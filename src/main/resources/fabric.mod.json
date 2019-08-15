@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "multiconnect",
+  "version": "${version}",
+
+  "name": "MultiConnect",
+  "description": "This mod allows you to connect to servers on multiple Minecraft versions",
+  "authors": [
+    "Earthcomputer",
+    "Icon made by Vectors Market from Flaticon"
+  ],
+  "contact": {
+    "homepage": "https://earthcomputer.net/",
+    "sources": "https://github.com/Earthcomputer/multiconnect"
+  },
+
+  "license": "MIT",
+  "icon": "assets/multiconnect/icon.png",
+
+  "environment": "*",
+  "mixins": [
+    "multiconnect.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.4.0"
+  }
+}

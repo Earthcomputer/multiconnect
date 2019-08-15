@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "MixinConnectScreen",
+    "MixinConnectScreen1"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
