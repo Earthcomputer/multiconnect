@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.mixin;
 
 import net.earthcomputer.multiconnect.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocol.Protocols;
+import net.earthcomputer.multiconnect.protocols.Protocols;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;

@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.mixin;
 
-import net.earthcomputer.multiconnect.IHandshakePacket;
+import net.earthcomputer.multiconnect.impl.IHandshakePacket;
 import net.minecraft.server.network.packet.HandshakeC2SPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;

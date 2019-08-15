@@ -1,10 +1,10 @@
 package net.earthcomputer.multiconnect.mixin;
 
 import net.earthcomputer.multiconnect.ConnectionInfo;
-import net.earthcomputer.multiconnect.GetProtocolPacketListener;
-import net.earthcomputer.multiconnect.IConnectScreen;
-import net.earthcomputer.multiconnect.IHandshakePacket;
-import net.earthcomputer.multiconnect.protocol.Protocols;
+import net.earthcomputer.multiconnect.impl.GetProtocolPacketListener;
+import net.earthcomputer.multiconnect.impl.IConnectScreen;
+import net.earthcomputer.multiconnect.impl.IHandshakePacket;
+import net.earthcomputer.multiconnect.protocols.Protocols;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.DisconnectedScreen;

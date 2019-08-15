@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect;
+package net.earthcomputer.multiconnect.impl;
 
 import net.minecraft.client.gui.screen.Screen;
 

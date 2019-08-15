@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.mixin;
 
 import net.earthcomputer.multiconnect.ConnectionInfo;
-import net.earthcomputer.multiconnect.IConnectScreen;
+import net.earthcomputer.multiconnect.impl.IConnectScreen;
 import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.Screen;
 import org.spongepowered.asm.mixin.Mixin;
