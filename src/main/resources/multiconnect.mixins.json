@@ -6,7 +6,9 @@
   ],
   "client": [
     "MixinConnectScreen",
-    "MixinConnectScreen1"
+    "MixinConnectScreen1",
+    "MixinHandshakePacket",
+    "MixinMinecraftClient"
   ],
   "injectors": {
     "defaultRequire": 1

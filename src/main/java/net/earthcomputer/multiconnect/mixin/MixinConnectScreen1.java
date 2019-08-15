@@ -3,12 +3,15 @@ package net.earthcomputer.multiconnect.mixin;
 import net.earthcomputer.multiconnect.ConnectionInfo;
 import net.earthcomputer.multiconnect.GetProtocolPacketListener;
 import net.earthcomputer.multiconnect.IConnectScreen;
+import net.earthcomputer.multiconnect.IHandshakePacket;
+import net.earthcomputer.multiconnect.protocol.Protocols;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
+import net.minecraft.network.Packet;
 import net.minecraft.server.network.packet.HandshakeC2SPacket;
 import net.minecraft.server.network.packet.QueryRequestC2SPacket;
 import net.minecraft.text.LiteralText;
@@ -17,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.net.InetAddress;
@@ -57,7 +61,16 @@ public class MixinConnectScreen1 {
             ci.cancel();
         }
 
-        LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocol);
+        LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion);
+    }
+
+    @Redirect(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;)V", ordinal = 0))
+    public void sendHandshake(ClientConnection connect, Packet<?> packet) {
+        if (Protocols.isSupported(ConnectionInfo.protocolVersion)) {
+            ((IHandshakePacket) packet).setVersion(ConnectionInfo.protocolVersion);
+            ConnectionInfo.protocol = Protocols.get(ConnectionInfo.protocolVersion);
+            ConnectionInfo.protocol.setup();
+        }
     }
 
 }
