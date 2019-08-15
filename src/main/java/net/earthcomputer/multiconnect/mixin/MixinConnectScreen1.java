@@ -71,6 +71,7 @@ public class MixinConnectScreen1 {
             ConnectionInfo.protocol = Protocols.get(ConnectionInfo.protocolVersion);
             ConnectionInfo.protocol.setup();
         }
+        connect.send(packet);
     }
 
 }
