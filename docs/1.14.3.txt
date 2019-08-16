@@ -1,6 +1,4 @@
 Changes compared to 1.14.2:
 - Protocol version updated 485 -> 490
-- Block.SOLID_SMALL_SQUARE_SHAPE changed
-- Chunk.isLightOn check moved earlier in ChunkSerializer
 - Extra stuff added to CustomPayloadS2CPacket.DEBUG_BRAIN
 - Add boolean to SetTradeOffersPacket (clientbound): refreshable (yarn)/regularVillager (ViaVersion)

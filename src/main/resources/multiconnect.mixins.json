@@ -10,7 +10,8 @@
     "MixinHandshakePacket",
     "MixinMinecraftClient",
     "MixinServerListIcon",
-    "MixinNetworkState"
+    "MixinNetworkState",
+    "MixinClientConnection"
   ],
   "injectors": {
     "defaultRequire": 1
