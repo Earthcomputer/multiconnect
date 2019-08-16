@@ -1,0 +1,8 @@
+Changes compared to 1.14:
+- Protocol version updated 477 -> 480
+- Add AbstractTraderEntity.HEAD_ROLLING_TIME_LEFT to DataTracker
+- Add CustomPayloadS2CPacket.DEBUG_RAIDS
+- Change CustomPayloadS2CPacket.DEBUG_BRAIN
+- Datafix: OminousBannerBlockEntityRenameFix
+- Datafix: VillagerXpRebuildFix
+- Datafix: ZombieVillagerXpRebuildFix
