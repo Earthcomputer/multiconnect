@@ -1,3 +1,6 @@
+
+import net.fabricmc.loom.task.RemapJarTask
+
 plugins {
 	id 'fabric-loom' version '0.2.5-SNAPSHOT'
 	id 'maven-publish'
@@ -13,6 +16,10 @@ group = project.maven_group
 minecraft {
 }
 
+sourceSets {
+	api
+}
+
 dependencies {
 	//to change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -22,6 +29,8 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	// whoops we don't want it sorry Fabric :P
 	//modCompile "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	//compile sourceSets.api.output
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.
@@ -55,8 +64,36 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 	from sourceSets.main.allSource
 }
 
+task apiJar(type: Jar, dependsOn: apiClasses) {
+	classifier = 'api-dev'
+	from sourceSets.api.allJava
+	from (sourceSets.api.output) {
+		include "fabric.mod.json"
+		expand "version": project.version
+	}
+	from (sourceSets.api.output) {
+		exclude "fabric.mod.json"
+	}
+	from 'LICENSE'
+}
+
+task remapApiJar(type: RemapJarTask, dependsOn: project.apiJar) {
+	input = apiJar.archivePath
+	classifier = 'api'
+	addNestedDependencies = false
+}
+
+remapJar.dependsOn remapApiJar
+
 jar {
 	from "LICENSE"
+}
+
+def bintrayLogin = new Properties()
+try {
+	bintrayLogin.load(new FileReader(file('bintrayLogin.properties')))
+} catch (IOException e) {
+	bintrayLogin = null
 }
 
 // configure the maven publication
@@ -70,11 +107,21 @@ publishing {
 			artifact(sourcesJar) {
 				builtBy remapSourcesJar
 			}
+			artifact(remapApiJar) {
+				builtBy remapApiJar
+			}
 		}
 	}
 
 	// select the repositories you want to publish to
 	repositories {
+		maven {
+			url 'https://api.bintray.com/maven/earthcomputer/mods/multiconnect/'
+			credentials {
+				username = bintrayLogin == null ? 'foo' : bintrayLogin['user']
+				password = bintrayLogin == null ? 'bar' : bintrayLogin['pass']
+			}
+		}
 		// uncomment to publish to the local maven
 		// mavenLocal()
 	}

@@ -20,7 +20,7 @@ public class MixinClientConnection {
     @Inject(method = "exceptionCaught", at = @At("HEAD"))
     public void onExceptionCaught(ChannelHandlerContext context, Throwable t, CallbackInfo ci) {
         if (!(t instanceof PacketEncoderException) && !(t instanceof TimeoutException) && channel.isOpen()) {
-            LogManager.getLogger("multiconnect").error("Unexpectedly disconnected from server!", t);
+            LogManager.getLogger("assets/multiconnect").error("Unexpectedly disconnected from server!", t);
         }
     }
 

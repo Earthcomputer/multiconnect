@@ -29,7 +29,7 @@ import java.net.UnknownHostException;
 @Mixin(targets = "net.minecraft.client.gui.screen.ConnectScreen$1")
 public class MixinConnectScreen1 {
 
-    @Inject(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;connect(Ljava/net/InetAddress;IZ)Lnet/minecraft/network/ClientConnection;"), cancellable = true)
+    @Inject(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;connect(Ljava/net/InetAddress;IZ)Lnet/minecraft/network/ClientConnection;"), cancellable = true)
     public void beforeConnect(CallbackInfo ci) throws UnknownHostException {
         Screen screen = MinecraftClient.getInstance().currentScreen;
         if (!(screen instanceof ConnectScreen))
@@ -61,10 +61,10 @@ public class MixinConnectScreen1 {
             ci.cancel();
         }
 
-        LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion);
+        LogManager.getLogger("assets/multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion);
     }
 
-    @Redirect(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;)V", ordinal = 0))
+    @Redirect(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;)V", ordinal = 0))
     public void sendHandshake(ClientConnection connect, Packet<?> packet) {
         if (Protocols.isSupported(ConnectionInfo.protocolVersion)) {
             ((IHandshakePacket) packet).setVersion(ConnectionInfo.protocolVersion);

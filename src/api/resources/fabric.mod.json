@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "multiconnect-api",
+  "version": "${version}",
+
+  "name": "MultiConnect API",
+  "description": "API for MultiConnect",
+  "authors": [
+    "Earthcomputer",
+    "Icon made by Vectors Market from Flaticon"
+  ],
+  "contact": {
+    "homepage": "https://earthcomputer.net/",
+    "sources": "https://github.com/Earthcomputer/multiconnect"
+  },
+
+  "license": "MIT",
+  "icon": "assets/multiconnect/icon.png",
+
+  "environment": "client",
+  "mixins": [
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.4.0"
+  }
+}
