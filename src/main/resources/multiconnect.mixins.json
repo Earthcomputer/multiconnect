@@ -11,7 +11,8 @@
     "MixinMinecraftClient",
     "MixinServerListIcon",
     "MixinNetworkState",
-    "MixinClientConnection"
+    "MixinClientConnection",
+    "MixinDataTracker"
   ],
   "injectors": {
     "defaultRequire": 1

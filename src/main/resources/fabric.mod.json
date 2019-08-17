@@ -17,7 +17,7 @@
   "license": "MIT",
   "icon": "assets/multiconnect/icon.png",
 
-  "environment": "*",
+  "environment": "client",
   "mixins": [
     "multiconnect.mixins.json",
     "multiconnect.1_14_3.mixins.json",
