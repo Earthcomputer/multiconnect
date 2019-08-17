@@ -8,13 +8,9 @@ import net.earthcomputer.multiconnect.protocols.v1_14_3.Protocol_1_14_3;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
 import net.minecraft.SharedConstants;
 
-public class Protocols {
+import static net.earthcomputer.multiconnect.api.Protocols.*;
 
-    public static final int V1_14_4 = 498;
-    public static final int V1_14_3 = 490;
-    public static final int V1_14_2 = 485;
-    public static final int V1_14_1 = 480;
-    public static final int V1_14 = 477;
+public class ProtocolRegistry {
 
     private static Int2ObjectOpenHashMap<AbstractProtocol> protocols = new Int2ObjectOpenHashMap<>();
     static {

@@ -1,6 +1,5 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.earthcomputer.multiconnect.ConnectionInfo;
 import net.minecraft.client.network.packet.QueryPongS2CPacket;
 import net.minecraft.client.network.packet.QueryResponseS2CPacket;
 import net.minecraft.network.ClientConnection;

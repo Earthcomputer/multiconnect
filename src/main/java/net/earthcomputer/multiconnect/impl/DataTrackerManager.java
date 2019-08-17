@@ -1,6 +1,5 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.earthcomputer.multiconnect.ConnectionInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.TrackedData;
 

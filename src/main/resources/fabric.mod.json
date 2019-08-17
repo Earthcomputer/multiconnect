@@ -25,6 +25,12 @@
     "multiconnect.1_14_1.mixins.json"
   ],
 
+  "entrypoints": {
+    "main": [
+      "net.earthcomputer.multiconnect.api.Initializer"
+    ]
+  },
+
   "depends": {
     "fabricloader": ">=0.4.0"
   }

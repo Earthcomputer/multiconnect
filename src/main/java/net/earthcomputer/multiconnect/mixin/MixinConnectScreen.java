@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.mixin;
 
-import net.earthcomputer.multiconnect.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.IConnectScreen;
 import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.Screen;

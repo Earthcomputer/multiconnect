@@ -1,10 +1,10 @@
 package net.earthcomputer.multiconnect.mixin;
 
-import net.earthcomputer.multiconnect.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.GetProtocolPacketListener;
 import net.earthcomputer.multiconnect.impl.IConnectScreen;
 import net.earthcomputer.multiconnect.impl.IHandshakePacket;
-import net.earthcomputer.multiconnect.protocols.Protocols;
+import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
@@ -66,9 +66,9 @@ public class MixinConnectScreen1 {
 
     @Redirect(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;)V", ordinal = 0))
     public void sendHandshake(ClientConnection connect, Packet<?> packet) {
-        if (Protocols.isSupported(ConnectionInfo.protocolVersion)) {
+        if (ProtocolRegistry.isSupported(ConnectionInfo.protocolVersion)) {
             ((IHandshakePacket) packet).setVersion(ConnectionInfo.protocolVersion);
-            ConnectionInfo.protocol = Protocols.get(ConnectionInfo.protocolVersion);
+            ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
             ConnectionInfo.protocol.setup();
         }
         connect.send(packet);

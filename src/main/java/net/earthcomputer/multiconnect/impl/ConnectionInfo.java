@@ -1,7 +1,7 @@
-package net.earthcomputer.multiconnect;
+package net.earthcomputer.multiconnect.impl;
 
 import net.earthcomputer.multiconnect.protocols.AbstractProtocol;
-import net.earthcomputer.multiconnect.protocols.Protocols;
+import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.SharedConstants;
 
 public class ConnectionInfo {
@@ -9,6 +9,6 @@ public class ConnectionInfo {
     public static String ip;
     public static int port = -1;
     public static int protocolVersion = SharedConstants.getGameVersion().getProtocolVersion();
-    public static AbstractProtocol protocol = Protocols.latest();
+    public static AbstractProtocol protocol = ProtocolRegistry.latest();
 
 }

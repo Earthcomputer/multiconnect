@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_14_3.mixin;
 
-import net.earthcomputer.multiconnect.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocols.Protocols;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.util.PacketByteBuf;
 import net.minecraft.village.TraderOfferList;
 import org.spongepowered.asm.mixin.Mixin;

@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.mixin;
 
-import net.earthcomputer.multiconnect.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocols.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -18,7 +18,7 @@ public class MixinMinecraftClient {
         ConnectionInfo.ip = null;
         ConnectionInfo.port = -1;
         ConnectionInfo.protocolVersion = SharedConstants.getGameVersion().getProtocolVersion();
-        ConnectionInfo.protocol = Protocols.get(ConnectionInfo.protocolVersion);
+        ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
     }
 
 }
