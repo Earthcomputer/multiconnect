@@ -11,7 +11,8 @@
   ],
   "contact": {
     "homepage": "https://earthcomputer.net/",
-    "sources": "https://github.com/Earthcomputer/multiconnect"
+    "sources": "https://github.com/Earthcomputer/multiconnect",
+    "issues": "https://github.com/Earthcomputer/multiconnect/issues"
   },
 
   "license": "MIT",
@@ -33,5 +34,9 @@
 
   "depends": {
     "fabricloader": ">=0.4.0"
+  },
+
+  "custom": {
+    "modmenu:clientsideOnly": true
   }
 }
