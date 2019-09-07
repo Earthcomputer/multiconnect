@@ -15,7 +15,9 @@
     "MixinDataTracker",
     "MixinDecoderHandler",
     "MixinEncoderHandler",
-    "MixinPacketByteBuf"
+    "MixinPacketByteBuf",
+    "MixinSimpleRegistry",
+    "MixinInt2ObjectBiMap"
   ],
   "injectors": {
     "defaultRequire": 1
