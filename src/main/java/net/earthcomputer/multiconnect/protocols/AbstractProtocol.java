@@ -2,11 +2,9 @@ package net.earthcomputer.multiconnect.protocols;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import net.earthcomputer.multiconnect.impl.DataTrackerManager;
-import net.earthcomputer.multiconnect.impl.INetworkState;
-import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
-import net.earthcomputer.multiconnect.impl.TransformerByteBuf;
+import net.earthcomputer.multiconnect.impl.*;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
@@ -30,6 +28,7 @@ public abstract class AbstractProtocol {
         DataTrackerManager.onConnectToServer();
         DefaultRegistry.restoreAll();
         DefaultRegistry.DEFAULT_REGISTRIES.keySet().forEach((registry -> modifyRegistry((ISimpleRegistry<?>) registry)));
+        recomputeBlockStates();
     }
 
     protected void modifyPacketLists() {
@@ -40,6 +39,17 @@ public abstract class AbstractProtocol {
         }
         for (Class<? extends Packet<?>> packet : getServerboundPackets()) {
             ((INetworkState) NetworkState.PLAY).multiconnect_addPacket(NetworkSide.SERVERBOUND, packet);
+        }
+    }
+
+    protected void recomputeBlockStates() {
+        ((IIdList) Block.STATE_IDS).clear();
+        for (Block block : Registry.BLOCK) {
+            for (BlockState state : block.getStateFactory().getStates()) {
+                if (acceptBlockState(state)) {
+                    Block.STATE_IDS.add(state);
+                }
+            }
         }
     }
 
@@ -58,6 +68,10 @@ public abstract class AbstractProtocol {
     }
 
     public void modifyRegistry(ISimpleRegistry<?> registry) {
+    }
+
+    public boolean acceptBlockState(BlockState state) {
+        return true;
     }
 
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
