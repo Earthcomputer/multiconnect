@@ -22,7 +22,6 @@
   "mixins": [
     "multiconnect.mixins.json",
     "multiconnect.1_14_3.mixins.json",
-    "multiconnect.1_14_2.mixins.json",
     "multiconnect.1_14_1.mixins.json"
   ],
 

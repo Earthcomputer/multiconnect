@@ -7,7 +7,9 @@ classes/
 
 # idea
 
-.idea/
+!.idea/
+.idea/*
+!.idea/inspectionProfiles/
 *.iml
 *.ipr
 *.iws

@@ -12,7 +12,10 @@
     "MixinServerListIcon",
     "MixinNetworkState",
     "MixinClientConnection",
-    "MixinDataTracker"
+    "MixinDataTracker",
+    "MixinDecoderHandler",
+    "MixinEncoderHandler",
+    "MixinPacketByteBuf"
   ],
   "injectors": {
     "defaultRequire": 1

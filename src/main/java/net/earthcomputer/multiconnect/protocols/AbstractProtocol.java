@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.protocols;
 import com.google.common.collect.BiMap;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.INetworkState;
+import net.earthcomputer.multiconnect.impl.TransformerByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.network.NetworkSide;
@@ -35,6 +36,12 @@ public abstract class AbstractProtocol {
 
     public List<Class<? extends Packet<?>>> getServerboundPackets() {
         return new ArrayList<>(DefaultPackets.SERVERBOUND);
+    }
+
+    public void transformPacketClientbound(Class<? extends Packet<?>> packetClass, List<TransformerByteBuf> transformers) {
+    }
+
+    public void transformPacketServerbound(Class<? extends Packet<?>> packetClass, List<TransformerByteBuf> transformers) {
     }
 
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
