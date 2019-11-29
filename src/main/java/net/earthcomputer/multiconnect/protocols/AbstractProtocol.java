@@ -42,6 +42,10 @@ public abstract class AbstractProtocol {
         }
     }
 
+    protected static <T> void insertAfter(List<T> list, T element, T toInsert) {
+        list.add(list.indexOf(element) + 1, toInsert);
+    }
+
     protected void recomputeBlockStates() {
         ((IIdList) Block.STATE_IDS).clear();
         for (Block block : Registry.BLOCK) {
@@ -150,6 +154,7 @@ public abstract class AbstractProtocol {
             DEFAULT_REGISTRIES.put(Registry.BLOCK_ENTITY, new DefaultRegistry<>(Registry.BLOCK_ENTITY));
             DEFAULT_REGISTRIES.put(Registry.CONTAINER, new DefaultRegistry<>(Registry.CONTAINER));
             DEFAULT_REGISTRIES.put(Registry.STATUS_EFFECT, new DefaultRegistry<>(Registry.STATUS_EFFECT));
+            DEFAULT_REGISTRIES.put(Registry.RECIPE_SERIALIZER, new DefaultRegistry<>(Registry.RECIPE_SERIALIZER));
 
             DEFAULT_BLOCK_ITEMS.putAll(Item.BLOCK_ITEMS);
             DEFAULT_SPAWN_EGG_ITEMS.putAll(getSpawnEggItems());
