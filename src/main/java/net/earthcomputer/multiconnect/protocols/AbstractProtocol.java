@@ -82,6 +82,9 @@ public abstract class AbstractProtocol {
         return true;
     }
 
+    public void postEntityDataRegister(Class<? extends Entity> clazz) {
+    }
+
     static {
         DefaultPackets.initialize();
         DefaultRegistry.initialize();

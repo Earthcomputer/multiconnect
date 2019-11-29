@@ -1,11 +1,15 @@
 package net.earthcomputer.multiconnect.impl;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandler;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.function.BiConsumer;
 
 public class DataTrackerManager {
     /*
@@ -27,6 +31,8 @@ public class DataTrackerManager {
 
     private static Map<Class<? extends Entity>, List<TrackedData<?>>> DEFAULT_DATA = new HashMap<>();
     private static Map<Class<? extends Entity>, Integer> NEXT_IDS = new HashMap<>();
+    private static Map<Class<? extends Entity>, List<Pair<TrackedData<?>, ?>>> oldTrackedData = new HashMap<>();
+    private static Map<TrackedData<?>, BiConsumer<?, ?>> oldTrackedDataHandlers = new IdentityHashMap<>();
     private static boolean dirty = false;
 
     private static final Field TRACKED_DATA_ID;
@@ -41,6 +47,27 @@ public class DataTrackerManager {
             modifiers.set(TRACKED_DATA_ID, TRACKED_DATA_ID.getModifiers() & ~Modifier.FINAL);
         } catch (ReflectiveOperationException e) {
             throw new AssertionError(e);
+        }
+    }
+
+    public static <T> TrackedData<T> createOldTrackedData(TrackedDataHandler<T> type) {
+        return type.create(DEFAULT_ABSENT_ID);
+    }
+
+    /**
+     * Called from inside a protocol's acceptEntityData or postEntityDataRegister method to register an old
+     * tracked data no longer in the current version. Will insert the new data before the current data being
+     * checked.
+     */
+    public static <T, U extends Entity> void registerOldTrackedData(Class<U> clazz, TrackedData<T> data, T _default, BiConsumer<? super U, ? super T> handler) {
+        if (ConnectionInfo.protocol.acceptEntityData(clazz, data)) {
+            int id = getNextId(clazz);
+            NEXT_IDS.put(clazz, id + 1);
+            setId(data, id);
+            oldTrackedData.computeIfAbsent(clazz, k -> new ArrayList<>()).add(Pair.of(data, _default));
+            oldTrackedDataHandlers.put(data, handler);
+        } else {
+            setId(data, DEFAULT_ABSENT_ID);
         }
     }
 
@@ -83,6 +110,8 @@ public class DataTrackerManager {
 
     public static void reregisterAll() {
         NEXT_IDS.clear();
+        oldTrackedData.clear();
+        oldTrackedDataHandlers.clear();
         Set<Class<? extends Entity>> alreadyReregistered = new HashSet<>();
         for (Class<? extends Entity> clazz : DEFAULT_DATA.keySet()) {
             reregisterDataForClass(clazz, alreadyReregistered);
@@ -101,6 +130,55 @@ public class DataTrackerManager {
         if (DEFAULT_DATA.containsKey(clazz))
             for (TrackedData<?> data : DEFAULT_DATA.get(clazz))
                 reregisterData(clazz, data);
+        ConnectionInfo.protocol.postEntityDataRegister(clazz);
+    }
+
+    public static void startTrackingOldTrackedData(Entity entity) {
+        for (Class<?> clazz = entity.getClass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
+            for (Pair<TrackedData<?>, ?> pair : oldTrackedData.get(clazz)) {
+                doStartTracking(entity, pair.getLeft(), pair.getRight());
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> void doStartTracking(Entity entity, TrackedData<T> data, Object _default) {
+        entity.getDataTracker().startTracking(data, (T) _default);
+    }
+
+    public static void handleOldTrackedData(Entity entity, TrackedData<?> data) {
+        BiConsumer<?, ?> handler = oldTrackedDataHandlers.get(data);
+        if (handler != null)
+            doHandleTrackedData(handler, entity, entity.getDataTracker().get(data));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T, U> void doHandleTrackedData(BiConsumer<U, T> handler, Entity entity, Object val) {
+        handler.accept((U) entity, (T) val);
+    }
+
+    public static Field getTrackedDataField(Class<? extends Entity> clazz, int index, String nameForDebug) {
+        try {
+            Field field = Arrays.stream(clazz.getDeclaredFields())
+                    .filter(f -> f.getType() == TrackedData.class)
+                    .skip(index).findFirst().orElseThrow(NoSuchFieldException::new);
+            field.setAccessible(true);
+            if (FabricLoader.getInstance().isDevelopmentEnvironment())
+                if (!field.getName().equals(nameForDebug))
+                    throw new AssertionError("Field name " + field.getName() + " does not match " + nameForDebug);
+            return field;
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> TrackedData<T> getTrackedData(Class<T> type, Field trackedDataField) {
+        try {
+            return (TrackedData<T>) trackedDataField.get(null);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError(e);
+        }
     }
 
 }

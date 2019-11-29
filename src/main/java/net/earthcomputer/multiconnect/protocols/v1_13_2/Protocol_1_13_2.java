@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.TransformerByteBuf;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.PendingDifficulty;
@@ -14,10 +15,19 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.packet.*;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.EntityType;
+import net.minecraft.entity.*;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.mob.*;
+import net.minecraft.entity.passive.CatEntity;
+import net.minecraft.entity.passive.HorseEntity;
+import net.minecraft.entity.passive.MooshroomEntity;
+import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Packet;
@@ -27,12 +37,15 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.recipe.RecipeSerializer;
 import net.minecraft.server.network.packet.*;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.TagHelper;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.village.VillagerData;
+import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
@@ -43,8 +56,32 @@ import net.minecraft.world.chunk.PalettedContainer;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
 
 public class Protocol_1_13_2 extends Protocol_1_14 {
+
+    private static final Field ENTITY_POSE = DataTrackerManager.getTrackedDataField(Entity.class, 6, "POSE");
+    private static final Field ENDER_EYE_ITEM = DataTrackerManager.getTrackedDataField(EnderEyeEntity.class, 0, "ITEM");
+    private static final Field FIREWORK_SHOOTER = DataTrackerManager.getTrackedDataField(FireworkEntity.class, 1, "SHOOTER_ENTITY_ID");
+    private static final Field FIREWORK_ANGLE = DataTrackerManager.getTrackedDataField(FireworkEntity.class, 2, "SHOT_AT_ANGLE");
+    private static final Field LIVING_SLEEPING_POSITION = DataTrackerManager.getTrackedDataField(LivingEntity.class, 5, "SLEEPING_POSITION");
+    private static final Field VILLAGER_DATA = DataTrackerManager.getTrackedDataField(VillagerEntity.class, 0, "VILLAGER_DATA");
+    private static final Field ZOMBIE_DROWNING = DataTrackerManager.getTrackedDataField(ZombieEntity.class, 2, "CONVERTING_IN_WATER");
+    private static final Field ZOMBIE_VILLAGER_DATA = DataTrackerManager.getTrackedDataField(ZombieVillagerEntity.class, 1, "VILLAGER_DATA");
+    private static final Field MOOSHROOM_TYPE = DataTrackerManager.getTrackedDataField(MooshroomEntity.class, 0, "TYPE");
+    private static final Field CAT_SLEEPING_WITH_OWNER = DataTrackerManager.getTrackedDataField(CatEntity.class, 1, "SLEEPING_WITH_OWNER");
+    private static final Field CAT_HEAD_DOWN = DataTrackerManager.getTrackedDataField(CatEntity.class, 2, "HEAD_DOWN");
+    private static final Field CAT_COLLAR_COLOR = DataTrackerManager.getTrackedDataField(CatEntity.class, 3, "COLLAR_COLOR");
+    private static final Field PROJECTILE_PIERCE_LEVEL = DataTrackerManager.getTrackedDataField(ProjectileEntity.class, 2, "PIERCE_LEVEL");
+
+    private static final TrackedData<Integer> OLD_FIREWORK_SHOOTER = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Integer> OLD_VILLAGER_PROFESSION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Byte> OLD_ILLAGER_FLAGS = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BYTE);
+    private static final TrackedData<Boolean> OLD_SKELETON_ATTACKING = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BOOLEAN);
+    private static final TrackedData<Boolean> OLD_ZOMBIE_ATTACKING = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BOOLEAN);
+    private static final TrackedData<Integer> OLD_ZOMBIE_VILLAGER_PROFESSION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Integer> OLD_HORSE_ARMOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
 
     private static final Palette<BlockState> BLOCK_STATE_PALETTE;
     static {
@@ -287,6 +324,99 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         }
     }
 
+    @Override
+    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+        if (clazz == Entity.class && data == DataTrackerManager.getTrackedData(EntityPose.class, ENTITY_POSE))
+            return false;
+        if (clazz == EnderEyeEntity.class && data == DataTrackerManager.getTrackedData(ItemStack.class, ENDER_EYE_ITEM))
+            return false;
+        if (clazz == FireworkEntity.class) {
+            TrackedData<OptionalInt> fireworkShooter = DataTrackerManager.getTrackedData(OptionalInt.class, FIREWORK_SHOOTER);
+            if (data == fireworkShooter) {
+                DataTrackerManager.registerOldTrackedData(FireworkEntity.class, OLD_FIREWORK_SHOOTER, 0,
+                        (entity, val) -> entity.getDataTracker().set(fireworkShooter, val <= 0 ? OptionalInt.empty() : OptionalInt.of(val)));
+                return false;
+            }
+            if (data == DataTrackerManager.getTrackedData(Boolean.class, FIREWORK_ANGLE))
+                return false;
+        }
+        if (clazz == LivingEntity.class && data == DataTrackerManager.getTrackedData(Optional.class, LIVING_SLEEPING_POSITION))
+            return false;
+        if (clazz == VillagerEntity.class) {
+            TrackedData<VillagerData> villagerData = DataTrackerManager.getTrackedData(VillagerData.class, VILLAGER_DATA);
+            if (data == villagerData) {
+                DataTrackerManager.registerOldTrackedData(VillagerEntity.class, OLD_VILLAGER_PROFESSION, 0,
+                        (entity, val) -> entity.getDataTracker().set(villagerData, entity.getVillagerData().withProfession(getVillagerProfession(val))));
+                return false;
+            }
+        }
+        if (clazz == ZombieEntity.class && data == DataTrackerManager.getTrackedData(Boolean.class, ZOMBIE_DROWNING))
+            DataTrackerManager.registerOldTrackedData(ZombieEntity.class, OLD_ZOMBIE_ATTACKING, false, MobEntity::setAttacking);
+        if (clazz == ZombieVillagerEntity.class) {
+            TrackedData<VillagerData> villagerData = DataTrackerManager.getTrackedData(VillagerData.class, ZOMBIE_VILLAGER_DATA);
+            if (data == villagerData) {
+                DataTrackerManager.registerOldTrackedData(ZombieVillagerEntity.class, OLD_ZOMBIE_VILLAGER_PROFESSION, 0,
+                        (entity, val) -> entity.getDataTracker().set(villagerData, entity.getVillagerData().withProfession(getVillagerProfession(val))));
+                return false;
+            }
+        }
+        if (clazz == MooshroomEntity.class && data == DataTrackerManager.getTrackedData(String.class, MOOSHROOM_TYPE))
+            return false;
+        if (clazz == CatEntity.class) {
+            if (data == DataTrackerManager.getTrackedData(Boolean.class, CAT_SLEEPING_WITH_OWNER)
+                || data == DataTrackerManager.getTrackedData(Boolean.class, CAT_HEAD_DOWN)
+                || data == DataTrackerManager.getTrackedData(Integer.class, CAT_COLLAR_COLOR))
+                return false;
+        }
+        if (clazz == ProjectileEntity.class && data == DataTrackerManager.getTrackedData(Byte.class, PROJECTILE_PIERCE_LEVEL))
+            return false;
+        return super.acceptEntityData(clazz, data);
+    }
+
+    @Override
+    public void postEntityDataRegister(Class<? extends Entity> clazz) {
+        if (clazz == IllagerEntity.class)
+            DataTrackerManager.registerOldTrackedData(IllagerEntity.class, OLD_ILLAGER_FLAGS, (byte)0,
+                    (entity, val) -> entity.setAttacking((val & 1) != 0));
+        if (clazz == AbstractSkeletonEntity.class)
+            DataTrackerManager.registerOldTrackedData(AbstractSkeletonEntity.class, OLD_SKELETON_ATTACKING, false, MobEntity::setAttacking);
+        if (clazz == HorseEntity.class)
+            DataTrackerManager.registerOldTrackedData(HorseEntity.class, OLD_HORSE_ARMOR, 0, (entity, val) -> {
+                switch (val) {
+                    case 1:
+                        entity.setEquippedStack(EquipmentSlot.CHEST, new ItemStack(Items.IRON_HORSE_ARMOR));
+                        break;
+                    case 2:
+                        entity.setEquippedStack(EquipmentSlot.CHEST, new ItemStack(Items.GOLDEN_HORSE_ARMOR));
+                        break;
+                    case 3:
+                        entity.setEquippedStack(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_HORSE_ARMOR));
+                        break;
+                    default:
+                        entity.setEquippedStack(EquipmentSlot.CHEST, ItemStack.EMPTY);
+                }
+            });
+        super.postEntityDataRegister(clazz);
+    }
+
+    private static VillagerProfession getVillagerProfession(int id) {
+        switch (id) {
+            case 0:
+                return VillagerProfession.FARMER;
+            case 1:
+                return VillagerProfession.LIBRARIAN;
+            case 2:
+                return VillagerProfession.CLERIC;
+            case 3:
+                return VillagerProfession.ARMORER;
+            case 4:
+                return VillagerProfession.BUTCHER;
+            case 5:
+            default:
+                return VillagerProfession.NITWIT;
+        }
+    }
+
     @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})
     @Override
     public void modifyRegistry(ISimpleRegistry<?> registry) {
@@ -404,6 +534,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
         registry.unregister(EntityType.CAT);
+        int ocelotId = Registry.ENTITY_TYPE.getRawId(EntityType.OCELOT);
+        registry.unregister(EntityType.OCELOT);
+        registry.register(EntityType.CAT, ocelotId, new Identifier("ocelot"));
         registry.unregister(EntityType.FOX);
         registry.unregister(EntityType.PANDA);
         registry.unregister(EntityType.PILLAGER);
