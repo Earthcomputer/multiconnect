@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_13_2.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.ILightUpdatePacket;
+import net.earthcomputer.multiconnect.protocols.v1_13_2.PendingDifficulty;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.PendingLightData;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.*;

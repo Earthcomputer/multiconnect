@@ -36,6 +36,11 @@ public class TransformerByteBuf extends PacketByteBuf {
         this.context = context;
     }
 
+    public void setUserData(int val) {
+        if (getDelegate() instanceof TransformerByteBuf)
+            ((TransformerByteBuf) getDelegate()).setUserData(val);
+    }
+
     @Override
     public int readVarInt() {
         int val;

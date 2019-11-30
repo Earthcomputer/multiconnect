@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_13_2.mixin;
+package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
 import net.minecraft.world.Difficulty;
 

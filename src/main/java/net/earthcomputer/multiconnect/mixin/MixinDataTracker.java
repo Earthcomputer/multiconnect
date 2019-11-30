@@ -22,8 +22,8 @@ public class MixinDataTracker {
         DataTrackerManager.onRegisterData(clazz, ci.getReturnValue());
     }
 
-    @Inject(method = "addTrackedData", at = @At("HEAD"), cancellable = true)
-    public <T> void onAddTrackedData(TrackedData<T> data, T _default, CallbackInfo ci) {
+    @Inject(method = "startTracking", at = @At("HEAD"), cancellable = true)
+    public <T> void onStartTracking(TrackedData<T> data, T _default, CallbackInfo ci) {
         DataTrackerManager.onCreateDataEntry();
         if (data.getId() == DataTrackerManager.DEFAULT_ABSENT_ID)
             DataTrackerManager.setId(data, nextAbsentId--);

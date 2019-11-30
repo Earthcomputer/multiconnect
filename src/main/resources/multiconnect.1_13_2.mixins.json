@@ -7,7 +7,9 @@
   "client": [
     "MixinClientChunkManager",
     "MixinClientPlayNetworkHandler",
-    "MixinLightUpdatePacket"
+    "MixinLightUpdatePacket",
+    "MixinSynchronizeRecipesPacket",
+    "MixinRegistryTagManager"
   ],
   "injectors": {
     "defaultRequire": 1

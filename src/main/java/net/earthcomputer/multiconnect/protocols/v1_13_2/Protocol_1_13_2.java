@@ -5,7 +5,6 @@ import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.TransformerByteBuf;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.PendingDifficulty;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -275,6 +274,32 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                     if (!isTopLevel() || varIntsRead++ != 1)
                         return super.readVarInt();
                     return super.readByte() & 0xff;
+                }
+            });
+        }
+        else if (packetClass == SynchronizeRecipesS2CPacket.class) {
+            transformers.add(new TransformerByteBuf() {
+                private Identifier recipeOutput;
+                private int identifiersRead = 0;
+
+                @Override
+                public void setUserData(int val) {
+                    identifiersRead = 0;
+                }
+
+                @Override
+                public Identifier readIdentifier() {
+                    if (!isTopLevel())
+                        return super.readIdentifier();
+                    switch (identifiersRead++) {
+                        case 0:
+                            recipeOutput = super.readIdentifier();
+                            return new Identifier(readString(32767));
+                        case 1:
+                            return recipeOutput;
+                        default:
+                            return super.readIdentifier();
+                    }
                 }
             });
         }
@@ -583,5 +608,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(RecipeSerializer.SMOKING);
         registry.unregister(RecipeSerializer.CAMPFIRE_COOKING);
         registry.unregister(RecipeSerializer.STONECUTTING);
+        registry.register(AddBannerPatternRecipe.SERIALIZER, registry.getNextId(), new Identifier("crafting_special_banneraddpattern"));
     }
 }

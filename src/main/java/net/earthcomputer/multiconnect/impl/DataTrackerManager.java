@@ -135,8 +135,11 @@ public class DataTrackerManager {
 
     public static void startTrackingOldTrackedData(Entity entity) {
         for (Class<?> clazz = entity.getClass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
-            for (Pair<TrackedData<?>, ?> pair : oldTrackedData.get(clazz)) {
-                doStartTracking(entity, pair.getLeft(), pair.getRight());
+            List<Pair<TrackedData<?>, ?>> trackedData = oldTrackedData.get(clazz);
+            if (trackedData != null) {
+                for (Pair<TrackedData<?>, ?> pair : trackedData) {
+                    doStartTracking(entity, pair.getLeft(), pair.getRight());
+                }
             }
         }
     }
