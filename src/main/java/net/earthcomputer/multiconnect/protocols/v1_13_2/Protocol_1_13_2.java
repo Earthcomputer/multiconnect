@@ -6,10 +6,9 @@ import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.TransformerByteBuf;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.block.enums.Instrument;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.packet.*;
 import net.minecraft.enchantment.Enchantment;
@@ -202,7 +201,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
                     super.readBytes(data);
                     PacketByteBuf inBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data.clone()));
-                    PalettedContainer<BlockState> tempContainer = new PalettedContainer<>(BLOCK_STATE_PALETTE, Block.STATE_IDS, TagHelper::deserializeBlockState, TagHelper::serializeBlockState, Blocks.AIR.getDefaultState());
                     PacketByteBuf outBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data));
                     outBuf.writerIndex(0);
 
@@ -212,6 +210,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                     for (int sectionY = 0; sectionY < 18; sectionY++) {
                         if ((verticalStripBitmask & (1 << sectionY)) != 0) {
                             outBuf.writeShort(0); // non-empty block count
+                            PalettedContainer<BlockState> tempContainer = new PalettedContainer<>(BLOCK_STATE_PALETTE, Block.STATE_IDS, TagHelper::deserializeBlockState, TagHelper::serializeBlockState, Blocks.AIR.getDefaultState());
                             tempContainer.fromPacket(inBuf);
                             tempContainer.toPacket(outBuf);
                             byte[] light = new byte[16 * 16 * 16 / 2];
@@ -653,6 +652,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(Blocks.CORNFLOWER);
         registry.unregister(Blocks.LILY_OF_THE_VALLEY);
         registry.unregister(Blocks.WITHER_ROSE);
+        registry.unregister(Blocks.POTTED_CORNFLOWER);
+        registry.unregister(Blocks.POTTED_LILY_OF_THE_VALLEY);
+        registry.unregister(Blocks.POTTED_WITHER_ROSE);
         registry.unregister(Blocks.GRINDSTONE);
         registry.unregister(Blocks.JIGSAW);
         registry.unregister(Blocks.LANTERN);
@@ -715,6 +717,55 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(Blocks.NETHER_BRICK_WALL);
         registry.unregister(Blocks.RED_NETHER_BRICK_WALL);
         registry.unregister(Blocks.END_STONE_BRICK_WALL);
+
+        registry.unregister(Blocks.STONE_BRICKS);
+        registry.unregister(Blocks.MOSSY_STONE_BRICKS);
+        registry.unregister(Blocks.CRACKED_STONE_BRICKS);
+        registry.unregister(Blocks.CHISELED_STONE_BRICKS);
+        insertAfter(registry, Blocks.INFESTED_CHISELED_STONE_BRICKS, Blocks.STONE_BRICKS, "stone_bricks");
+        insertAfter(registry, Blocks.STONE_BRICKS, Blocks.MOSSY_STONE_BRICKS, "mossy_stone_bricks");
+        insertAfter(registry, Blocks.MOSSY_STONE_BRICKS, Blocks.CRACKED_STONE_BRICKS, "cracked_stone_bricks");
+        insertAfter(registry, Blocks.CRACKED_STONE_BRICKS, Blocks.CHISELED_STONE_BRICKS, "chiseled_stone_bricks");
+
+        registry.unregister(Blocks.SKELETON_WALL_SKULL);
+        insertAfter(registry, Blocks.DARK_OAK_BUTTON, Blocks.SKELETON_WALL_SKULL, "skeleton_wall_skull");
+        registry.unregister(Blocks.WITHER_SKELETON_WALL_SKULL);
+        insertAfter(registry, Blocks.SKELETON_SKULL, Blocks.WITHER_SKELETON_WALL_SKULL, "wither_skeleton_wall_skull");
+        registry.unregister(Blocks.ZOMBIE_WALL_HEAD);
+        insertAfter(registry, Blocks.WITHER_SKELETON_SKULL, Blocks.ZOMBIE_WALL_HEAD, "zombie_wall_head");
+        registry.unregister(Blocks.PLAYER_WALL_HEAD);
+        insertAfter(registry, Blocks.ZOMBIE_HEAD, Blocks.PLAYER_WALL_HEAD, "player_wall_head");
+        registry.unregister(Blocks.CREEPER_WALL_HEAD);
+        insertAfter(registry, Blocks.PLAYER_HEAD, Blocks.CREEPER_WALL_HEAD, "creeper_wall_head");
+        registry.unregister(Blocks.DRAGON_WALL_HEAD);
+        insertAfter(registry, Blocks.CREEPER_HEAD, Blocks.DRAGON_WALL_HEAD, "dragon_wall_head");
+
+        registry.unregister(Blocks.DEAD_TUBE_CORAL);
+        registry.unregister(Blocks.DEAD_BRAIN_CORAL);
+        registry.unregister(Blocks.DEAD_BUBBLE_CORAL);
+        registry.unregister(Blocks.DEAD_FIRE_CORAL);
+        registry.unregister(Blocks.DEAD_HORN_CORAL);
+
+        registry.unregister(Blocks.DEAD_TUBE_CORAL_FAN);
+        registry.unregister(Blocks.DEAD_BRAIN_CORAL_FAN);
+        registry.unregister(Blocks.DEAD_BUBBLE_CORAL_FAN);
+        registry.unregister(Blocks.DEAD_FIRE_CORAL_FAN);
+        registry.unregister(Blocks.DEAD_HORN_CORAL_FAN);
+        registry.unregister(Blocks.TUBE_CORAL_FAN);
+        registry.unregister(Blocks.BRAIN_CORAL_FAN);
+        registry.unregister(Blocks.BUBBLE_CORAL_FAN);
+        registry.unregister(Blocks.FIRE_CORAL_FAN);
+        registry.unregister(Blocks.HORN_CORAL_FAN);
+        insertAfter(registry, Blocks.HORN_CORAL_WALL_FAN, Blocks.DEAD_TUBE_CORAL_FAN, "dead_tube_coral_fan");
+        insertAfter(registry, Blocks.DEAD_TUBE_CORAL_FAN, Blocks.DEAD_BRAIN_CORAL_FAN, "dead_brain_coral_fan");
+        insertAfter(registry, Blocks.DEAD_BRAIN_CORAL_FAN, Blocks.DEAD_BUBBLE_CORAL_FAN, "dead_bubble_coral_fan");
+        insertAfter(registry, Blocks.DEAD_BUBBLE_CORAL_FAN, Blocks.DEAD_FIRE_CORAL_FAN, "dead_fire_coral_fan");
+        insertAfter(registry, Blocks.DEAD_FIRE_CORAL_FAN, Blocks.DEAD_HORN_CORAL_FAN, "dead_horn_coral_fan");
+        insertAfter(registry, Blocks.DEAD_HORN_CORAL_FAN, Blocks.TUBE_CORAL_FAN, "tube_coral_fan");
+        insertAfter(registry, Blocks.TUBE_CORAL_FAN, Blocks.BRAIN_CORAL_FAN, "brain_coral_fan");
+        insertAfter(registry, Blocks.BRAIN_CORAL_FAN, Blocks.BUBBLE_CORAL_FAN, "bubble_coral_fan");
+        insertAfter(registry, Blocks.BUBBLE_CORAL_FAN, Blocks.FIRE_CORAL_FAN, "fire_coral_fan");
+        insertAfter(registry, Blocks.FIRE_CORAL_FAN, Blocks.HORN_CORAL_FAN, "horn_coral_fan");
     }
 
     private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
@@ -783,5 +834,23 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(RecipeSerializer.CAMPFIRE_COOKING);
         registry.unregister(RecipeSerializer.STONECUTTING);
         registry.register(AddBannerPatternRecipe.SERIALIZER, registry.getNextId(), new Identifier("crafting_special_banneraddpattern"));
+    }
+
+    @Override
+    public boolean acceptBlockState(BlockState state) {
+        Block block = state.getBlock();
+        if (block == Blocks.NOTE_BLOCK) {
+            Instrument instrument = state.get(NoteBlock.INSTRUMENT);
+            if (instrument == Instrument.IRON_XYLOPHONE || instrument == Instrument.COW_BELL
+                    || instrument == Instrument.DIDGERIDOO || instrument == Instrument.BIT
+                    || instrument == Instrument.BANJO || instrument == Instrument.PLING)
+                return false;
+        }
+
+        if (block instanceof CoralBlock || block == Blocks.CONDUIT) {
+            if (!state.get(CoralParentBlock.WATERLOGGED))
+                return false;
+        }
+        return super.acceptBlockState(state);
     }
 }

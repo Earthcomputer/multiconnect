@@ -96,6 +96,13 @@ public abstract class AbstractProtocol {
     public void postEntityDataRegister(Class<? extends Entity> clazz) {
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> int getUnmodifiedId(Registry<T> registry, T value) {
+        DefaultRegistry<T> defaultRegistry = (DefaultRegistry<T>) DefaultRegistry.DEFAULT_REGISTRIES.get(registry);
+        if (defaultRegistry == null) return registry.getRawId(value);
+        return defaultRegistry.defaultIndexedEntries.getId(value);
+    }
+
     static {
         DefaultPackets.initialize();
         DefaultRegistry.initialize();

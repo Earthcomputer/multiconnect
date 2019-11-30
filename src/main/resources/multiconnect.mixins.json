@@ -19,7 +19,8 @@
     "MixinSimpleRegistry",
     "MixinInt2ObjectBiMap",
     "MixinIdList",
-    "MixinEntity"
+    "MixinEntity",
+    "MixinItemModels"
   ],
   "injectors": {
     "defaultRequire": 1
