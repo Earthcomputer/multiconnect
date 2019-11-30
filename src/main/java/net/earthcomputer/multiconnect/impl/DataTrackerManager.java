@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.impl;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
 import org.apache.commons.lang3.tuple.Pair;
@@ -27,13 +28,13 @@ public class DataTrackerManager {
      * Reregisters also happen when connecting to a new server.
      */
 
-    public static final int DEFAULT_ABSENT_ID = -1;
-
     private static Map<Class<? extends Entity>, List<TrackedData<?>>> DEFAULT_DATA = new HashMap<>();
     private static Map<Class<? extends Entity>, Integer> NEXT_IDS = new HashMap<>();
     private static Map<Class<? extends Entity>, List<Pair<TrackedData<?>, ?>>> oldTrackedData = new HashMap<>();
     private static Map<TrackedData<?>, BiConsumer<?, ?>> oldTrackedDataHandlers = new IdentityHashMap<>();
     private static boolean dirty = false;
+    private static int nextAbsentId = -1;
+    private static Set<DataTracker> trackerInstances = Collections.newSetFromMap(new WeakHashMap<>());
 
     private static final Field TRACKED_DATA_ID;
     static {
@@ -50,8 +51,12 @@ public class DataTrackerManager {
         }
     }
 
+    public static void addTrackerInstance(DataTracker instance) {
+        trackerInstances.add(instance);
+    }
+
     public static <T> TrackedData<T> createOldTrackedData(TrackedDataHandler<T> type) {
-        return type.create(DEFAULT_ABSENT_ID);
+        return type.create(-1);
     }
 
     /**
@@ -67,7 +72,7 @@ public class DataTrackerManager {
             oldTrackedData.computeIfAbsent(clazz, k -> new ArrayList<>()).add(Pair.of(data, _default));
             oldTrackedDataHandlers.put(data, handler);
         } else {
-            setId(data, DEFAULT_ABSENT_ID);
+            setId(data, nextAbsentId--);
         }
     }
 
@@ -100,7 +105,7 @@ public class DataTrackerManager {
             NEXT_IDS.put(clazz, id + 1);
             setId(data, id);
         } else {
-            setId(data, DEFAULT_ABSENT_ID);
+            setId(data, nextAbsentId--);
         }
     }
 
@@ -109,12 +114,16 @@ public class DataTrackerManager {
     }
 
     public static void reregisterAll() {
+        nextAbsentId = -1;
         NEXT_IDS.clear();
         oldTrackedData.clear();
         oldTrackedDataHandlers.clear();
         Set<Class<? extends Entity>> alreadyReregistered = new HashSet<>();
         for (Class<? extends Entity> clazz : DEFAULT_DATA.keySet()) {
             reregisterDataForClass(clazz, alreadyReregistered);
+        }
+        for (DataTracker tracker : trackerInstances) {
+            ((IDataTracker) tracker).multiconnect_recomputeEntries();
         }
         dirty = false;
     }

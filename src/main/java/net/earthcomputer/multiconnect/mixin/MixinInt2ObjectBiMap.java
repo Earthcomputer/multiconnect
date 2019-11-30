@@ -31,7 +31,7 @@ public abstract class MixinInt2ObjectBiMap<K> implements IInt2ObjectBiMap<K> {
 
         int lastIndex = index;
 
-        while (index != idealIndex) {
+        do {
             index = (index + 1) % values.length;
             if (values[index] == null)
                 break;
@@ -43,7 +43,7 @@ public abstract class MixinInt2ObjectBiMap<K> implements IInt2ObjectBiMap<K> {
                 ids[index] = 0;
                 lastIndex = index;
             }
-        }
+        } while (index != idealIndex);
 
         size--;
         if (id == nextId - 1)

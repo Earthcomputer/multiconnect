@@ -5,6 +5,9 @@ import com.google.common.collect.HashBiMap;
 import net.earthcomputer.multiconnect.impl.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.client.color.item.ItemColors;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
@@ -29,6 +32,9 @@ public abstract class AbstractProtocol {
         DefaultRegistry.restoreAll();
         DefaultRegistry.DEFAULT_REGISTRIES.keySet().forEach((registry -> modifyRegistry((ISimpleRegistry<?>) registry)));
         recomputeBlockStates();
+        IMinecraftClient imc = (IMinecraftClient) MinecraftClient.getInstance();
+        imc.setBlockColorMap(BlockColors.create());
+        imc.setItemColorMap(ItemColors.create(MinecraftClient.getInstance().getBlockColorMap()));
     }
 
     protected void modifyPacketLists() {
@@ -44,6 +50,11 @@ public abstract class AbstractProtocol {
 
     protected static <T> void insertAfter(List<T> list, T element, T toInsert) {
         list.add(list.indexOf(element) + 1, toInsert);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected static <T> void insertAfter(ISimpleRegistry<T> registry, T element, T toInsert, String id) {
+        registry.register(toInsert, ((SimpleRegistry<T>) registry).getRawId(element) + 1, new Identifier(id));
     }
 
     protected void recomputeBlockStates() {

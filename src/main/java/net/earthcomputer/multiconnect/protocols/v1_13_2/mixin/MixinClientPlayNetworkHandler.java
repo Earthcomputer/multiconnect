@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class MixinClientPlayNetworkHandler {
@@ -40,17 +41,19 @@ public abstract class MixinClientPlayNetworkHandler {
             LightUpdateS2CPacket lightPacket = new LightUpdateS2CPacket();
             @SuppressWarnings("ConstantConditions") ILightUpdatePacket iLightPacket = (ILightUpdatePacket) lightPacket;
 
-            PendingLightData lightData = PendingLightData.getInstance();
+            PendingLightData lightData = PendingLightData.getInstance(packet.getX(), packet.getZ());
 
             iLightPacket.setChunkX(packet.getX());
             iLightPacket.setChunkZ(packet.getZ());
 
-            int blockLightMask = (packet.getVerticalStripBitmask() & 0xffff) << 1;
-            int skyLightMask = packet.isFullChunk() ? 0x3ffff : world.dimension.hasSkyLight() ? blockLightMask : 0;
+            int blockLightMask = packet.getVerticalStripBitmask();
+            int skyLightMask = world.dimension.hasSkyLight() ? blockLightMask : 0;
             iLightPacket.setBlocklightMask(blockLightMask);
             iLightPacket.setSkylightMask(skyLightMask);
+            iLightPacket.setBlockLightUpdates(new ArrayList<>());
+            iLightPacket.setSkyLightUpdates(new ArrayList<>());
 
-            for (int i = 0; i < 16; i++) {
+            for (int i = 0; i < 18; i++) {
                 byte[] blockData = lightData.getBlockLight(i);
                 if (blockData != null)
                     lightPacket.getBlockLightUpdates().add(blockData);
@@ -59,7 +62,7 @@ public abstract class MixinClientPlayNetworkHandler {
                     lightPacket.getSkyLightUpdates().add(skyData);
             }
 
-            PendingLightData.setInstance(null);
+            PendingLightData.setInstance(packet.getX(), packet.getZ(), null);
 
             onLightUpdate(lightPacket);
         }

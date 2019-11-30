@@ -43,6 +43,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.SimpleRegistry;
 import net.minecraft.village.VillagerData;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Difficulty;
@@ -81,6 +82,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     private static final TrackedData<Boolean> OLD_ZOMBIE_ATTACKING = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Integer> OLD_ZOMBIE_VILLAGER_PROFESSION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> OLD_HORSE_ARMOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+
+    private static SimpleRegistry<EntityType<?>> ENTITY_REGISTRY_1_13;
 
     private static final Palette<BlockState> BLOCK_STATE_PALETTE;
     static {
@@ -135,9 +138,37 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
         if (packetClass == ChunkDataS2CPacket.class) {
             transformers.add(new TransformerByteBuf() {
+                private int chunkX, chunkZ;
+                private int intsRead = 0;
                 private boolean hasReadHeighmaps = false;
                 private boolean hasReadVerticalStripBitmask = false;
                 private int verticalStripBitmask;
+                private boolean isFullChunk;
+                private int booleansRead = 0;
+
+                @Override
+                public boolean readBoolean() {
+                    if (!isTopLevel() || booleansRead++ != 0)
+                        return super.readBoolean();
+                    isFullChunk = super.readBoolean();
+                    return isFullChunk;
+                }
+
+                @Override
+                public int readInt() {
+                    if (!isTopLevel())
+                        return super.readInt();
+                    int val = super.readInt();
+                    switch (intsRead++) {
+                        case 0:
+                            chunkX = val;
+                            break;
+                        case 1:
+                            chunkZ = val;
+                            break;
+                    }
+                    return val;
+                }
 
                 @Override
                 public CompoundTag readCompoundTag() {
@@ -176,9 +207,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                     outBuf.writerIndex(0);
 
                     PendingLightData lightData = new PendingLightData();
-                    PendingLightData.setInstance(lightData);
+                    PendingLightData.setInstance(chunkX, chunkZ, lightData);
 
-                    for (int sectionY = 0; sectionY < 16; sectionY++) {
+                    for (int sectionY = 0; sectionY < 18; sectionY++) {
                         if ((verticalStripBitmask & (1 << sectionY)) != 0) {
                             outBuf.writeShort(0); // non-empty block count
                             tempContainer.fromPacket(inBuf);
@@ -186,12 +217,27 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                             byte[] light = new byte[16 * 16 * 16 / 2];
                             inBuf.readBytes(light);
                             lightData.setBlockLight(sectionY, light);
+                            // since this thread is async, this code may be run before the join game packet is
+                            // processed, and therefore world would be null
+                            while (MinecraftClient.getInstance().world == null) {
+                                try {
+                                    Thread.sleep(1);
+                                } catch (InterruptedException e) {
+                                    return this;
+                                }
+                            }
                             if (MinecraftClient.getInstance().world.dimension.hasSkyLight()) {
                                 light = new byte[16 * 16 * 16 / 2];
                                 inBuf.readBytes(light);
                                 lightData.setSkyLight(sectionY, light);
                             }
                         }
+                    }
+
+                    // biomes
+                    if (isFullChunk) {
+                        for (int i = 0; i < 256; i++)
+                            outBuf.writeInt(inBuf.readInt());
                     }
                     return this;
                 }
@@ -268,12 +314,58 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         else if (packetClass == EntitySpawnS2CPacket.class) {
             transformers.add(new TransformerByteBuf() {
                 private int varIntsRead = 0;
+                private double x, y, z;
+                private byte pitch, yaw;
+                private int entityData;
+                private int doublesRead, bytesRead, intsRead;
+
+                @Override
+                public byte readByte() {
+                    if (!isTopLevel())
+                        return super.readByte();
+                    switch (bytesRead++) {
+                        case 0:
+                            return pitch;
+                        case 1:
+                            return yaw;
+                    }
+                    return super.readByte();
+                }
+
+                @Override
+                public int readInt() {
+                    if (!isTopLevel() || intsRead++ != 0)
+                        return super.readInt();
+                    return entityData;
+                }
+
+                @Override
+                public double readDouble() {
+                    if (!isTopLevel())
+                        return super.readDouble();
+                    switch (doublesRead++) {
+                        case 0:
+                            return x;
+                        case 1:
+                            return y;
+                        case 2:
+                            return z;
+                    }
+                    return super.readDouble();
+                }
 
                 @Override
                 public int readVarInt() {
                     if (!isTopLevel() || varIntsRead++ != 1)
                         return super.readVarInt();
-                    return super.readByte() & 0xff;
+                    int typeId = super.readByte() & 0xff;
+                    x = super.readDouble();
+                    y = super.readDouble();
+                    z = super.readDouble();
+                    pitch = super.readByte();
+                    yaw = super.readByte();
+                    entityData = super.readInt();
+                    return Registry.ENTITY_TYPE.getRawId(mapObjectId(typeId, entityData));
                 }
             });
         }
@@ -424,6 +516,85 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         super.postEntityDataRegister(clazz);
     }
 
+    private static EntityType<?> mapObjectId(int id, int entityData) {
+        switch (id) {
+            case 10:
+                switch (entityData) {
+                    case 1:
+                        return EntityType.CHEST_MINECART;
+                    case 2:
+                        return EntityType.FURNACE_MINECART;
+                    case 3:
+                        return EntityType.TNT_MINECART;
+                    case 4:
+                        return EntityType.SPAWNER_MINECART;
+                    case 5:
+                        return EntityType.HOPPER_MINECART;
+                    case 6:
+                        return EntityType.COMMAND_BLOCK_MINECART;
+                    case 0:
+                    default:
+                        return EntityType.MINECART;
+                }
+            case 90:
+                return EntityType.FISHING_BOBBER;
+            case 60:
+                return EntityType.ARROW;
+            case 91:
+                return EntityType.SPECTRAL_ARROW;
+            case 94:
+                return EntityType.TRIDENT;
+            case 61:
+                return EntityType.SNOWBALL;
+            case 68:
+                return EntityType.LLAMA_SPIT;
+            case 71:
+                return EntityType.ITEM_FRAME;
+            case 77:
+                return EntityType.LEASH_KNOT;
+            case 65:
+                return EntityType.ENDER_PEARL;
+            case 72:
+                return EntityType.EYE_OF_ENDER;
+            case 76:
+                return EntityType.FIREWORK_ROCKET;
+            case 63:
+                return EntityType.FIREBALL;
+            case 93:
+                return EntityType.DRAGON_FIREBALL;
+            case 64:
+                return EntityType.SMALL_FIREBALL;
+            case 66:
+                return EntityType.WITHER_SKULL;
+            case 67:
+                return EntityType.SHULKER_BULLET;
+            case 62:
+                return EntityType.EGG;
+            case 79:
+                return EntityType.EVOKER_FANGS;
+            case 73:
+                return EntityType.POTION;
+            case 75:
+                return EntityType.EXPERIENCE_BOTTLE;
+            case 1:
+                return EntityType.BOAT;
+            case 50:
+                return EntityType.TNT;
+            case 78:
+                return EntityType.ARMOR_STAND;
+            case 51:
+                return EntityType.END_CRYSTAL;
+            case 2:
+                return EntityType.ITEM;
+            case 70:
+                return EntityType.FALLING_BLOCK;
+            case 3:
+                return EntityType.AREA_EFFECT_CLOUD;
+            default:
+                return ENTITY_REGISTRY_1_13.get(id);
+        }
+    }
+
     private static VillagerProfession getVillagerProfession(int id) {
         switch (id) {
             case 0:
@@ -568,6 +739,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(EntityType.RAVAGER);
         registry.unregister(EntityType.TRADER_LLAMA);
         registry.unregister(EntityType.WANDERING_TRADER);
+        registry.unregister(EntityType.TRIDENT);
+        insertAfter(registry, EntityType.POTION, EntityType.TRIDENT, "trident");
+        ENTITY_REGISTRY_1_13 = registry.copy();
     }
 
     private void modifyBiomeRegistry(ISimpleRegistry<Biome> registry) {

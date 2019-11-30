@@ -82,4 +82,13 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     public void addUnregisterListener(Consumer<T> listener) {
         unregisterListeners.add(listener);
     }
+
+    @Override
+    public SimpleRegistry<T> copy() {
+        SimpleRegistry<T> newRegistry = new SimpleRegistry<>();
+        for (T t : indexedEntries) {
+            newRegistry.set(indexedEntries.getId(t), entries.inverse().get(t), t);
+        }
+        return newRegistry;
+    }
 }
