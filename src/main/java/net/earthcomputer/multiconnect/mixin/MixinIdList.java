@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Mixin(IdList.class)
 public class MixinIdList<T> implements IIdList {
@@ -21,5 +22,10 @@ public class MixinIdList<T> implements IIdList {
         nextId = 0;
         idMap.clear();
         list.clear();
+    }
+
+    @Override
+    public Iterable<Integer> ids() {
+        return IntStream.range(0, nextId).filter(i -> list.get(i) != null).boxed()::iterator;
     }
 }

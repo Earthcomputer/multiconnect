@@ -20,7 +20,9 @@
     "MixinInt2ObjectBiMap",
     "MixinIdList",
     "MixinEntity",
-    "MixinItemModels"
+    "MixinItemModels",
+    "MixinBlockColors",
+    "MixinItemColors"
   ],
   "injectors": {
     "defaultRequire": 1

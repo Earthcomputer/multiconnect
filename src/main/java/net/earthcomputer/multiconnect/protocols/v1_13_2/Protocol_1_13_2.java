@@ -777,6 +777,11 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(Items.LEATHER_HORSE_ARMOR);
         registry.unregister(Items.SUSPICIOUS_STEW);
         registry.unregister(Items.SWEET_BERRIES);
+        registry.unregister(Items.FLOWER_BANNER_PATTERN);
+        registry.unregister(Items.CREEPER_BANNER_PATTERN);
+        registry.unregister(Items.SKULL_BANNER_PATTERN);
+        registry.unregister(Items.MOJANG_BANNER_PATTERN);
+        registry.unregister(Items.GLOBE_BANNER_PATTERN);
     }
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {

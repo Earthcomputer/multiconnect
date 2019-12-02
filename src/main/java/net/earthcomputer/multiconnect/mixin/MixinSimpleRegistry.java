@@ -41,6 +41,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     @Override
     public abstract BiMap<Identifier, T> getEntries();
 
+    @Unique private List<Consumer<T>> registerListeners = new ArrayList<>(0);
     @Unique private List<Consumer<T>> unregisterListeners = new ArrayList<>(0);
 
     @Override
@@ -53,6 +54,8 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         }
         setNextId(getNextId() + 1);
         set(id, name, t);
+
+        registerListeners.forEach(listener -> listener.accept(t));
     }
 
     @Override
@@ -76,6 +79,11 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         randomEntries = null;
 
         unregisterListeners.forEach(listener -> listener.accept(t));
+    }
+
+    @Override
+    public void addRegisterListener(Consumer<T> listener) {
+        registerListeners.add(listener);
     }
 
     @Override

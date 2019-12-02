@@ -21,6 +21,8 @@ public interface ISimpleRegistry<T> {
 
     void unregister(T t);
 
+    void addRegisterListener(Consumer<T> listener);
+
     void addUnregisterListener(Consumer<T> listener);
 
     SimpleRegistry<T> copy();

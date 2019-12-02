@@ -6,16 +6,20 @@ import net.earthcomputer.multiconnect.impl.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.color.block.BlockColorProvider;
 import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.client.color.item.ItemColorProvider;
 import net.minecraft.client.color.item.ItemColors;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.SpawnEggItem;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
+import net.minecraft.util.IdList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Int2ObjectBiMap;
 import net.minecraft.util.registry.Registry;
@@ -32,9 +36,26 @@ public abstract class AbstractProtocol {
         DefaultRegistry.restoreAll();
         DefaultRegistry.DEFAULT_REGISTRIES.keySet().forEach((registry -> modifyRegistry((ISimpleRegistry<?>) registry)));
         recomputeBlockStates();
-        IMinecraftClient imc = (IMinecraftClient) MinecraftClient.getInstance();
-        imc.setBlockColorMap(BlockColors.create());
-        imc.setItemColorMap(ItemColors.create(MinecraftClient.getInstance().getBlockColorMap()));
+        {
+            IdList<BlockColorProvider> srcProviders = ((IBlockColors) BlockColors.create()).getProviders();
+            IdList<BlockColorProvider> dstProviders = ((IBlockColors) MinecraftClient.getInstance().getBlockColorMap()).getProviders();
+            ((IIdList) dstProviders).clear();
+            for (int id : ((IIdList) srcProviders).ids()) {
+                if (id != 0)
+                    dstProviders.set(srcProviders.get(id), id);
+            }
+        }
+        {
+            IdList<ItemColorProvider> srcProviders = ((IItemColors) ItemColors.create(MinecraftClient.getInstance().getBlockColorMap())).getProviders();
+            IdList<ItemColorProvider> dstProviders = ((IItemColors) ((IMinecraftClient) MinecraftClient.getInstance()).getItemColorMap()).getProviders();
+            ((IIdList) dstProviders).clear();
+            for (int id : ((IIdList) srcProviders).ids()) {
+                if (id != 0)
+                    dstProviders.set(srcProviders.get(id), id);
+            }
+        }
+        ((IMinecraftClient) MinecraftClient.getInstance()).callInitializeSearchableContainers();
+        ((IMinecraftClient) MinecraftClient.getInstance()).getSearchManager().apply(MinecraftClient.getInstance().getResourceManager());
     }
 
     protected void modifyPacketLists() {
@@ -181,10 +202,50 @@ public abstract class AbstractProtocol {
             DEFAULT_SPAWN_EGG_ITEMS.putAll(getSpawnEggItems());
 
             //noinspection unchecked
+            ((ISimpleRegistry<Block>) Registry.BLOCK).addRegisterListener(block -> {
+                if (DEFAULT_BLOCK_ITEMS.containsKey(block)) {
+                    Item item = DEFAULT_BLOCK_ITEMS.get(block);
+                    Item.BLOCK_ITEMS.put(block, item);
+                    Block prevBlock = null;
+                    for (int id = Registry.BLOCK.getRawId(block) - 1; id >= 0; id--) {
+                        Block b = Registry.BLOCK.get(id);
+                        if (Item.BLOCK_ITEMS.containsKey(b) && ((BlockItem) Item.BLOCK_ITEMS.get(b)).getBlock() == b) {
+                            prevBlock = b;
+                            break;
+                        }
+                    }
+                    Identifier name = DEFAULT_REGISTRIES.get(Registry.ITEM).defaultEntries.inverse().get(item);
+                    if (prevBlock == null)
+                        // noinspection unchecked
+                        ((ISimpleRegistry<Item>) Registry.ITEM).register(item, 0, name);
+                    else
+                        // noinspection unchecked
+                        insertAfter((ISimpleRegistry<Item>) Registry.ITEM, Item.BLOCK_ITEMS.get(prevBlock), item, name.toString());
+                }
+            });
+            //noinspection unchecked
             ((ISimpleRegistry<Block>) Registry.BLOCK).addUnregisterListener(block -> {
                 if (Item.BLOCK_ITEMS.containsKey(block)) {
                     //noinspection unchecked
                     ((ISimpleRegistry<Item>) Registry.ITEM).unregister(Item.BLOCK_ITEMS.remove(block));
+                }
+            });
+            //noinspection unchecked
+            ((ISimpleRegistry<EntityType<?>>) Registry.ENTITY_TYPE).addRegisterListener(entityType -> {
+                if (DEFAULT_SPAWN_EGG_ITEMS.containsKey(entityType)) {
+                    SpawnEggItem item = DEFAULT_SPAWN_EGG_ITEMS.get(entityType);
+                    //noinspection unchecked
+                    DefaultRegistry<Item> defaultItems = (DefaultRegistry<Item>) DEFAULT_REGISTRIES.get(Registry.ITEM);
+                    Item prevItem = null;
+                    for (int id = defaultItems.defaultIndexedEntries.getId(item) - 1; id >= 0; id--) {
+                        Item it = defaultItems.defaultIndexedEntries.get(id);
+                        if (Registry.ITEM.containsId(defaultItems.defaultEntries.inverse().get(it))) {
+                            prevItem = it;
+                            break;
+                        }
+                    }
+                    //noinspection unchecked
+                    insertAfter((ISimpleRegistry<Item>) Registry.ITEM, prevItem, item, defaultItems.defaultEntries.inverse().get(item).toString());
                 }
             });
             //noinspection unchecked
