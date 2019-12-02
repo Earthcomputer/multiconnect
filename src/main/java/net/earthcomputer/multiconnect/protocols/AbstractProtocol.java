@@ -242,6 +242,7 @@ public abstract class AbstractProtocol {
             DEFAULT_REGISTRIES.put(Registry.CONTAINER, new DefaultRegistry<>(Registry.CONTAINER));
             DEFAULT_REGISTRIES.put(Registry.STATUS_EFFECT, new DefaultRegistry<>(Registry.STATUS_EFFECT));
             DEFAULT_REGISTRIES.put(Registry.RECIPE_SERIALIZER, new DefaultRegistry<>(Registry.RECIPE_SERIALIZER));
+            DEFAULT_REGISTRIES.put(Registry.SOUND_EVENT, new DefaultRegistry<>(Registry.SOUND_EVENT));
 
             DEFAULT_BLOCK_ITEMS.putAll(Item.BLOCK_ITEMS);
             DEFAULT_SPAWN_EGG_ITEMS.putAll(getSpawnEggItems());
