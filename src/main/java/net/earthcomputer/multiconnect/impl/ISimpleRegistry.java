@@ -17,13 +17,23 @@ public interface ISimpleRegistry<T> {
 
     BiMap<Identifier, T> getEntries();
 
-    void register(T t, int id, Identifier name);
+    default void register(T t, int id, Identifier name) {
+        register(t, id, name, true);
+    }
 
-    void unregister(T t);
+    void register(T t, int id, Identifier name, boolean sideEffects);
+
+    default void unregister(T t) {
+        unregister(t, true);
+    }
+
+    void unregister(T t, boolean sideEffects);
 
     void addRegisterListener(Consumer<T> listener);
 
     void addUnregisterListener(Consumer<T> listener);
 
     SimpleRegistry<T> copy();
+
+    void dump();
 }

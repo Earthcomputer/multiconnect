@@ -661,6 +661,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(Blocks.LECTERN);
         registry.unregister(Blocks.LOOM);
         registry.unregister(Blocks.SCAFFOLDING);
+        rename(registry, Blocks.OAK_SIGN, "sign");
+        rename(registry, Blocks.OAK_WALL_SIGN, "wall_sign");
         registry.unregister(Blocks.SPRUCE_SIGN);
         registry.unregister(Blocks.SPRUCE_WALL_SIGN);
         registry.unregister(Blocks.BIRCH_SIGN);
@@ -740,12 +742,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(Blocks.DRAGON_WALL_HEAD);
         insertAfter(registry, Blocks.CREEPER_HEAD, Blocks.DRAGON_WALL_HEAD, "dragon_wall_head");
 
-        registry.unregister(Blocks.DEAD_TUBE_CORAL);
-        registry.unregister(Blocks.DEAD_BRAIN_CORAL);
-        registry.unregister(Blocks.DEAD_BUBBLE_CORAL);
-        registry.unregister(Blocks.DEAD_FIRE_CORAL);
-        registry.unregister(Blocks.DEAD_HORN_CORAL);
-
         registry.unregister(Blocks.DEAD_TUBE_CORAL_FAN);
         registry.unregister(Blocks.DEAD_BRAIN_CORAL_FAN);
         registry.unregister(Blocks.DEAD_BUBBLE_CORAL_FAN);
@@ -782,6 +778,10 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(Items.SKULL_BANNER_PATTERN);
         registry.unregister(Items.MOJANG_BANNER_PATTERN);
         registry.unregister(Items.GLOBE_BANNER_PATTERN);
+        rename(registry, Items.OAK_SIGN, "sign");
+        rename(registry, Items.RED_DYE, "rose_red");
+        rename(registry, Items.GREEN_DYE, "cactus_green");
+        rename(registry, Items.YELLOW_DYE, "dandelion_yellow");
     }
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
@@ -852,10 +852,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 return false;
         }
 
-        if (block instanceof CoralBlock || block == Blocks.CONDUIT) {
-            if (!state.get(CoralParentBlock.WATERLOGGED))
-                return false;
-        }
         return super.acceptBlockState(state);
     }
 }

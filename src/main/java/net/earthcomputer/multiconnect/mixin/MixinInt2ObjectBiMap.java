@@ -19,6 +19,8 @@ public abstract class MixinInt2ObjectBiMap<K> implements IInt2ObjectBiMap<K> {
 
     @Override
     public void remove(K k) {
+        if (k == null) throw new NullPointerException();
+
         int idealIndex = getIdealIndex(k);
         int index = findIndex(k, idealIndex);
         if (index == -1)

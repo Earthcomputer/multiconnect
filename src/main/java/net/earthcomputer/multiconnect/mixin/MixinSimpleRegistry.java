@@ -22,6 +22,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     @Shadow @Final protected Int2ObjectBiMap<T> indexedEntries;
     @Shadow @Final protected BiMap<Identifier, T> entries;
     @Shadow protected Object[] randomEntries;
+    @Shadow private int nextId;
 
     @Shadow public abstract <V extends T> V set(int int_1, Identifier identifier_1, V object_1);
 
@@ -45,7 +46,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     @Unique private List<Consumer<T>> unregisterListeners = new ArrayList<>(0);
 
     @Override
-    public void register(T t, int id, Identifier name) {
+    public void register(T t, int id, Identifier name, boolean sideEffects) {
         for (int remapId = getNextId(); remapId > id; remapId--) {
             T toRemap = indexedEntries.get(remapId - 1);
             //noinspection unchecked
@@ -55,11 +56,12 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         setNextId(getNextId() + 1);
         set(id, name, t);
 
-        registerListeners.forEach(listener -> listener.accept(t));
+        if (sideEffects)
+            registerListeners.forEach(listener -> listener.accept(t));
     }
 
     @Override
-    public void unregister(T t) {
+    public void unregister(T t, boolean sideEffects) {
         if (!entries.containsValue(t))
             return;
 
@@ -68,7 +70,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         ((IInt2ObjectBiMap<T>) indexedEntries).remove(t);
         entries.inverse().remove(t);
 
-        for (int remapId = id; remapId < getNextId(); remapId++) {
+        for (int remapId = id; remapId < getNextId() - 1; remapId++) {
             T toRemap = indexedEntries.get(remapId + 1);
             //noinspection unchecked
             ((IInt2ObjectBiMap<T>) indexedEntries).remove(toRemap);
@@ -78,7 +80,8 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
 
         randomEntries = null;
 
-        unregisterListeners.forEach(listener -> listener.accept(t));
+        if (sideEffects)
+            unregisterListeners.forEach(listener -> listener.accept(t));
     }
 
     @Override
@@ -98,5 +101,16 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
             newRegistry.set(indexedEntries.getId(t), entries.inverse().get(t), t);
         }
         return newRegistry;
+    }
+
+    @Override
+    public void dump() {
+        for (int id = 0; id < nextId; id++) {
+            try {
+                System.out.println(id + ": " + entries.inverse().get(indexedEntries.get(id)));
+            } catch (Throwable t) {
+                System.out.println(id + ": ERROR: " + t);
+            }
+        }
     }
 }

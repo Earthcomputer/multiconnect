@@ -13,20 +13,22 @@ import net.minecraft.client.color.item.ItemColors;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
-import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.SpawnEggItem;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
+import net.minecraft.state.property.Property;
 import net.minecraft.util.IdList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Int2ObjectBiMap;
+import net.minecraft.util.SystemUtil;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.SimpleRegistry;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class AbstractProtocol {
 
@@ -124,6 +126,49 @@ public abstract class AbstractProtocol {
         return defaultRegistry.defaultIndexedEntries.getId(value);
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> void rename(ISimpleRegistry<T> registry, T value, String newName) {
+        int id = ((SimpleRegistry<T>) registry).getRawId(value);
+        registry.unregister(value);
+        registry.register(value, id, new Identifier(newName));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> void reregister(ISimpleRegistry<T> registry, T value) {
+        if (registry.getEntries().containsValue(value))
+            return;
+
+        //noinspection SuspiciousMethodCalls
+        DefaultRegistry<T> defaultRegistry = (DefaultRegistry<T>) DefaultRegistry.DEFAULT_REGISTRIES.get(registry);
+        T prevValue = null;
+        for (int id = defaultRegistry.defaultIndexedEntries.getId(value) - 1; id >= 0; id--) {
+            T val = defaultRegistry.defaultIndexedEntries.get(id);
+            if (registry.getEntries().containsValue(val)) {
+                prevValue = val;
+                break;
+            }
+        }
+
+        insertAfter(registry, prevValue, value, defaultRegistry.defaultEntries.inverse().get(value).toString());
+    }
+
+    protected static void dumpBlockStates() {
+        for (int id : ((IIdList) Block.STATE_IDS).ids()) {
+            BlockState state = Block.STATE_IDS.get(id);
+            assert state != null;
+            StringBuilder sb = new StringBuilder().append(id).append(": ").append(Registry.BLOCK.getId(state.getBlock()));
+            if (!state.getProperties().isEmpty()) {
+                sb.append("[")
+                        .append(state.getProperties().stream()
+                                .sorted(Comparator.comparing(Property::getName))
+                                .map(p -> p.getName() + "=" + SystemUtil.getValueAsString(p, state.get(p)))
+                                .collect(Collectors.joining(",")))
+                        .append("]");
+            }
+            System.out.println(sb);
+        }
+    }
+
     static {
         DefaultPackets.initialize();
         DefaultRegistry.initialize();
@@ -170,7 +215,7 @@ public abstract class AbstractProtocol {
             iregistry.setNextId(defaultNextId);
         }
 
-        public static Map<Registry<?>, DefaultRegistry<?>> DEFAULT_REGISTRIES = new HashMap<>();
+        public static Map<Registry<?>, DefaultRegistry<?>> DEFAULT_REGISTRIES = new LinkedHashMap<>();
 
         @SuppressWarnings("unchecked")
         public static <T> void restore(Registry<?> registry, DefaultRegistry<?> defaultRegistry) {
@@ -206,21 +251,8 @@ public abstract class AbstractProtocol {
                 if (DEFAULT_BLOCK_ITEMS.containsKey(block)) {
                     Item item = DEFAULT_BLOCK_ITEMS.get(block);
                     Item.BLOCK_ITEMS.put(block, item);
-                    Block prevBlock = null;
-                    for (int id = Registry.BLOCK.getRawId(block) - 1; id >= 0; id--) {
-                        Block b = Registry.BLOCK.get(id);
-                        if (Item.BLOCK_ITEMS.containsKey(b) && ((BlockItem) Item.BLOCK_ITEMS.get(b)).getBlock() == b) {
-                            prevBlock = b;
-                            break;
-                        }
-                    }
-                    Identifier name = DEFAULT_REGISTRIES.get(Registry.ITEM).defaultEntries.inverse().get(item);
-                    if (prevBlock == null)
-                        // noinspection unchecked
-                        ((ISimpleRegistry<Item>) Registry.ITEM).register(item, 0, name);
-                    else
-                        // noinspection unchecked
-                        insertAfter((ISimpleRegistry<Item>) Registry.ITEM, Item.BLOCK_ITEMS.get(prevBlock), item, name.toString());
+                    //noinspection unchecked
+                    reregister((ISimpleRegistry<Item>) Registry.ITEM, item);
                 }
             });
             //noinspection unchecked
@@ -235,17 +267,7 @@ public abstract class AbstractProtocol {
                 if (DEFAULT_SPAWN_EGG_ITEMS.containsKey(entityType)) {
                     SpawnEggItem item = DEFAULT_SPAWN_EGG_ITEMS.get(entityType);
                     //noinspection unchecked
-                    DefaultRegistry<Item> defaultItems = (DefaultRegistry<Item>) DEFAULT_REGISTRIES.get(Registry.ITEM);
-                    Item prevItem = null;
-                    for (int id = defaultItems.defaultIndexedEntries.getId(item) - 1; id >= 0; id--) {
-                        Item it = defaultItems.defaultIndexedEntries.get(id);
-                        if (Registry.ITEM.containsId(defaultItems.defaultEntries.inverse().get(it))) {
-                            prevItem = it;
-                            break;
-                        }
-                    }
-                    //noinspection unchecked
-                    insertAfter((ISimpleRegistry<Item>) Registry.ITEM, prevItem, item, defaultItems.defaultEntries.inverse().get(item).toString());
+                    reregister((ISimpleRegistry<Item>) Registry.ITEM, item);
                 }
             });
             //noinspection unchecked
