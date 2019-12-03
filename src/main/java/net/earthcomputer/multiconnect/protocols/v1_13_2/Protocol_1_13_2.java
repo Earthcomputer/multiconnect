@@ -822,7 +822,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(EntityType.TRADER_LLAMA);
         registry.unregister(EntityType.WANDERING_TRADER);
         registry.unregister(EntityType.TRIDENT);
-        insertAfter(registry, EntityType.POTION, EntityType.TRIDENT, "trident");
+        insertAfter(registry, EntityType.FISHING_BOBBER, EntityType.TRIDENT, "trident");
         ENTITY_REGISTRY_1_13 = registry.copy();
     }
 
