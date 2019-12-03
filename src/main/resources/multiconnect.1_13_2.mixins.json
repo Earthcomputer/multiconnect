@@ -9,7 +9,9 @@
     "MixinClientPlayNetworkHandler",
     "MixinLightUpdatePacket",
     "MixinSynchronizeRecipesPacket",
-    "MixinRegistryTagManager"
+    "MixinRegistryTagManager",
+    "MixinOtherClientPlayerEntity",
+    "MixinPlayerEntity"
   ],
   "injectors": {
     "defaultRequire": 1
