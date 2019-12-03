@@ -6,6 +6,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.util.PacketByteBuf;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -54,5 +55,11 @@ public class MixinDataTracker implements IDataTracker {
         for (DataTracker.Entry entry : entryList) {
             entries.put(entry.getData().getId(), entry);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> TrackedData<T> multiconnect_getActualTrackedData(TrackedData<T> data) {
+        return (TrackedData<T>) entries.get(data.getId()).getData();
     }
 }

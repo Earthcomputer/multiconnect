@@ -105,6 +105,10 @@ public abstract class AbstractProtocol {
     public void transformPacketServerbound(Class<? extends Packet<?>> packetClass, List<TransformerByteBuf> transformers) {
     }
 
+    public boolean onSendPacket(Packet<?> packet) {
+        return true;
+    }
+
     public void modifyRegistry(ISimpleRegistry<?> registry) {
     }
 

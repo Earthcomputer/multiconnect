@@ -159,6 +159,7 @@ public class DataTrackerManager {
     }
 
     public static void handleOldTrackedData(Entity entity, TrackedData<?> data) {
+        data = ((IDataTracker) entity.getDataTracker()).multiconnect_getActualTrackedData(data);
         BiConsumer<?, ?> handler = oldTrackedDataHandlers.get(data);
         if (handler != null)
             doHandleTrackedData(handler, entity, entity.getDataTracker().get(data));

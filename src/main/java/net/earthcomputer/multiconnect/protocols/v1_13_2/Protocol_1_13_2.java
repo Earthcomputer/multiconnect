@@ -42,6 +42,7 @@ import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.TagHelper;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.SimpleRegistry;
@@ -462,6 +463,15 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 return this;
             }
         });
+    }
+
+    @Override
+    public boolean onSendPacket(Packet<?> packet) {
+        if (!super.onSendPacket(packet))
+            return false;
+        if (packet instanceof PlayerMoveC2SPacket || packet instanceof VehicleMoveC2SPacket)
+            updateCameraPosition();
+        return true;
     }
 
     @Override
@@ -1476,5 +1486,11 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         }
 
         return super.acceptBlockState(state);
+    }
+
+    public static void updateCameraPosition() {
+        assert MinecraftClient.getInstance().getNetworkHandler() != null;
+        ChunkSectionPos chunkPos = ChunkSectionPos.from(MinecraftClient.getInstance().player);
+        MinecraftClient.getInstance().getNetworkHandler().handleChunkRenderDistanceCenter(new ChunkRenderDistanceCenterS2CPacket(chunkPos.getChunkX(), chunkPos.getChunkZ()));
     }
 }
