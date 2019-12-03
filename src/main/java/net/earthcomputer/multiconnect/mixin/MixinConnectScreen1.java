@@ -37,6 +37,7 @@ public class MixinConnectScreen1 {
         IConnectScreen connectScreen = (IConnectScreen) screen;
 
         ClientConnection connection = ClientConnection.connect(InetAddress.getByName(ConnectionInfo.ip), ConnectionInfo.port, false);
+        connectScreen.multiconnect_setVersionRequestConnection(connection);
         GetProtocolPacketListener listener = new GetProtocolPacketListener(connection);
         connection.setPacketListener(listener);
 
@@ -61,7 +62,9 @@ public class MixinConnectScreen1 {
             ci.cancel();
         }
 
-        LogManager.getLogger("assets/multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion);
+        connectScreen.multiconnect_setVersionRequestConnection(null);
+
+        LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion);
     }
 
     @Redirect(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;)V", ordinal = 0))

@@ -32,8 +32,10 @@ public class GetProtocolPacketListener implements ClientQueryPacketListener {
 
     @Override
     public void onDisconnected(Text reason) {
-        completed = true;
-        failed = true;
+        if (!completed) {
+            completed = true;
+            failed = true;
+        }
     }
 
     @Override
