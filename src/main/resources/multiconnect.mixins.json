@@ -22,7 +22,8 @@
     "MixinEntity",
     "MixinItemModels",
     "MixinBlockColors",
-    "MixinItemColors"
+    "MixinItemColors",
+    "MixinParticleManager"
   ],
   "injectors": {
     "defaultRequire": 1

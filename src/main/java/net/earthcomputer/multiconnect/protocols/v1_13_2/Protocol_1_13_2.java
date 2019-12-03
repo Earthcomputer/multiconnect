@@ -396,6 +396,17 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 }
             });
         }
+
+        transformers.add(new TransformerByteBuf() {
+            @Override
+            public BlockPos readBlockPos() {
+                long val = getNotTopLevel(super::readLong);
+                int x = (int) (val >> 38);
+                int y = (int) (val << 26 >> 52);
+                int z = (int) (val << 38 >> 38);
+                return new BlockPos(x, y, z);
+            }
+        });
     }
 
     @Override
@@ -440,6 +451,17 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 }
             });
         }
+
+        transformers.add(new TransformerByteBuf() {
+            @Override
+            public PacketByteBuf writeBlockPos(BlockPos pos) {
+                long val = (((long) pos.getX() & 0x3FFFFFF) << 38)
+                        | (((long) pos.getY() & 0xFFF) << 26)
+                        | ((long) pos.getZ() & 0x3FFFFFF);
+                doNotTopLevel(() -> super.writeLong(val));
+                return this;
+            }
+        });
     }
 
     @Override

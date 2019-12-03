@@ -20,6 +20,7 @@ import net.minecraft.util.math.ChunkSectionPos;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.function.Supplier;
 
 public class TransformerByteBuf extends PacketByteBuf {
 
@@ -47,12 +48,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             val = ((PacketByteBuf) getDelegate()).readVarInt();
         } else {
-            reentrantDepth++;
-            try {
-                val = super.readVarInt();
-            } finally {
-                reentrantDepth--;
-            }
+            val = getNotTopLevel(super::readVarInt);
         }
 
         if (packetClass == null) {
@@ -79,12 +75,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeVarInt(val);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeVarInt(val);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeVarInt(val));
         }
 
         if (packetClass == null) {
@@ -111,12 +102,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeByteArray(bytes);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeByteArray(bytes);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeByteArray(bytes));
         }
         return this;
     }
@@ -125,12 +111,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readByteArray();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readByteArray();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readByteArray);
         }
     }
 
@@ -138,12 +119,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readByteArray(maxSize);
         } else {
-            reentrantDepth++;
-            try {
-                return super.readByteArray(maxSize);
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(() -> super.readByteArray(maxSize));
         }
     }
 
@@ -151,12 +127,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeIntArray(ints);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeIntArray(ints);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeIntArray(ints));
         }
         return this;
     }
@@ -165,12 +136,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readIntArray();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readIntArray();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readIntArray);
         }
     }
 
@@ -178,12 +144,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readIntArray(maxSize);
         } else {
-            reentrantDepth++;
-            try {
-                return super.readIntArray(maxSize);
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(() -> super.readIntArray(maxSize));
         }
     }
 
@@ -191,12 +152,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeLongArray(longs);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeLongArray(longs);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeLongArray(longs));
         }
         return this;
     }
@@ -206,12 +162,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readLongArray(dest);
         } else {
-            reentrantDepth++;
-            try {
-                return super.readLongArray(dest);
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(() -> super.readLongArray(dest));
         }
     }
 
@@ -220,12 +171,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readLongArray(dest, maxSize);
         } else {
-            reentrantDepth++;
-            try {
-                return super.readLongArray(dest, maxSize);
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(() -> super.readLongArray(dest, maxSize));
         }
     }
 
@@ -233,12 +179,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readBlockPos();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readBlockPos();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readBlockPos);
         }
     }
 
@@ -246,12 +187,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeBlockPos(pos);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeBlockPos(pos);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeBlockPos(pos));
         }
         return this;
     }
@@ -261,12 +197,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readChunkSectionPos();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readChunkSectionPos();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readChunkSectionPos);
         }
     }
 
@@ -274,12 +205,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readText();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readText();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readText);
         }
     }
 
@@ -287,12 +213,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeText(text);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeText(text);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeText(text));
         }
         return this;
     }
@@ -301,12 +222,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readEnumConstant(clazz);
         } else {
-            reentrantDepth++;
-            try {
-                return super.readEnumConstant(clazz);
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(() -> super.readEnumConstant(clazz));
         }
     }
 
@@ -314,12 +230,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeEnumConstant(val);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeEnumConstant(val);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeEnumConstant(val));
         }
         return this;
     }
@@ -328,12 +239,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readVarLong();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readVarLong();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readVarLong);
         }
     }
 
@@ -341,12 +247,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeUuid(uuid);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeUuid(uuid);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeUuid(uuid));
         }
         return this;
     }
@@ -355,12 +256,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readUuid();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readUuid();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readUuid);
         }
     }
 
@@ -368,12 +264,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeVarLong(val);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeVarLong(val);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeVarLong(val));
         }
         return this;
     }
@@ -382,12 +273,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeCompoundTag(nbt);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeCompoundTag(nbt);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeCompoundTag(nbt));
         }
         return this;
     }
@@ -396,12 +282,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readCompoundTag();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readCompoundTag();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readCompoundTag);
         }
     }
 
@@ -409,12 +290,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeItemStack(stack);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeItemStack(stack);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeItemStack(stack));
         }
         return this;
     }
@@ -423,12 +299,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readItemStack();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readItemStack();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readItemStack);
         }
     }
 
@@ -437,12 +308,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readString();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readString();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readString);
         }
     }
 
@@ -450,12 +316,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readString(maxLen);
         } else {
-            reentrantDepth++;
-            try {
-                return super.readString(maxLen);
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(() -> super.readString(maxLen));
         }
     }
 
@@ -463,12 +324,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeString(str);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeString(str);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeString(str));
         }
         return this;
     }
@@ -477,12 +333,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeString(string_1, int_1);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeString(string_1, int_1);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeString(string_1, int_1));
         }
         return this;
     }
@@ -491,12 +342,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readIdentifier();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readIdentifier();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readIdentifier);
         }
     }
 
@@ -504,12 +350,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeIdentifier(id);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeIdentifier(id);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeIdentifier(id));
         }
         return this;
     }
@@ -518,12 +359,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readDate();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readDate();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readDate);
         }
     }
 
@@ -531,12 +367,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeDate(date);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeDate(date);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeDate(date));
         }
         return this;
     }
@@ -545,12 +376,7 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             return ((PacketByteBuf) getDelegate()).readBlockHitResult();
         } else {
-            reentrantDepth++;
-            try {
-                return super.readBlockHitResult();
-            } finally {
-                reentrantDepth--;
-            }
+            return getNotTopLevel(super::readBlockHitResult);
         }
     }
 
@@ -558,17 +384,30 @@ public class TransformerByteBuf extends PacketByteBuf {
         if (getDelegate() instanceof PacketByteBuf && reentrantDepth == 0) {
             ((PacketByteBuf) getDelegate()).writeBlockHitResult(hitResult);
         } else {
-            reentrantDepth++;
-            try {
-                super.writeBlockHitResult(hitResult);
-            } finally {
-                reentrantDepth--;
-            }
+            doNotTopLevel(() -> super.writeBlockHitResult(hitResult));
         }
     }
 
     protected boolean isTopLevel() {
         return reentrantDepth == 0;
+    }
+
+    protected void doNotTopLevel(Runnable action) {
+        reentrantDepth++;
+        try {
+            action.run();
+        } finally {
+            reentrantDepth--;
+        }
+    }
+
+    protected <T> T getNotTopLevel(Supplier<T> action) {
+        reentrantDepth++;
+        try {
+            return action.get();
+        } finally {
+            reentrantDepth--;
+        }
     }
 
     private void setDelegate(ByteBuf delegate) {
