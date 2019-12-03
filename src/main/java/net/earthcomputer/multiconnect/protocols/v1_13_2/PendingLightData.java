@@ -24,8 +24,8 @@ public class PendingLightData {
         }
     }
 
-    private byte[][] blockLight = new byte[18][];
-    private byte[][] skyLight = new byte[18][];
+    private byte[][] blockLight = new byte[16][];
+    private byte[][] skyLight = new byte[16][];
 
     public void setBlockLight(int sectionY, byte[] blockLight) {
         this.blockLight[sectionY] = blockLight;

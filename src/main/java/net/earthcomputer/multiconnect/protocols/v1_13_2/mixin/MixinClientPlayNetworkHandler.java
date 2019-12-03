@@ -35,7 +35,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow public abstract void onDifficulty(DifficultyS2CPacket difficultyS2CPacket_1);
 
-    @Inject(method = "onChunkData", at = @At("TAIL"))
+    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/packet/ChunkDataS2CPacket;getX()I"))
     private void onChunkDataPost(ChunkDataS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             LightUpdateS2CPacket lightPacket = new LightUpdateS2CPacket();
@@ -46,14 +46,14 @@ public abstract class MixinClientPlayNetworkHandler {
             iLightPacket.setChunkX(packet.getX());
             iLightPacket.setChunkZ(packet.getZ());
 
-            int blockLightMask = packet.getVerticalStripBitmask();
+            int blockLightMask = packet.getVerticalStripBitmask() << 1;
             int skyLightMask = world.dimension.hasSkyLight() ? blockLightMask : 0;
             iLightPacket.setBlocklightMask(blockLightMask);
             iLightPacket.setSkylightMask(skyLightMask);
             iLightPacket.setBlockLightUpdates(new ArrayList<>());
             iLightPacket.setSkyLightUpdates(new ArrayList<>());
 
-            for (int i = 0; i < 18; i++) {
+            for (int i = 0; i < 16; i++) {
                 byte[] blockData = lightData.getBlockLight(i);
                 if (blockData != null)
                     lightPacket.getBlockLightUpdates().add(blockData);

@@ -210,7 +210,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                     PendingLightData lightData = new PendingLightData();
                     PendingLightData.setInstance(chunkX, chunkZ, lightData);
 
-                    for (int sectionY = 0; sectionY < 18; sectionY++) {
+                    for (int sectionY = 0; sectionY < 16; sectionY++) {
                         if ((verticalStripBitmask & (1 << sectionY)) != 0) {
                             outBuf.writeShort(0); // non-empty block count
                             PalettedContainer<BlockState> tempContainer = new PalettedContainer<>(BLOCK_STATE_PALETTE, Block.STATE_IDS, TagHelper::deserializeBlockState, TagHelper::serializeBlockState, Blocks.AIR.getDefaultState());
