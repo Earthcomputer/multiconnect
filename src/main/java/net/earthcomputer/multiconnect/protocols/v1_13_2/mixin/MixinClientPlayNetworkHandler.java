@@ -8,7 +8,11 @@ import net.earthcomputer.multiconnect.protocols.v1_13_2.PendingLightData;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.*;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.PacketByteBuf;
+import net.minecraft.village.TradeOffer;
+import net.minecraft.village.TraderOfferList;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,7 +27,7 @@ import java.util.ArrayList;
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class MixinClientPlayNetworkHandler {
 
-    private static final Identifier CUSTOM_PAYLOAD_TRADE_LIST = new Identifier("trade_list");
+    private static final Identifier CUSTOM_PAYLOAD_TRADE_LIST = new Identifier("trader_list");
     private static final Identifier CUSTOM_PAYLOAD_OPEN_BOOK = new Identifier("open_book");
 
     @Shadow @Final private static Logger LOGGER;
@@ -33,7 +37,9 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow public abstract void onOpenWrittenBook(OpenWrittenBookS2CPacket packet);
 
-    @Shadow public abstract void onDifficulty(DifficultyS2CPacket difficultyS2CPacket_1);
+    @Shadow public abstract void onDifficulty(DifficultyS2CPacket packet);
+
+    @Shadow public abstract void onSetTradeOffers(SetTradeOffersPacket packet);
 
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/packet/ChunkDataS2CPacket;getX()I"))
     private void onChunkDataPost(ChunkDataS2CPacket packet, CallbackInfo ci) {
@@ -73,7 +79,24 @@ public abstract class MixinClientPlayNetworkHandler {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             Identifier channel = packet.getChannel();
             if (CUSTOM_PAYLOAD_TRADE_LIST.equals(channel)) {
-                // TODO: trading
+                PacketByteBuf buf = packet.getData();
+                int syncId = buf.readInt();
+                TraderOfferList trades = new TraderOfferList();
+                int tradeCount = buf.readUnsignedByte();
+                for (int i = 0; i < tradeCount; i++) {
+                    ItemStack buy = buf.readItemStack();
+                    ItemStack sell = buf.readItemStack();
+                    boolean hasSecondItem = buf.readBoolean();
+                    ItemStack secondBuy = hasSecondItem ? buf.readItemStack() : ItemStack.EMPTY;
+                    boolean locked = buf.readBoolean();
+                    int tradeUses = buf.readInt();
+                    int maxTradeUses = buf.readInt();
+                    TradeOffer trade = new TradeOffer(buy, secondBuy, sell, tradeUses, maxTradeUses, 0, 1);
+                    if (locked)
+                        trade.clearUses();
+                    trades.add(trade);
+                }
+                onSetTradeOffers(new SetTradeOffersPacket(syncId, trades, 5, 0, false, false));
                 ci.cancel();
             } else if (CUSTOM_PAYLOAD_OPEN_BOOK.equals(channel)) {
                 OpenWrittenBookS2CPacket openBookPacket = new OpenWrittenBookS2CPacket();

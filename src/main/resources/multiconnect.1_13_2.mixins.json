@@ -11,7 +11,8 @@
     "MixinSynchronizeRecipesPacket",
     "MixinRegistryTagManager",
     "MixinOtherClientPlayerEntity",
-    "MixinPlayerEntity"
+    "MixinPlayerEntity",
+    "MixinMerchantContainer"
   ],
   "injectors": {
     "defaultRequire": 1
