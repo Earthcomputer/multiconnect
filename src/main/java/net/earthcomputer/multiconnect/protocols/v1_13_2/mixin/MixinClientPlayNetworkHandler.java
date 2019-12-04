@@ -8,9 +8,11 @@ import net.earthcomputer.multiconnect.protocols.v1_13_2.PendingLightData;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.*;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.PacketByteBuf;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.TraderOfferList;
 import org.apache.logging.log4j.Logger;
@@ -40,6 +42,8 @@ public abstract class MixinClientPlayNetworkHandler {
     @Shadow public abstract void onDifficulty(DifficultyS2CPacket packet);
 
     @Shadow public abstract void onSetTradeOffers(SetTradeOffersPacket packet);
+
+    @Shadow public abstract void onVelocityUpdate(EntityVelocityUpdateS2CPacket entityVelocityUpdateS2CPacket_1);
 
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/packet/ChunkDataS2CPacket;getX()I"))
     private void onChunkDataPost(ChunkDataS2CPacket packet, CallbackInfo ci) {
@@ -122,6 +126,19 @@ public abstract class MixinClientPlayNetworkHandler {
     private void onOnPlayerRespawn(PlayerRespawnS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             onDifficulty(new DifficultyS2CPacket(PendingDifficulty.getPendingDifficulty(), false));
+        }
+    }
+
+    @Inject(method = "onEntitySpawn", at = @At("TAIL"))
+    private void onOnEntitySpawn(EntitySpawnS2CPacket packet, CallbackInfo ci) {
+        if (ConnectionInfo.protocolVersion >= Protocols.V1_13_2) {
+            if (packet.getEntityTypeId() == EntityType.ITEM
+                    || packet.getEntityTypeId() == EntityType.ARROW
+                    || packet.getEntityTypeId() == EntityType.SPECTRAL_ARROW
+                    || packet.getEntityTypeId() == EntityType.TRIDENT) {
+                onVelocityUpdate(new EntityVelocityUpdateS2CPacket(packet.getId(),
+                        new Vec3d(packet.getVelocityX(), packet.getVelocityY(), packet.getVelocityz())));
+            }
         }
     }
 
