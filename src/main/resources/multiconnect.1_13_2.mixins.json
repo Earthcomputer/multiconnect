@@ -12,7 +12,8 @@
     "MixinRegistryTagManager",
     "MixinOtherClientPlayerEntity",
     "MixinPlayerEntity",
-    "MixinMerchantContainer"
+    "MixinMerchantContainer",
+    "MixinPlayerEntityRenderer"
   ],
   "injectors": {
     "defaultRequire": 1

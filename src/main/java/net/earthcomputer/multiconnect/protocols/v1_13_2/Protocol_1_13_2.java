@@ -818,6 +818,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         rename(registry, Items.RED_DYE, "rose_red");
         rename(registry, Items.GREEN_DYE, "cactus_green");
         rename(registry, Items.YELLOW_DYE, "dandelion_yellow");
+
+        registry.unregister(Items.CAT_SPAWN_EGG);
+        insertAfter(registry, Items.MULE_SPAWN_EGG, Items.CAT_SPAWN_EGG, "ocelot_spawn_egg");
     }
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
