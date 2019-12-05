@@ -13,7 +13,8 @@
     "MixinOtherClientPlayerEntity",
     "MixinPlayerEntity",
     "MixinMerchantContainer",
-    "MixinPlayerEntityRenderer"
+    "MixinPlayerEntityRenderer",
+    "MixinArgumentTypes"
   ],
   "injectors": {
     "defaultRequire": 1
