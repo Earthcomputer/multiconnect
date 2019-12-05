@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
+import com.google.gson.JsonParseException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
@@ -28,6 +29,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.network.Packet;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleType;
@@ -36,6 +39,8 @@ import net.minecraft.recipe.RecipeSerializer;
 import net.minecraft.server.network.packet.*;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.PacketByteBuf;
@@ -407,6 +412,27 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 int z = (int) (val << 38 >> 38);
                 return new BlockPos(x, y, z);
             }
+
+            @Override
+            public ItemStack readItemStack() {
+                ItemStack stack = super.readItemStack();
+                if (stack.hasTag()) {
+                    assert stack.getTag() != null;
+                    if (stack.getTag().containsKey("display", 10)) {
+                        CompoundTag display = stack.getTag().getCompound("display");
+                        if (display.containsKey("Lore", 9)) {
+                            ListTag lore = display.getList("Lore", 8);
+                            display.put("multiconnect:1.13.2/oldLore", lore);
+                            ListTag newLore = new ListTag();
+                            for (int i = 0; i < lore.size(); i++) {
+                                newLore.add(new StringTag(Text.Serializer.toJson(new LiteralText(lore.getString(i)))));
+                            }
+                            display.put("Lore", newLore);
+                        }
+                    }
+                }
+                return stack;
+            }
         });
     }
 
@@ -461,6 +487,33 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                         | ((long) pos.getZ() & 0x3FFFFFF);
                 doNotTopLevel(() -> super.writeLong(val));
                 return this;
+            }
+
+            @Override
+            public PacketByteBuf writeItemStack(ItemStack stack) {
+                if (stack.hasTag()) {
+                    assert stack.getTag() != null;
+                    if (stack.getTag().containsKey("display", 10)) {
+                        CompoundTag display = stack.getTag().getCompound("display");
+                        if (display.containsKey("multiconnect:1.13.2/oldLore", 9) || display.containsKey("Lore", 9)) {
+                            stack = stack.copy();
+                            ListTag lore = display.containsKey("multiconnect:1.13.2/oldLore", 9) ? display.getList("multiconnect:1.13.2/oldLore", 8) : display.getList("Lore", 8);
+                            ListTag newLore = new ListTag();
+                            for (int i = 0; i < lore.size(); i++) {
+                                try {
+                                    Text text = Text.Serializer.fromJson(lore.getString(i));
+                                    if (text == null) throw new JsonParseException("text null");
+                                    newLore.add(new StringTag(text.asFormattedString()));
+                                } catch (JsonParseException e) {
+                                    newLore.add(lore.get(i));
+                                }
+                            }
+                            display.put("Lore", newLore);
+                            display.remove("multiconnect:1.13.2/oldLore");
+                        }
+                    }
+                }
+                return super.writeItemStack(stack);
             }
         });
     }
