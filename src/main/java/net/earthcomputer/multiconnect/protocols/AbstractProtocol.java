@@ -32,6 +32,9 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractProtocol {
 
+    public void registerTranslators() {
+    }
+
     public void setup() {
         modifyPacketLists();
         DataTrackerManager.onConnectToServer();
@@ -97,12 +100,6 @@ public abstract class AbstractProtocol {
 
     public List<Class<? extends Packet<?>>> getServerboundPackets() {
         return new ArrayList<>(DefaultPackets.SERVERBOUND);
-    }
-
-    public void transformPacketClientbound(Class<? extends Packet<?>> packetClass, List<TransformerByteBuf> transformers) {
-    }
-
-    public void transformPacketServerbound(Class<? extends Packet<?>> packetClass, List<TransformerByteBuf> transformers) {
     }
 
     public boolean onSendPacket(Packet<?> packet) {

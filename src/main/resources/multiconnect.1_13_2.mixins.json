@@ -8,7 +8,6 @@
     "MixinClientChunkManager",
     "MixinClientPlayNetworkHandler",
     "MixinLightUpdatePacket",
-    "MixinSynchronizeRecipesPacket",
     "MixinRegistryTagManager",
     "MixinOtherClientPlayerEntity",
     "MixinPlayerEntity",

@@ -8,5 +8,7 @@ public class Protocols {
     public static final int V1_14_1 = 480;
     public static final int V1_14 = 477;
     public static final int V1_13_2 = 404;
+    public static final int V1_13_1 = 401;
+    public static final int V1_13 = 393;
 
 }

@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.mixin;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import net.earthcomputer.multiconnect.impl.TransformerByteBuf;
+import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.network.DecoderHandler;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.util.PacketByteBuf;

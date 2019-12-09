@@ -1,12 +1,15 @@
 package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
 import com.google.gson.JsonParseException;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
-import net.earthcomputer.multiconnect.impl.TransformerByteBuf;
+import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.transformer.InboundTranslator;
+import net.earthcomputer.multiconnect.transformer.OutboundTranslator;
+import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
+import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.enums.Instrument;
@@ -48,7 +51,7 @@ import net.minecraft.util.TagHelper;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.SimpleRegistry;
 import net.minecraft.village.VillagerData;
@@ -65,6 +68,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.function.Supplier;
 
 public class Protocol_1_13_2 extends Protocol_1_14 {
 
@@ -140,282 +144,180 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     @Override
-    public void transformPacketClientbound(Class<? extends Packet<?>> packetClass, List<TransformerByteBuf> transformers) {
-        super.transformPacketClientbound(packetClass, transformers);
+    public void registerTranslators() {
+        ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            int chunkX = buf.readInt();
+            int chunkZ = buf.readInt();
+            boolean fullChunk = buf.readBoolean();
+            int verticalStripBitmask = buf.readVarInt();
+            buf.disablePassthroughMode();
 
-        if (packetClass == ChunkDataS2CPacket.class) {
-            transformers.add(new TransformerByteBuf() {
-                private int chunkX, chunkZ;
-                private int intsRead = 0;
-                private boolean hasReadHeighmaps = false;
-                private boolean hasReadVerticalStripBitmask = false;
-                private int verticalStripBitmask;
-                private boolean isFullChunk;
-                private int booleansRead = 0;
+            buf.pendingRead(CompoundTag.class, new CompoundTag()); // heightmaps
 
-                @Override
-                public boolean readBoolean() {
-                    if (!isTopLevel() || booleansRead++ != 0)
-                        return super.readBoolean();
-                    isFullChunk = super.readBoolean();
-                    return isFullChunk;
-                }
+            int dataLength = buf.readVarInt();
+            byte[] data = new byte[dataLength];
+            buf.readBytes(data);
 
-                @Override
-                public int readInt() {
-                    if (!isTopLevel())
-                        return super.readInt();
-                    int val = super.readInt();
-                    switch (intsRead++) {
-                        case 0:
-                            chunkX = val;
-                            break;
-                        case 1:
-                            chunkZ = val;
-                            break;
-                    }
-                    return val;
-                }
+            PacketByteBuf inBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data.clone()));
+            PacketByteBuf outBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data));
+            outBuf.writerIndex(0);
 
-                @Override
-                public CompoundTag readCompoundTag() {
-                    if (!isTopLevel()) {
-                        return super.readCompoundTag();
-                    }
-                    if (!hasReadHeighmaps) {
-                        hasReadHeighmaps = true;
-                        return new CompoundTag();
-                    }
-                    return super.readCompoundTag();
-                }
+            PendingLightData lightData = new PendingLightData();
+            PendingLightData.setInstance(chunkX, chunkZ, lightData);
 
-                @Override
-                public int readVarInt() {
-                    if (!isTopLevel()) {
-                        return super.readVarInt();
-                    }
-                    if (!hasReadVerticalStripBitmask) {
-                        hasReadVerticalStripBitmask = true;
-                        verticalStripBitmask = super.readVarInt();
-                        return verticalStripBitmask;
-                    }
-                    return super.readVarInt();
-                }
-
-                @Override
-                public ByteBuf readBytes(byte[] data) {
-                    if (!isTopLevel())
-                        return super.readBytes(data);
-
-                    super.readBytes(data);
-                    PacketByteBuf inBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data.clone()));
-                    PacketByteBuf outBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data));
-                    outBuf.writerIndex(0);
-
-                    PendingLightData lightData = new PendingLightData();
-                    PendingLightData.setInstance(chunkX, chunkZ, lightData);
-
-                    for (int sectionY = 0; sectionY < 16; sectionY++) {
-                        if ((verticalStripBitmask & (1 << sectionY)) != 0) {
-                            outBuf.writeShort(0); // non-empty block count
-                            PalettedContainer<BlockState> tempContainer = new PalettedContainer<>(BLOCK_STATE_PALETTE, Block.STATE_IDS, TagHelper::deserializeBlockState, TagHelper::serializeBlockState, Blocks.AIR.getDefaultState());
-                            tempContainer.fromPacket(inBuf);
-                            tempContainer.toPacket(outBuf);
-                            byte[] light = new byte[16 * 16 * 16 / 2];
-                            inBuf.readBytes(light);
-                            lightData.setBlockLight(sectionY, light);
-                            // since this thread is async, this code may be run before the join game packet is
-                            // processed, and therefore world would be null
-                            while (MinecraftClient.getInstance().world == null) {
-                                try {
-                                    Thread.sleep(1);
-                                } catch (InterruptedException e) {
-                                    return this;
-                                }
-                            }
-                            if (MinecraftClient.getInstance().world.dimension.hasSkyLight()) {
-                                light = new byte[16 * 16 * 16 / 2];
-                                inBuf.readBytes(light);
-                                lightData.setSkyLight(sectionY, light);
-                            }
+            for (int sectionY = 0; sectionY < 16; sectionY++) {
+                if ((verticalStripBitmask & (1 << sectionY)) != 0) {
+                    outBuf.writeShort(0); // non-empty block count
+                    PalettedContainer<BlockState> tempContainer = new PalettedContainer<>(BLOCK_STATE_PALETTE, Block.STATE_IDS, TagHelper::deserializeBlockState, TagHelper::serializeBlockState, Blocks.AIR.getDefaultState());
+                    tempContainer.fromPacket(inBuf);
+                    tempContainer.toPacket(outBuf);
+                    byte[] light = new byte[16 * 16 * 16 / 2];
+                    inBuf.readBytes(light);
+                    lightData.setBlockLight(sectionY, light);
+                    // since this thread is async, this code may be run before the join game packet is
+                    // processed, and therefore world would be null
+                    while (MinecraftClient.getInstance().world == null) {
+                        try {
+                            Thread.sleep(1);
+                        } catch (InterruptedException e) {
+                            return;
                         }
                     }
-
-                    // biomes
-                    if (isFullChunk) {
-                        for (int i = 0; i < 256; i++)
-                            outBuf.writeInt(inBuf.readInt());
-                    }
-                    return this;
-                }
-            });
-        }
-        else if (packetClass == GameJoinS2CPacket.class) {
-            transformers.add(new TransformerByteBuf() {
-                private int intsRead = 0;
-
-                @Override
-                public int readInt() {
-                    if (!isTopLevel() || intsRead++ != 1)
-                        return super.readInt();
-                    int ret = super.readInt();
-                    PendingDifficulty.setPendingDifficulty(Difficulty.byOrdinal(readUnsignedByte()));
-                    return ret;
-                }
-
-                @Override
-                public int readVarInt() {
-                    return isTopLevel() ? 64 : super.readVarInt();
-                }
-            });
-        }
-        else if (packetClass == MapUpdateS2CPacket.class) {
-            transformers.add(new TransformerByteBuf() {
-                private int booleansRead = 0;
-
-                @Override
-                public boolean readBoolean() {
-                    if (!isTopLevel() || booleansRead++ != 1) {
-                        return super.readBoolean();
-                    }
-                    return false;
-                }
-            });
-        }
-        else if (packetClass == EntityAttachS2CPacket.class) {
-            transformers.add(new TransformerByteBuf() {
-                private int intsRead = 0;
-
-                @Override
-                public int readInt() {
-                    if (!isTopLevel() || intsRead++ != 1) {
-                        return super.readInt();
-                    }
-                    int ret = super.readInt();
-                    if (ret == -1) ret = 0;
-                    return ret;
-                }
-            });
-        }
-        else if (packetClass == PlayerRespawnS2CPacket.class) {
-            transformers.add(new TransformerByteBuf() {
-                @Override
-                public short readUnsignedByte() {
-                    if (!isTopLevel())
-                        return super.readUnsignedByte();
-                    PendingDifficulty.setPendingDifficulty(Difficulty.byOrdinal(super.readUnsignedByte()));
-                    return super.readUnsignedByte();
-                }
-            });
-        }
-        else if (packetClass == DifficultyS2CPacket.class) {
-            transformers.add(new TransformerByteBuf() {
-                @Override
-                public boolean readBoolean() {
-                    if (!isTopLevel())
-                        return super.readBoolean();
-                    return false;
-                }
-            });
-        }
-        else if (packetClass == EntitySpawnS2CPacket.class) {
-            transformers.add(new TransformerByteBuf() {
-                private int varIntsRead = 0;
-                private double x, y, z;
-                private byte pitch, yaw;
-                private int entityData;
-                private int doublesRead, bytesRead, intsRead;
-
-                @Override
-                public byte readByte() {
-                    if (!isTopLevel())
-                        return super.readByte();
-                    switch (bytesRead++) {
-                        case 0:
-                            return pitch;
-                        case 1:
-                            return yaw;
-                    }
-                    return super.readByte();
-                }
-
-                @Override
-                public int readInt() {
-                    if (!isTopLevel() || intsRead++ != 0)
-                        return super.readInt();
-                    return entityData;
-                }
-
-                @Override
-                public double readDouble() {
-                    if (!isTopLevel())
-                        return super.readDouble();
-                    switch (doublesRead++) {
-                        case 0:
-                            return x;
-                        case 1:
-                            return y;
-                        case 2:
-                            return z;
-                    }
-                    return super.readDouble();
-                }
-
-                @Override
-                public int readVarInt() {
-                    if (!isTopLevel() || varIntsRead++ != 1)
-                        return super.readVarInt();
-                    int typeId = super.readByte() & 0xff;
-                    x = super.readDouble();
-                    y = super.readDouble();
-                    z = super.readDouble();
-                    pitch = super.readByte();
-                    yaw = super.readByte();
-                    entityData = super.readInt();
-                    return Registry.ENTITY_TYPE.getRawId(mapObjectId(typeId, entityData));
-                }
-            });
-        }
-        else if (packetClass == SynchronizeRecipesS2CPacket.class) {
-            transformers.add(new TransformerByteBuf() {
-                private Identifier recipeOutput;
-                private int identifiersRead = 0;
-
-                @Override
-                public void setUserData(int val) {
-                    identifiersRead = 0;
-                }
-
-                @Override
-                public Identifier readIdentifier() {
-                    if (!isTopLevel())
-                        return super.readIdentifier();
-                    switch (identifiersRead++) {
-                        case 0:
-                            recipeOutput = super.readIdentifier();
-                            return new Identifier(readString(32767));
-                        case 1:
-                            return recipeOutput;
-                        default:
-                            return super.readIdentifier();
+                    if (MinecraftClient.getInstance().world.dimension.hasSkyLight()) {
+                        light = new byte[16 * 16 * 16 / 2];
+                        inBuf.readBytes(light);
+                        lightData.setSkyLight(sectionY, light);
                     }
                 }
-            });
-        }
+            }
 
-        transformers.add(new TransformerByteBuf() {
+            // biomes
+            if (fullChunk) {
+                for (int i = 0; i < 256; i++)
+                    outBuf.writeInt(inBuf.readInt());
+            }
+
+            buf.pendingRead(VarInt.class, new VarInt(outBuf.writerIndex()));
+            buf.pendingRead(byte[].class, data);
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readInt(); // player id
+            buf.readUnsignedByte(); // gamemode
+            buf.readInt(); // dimension
+            buf.disablePassthroughMode();
+            PendingDifficulty.setPendingDifficulty(Difficulty.byOrdinal(buf.readUnsignedByte()));
+            buf.enablePassthroughMode();
+            buf.readUnsignedByte(); // max players
+            buf.readString(16); // generator type
+            buf.disablePassthroughMode();
+            buf.pendingRead(VarInt.class, new VarInt(64)); // view distance
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(MapUpdateS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // id
+            buf.readByte(); // scale
+            buf.readBoolean(); // show icons
+            buf.disablePassthroughMode();
+            buf.pendingRead(Boolean.class, false); // locked
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(EntityAttachS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readInt(); // attached id
+            buf.disablePassthroughMode();
+            int holdingId = buf.readInt();
+            if (holdingId == -1) holdingId = 0;
+            buf.pendingRead(Integer.class, holdingId);
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readInt(); // dimension
+            buf.readUnsignedByte(); // gamemode
+            buf.disablePassthroughMode();
+            PendingDifficulty.setPendingDifficulty(Difficulty.byOrdinal(buf.readUnsignedByte()));
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(DifficultyS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readUnsignedByte(); // difficulty
+            buf.disablePassthroughMode();
+            buf.pendingRead(Boolean.class, false); // locked
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(EntitySpawnS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // id
+            buf.readUuid(); // uuid
+            buf.disablePassthroughMode();
+
+            int typeId = buf.readByte() & 0xff;
+            double x = buf.readDouble();
+            double y = buf.readDouble();
+            double z = buf.readDouble();
+            byte pitch = buf.readByte();
+            byte yaw = buf.readByte();
+            int entityData = buf.readInt();
+            typeId = Registry.ENTITY_TYPE.getRawId(mapObjectId(typeId, entityData));
+
+            buf.pendingRead(VarInt.class, new VarInt(typeId));
+            buf.pendingRead(Double.class, x);
+            buf.pendingRead(Double.class, y);
+            buf.pendingRead(Double.class, z);
+            buf.pendingRead(Byte.class, pitch);
+            buf.pendingRead(Byte.class, yaw);
+            buf.pendingRead(Integer.class, entityData);
+
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(SynchronizeRecipesS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            int recipeCount = buf.readVarInt();
+            buf.disablePassthroughMode();
+
+            for (int i = 0; i < recipeCount; i++) {
+                Identifier recipeId = buf.readIdentifier();
+                Identifier serializerId = new Identifier(buf.readString(32767));
+                buf.pendingRead(Identifier.class, serializerId);
+                buf.pendingRead(Identifier.class, recipeId);
+                buf.enablePassthroughMode();
+                Registry.RECIPE_SERIALIZER.getOrEmpty(serializerId)
+                        .orElseThrow(() -> new IllegalArgumentException("Unknown recipe serializer " + serializerId))
+                        .read(recipeId, buf);
+                buf.disablePassthroughMode();
+            }
+
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(BlockPos.class, buf -> {
+            long val = buf.readLong();
+            int x = (int) (val >> 38);
+            int y = (int) (val << 26 >> 52);
+            int z = (int) (val << 38 >> 38);
+            val = ((long)(x & 0x3FFFFFF) << 38) | ((long)(z & 0x3FFFFFF) << 12) | (long)(y & 0xFFF);
+            buf.pendingRead(Long.class, val);
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<ItemStack>() {
             @Override
-            public BlockPos readBlockPos() {
-                long val = getNotTopLevel(super::readLong);
-                int x = (int) (val >> 38);
-                int y = (int) (val << 26 >> 52);
-                int z = (int) (val << 38 >> 38);
-                return new BlockPos(x, y, z);
+            public void onRead(TransformerByteBuf buf) {
             }
 
             @Override
-            public ItemStack readItemStack() {
-                ItemStack stack = super.readItemStack();
+            public ItemStack translate(ItemStack stack) {
                 if (stack.hasTag()) {
                     assert stack.getTag() != null;
                     if (stack.getTag().containsKey("display", 10)) {
@@ -434,63 +336,51 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 return stack;
             }
         });
-    }
 
-    @Override
-    public void transformPacketServerbound(Class<? extends Packet<?>> packetClass, List<TransformerByteBuf> transformers) {
-        super.transformPacketServerbound(packetClass, transformers);
+        ProtocolRegistry.registerOutboundTranslator(PlayerInteractBlockC2SPacket.class, buf -> {
+            Supplier<Hand> hand = buf.skipWrite(Hand.class);
+            Supplier<BlockHitResult> hitResult = buf.skipWrite(BlockHitResult.class);
+            buf.pendingWrite(BlockPos.class, () -> hitResult.get().getBlockPos(), buf::writeBlockPos);
+            buf.pendingWrite(Direction.class, () -> hitResult.get().getSide(), buf::writeEnumConstant);
+            buf.pendingWrite(Hand.class, hand, buf::writeEnumConstant);
+            buf.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().x - hitResult.get().getBlockPos().getX()), buf::writeFloat);
+            buf.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().y - hitResult.get().getBlockPos().getY()), buf::writeFloat);
+            buf.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().z - hitResult.get().getBlockPos().getZ()), buf::writeFloat);
+        });
 
-        if (packetClass == PlayerInteractBlockC2SPacket.class) {
-            transformers.add(new TransformerByteBuf() {
-                private Hand hand = null;
-
-                @Override
-                public PacketByteBuf writeEnumConstant(Enum<?> val) {
-                    if (hand == null && isTopLevel() && val.getClass() == Hand.class)
-                        this.hand = (Hand) val;
-                    else
-                        super.writeEnumConstant(val);
-                    return this;
-                }
-
-                @Override
-                public void writeBlockHitResult(BlockHitResult hitResult) {
-                    BlockPos hitBlockPos = hitResult.getBlockPos();
-                    Vec3d hitPos = hitResult.getPos();
-                    writeBlockPos(hitBlockPos);
-                    writeEnumConstant(hitResult.getSide());
-                    writeEnumConstant(hand);
-                    writeFloat((float) (hitPos.x - hitBlockPos.getX()));
-                    writeFloat((float) (hitPos.y - hitBlockPos.getY()));
-                    writeFloat((float) (hitPos.z - hitBlockPos.getZ()));
+        ProtocolRegistry.registerOutboundTranslator(RecipeBookDataC2SPacket.class, buf -> {
+            Supplier<RecipeBookDataC2SPacket.Mode> mode = buf.passthroughWrite(RecipeBookDataC2SPacket.Mode.class);
+            buf.whenWrite(() -> {
+                if (mode.get() == RecipeBookDataC2SPacket.Mode.SETTINGS) {
+                    buf.passthroughWrite(Boolean.class); // gui open
+                    buf.passthroughWrite(Boolean.class); // filtering craftable
+                    buf.passthroughWrite(Boolean.class); // furnace gui open
+                    buf.passthroughWrite(Boolean.class); // furnace filtering craftable
+                    buf.skipWrite(Boolean.class); // blast furnace gui open
+                    buf.skipWrite(Boolean.class); // blast furnace filtering craftable
+                    buf.skipWrite(Boolean.class); // smoker gui open
+                    buf.skipWrite(Boolean.class); // smoker filtering craftable
                 }
             });
-        }
-        else if (packetClass == RecipeBookDataC2SPacket.class) {
-            transformers.add(new TransformerByteBuf() {
-                private int booleansWritten = 0;
+        });
 
-                @Override
-                public ByteBuf writeBoolean(boolean val) {
-                    if (isTopLevel() || booleansWritten++ < 4)
-                        super.writeBoolean(val);
-                    return this;
-                }
-            });
-        }
+        ProtocolRegistry.registerOutboundTranslator(BlockPos.class, buf -> {
+            Supplier<Long> val = buf.skipWrite(Long.class);
+            buf.pendingWrite(Long.class, () -> {
+                int x = (int) (val.get() >> 38);
+                int y = (int) (val.get() << 52 >> 52);
+                int z = (int) (val.get() << 26 >> 38);
+                return ((long)(x & 0x3FFFFFF) << 38) | ((long)(y & 0xFFF) << 26) | (long)(z & 0x3FFFFFF);
+            }, buf::writeLong);
+        });
 
-        transformers.add(new TransformerByteBuf() {
+        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<ItemStack>() {
             @Override
-            public PacketByteBuf writeBlockPos(BlockPos pos) {
-                long val = (((long) pos.getX() & 0x3FFFFFF) << 38)
-                        | (((long) pos.getY() & 0xFFF) << 26)
-                        | ((long) pos.getZ() & 0x3FFFFFF);
-                doNotTopLevel(() -> super.writeLong(val));
-                return this;
+            public void onWrite(TransformerByteBuf buf) {
             }
 
             @Override
-            public PacketByteBuf writeItemStack(ItemStack stack) {
+            public ItemStack translate(ItemStack stack) {
                 if (stack.hasTag()) {
                     assert stack.getTag() != null;
                     if (stack.getTag().containsKey("display", 10)) {
@@ -513,7 +403,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                         }
                     }
                 }
-                return super.writeItemStack(stack);
+                return stack;
             }
         });
     }
