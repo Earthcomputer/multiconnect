@@ -2,107 +2,52 @@ package net.earthcomputer.multiconnect;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.launch.knot.Knot;
+import net.fabricmc.loader.launch.knot.KnotClassLoaderInterface;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.InvocationInterceptor;
-import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Executable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
-public class TestingExtension implements BeforeAllCallback, InvocationInterceptor {
+public class TestingExtension implements BeforeAllCallback, Function<Class<?>, Class<?>> {
 
-    private ClassLoader knotClassLoader;
+    private static ClassLoader knotClassLoader;
 
-    @Override
-    public void beforeAll(ExtensionContext context) {
+    private static AtomicBoolean isSetup = new AtomicBoolean(false);
+    private static AtomicBoolean isSettingUp = new AtomicBoolean(true);
+    private static void setup() {
+        if (isSetup.getAndSet(true)) {
+            while (isSettingUp.get()) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            Thread.currentThread().setContextClassLoader(knotClassLoader);
+            return;
+        }
         System.setProperty("fabric.development", "true");
         System.setProperty("fabric.loader.entrypoint", "net.earthcomputer.multiconnect.TestingDummyMain");
         Knot knot = new Knot(EnvType.CLIENT, null);
         knot.init(new String[0]);
         knotClassLoader = knot.getClassLoader();
+        ((KnotClassLoaderInterface) knotClassLoader).addClassLoaderExclusion("net.earthcomputer.multiconnect.TestingExtension");
+        isSettingUp.set(false);
     }
 
     @Override
-    public <T> T interceptTestClassConstructor(Invocation<T> invocation, ReflectiveInvocationContext<Constructor<T>> invocationContext, ExtensionContext extensionContext) throws Throwable {
-        redirectInvocation(invocationContext);
-        return invocation.proceed();
+    public void beforeAll(ExtensionContext context) {
+        setup();
     }
 
     @Override
-    public void interceptBeforeAllMethod(Invocation<Void> invocation, ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext) throws Throwable {
-        redirectInvocation(invocationContext);
-        invocation.proceed();
-    }
-
-    @Override
-    public void interceptBeforeEachMethod(Invocation<Void> invocation, ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext) throws Throwable {
-        redirectInvocation(invocationContext);
-        invocation.proceed();
-    }
-
-    @Override
-    public void interceptTestMethod(Invocation<Void> invocation, ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext) throws Throwable {
-        redirectInvocation(invocationContext);
-        invocation.proceed();
-    }
-
-    @Override
-    public <T> T interceptTestFactoryMethod(Invocation<T> invocation, ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext) throws Throwable {
-        redirectInvocation(invocationContext);
-        return invocation.proceed();
-    }
-
-    @Override
-    public void interceptTestTemplateMethod(Invocation<Void> invocation, ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext) throws Throwable {
-        redirectInvocation(invocationContext);
-        invocation.proceed();
-    }
-
-    @Override
-    public void interceptAfterEachMethod(Invocation<Void> invocation, ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext) throws Throwable {
-        redirectInvocation(invocationContext);
-        invocation.proceed();
-    }
-
-    @Override
-    public void interceptAfterAllMethod(Invocation<Void> invocation, ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext) throws Throwable {
-        redirectInvocation(invocationContext);
-        invocation.proceed();
-    }
-
-    private void redirectInvocation(ReflectiveInvocationContext<?> context) {
-        Thread.currentThread().setContextClassLoader(knotClassLoader);
-        Executable method = context.getExecutable();
+    public Class<?> apply(Class<?> clazz) {
+        setup();
         try {
-            Class<?> newClass = knotClassLoader.loadClass(method.getDeclaringClass().getName());
-            if (context.getTarget().isPresent() && !newClass.isInstance(context.getTarget().get()))
-                throw new AssertionError("Cannot match source class "
-                        + context.getTarget().get().getClass().getName()
-                        + " (ClassLoader " + context.getTarget().get().getClass().getClassLoader().getClass().getName()
-                        + ") to new class " + newClass.getName()
-                        + " (ClassLoader " + newClass.getClassLoader().getClass().getName() + ")");
-            if (method instanceof Method) {
-                method = newClass.getDeclaredMethod(method.getName(), method.getParameterTypes());
-            } else {
-                method = newClass.getDeclaredConstructor(method.getParameterTypes());
-            }
-            method.setAccessible(true);
-            Field methodField = null;
-            for (Field field : context.getClass().getDeclaredFields()) {
-                if (Executable.class.isAssignableFrom(field.getType())) {
-                    methodField = field;
-                    break;
-                }
-            }
-            if (methodField == null)
-                throw new AssertionError("Could not find method field of class " + context.getClass().getName());
-            methodField.setAccessible(true);
-            methodField.set(context, method);
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
+            return knotClassLoader.loadClass(clazz.getName());
+        } catch (ClassNotFoundException e) {
+            return clazz;
         }
     }
 }

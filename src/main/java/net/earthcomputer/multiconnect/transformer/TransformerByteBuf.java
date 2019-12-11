@@ -37,14 +37,20 @@ import java.util.function.*;
 public final class TransformerByteBuf extends PacketByteBuf {
 
     private final ChannelHandlerContext context;
+    private final TranslatorRegistry translatorRegistry;
 
     private boolean transformationEnabled = false;
     private Deque<StackFrame> stack = new ArrayDeque<>();
     private boolean forceSuper = false;
 
     public TransformerByteBuf(ByteBuf delegate, ChannelHandlerContext context) {
+        this(delegate, context, ProtocolRegistry.getTranslatorRegistry());
+    }
+
+    public TransformerByteBuf(ByteBuf delegate, ChannelHandlerContext context, TranslatorRegistry translatorRegistry) {
         super(delegate);
         this.context = context;
+        this.translatorRegistry = translatorRegistry;
     }
 
     public void enablePassthroughMode() {
@@ -75,7 +81,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
             stack.push(new StackFrame(packetClass, ConnectionInfo.protocolVersion));
             //noinspection unchecked
             List<Pair<Integer, InboundTranslator<?>>> translators = (List<Pair<Integer, InboundTranslator<?>>>) (List<?>)
-                    ProtocolRegistry.getInboundTranslators(packetClass, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
+                    translatorRegistry.getInboundTranslators(packetClass, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
             for (Pair<Integer, InboundTranslator<?>> translator : translators) {
                 getStackFrame().version = translator.getLeft();
                 translator.getRight().onRead(this);
@@ -108,7 +114,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
         boolean passthroughMode = getStackFrame().passthroughMode;
         stack.push(new StackFrame(type, ConnectionInfo.protocolVersion));
 
-        List<Pair<Integer, InboundTranslator<STORED>>> translators = ProtocolRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, version);
+        List<Pair<Integer, InboundTranslator<STORED>>> translators = translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, version);
         for (Pair<Integer, InboundTranslator<STORED>> translator : translators) {
             getStackFrame().version = translator.getLeft();
             translator.getRight().onRead(this);
@@ -119,9 +125,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
         if (pendingReads != null && !pendingReads.isEmpty()) {
             PendingValue<STORED> pendingValue = pendingReads.poll();
             value = pendingValue.value;
-            translators = ProtocolRegistry.getInboundTranslators(type, pendingValue.version, version);
+            translators = translatorRegistry.getInboundTranslators(type, pendingValue.version, version);
         } else {
-            translators = ProtocolRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, version);
+            translators = translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, version);
 
             if (!passthroughMode && translators.isEmpty()) {
                 getStackFrame().version = version;
@@ -173,7 +179,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
             Class<? extends Packet<?>> packetClass = ((INetworkState) state).getPacketHandlerMap().get(NetworkSide.SERVERBOUND).get(val);
             stack.push(new StackFrame(packetClass, SharedConstants.getGameVersion().getProtocolVersion()));
             List<Pair<Integer, OutboundTranslator<?>>> translators = (List<Pair<Integer, OutboundTranslator<?>>>) (List<?>)
-                    ProtocolRegistry.getOutboundTranslators(packetClass, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
+                    translatorRegistry.getOutboundTranslators(packetClass, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
             for (Pair<Integer, OutboundTranslator<?>> translator : translators) {
                 translator.getRight().onWrite(this);
                 getStackFrame().version = translator.getLeft();
@@ -193,7 +199,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
         int version = getStackFrame().version;
         int minVersion = ConnectionInfo.protocolVersion;
-        List<Pair<Integer, OutboundTranslator<T>>> translators = ProtocolRegistry.getOutboundTranslators(type, minVersion, version);
+        List<Pair<Integer, OutboundTranslator<T>>> translators = translatorRegistry.getOutboundTranslators(type, minVersion, version);
 
         boolean skipWrite = false;
 

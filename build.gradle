@@ -89,13 +89,14 @@ dependencies {
 	include files(remapApiJar.archivePath)
 
 	testCompile 'org.junit.jupiter:junit-jupiter-api:5.5.2'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+	testRuntimeOnly 'com.github.Earthcomputer.junit5:junit-jupiter-engine:8785ac4d'
 	testCompile 'org.mockito:mockito-all:1.10.19'
 }
 
 test {
 	useJUnitPlatform()
 	systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+	systemProperty 'org.junit.TestClassResolver', 'net.earthcomputer.multiconnect.TestingExtension'
 	workingDir 'run'
 }
 
