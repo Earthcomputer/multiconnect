@@ -72,15 +72,31 @@ jar {
 	from "LICENSE"
 }
 
+repositories {
+	maven {
+		url 'https://jitpack.io/'
+	}
+}
+
 dependencies {
 	//to change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}"
-	modCompile "net.fabricmc:fabric-loader:${project.loader_version}"
+	modCompile "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 
 	compile sourceSets.api.output
 	include files(remapApiJar.archivePath)
+
+	testCompile 'org.junit.jupiter:junit-jupiter-api:5.5.2'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+	testCompile 'org.mockito:mockito-all:1.10.19'
+}
+
+test {
+	useJUnitPlatform()
+	systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+	workingDir 'run'
 }
 
 def bintrayLogin = new Properties()

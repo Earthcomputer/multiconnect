@@ -38,6 +38,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     private final ChannelHandlerContext context;
 
+    private boolean transformationEnabled = false;
     private Deque<StackFrame> stack = new ArrayDeque<>();
     private boolean forceSuper = false;
 
@@ -66,8 +67,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     @Override
     public int readVarInt() {
-        if (stack.isEmpty()) {
+        if (!transformationEnabled) {
             int packetId = super.readVarInt();
+            transformationEnabled = true;
             NetworkState state = context.channel().attr(ClientConnection.ATTR_KEY_PROTOCOL).get();
             Class<? extends Packet<?>> packetClass = ((INetworkState) state).getPacketHandlerMap().get(NetworkSide.CLIENTBOUND).get(packetId);
             stack.push(new StackFrame(packetClass, ConnectionInfo.protocolVersion));
@@ -99,6 +101,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
                                          Supplier<STORED> storedValueExtractor,
                                          Consumer<STORED> storedValueApplier,
                                          Function<STORED, RETURN> returnValueExtractor) {
+        if (!transformationEnabled)
+            return readMethod.get();
+
         int version = getStackFrame().version;
         boolean passthroughMode = getStackFrame().passthroughMode;
         stack.push(new StackFrame(type, ConnectionInfo.protocolVersion));
@@ -161,7 +166,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
     @SuppressWarnings("unchecked")
     @Override
     public PacketByteBuf writeVarInt(int val) {
-        if (stack.isEmpty()) {
+        if (!transformationEnabled) {
+            super.writeVarInt(val);
+            transformationEnabled = true;
             NetworkState state = context.channel().attr(ClientConnection.ATTR_KEY_PROTOCOL).get();
             Class<? extends Packet<?>> packetClass = ((INetworkState) state).getPacketHandlerMap().get(NetworkSide.SERVERBOUND).get(val);
             stack.push(new StackFrame(packetClass, SharedConstants.getGameVersion().getProtocolVersion()));
@@ -179,7 +186,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     private <T> PacketByteBuf write(Class<T> type, T value, Consumer<T> writeMethod) {
-        if (forceSuper) {
+        if (!transformationEnabled || forceSuper) {
             writeMethod.accept(value);
             return this;
         }

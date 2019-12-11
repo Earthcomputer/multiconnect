@@ -22,16 +22,6 @@ import static net.earthcomputer.multiconnect.api.Protocols.*;
 public class ProtocolRegistry {
 
     private static Int2ObjectOpenHashMap<AbstractProtocol> protocols = new Int2ObjectOpenHashMap<>();
-    static {
-        register(V1_14_4, new Protocol_1_14_4());
-        register(V1_14_3, new Protocol_1_14_3());
-        register(V1_14_2, new Protocol_1_14_2());
-        register(V1_14_1, new Protocol_1_14_1());
-        register(V1_14, new Protocol_1_14());
-        register(V1_13_2, new Protocol_1_13_2());
-        register(V1_13_1, new Protocol_1_13_1());
-        register(V1_13, new Protocol_1_13());
-    }
 
     public static boolean isSupported(int version) {
         return protocols.containsKey(version);
@@ -92,6 +82,17 @@ public class ProtocolRegistry {
                 Comparator.<Pair<Integer, T>, Integer>comparing(Pair::getLeft).reversed());
         if (maxIndex < 0) maxIndex = -maxIndex;
         return translators.subList(minIndex, maxIndex);
+    }
+
+    static {
+        register(V1_14_4, new Protocol_1_14_4());
+        register(V1_14_3, new Protocol_1_14_3());
+        register(V1_14_2, new Protocol_1_14_2());
+        register(V1_14_1, new Protocol_1_14_1());
+        register(V1_14, new Protocol_1_14());
+        register(V1_13_2, new Protocol_1_13_2());
+        register(V1_13_1, new Protocol_1_13_1());
+        register(V1_13, new Protocol_1_13());
     }
 
 }
