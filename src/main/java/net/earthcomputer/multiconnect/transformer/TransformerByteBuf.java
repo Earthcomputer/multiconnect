@@ -98,7 +98,10 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     private <STORED> TransformerByteBuf read(Class<?> type, Supplier<ByteBuf> readMethod, Supplier<STORED> storedValueExtractor, Consumer<STORED> storedValueApplier) {
-        return (TransformerByteBuf) read(type, readMethod, storedValueExtractor, storedValueApplier, value -> this);
+        return read(type, () -> {
+            readMethod.get();
+            return this;
+        }, storedValueExtractor, storedValueApplier, value -> this);
     }
 
     @SuppressWarnings("unchecked")
@@ -112,6 +115,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
         int version = getStackFrame().version;
         boolean passthroughMode = getStackFrame().passthroughMode;
+        Queue<PendingValue<STORED>> pendingReads = (Queue<PendingValue<STORED>>) (Queue<?>) getStackFrame().pendingReads.get(type);
         stack.push(new StackFrame(type, ConnectionInfo.protocolVersion));
 
         List<Pair<Integer, InboundTranslator<STORED>>> translators = translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, version);
@@ -120,7 +124,6 @@ public final class TransformerByteBuf extends PacketByteBuf {
             translator.getRight().onRead(this);
         }
 
-        Queue<PendingValue<STORED>> pendingReads = (Queue<PendingValue<STORED>>) (Queue<?>) getStackFrame().pendingReads.get(type);
         STORED value;
         if (pendingReads != null && !pendingReads.isEmpty()) {
             PendingValue<STORED> pendingValue = pendingReads.poll();
@@ -218,7 +221,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
             while (!instructions.isEmpty()) {
                 WriteInstruction insn = instructions.poll();
                 if (!insn.matchesType(type)) {
-                    throw new IllegalStateException("Write instruction did not match expected type");
+                    throw new IllegalStateException("Write instruction expected type " + insn.getExpectedType().getName() + ", but got " + type.getName());
                 }
                 insn.onWrite(value);
                 if (insn.consumesWrite()) {
@@ -230,6 +233,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
                     break;
                 }
             }
+        }
+        for (; translatorsIndex < translators.size(); translatorsIndex++) {
+            value = translators.get(translatorsIndex).getRight().translate(value);
         }
         getStackFrame().version = version;
 
@@ -316,6 +322,10 @@ public final class TransformerByteBuf extends PacketByteBuf {
     private interface WriteInstruction {
         boolean matchesType(Class<?> type);
 
+        default Class<?> getExpectedType() {
+            return null;
+        }
+
         boolean consumesWrite();
 
         boolean skipsWrite();
@@ -336,6 +346,11 @@ public final class TransformerByteBuf extends PacketByteBuf {
         @Override
         public boolean matchesType(Class<?> type) {
             return type == this.type;
+        }
+
+        @Override
+        public Class<?> getExpectedType() {
+            return this.type;
         }
 
         @Override
