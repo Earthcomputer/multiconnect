@@ -15,6 +15,7 @@ public class MixinEntity {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(EntityType<?> type, World world, CallbackInfo ci) {
+        DataTrackerManager.postRegisterData(((Entity) (Object) this).getClass());
         DataTrackerManager.startTrackingOldTrackedData((Entity) (Object) this);
     }
 

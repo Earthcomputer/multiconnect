@@ -94,6 +94,13 @@ public class DataTrackerManager {
         dirty = true;
     }
 
+    public static void postRegisterData(Class<? extends Entity> clazz) {
+        if (!DEFAULT_DATA.containsKey(clazz)) {
+            DEFAULT_DATA.put(clazz, Collections.emptyList());
+            dirty = true;
+        }
+    }
+
     public static void onCreateDataEntry() {
         if (dirty)
             reregisterAll();
