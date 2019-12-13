@@ -53,6 +53,34 @@ public final class TransformerByteBuf extends PacketByteBuf {
         this.translatorRegistry = translatorRegistry;
     }
 
+    @SuppressWarnings("unchecked")
+    public TransformerByteBuf readTopLevelType(Class<?> type) {
+        transformationEnabled = true;
+        stack.push(new StackFrame(type, ConnectionInfo.protocolVersion));
+        List<Pair<Integer, InboundTranslator<?>>> translators = (List<Pair<Integer, InboundTranslator<?>>>) (List<?>)
+                translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
+        for (Pair<Integer, InboundTranslator<?>> translator : translators) {
+            getStackFrame().version = translator.getLeft();
+            translator.getRight().onRead(this);
+        }
+        getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
+        return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public TransformerByteBuf writeTopLevelType(Class<?> type) {
+        transformationEnabled = true;
+        stack.push(new StackFrame(type, SharedConstants.getGameVersion().getProtocolVersion()));
+        List<Pair<Integer, OutboundTranslator<?>>> translators = (List<Pair<Integer, OutboundTranslator<?>>>) (List<?>)
+                translatorRegistry.getOutboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
+        for (Pair<Integer, OutboundTranslator<?>> translator : translators) {
+            translator.getRight().onWrite(this);
+            getStackFrame().version = translator.getLeft();
+        }
+        getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
+        return this;
+    }
+
     public void enablePassthroughMode() {
         getStackFrame().passthroughMode = true;
     }
@@ -75,18 +103,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
     public int readVarInt() {
         if (!transformationEnabled) {
             int packetId = super.readVarInt();
-            transformationEnabled = true;
             NetworkState state = context.channel().attr(ClientConnection.ATTR_KEY_PROTOCOL).get();
             Class<? extends Packet<?>> packetClass = ((INetworkState) state).getPacketHandlerMap().get(NetworkSide.CLIENTBOUND).get(packetId);
-            stack.push(new StackFrame(packetClass, ConnectionInfo.protocolVersion));
-            //noinspection unchecked
-            List<Pair<Integer, InboundTranslator<?>>> translators = (List<Pair<Integer, InboundTranslator<?>>>) (List<?>)
-                    translatorRegistry.getInboundTranslators(packetClass, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
-            for (Pair<Integer, InboundTranslator<?>> translator : translators) {
-                getStackFrame().version = translator.getLeft();
-                translator.getRight().onRead(this);
-            }
-            getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
+            readTopLevelType(packetClass);
             return packetId;
         } else {
             return read(VarInt.class, () -> new VarInt(super.readVarInt())).get();
@@ -113,7 +132,6 @@ public final class TransformerByteBuf extends PacketByteBuf {
         if (!transformationEnabled)
             return readMethod.get();
 
-        int version = getStackFrame().version;
         boolean passthroughMode = getStackFrame().passthroughMode;
         Queue<PendingValue<STORED>> pendingReads = (Queue<PendingValue<STORED>>) (Queue<?>) getStackFrame().pendingReads.get(type);
         stack.push(new StackFrame(type, ConnectionInfo.protocolVersion));
@@ -175,22 +193,13 @@ public final class TransformerByteBuf extends PacketByteBuf {
         queue.add(new PendingValue<>(value, getStackFrame().version));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public PacketByteBuf writeVarInt(int val) {
         if (!transformationEnabled) {
             super.writeVarInt(val);
-            transformationEnabled = true;
             NetworkState state = context.channel().attr(ClientConnection.ATTR_KEY_PROTOCOL).get();
             Class<? extends Packet<?>> packetClass = ((INetworkState) state).getPacketHandlerMap().get(NetworkSide.SERVERBOUND).get(val);
-            stack.push(new StackFrame(packetClass, SharedConstants.getGameVersion().getProtocolVersion()));
-            List<Pair<Integer, OutboundTranslator<?>>> translators = (List<Pair<Integer, OutboundTranslator<?>>>) (List<?>)
-                    translatorRegistry.getOutboundTranslators(packetClass, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
-            for (Pair<Integer, OutboundTranslator<?>> translator : translators) {
-                translator.getRight().onWrite(this);
-                getStackFrame().version = translator.getLeft();
-            }
-            getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
+            writeTopLevelType(packetClass);
             return this;
         } else {
             return write(VarInt.class, new VarInt(val), v -> super.writeVarInt(v.get()));

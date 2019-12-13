@@ -23,7 +23,8 @@
     "MixinItemModels",
     "MixinBlockColors",
     "MixinItemColors",
-    "MixinParticleManager"
+    "MixinParticleManager",
+    "MixinCustomPayloadS2C"
   ],
   "injectors": {
     "defaultRequire": 1
