@@ -22,7 +22,6 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import org.apache.commons.codec.binary.Hex;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -139,22 +138,6 @@ public class TransformerByteBufTest {
         assertEquals(0xc0 & 0x7f, buf.readVarInt());
         assertEquals(0x84 & 0x7f, buf.readVarInt());
         assertEquals(0x3d, buf.readVarInt());
-    }
-
-    @Test
-    public void testInapplicableNewTranslatorRead() {
-        TransformerByteBuf buf = inboundBuf(new TranslatorRegistry()
-                    .registerInboundTranslator(1, VarInt.class, buf1 -> {
-                        buf1.pendingRead(Byte.class, (byte)(buf1.readByte() & 0x7f));
-                        buf1.applyPendingReads();
-                    })
-                    .registerInboundTranslator(0, LoginHelloS2CPacket.class, buf1 -> {
-                        buf1.pendingRead(Double.class, (double)buf1.readVarInt());
-                        buf1.applyPendingReads();
-                    }),
-                0, 0xc0, 0x84, 0x3d);
-        assertEquals(0, buf.readVarInt());
-        assertEquals(1000000.0, buf.readDouble());
     }
 
     @Test
@@ -363,6 +346,14 @@ public class TransformerByteBufTest {
                         buf1.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().x - hitResult.get().getBlockPos().getX()), buf1::writeFloat);
                         buf1.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().y - hitResult.get().getBlockPos().getY()), buf1::writeFloat);
                         buf1.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().z - hitResult.get().getBlockPos().getZ()), buf1::writeFloat);
+                    })
+                    .registerOutboundTranslator(1, BlockPos.class, buf1 -> {
+                        Supplier<Long> val = buf1.skipWrite(Long.class);
+                        buf1.pendingWrite(Long.class, () -> {
+                            BlockPos pos = BlockPos.fromLong(val.get());
+                            pos = new BlockPos(pos.getZ(), pos.getY(), pos.getX());
+                            return pos.asLong();
+                        }, buf1::writeLong);
                     }),
                     23);
         buf.writeVarInt(0);
@@ -370,7 +361,7 @@ public class TransformerByteBufTest {
         buf.writeBlockHitResult(new BlockHitResult(new Vec3d(2, 3, 5), Direction.WEST, new BlockPos(7, 11, 13), false));
 
         assertEquals(0, buf.readVarInt());
-        assertEquals(new BlockPos(7, 11, 13), buf.readBlockPos());
+        assertEquals(new BlockPos(13, 11, 7), buf.readBlockPos());
         assertEquals(Direction.WEST, buf.readEnumConstant(Direction.class));
         assertEquals(Hand.OFF_HAND, buf.readEnumConstant(Hand.class));
     }

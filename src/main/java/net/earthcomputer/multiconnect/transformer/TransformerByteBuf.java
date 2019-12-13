@@ -123,19 +123,19 @@ public final class TransformerByteBuf extends PacketByteBuf {
         if (pendingReads != null && !pendingReads.isEmpty()) {
             PendingValue<STORED> pendingValue = pendingReads.poll();
             value = pendingValue.value;
-            translators = translatorRegistry.getInboundTranslators(type, pendingValue.version, version);
+            translators = translatorRegistry.getInboundTranslators(type, pendingValue.version, SharedConstants.getGameVersion().getProtocolVersion());
             for (Pair<Integer, InboundTranslator<STORED>> translator : translators) {
                 getStackFrame().version = translator.getLeft();
                 translator.getRight().onRead(this);
             }
         } else {
-            translators = translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, version);
+            translators = translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
             for (Pair<Integer, InboundTranslator<STORED>> translator : translators) {
                 getStackFrame().version = translator.getLeft();
                 translator.getRight().onRead(this);
             }
 
-            getStackFrame().version = version;
+            getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
             if (!passthroughMode && translators.isEmpty()) {
                 RETURN ret = readMethod.get();
                 if (!getStackFrame().pendingPendingReads.isEmpty())
@@ -199,6 +199,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     private <T> PacketByteBuf write(Class<T> type, T value, Consumer<T> writeMethod) {
         if (!transformationEnabled || forceSuper) {
+            forceSuper = false;
             writeMethod.accept(value);
             return this;
         }
@@ -243,15 +244,14 @@ public final class TransformerByteBuf extends PacketByteBuf {
         getStackFrame().version = version;
 
         if (!skipWrite) {
-            stack.push(new StackFrame(type, version));
+            stack.push(new StackFrame(type, SharedConstants.getGameVersion().getProtocolVersion()));
+            translators = translatorRegistry.getOutboundTranslators(type, minVersion, SharedConstants.getGameVersion().getProtocolVersion());
             for (Pair<Integer, OutboundTranslator<T>> translator : translators) {
-                if (translator.getLeft() < minVersion)
-                    break;
                 translator.getRight().onWrite(this);
                 getStackFrame().version = translator.getLeft();
             }
 
-            getStackFrame().version = version;
+            getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
             writeMethod.accept(value);
 
             stack.pop();
@@ -433,7 +433,6 @@ public final class TransformerByteBuf extends PacketByteBuf {
             write(type, this.value.get(), v -> {
                 forceSuper = true;
                 writeMethod.accept(v);
-                forceSuper = false;
             });
         }
     }
