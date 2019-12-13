@@ -131,7 +131,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onEntitySpawn", at = @At("TAIL"))
     private void onOnEntitySpawn(EntitySpawnS2CPacket packet, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion >= Protocols.V1_13_2) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             if (packet.getEntityTypeId() == EntityType.ITEM
                     || packet.getEntityTypeId() == EntityType.ARROW
                     || packet.getEntityTypeId() == EntityType.SPECTRAL_ARROW
