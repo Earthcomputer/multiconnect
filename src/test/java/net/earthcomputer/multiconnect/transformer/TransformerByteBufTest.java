@@ -17,6 +17,12 @@ import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
 import net.minecraft.server.network.packet.LoginHelloC2SPacket;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+import org.apache.commons.codec.binary.Hex;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,6 +74,28 @@ public class TransformerByteBufTest {
         assertEquals(0, buf.readVarInt());
         assertEquals(1, buf.readByte());
         assertEquals(2, buf.readByte());
+    }
+
+    @Test
+    public void testPassthroughWithNestedTranslator() {
+        TransformerByteBuf buf = inboundBuf(new TranslatorRegistry()
+                    .registerInboundTranslator(1, LoginHelloS2CPacket.class, buf1 -> {
+                        buf1.enablePassthroughMode();
+                        buf1.readVarInt();
+                        buf1.readVarInt();
+                        buf1.readVarInt();
+                        buf1.disablePassthroughMode();
+                        buf1.applyPendingReads();
+                    })
+                    .registerInboundTranslator(0, VarInt.class, buf1 -> {
+                        buf1.pendingRead(Byte.class, (byte) (buf1.readByte() & 0x7f));
+                        buf1.applyPendingReads();
+                    }),
+                    0, 0xc0, 0x84, 0x3d);
+        assertEquals(0, buf.readVarInt());
+        assertEquals(0xc0 & 0x7f, buf.readVarInt());
+        assertEquals(0x84 & 0x7f, buf.readVarInt());
+        assertEquals(0x3d, buf.readVarInt());
     }
 
     @Test
@@ -320,6 +348,31 @@ public class TransformerByteBufTest {
         buf.writeVarInt(0);
         buf.writeInt(53);
         assertWrittenEquals(buf, 0, 0, 0, 0, 53);
+    }
+
+    @Test
+    public void testMultiplePendingWrite() {
+        TransformerByteBuf buf = outboundBuf(new TranslatorRegistry()
+                    .registerOutboundTranslator(1, LoginHelloC2SPacket.class, buf1 -> {
+                        Supplier<Hand> hand = buf1.skipWrite(Hand.class);
+                        Supplier<BlockHitResult> hitResult = buf1.skipWrite(BlockHitResult.class);
+
+                        buf1.pendingWrite(BlockPos.class, () -> hitResult.get().getBlockPos(), buf1::writeBlockPos);
+                        buf1.pendingWrite(Direction.class, () -> hitResult.get().getSide(), buf1::writeEnumConstant);
+                        buf1.pendingWrite(Hand.class, hand, buf1::writeEnumConstant);
+                        buf1.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().x - hitResult.get().getBlockPos().getX()), buf1::writeFloat);
+                        buf1.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().y - hitResult.get().getBlockPos().getY()), buf1::writeFloat);
+                        buf1.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().z - hitResult.get().getBlockPos().getZ()), buf1::writeFloat);
+                    }),
+                    23);
+        buf.writeVarInt(0);
+        buf.writeEnumConstant(Hand.OFF_HAND);
+        buf.writeBlockHitResult(new BlockHitResult(new Vec3d(2, 3, 5), Direction.WEST, new BlockPos(7, 11, 13), false));
+
+        assertEquals(0, buf.readVarInt());
+        assertEquals(new BlockPos(7, 11, 13), buf.readBlockPos());
+        assertEquals(Direction.WEST, buf.readEnumConstant(Direction.class));
+        assertEquals(Hand.OFF_HAND, buf.readEnumConstant(Hand.class));
     }
 
     private static TransformerByteBuf inboundBuf(TranslatorRegistry registry, int... arr) {

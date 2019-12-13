@@ -117,23 +117,26 @@ public final class TransformerByteBuf extends PacketByteBuf {
         boolean passthroughMode = getStackFrame().passthroughMode;
         Queue<PendingValue<STORED>> pendingReads = (Queue<PendingValue<STORED>>) (Queue<?>) getStackFrame().pendingReads.get(type);
         stack.push(new StackFrame(type, ConnectionInfo.protocolVersion));
-
-        List<Pair<Integer, InboundTranslator<STORED>>> translators = translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, version);
-        for (Pair<Integer, InboundTranslator<STORED>> translator : translators) {
-            getStackFrame().version = translator.getLeft();
-            translator.getRight().onRead(this);
-        }
+        List<Pair<Integer, InboundTranslator<STORED>>> translators;
 
         STORED value;
         if (pendingReads != null && !pendingReads.isEmpty()) {
             PendingValue<STORED> pendingValue = pendingReads.poll();
             value = pendingValue.value;
             translators = translatorRegistry.getInboundTranslators(type, pendingValue.version, version);
+            for (Pair<Integer, InboundTranslator<STORED>> translator : translators) {
+                getStackFrame().version = translator.getLeft();
+                translator.getRight().onRead(this);
+            }
         } else {
             translators = translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, version);
+            for (Pair<Integer, InboundTranslator<STORED>> translator : translators) {
+                getStackFrame().version = translator.getLeft();
+                translator.getRight().onRead(this);
+            }
 
+            getStackFrame().version = version;
             if (!passthroughMode && translators.isEmpty()) {
-                getStackFrame().version = version;
                 RETURN ret = readMethod.get();
                 if (!getStackFrame().pendingPendingReads.isEmpty())
                     throw new IllegalStateException("You forgot to apply pending reads!");
@@ -239,20 +242,20 @@ public final class TransformerByteBuf extends PacketByteBuf {
         }
         getStackFrame().version = version;
 
-        stack.push(new StackFrame(type, version));
-        for (Pair<Integer, OutboundTranslator<T>> translator : translators) {
-            if (translator.getLeft() < minVersion)
-                break;
-            translator.getRight().onWrite(this);
-            getStackFrame().version = translator.getLeft();
-        }
-
         if (!skipWrite) {
+            stack.push(new StackFrame(type, version));
+            for (Pair<Integer, OutboundTranslator<T>> translator : translators) {
+                if (translator.getLeft() < minVersion)
+                    break;
+                translator.getRight().onWrite(this);
+                getStackFrame().version = translator.getLeft();
+            }
+
             getStackFrame().version = version;
             writeMethod.accept(value);
 
+            stack.pop();
         }
-        stack.pop();
 
         for (Map.Entry<Integer, Queue<WriteInstruction>> entry : getStackFrame().writeInstructions.subMap(version, true, minVersion, true).entrySet()) {
             getStackFrame().version = entry.getKey();
@@ -280,8 +283,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     public <T> void pendingWrite(Class<T> type, Supplier<T> value, Consumer<T> writeFunction) {
-        PendingWriteInstruction<T> insn = new PendingWriteInstruction<>(type, value, writeFunction);
-        getStackFrame().writeInstructions.computeIfAbsent(getStackFrame().version, k -> new ArrayDeque<>()).add(insn);
+        Queue<WriteInstruction> queue = getStackFrame().writeInstructions.computeIfAbsent(getStackFrame().version, k -> new ArrayDeque<>());
+        queue.add(new PendingWriteInstruction<>(type, value, writeFunction));
+        queue.add(new PassthroughWriteInstruction<>(type, false));
     }
 
     public <T> Supplier<T> passthroughWrite(Class<T> type) {
@@ -489,6 +493,11 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
+    public float readFloat() {
+        return read(Float.class, super::readFloat);
+    }
+
+    @Override
     public double readDouble() {
         return read(Double.class, super::readDouble);
     }
@@ -673,7 +682,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     @Override
     public long readVarLong() {
-        return read(VarLong.class, () -> new VarLong(super.readLong())).get();
+        return read(VarLong.class, () -> new VarLong(super.readVarLong())).get();
     }
 
     @Override

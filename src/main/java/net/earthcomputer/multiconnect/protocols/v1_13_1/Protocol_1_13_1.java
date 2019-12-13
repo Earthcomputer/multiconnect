@@ -17,6 +17,7 @@ public class Protocol_1_13_1 extends Protocol_1_13_2 {
             if (itemId != -1) {
                 buf.pendingRead(VarInt.class, new VarInt(itemId));
             }
+            buf.applyPendingReads();
         });
         ProtocolRegistry.registerOutboundTranslator(ItemStack.class, buf -> {
             Supplier<Boolean> present = buf.skipWrite(Boolean.class);
