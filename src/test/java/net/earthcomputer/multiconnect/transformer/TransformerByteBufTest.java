@@ -408,7 +408,7 @@ public class TransformerByteBufTest {
         when(context.channel()).thenReturn(channel);
         when(channel.attr(ClientConnection.ATTR_KEY_PROTOCOL)).thenReturn(attr);
         when(attr.get()).thenReturn(state);
-        when(((INetworkState) state).getPacketHandlerMap()).thenReturn(packetMap);
+        when(((INetworkState) state).getPacketHandlers()).thenReturn(packetMap);
 
         return new TransformerByteBuf(delegate, context, translatorRegistry);
     }

@@ -18,16 +18,18 @@ import net.minecraft.item.SpawnEggItem;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
+import net.minecraft.network.listener.PacketListener;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.IdList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Int2ObjectBiMap;
-import net.minecraft.util.SystemUtil;
+import net.minecraft.util.Util;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.SimpleRegistry;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public abstract class AbstractProtocol {
@@ -64,14 +66,32 @@ public abstract class AbstractProtocol {
     }
 
     protected void modifyPacketLists() {
-        ((INetworkState) NetworkState.PLAY).getPacketHandlerMap().clear();
+        INetworkState networkState = (INetworkState) (Object) NetworkState.PLAY;
+        networkState.getPacketHandlers().values().forEach(IPacketHandler::multiconnect_clear);
 
-        for (Class<? extends Packet<?>> packet : getClientboundPackets()) {
-            ((INetworkState) NetworkState.PLAY).multiconnect_addPacket(NetworkSide.CLIENTBOUND, packet);
+        for (PacketInfo<?> packetInfo : getClientboundPackets()) {
+            doRegister(networkState.getPacketHandlers().get(NetworkSide.CLIENTBOUND), packetInfo.getPacketClass(), packetInfo.getFactory());
+            networkState.multiconnect_onAddPacket(packetInfo.getPacketClass());
         }
-        for (Class<? extends Packet<?>> packet : getServerboundPackets()) {
-            ((INetworkState) NetworkState.PLAY).multiconnect_addPacket(NetworkSide.SERVERBOUND, packet);
+        for (PacketInfo<?> packetInfo : getServerboundPackets()) {
+            doRegister(networkState.getPacketHandlers().get(NetworkSide.SERVERBOUND), packetInfo.getPacketClass(), packetInfo.getFactory());
+            networkState.multiconnect_onAddPacket(packetInfo.getPacketClass());
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends PacketListener, P extends Packet<T>> void doRegister(IPacketHandler<T> handler, Class<?> packetClass, Supplier<?> factory) {
+        handler.multiconnect_register((Class<P>) packetClass, (Supplier<P>) factory);
+    }
+
+    protected static void insertAfter(List<PacketInfo<?>> list, Class<? extends Packet<?>> element, PacketInfo<?> toInsert) {
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).getPacketClass() == element) {
+                list.add(i + 1, toInsert);
+                return;
+            }
+        }
+        list.add(0, toInsert);
     }
 
     protected static <T> void insertAfter(List<T> list, T element, T toInsert) {
@@ -83,10 +103,14 @@ public abstract class AbstractProtocol {
         registry.register(toInsert, ((SimpleRegistry<T>) registry).getRawId(element) + 1, new Identifier(id));
     }
 
+    protected static void remove(List<PacketInfo<?>> list, Class<? extends Packet<?>> element) {
+        list.removeIf(it -> it.getPacketClass() == element);
+    }
+
     protected void recomputeBlockStates() {
         ((IIdList) Block.STATE_IDS).clear();
         for (Block block : Registry.BLOCK) {
-            for (BlockState state : block.getStateFactory().getStates()) {
+            for (BlockState state : block.getStateManager().getStates()) {
                 if (acceptBlockState(state)) {
                     Block.STATE_IDS.add(state);
                 }
@@ -94,11 +118,11 @@ public abstract class AbstractProtocol {
         }
     }
 
-    public List<Class<? extends Packet<?>>> getClientboundPackets() {
+    public List<PacketInfo<?>> getClientboundPackets() {
         return new ArrayList<>(DefaultPackets.CLIENTBOUND);
     }
 
-    public List<Class<? extends Packet<?>>> getServerboundPackets() {
+    public List<PacketInfo<?>> getServerboundPackets() {
         return new ArrayList<>(DefaultPackets.SERVERBOUND);
     }
 
@@ -162,7 +186,7 @@ public abstract class AbstractProtocol {
                 sb.append("[")
                         .append(state.getProperties().stream()
                                 .sorted(Comparator.comparing(Property::getName))
-                                .map(p -> p.getName() + "=" + SystemUtil.getValueAsString(p, state.get(p)))
+                                .map(p -> p.getName() + "=" + Util.getValueAsString(p, state.get(p)))
                                 .collect(Collectors.joining(",")))
                         .append("]");
             }
@@ -176,17 +200,15 @@ public abstract class AbstractProtocol {
     }
 
     private static class DefaultPackets {
-        private static List<Class<? extends Packet<?>>> CLIENTBOUND = new ArrayList<>();
-        private static List<Class<? extends Packet<?>>> SERVERBOUND = new ArrayList<>();
+        private static List<PacketInfo<?>> CLIENTBOUND = new ArrayList<>();
+        private static List<PacketInfo<?>> SERVERBOUND = new ArrayList<>();
 
         private static void initialize() {
-            Map<NetworkSide, BiMap<Integer, Class<? extends Packet<?>>>> packetHandlerMap = ((INetworkState) NetworkState.PLAY).getPacketHandlerMap();
-            BiMap<Integer, Class<? extends Packet<?>>> clientPacketMap = packetHandlerMap.get(NetworkSide.CLIENTBOUND);
-            CLIENTBOUND.addAll(clientPacketMap.values());
-            CLIENTBOUND.sort(Comparator.comparing(packet -> clientPacketMap.inverse().get(packet)));
-            BiMap<Integer, Class<? extends Packet<?>>> serverPacketMap = packetHandlerMap.get(NetworkSide.SERVERBOUND);
-            SERVERBOUND.addAll(serverPacketMap.values());
-            SERVERBOUND.sort(Comparator.comparing(packet -> serverPacketMap.inverse().get(packet)));
+            Map<NetworkSide, ? extends IPacketHandler<?>> packetHandlerMap = ((INetworkState) (Object) NetworkState.PLAY).getPacketHandlers();
+            IPacketHandler<?> clientPacketMap = packetHandlerMap.get(NetworkSide.CLIENTBOUND);
+            CLIENTBOUND.addAll(clientPacketMap.multiconnect_values());
+            IPacketHandler<?> serverPacketMap = packetHandlerMap.get(NetworkSide.SERVERBOUND);
+            SERVERBOUND.addAll(serverPacketMap.multiconnect_values());
         }
     }
 

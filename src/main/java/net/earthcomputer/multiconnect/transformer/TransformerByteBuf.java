@@ -104,7 +104,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
         if (!transformationEnabled) {
             int packetId = super.readVarInt();
             NetworkState state = context.channel().attr(ClientConnection.ATTR_KEY_PROTOCOL).get();
-            Class<? extends Packet<?>> packetClass = ((INetworkState) state).getPacketHandlerMap().get(NetworkSide.CLIENTBOUND).get(packetId);
+            //noinspection ConstantConditions
+            Class<? extends Packet<?>> packetClass = ((INetworkState) (Object) state).getPacketHandlers()
+                    .get(NetworkSide.CLIENTBOUND).multiconnect_getPacketClassById(packetId);
             readTopLevelType(packetClass);
             return packetId;
         } else {
@@ -198,7 +200,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
         if (!transformationEnabled) {
             super.writeVarInt(val);
             NetworkState state = context.channel().attr(ClientConnection.ATTR_KEY_PROTOCOL).get();
-            Class<? extends Packet<?>> packetClass = ((INetworkState) state).getPacketHandlerMap().get(NetworkSide.SERVERBOUND).get(val);
+            //noinspection ConstantConditions
+            Class<? extends Packet<?>> packetClass = ((INetworkState) (Object) state).getPacketHandlers()
+                    .get(NetworkSide.SERVERBOUND).multiconnect_getPacketClassById(val);
             writeTopLevelType(packetClass);
             return this;
         } else {

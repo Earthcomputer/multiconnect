@@ -64,7 +64,7 @@ public class AddBannerPatternRecipe extends SpecialCraftingRecipe {
 
             CompoundTag tileEntityNbt = result.getOrCreateSubTag("BlockEntityTag");
             ListTag patterns;
-            if (tileEntityNbt.containsKey("Patterns", 9)) {
+            if (tileEntityNbt.contains("Patterns", 9)) {
                 patterns = tileEntityNbt.getList("Patterns", 10);
             } else {
                 patterns = new ListTag();

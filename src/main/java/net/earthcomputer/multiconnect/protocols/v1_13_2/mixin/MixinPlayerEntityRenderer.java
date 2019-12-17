@@ -5,44 +5,23 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerEntityRenderer.class)
 public class MixinPlayerEntityRenderer {
 
-    @Unique private ThreadLocal<AbstractClientPlayerEntity> capturedPlayer = new ThreadLocal<>();
-
-    @Inject(method = "method_4215", at = @At("HEAD"))
-    private void capturePlayer(AbstractClientPlayerEntity player, double x, double y, double z, float yaw, float delta, CallbackInfo ci) {
-        capturedPlayer.set(player);
-    }
-
-    @ModifyVariable(method = "method_4215", ordinal = 0, at = @At("HEAD"))
-    private double modifyX(double x) {
+    @Inject(method = "getPositionOffset", at = @At("RETURN"), cancellable = true)
+    private void injectSleepingOffset(AbstractClientPlayerEntity player, float delta, CallbackInfoReturnable<Vec3d> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            Direction sleepingDir = capturedPlayer.get().getSleepingDirection();
+            Direction sleepingDir = player.getSleepingDirection();
             if (sleepingDir != null) {
-                x -= sleepingDir.getOffsetX() * 0.4;
+                ci.setReturnValue(ci.getReturnValue().subtract(sleepingDir.getOffsetX() * 0.4, 0, sleepingDir.getOffsetZ() * 0.4));
             }
         }
-        return x;
-    }
-
-    @ModifyVariable(method = "method_4215", ordinal = 2, at = @At("HEAD"))
-    private double modifyZ(double z) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            Direction sleepingDir = capturedPlayer.get().getSleepingDirection();
-            if (sleepingDir != null) {
-                z -= sleepingDir.getOffsetZ() * 0.4;
-            }
-        }
-        capturedPlayer.set(null);
-        return z;
     }
 
 }

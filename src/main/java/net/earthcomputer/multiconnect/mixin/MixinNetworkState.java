@@ -1,10 +1,11 @@
 package net.earthcomputer.multiconnect.mixin;
 
-import com.google.common.collect.BiMap;
 import net.earthcomputer.multiconnect.impl.INetworkState;
+import net.earthcomputer.multiconnect.impl.IPacketHandler;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -16,12 +17,12 @@ public abstract class MixinNetworkState implements INetworkState {
 
     @Accessor
     @Override
-    public abstract Map<NetworkSide, BiMap<Integer, Class<? extends Packet<?>>>> getPacketHandlerMap();
+    public abstract Map<NetworkSide, ? extends IPacketHandler<?>> getPacketHandlers();
 
-    @Shadow protected abstract NetworkState addPacket(NetworkSide networkSide_1, Class<? extends Packet<?>> class_1);
+    @Shadow @Final private static Map<Class<? extends Packet<?>>, NetworkState> HANDLER_STATE_MAP;
 
     @Override
-    public void multiconnect_addPacket(NetworkSide side, Class<? extends Packet<?>> packet) {
-        addPacket(side, packet);
+    public void multiconnect_onAddPacket(Class<? extends Packet<?>> packet) {
+        HANDLER_STATE_MAP.put(packet, (NetworkState) (Object) this);
     }
 }

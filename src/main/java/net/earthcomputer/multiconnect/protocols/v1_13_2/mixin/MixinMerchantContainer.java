@@ -37,11 +37,13 @@ public abstract class MixinMerchantContainer extends Container {
 
         ClientPlayerInteractionManager interactionManager = MinecraftClient.getInstance().interactionManager;
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        assert player != null;
+        assert interactionManager != null;
 
         // move 1st input slot to inventory
         if (!traderInventory.getInvStack(0).isEmpty()) {
             int count = traderInventory.getInvStack(0).getCount();
-            interactionManager.method_2906(syncId, 0, 0, SlotActionType.QUICK_MOVE, player);
+            interactionManager.clickSlot(syncId, 0, 0, SlotActionType.QUICK_MOVE, player);
             if (count == traderInventory.getInvStack(0).getCount())
                 return;
         }
@@ -49,7 +51,7 @@ public abstract class MixinMerchantContainer extends Container {
         // move 2nd input slot to inventory
         if (!traderInventory.getInvStack(1).isEmpty()) {
             int count = traderInventory.getInvStack(1).getCount();
-            interactionManager.method_2906(syncId, 1, 0, SlotActionType.QUICK_MOVE, player);
+            interactionManager.clickSlot(syncId, 1, 0, SlotActionType.QUICK_MOVE, player);
             if (count == traderInventory.getInvStack(1).getCount())
                 return;
         }
@@ -78,11 +80,11 @@ public abstract class MixinMerchantContainer extends Container {
             return;
 
         boolean wasHoldingItem = !player.inventory.getCursorStack().isEmpty();
-        interactionManager.method_2906(syncId, slot, 0, SlotActionType.PICKUP, player);
-        interactionManager.method_2906(syncId, slot, 0, SlotActionType.PICKUP_ALL, player);
-        interactionManager.method_2906(syncId, inputSlot, 0, SlotActionType.PICKUP, player);
+        interactionManager.clickSlot(syncId, slot, 0, SlotActionType.PICKUP, player);
+        interactionManager.clickSlot(syncId, slot, 0, SlotActionType.PICKUP_ALL, player);
+        interactionManager.clickSlot(syncId, inputSlot, 0, SlotActionType.PICKUP, player);
         if (wasHoldingItem)
-            interactionManager.method_2906(syncId, slot, 0, SlotActionType.PICKUP, player);
+            interactionManager.clickSlot(syncId, slot, 0, SlotActionType.PICKUP, player);
     }
 
     @Inject(method = "canInsertIntoSlot", at = @At("HEAD"), cancellable = true)

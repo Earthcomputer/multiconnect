@@ -15,7 +15,6 @@
     "MixinDataTracker",
     "MixinDecoderHandler",
     "MixinEncoderHandler",
-    "MixinPacketByteBuf",
     "MixinSimpleRegistry",
     "MixinInt2ObjectBiMap",
     "MixinIdList",
@@ -24,7 +23,8 @@
     "MixinBlockColors",
     "MixinItemColors",
     "MixinParticleManager",
-    "MixinCustomPayloadS2C"
+    "MixinCustomPayloadS2C",
+    "MixinPacketHandler"
   ],
   "injectors": {
     "defaultRequire": 1

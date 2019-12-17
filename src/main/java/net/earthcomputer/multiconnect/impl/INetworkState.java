@@ -8,8 +8,8 @@ import java.util.Map;
 
 public interface INetworkState {
 
-    Map<NetworkSide, BiMap<Integer, Class<? extends Packet<?>>>> getPacketHandlerMap();
+    Map<NetworkSide, ? extends IPacketHandler<?>> getPacketHandlers();
 
-    void multiconnect_addPacket(NetworkSide side, Class<? extends Packet<?>> packet);
+    void multiconnect_onAddPacket(Class<? extends Packet<?>> packet);
 
 }

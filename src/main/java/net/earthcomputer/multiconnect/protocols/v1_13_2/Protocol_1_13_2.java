@@ -4,6 +4,7 @@ import com.google.gson.JsonParseException;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
+import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.transformer.InboundTranslator;
 import net.earthcomputer.multiconnect.transformer.OutboundTranslator;
@@ -33,6 +34,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtHelper;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.Packet;
 import net.minecraft.particle.ParticleEffect;
@@ -47,7 +49,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.PacketByteBuf;
-import net.minecraft.util.TagHelper;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
@@ -111,35 +112,35 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     @Override
-    public List<Class<? extends Packet<?>>> getClientboundPackets() {
-        List<Class<? extends Packet<?>>> packets = super.getClientboundPackets();
-        insertAfter(packets, GuiCloseS2CPacket.class, GuiOpenS2CPacket_1_13_2.class);
-        packets.remove(TagQueryResponseS2CPacket.class);
-        insertAfter(packets, EntityStatusS2CPacket.class, TagQueryResponseS2CPacket.class);
-        packets.remove(GuiOpenS2CPacket.class);
-        packets.remove(LightUpdateS2CPacket.class);
-        packets.remove(EntityS2CPacket.class);
-        insertAfter(packets, SetTradeOffersPacket.class, EntityS2CPacket.class);
-        packets.remove(SetTradeOffersPacket.class);
-        packets.remove(OpenWrittenBookS2CPacket.class);
-        packets.remove(OpenContainerPacket.class);
-        insertAfter(packets, PlayerPositionLookS2CPacket.class, UseBedS2CPacket.class);
-        packets.remove(ChunkRenderDistanceCenterS2CPacket.class);
-        packets.remove(ChunkLoadDistanceS2CPacket.class);
-        packets.remove(StopSoundS2CPacket.class);
-        insertAfter(packets, PlaySoundFromEntityS2CPacket.class, StopSoundS2CPacket.class);
-        packets.remove(PlaySoundFromEntityS2CPacket.class);
+    public List<PacketInfo<?>> getClientboundPackets() {
+        List<PacketInfo<?>> packets = super.getClientboundPackets();
+        insertAfter(packets, GuiCloseS2CPacket.class, PacketInfo.of(GuiOpenS2CPacket_1_13_2.class, GuiOpenS2CPacket_1_13_2::new));
+        remove(packets, TagQueryResponseS2CPacket.class);
+        insertAfter(packets, EntityStatusS2CPacket.class, PacketInfo.of(TagQueryResponseS2CPacket.class, TagQueryResponseS2CPacket::new));
+        remove(packets, GuiOpenS2CPacket.class);
+        remove(packets, LightUpdateS2CPacket.class);
+        remove(packets, EntityS2CPacket.class);
+        insertAfter(packets, SetTradeOffersPacket.class, PacketInfo.of(EntityS2CPacket.class, EntityS2CPacket::new));
+        remove(packets, SetTradeOffersPacket.class);
+        remove(packets, OpenWrittenBookS2CPacket.class);
+        remove(packets, OpenContainerPacket.class);
+        insertAfter(packets, PlayerPositionLookS2CPacket.class, PacketInfo.of(UseBedS2CPacket.class, UseBedS2CPacket::new));
+        remove(packets, ChunkRenderDistanceCenterS2CPacket.class);
+        remove(packets, ChunkLoadDistanceS2CPacket.class);
+        remove(packets, StopSoundS2CPacket.class);
+        insertAfter(packets, PlaySoundFromEntityS2CPacket.class, PacketInfo.of(StopSoundS2CPacket.class, StopSoundS2CPacket::new));
+        remove(packets, PlaySoundFromEntityS2CPacket.class);
         return packets;
     }
 
     @Override
-    public List<Class<? extends Packet<?>>> getServerboundPackets() {
-        List<Class<? extends Packet<?>>> packets = super.getServerboundPackets();
-        packets.remove(UpdateDifficultyC2SPacket.class);
-        packets.remove(PlayerMoveC2SPacket.class);
-        insertAfter(packets, UpdateDifficultyLockC2SPacket.class, PlayerMoveC2SPacket.class);
-        packets.remove(UpdateDifficultyLockC2SPacket.class);
-        packets.remove(UpdateJigsawC2SPacket.class);
+    public List<PacketInfo<?>> getServerboundPackets() {
+        List<PacketInfo<?>> packets = super.getServerboundPackets();
+        remove(packets, UpdateDifficultyC2SPacket.class);
+        remove(packets, PlayerMoveC2SPacket.class);
+        insertAfter(packets, UpdateDifficultyLockC2SPacket.class, PacketInfo.of(PlayerMoveC2SPacket.class, PlayerMoveC2SPacket::new));
+        remove(packets, UpdateDifficultyLockC2SPacket.class);
+        remove(packets, UpdateJigsawC2SPacket.class);
         return packets;
     }
 
@@ -169,7 +170,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
                     outBuf.writeShort(0); // non-empty block count
-                    PalettedContainer<BlockState> tempContainer = new PalettedContainer<>(BLOCK_STATE_PALETTE, Block.STATE_IDS, TagHelper::deserializeBlockState, TagHelper::serializeBlockState, Blocks.AIR.getDefaultState());
+                    PalettedContainer<BlockState> tempContainer = new PalettedContainer<>(BLOCK_STATE_PALETTE, Block.STATE_IDS, NbtHelper::toBlockState, NbtHelper::fromBlockState, Blocks.AIR.getDefaultState());
                     tempContainer.fromPacket(inBuf);
                     tempContainer.toPacket(outBuf);
                     byte[] light = new byte[16 * 16 * 16 / 2];
@@ -320,14 +321,14 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             public ItemStack translate(ItemStack stack) {
                 if (stack.hasTag()) {
                     assert stack.getTag() != null;
-                    if (stack.getTag().containsKey("display", 10)) {
+                    if (stack.getTag().contains("display", 10)) {
                         CompoundTag display = stack.getTag().getCompound("display");
-                        if (display.containsKey("Lore", 9)) {
+                        if (display.contains("Lore", 9)) {
                             ListTag lore = display.getList("Lore", 8);
                             display.put("multiconnect:1.13.2/oldLore", lore);
                             ListTag newLore = new ListTag();
                             for (int i = 0; i < lore.size(); i++) {
-                                newLore.add(new StringTag(Text.Serializer.toJson(new LiteralText(lore.getString(i)))));
+                                newLore.add(StringTag.of(Text.Serializer.toJson(new LiteralText(lore.getString(i)))));
                             }
                             display.put("Lore", newLore);
                         }
@@ -383,17 +384,17 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             public ItemStack translate(ItemStack stack) {
                 if (stack.hasTag()) {
                     assert stack.getTag() != null;
-                    if (stack.getTag().containsKey("display", 10)) {
+                    if (stack.getTag().contains("display", 10)) {
                         CompoundTag display = stack.getTag().getCompound("display");
-                        if (display.containsKey("multiconnect:1.13.2/oldLore", 9) || display.containsKey("Lore", 9)) {
+                        if (display.contains("multiconnect:1.13.2/oldLore", 9) || display.contains("Lore", 9)) {
                             stack = stack.copy();
-                            ListTag lore = display.containsKey("multiconnect:1.13.2/oldLore", 9) ? display.getList("multiconnect:1.13.2/oldLore", 8) : display.getList("Lore", 8);
+                            ListTag lore = display.contains("multiconnect:1.13.2/oldLore", 9) ? display.getList("multiconnect:1.13.2/oldLore", 8) : display.getList("Lore", 8);
                             ListTag newLore = new ListTag();
                             for (int i = 0; i < lore.size(); i++) {
                                 try {
                                     Text text = Text.Serializer.fromJson(lore.getString(i));
                                     if (text == null) throw new JsonParseException("text null");
-                                    newLore.add(new StringTag(text.asFormattedString()));
+                                    newLore.add(StringTag.of(text.asFormattedString()));
                                 } catch (JsonParseException e) {
                                     newLore.add(lore.get(i));
                                 }
@@ -477,16 +478,16 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             DataTrackerManager.registerOldTrackedData(HorseEntity.class, OLD_HORSE_ARMOR, 0, (entity, val) -> {
                 switch (val) {
                     case 1:
-                        entity.setEquippedStack(EquipmentSlot.CHEST, new ItemStack(Items.IRON_HORSE_ARMOR));
+                        entity.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.IRON_HORSE_ARMOR));
                         break;
                     case 2:
-                        entity.setEquippedStack(EquipmentSlot.CHEST, new ItemStack(Items.GOLDEN_HORSE_ARMOR));
+                        entity.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.GOLDEN_HORSE_ARMOR));
                         break;
                     case 3:
-                        entity.setEquippedStack(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_HORSE_ARMOR));
+                        entity.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_HORSE_ARMOR));
                         break;
                     default:
-                        entity.setEquippedStack(EquipmentSlot.CHEST, ItemStack.EMPTY);
+                        entity.equipStack(EquipmentSlot.CHEST, ItemStack.EMPTY);
                 }
             });
         super.postEntityDataRegister(clazz);
@@ -1437,6 +1438,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     public static void updateCameraPosition() {
         assert MinecraftClient.getInstance().getNetworkHandler() != null;
         ChunkSectionPos chunkPos = ChunkSectionPos.from(MinecraftClient.getInstance().player);
-        MinecraftClient.getInstance().getNetworkHandler().handleChunkRenderDistanceCenter(new ChunkRenderDistanceCenterS2CPacket(chunkPos.getChunkX(), chunkPos.getChunkZ()));
+        MinecraftClient.getInstance().getNetworkHandler().onChunkRenderDistanceCenter(new ChunkRenderDistanceCenterS2CPacket(chunkPos.getSectionX(), chunkPos.getSectionZ()));
     }
 }

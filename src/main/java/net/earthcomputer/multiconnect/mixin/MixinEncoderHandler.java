@@ -24,12 +24,12 @@ public class MixinEncoderHandler {
 
     @Unique private ThreadLocal<ChannelHandlerContext> context = new ThreadLocal<>();
 
-    @Inject(method = "method_10838", at = @At(value = "JUMP", opcode = Opcodes.IFNONNULL, ordinal = 1))
+    @Inject(method = "encode", at = @At(value = "JUMP", opcode = Opcodes.IFNONNULL, ordinal = 1))
     private void onEncodeHead(ChannelHandlerContext context, Packet<?> packet, ByteBuf buf, CallbackInfo ci) {
         this.context.set(context);
     }
 
-    @ModifyVariable(method = "method_10838", ordinal = 0, at = @At(value = "STORE", ordinal = 0))
+    @ModifyVariable(method = "encode", ordinal = 0, at = @At(value = "STORE", ordinal = 0))
     private PacketByteBuf transformPacketByteBuf(PacketByteBuf buf) {
         if (side == NetworkSide.SERVERBOUND)
             buf = new TransformerByteBuf(buf, context.get());
