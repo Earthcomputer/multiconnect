@@ -32,7 +32,7 @@ public class DataTrackerManager {
     private static Map<Class<? extends Entity>, Integer> NEXT_IDS = new HashMap<>();
     private static Map<Class<? extends Entity>, List<Pair<TrackedData<?>, ?>>> oldTrackedData = new HashMap<>();
     private static Map<TrackedData<?>, BiConsumer<?, ?>> oldTrackedDataHandlers = new IdentityHashMap<>();
-    private static boolean dirty = false;
+    private static volatile boolean dirty = false;
     private static int nextAbsentId = -1;
     private static Set<DataTracker> trackerInstances = Collections.newSetFromMap(new WeakHashMap<>());
 
@@ -51,7 +51,7 @@ public class DataTrackerManager {
         }
     }
 
-    public static void addTrackerInstance(DataTracker instance) {
+    public static synchronized void addTrackerInstance(DataTracker instance) {
         trackerInstances.add(instance);
     }
 
@@ -76,7 +76,7 @@ public class DataTrackerManager {
         }
     }
 
-    public static void setId(TrackedData<?> data, int id) {
+    private static void setId(TrackedData<?> data, int id) {
         try {
             TRACKED_DATA_ID.set(data, id);
         } catch (ReflectiveOperationException e) {
@@ -86,22 +86,28 @@ public class DataTrackerManager {
 
     @SuppressWarnings("unchecked")
     private static int getNextId(Class<? extends Entity> clazz) {
-        return NEXT_IDS.computeIfAbsent(clazz, k -> k == Entity.class ? 0 : getNextId((Class<? extends Entity>) clazz.getSuperclass()));
+        Integer ret = NEXT_IDS.get(clazz);
+        if (ret == null) {
+            int nextId = clazz == Entity.class ? 0 : getNextId((Class<? extends Entity>) clazz.getSuperclass());
+            NEXT_IDS.put(clazz, nextId);
+            return nextId;
+        }
+        return ret;
     }
 
-    public static void onRegisterData(Class<? extends Entity> clazz, TrackedData<?> data) {
+    public static synchronized void onRegisterData(Class<? extends Entity> clazz, TrackedData<?> data) {
         DEFAULT_DATA.computeIfAbsent(clazz, k -> new ArrayList<>()).add(data);
         dirty = true;
     }
 
-    public static void postRegisterData(Class<? extends Entity> clazz) {
+    public static synchronized void postRegisterData(Class<? extends Entity> clazz) {
         if (!DEFAULT_DATA.containsKey(clazz)) {
             DEFAULT_DATA.put(clazz, Collections.emptyList());
             dirty = true;
         }
     }
 
-    public static void onCreateDataEntry() {
+    public static synchronized void onCreateDataEntry() {
         if (dirty)
             reregisterAll();
     }
@@ -120,7 +126,7 @@ public class DataTrackerManager {
         reregisterAll();
     }
 
-    public static void reregisterAll() {
+    private static void reregisterAll() {
         nextAbsentId = -1;
         NEXT_IDS.clear();
         oldTrackedData.clear();
@@ -149,7 +155,7 @@ public class DataTrackerManager {
         ConnectionInfo.protocol.postEntityDataRegister(clazz);
     }
 
-    public static void startTrackingOldTrackedData(Entity entity) {
+    public static synchronized void startTrackingOldTrackedData(Entity entity) {
         for (Class<?> clazz = entity.getClass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
             List<Pair<TrackedData<?>, ?>> trackedData = oldTrackedData.get(clazz);
             if (trackedData != null) {
@@ -165,7 +171,7 @@ public class DataTrackerManager {
         entity.getDataTracker().startTracking(data, (T) _default);
     }
 
-    public static void handleOldTrackedData(Entity entity, TrackedData<?> data) {
+    public static synchronized void handleOldTrackedData(Entity entity, TrackedData<?> data) {
         data = ((IDataTracker) entity.getDataTracker()).multiconnect_getActualTrackedData(data);
         BiConsumer<?, ?> handler = oldTrackedDataHandlers.get(data);
         if (handler != null)

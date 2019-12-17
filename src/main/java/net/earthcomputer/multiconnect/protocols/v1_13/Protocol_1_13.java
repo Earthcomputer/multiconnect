@@ -21,7 +21,7 @@ import java.util.Optional;
 
 public class Protocol_1_13 extends Protocol_1_13_1 {
 
-    private static final Field PROJECTILE_UUID = DataTrackerManager.getTrackedDataField(ProjectileEntity.class, 1, "field_7580");
+    private static final Field PROJECTILE_UUID = DataTrackerManager.getTrackedDataField(ProjectileEntity.class, 1, "OPTIONAL_UUID");
 
     @Override
     public void registerTranslators() {

@@ -9,6 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.PacketByteBuf;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,7 +40,7 @@ public class MixinClientChunkManager {
     }
 
     @Inject(method = "loadChunkFromPacket", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/WorldChunk;getSectionArray()[Lnet/minecraft/world/chunk/ChunkSection;"))
-    private void recalculateHeightmaps(World world, int x, int z, PacketByteBuf buf, CompoundTag tag, int verticalStripMask, boolean fullChunk, CallbackInfoReturnable<WorldChunk> ci) {
+    private void recalculateHeightmaps(int x, int z, BiomeArray biomeArray, PacketByteBuf buf, CompoundTag tag, int verticalStripMask, CallbackInfoReturnable<WorldChunk> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             WorldChunk chunk = this.chunk.get();
             for (ChunkSection section : chunk.getSectionArray()) {

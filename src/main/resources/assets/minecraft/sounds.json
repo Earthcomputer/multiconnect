@@ -1,0 +1,57 @@
+{
+  "entity.parrot.imitate.enderman": {
+    "sounds": [
+      {
+        "name": "entity.enderman.ambient",
+        "pitch": 1.7,
+        "type": "event",
+        "volume": 0.5
+      }
+    ],
+    "subtitle": "subtitles.entity.parrot.imitate.enderman"
+  },
+  "entity.parrot.imitate.panda": {
+    "sounds": [
+      {
+        "name": "entity.panda.ambient",
+        "pitch": 1.8,
+        "type": "event",
+        "volume": 1.4
+      }
+    ],
+    "subtitle": "subtitles.entity.parrot.imitate.panda"
+  },
+  "entity.parrot.imitate.polar_bear": {
+    "sounds": [
+      {
+        "name": "entity.polar_bear.ambient",
+        "pitch": 1.8,
+        "type": "event",
+        "volume": 0.5
+      }
+    ],
+    "subtitle": "subtitles.entity.parrot.imitate.polar_bear"
+  },
+  "entity.parrot.imitate.wolf": {
+    "sounds": [
+      {
+        "name": "entity.wolf.ambient",
+        "pitch": 1.8,
+        "type": "event",
+        "volume": 0.6
+      }
+    ],
+    "subtitle": "subtitles.entity.parrot.imitate.wolf"
+  },
+  "entity.parrot.imitate.zombie_pigman": {
+    "sounds": [
+      {
+        "name": "entity.zombie_pigman.ambient",
+        "pitch": 1.8,
+        "type": "event",
+        "volume": 0.4
+      }
+    ],
+    "subtitle": "subtitles.entity.parrot.imitate.zombie_pigman"
+  }
+}

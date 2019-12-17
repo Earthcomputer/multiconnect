@@ -6,6 +6,7 @@ import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
 import net.earthcomputer.multiconnect.transformer.InboundTranslator;
 import net.earthcomputer.multiconnect.transformer.OutboundTranslator;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
@@ -77,7 +78,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     private static final Field ENDER_EYE_ITEM = DataTrackerManager.getTrackedDataField(EnderEyeEntity.class, 0, "ITEM");
     private static final Field FIREWORK_SHOOTER = DataTrackerManager.getTrackedDataField(FireworkEntity.class, 1, "SHOOTER_ENTITY_ID");
     private static final Field FIREWORK_ANGLE = DataTrackerManager.getTrackedDataField(FireworkEntity.class, 2, "SHOT_AT_ANGLE");
-    private static final Field LIVING_SLEEPING_POSITION = DataTrackerManager.getTrackedDataField(LivingEntity.class, 5, "SLEEPING_POSITION");
+    private static final Field LIVING_SLEEPING_POSITION = DataTrackerManager.getTrackedDataField(LivingEntity.class, 6, "SLEEPING_POSITION");
     private static final Field VILLAGER_DATA = DataTrackerManager.getTrackedDataField(VillagerEntity.class, 0, "VILLAGER_DATA");
     private static final Field ZOMBIE_DROWNING = DataTrackerManager.getTrackedDataField(ZombieEntity.class, 2, "CONVERTING_IN_WATER");
     private static final Field ZOMBIE_VILLAGER_DATA = DataTrackerManager.getTrackedDataField(ZombieVillagerEntity.class, 1, "VILLAGER_DATA");
@@ -1050,7 +1051,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(SoundEvents.ENTITY_PANDA_HURT);
         registry.unregister(SoundEvents.ENTITY_PANDA_BITE);
         registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_GUARDIAN);
-        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_PANDA);
+        registry.unregister(SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_PANDA);
         registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_PILLAGER);
         registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_RAVAGER);
         registry.unregister(SoundEvents.ENTITY_PILLAGER_AMBIENT);
