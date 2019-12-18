@@ -1,16 +1,27 @@
 package net.earthcomputer.multiconnect.protocols.v1_14_4;
 
+import io.netty.buffer.Unpooled;
+import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
+import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15;
+import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.BellBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.client.network.packet.PlayerActionResponseS2CPacket;
-import net.minecraft.client.network.packet.SynchronizeTagsS2CPacket;
+import net.minecraft.client.network.packet.*;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.mob.EndermanEntity;
+import net.minecraft.entity.passive.WolfEntity;
+import net.minecraft.entity.projectile.TridentEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleEffect;
@@ -18,11 +29,163 @@ import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.chunk.ChunkSection;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.List;
 
 public class Protocol_1_14_4 extends Protocol_1_15 {
+
+    private static final Field ENDERMAN_HAS_SCREAMED = DataTrackerManager.getTrackedDataField(EndermanEntity.class, 2, "field_20618");
+    private static final Field LIVING_STINGER_COUNT = DataTrackerManager.getTrackedDataField(LivingEntity.class, 5, "STINGER_COUNT");
+    private static final Field TRIDENT_HAS_ENCHANTMENT_GLINT = DataTrackerManager.getTrackedDataField(TridentEntity.class, 1, "field_21514");
+    private static final Field WOLF_BEGGING = DataTrackerManager.getTrackedDataField(WolfEntity.class, 0, "BEGGING");
+
+    private static final TrackedData<Float> OLD_WOLF_HEALTH = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.FLOAT);
+
+    @Override
+    public void registerTranslators() {
+        ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            int chunkX = buf.readInt();
+            int chunkZ = buf.readInt();
+            boolean isFullChunk = buf.readBoolean();
+            if (!isFullChunk) {
+                buf.disablePassthroughMode();
+                buf.applyPendingReads();
+                return;
+            }
+            int verticalStripBitmask = buf.readVarInt();
+            buf.readCompoundTag(); // heightmaps
+            buf.disablePassthroughMode();
+
+            int dataLength = buf.readVarInt();
+            if (dataLength > 2097152)
+                throw new RuntimeException("Chunk Packet trying to allocate too much memory on read.");
+            byte[] data = new byte[dataLength];
+            buf.readBytes(data);
+            PacketByteBuf inBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data.clone()));
+            PacketByteBuf outBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data));
+            outBuf.writerIndex(0);
+
+            for (int sectionY = 0; sectionY < 16; sectionY++) {
+                if ((verticalStripBitmask & (1 << sectionY)) != 0) {
+                    new ChunkSection(sectionY << 4).fromPacket(inBuf);
+                }
+            }
+            int len = inBuf.readerIndex();
+            inBuf.readerIndex(0);
+            byte[] bytes = new byte[len];
+            inBuf.readBytes(bytes);
+            outBuf.writeBytes(bytes);
+
+            int[] rawBiomeData = new int[256];
+            Biome[] biomeData = new Biome[256];
+            for (int i = 0; i < 256; i++) {
+                rawBiomeData[i] = inBuf.readInt();
+                biomeData[i] = Registry.BIOME.get(rawBiomeData[i]);
+            }
+            PendingBiomeData.setPendingBiomeData(chunkX, chunkZ, biomeData);
+
+            for (int y = 0; y < 64; y++) {
+                for (int z = 0; z < 4; z++) {
+                    for (int x = 0; x < 4; x++) {
+                        int centerX = (x << 2) + 2;
+                        int centerZ = (z << 2) + 2;
+                        buf.pendingRead(Integer.class, rawBiomeData[centerZ << 4 | centerX]);
+                    }
+                }
+            }
+
+            buf.pendingRead(VarInt.class, new VarInt(outBuf.writerIndex()));
+            buf.pendingRead(byte[].class, data);
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readInt(); // player id
+            buf.readUnsignedByte(); // game mode
+            buf.readInt(); // dimension
+            buf.pendingRead(Long.class, 0L); // seed
+            buf.readUnsignedByte(); // max players
+            buf.readString(16); // generator type
+            buf.readVarInt(); // render distance
+            buf.readBoolean(); // reduced debug info
+            buf.disablePassthroughMode();
+            buf.pendingRead(Boolean.class, true); // show death screen
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(MobSpawnS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            int entityId = buf.readVarInt();
+            buf.readUuid();
+            buf.readVarInt();
+            buf.readDouble();
+            buf.readDouble();
+            buf.readDouble();
+            buf.readByte();
+            buf.readByte();
+            buf.readByte();
+            buf.readShort();
+            buf.readShort();
+            buf.readShort();
+            buf.disablePassthroughMode();
+            try {
+                PendingDataTrackerEntries.setEntries(entityId, DataTracker.deserializePacket(buf));
+            } catch (IOException e) {
+                // I don't even know why it's declared to throw an IOException
+                throw new AssertionError(e);
+            }
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(ParticleS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readInt(); // type
+            buf.readBoolean(); // long distance
+            buf.disablePassthroughMode();
+            double x = buf.readFloat();
+            double y = buf.readFloat();
+            double z = buf.readFloat();
+            buf.pendingRead(Double.class, x);
+            buf.pendingRead(Double.class, y);
+            buf.pendingRead(Double.class, z);
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readInt(); // dimension
+            buf.disablePassthroughMode();
+            buf.pendingRead(Long.class, 0L); // seed
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(PlayerSpawnS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            int entityId = buf.readVarInt();
+            buf.readUuid();
+            buf.readDouble();
+            buf.readDouble();
+            buf.readDouble();
+            buf.readByte();
+            buf.readByte();
+            buf.disablePassthroughMode();
+            try {
+                PendingDataTrackerEntries.setEntries(entityId, DataTracker.deserializePacket(buf));
+            } catch (IOException e) {
+                // I don't even know why it's declared to throw an IOException
+                throw new AssertionError(e);
+            }
+            buf.applyPendingReads();
+        });
+    }
 
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
@@ -113,5 +276,19 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             return false;
 
         return super.acceptBlockState(state);
+    }
+
+    @Override
+    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+        if (clazz == LivingEntity.class && data == DataTrackerManager.getTrackedData(Integer.class, LIVING_STINGER_COUNT))
+            return false;
+        if (clazz == TridentEntity.class && data == DataTrackerManager.getTrackedData(Boolean.class, TRIDENT_HAS_ENCHANTMENT_GLINT))
+            return false;
+        if (clazz == WolfEntity.class && data == DataTrackerManager.getTrackedData(Boolean.class, WOLF_BEGGING))
+            DataTrackerManager.registerOldTrackedData(WolfEntity.class, OLD_WOLF_HEALTH, 20f, LivingEntity::setHealth);
+        if (clazz == EndermanEntity.class && data == DataTrackerManager.getTrackedData(Boolean.class, ENDERMAN_HAS_SCREAMED))
+            return false;
+
+        return super.acceptEntityData(clazz, data);
     }
 }
