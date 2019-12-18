@@ -23,8 +23,7 @@ public class Protocol_1_13 extends Protocol_1_13_1 {
 
     private static final Field PROJECTILE_UUID = DataTrackerManager.getTrackedDataField(ProjectileEntity.class, 1, "OPTIONAL_UUID");
 
-    @Override
-    public void registerTranslators() {
+    public static void registerTranslators() {
         ProtocolRegistry.registerOutboundTranslator(BookUpdateC2SPacket.class, buf -> {
             buf.passthroughWrite(ItemStack.class); // book item
             buf.passthroughWrite(Boolean.class); // signed

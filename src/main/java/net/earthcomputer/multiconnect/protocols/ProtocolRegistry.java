@@ -55,21 +55,25 @@ public class ProtocolRegistry {
 
     private static int registeringProtocol;
     private static void register(int version, AbstractProtocol protocol) {
+        register(version, protocol, () -> {});
+    }
+
+    private static void register(int version, AbstractProtocol protocol, Runnable registerTranslators) {
         registeringProtocol = version;
         protocols.put(version, protocol);
-        protocol.registerTranslators();
+        registerTranslators.run();
     }
 
     static {
         register(V1_15, new Protocol_1_15());
-        register(V1_14_4, new Protocol_1_14_4());
+        register(V1_14_4, new Protocol_1_14_4(), Protocol_1_14_4::registerTranslators);
         register(V1_14_3, new Protocol_1_14_3());
-        register(V1_14_2, new Protocol_1_14_2());
+        register(V1_14_2, new Protocol_1_14_2(), Protocol_1_14_2::registerTranslators);
         register(V1_14_1, new Protocol_1_14_1());
         register(V1_14, new Protocol_1_14());
-        register(V1_13_2, new Protocol_1_13_2());
-        register(V1_13_1, new Protocol_1_13_1());
-        register(V1_13, new Protocol_1_13());
+        register(V1_13_2, new Protocol_1_13_2(), Protocol_1_13_2::registerTranslators);
+        register(V1_13_1, new Protocol_1_13_1(), Protocol_1_13_1::registerTranslators);
+        register(V1_13, new Protocol_1_13(), Protocol_1_13::registerTranslators);
     }
 
 }

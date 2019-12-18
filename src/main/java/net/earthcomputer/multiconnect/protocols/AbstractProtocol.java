@@ -34,9 +34,6 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractProtocol {
 
-    public void registerTranslators() {
-    }
-
     public void setup() {
         modifyPacketLists();
         DataTrackerManager.onConnectToServer();

@@ -47,8 +47,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
 
     private static final TrackedData<Float> OLD_WOLF_HEALTH = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.FLOAT);
 
-    @Override
-    public void registerTranslators() {
+    public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             int chunkX = buf.readInt();

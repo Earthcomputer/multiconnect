@@ -7,8 +7,7 @@ import net.minecraft.village.TraderOfferList;
 
 public class Protocol_1_14_2 extends Protocol_1_14_3 {
 
-    @Override
-    public void registerTranslators() {
+    public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(SetTradeOffersPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt();

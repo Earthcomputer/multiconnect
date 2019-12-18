@@ -9,8 +9,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class Protocol_1_13_1 extends Protocol_1_13_2 {
-    @Override
-    public void registerTranslators() {
+    public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ItemStack.class, buf -> {
             int itemId = buf.readShort();
             buf.pendingRead(Boolean.class, itemId != -1);

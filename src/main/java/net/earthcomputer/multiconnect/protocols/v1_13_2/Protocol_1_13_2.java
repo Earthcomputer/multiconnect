@@ -145,8 +145,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         return packets;
     }
 
-    @Override
-    public void registerTranslators() {
+    public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             int chunkX = buf.readInt();
