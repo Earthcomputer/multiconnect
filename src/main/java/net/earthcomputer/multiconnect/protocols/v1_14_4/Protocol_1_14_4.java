@@ -231,6 +231,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
     }
 
     private void modifySoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+        registry.unregister(SoundEvents.ENTITY_BEE_DEATH);
         registry.unregister(SoundEvents.ENTITY_BEE_HURT);
         registry.unregister(SoundEvents.ENTITY_BEE_LOOP_AGGRESSIVE);
         registry.unregister(SoundEvents.ENTITY_BEE_LOOP);
