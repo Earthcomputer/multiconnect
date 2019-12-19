@@ -2,13 +2,13 @@ package net.earthcomputer.multiconnect.protocols.v1_14_2;
 
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_14_3.Protocol_1_14_3;
-import net.minecraft.client.network.packet.SetTradeOffersPacket;
+import net.minecraft.client.network.packet.SetTradeOffersS2CPacket;
 import net.minecraft.village.TraderOfferList;
 
 public class Protocol_1_14_2 extends Protocol_1_14_3 {
 
     public static void registerTranslators() {
-        ProtocolRegistry.registerInboundTranslator(SetTradeOffersPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SetTradeOffersS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt();
             TraderOfferList.fromPacket(buf);

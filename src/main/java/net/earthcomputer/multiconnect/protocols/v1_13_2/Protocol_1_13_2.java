@@ -121,10 +121,10 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         remove(packets, GuiOpenS2CPacket.class);
         remove(packets, LightUpdateS2CPacket.class);
         remove(packets, EntityS2CPacket.class);
-        insertAfter(packets, SetTradeOffersPacket.class, PacketInfo.of(EntityS2CPacket.class, EntityS2CPacket::new));
-        remove(packets, SetTradeOffersPacket.class);
+        insertAfter(packets, SetTradeOffersS2CPacket.class, PacketInfo.of(EntityS2CPacket.class, EntityS2CPacket::new));
+        remove(packets, SetTradeOffersS2CPacket.class);
         remove(packets, OpenWrittenBookS2CPacket.class);
-        remove(packets, OpenContainerPacket.class);
+        remove(packets, OpenContainerS2CPacket.class);
         insertAfter(packets, PlayerPositionLookS2CPacket.class, PacketInfo.of(UseBedS2CPacket.class, UseBedS2CPacket::new));
         remove(packets, ChunkRenderDistanceCenterS2CPacket.class);
         remove(packets, ChunkLoadDistanceS2CPacket.class);
@@ -242,7 +242,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readInt(); // dimension
-            buf.readUnsignedByte(); // gamemode
             buf.disablePassthroughMode();
             PendingDifficulty.setPendingDifficulty(Difficulty.byOrdinal(buf.readUnsignedByte()));
             buf.applyPendingReads();

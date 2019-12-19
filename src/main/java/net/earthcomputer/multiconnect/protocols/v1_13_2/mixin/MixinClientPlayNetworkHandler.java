@@ -41,7 +41,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow public abstract void onDifficulty(DifficultyS2CPacket packet);
 
-    @Shadow public abstract void onSetTradeOffers(SetTradeOffersPacket packet);
+    @Shadow public abstract void onSetTradeOffers(SetTradeOffersS2CPacket packet);
 
     @Shadow public abstract void onVelocityUpdate(EntityVelocityUpdateS2CPacket entityVelocityUpdateS2CPacket_1);
 
@@ -100,7 +100,7 @@ public abstract class MixinClientPlayNetworkHandler {
                         trade.clearUses();
                     trades.add(trade);
                 }
-                onSetTradeOffers(new SetTradeOffersPacket(syncId, trades, 5, 0, false, false));
+                onSetTradeOffers(new SetTradeOffersS2CPacket(syncId, trades, 5, 0, false, false));
                 ci.cancel();
             } else if (CUSTOM_PAYLOAD_OPEN_BOOK.equals(channel)) {
                 OpenWrittenBookS2CPacket openBookPacket = new OpenWrittenBookS2CPacket();

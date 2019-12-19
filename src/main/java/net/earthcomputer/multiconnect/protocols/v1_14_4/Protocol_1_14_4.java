@@ -87,6 +87,8 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             for (int i = 0; i < 256; i++) {
                 rawBiomeData[i] = inBuf.readInt();
                 biomeData[i] = Registry.BIOME.get(rawBiomeData[i]);
+                if (biomeData[i] == null)
+                    throw new RuntimeException("Received invalid biome id: " + rawBiomeData[i]);
             }
             PendingBiomeData.setPendingBiomeData(chunkX, chunkZ, biomeData);
 
