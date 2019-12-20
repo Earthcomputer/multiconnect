@@ -1,16 +1,18 @@
 package net.earthcomputer.multiconnect.mixin;
 
-import net.earthcomputer.multiconnect.impl.IItemColors;
-import net.minecraft.client.color.item.ItemColorProvider;
+import net.earthcomputer.multiconnect.protocols.AbstractProtocol;
 import net.minecraft.client.color.item.ItemColors;
-import net.minecraft.util.IdList;
+import net.minecraft.util.registry.DefaultedRegistry;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ItemColors.class)
-public abstract class MixinItemColors implements IItemColors {
+public abstract class MixinItemColors {
 
-    @Accessor
-    @Override
-    public abstract IdList<ItemColorProvider> getProviders();
+    @Redirect(method = "getColorMultiplier", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/DefaultedRegistry;getRawId(Ljava/lang/Object;)I"))
+    private <T> int redirectGetRawId(DefaultedRegistry<T> registry, T value) {
+        return AbstractProtocol.getUnmodifiedId(registry, value);
+    }
+
 }

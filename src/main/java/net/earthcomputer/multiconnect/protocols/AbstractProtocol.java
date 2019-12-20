@@ -6,10 +6,6 @@ import net.earthcomputer.multiconnect.impl.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.color.block.BlockColorProvider;
-import net.minecraft.client.color.block.BlockColors;
-import net.minecraft.client.color.item.ItemColorProvider;
-import net.minecraft.client.color.item.ItemColors;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
@@ -20,7 +16,6 @@ import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.state.property.Property;
-import net.minecraft.util.IdList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Int2ObjectBiMap;
 import net.minecraft.util.Util;
@@ -40,24 +35,6 @@ public abstract class AbstractProtocol {
         DefaultRegistry.restoreAll();
         DefaultRegistry.DEFAULT_REGISTRIES.keySet().forEach((registry -> modifyRegistry((ISimpleRegistry<?>) registry)));
         recomputeBlockStates();
-        {
-            IdList<BlockColorProvider> srcProviders = ((IBlockColors) BlockColors.create()).getProviders();
-            IdList<BlockColorProvider> dstProviders = ((IBlockColors) MinecraftClient.getInstance().getBlockColorMap()).getProviders();
-            ((IIdList) dstProviders).clear();
-            for (int id : ((IIdList) srcProviders).ids()) {
-                if (id != 0)
-                    dstProviders.set(srcProviders.get(id), id);
-            }
-        }
-        {
-            IdList<ItemColorProvider> srcProviders = ((IItemColors) ItemColors.create(MinecraftClient.getInstance().getBlockColorMap())).getProviders();
-            IdList<ItemColorProvider> dstProviders = ((IItemColors) ((IMinecraftClient) MinecraftClient.getInstance()).getItemColorMap()).getProviders();
-            ((IIdList) dstProviders).clear();
-            for (int id : ((IIdList) srcProviders).ids()) {
-                if (id != 0)
-                    dstProviders.set(srcProviders.get(id), id);
-            }
-        }
         ((IMinecraftClient) MinecraftClient.getInstance()).callInitializeSearchableContainers();
         ((IMinecraftClient) MinecraftClient.getInstance()).getSearchManager().apply(MinecraftClient.getInstance().getResourceManager());
     }
