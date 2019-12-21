@@ -32,7 +32,7 @@ This section is for when you are developing your own mod and want to use the mul
    ```
    - Note: replace `<version>` with the version of multiconnect you want to depend on.
    - Note: SKIP this step if your mod is NOT using the API in any way.
-1. If you only want to compile your mod with the API, but don't want to run multiconnect in the development environment, add the following to your `dependencies {}` block:
+1. If you want to compile your mod with the API, or if you want to run multiconnect in the development environment, add the following to your `dependencies {}` block:
    ```groovy
    dependencies {
       // ...
