@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_12_2.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "MixinCustomPayloadC2S",
+    "MixinCommandBlockMinecartC2S"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

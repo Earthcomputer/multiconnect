@@ -126,6 +126,13 @@ public abstract class AbstractProtocol {
     }
 
     @SuppressWarnings("unchecked")
+    public static <T> Identifier getUnmodifiedName(Registry<T> registry, T value) {
+        DefaultRegistry<T> defaultRegistry = (DefaultRegistry<T>) DefaultRegistry.DEFAULT_REGISTRIES.get(registry);
+        if (defaultRegistry == null) return registry.getId(value);
+        return defaultRegistry.defaultEntries.inverse().get(value);
+    }
+
+    @SuppressWarnings("unchecked")
     public static <T> void rename(ISimpleRegistry<T> registry, T value, String newName) {
         int id = ((SimpleRegistry<T>) registry).getRawId(value);
         registry.unregister(value);

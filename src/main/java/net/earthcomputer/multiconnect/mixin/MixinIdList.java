@@ -1,14 +1,22 @@
 package net.earthcomputer.multiconnect.mixin;
 
+import com.google.common.collect.Iterators;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.impl.IIdList;
 import net.minecraft.util.IdList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.IdentityHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Mixin(IdList.class)
 public class MixinIdList<T> implements IIdList {
@@ -17,15 +25,64 @@ public class MixinIdList<T> implements IIdList {
     @Shadow @Final private IdentityHashMap<T, Integer> idMap;
     @Shadow @Final private List<T> list;
 
+    @Unique private int minHighIds = Integer.MAX_VALUE;
+    @Unique private final Int2ObjectMap<T> highIdsMap = new Int2ObjectOpenHashMap<>();
+
+    @Inject(method = "set", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", remap = false), cancellable = true)
+    private void onSet(T value, int id, CallbackInfo ci) {
+        if (id > list.size() + 4096) {
+            if (id < minHighIds)
+                minHighIds = id;
+            highIdsMap.put(id, value);
+            if (nextId <= id)
+                nextId = id + 1;
+            ci.cancel();
+        }
+        if (id > minHighIds) {
+            minHighIds = Integer.MAX_VALUE;
+            while (id >= list.size())
+                list.add(null);
+            Iterator<Int2ObjectMap.Entry<T>> itr = highIdsMap.int2ObjectEntrySet().iterator();
+            while (itr.hasNext()) {
+                Int2ObjectMap.Entry<T> entry = itr.next();
+                if (entry.getIntKey() <= id) {
+                    list.set(entry.getIntKey(), entry.getValue());
+                    itr.remove();
+                } else {
+                    minHighIds = entry.getIntKey();
+                }
+            }
+        }
+    }
+
+    @Inject(method = "get", at = @At("RETURN"), cancellable = true)
+    private void onGet(int id, CallbackInfoReturnable<T> ci) {
+        if (ci.getReturnValue() == null) {
+            ci.setReturnValue(highIdsMap.get(id));
+        }
+    }
+
+    @Inject(method = "iterator", at = @At("RETURN"), cancellable = true)
+    private void onIterator(CallbackInfoReturnable<Iterator<T>> ci) {
+        ci.setReturnValue(Iterators.concat(ci.getReturnValue(),
+                highIdsMap.int2ObjectEntrySet().stream()
+                        .sorted(Comparator.comparingInt(Int2ObjectMap.Entry::getIntKey))
+                        .map(Int2ObjectMap.Entry::getValue)
+                        .iterator()));
+    }
+
     @Override
     public void clear() {
         nextId = 0;
         idMap.clear();
         list.clear();
+        highIdsMap.clear();
+        minHighIds = Integer.MAX_VALUE;
     }
 
     @Override
     public Iterable<Integer> ids() {
-        return IntStream.range(0, nextId).filter(i -> list.get(i) != null).boxed()::iterator;
+        return Stream.concat(IntStream.range(0, list.size()).filter(i -> list.get(i) != null).boxed(),
+                highIdsMap.keySet().stream().sorted())::iterator;
     }
 }
