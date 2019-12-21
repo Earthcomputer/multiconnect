@@ -41,7 +41,6 @@ This section is for when you are developing your own mod and want to use the mul
       }
    }
    ```
-   - Note: SKIP this step if your mod is NOT using the API in any way.
 1. If you want to run multiconnect in the IDE alongside your mod, follow the previous step, and additionally add the following to your `dependencies {}` block:
    ```groovy
    dependencies {
