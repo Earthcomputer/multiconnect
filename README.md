@@ -1,7 +1,7 @@
 # multiconnect
 A mod to enable a Minecraft client to connect to multiple server versions.
 
-## Installation
+## Installation for Players
 1. Download and run the [Fabric installer](https://fabricmc.net/use).
    - Click the "vanilla" button, leave the other settings as they are,
      and click "download installer".
@@ -9,6 +9,49 @@ A mod to enable a Minecraft client to connect to multiple server versions.
      or an old version of Minecraft.
 1. Download multiconnect from the [releases page](https://github.com/Earthcomputer/multiconnect/releases)
    and move it to the mods folder (`.minecraft/mods`).
+
+## Installation for Mod Developers
+This section is for when you are developing your own mod and want to use the multiconnect API, or run multiconnect alongside your mod in the IDE. Aside from the first step, you ONLY need to follow the steps applicable to you and your mod.
+1. Add a `repositores {}` block in your `build.gradle` (if there isn't already one), and add Earthcomputer's Bintray mods repository:
+   ```groovy
+   repositories {
+      maven {
+         url 'https://dl.bintray.com/earthcomputer/mods'
+      }
+   }
+   ```
+   - Note: this repositories block is NOT the same as the one inside the `buildscript {}` block.
+1. If you want to use the API inside your mod, you will have to jar-in-jar it for the release. To do this, add the following to your `dependencies {}` block:
+   ```groovy
+   dependencies {
+      // ...
+      include('net.earthcomputer:multiconnect:<version>:api') {
+         transitive = false
+      }
+   }
+   ```
+   - Note: replace `<version>` with the version of multiconnect you want to depend on.
+   - Note: SKIP this step if your mod is NOT using the API in any way.
+1. If you only want to compile your mod with the API, but don't want to run multiconnect in the development environment, add the following to your `dependencies {}` block:
+   ```groovy
+   dependencies {
+      // ...
+      compileOnly('net.earthcomputer:multiconnect:<version>:api') {
+         transitive = false
+      }
+   }
+   ```
+   - Note: SKIP this step if your mod is NOT using the API in any way.
+1. If you want to run multiconnect in the IDE alongside your mod, follow the previous step, and additionally add the following to your `dependencies {}` block:
+   ```groovy
+   dependencies {
+      // ...
+      compileOnly('net.earthcomputer:multiconnect:<version>') {
+         transitive = false
+      }
+   }
+   ```
+   - Note: this looks the same as the previous step, except without `:api` on the end. You need to add both the code from this step and from the previous step.
 
 ## Contributing
 1. Clone the repository
