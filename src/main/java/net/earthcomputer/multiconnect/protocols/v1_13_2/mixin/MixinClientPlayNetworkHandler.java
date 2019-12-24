@@ -5,6 +5,7 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.ILightUpdatePacket;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.PendingDifficulty;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.PendingLightData;
+import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.*;
 import net.minecraft.client.world.ClientWorld;
@@ -28,9 +29,6 @@ import java.util.ArrayList;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class MixinClientPlayNetworkHandler {
-
-    private static final Identifier CUSTOM_PAYLOAD_TRADE_LIST = new Identifier("trader_list");
-    private static final Identifier CUSTOM_PAYLOAD_OPEN_BOOK = new Identifier("open_book");
 
     @Shadow @Final private static Logger LOGGER;
     @Shadow private ClientWorld world;
@@ -82,7 +80,7 @@ public abstract class MixinClientPlayNetworkHandler {
     private void onOnCustomPayload(CustomPayloadS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             Identifier channel = packet.getChannel();
-            if (CUSTOM_PAYLOAD_TRADE_LIST.equals(channel)) {
+            if (Protocol_1_13_2.CUSTOM_PAYLOAD_TRADE_LIST.equals(channel)) {
                 PacketByteBuf buf = packet.getData();
                 int syncId = buf.readInt();
                 TraderOfferList trades = new TraderOfferList();
@@ -102,7 +100,7 @@ public abstract class MixinClientPlayNetworkHandler {
                 }
                 onSetTradeOffers(new SetTradeOffersS2CPacket(syncId, trades, 5, 0, false, false));
                 ci.cancel();
-            } else if (CUSTOM_PAYLOAD_OPEN_BOOK.equals(channel)) {
+            } else if (Protocol_1_13_2.CUSTOM_PAYLOAD_OPEN_BOOK.equals(channel)) {
                 OpenWrittenBookS2CPacket openBookPacket = new OpenWrittenBookS2CPacket();
                 try {
                     openBookPacket.read(packet.getData());

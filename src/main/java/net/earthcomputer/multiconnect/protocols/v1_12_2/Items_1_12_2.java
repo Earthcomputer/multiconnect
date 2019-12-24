@@ -125,7 +125,6 @@ public class Items_1_12_2 {
         for (EntityType entityType : Registry.ENTITY_TYPE) {
             SpawnEggItem item = SpawnEggItem.forEntity(entityType);
             if (item != null && item != BAT_SPAWN_EGG) {
-                // TODO: lots of high ids puts lots of nulls in the registry, wasting memory
                 registry.register(item, nextHighBits << 16 | spawnEggId, REGISTRY_1_13.getId(item), false);
                 nextHighBits++;
             }
@@ -136,7 +135,7 @@ public class Items_1_12_2 {
         if (REGISTRY_1_13 == null)
             REGISTRY_1_13 = registry.copy();
 
-        registry.clear();
+        registry.clear(false);
         OLD_ITEM_TO_NEW.clear();
 
         registerBlockItem(registry, Blocks.AIR);

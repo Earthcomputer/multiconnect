@@ -5,8 +5,8 @@ import net.minecraft.util.PacketByteBuf;
 
 public interface ICustomPaylaodC2SPacket {
 
-    Identifier getChannel();
+    Identifier multiconnect_getChannel();
 
-    PacketByteBuf getData();
+    PacketByteBuf multiconnect_getData();
 
 }

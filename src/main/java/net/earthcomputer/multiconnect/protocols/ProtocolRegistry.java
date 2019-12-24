@@ -77,7 +77,7 @@ public class ProtocolRegistry {
         register(V1_13_2, new Protocol_1_13_2(), Protocol_1_13_2::registerTranslators);
         register(V1_13_1, new Protocol_1_13_1(), Protocol_1_13_1::registerTranslators);
         register(V1_13, new Protocol_1_13(), Protocol_1_13::registerTranslators);
-        register(V1_12_2, new Protocol_1_12_2());
+        register(V1_12_2, new Protocol_1_12_2(), Protocol_1_12_2::registerTranslators);
     }
 
 }

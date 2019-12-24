@@ -6,7 +6,9 @@
   ],
   "client": [
     "MixinCustomPayloadC2S",
-    "MixinCommandBlockMinecartC2S"
+    "MixinCommandBlockMinecartC2S",
+    "MixinWorldChunk",
+    "MixinClientChunkManager"
   ],
   "injectors": {
     "defaultRequire": 1

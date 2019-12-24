@@ -74,6 +74,9 @@ import java.util.function.Supplier;
 
 public class Protocol_1_13_2 extends Protocol_1_14 {
 
+    public static final Identifier CUSTOM_PAYLOAD_TRADE_LIST = new Identifier("trader_list");
+    public static final Identifier CUSTOM_PAYLOAD_OPEN_BOOK = new Identifier("open_book");
+
     private static final Field ENTITY_POSE = DataTrackerManager.getTrackedDataField(Entity.class, 6, "POSE");
     private static final Field ENDER_EYE_ITEM = DataTrackerManager.getTrackedDataField(EnderEyeEntity.class, 0, "ITEM");
     private static final Field FIREWORK_SHOOTER = DataTrackerManager.getTrackedDataField(FireworkEntity.class, 1, "SHOOTER_ENTITY_ID");

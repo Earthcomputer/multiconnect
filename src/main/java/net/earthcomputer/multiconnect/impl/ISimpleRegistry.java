@@ -29,7 +29,7 @@ public interface ISimpleRegistry<T> {
 
     void unregister(T t, boolean sideEffects);
 
-    void clear();
+    void clear(boolean sideEffects);
 
     void addRegisterListener(Consumer<T> listener);
 

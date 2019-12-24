@@ -10,11 +10,11 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(CustomPayloadC2SPacket.class)
 public abstract class MixinCustomPayloadC2S implements ICustomPaylaodC2SPacket {
 
-    @Accessor
+    @Accessor("channel")
     @Override
-    public abstract Identifier getChannel();
+    public abstract Identifier multiconnect_getChannel();
 
-    @Accessor
+    @Accessor("data")
     @Override
-    public abstract PacketByteBuf getData();
+    public abstract PacketByteBuf multiconnect_getData();
 }

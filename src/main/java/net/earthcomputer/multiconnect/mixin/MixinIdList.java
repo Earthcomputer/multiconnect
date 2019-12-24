@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -28,6 +29,11 @@ public class MixinIdList<T> implements IIdList {
     @Unique private int minHighIds = Integer.MAX_VALUE;
     @Unique private final Int2ObjectMap<T> highIdsMap = new Int2ObjectOpenHashMap<>();
 
+    @Redirect(method = "set", at = @At(value = "INVOKE", target = "Ljava/util/IdentityHashMap;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", remap = false))
+    private Object redirectSetPut(IdentityHashMap<T, Integer> idMap, T key, Object value) {
+        return idMap.putIfAbsent(key, (Integer) value);
+    }
+
     @Inject(method = "set", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", remap = false), cancellable = true)
     private void onSet(T value, int id, CallbackInfo ci) {
         if (id > list.size() + 4096) {
@@ -38,7 +44,7 @@ public class MixinIdList<T> implements IIdList {
                 nextId = id + 1;
             ci.cancel();
         }
-        if (id > minHighIds) {
+        else if (id > minHighIds) {
             minHighIds = Integer.MAX_VALUE;
             while (id >= list.size())
                 list.add(null);

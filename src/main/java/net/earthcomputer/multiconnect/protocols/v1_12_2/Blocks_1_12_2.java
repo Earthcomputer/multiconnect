@@ -52,7 +52,7 @@ public class Blocks_1_12_2 {
         if (REGISTRY_1_13 == null)
             REGISTRY_1_13 = registry.copy();
 
-        registry.clear();
+        registry.clear(false);
 
         register(registry, AIR, 0, "air");
         register(registry, STONE, 1, "stone");
@@ -140,7 +140,7 @@ public class Blocks_1_12_2 {
         register(registry, SUGAR_CANE, 83, "reeds");
         register(registry, JUKEBOX, 84, "jukebox");
         register(registry, OAK_FENCE, 85, "fence");
-        register(registry, PUMPKIN, 86, "pumpkin");
+        register(registry, CARVED_PUMPKIN, 86, "pumpkin");
         register(registry, NETHERRACK, 87, "netherrack");
         register(registry, SOUL_SAND, 88, "soul_sand");
         register(registry, GLOWSTONE, 89, "glowstone");

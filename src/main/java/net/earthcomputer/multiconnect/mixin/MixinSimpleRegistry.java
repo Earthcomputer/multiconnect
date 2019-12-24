@@ -85,7 +85,14 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     }
 
     @Override
-    public void clear() {
+    public void clear(boolean sideEffects) {
+        if (sideEffects) {
+            for (int id = getNextId() - 1; id >= 0; id--) {
+                T value = indexedEntries.get(id);
+                if (value != null)
+                    unregisterListeners.forEach(listener -> listener.accept(value));
+            }
+        }
         entries.clear();
         indexedEntries.clear();
         randomEntries = null;
