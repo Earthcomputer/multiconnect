@@ -8,7 +8,11 @@
     "MixinCustomPayloadC2S",
     "MixinCommandBlockMinecartC2S",
     "MixinWorldChunk",
-    "MixinClientChunkManager"
+    "MixinClientChunkManager",
+    "MixinIdListPalette",
+    "MixinParticleManager",
+    "MixinClientPlayNetworkHandler",
+    "MixinSkullBlockEntity"
   ],
   "injectors": {
     "defaultRequire": 1

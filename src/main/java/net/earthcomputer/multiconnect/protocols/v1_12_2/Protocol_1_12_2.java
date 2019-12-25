@@ -15,11 +15,14 @@ import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.WallSkullBlock;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.*;
 import net.minecraft.client.util.TextFormat;
 import net.minecraft.datafixers.fixes.BlockStateFlattening;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.painting.PaintingMotive;
 import net.minecraft.item.Item;
@@ -29,6 +32,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Packet;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.Potions;
 import net.minecraft.scoreboard.ScoreboardCriterion;
 import net.minecraft.server.network.packet.*;
 import net.minecraft.stat.StatType;
@@ -40,7 +45,10 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.Biomes;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -54,8 +62,6 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public static void registerTranslators() {
-        // TODO: chunk data
-
         ProtocolRegistry.registerInboundTranslator(CustomPayloadS2CPacket.class, buf -> {
             String channel = buf.readString();
             Identifier newChannel;
@@ -100,7 +106,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         ProtocolRegistry.registerInboundTranslator(ParticleS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             ParticleType<?> particleType = Registry.PARTICLE_TYPE.get(buf.readInt());
-            if (particleType != ParticleTypes.ITEM) {
+            if (particleType != ParticleTypes.ITEM && particleType != ParticleTypes.DUST) {
                 buf.disablePassthroughMode();
                 buf.applyPendingReads();
                 return;
@@ -109,16 +115,35 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.readFloat(); // x
             buf.readFloat(); // y
             buf.readFloat(); // z
-            buf.readFloat(); // offset x
-            buf.readFloat(); // offset y
-            buf.readFloat(); // offset z
+            float red = 0, green = 0, blue = 0;
+            if (particleType == ParticleTypes.DUST) {
+                buf.disablePassthroughMode();
+                red = buf.readFloat();
+                green = buf.readFloat();
+                blue = buf.readFloat();
+                buf.pendingRead(Float.class, 0f); // offset x
+                buf.pendingRead(Float.class, 0f); // offset y
+                buf.pendingRead(Float.class, 0f); // offset z
+                buf.enablePassthroughMode();
+            } else {
+                buf.readFloat(); // offset x
+                buf.readFloat(); // offset y
+                buf.readFloat(); // offset z
+            }
             buf.readFloat(); // speed
             buf.readInt(); // count
             buf.disablePassthroughMode();
-            Item item = Registry.ITEM.get(buf.readVarInt());
-            int meta = buf.readVarInt();
-            ItemStack stack = Items_1_12_2.oldItemStackToNew(new ItemStack(item), meta);
-            buf.pendingRead(ItemStack.class, stack);
+            if (particleType == ParticleTypes.ITEM) {
+                Item item = Registry.ITEM.get(buf.readVarInt());
+                int meta = buf.readVarInt();
+                ItemStack stack = Items_1_12_2.oldItemStackToNew(new ItemStack(item), meta);
+                buf.pendingRead(ItemStack.class, stack);
+            } else {
+                buf.pendingRead(Float.class, red);
+                buf.pendingRead(Float.class, green);
+                buf.pendingRead(Float.class, blue);
+                buf.pendingRead(Float.class, 1f); // scale
+            }
             buf.applyPendingReads();
         });
 
@@ -576,20 +601,37 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     @Override
     protected void recomputeBlockStates() {
+        final int skullId = Registry.BLOCK.getRawId(Blocks.SKELETON_SKULL);
+
         ((IIdList) Block.STATE_IDS).clear();
         Set<BlockState> addedStates = new HashSet<>();
         for (int blockId = 0; blockId < 256; blockId++) {
-            for (int meta = 0; meta < 16; meta++) {
-                Dynamic<?> dynamicState = BlockStateFlattening.lookupState(blockId << 16 | meta);
-                Block block = Registry.BLOCK.get(new Identifier(dynamicState.get("Name").asString("")));
-                if (block != Blocks.AIR || blockId == 0) {
-                    StateManager<Block, BlockState> stateManager = block.getStateManager();
-                    BlockState state = block.getDefaultState();
-                    for (Map.Entry<String, String> entry : dynamicState.get("Properties").asMap(k -> k.asString(""), v -> v.asString("")).entrySet()) {
-                        state = addProperty(stateManager, state, entry.getKey(), entry.getValue());
+            if (blockId == skullId) {
+                final Direction[] dirs = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, Direction.DOWN, Direction.UP};
+                for (int meta = 0; meta < 16; meta++) {
+                    Direction dir = dirs[meta & 7];
+                    BlockState state;
+                    if (dir == Direction.DOWN || dir == Direction.UP) {
+                        state = Blocks.SKELETON_SKULL.getDefaultState();
+                    } else {
+                        state = Blocks.SKELETON_WALL_SKULL.getDefaultState().with(WallSkullBlock.FACING, dir);
                     }
-                    Block.STATE_IDS.set(state, blockId << 16 | meta);
+                    Block.STATE_IDS.set(state, blockId << 4 | meta);
                     addedStates.add(state);
+                }
+            } else {
+                for (int meta = 0; meta < 16; meta++) {
+                    Dynamic<?> dynamicState = BlockStateFlattening.lookupState(blockId << 4 | meta);
+                    Block block = Registry.BLOCK.get(new Identifier(dynamicState.get("Name").asString("")));
+                    if (block != Blocks.AIR || blockId == 0) {
+                        StateManager<Block, BlockState> stateManager = block.getStateManager();
+                        BlockState state = block.getDefaultState();
+                        for (Map.Entry<String, String> entry : dynamicState.get("Properties").asMap(k -> k.asString(""), v -> v.asString("")).entrySet()) {
+                            state = addProperty(stateManager, state, entry.getKey(), entry.getValue());
+                        }
+                        Block.STATE_IDS.set(state, blockId << 4 | meta);
+                        addedStates.add(state);
+                    }
                 }
             }
         }
@@ -619,95 +661,87 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         } else if (registry == Registry.ITEM) {
             Items_1_12_2.registerItems((ISimpleRegistry<Item>) registry);
         } else if (registry == Registry.ENTITY_TYPE) {
-            modifyEntityTypeRegistry((ISimpleRegistry<EntityType<?>>) registry);
+            Entities_1_12_2.registerEntities((ISimpleRegistry<EntityType<?>>) registry);
+        } else if (registry == Registry.ENCHANTMENT) {
+            Enchantments_1_12_2.registerEnchantments((ISimpleRegistry<Enchantment>) registry);
+        } else if (registry == Registry.POTION) {
+            modifyPotionRegistry((ISimpleRegistry<Potion>) registry);
+        } else if (registry == Registry.BIOME) {
+            modifyBiomeRegistry((ISimpleRegistry<Biome>) registry);
+        } else if (registry == Registry.PARTICLE_TYPE) {
+            Particles_1_12_2.registerParticles((ISimpleRegistry<ParticleType<?>>) registry);
+        } else if (registry == Registry.BLOCK_ENTITY) {
+            BlockEntities_1_12_2.registerBlockEntities((ISimpleRegistry<BlockEntityType<?>>) registry);
         }
     }
 
-    private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
-        registry.clear(true);
+    private static void modifyPotionRegistry(ISimpleRegistry<Potion> registry) {
+        registry.unregister(Potions.STRONG_SLOWNESS);
+        registry.unregister(Potions.TURTLE_MASTER);
+        registry.unregister(Potions.LONG_TURTLE_MASTER);
+        registry.unregister(Potions.STRONG_TURTLE_MASTER);
+        registry.unregister(Potions.SLOW_FALLING);
+        registry.unregister(Potions.LONG_SLOW_FALLING);
+    }
 
-        registry.register(EntityType.ITEM, 1, new Identifier("item"));
-        registry.register(EntityType.EXPERIENCE_ORB, 2, new Identifier("xp_orb"));
-        registry.register(EntityType.AREA_EFFECT_CLOUD, 3, new Identifier("area_effect_cloud"));
-        registry.register(EntityType.ELDER_GUARDIAN, 4, new Identifier("elder_guardian"));
-        registry.register(EntityType.WITHER_SKELETON, 5, new Identifier("wither_skeleton"));
-        registry.register(EntityType.STRAY, 6, new Identifier("stray"));
-        registry.register(EntityType.EGG, 7, new Identifier("egg"));
-        registry.register(EntityType.LEASH_KNOT, 8, new Identifier("leash_knot"));
-        registry.register(EntityType.PAINTING, 9, new Identifier("painting"));
-        registry.register(EntityType.ARROW, 10, new Identifier("arrow"));
-        registry.register(EntityType.SNOWBALL, 11, new Identifier("snowball"));
-        registry.register(EntityType.FIREBALL, 12, new Identifier("fireball"));
-        registry.register(EntityType.SMALL_FIREBALL, 13, new Identifier("small_fireball"));
-        registry.register(EntityType.ENDER_PEARL, 14, new Identifier("ender_pearl"));
-        registry.register(EntityType.EYE_OF_ENDER, 15, new Identifier("eye_of_ender_signal"));
-        registry.register(EntityType.POTION, 16, new Identifier("potion"));
-        registry.register(EntityType.EXPERIENCE_BOTTLE, 17, new Identifier("xp_bottle"));
-        registry.register(EntityType.ITEM_FRAME, 18, new Identifier("item_frame"));
-        registry.register(EntityType.WITHER_SKULL, 19, new Identifier("wither_skull"));
-        registry.register(EntityType.TNT, 20, new Identifier("tnt"));
-        registry.register(EntityType.FALLING_BLOCK, 21, new Identifier("falling_block"));
-        registry.register(EntityType.FIREWORK_ROCKET, 22, new Identifier("fireworks_rocket"));
-        registry.register(EntityType.HUSK, 23, new Identifier("husk"));
-        registry.register(EntityType.SPECTRAL_ARROW, 24, new Identifier("spectral_arrow"));
-        registry.register(EntityType.SHULKER_BULLET, 25, new Identifier("shulker_bullet"));
-        registry.register(EntityType.DRAGON_FIREBALL, 26, new Identifier("dragon_fireball"));
-        registry.register(EntityType.ZOMBIE_VILLAGER, 27, new Identifier("zombie_villager"));
-        registry.register(EntityType.SKELETON_HORSE, 28, new Identifier("skeleton_horse"));
-        registry.register(EntityType.ZOMBIE_HORSE, 29, new Identifier("zombie_horse"));
-        registry.register(EntityType.ARMOR_STAND, 30, new Identifier("armor_stand"));
-        registry.register(EntityType.DONKEY, 31, new Identifier("donkey"));
-        registry.register(EntityType.MULE, 32, new Identifier("mule"));
-        registry.register(EntityType.EVOKER_FANGS, 33, new Identifier("evocation_fangs"));
-        registry.register(EntityType.EVOKER, 34, new Identifier("evocation_illager"));
-        registry.register(EntityType.VEX, 35, new Identifier("vex"));
-        registry.register(EntityType.VINDICATOR, 36, new Identifier("vindication_illager"));
-        registry.register(EntityType.ILLUSIONER, 37, new Identifier("illusion_illager"));
-        registry.register(EntityType.COMMAND_BLOCK_MINECART, 40, new Identifier("commandblock_minecart"));
-        registry.register(EntityType.BOAT, 41, new Identifier("boat"));
-        registry.register(EntityType.MINECART, 42, new Identifier("minecart"));
-        registry.register(EntityType.CHEST_MINECART, 43, new Identifier("chest_minecart"));
-        registry.register(EntityType.FURNACE_MINECART, 44, new Identifier("furnace_minecart"));
-        registry.register(EntityType.TNT_MINECART, 45, new Identifier("tnt_minecart"));
-        registry.register(EntityType.HOPPER_MINECART, 46, new Identifier("hopper_minecart"));
-        registry.register(EntityType.SPAWNER_MINECART, 47, new Identifier("spawner_minecart"));
-        registry.register(EntityType.CREEPER, 50, new Identifier("creeper"));
-        registry.register(EntityType.SKELETON, 51, new Identifier("skeleton"));
-        registry.register(EntityType.SPIDER, 52, new Identifier("spider"));
-        registry.register(EntityType.GIANT, 53, new Identifier("giant"));
-        registry.register(EntityType.ZOMBIE, 54, new Identifier("zombie"));
-        registry.register(EntityType.SLIME, 55, new Identifier("slime"));
-        registry.register(EntityType.GHAST, 56, new Identifier("ghast"));
-        registry.register(EntityType.ZOMBIE_PIGMAN, 57, new Identifier("zombie_pigman"));
-        registry.register(EntityType.ENDERMAN, 58, new Identifier("enderman"));
-        registry.register(EntityType.CAVE_SPIDER, 59, new Identifier("cave_spider"));
-        registry.register(EntityType.SILVERFISH, 60, new Identifier("silverfish"));
-        registry.register(EntityType.BLAZE, 61, new Identifier("blaze"));
-        registry.register(EntityType.MAGMA_CUBE, 62, new Identifier("magma_cube"));
-        registry.register(EntityType.ENDER_DRAGON, 63, new Identifier("ender_dragon"));
-        registry.register(EntityType.WITHER, 64, new Identifier("wither"));
-        registry.register(EntityType.BAT, 65, new Identifier("bat"));
-        registry.register(EntityType.WITCH, 66, new Identifier("witch"));
-        registry.register(EntityType.ENDERMITE, 67, new Identifier("endermite"));
-        registry.register(EntityType.GUARDIAN, 68, new Identifier("guardian"));
-        registry.register(EntityType.SHULKER, 69, new Identifier("shulker"));
-        registry.register(EntityType.PIG, 90, new Identifier("pig"));
-        registry.register(EntityType.SHEEP, 91, new Identifier("sheep"));
-        registry.register(EntityType.COW, 92, new Identifier("cow"));
-        registry.register(EntityType.CHICKEN, 93, new Identifier("chicken"));
-        registry.register(EntityType.SQUID, 94, new Identifier("squid"));
-        registry.register(EntityType.WOLF, 95, new Identifier("wolf"));
-        registry.register(EntityType.MOOSHROOM, 96, new Identifier("mooshroom"));
-        registry.register(EntityType.SNOW_GOLEM, 97, new Identifier("snowman"));
-        registry.register(EntityType.OCELOT, 98, new Identifier("ocelot"));
-        registry.register(EntityType.IRON_GOLEM, 99, new Identifier("villager_golem"));
-        registry.register(EntityType.HORSE, 100, new Identifier("horse"));
-        registry.register(EntityType.RABBIT, 101, new Identifier("rabbit"));
-        registry.register(EntityType.POLAR_BEAR, 102, new Identifier("polar_bear"));
-        registry.register(EntityType.LLAMA, 103, new Identifier("llama"));
-        registry.register(EntityType.LLAMA_SPIT, 104, new Identifier("llama_spit"));
-        registry.register(EntityType.PARROT, 105, new Identifier("parrot"));
-        registry.register(EntityType.VILLAGER, 120, new Identifier("villager"));
-        registry.register(EntityType.END_CRYSTAL, 200, new Identifier("ender_crystal"));
+    private static void modifyBiomeRegistry(ISimpleRegistry<Biome> registry) {
+        rename(registry, Biomes.MOUNTAINS, "extreme_hills");
+        rename(registry, Biomes.SWAMP, "swampland");
+        rename(registry, Biomes.NETHER, "hell");
+        rename(registry, Biomes.THE_END, "sky");
+        rename(registry, Biomes.SNOWY_TUNDRA, "ice_flats");
+        rename(registry, Biomes.SNOWY_MOUNTAINS, "ice_mountains");
+        rename(registry, Biomes.MUSHROOM_FIELDS, "mushroom_island");
+        rename(registry, Biomes.MUSHROOM_FIELD_SHORE, "mushroom_island_shore");
+        rename(registry, Biomes.BEACH, "beaches");
+        rename(registry, Biomes.WOODED_HILLS, "forest_hills");
+        rename(registry, Biomes.MOUNTAIN_EDGE, "smaller_extreme_hills");
+        rename(registry, Biomes.STONE_SHORE, "stone_beach");
+        rename(registry, Biomes.SNOWY_BEACH, "cold_beach");
+        rename(registry, Biomes.DARK_FOREST, "roofed_forest");
+        rename(registry, Biomes.SNOWY_TAIGA, "taiga_cold");
+        rename(registry, Biomes.SNOWY_TAIGA_HILLS, "taiga_cold_hills");
+        rename(registry, Biomes.GIANT_TREE_TAIGA, "redwood_taiga");
+        rename(registry, Biomes.GIANT_TREE_TAIGA_HILLS, "redwood_taiga_hills");
+        rename(registry, Biomes.WOODED_MOUNTAINS, "extreme_hills_with_trees");
+        rename(registry, Biomes.SAVANNA_PLATEAU, "savanna_rock");
+        rename(registry, Biomes.BADLANDS, "mesa");
+        rename(registry, Biomes.WOODED_BADLANDS_PLATEAU, "mesa_rock");
+        rename(registry, Biomes.BADLANDS_PLATEAU, "mesa_clear_rock");
+        registry.purge(Biomes.SMALL_END_ISLANDS);
+        registry.purge(Biomes.END_MIDLANDS);
+        registry.purge(Biomes.END_HIGHLANDS);
+        registry.purge(Biomes.END_BARRENS);
+        registry.purge(Biomes.WARM_OCEAN);
+        registry.purge(Biomes.LUKEWARM_OCEAN);
+        registry.purge(Biomes.COLD_OCEAN);
+        registry.purge(Biomes.DEEP_WARM_OCEAN);
+        registry.purge(Biomes.DEEP_LUKEWARM_OCEAN);
+        registry.purge(Biomes.DEEP_WARM_OCEAN);
+        registry.purge(Biomes.DEEP_LUKEWARM_OCEAN);
+        registry.purge(Biomes.DEEP_COLD_OCEAN);
+        registry.purge(Biomes.DEEP_FROZEN_OCEAN);
+        rename(registry, Biomes.THE_VOID, "void");
+        rename(registry, Biomes.SUNFLOWER_PLAINS, "mutated_plains");
+        rename(registry, Biomes.DESERT_LAKES, "mutated_desert");
+        rename(registry, Biomes.GRAVELLY_MOUNTAINS, "mutated_extreme_hills");
+        rename(registry, Biomes.FLOWER_FOREST, "mutated_forest");
+        rename(registry, Biomes.TAIGA_MOUNTAINS, "mutated_taiga");
+        rename(registry, Biomes.SWAMP_HILLS, "mutated_swampland");
+        rename(registry, Biomes.ICE_SPIKES, "mutated_ice_flats");
+        rename(registry, Biomes.MODIFIED_JUNGLE, "mutated_jungle");
+        rename(registry, Biomes.MODIFIED_JUNGLE_EDGE, "mutated_jungle_edge");
+        rename(registry, Biomes.TALL_BIRCH_FOREST, "mutated_birch_forest");
+        rename(registry, Biomes.TALL_BIRCH_HILLS, "mutated_birch_forest_hills");
+        rename(registry, Biomes.DARK_FOREST_HILLS, "mutated_roofed_forest_hills");
+        rename(registry, Biomes.SNOWY_TAIGA_MOUNTAINS, "mutated_taiga_cold");
+        rename(registry, Biomes.GIANT_SPRUCE_TAIGA, "mutated_redwood_taiga");
+        rename(registry, Biomes.GIANT_SPRUCE_TAIGA_HILLS, "mutated_redwood_taiga_hills");
+        rename(registry, Biomes.MODIFIED_GRAVELLY_MOUNTAINS, "mutated_extreme_hills_with_trees");
+        rename(registry, Biomes.SHATTERED_SAVANNA, "mutated_savanna");
+        rename(registry, Biomes.SHATTERED_SAVANNA_PLATEAU, "mutated_savanna_rock");
+        rename(registry, Biomes.ERODED_BADLANDS, "mutated_mesa");
+        rename(registry, Biomes.MODIFIED_WOODED_BADLANDS_PLATEAU, "mutated_mesa_rock");
+        rename(registry, Biomes.MODIFIED_BADLANDS_PLATEAU, "mutated_mesa_clear_rock");
     }
 }

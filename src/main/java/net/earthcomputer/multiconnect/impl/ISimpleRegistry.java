@@ -29,6 +29,12 @@ public interface ISimpleRegistry<T> {
 
     void unregister(T t, boolean sideEffects);
 
+    default void purge(T t) {
+        purge(t, true);
+    }
+
+    void purge(T t, boolean sideEffects);
+
     void clear(boolean sideEffects);
 
     void addRegisterListener(Consumer<T> listener);

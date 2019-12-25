@@ -5,6 +5,7 @@ import com.google.common.collect.HashBiMap;
 import net.earthcomputer.multiconnect.impl.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.FlowerPotBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -35,6 +36,7 @@ public abstract class AbstractProtocol {
         DefaultRegistry.restoreAll();
         DefaultRegistry.DEFAULT_REGISTRIES.keySet().forEach((registry -> modifyRegistry((ISimpleRegistry<?>) registry)));
         recomputeBlockStates();
+        refreshFlowerPotBlocks();
         ((IMinecraftClient) MinecraftClient.getInstance()).callInitializeSearchableContainers();
         ((IMinecraftClient) MinecraftClient.getInstance()).getSearchManager().apply(MinecraftClient.getInstance().getResourceManager());
     }
@@ -73,7 +75,7 @@ public abstract class AbstractProtocol {
     }
 
     @SuppressWarnings("unchecked")
-    protected static <T> void insertAfter(ISimpleRegistry<T> registry, T element, T toInsert, String id) {
+    public static <T> void insertAfter(ISimpleRegistry<T> registry, T element, T toInsert, String id) {
         registry.register(toInsert, ((SimpleRegistry<T>) registry).getRawId(element) + 1, new Identifier(id));
     }
 
@@ -156,6 +158,20 @@ public abstract class AbstractProtocol {
         }
 
         insertAfter(registry, prevValue, value, defaultRegistry.defaultEntries.inverse().get(value).toString());
+    }
+
+    public static void refreshFlowerPotBlocks() {
+        Map<Block, Block> flowerPots = DefaultRegistry.getFlowerPotBlocks();
+        flowerPots.clear();
+        for (Block block : Registry.BLOCK) {
+            if (block instanceof FlowerPotBlock) {
+                flowerPots.put(((FlowerPotBlock) block).getContent(), block);
+            }
+        }
+    }
+
+    public static Block getFlowerPotBlock(Block contents) {
+        return DefaultRegistry.getFlowerPotBlocks().get(contents);
     }
 
     protected static void dumpBlockStates() {
@@ -293,13 +309,27 @@ public abstract class AbstractProtocol {
             }
         }
 
+        private static Map<Block, Block> getFlowerPotBlocks() {
+            try {
+                //noinspection unchecked
+                return (Map<Block, Block>) FLOWER_POTS_FIELD.get(null);
+            } catch (ReflectiveOperationException e) {
+                throw new AssertionError(e);
+            }
+        }
+
         private static final Field SPAWN_EGGS_FIELD;
+        private static final Field FLOWER_POTS_FIELD;
         static {
             try {
                 SPAWN_EGGS_FIELD = Arrays.stream(SpawnEggItem.class.getDeclaredFields())
                         .filter(it -> it.getType() == Map.class)
                         .findFirst().orElseThrow(NoSuchFieldException::new);
                 SPAWN_EGGS_FIELD.setAccessible(true);
+                FLOWER_POTS_FIELD = Arrays.stream(FlowerPotBlock.class.getDeclaredFields())
+                        .filter(it -> it.getType() == Map.class)
+                        .findFirst().orElseThrow(NoSuchFieldException::new);
+                FLOWER_POTS_FIELD.setAccessible(true);
             } catch (ReflectiveOperationException e) {
                 throw new AssertionError(e);
             }
