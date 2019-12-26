@@ -47,6 +47,7 @@ import net.minecraft.state.property.Property;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -97,6 +98,70 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     }
 
     public static void registerTranslators() {
+        ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readInt(); // chunk x
+            buf.readInt(); // chunk z
+            boolean fullChunk = buf.readBoolean();
+            int verticalStripBitmask = buf.readVarInt();
+            buf.disablePassthroughMode();
+            int dataLength = buf.readVarInt();
+            if (dataLength > 2097152)
+                throw new RuntimeException("Chunk Packet trying to allocate too much memory on read.");
+            byte[] data = new byte[dataLength + 256 * 3];
+            buf.readBytes(data, 0, dataLength);
+
+            PacketByteBuf inBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data.clone()));
+            PacketByteBuf outBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data));
+            outBuf.writerIndex(0);
+            for (int sectionY = 0; sectionY < 16; sectionY++) {
+                if ((verticalStripBitmask & (1 << sectionY)) != 0) {
+                    int paletteSize = inBuf.readByte();
+                    outBuf.writeByte(paletteSize);
+                    if (paletteSize <= 8) {
+                        // array and bimap palette data look the same enough to use the same code here
+                        int size = inBuf.readVarInt();
+                        outBuf.writeVarInt(size);
+                        for (int i = 0; i < size; i++)
+                            outBuf.writeVarInt(inBuf.readVarInt());
+                    } else {
+                        inBuf.readVarInt();
+                    }
+                    long[] chunkData = new long[paletteSize * 64];
+                    inBuf.readLongArray(chunkData);
+                    outBuf.writeLongArray(chunkData);
+                    byte[] light = new byte[16 * 16 * 16 / 2];
+                    inBuf.readBytes(light);
+                    outBuf.writeBytes(light);
+                    // since this thread is async, this code may be run before the join game packet is
+                    // processed, and therefore world would be null
+                    while (MinecraftClient.getInstance().world == null) {
+                        try {
+                            Thread.sleep(1);
+                        } catch (InterruptedException e) {
+                            return;
+                        }
+                    }
+                    if (MinecraftClient.getInstance().world.dimension.hasSkyLight()) {
+                        light = new byte[16 * 16 * 16 / 2];
+                        inBuf.readBytes(light);
+                        outBuf.writeBytes(light);
+                    }
+                }
+            }
+
+            // biomes
+            if (fullChunk) {
+                for (int i = 0; i < 256; i++)
+                    outBuf.writeInt(inBuf.readByte() & 0xff);
+            }
+
+            buf.pendingRead(VarInt.class, new VarInt(outBuf.writerIndex()));
+            buf.pendingRead(byte[].class, data);
+
+            buf.applyPendingReads();
+        });
+
         ProtocolRegistry.registerInboundTranslator(CustomPayloadS2CPacket.class, buf -> {
             String channel = buf.readString();
             Identifier newChannel;

@@ -160,6 +160,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.pendingRead(CompoundTag.class, new CompoundTag()); // heightmaps
 
             int dataLength = buf.readVarInt();
+            if (dataLength > 2097152)
+                throw new RuntimeException("Chunk Packet trying to allocate too much memory on read.");
             byte[] data = new byte[dataLength];
             buf.readBytes(data);
 
