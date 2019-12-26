@@ -61,6 +61,16 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     }
 
     @Override
+    public void registerInPlace(T t, int id, Identifier name, boolean sideEffects) {
+        if (id == getNextId())
+            setNextId(id + 1);
+        set(id, name, t);
+
+        if (sideEffects)
+            registerListeners.forEach(listener -> listener.accept(t));
+    }
+
+    @Override
     public void unregister(T t, boolean sideEffects) {
         if (!entries.containsValue(t))
             return;

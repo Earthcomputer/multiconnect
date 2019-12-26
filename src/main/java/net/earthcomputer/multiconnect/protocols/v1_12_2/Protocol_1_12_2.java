@@ -22,9 +22,12 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.*;
 import net.minecraft.client.util.TextFormat;
 import net.minecraft.datafixers.fixes.BlockStateFlattening;
+import net.minecraft.datafixers.fixes.EntityTheRenameningBlock;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.painting.PaintingMotive;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.map.MapIcon;
@@ -36,6 +39,8 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
 import net.minecraft.scoreboard.ScoreboardCriterion;
 import net.minecraft.server.network.packet.*;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.StatType;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Property;
@@ -60,6 +65,36 @@ import java.util.function.Supplier;
 public class Protocol_1_12_2 extends Protocol_1_13 {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final Map<String, PaintingMotive> OLD_MOTIVE_NAMES = new HashMap<>();
+    static {
+        OLD_MOTIVE_NAMES.put("Kebab", PaintingMotive.KEBAB);
+        OLD_MOTIVE_NAMES.put("Aztec", PaintingMotive.AZTEC);
+        OLD_MOTIVE_NAMES.put("Alban", PaintingMotive.ALBAN);
+        OLD_MOTIVE_NAMES.put("Aztec2", PaintingMotive.AZTEC2);
+        OLD_MOTIVE_NAMES.put("Bomb", PaintingMotive.BOMB);
+        OLD_MOTIVE_NAMES.put("Plant", PaintingMotive.PLANT);
+        OLD_MOTIVE_NAMES.put("Wasteland", PaintingMotive.WASTELAND);
+        OLD_MOTIVE_NAMES.put("Pool", PaintingMotive.POOL);
+        OLD_MOTIVE_NAMES.put("Courbet", PaintingMotive.COURBET);
+        OLD_MOTIVE_NAMES.put("Sea", PaintingMotive.SEA);
+        OLD_MOTIVE_NAMES.put("Sunset", PaintingMotive.SUNSET);
+        OLD_MOTIVE_NAMES.put("Creebet", PaintingMotive.CREEBET);
+        OLD_MOTIVE_NAMES.put("Wanderer", PaintingMotive.WANDERER);
+        OLD_MOTIVE_NAMES.put("Graham", PaintingMotive.GRAHAM);
+        OLD_MOTIVE_NAMES.put("Match", PaintingMotive.MATCH);
+        OLD_MOTIVE_NAMES.put("Bust", PaintingMotive.BUST);
+        OLD_MOTIVE_NAMES.put("Stage", PaintingMotive.STAGE);
+        OLD_MOTIVE_NAMES.put("Void", PaintingMotive.VOID);
+        OLD_MOTIVE_NAMES.put("SkullAndRoses", PaintingMotive.SKULL_AND_ROSES);
+        OLD_MOTIVE_NAMES.put("Wither", PaintingMotive.WITHER);
+        OLD_MOTIVE_NAMES.put("Fighters", PaintingMotive.FIGHTERS);
+        OLD_MOTIVE_NAMES.put("Pointer", PaintingMotive.POINTER);
+        OLD_MOTIVE_NAMES.put("Pigscene", PaintingMotive.PIGSCENE);
+        OLD_MOTIVE_NAMES.put("BurningSkull", PaintingMotive.BURNING_SKULL);
+        OLD_MOTIVE_NAMES.put("Skeleton", PaintingMotive.SKELETON);
+        OLD_MOTIVE_NAMES.put("DonkeyKong", PaintingMotive.DONKEY_KONG);
+    }
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(CustomPayloadS2CPacket.class, buf -> {
@@ -197,7 +232,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.readVarInt(); // id
             buf.readUuid(); // uuid
             buf.disablePassthroughMode();
-            PaintingMotive motive = Registry.MOTIVE.get(new Identifier(buf.readString(13)));
+            PaintingMotive motive = OLD_MOTIVE_NAMES.getOrDefault(buf.readString(13), PaintingMotive.KEBAB);
             buf.pendingRead(VarInt.class, new VarInt(Registry.MOTIVE.getRawId(motive)));
             buf.applyPendingReads();
         });
@@ -622,7 +657,10 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             } else {
                 for (int meta = 0; meta < 16; meta++) {
                     Dynamic<?> dynamicState = BlockStateFlattening.lookupState(blockId << 4 | meta);
-                    Block block = Registry.BLOCK.get(new Identifier(dynamicState.get("Name").asString("")));
+                    String fixedName = dynamicState.get("Name").asString("");
+                    fixedName = EntityTheRenameningBlock.BLOCKS.getOrDefault(fixedName, fixedName);
+                    if ("minecraft:melon_block".equals(fixedName)) fixedName = "minecraft:melon";
+                    Block block = Registry.BLOCK.get(new Identifier(fixedName));
                     if (block != Blocks.AIR || blockId == 0) {
                         StateManager<Block, BlockState> stateManager = block.getStateManager();
                         BlockState state = block.getDefaultState();
@@ -672,6 +710,10 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             Particles_1_12_2.registerParticles((ISimpleRegistry<ParticleType<?>>) registry);
         } else if (registry == Registry.BLOCK_ENTITY) {
             BlockEntities_1_12_2.registerBlockEntities((ISimpleRegistry<BlockEntityType<?>>) registry);
+        } else if (registry == Registry.STATUS_EFFECT) {
+            modifyStatusEffectRegistry((ISimpleRegistry<StatusEffect>) registry);
+        } else if (registry == Registry.SOUND_EVENT) {
+            modifySoundRegistry((ISimpleRegistry<SoundEvent>) registry);
         }
     }
 
@@ -743,5 +785,127 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         rename(registry, Biomes.ERODED_BADLANDS, "mutated_mesa");
         rename(registry, Biomes.MODIFIED_WOODED_BADLANDS_PLATEAU, "mutated_mesa_rock");
         rename(registry, Biomes.MODIFIED_BADLANDS_PLATEAU, "mutated_mesa_clear_rock");
+    }
+
+    private static void modifyStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {
+        registry.unregister(StatusEffects.SLOW_FALLING);
+        registry.unregister(StatusEffects.CONDUIT_POWER);
+        registry.unregister(StatusEffects.DOLPHINS_GRACE);
+    }
+
+    private static void modifySoundRegistry(ISimpleRegistry<SoundEvent> registry) {
+        registry.unregister(SoundEvents.AMBIENT_UNDERWATER_ENTER);
+        registry.unregister(SoundEvents.AMBIENT_UNDERWATER_EXIT);
+        registry.unregister(SoundEvents.AMBIENT_UNDERWATER_LOOP);
+        registry.unregister(SoundEvents.AMBIENT_UNDERWATER_LOOP_ADDITIONS);
+        registry.unregister(SoundEvents.AMBIENT_UNDERWATER_LOOP_ADDITIONS_RARE);
+        registry.unregister(SoundEvents.AMBIENT_UNDERWATER_LOOP_ADDITIONS_ULTRA_RARE);
+        registry.unregister(SoundEvents.BLOCK_BEACON_ACTIVATE);
+        registry.unregister(SoundEvents.BLOCK_BEACON_AMBIENT);
+        registry.unregister(SoundEvents.BLOCK_BEACON_DEACTIVATE);
+        registry.unregister(SoundEvents.BLOCK_BEACON_POWER_SELECT);
+        registry.unregister(SoundEvents.BLOCK_BUBBLE_COLUMN_BUBBLE_POP);
+        registry.unregister(SoundEvents.BLOCK_BUBBLE_COLUMN_UPWARDS_AMBIENT);
+        registry.unregister(SoundEvents.BLOCK_BUBBLE_COLUMN_UPWARDS_INSIDE);
+        registry.unregister(SoundEvents.BLOCK_BUBBLE_COLUMN_WHIRLPOOL_AMBIENT);
+        registry.unregister(SoundEvents.BLOCK_BUBBLE_COLUMN_WHIRLPOOL_INSIDE);
+        registry.unregister(SoundEvents.BLOCK_CONDUIT_ACTIVATE);
+        registry.unregister(SoundEvents.BLOCK_CONDUIT_AMBIENT);
+        registry.unregister(SoundEvents.BLOCK_CONDUIT_AMBIENT_SHORT);
+        registry.unregister(SoundEvents.BLOCK_CONDUIT_ATTACK_TARGET);
+        registry.unregister(SoundEvents.BLOCK_CONDUIT_DEACTIVATE);
+        registry.unregister(SoundEvents.BLOCK_WET_GRASS_BREAK);
+        registry.unregister(SoundEvents.BLOCK_WET_GRASS_FALL);
+        registry.unregister(SoundEvents.BLOCK_WET_GRASS_HIT);
+        registry.unregister(SoundEvents.BLOCK_WET_GRASS_PLACE);
+        registry.unregister(SoundEvents.BLOCK_WET_GRASS_STEP);
+        registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_BREAK);
+        registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_FALL);
+        registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_HIT);
+        registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_PLACE);
+        registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_STEP);
+        registry.unregister(SoundEvents.BLOCK_PUMPKIN_CARVE);
+        registry.unregister(SoundEvents.ENTITY_COD_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_COD_DEATH);
+        registry.unregister(SoundEvents.ENTITY_COD_FLOP);
+        registry.unregister(SoundEvents.ENTITY_COD_HURT);
+        registry.unregister(SoundEvents.ENTITY_DOLPHIN_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_DOLPHIN_AMBIENT_WATER);
+        registry.unregister(SoundEvents.ENTITY_DOLPHIN_ATTACK);
+        registry.unregister(SoundEvents.ENTITY_DOLPHIN_DEATH);
+        registry.unregister(SoundEvents.ENTITY_DOLPHIN_EAT);
+        registry.unregister(SoundEvents.ENTITY_DOLPHIN_HURT);
+        registry.unregister(SoundEvents.ENTITY_DOLPHIN_JUMP);
+        registry.unregister(SoundEvents.ENTITY_DOLPHIN_PLAY);
+        registry.unregister(SoundEvents.ENTITY_DOLPHIN_SPLASH);
+        registry.unregister(SoundEvents.ENTITY_DOLPHIN_SWIM);
+        registry.unregister(SoundEvents.ENTITY_DROWNED_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_DROWNED_AMBIENT_WATER);
+        registry.unregister(SoundEvents.ENTITY_DROWNED_DEATH);
+        registry.unregister(SoundEvents.ENTITY_DROWNED_DEATH_WATER);
+        registry.unregister(SoundEvents.ENTITY_DROWNED_HURT);
+        registry.unregister(SoundEvents.ENTITY_DROWNED_HURT_WATER);
+        registry.unregister(SoundEvents.ENTITY_DROWNED_SHOOT);
+        registry.unregister(SoundEvents.ENTITY_DROWNED_STEP);
+        registry.unregister(SoundEvents.ENTITY_DROWNED_SWIM);
+        registry.unregister(SoundEvents.ENTITY_FISH_SWIM);
+        registry.unregister(SoundEvents.ENTITY_HUSK_CONVERTED_TO_ZOMBIE);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_DROWNED);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_PHANTOM);
+        registry.unregister(SoundEvents.ENTITY_PHANTOM_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_PHANTOM_BITE);
+        registry.unregister(SoundEvents.ENTITY_PHANTOM_DEATH);
+        registry.unregister(SoundEvents.ENTITY_PHANTOM_FLAP);
+        registry.unregister(SoundEvents.ENTITY_PHANTOM_HURT);
+        registry.unregister(SoundEvents.ENTITY_PHANTOM_SWOOP);
+        registry.unregister(SoundEvents.ENTITY_PLAYER_SPLASH_HIGH_SPEED);
+        registry.unregister(SoundEvents.ENTITY_PUFFER_FISH_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_PUFFER_FISH_BLOW_OUT);
+        registry.unregister(SoundEvents.ENTITY_PUFFER_FISH_BLOW_UP);
+        registry.unregister(SoundEvents.ENTITY_PUFFER_FISH_DEATH);
+        registry.unregister(SoundEvents.ENTITY_PUFFER_FISH_FLOP);
+        registry.unregister(SoundEvents.ENTITY_PUFFER_FISH_HURT);
+        registry.unregister(SoundEvents.ENTITY_PUFFER_FISH_STING);
+        registry.unregister(SoundEvents.ENTITY_SALMON_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_SALMON_DEATH);
+        registry.unregister(SoundEvents.ENTITY_SALMON_FLOP);
+        registry.unregister(SoundEvents.ENTITY_SALMON_HURT);
+        registry.unregister(SoundEvents.ENTITY_SKELETON_HORSE_SWIM);
+        registry.unregister(SoundEvents.ENTITY_SKELETON_HORSE_AMBIENT_WATER);
+        registry.unregister(SoundEvents.ENTITY_SKELETON_HORSE_GALLOP_WATER);
+        registry.unregister(SoundEvents.ENTITY_SKELETON_HORSE_JUMP_WATER);
+        registry.unregister(SoundEvents.ENTITY_SKELETON_HORSE_STEP_WATER);
+        registry.unregister(SoundEvents.ENTITY_SQUID_SQUIRT);
+        registry.unregister(SoundEvents.ENTITY_TROPICAL_FISH_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_TROPICAL_FISH_DEATH);
+        registry.unregister(SoundEvents.ENTITY_TROPICAL_FISH_FLOP);
+        registry.unregister(SoundEvents.ENTITY_TROPICAL_FISH_HURT);
+        registry.unregister(SoundEvents.ENTITY_TURTLE_AMBIENT_LAND);
+        registry.unregister(SoundEvents.ENTITY_TURTLE_DEATH);
+        registry.unregister(SoundEvents.ENTITY_TURTLE_DEATH_BABY);
+        registry.unregister(SoundEvents.ENTITY_TURTLE_EGG_BREAK);
+        registry.unregister(SoundEvents.ENTITY_TURTLE_EGG_CRACK);
+        registry.unregister(SoundEvents.ENTITY_TURTLE_EGG_HATCH);
+        registry.unregister(SoundEvents.ENTITY_TURTLE_HURT);
+        registry.unregister(SoundEvents.ENTITY_TURTLE_HURT_BABY);
+        registry.unregister(SoundEvents.ENTITY_TURTLE_LAY_EGG);
+        registry.unregister(SoundEvents.ENTITY_TURTLE_SHAMBLE);
+        registry.unregister(SoundEvents.ENTITY_TURTLE_SHAMBLE_BABY);
+        registry.unregister(SoundEvents.ENTITY_TURTLE_SWIM);
+        registry.unregister(SoundEvents.ENTITY_ZOMBIE_CONVERTED_TO_DROWNED);
+        registry.unregister(SoundEvents.ENTITY_ZOMBIE_DESTROY_EGG);
+        registry.unregister(SoundEvents.ITEM_ARMOR_EQUIP_TURTLE);
+        registry.unregister(SoundEvents.ITEM_AXE_STRIP);
+        registry.unregister(SoundEvents.ITEM_BUCKET_EMPTY_FISH);
+        registry.unregister(SoundEvents.ITEM_BUCKET_FILL_FISH);
+        registry.unregister(SoundEvents.ITEM_TRIDENT_HIT);
+        registry.unregister(SoundEvents.ITEM_TRIDENT_HIT_GROUND);
+        registry.unregister(SoundEvents.ITEM_TRIDENT_RETURN);
+        registry.unregister(SoundEvents.ITEM_TRIDENT_RIPTIDE_1);
+        registry.unregister(SoundEvents.ITEM_TRIDENT_RIPTIDE_2);
+        registry.unregister(SoundEvents.ITEM_TRIDENT_RIPTIDE_3);
+        registry.unregister(SoundEvents.ITEM_TRIDENT_THROW);
+        registry.unregister(SoundEvents.ITEM_TRIDENT_THUNDER);
+        registry.unregister(SoundEvents.MUSIC_UNDER_WATER);
     }
 }

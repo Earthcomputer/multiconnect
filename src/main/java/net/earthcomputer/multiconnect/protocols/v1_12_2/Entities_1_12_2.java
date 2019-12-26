@@ -7,11 +7,11 @@ import net.minecraft.util.Identifier;
 public class Entities_1_12_2 {
 
     private static void register(ISimpleRegistry<EntityType<?>> registry, EntityType<?> entity, int id, String name, String oldName) {
-        registry.register(entity, id, new Identifier(name));
+        registry.register(entity, id, new Identifier(name), false);
     }
 
     public static void registerEntities(ISimpleRegistry<EntityType<?>> registry) {
-        registry.clear(true);
+        registry.clear(false);
 
         register(registry, EntityType.ITEM, 1, "item", "Item");
         register(registry, EntityType.EXPERIENCE_ORB, 2, "xp_orb", "XPOrb");

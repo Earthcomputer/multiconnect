@@ -744,6 +744,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         insertAfter(registry, Blocks.BRAIN_CORAL_FAN, Blocks.BUBBLE_CORAL_FAN, "bubble_coral_fan");
         insertAfter(registry, Blocks.BUBBLE_CORAL_FAN, Blocks.FIRE_CORAL_FAN, "fire_coral_fan");
         insertAfter(registry, Blocks.FIRE_CORAL_FAN, Blocks.HORN_CORAL_FAN, "horn_coral_fan");
+
+        rename(registry, Blocks.SMOOTH_STONE_SLAB, "stone_slab");
     }
 
     private void modifyItemRegistry(ISimpleRegistry<Item> registry) {

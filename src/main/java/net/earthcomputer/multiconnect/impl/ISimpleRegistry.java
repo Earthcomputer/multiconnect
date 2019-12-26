@@ -23,6 +23,12 @@ public interface ISimpleRegistry<T> {
 
     void register(T t, int id, Identifier name, boolean sideEffects);
 
+    default void registerInPlace(T t, int id, Identifier name) {
+        registerInPlace(t, id, name, true);
+    }
+
+    void registerInPlace(T t, int id, Identifier name, boolean sideEffects);
+
     default void unregister(T t) {
         unregister(t, true);
     }

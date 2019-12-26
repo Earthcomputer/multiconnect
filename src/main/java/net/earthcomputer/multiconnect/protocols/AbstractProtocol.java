@@ -137,8 +137,8 @@ public abstract class AbstractProtocol {
     @SuppressWarnings("unchecked")
     public static <T> void rename(ISimpleRegistry<T> registry, T value, String newName) {
         int id = ((SimpleRegistry<T>) registry).getRawId(value);
-        registry.unregister(value);
-        registry.register(value, id, new Identifier(newName));
+        registry.purge(value);
+        registry.registerInPlace(value, id, new Identifier(newName));
     }
 
     @SuppressWarnings("unchecked")

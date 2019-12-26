@@ -5,6 +5,7 @@ import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.AbstractProtocol;
 import net.minecraft.block.*;
 import net.minecraft.datafixers.fixes.BlockStateFlattening;
+import net.minecraft.datafixers.fixes.EntityTheRenameningBlock;
 import net.minecraft.item.Item;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.Identifier;
@@ -68,6 +69,8 @@ public class Blocks_1_12_2 {
         final int flowerPotId = Registry.BLOCK.getRawId(FLOWER_POT);
         final int skullId = Registry.BLOCK.getRawId(SKELETON_SKULL);
 
+        // TODO: improve this code now that registerInPlace exists
+
         for (int meta = 1; meta < 16; meta++) {
             for (int blockId = 1; blockId < 256; blockId++) {
                 if (blockId == flowerPotId) {
@@ -103,7 +106,10 @@ public class Blocks_1_12_2 {
                         case 11: registry.register(DRAGON_WALL_HEAD, meta << 16 | blockId, new Identifier("dragon_wall_head"), false); break;
                     }
                 } else {
-                    Identifier subName = new Identifier(BlockStateFlattening.lookup(blockId << 4 | meta));
+                    String fixedName = BlockStateFlattening.lookup(blockId << 4 | meta);
+                    fixedName = EntityTheRenameningBlock.BLOCKS.getOrDefault(fixedName, fixedName);
+                    if ("minecraft:melon_block".equals(fixedName)) fixedName = "minecraft:melon";
+                    Identifier subName = new Identifier(fixedName);
                     Block subBlock = REGISTRY_1_13.get(subName);
                     if (subBlock != AIR && Registry.BLOCK.getRawId(subBlock) == 0) {
                         registry.register(subBlock, meta << 16 | blockId, subName, false);
@@ -197,7 +203,7 @@ public class Blocks_1_12_2 {
         register(registry, OAK_DOOR, 64, "wooden_door");
         register(registry, LADDER, 65, "ladder");
         register(registry, RAIL, 66, "rail");
-        register(registry, STONE_STAIRS, 67, "stone_stairs");
+        register(registry, COBBLESTONE_STAIRS, 67, "stone_stairs");
         register(registry, OAK_WALL_SIGN, 68, "wall_sign");
         register(registry, LEVER, 69, "lever");
         register(registry, STONE_PRESSURE_PLATE, 70, "stone_pressure_plate");

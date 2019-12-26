@@ -12,7 +12,8 @@
     "MixinIdListPalette",
     "MixinParticleManager",
     "MixinClientPlayNetworkHandler",
-    "MixinSkullBlockEntity"
+    "MixinSkullBlockEntity",
+    "MixinBedBlockEntity"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -16,16 +16,13 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.lang.invoke.*;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +37,8 @@ public class MixinParticleManager implements IParticleManager {
             Class<?> ssp = Arrays.stream(ParticleManager.class.getDeclaredClasses())
                     .filter(cls -> ArrayUtils.contains(cls.getInterfaces(), SpriteProvider.class))
                     .findFirst().orElseThrow(ClassNotFoundException::new);
-            SSP_CTOR = ssp.getDeclaredConstructor();
+            SSP_CTOR = ssp.getDeclaredConstructor(ParticleManager.class);
+            SSP_CTOR.setAccessible(true);
         } catch (ReflectiveOperationException e) {
             throw new AssertionError(e);
         }
@@ -81,7 +79,7 @@ public class MixinParticleManager implements IParticleManager {
         // https://stackoverflow.com/questions/26775676/explicit-use-of-lambdametafactory
         SpriteProvider spriteProvider;
         try {
-            spriteProvider = (SpriteProvider) SSP_CTOR.newInstance();
+            spriteProvider = (SpriteProvider) SSP_CTOR.newInstance((ParticleManager) (Object) this);
         } catch (Throwable e) {
             throw new AssertionError(e);
         }

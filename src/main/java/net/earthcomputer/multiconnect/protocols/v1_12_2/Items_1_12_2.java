@@ -5,12 +5,10 @@ import com.google.common.collect.HashBiMap;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.datafixers.fixes.EntityTheRenameningBlock;
 import net.minecraft.datafixers.fixes.ItemInstanceTheFlatteningFix;
 import net.minecraft.entity.EntityType;
-import net.minecraft.item.FilledMapItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SpawnEggItem;
+import net.minecraft.item.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -97,11 +95,11 @@ public class Items_1_12_2 {
     }
 
     private static void register(ISimpleRegistry<Item> registry, Item item, int id, String name) {
-        registry.register(item, id, new Identifier(name), false);
+        registry.registerInPlace(item, id, new Identifier(name), false);
     }
 
     private static void registerBlockItem(ISimpleRegistry<Item> registry, Block block) {
-        registry.register(Item.BLOCK_ITEMS.get(block), Registry.BLOCK.getRawId(block), Registry.BLOCK.getId(block), false);
+        registry.registerInPlace(Item.BLOCK_ITEMS.getOrDefault(block, AIR), Registry.BLOCK.getRawId(block), Registry.BLOCK.getId(block), false);
     }
 
     private static void registerAliases(ISimpleRegistry<Item> registry) {
@@ -110,10 +108,11 @@ public class Items_1_12_2 {
                 Item baseItem = Registry.ITEM.get(itemId);
                 String baseName = Registry.ITEM.getId(baseItem).toString();
                 String newName = ItemInstanceTheFlatteningFix.getItem(baseName, meta);
+                newName = EntityTheRenameningBlock.ITEMS.getOrDefault(newName, newName);
                 if (newName != null) {
                     Item subItem = REGISTRY_1_13.get(new Identifier(newName));
                     if (subItem != AIR && Registry.ITEM.getRawId(subItem) == 0) {
-                        registry.register(subItem, meta << 16 | itemId, new Identifier(newName), false);
+                        registry.registerInPlace(subItem, meta << 16 | itemId, new Identifier(newName), false);
                         OLD_ITEM_TO_NEW.put(Pair.of(baseItem, meta), subItem);
                     }
                 }
@@ -125,7 +124,7 @@ public class Items_1_12_2 {
         for (EntityType entityType : Registry.ENTITY_TYPE) {
             SpawnEggItem item = SpawnEggItem.forEntity(entityType);
             if (item != null && item != BAT_SPAWN_EGG) {
-                registry.register(item, nextHighBits << 16 | spawnEggId, REGISTRY_1_13.getId(item), false);
+                registry.registerInPlace(item, nextHighBits << 16 | spawnEggId, REGISTRY_1_13.getId(item), false);
                 nextHighBits++;
             }
         }
@@ -200,7 +199,7 @@ public class Items_1_12_2 {
         registerBlockItem(registry, Blocks.FURNACE);
         registerBlockItem(registry, Blocks.LADDER);
         registerBlockItem(registry, Blocks.RAIL);
-        registerBlockItem(registry, Blocks.STONE_STAIRS);
+        registerBlockItem(registry, Blocks.COBBLESTONE_STAIRS);
         registerBlockItem(registry, Blocks.LEVER);
         registerBlockItem(registry, Blocks.STONE_PRESSURE_PLATE);
         registerBlockItem(registry, Blocks.OAK_PRESSURE_PLATE);
@@ -444,7 +443,7 @@ public class Items_1_12_2 {
         register(registry, COOKIE, 357, "cookie");
         register(registry, FILLED_MAP, 358, "filled_map");
         register(registry, SHEARS, 359, "shears");
-        register(registry, MELON, 360, "melon");
+        register(registry, MELON_SLICE, 360, "melon");
         register(registry, PUMPKIN_SEEDS, 361, "pumpkin_seeds");
         register(registry, MELON_SEEDS, 362, "melon_seeds");
         register(registry, BEEF, 363, "beef");

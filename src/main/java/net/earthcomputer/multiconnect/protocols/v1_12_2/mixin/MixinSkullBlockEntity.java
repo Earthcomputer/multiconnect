@@ -41,9 +41,9 @@ public abstract class MixinSkullBlockEntity extends BlockEntity {
         final Block[] wallSkullBlocks = {Blocks.SKELETON_WALL_SKULL, Blocks.WITHER_SKELETON_WALL_SKULL, Blocks.ZOMBIE_WALL_HEAD, Blocks.PLAYER_WALL_HEAD, Blocks.CREEPER_WALL_HEAD, Blocks.DRAGON_WALL_HEAD};
         assert world != null;
         if (state.getBlock() instanceof WallSkullBlock) {
-            world.setBlockState(pos, wallSkullBlocks[skullType].getDefaultState().with(WallSkullBlock.FACING, state.get(WallSkullBlock.FACING)));
+            world.setBlockState(pos, wallSkullBlocks[skullType].getDefaultState().with(WallSkullBlock.FACING, state.get(WallSkullBlock.FACING)), 18);
         } else {
-            world.setBlockState(pos, skullBlocks[skullType].getDefaultState().with(SkullBlock.ROTATION, state.get(SkullBlock.ROTATION)));
+            world.setBlockState(pos, skullBlocks[skullType].getDefaultState().with(SkullBlock.ROTATION, state.get(SkullBlock.ROTATION)), 18);
         }
     }
 
