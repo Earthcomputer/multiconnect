@@ -21,7 +21,6 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.*;
-import net.minecraft.client.particle.BlockDustParticle;
 import net.minecraft.client.util.TextFormat;
 import net.minecraft.datafixers.fixes.BlockStateFlattening;
 import net.minecraft.datafixers.fixes.EntityTheRenameningBlock;
@@ -518,7 +517,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     @Override
     public List<PacketInfo<?>> getServerboundPackets() {
-        List<PacketInfo<?>> packets = super.getClientboundPackets();
+        List<PacketInfo<?>> packets = super.getServerboundPackets();
         remove(packets, RequestCommandCompletionsC2SPacket.class);
         insertAfter(packets, TeleportConfirmC2SPacket.class, PacketInfo.of(RequestCommandCompletionsC2SPacket.class, RequestCommandCompletionsC2SPacket::new));
         remove(packets, QueryBlockNbtC2SPacket.class);

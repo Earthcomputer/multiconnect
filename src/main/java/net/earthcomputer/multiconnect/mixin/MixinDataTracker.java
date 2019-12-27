@@ -6,7 +6,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.util.PacketByteBuf;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,9 +20,11 @@ import java.util.List;
 import java.util.Map;
 
 @Mixin(DataTracker.class)
-public class MixinDataTracker implements IDataTracker {
+public abstract class MixinDataTracker implements IDataTracker {
 
     @Shadow @Final private Map<Integer, DataTracker.Entry<?>> entries;
+
+    @Shadow protected abstract <T> void addTrackedData(TrackedData<T> trackedData_1, T object_1);
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(Entity entity, CallbackInfo ci) {
@@ -33,6 +34,14 @@ public class MixinDataTracker implements IDataTracker {
     @Inject(method = "registerData", at = @At("RETURN"))
     private static <T> void onRegisterData(Class<? extends Entity> clazz, TrackedDataHandler<T> dataType, CallbackInfoReturnable<TrackedData<T>> ci) {
         DataTrackerManager.onRegisterData(clazz, ci.getReturnValue());
+    }
+
+    @Inject(method = "startTracking", at = @At(value = "INVOKE", target = "Ljava/lang/IllegalArgumentException;<init>(Ljava/lang/String;)V", ordinal = 2, remap = false), cancellable = true)
+    private <T> void allowUnregisteredTracker(TrackedData<T> data, T _default, CallbackInfo ci) {
+        if (data.getId() < 0) {
+            ci.cancel();
+            addTrackedData(data, _default);
+        }
     }
 
     @Inject(method = "startTracking", at = @At("HEAD"), cancellable = true)
