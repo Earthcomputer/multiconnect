@@ -9,11 +9,11 @@
     "MixinCommandBlockMinecartC2S",
     "MixinWorldChunk",
     "MixinClientChunkManager",
-    "MixinIdListPalette",
     "MixinParticleManager",
     "MixinClientPlayNetworkHandler",
     "MixinSkullBlockEntity",
-    "MixinBedBlockEntity"
+    "MixinBedBlockEntity",
+    "MixinAreaEffectCloudEntity"
   ],
   "injectors": {
     "defaultRequire": 1

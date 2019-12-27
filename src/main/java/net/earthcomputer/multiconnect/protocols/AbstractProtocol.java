@@ -10,6 +10,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandler;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.item.Item;
 import net.minecraft.item.SpawnEggItem;
 import net.minecraft.network.NetworkSide;
@@ -37,6 +39,7 @@ public abstract class AbstractProtocol {
         DefaultRegistry.DEFAULT_REGISTRIES.keySet().forEach((registry -> modifyRegistry((ISimpleRegistry<?>) registry)));
         recomputeBlockStates();
         refreshFlowerPotBlocks();
+        removeTrackedDataHandlers();
         ((IMinecraftClient) MinecraftClient.getInstance()).callInitializeSearchableContainers();
         ((IMinecraftClient) MinecraftClient.getInstance()).getSearchManager().apply(MinecraftClient.getInstance().getResourceManager());
     }
@@ -160,6 +163,22 @@ public abstract class AbstractProtocol {
         insertAfter(registry, prevValue, value, defaultRegistry.defaultEntries.inverse().get(value).toString());
     }
 
+    protected void removeTrackedDataHandlers() {
+    }
+
+    protected static void removeTrackedDataHandler(TrackedDataHandler<?> handler) {
+        Int2ObjectBiMap<TrackedDataHandler<?>> biMap = DefaultRegistry.getTrackedDataHandlers();
+        //noinspection unchecked
+        IInt2ObjectBiMap<TrackedDataHandler<?>> iBiMap = (IInt2ObjectBiMap<TrackedDataHandler<?>>) biMap;
+        int id = TrackedDataHandlerRegistry.getId(handler);
+        iBiMap.remove(handler);
+        for (; TrackedDataHandlerRegistry.get(id + 1) != null; id++) {
+            TrackedDataHandler<?> h = TrackedDataHandlerRegistry.get(id + 1);
+            iBiMap.remove(h);
+            biMap.put(h, id);
+        }
+    }
+
     public static void refreshFlowerPotBlocks() {
         Map<Block, Block> flowerPots = DefaultRegistry.getFlowerPotBlocks();
         flowerPots.clear();
@@ -213,6 +232,7 @@ public abstract class AbstractProtocol {
 
         private static Map<Block, Item> DEFAULT_BLOCK_ITEMS = new HashMap<>();
         private static Map<EntityType<?>, SpawnEggItem> DEFAULT_SPAWN_EGG_ITEMS = new IdentityHashMap<>();
+        private static Int2ObjectBiMap<TrackedDataHandler<?>> DEFAULT_TRACKED_DATA_HANDLERS = new Int2ObjectBiMap<>(16);
 
         private Int2ObjectBiMap<T> defaultIndexedEntries = new Int2ObjectBiMap<>(256);
         private BiMap<Identifier, T> defaultEntries = HashBiMap.create();
@@ -248,6 +268,9 @@ public abstract class AbstractProtocol {
             Item.BLOCK_ITEMS.putAll(DEFAULT_BLOCK_ITEMS);
             getSpawnEggItems().clear();
             getSpawnEggItems().putAll(DEFAULT_SPAWN_EGG_ITEMS);
+            getTrackedDataHandlers().clear();
+            for (TrackedDataHandler<?> handler : DEFAULT_TRACKED_DATA_HANDLERS)
+                getTrackedDataHandlers().put(handler, DEFAULT_TRACKED_DATA_HANDLERS.getId(handler));
         }
 
         public static void initialize() {
@@ -266,6 +289,8 @@ public abstract class AbstractProtocol {
 
             DEFAULT_BLOCK_ITEMS.putAll(Item.BLOCK_ITEMS);
             DEFAULT_SPAWN_EGG_ITEMS.putAll(getSpawnEggItems());
+            for (TrackedDataHandler<?> handler : getTrackedDataHandlers())
+                DEFAULT_TRACKED_DATA_HANDLERS.put(handler, getTrackedDataHandlers().getId(handler));
 
             //noinspection unchecked
             ((ISimpleRegistry<Block>) Registry.BLOCK).addRegisterListener(block -> {
@@ -318,8 +343,18 @@ public abstract class AbstractProtocol {
             }
         }
 
+        private static Int2ObjectBiMap<TrackedDataHandler<?>> getTrackedDataHandlers() {
+            try {
+                //noinspection unchecked
+                return (Int2ObjectBiMap<TrackedDataHandler<?>>) TRACKED_DATA_HANDLERS.get(null);
+            } catch (ReflectiveOperationException e) {
+                throw new AssertionError(e);
+            }
+        }
+
         private static final Field SPAWN_EGGS_FIELD;
         private static final Field FLOWER_POTS_FIELD;
+        private static final Field TRACKED_DATA_HANDLERS;
         static {
             try {
                 SPAWN_EGGS_FIELD = Arrays.stream(SpawnEggItem.class.getDeclaredFields())
@@ -330,6 +365,10 @@ public abstract class AbstractProtocol {
                         .filter(it -> it.getType() == Map.class)
                         .findFirst().orElseThrow(NoSuchFieldException::new);
                 FLOWER_POTS_FIELD.setAccessible(true);
+                TRACKED_DATA_HANDLERS = Arrays.stream(TrackedDataHandlerRegistry.class.getDeclaredFields())
+                        .filter(it -> it.getType() == Int2ObjectBiMap.class)
+                        .findFirst().orElseThrow(NoSuchFieldException::new);
+                TRACKED_DATA_HANDLERS.setAccessible(true);
             } catch (ReflectiveOperationException e) {
                 throw new AssertionError(e);
             }

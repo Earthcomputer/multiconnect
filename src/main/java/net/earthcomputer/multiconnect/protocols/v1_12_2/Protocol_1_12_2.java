@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.mojang.datafixers.Dynamic;
 import io.netty.buffer.Unpooled;
+import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.IIdList;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
@@ -20,21 +21,27 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.*;
+import net.minecraft.client.particle.BlockDustParticle;
 import net.minecraft.client.util.TextFormat;
 import net.minecraft.datafixers.fixes.BlockStateFlattening;
 import net.minecraft.datafixers.fixes.EntityTheRenameningBlock;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.AreaEffectCloudEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.decoration.painting.PaintingMotive;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.map.MapIcon;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Packet;
-import net.minecraft.particle.ParticleType;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.particle.*;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
 import net.minecraft.scoreboard.ScoreboardCriterion;
@@ -59,9 +66,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 public class Protocol_1_12_2 extends Protocol_1_13 {
 
@@ -96,6 +105,18 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         OLD_MOTIVE_NAMES.put("Skeleton", PaintingMotive.SKELETON);
         OLD_MOTIVE_NAMES.put("DonkeyKong", PaintingMotive.DONKEY_KONG);
     }
+
+    private static final Pattern NON_IDENTIFIER_CHARS = Pattern.compile("[^a-z0-9/._\\-]");
+
+    private static final Field AREA_EFFECT_CLOUD_PARTICLE_ID = DataTrackerManager.getTrackedDataField(AreaEffectCloudEntity.class, 3, "PARTICLE_ID");
+    private static final Field ENTITY_CUSTOM_NAME = DataTrackerManager.getTrackedDataField(Entity.class, 2, "CUSTOM_NAME");
+    private static final Field BOAT_BUBBLE_WOBBLE_TICKS = DataTrackerManager.getTrackedDataField(BoatEntity.class, 6, "BUBBLE_WOBBLE_TICKS");
+    private static final Field ZOMBIE_CONVERTING_IN_WATER = DataTrackerManager.getTrackedDataField(ZombieEntity.class, 2, "CONVERTING_IN_WATER");
+
+    private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_ID = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM1 = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM2 = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<String> OLD_CUSTOM_NAME = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.STRING);
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
@@ -172,7 +193,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             } else if ("MC|BOpen".equals(channel)) {
                 newChannel = Protocol_1_13_2.CUSTOM_PAYLOAD_OPEN_BOOK;
             } else {
-                newChannel = new Identifier(channel);
+                newChannel = new Identifier(NON_IDENTIFIER_CHARS.matcher(channel.toLowerCase(Locale.ENGLISH)).replaceAll("_"));
             }
             buf.pendingRead(Identifier.class, newChannel);
             buf.applyPendingReads();
@@ -697,6 +718,88 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         }
 
         return true;
+    }
+
+    @Override
+    protected void removeTrackedDataHandlers() {
+        super.removeTrackedDataHandlers();
+        removeTrackedDataHandler(TrackedDataHandlerRegistry.OPTIONAL_TEXT_COMPONENT);
+    }
+
+    @Override
+    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+        if (!super.acceptEntityData(clazz, data))
+            return false;
+
+        if (clazz == AreaEffectCloudEntity.class && data == DataTrackerManager.getTrackedData(ParticleEffect.class, AREA_EFFECT_CLOUD_PARTICLE_ID)) {
+            DataTrackerManager.registerOldTrackedData(AreaEffectCloudEntity.class,
+                    OLD_AREA_EFFECT_CLOUD_PARTICLE_ID,
+                    Registry.PARTICLE_TYPE.getRawId(ParticleTypes.ENTITY_EFFECT),
+                    (entity, val) -> {
+                ParticleType<?> type = Registry.PARTICLE_TYPE.get(val);
+                if (type == null)
+                    type = ParticleTypes.ENTITY_EFFECT;
+                setParticleType(entity, type);
+            });
+            DataTrackerManager.registerOldTrackedData(AreaEffectCloudEntity.class,
+                    OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM1,
+                    0,
+                    (entity, val) -> {
+                ((IAreaEffectCloudEntity) entity).multiconnect_setParam1(val);
+                setParticleType(entity, entity.getParticleType().getType());
+            });
+            DataTrackerManager.registerOldTrackedData(AreaEffectCloudEntity.class,
+                    OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM2,
+                    0,
+                    (entity, val) -> {
+                ((IAreaEffectCloudEntity) entity).multiconnect_setParam2(val);
+                setParticleType(entity, entity.getParticleType().getType());
+            });
+            return false;
+        }
+
+        if (clazz == Entity.class && data == DataTrackerManager.getTrackedData(Optional.class, ENTITY_CUSTOM_NAME)) {
+            DataTrackerManager.registerOldTrackedData(Entity.class, OLD_CUSTOM_NAME, "",
+                    (entity, val) -> entity.setCustomName(val.isEmpty() ? null : new LiteralText(val)));
+            return false;
+        }
+
+        if (clazz == BoatEntity.class && data == DataTrackerManager.getTrackedData(Integer.class, BOAT_BUBBLE_WOBBLE_TICKS)) {
+            return false;
+        }
+
+        if (clazz == ZombieEntity.class && data == DataTrackerManager.getTrackedData(Boolean.class, ZOMBIE_CONVERTING_IN_WATER)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void setParticleType(AreaEffectCloudEntity entity, ParticleType<?> type) {
+        IAreaEffectCloudEntity iaece = (IAreaEffectCloudEntity) entity;
+        if (type.getParametersFactory() == ItemStackParticleEffect.PARAMETERS_FACTORY) {
+            Item item = Registry.ITEM.get(iaece.multiconnect_getParam1());
+            int meta = iaece.multiconnect_getParam2();
+            ItemStack stack = Items_1_12_2.oldItemStackToNew(new ItemStack(item), meta);
+            entity.setParticleType(createParticle(type, buf -> buf.writeItemStack(stack)));
+        } else if (type.getParametersFactory() == BlockStateParticleEffect.PARAMETERS_FACTORY) {
+            entity.setParticleType(createParticle(type, buf -> buf.writeVarInt(iaece.multiconnect_getParam1())));
+        } else if (type.getParametersFactory() == DustParticleEffect.PARAMETERS_FACTORY) {
+            entity.setParticleType(createParticle(type, buf -> {
+                buf.writeFloat(1);
+                buf.writeFloat(0);
+                buf.writeFloat(0);
+                buf.writeFloat(1);
+            }));
+        } else {
+            entity.setParticleType(createParticle(type, buf -> {}));
+        }
+    }
+
+    private static <T extends ParticleEffect> T createParticle(ParticleType<T> type, Consumer<PacketByteBuf> function) {
+        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+        function.accept(buf);
+        return type.getParametersFactory().read(type, buf);
     }
 
     @Override

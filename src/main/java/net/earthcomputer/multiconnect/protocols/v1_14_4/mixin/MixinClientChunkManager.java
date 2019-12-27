@@ -21,10 +21,12 @@ public class MixinClientChunkManager {
     @Inject(method = "loadChunkFromPacket", at = @At("RETURN"))
     private void onLoadChunkFromPacket(int x, int z, BiomeArray biomeArray, PacketByteBuf buf, CompoundTag heightmaps, int verticalStripMask, CallbackInfoReturnable<WorldChunk> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_14_4) {
-            Biome[] biomeData = PendingBiomeData.getPendingBiomeData(x, z);
-            if (biomeData != null) {
-                ((IBiomeStorage_1_14_4) ci.getReturnValue()).multiconnect_setBiomeArray_1_14_4(biomeData);
-                PendingBiomeData.setPendingBiomeData(x, z, null);
+            if (ci.getReturnValue() != null) {
+                Biome[] biomeData = PendingBiomeData.getPendingBiomeData(x, z);
+                if (biomeData != null) {
+                    ((IBiomeStorage_1_14_4) ci.getReturnValue()).multiconnect_setBiomeArray_1_14_4(biomeData);
+                    PendingBiomeData.setPendingBiomeData(x, z, null);
+                }
             }
         }
     }

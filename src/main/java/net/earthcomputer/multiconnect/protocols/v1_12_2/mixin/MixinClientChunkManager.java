@@ -28,14 +28,16 @@ public abstract class MixinClientChunkManager {
     @Inject(method = "loadChunkFromPacket", at = @At("RETURN"))
     private void onLoadChunkFromPacket(int x, int z, BiomeArray biomes, PacketByteBuf buf, CompoundTag heightmaps, int verticalStripBitmask, CallbackInfoReturnable<WorldChunk> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            synchronized (LOCK) {
-                UpgradeData upgradeData = ChunkUpgrader.fixChunk(ci.getReturnValue());
-                ((IUpgradableChunk) ci.getReturnValue()).multiconnect_setClientUpgradeData(upgradeData);
-                for (int dx = -1; dx <= 1; dx++) {
-                    for (int dz = -1; dz <= 1; dz++) {
-                        WorldChunk chunk = getChunk(x + dx, z + dz, ChunkStatus.FULL, false);
-                        if (chunk != null)
-                            ((IUpgradableChunk) chunk).multiconnect_onNeighborLoaded();
+            if (ci.getReturnValue() != null) {
+                synchronized (LOCK) {
+                    UpgradeData upgradeData = ChunkUpgrader.fixChunk(ci.getReturnValue());
+                    ((IUpgradableChunk) ci.getReturnValue()).multiconnect_setClientUpgradeData(upgradeData);
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dz = -1; dz <= 1; dz++) {
+                            WorldChunk chunk = getChunk(x + dx, z + dz, ChunkStatus.FULL, false);
+                            if (chunk != null)
+                                ((IUpgradableChunk) chunk).multiconnect_onNeighborLoaded();
+                        }
                     }
                 }
             }
