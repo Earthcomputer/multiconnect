@@ -140,4 +140,11 @@ public abstract class MixinClientPlayNetworkHandler {
         }
     }
 
+    @Inject(method = "onPlayerPositionLook", at = @At("TAIL"))
+    private void onOnPlayerPositionLook(PlayerPositionLookS2CPacket packet, CallbackInfo ci) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
+            Protocol_1_13_2.updateCameraPosition();
+        }
+    }
+
 }

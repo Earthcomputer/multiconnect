@@ -22,6 +22,7 @@ import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Int2ObjectBiMap;
 import net.minecraft.util.Util;
+import net.minecraft.util.registry.DefaultedRegistry;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.SimpleRegistry;
 
@@ -36,7 +37,10 @@ public abstract class AbstractProtocol {
         modifyPacketLists();
         DataTrackerManager.onConnectToServer();
         DefaultRegistry.restoreAll();
-        DefaultRegistry.DEFAULT_REGISTRIES.keySet().forEach((registry -> modifyRegistry((ISimpleRegistry<?>) registry)));
+        DefaultRegistry.DEFAULT_REGISTRIES.keySet().forEach((registry -> {
+            modifyRegistry((ISimpleRegistry<?>) registry);
+            postModifyRegistry(registry);
+        }));
         recomputeBlockStates();
         refreshFlowerPotBlocks();
         removeTrackedDataHandlers();
@@ -110,6 +114,19 @@ public abstract class AbstractProtocol {
     }
 
     public void modifyRegistry(ISimpleRegistry<?> registry) {
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> void postModifyRegistry(Registry<T> registry) {
+        if (!(registry instanceof SimpleRegistry)) return;
+        if (registry instanceof DefaultedRegistry) return;
+        ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
+        DefaultRegistry<T> defaultRegistry = (DefaultRegistry<T>) DefaultRegistry.DEFAULT_REGISTRIES.get(registry);
+        if (defaultRegistry == null) return;
+        for (Map.Entry<Identifier, T> entry : defaultRegistry.defaultEntries.entrySet()) {
+            if (registry.getId(entry.getValue()) == null)
+                iregistry.register(entry.getValue(), iregistry.getNextId(), entry.getKey(), false);
+        }
     }
 
     public boolean acceptBlockState(BlockState state) {
