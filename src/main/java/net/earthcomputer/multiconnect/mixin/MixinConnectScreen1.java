@@ -41,7 +41,10 @@ public class MixinConnectScreen1 {
         GetProtocolPacketListener listener = new GetProtocolPacketListener(connection);
         connection.setPacketListener(listener);
 
-        connection.send(new HandshakeC2SPacket(ConnectionInfo.ip, ConnectionInfo.port, NetworkState.STATUS));
+        HandshakeC2SPacket handshake  = new HandshakeC2SPacket(ConnectionInfo.ip, ConnectionInfo.port, NetworkState.STATUS);
+        //noinspection ConstantConditions
+        ((IHandshakePacket) handshake).setVersion(-1);
+        connection.send(handshake);
         connection.send(new QueryRequestC2SPacket());
 
         while (!listener.hasCompleted()) {
