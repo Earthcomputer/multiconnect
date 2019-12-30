@@ -116,6 +116,12 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     @Override
+    public void setup() {
+        PendingChunkDataPackets.processPackets(packet -> {});
+        super.setup();
+    }
+
+    @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
         insertAfter(packets, GuiCloseS2CPacket.class, PacketInfo.of(GuiOpenS2CPacket_1_13_2.class, GuiOpenS2CPacket_1_13_2::new));

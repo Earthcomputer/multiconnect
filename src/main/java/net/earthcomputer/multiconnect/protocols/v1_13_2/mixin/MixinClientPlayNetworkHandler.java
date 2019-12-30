@@ -2,10 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_13_2.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.ILightUpdatePacket;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.PendingDifficulty;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.PendingLightData;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
+import net.earthcomputer.multiconnect.protocols.v1_13_2.*;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.*;
 import net.minecraft.client.world.ClientWorld;
@@ -73,6 +70,16 @@ public abstract class MixinClientPlayNetworkHandler {
             PendingLightData.setInstance(packet.getX(), packet.getZ(), null);
 
             onLightUpdate(lightPacket);
+
+            if (packet.isFullChunk())
+                PendingChunkDataPackets.push(packet);
+        }
+    }
+
+    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;addEntitiesToChunk(Lnet/minecraft/world/chunk/WorldChunk;)V"))
+    private void onChunkDataSuccess(ChunkDataS2CPacket packet, CallbackInfo ci) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
+            PendingChunkDataPackets.pop();
         }
     }
 
