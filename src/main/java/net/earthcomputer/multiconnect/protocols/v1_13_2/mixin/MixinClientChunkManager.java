@@ -71,7 +71,7 @@ public class MixinClientChunkManager {
         }
     }
 
-    @Inject(method = "setChunkMapCenter", at = @At("HEAD"))
+    @Inject(method = "setChunkMapCenter", at = @At("TAIL"))
     private void onSetChunkMapCenter(int x, int z, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             if (x != lastCenterX || z != lastCenterZ) {
