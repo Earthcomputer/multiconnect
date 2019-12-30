@@ -151,7 +151,9 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     public void dump() {
         for (int id = 0; id < nextId; id++) {
             try {
-                System.out.println(id + ": " + entries.inverse().get(indexedEntries.get(id)));
+                T val = indexedEntries.get(id);
+                if (val != null)
+                    System.out.println(id + ": " + entries.inverse().get(val));
             } catch (Throwable t) {
                 System.out.println(id + ": ERROR: " + t);
             }

@@ -13,7 +13,8 @@
     "MixinClientPlayNetworkHandler",
     "MixinSkullBlockEntity",
     "MixinBedBlockEntity",
-    "MixinAreaEffectCloudEntity"
+    "MixinAreaEffectCloudEntity",
+    "MixinBlockStateFlattening"
   ],
   "injectors": {
     "defaultRequire": 1

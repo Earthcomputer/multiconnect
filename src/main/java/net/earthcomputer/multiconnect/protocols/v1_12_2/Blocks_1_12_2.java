@@ -180,7 +180,7 @@ public class Blocks_1_12_2 {
         register(registry, GOLD_BLOCK, 41, "gold_block");
         register(registry, IRON_BLOCK, 42, "iron_block");
         register(registry, DOUBLE_STONE_SLAB, 43, "double_stone_slab");
-        register(registry, STONE_SLAB, 44, "stone_slab");
+        register(registry, COBBLESTONE_SLAB, 44, "stone_slab");
         register(registry, BRICKS, 45, "brick_block");
         register(registry, TNT, 46, "tnt");
         register(registry, BOOKSHELF, 47, "bookshelf");

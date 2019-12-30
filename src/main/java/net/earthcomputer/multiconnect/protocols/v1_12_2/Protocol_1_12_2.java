@@ -120,8 +120,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            buf.readInt(); // chunk x
-            buf.readInt(); // chunk z
+            int chunkX = buf.readInt();
+            int chunkZ = buf.readInt();
             boolean fullChunk = buf.readBoolean();
             int verticalStripBitmask = buf.readVarInt();
             buf.disablePassthroughMode();
@@ -142,8 +142,14 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                         // array and bimap palette data look the same enough to use the same code here
                         int size = inBuf.readVarInt();
                         outBuf.writeVarInt(size);
-                        for (int i = 0; i < size; i++)
-                            outBuf.writeVarInt(inBuf.readVarInt());
+                        for (int i = 0; i < size; i++) {
+                            int stateId = inBuf.readVarInt();
+                            if (Block.STATE_IDS.get(stateId) == null) {
+                                LOGGER.warn("Got unknown state ID " + stateId + " in palette for chunk section (" + chunkX + ", " + sectionY + ", " + chunkZ + ")");
+                                stateId = 0;
+                            }
+                            outBuf.writeVarInt(stateId);
+                        }
                     } else {
                         inBuf.readVarInt();
                     }
@@ -825,9 +831,12 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 for (int meta = 0; meta < 16; meta++) {
                     Dynamic<?> dynamicState = BlockStateFlattening.lookupState(blockId << 4 | meta);
                     String fixedName = dynamicState.get("Name").asString("");
-                    fixedName = EntityTheRenameningBlock.BLOCKS.getOrDefault(fixedName, fixedName);
-                    if ("minecraft:melon_block".equals(fixedName)) fixedName = "minecraft:melon";
                     Block block = Registry.BLOCK.get(new Identifier(fixedName));
+                    if (block == Blocks.AIR && blockId != 0) {
+                        dynamicState = BlockStateReverseFlattening.reverseLookupState(blockId << 4 | meta);
+                        fixedName = dynamicState.get("Name").asString("");
+                        block = Registry.BLOCK.get(new Identifier(fixedName));
+                    }
                     if (block != Blocks.AIR || blockId == 0) {
                         StateManager<Block, BlockState> stateManager = block.getStateManager();
                         BlockState state = block.getDefaultState();
