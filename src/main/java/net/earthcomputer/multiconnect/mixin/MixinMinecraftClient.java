@@ -24,6 +24,7 @@ public abstract class MixinMinecraftClient implements IMinecraftClient {
         ConnectionInfo.port = -1;
         ConnectionInfo.protocolVersion = SharedConstants.getGameVersion().getProtocolVersion();
         ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
+        ConnectionInfo.protocol.setup();
     }
 
     @Accessor
