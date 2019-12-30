@@ -43,33 +43,35 @@ public abstract class MixinClientPlayNetworkHandler {
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/packet/ChunkDataS2CPacket;getX()I"))
     private void onChunkDataPost(ChunkDataS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            LightUpdateS2CPacket lightPacket = new LightUpdateS2CPacket();
-            @SuppressWarnings("ConstantConditions") ILightUpdatePacket iLightPacket = (ILightUpdatePacket) lightPacket;
+            if (!PendingChunkDataPackets.isProcessingQueuedPackets()) {
+                LightUpdateS2CPacket lightPacket = new LightUpdateS2CPacket();
+                @SuppressWarnings("ConstantConditions") ILightUpdatePacket iLightPacket = (ILightUpdatePacket) lightPacket;
 
-            PendingLightData lightData = PendingLightData.getInstance(packet.getX(), packet.getZ());
+                PendingLightData lightData = PendingLightData.getInstance(packet.getX(), packet.getZ());
 
-            iLightPacket.setChunkX(packet.getX());
-            iLightPacket.setChunkZ(packet.getZ());
+                iLightPacket.setChunkX(packet.getX());
+                iLightPacket.setChunkZ(packet.getZ());
 
-            int blockLightMask = packet.getVerticalStripBitmask() << 1;
-            int skyLightMask = world.dimension.hasSkyLight() ? blockLightMask : 0;
-            iLightPacket.setBlocklightMask(blockLightMask);
-            iLightPacket.setSkylightMask(skyLightMask);
-            iLightPacket.setBlockLightUpdates(new ArrayList<>());
-            iLightPacket.setSkyLightUpdates(new ArrayList<>());
+                int blockLightMask = packet.getVerticalStripBitmask() << 1;
+                int skyLightMask = world.dimension.hasSkyLight() ? blockLightMask : 0;
+                iLightPacket.setBlocklightMask(blockLightMask);
+                iLightPacket.setSkylightMask(skyLightMask);
+                iLightPacket.setBlockLightUpdates(new ArrayList<>());
+                iLightPacket.setSkyLightUpdates(new ArrayList<>());
 
-            for (int i = 0; i < 16; i++) {
-                byte[] blockData = lightData.getBlockLight(i);
-                if (blockData != null)
-                    lightPacket.getBlockLightUpdates().add(blockData);
-                byte[] skyData = lightData.getSkyLight(i);
-                if (skyData != null)
-                    lightPacket.getSkyLightUpdates().add(skyData);
+                for (int i = 0; i < 16; i++) {
+                    byte[] blockData = lightData.getBlockLight(i);
+                    if (blockData != null)
+                        lightPacket.getBlockLightUpdates().add(blockData);
+                    byte[] skyData = lightData.getSkyLight(i);
+                    if (skyData != null)
+                        lightPacket.getSkyLightUpdates().add(skyData);
+                }
+
+                PendingLightData.setInstance(packet.getX(), packet.getZ(), null);
+
+                onLightUpdate(lightPacket);
             }
-
-            PendingLightData.setInstance(packet.getX(), packet.getZ(), null);
-
-            onLightUpdate(lightPacket);
 
             if (packet.isFullChunk())
                 PendingChunkDataPackets.push(packet);
