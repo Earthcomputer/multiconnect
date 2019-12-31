@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 
 import com.mojang.datafixers.Dynamic;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.BlockStateReverseFlattening;
-import net.minecraft.datafixers.fixes.BlockStateFlattening;
+import net.minecraft.datafixer.fix.BlockStateFlattening;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,7 +17,7 @@ public abstract class MixinBlockStateFlattening {
         BlockStateReverseFlattening.IDS_TO_OLD_STATES[id] = oldState;
     }
 
-    @Inject(method = "method_22426", at = @At("RETURN"))
+    @Inject(method = "fillEmptyStates", at = @At("RETURN"))
     private static void onFillEmptyStates(CallbackInfo ci) {
         for (int i = 0; i < BlockStateReverseFlattening.IDS_TO_OLD_STATES.length; i++) {
             if (BlockStateReverseFlattening.IDS_TO_OLD_STATES[i] == null)

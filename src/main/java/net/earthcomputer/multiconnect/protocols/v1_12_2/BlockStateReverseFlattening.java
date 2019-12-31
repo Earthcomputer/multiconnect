@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.mojang.datafixers.Dynamic;
-import net.minecraft.datafixers.fixes.BlockStateFlattening;
+import net.minecraft.datafixer.fix.BlockStateFlattening;
 
 public class BlockStateReverseFlattening {
 
@@ -18,7 +18,7 @@ public class BlockStateReverseFlattening {
 
     static {
         // load block state flattening class
-        BlockStateFlattening.lookup(0);
+        BlockStateFlattening.lookupStateBlock(0);
     }
 
 }

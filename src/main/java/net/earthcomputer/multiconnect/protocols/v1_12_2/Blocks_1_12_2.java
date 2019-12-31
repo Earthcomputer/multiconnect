@@ -4,8 +4,8 @@ import net.earthcomputer.multiconnect.impl.IBlockSettings;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.AbstractProtocol;
 import net.minecraft.block.*;
-import net.minecraft.datafixers.fixes.BlockStateFlattening;
-import net.minecraft.datafixers.fixes.EntityTheRenameningBlock;
+import net.minecraft.datafixer.fix.BlockStateFlattening;
+import net.minecraft.datafixer.fix.EntityTheRenameningBlock;
 import net.minecraft.item.Item;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.Identifier;
@@ -106,7 +106,7 @@ public class Blocks_1_12_2 {
                         case 11: registry.register(DRAGON_WALL_HEAD, meta << 16 | blockId, new Identifier("dragon_wall_head"), false); break;
                     }
                 } else {
-                    String fixedName = BlockStateFlattening.lookup(blockId << 4 | meta);
+                    String fixedName = BlockStateFlattening.lookupStateBlock(blockId << 4 | meta);
                     fixedName = EntityTheRenameningBlock.BLOCKS.getOrDefault(fixedName, fixedName);
                     if ("minecraft:melon_block".equals(fixedName)) fixedName = "minecraft:melon";
                     Identifier subName = new Identifier(fixedName);

@@ -200,6 +200,7 @@ public class Particles_1_12_2 {
             this.velocityZ = 0;
         }
 
+        @SuppressWarnings("deprecation")
         @Override
         public void buildGeometry(VertexConsumer vc, Camera camera, float delta) {
             if (!(vc instanceof BufferBuilder)) return;

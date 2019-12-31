@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.block.*;
-import net.minecraft.datafixers.fixes.ChunkPalettedStorageFix;
+import net.minecraft.datafixer.fix.ChunkPalettedStorageFix;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;

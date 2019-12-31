@@ -34,7 +34,7 @@ public class MixinWorldChunk implements IUpgradableChunk {
                     }
                 }
             }
-            clientUpgradeData.method_12356((WorldChunk) (Object) this);
+            clientUpgradeData.upgrade((WorldChunk) (Object) this);
             clientUpgradeData = null;
         }
     }
