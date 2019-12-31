@@ -7,9 +7,12 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.datafixer.fix.EntityTheRenameningBlock;
 import net.minecraft.datafixer.fix.ItemInstanceTheFlatteningFix;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.*;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.apache.commons.lang3.tuple.Pair;
@@ -48,6 +51,30 @@ public class Items_1_12_2 {
                     stack = newStack;
                 }
             }
+        }
+        if (stack.getTag() != null && stack.getTag().contains("ench", 9)) {
+            stack = stack.copy();
+            assert stack.getTag() != null;
+            ListTag enchantments = stack.getTag().getList("ench", 10);
+            for (int i = 0; i < enchantments.size(); i++) {
+                CompoundTag ench = enchantments.getCompound(i);
+                int id = ench.getInt("id");
+                Identifier name = Registry.ENCHANTMENT.getId(Registry.ENCHANTMENT.get(id));
+                if (name == null) {
+                    enchantments.remove(i);
+                    i--;
+                } else {
+                    ench.putString("id", name.toString());
+                }
+            }
+            stack.getTag().put("Enchantments", enchantments);
+            stack.getTag().remove("ench");
+        }
+        if (stack.hasCustomName()) {
+            stack = stack.copy();
+            //noinspection ConstantConditions
+            String displayName = stack.getSubTag("display").getString("Name");
+            stack.setCustomName(new LiteralText(displayName));
         }
         return stack;
     }
@@ -90,6 +117,30 @@ public class Items_1_12_2 {
             if (!entityTag.contains("id", 8))
                 entityTag.putString("id", Registry.ENTITY_TYPE.getId(((SpawnEggItem) stack.getItem()).getEntityType(oldStack.getTag())).toString());
             stack = oldStack;
+        }
+        if (stack.hasEnchantments()) {
+            stack = stack.copy();
+            ListTag enchantments = stack.getEnchantments();
+            for (int i = 0; i < enchantments.size(); i++) {
+                CompoundTag ench = enchantments.getCompound(i);
+                Identifier name = Identifier.tryParse(ench.getString("id"));
+                Enchantment enchObj = Registry.ENCHANTMENT.get(name);
+                if (enchObj == null) {
+                    enchantments.remove(i);
+                    i--;
+                } else {
+                    ench.putInt("id", Registry.ENCHANTMENT.getRawId(enchObj));
+                }
+            }
+            assert stack.getTag() != null;
+            stack.getTag().put("ench", enchantments);
+            stack.getTag().remove("Enchantments");
+        }
+        if (stack.hasCustomName()) {
+            stack = stack.copy();
+            String displayName = stack.getName().asFormattedString();
+            //noinspection ConstantConditions
+            stack.getSubTag("display").putString("Name", displayName);
         }
         return Pair.of(stack, meta);
     }
