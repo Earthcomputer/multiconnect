@@ -498,25 +498,36 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 buf.pendingWrite(BlockPos.class, ((BlockHitResult) hitResult)::getBlockPos, buf::writeBlockPos);
         });
 
-        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, buf -> {
-            Supplier<Short> itemId = buf.skipWrite(Short.class);
-            buf.whenWrite(() -> {
-                if (itemId.get() == -1) {
-                    buf.pendingWrite(Short.class, itemId, (Consumer<Short>) buf::writeShort);
-                } else {
-                    Supplier<Byte> count = buf.skipWrite(Byte.class);
-                    Supplier<CompoundTag> tag = buf.skipWrite(CompoundTag.class);
-                    buf.whenWrite(() -> {
-                        ItemStack stack = new ItemStack(Registry.ITEM.get(itemId.get()), count.get());
-                        stack.setTag(tag.get());
-                        Pair<ItemStack, Integer> oldStackAndMeta = Items_1_12_2.newItemStackToOld(stack);
-                        buf.pendingWrite(Short.class, () -> (short) Registry.ITEM.getRawId(oldStackAndMeta.getLeft().getItem()), (Consumer<Short>) buf::writeShort);
-                        buf.pendingWrite(Byte.class, count, (Consumer<Byte>) buf::writeByte);
-                        buf.pendingWrite(Short.class, () -> (short) oldStackAndMeta.getRight().intValue(), (Consumer<Short>) buf::writeShort);
-                        buf.pendingWrite(CompoundTag.class, oldStackAndMeta.getLeft()::getTag, buf::writeCompoundTag);
-                    });
-                }
-            });
+        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<ItemStack>() {
+            @Override
+            public void onWrite(TransformerByteBuf buf) {
+                Supplier<Short> itemId = buf.skipWrite(Short.class);
+                buf.whenWrite(() -> {
+                    if (itemId.get() == -1) {
+                        buf.pendingWrite(Short.class, itemId, (Consumer<Short>) buf::writeShort);
+                    } else {
+                        Supplier<Byte> count = buf.skipWrite(Byte.class);
+                        Supplier<CompoundTag> tag = buf.skipWrite(CompoundTag.class);
+                        buf.whenWrite(() -> {
+                            CompoundTag oldTag = tag.get();
+                            int meta = oldTag.getInt("Damage");
+                            oldTag.remove("Damage");
+                            buf.pendingWrite(Short.class, itemId, (Consumer<Short>) buf::writeShort);
+                            buf.pendingWrite(Byte.class, count, (Consumer<Byte>) buf::writeByte);
+                            buf.pendingWrite(Short.class, () -> (short) meta, (Consumer<Short>) buf::writeShort);
+                            buf.pendingWrite(CompoundTag.class, () -> oldTag.isEmpty() ? null : oldTag, buf::writeCompoundTag);
+                        });
+                    }
+                });
+            }
+
+            @Override
+            public ItemStack translate(ItemStack from) {
+                Pair<ItemStack, Integer> itemAndMeta = Items_1_12_2.newItemStackToOld(from);
+                ItemStack to = itemAndMeta.getLeft();
+                to.setDamage(itemAndMeta.getRight());
+                return to;
+            }
         });
     }
 
