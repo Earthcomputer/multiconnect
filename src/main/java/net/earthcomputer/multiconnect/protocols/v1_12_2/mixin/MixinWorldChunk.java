@@ -12,12 +12,19 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(WorldChunk.class)
-public class MixinWorldChunk implements IUpgradableChunk {
+public abstract class MixinWorldChunk implements IUpgradableChunk {
 
     @Shadow @Final private World world;
     @Shadow @Final private ChunkPos pos;
 
+    @Shadow public abstract ChunkPos getPos();
+
     @Unique private UpgradeData clientUpgradeData;
+
+    @Override
+    public UpgradeData multiconnect_getClientUpgradeData() {
+        return clientUpgradeData;
+    }
 
     @Override
     public void multiconnect_setClientUpgradeData(UpgradeData upgradeData) {

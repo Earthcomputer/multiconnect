@@ -834,6 +834,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     @Override
     protected void recomputeBlockStates() {
         final int skullId = Registry.BLOCK.getRawId(Blocks.SKELETON_SKULL);
+        final int tallGrassId = Registry.BLOCK.getRawId(Blocks.GRASS);
 
         ((IIdList) Block.STATE_IDS).clear();
         Set<BlockState> addedStates = new HashSet<>();
@@ -851,10 +852,18 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                     Block.STATE_IDS.set(state, blockId << 4 | meta);
                     addedStates.add(state);
                 }
+            } else if (blockId == tallGrassId) {
+                Block.STATE_IDS.set(Blocks.DEAD_BUSH.getDefaultState(), blockId << 4);
+                Block.STATE_IDS.set(Blocks.GRASS.getDefaultState(), blockId << 4 | 1);
+                Block.STATE_IDS.set(Blocks.FERN.getDefaultState(), blockId << 4 | 2);
+                for (int meta = 3; meta < 16; meta++)
+                    Block.STATE_IDS.set(Blocks.DEAD_BUSH.getDefaultState(), blockId << 4 | meta);
             } else {
                 for (int meta = 0; meta < 16; meta++) {
                     Dynamic<?> dynamicState = BlockStateFlattening.lookupState(blockId << 4 | meta);
                     String fixedName = dynamicState.get("Name").asString("");
+                    if (meta == 0 || fixedName.equals(BlockStateFlattening.lookupStateBlock(blockId << 4)))
+                        fixedName = BlockStateReverseFlattening.reverseLookupStateBlock(blockId << 4);
                     Block block = Registry.BLOCK.get(new Identifier(fixedName));
                     if (block == Blocks.AIR && blockId != 0) {
                         dynamicState = BlockStateReverseFlattening.reverseLookupState(blockId << 4 | meta);
@@ -862,7 +871,6 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                         block = Registry.BLOCK.get(new Identifier(fixedName));
                     }
                     if (block != Blocks.AIR || blockId == 0) {
-                        if (block == Blocks.GRASS && meta == 0) block = Blocks.DEAD_BUSH;
                         StateManager<Block, BlockState> stateManager = block.getStateManager();
                         BlockState state = block.getDefaultState();
                         for (Map.Entry<String, String> entry : dynamicState.get("Properties").asMap(k -> k.asString(""), v -> v.asString("")).entrySet()) {

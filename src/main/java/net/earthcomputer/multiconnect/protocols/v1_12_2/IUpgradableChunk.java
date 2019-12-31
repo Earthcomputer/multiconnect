@@ -4,6 +4,8 @@ import net.minecraft.world.chunk.UpgradeData;
 
 public interface IUpgradableChunk {
 
+    UpgradeData multiconnect_getClientUpgradeData();
+
     void multiconnect_setClientUpgradeData(UpgradeData upgradeData);
 
     void multiconnect_onNeighborLoaded();

@@ -141,7 +141,6 @@ public class Blocks_1_12_2 {
         register(registry, AIR, 0, "air");
         register(registry, STONE, 1, "stone");
         register(registry, GRASS_BLOCK, 2, "grass");
-        System.out.println(GRASS_BLOCK);
         register(registry, DIRT, 3, "dirt");
         register(registry, COBBLESTONE, 4, "cobblestone");
         register(registry, OAK_PLANKS, 5, "planks");
@@ -394,9 +393,7 @@ public class Blocks_1_12_2 {
         register(registry, WHITE_CONCRETE_POWDER, 252, "concrete_powder");
         register(registry, STRUCTURE_BLOCK, 255, "structure_block");
 
-        System.out.println(GRASS_BLOCK);
         registerAliases(registry);
-        System.out.println(GRASS_BLOCK);
         fixBlockItems();
     }
 

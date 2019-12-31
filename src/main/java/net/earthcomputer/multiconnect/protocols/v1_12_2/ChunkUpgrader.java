@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.block.*;
 import net.minecraft.datafixer.fix.ChunkPalettedStorageFix;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
@@ -14,6 +14,7 @@ import net.minecraft.world.chunk.WorldChunk;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.function.IntConsumer;
 
 import static net.minecraft.block.Blocks.*;
 
@@ -84,7 +85,20 @@ public class ChunkUpgrader {
 
         CompoundTag upgradeData = new CompoundTag();
         upgradeData.putInt("Sides", sidesToUpgrade);
-        upgradeData.putIntArray("Indices", centerIndicesToUpgrade.toIntArray());
+        CompoundTag centerIndices = new CompoundTag();
+        centerIndicesToUpgrade.forEach((IntConsumer) index -> {
+            int low = index & 4095;
+            int high = index >>> 12;
+            Tag tag = centerIndices.get(String.valueOf(high));
+            if (tag == null)
+                centerIndices.put(String.valueOf(high), tag = new ListTag());
+            ((ListTag) tag).add(IntTag.of(low));
+        });
+        for (String key : centerIndices.getKeys()) {
+            //noinspection ConstantConditions
+            centerIndices.put(key, new IntArrayTag(((ListTag) centerIndices.get(key)).stream().mapToInt(val -> ((IntTag) val).getInt()).toArray()));
+        }
+        upgradeData.put("Indices", centerIndices);
         return new UpgradeData(upgradeData);
     }
 }

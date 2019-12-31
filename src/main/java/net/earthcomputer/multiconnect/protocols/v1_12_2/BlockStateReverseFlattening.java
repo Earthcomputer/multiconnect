@@ -16,6 +16,15 @@ public class BlockStateReverseFlattening {
         return ret;
     }
 
+    public static String reverseLookupStateBlock(int stateId) {
+        if (stateId < 0 || stateId >= IDS_TO_OLD_STATES.length)
+            return "minecraft:air";
+        Dynamic<?> val = IDS_TO_OLD_STATES[stateId];
+        if (val == null)
+            return "minecraft:air";
+        return val.get("Name").asString("");
+    }
+
     static {
         // load block state flattening class
         BlockStateFlattening.lookupStateBlock(0);

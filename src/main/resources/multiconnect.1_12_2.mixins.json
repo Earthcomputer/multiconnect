@@ -14,7 +14,8 @@
     "MixinSkullBlockEntity",
     "MixinBedBlockEntity",
     "MixinAreaEffectCloudEntity",
-    "MixinBlockStateFlattening"
+    "MixinBlockStateFlattening",
+    "MixinUpgradeData"
   ],
   "injectors": {
     "defaultRequire": 1
