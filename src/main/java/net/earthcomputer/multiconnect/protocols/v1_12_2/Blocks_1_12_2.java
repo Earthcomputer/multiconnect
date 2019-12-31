@@ -112,6 +112,8 @@ public class Blocks_1_12_2 {
                     Identifier subName = new Identifier(fixedName);
                     Block subBlock = REGISTRY_1_13.get(subName);
                     if (subBlock != AIR && Registry.BLOCK.getRawId(subBlock) == 0) {
+                        while (Registry.BLOCK.get(subName) != Blocks.AIR)
+                            subName = new Identifier(subName.getNamespace(), subName.getPath() + "_");
                         registry.register(subBlock, meta << 16 | blockId, subName, false);
                     }
                 }
@@ -138,7 +140,8 @@ public class Blocks_1_12_2 {
 
         register(registry, AIR, 0, "air");
         register(registry, STONE, 1, "stone");
-        register(registry, GRASS, 2, "grass");
+        register(registry, GRASS_BLOCK, 2, "grass");
+        System.out.println(GRASS_BLOCK);
         register(registry, DIRT, 3, "dirt");
         register(registry, COBBLESTONE, 4, "cobblestone");
         register(registry, OAK_PLANKS, 5, "planks");
@@ -167,7 +170,7 @@ public class Blocks_1_12_2 {
         register(registry, DETECTOR_RAIL, 28, "detector_rail");
         register(registry, STICKY_PISTON, 29, "sticky_piston");
         register(registry, COBWEB, 30, "web");
-        register(registry, TALL_GRASS, 31, "tallgrass");
+        register(registry, GRASS, 31, "tallgrass");
         register(registry, DEAD_BUSH, 32, "deadbush");
         register(registry, PISTON, 33, "piston");
         register(registry, PISTON_HEAD, 34, "piston_head");
@@ -391,7 +394,9 @@ public class Blocks_1_12_2 {
         register(registry, WHITE_CONCRETE_POWDER, 252, "concrete_powder");
         register(registry, STRUCTURE_BLOCK, 255, "structure_block");
 
+        System.out.println(GRASS_BLOCK);
         registerAliases(registry);
+        System.out.println(GRASS_BLOCK);
         fixBlockItems();
     }
 

@@ -53,6 +53,7 @@ public class Items_1_12_2 {
     }
 
     public static Pair<ItemStack, Integer> newItemStackToOld(ItemStack stack) {
+        System.out.println("Translating " + stack + (stack.hasTag() ? " " + stack.getTag() : ""));
         int meta = 0;
         Pair<Item, Integer> oldItemAndMeta = OLD_ITEM_TO_NEW.inverse().get(stack.getItem());
         if (oldItemAndMeta != null) {
@@ -91,6 +92,7 @@ public class Items_1_12_2 {
                 entityTag.putString("id", Registry.ENTITY_TYPE.getId(((SpawnEggItem) stack.getItem()).getEntityType(oldStack.getTag())).toString());
             stack = oldStack;
         }
+        System.out.println("Result: " + stack + "@" + meta + (stack.hasTag() ? " " + stack.getTag() : ""));
         return Pair.of(stack, meta);
     }
 
@@ -139,7 +141,7 @@ public class Items_1_12_2 {
 
         registerBlockItem(registry, Blocks.AIR);
         registerBlockItem(registry, Blocks.STONE);
-        registerBlockItem(registry, Blocks.GRASS);
+        registerBlockItem(registry, Blocks.GRASS_BLOCK);
         registerBlockItem(registry, Blocks.DIRT);
         registerBlockItem(registry, Blocks.COBBLESTONE);
         registerBlockItem(registry, Blocks.OAK_PLANKS);

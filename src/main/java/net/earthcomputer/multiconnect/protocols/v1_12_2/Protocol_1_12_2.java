@@ -9,10 +9,7 @@ import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
-import net.earthcomputer.multiconnect.transformer.CustomPayload;
-import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
-import net.earthcomputer.multiconnect.transformer.UnsignedByte;
-import net.earthcomputer.multiconnect.transformer.VarInt;
+import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -420,22 +417,39 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(ItemStack.class, buf -> {
-            short itemId = buf.readShort();
-            if (itemId == -1) {
+        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<ItemStack>() {
+            @Override
+            public void onRead(TransformerByteBuf buf) {
+                short itemId = buf.readShort();
+                if (itemId == -1) {
+                    buf.pendingRead(Short.class, itemId);
+                    buf.applyPendingReads();
+                    return;
+                }
+                byte count = buf.readByte();
+                short meta = buf.readShort();
+                CompoundTag tag = buf.readCompoundTag();
+                if (tag == null)
+                    tag = new CompoundTag();
+                tag.putShort("Damage", meta);
                 buf.pendingRead(Short.class, itemId);
+                buf.pendingRead(Byte.class, count);
+                buf.pendingRead(CompoundTag.class, tag);
                 buf.applyPendingReads();
-                return;
             }
-            byte count = buf.readByte();
-            short meta = buf.readShort();
-            ItemStack stack = new ItemStack(Registry.ITEM.get(itemId), count);
-            stack.setTag(buf.readCompoundTag());
-            stack = Items_1_12_2.oldItemStackToNew(stack, meta);
-            buf.pendingRead(Short.class, (short)Registry.ITEM.getRawId(stack.getItem()));
-            buf.pendingRead(Byte.class, count);
-            buf.pendingRead(CompoundTag.class, stack.getTag());
-            buf.applyPendingReads();
+
+            @Override
+            public ItemStack translate(ItemStack from) {
+                if (from.isEmpty())
+                    return from;
+                from = from.copy();
+                int meta = from.getDamage();
+                assert from.getTag() != null;
+                from.getTag().remove("Damage");
+                if (from.getTag().isEmpty())
+                    from.setTag(null);
+                return Items_1_12_2.oldItemStackToNew(from, meta);
+            }
         });
 
         ProtocolRegistry.registerOutboundTranslator(CraftRequestC2SPacket.class, buf -> {
@@ -837,6 +851,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                         block = Registry.BLOCK.get(new Identifier(fixedName));
                     }
                     if (block != Blocks.AIR || blockId == 0) {
+                        if (block == Blocks.GRASS && meta == 0) block = Blocks.DEAD_BUSH;
                         StateManager<Block, BlockState> stateManager = block.getStateManager();
                         BlockState state = block.getDefaultState();
                         for (Map.Entry<String, String> entry : dynamicState.get("Properties").asMap(k -> k.asString(""), v -> v.asString("")).entrySet()) {
