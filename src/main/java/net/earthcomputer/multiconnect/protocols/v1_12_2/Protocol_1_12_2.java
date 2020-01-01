@@ -18,7 +18,6 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.*;
-import net.minecraft.client.util.TextFormat;
 import net.minecraft.datafixer.fix.BlockStateFlattening;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.AreaEffectCloudEntity;
@@ -48,6 +47,7 @@ import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.hit.BlockHitResult;
@@ -387,18 +387,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 buf.readString(32); // name tag visibility rule
                 buf.readString(32); // collision rule
                 buf.disablePassthroughMode();
-                int colorCode = buf.readByte();
-                TextFormat color = TextFormat.RESET;
-                if (colorCode >= 0 && colorCode < 16) {
-                    char formatChar = "0123456789abcdef".charAt(colorCode);
-                    for (TextFormat format : TextFormat.values()) {
-                        if (format.getChar() == formatChar) {
-                            color = format;
-                            break;
-                        }
-                    }
-                }
-                buf.pendingRead(TextFormat.class, color);
+                Formatting color = Formatting.byColorIndex(buf.readByte());
+                buf.pendingRead(Formatting.class, color);
                 buf.pendingRead(Text.class, prefix);
                 buf.pendingRead(Text.class, suffix);
             }
