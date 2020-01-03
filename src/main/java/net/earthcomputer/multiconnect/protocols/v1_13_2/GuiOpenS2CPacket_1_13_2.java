@@ -34,7 +34,7 @@ public class GuiOpenS2CPacket_1_13_2 implements Packet<ClientPlayNetworkHandler>
     @Override
     public void apply(ClientPlayNetworkHandler handler) {
         if ("minecraft:container".equals(type)) {
-            handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.GENERIC_9X3, title));
+            handler.onOpenContainer(new OpenContainerS2CPacket(syncId, slotCount <= 27 ? ContainerType.GENERIC_9X3 : ContainerType.GENERIC_9X6, title));
         } else if ("minecraft:villager".equals(type)) {
             handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.MERCHANT, title));
         } else if ("EntityHorse".equals(type)) {
@@ -50,7 +50,7 @@ public class GuiOpenS2CPacket_1_13_2 implements Packet<ClientPlayNetworkHandler>
             }
         } else {
             if ("minecraft:chest".equals(type)) {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.GENERIC_9X3, title));
+                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, slotCount <= 27 ? ContainerType.GENERIC_9X3 : ContainerType.GENERIC_9X6, title));
             } else if ("minecraft:hopper".equals(type)) {
                 handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.HOPPER, title));
             } else if ("minecraft:furnace".equals(type)) {
@@ -64,7 +64,7 @@ public class GuiOpenS2CPacket_1_13_2 implements Packet<ClientPlayNetworkHandler>
             } else if ("minecraft:shulker_box".equals(type)) {
                 handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.SHULKER_BOX, title));
             } else {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.GENERIC_9X3, title));
+                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, slotCount <= 27 ? ContainerType.GENERIC_9X3 : ContainerType.GENERIC_9X6, title));
             }
         }
     }
