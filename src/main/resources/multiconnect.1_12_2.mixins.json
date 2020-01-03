@@ -17,7 +17,8 @@
     "MixinBlockStateFlattening",
     "MixinUpgradeData",
     "MixinBlock",
-    "MixinClientWorld"
+    "MixinClientWorld",
+    "MixinBlockItem"
   ],
   "injectors": {
     "defaultRequire": 1

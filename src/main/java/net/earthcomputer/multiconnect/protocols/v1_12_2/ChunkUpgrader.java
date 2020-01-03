@@ -3,15 +3,22 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.block.*;
+import net.minecraft.block.enums.ChestType;
+import net.minecraft.block.enums.DoubleBlockHalf;
 import net.minecraft.datafixer.fix.ChunkPalettedStorageFix;
 import net.minecraft.nbt.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.IWorld;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.chunk.WorldChunk;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.function.IntConsumer;
@@ -21,6 +28,7 @@ import static net.minecraft.block.Blocks.*;
 public class ChunkUpgrader {
 
     private static final BitSet BLOCKS_NEEDING_SIDE_UPDATE;
+    private static final MethodHandle APPLY_ADJACENT_BLOCK;
     static {
         try {
             Field field = Arrays.stream(ChunkPalettedStorageFix.class.getDeclaredFields())
@@ -28,6 +36,11 @@ public class ChunkUpgrader {
                     .findFirst().orElseThrow(NoSuchFieldException::new);
             field.setAccessible(true);
             BLOCKS_NEEDING_SIDE_UPDATE = (BitSet) field.get(null);
+            Method method = Arrays.stream(UpgradeData.class.getDeclaredMethods())
+                    .filter(m -> Arrays.equals(m.getParameterTypes(), new Object[]{BlockState.class, Direction.class, IWorld.class, BlockPos.class, BlockPos.class}))
+                    .findFirst().orElseThrow(NoSuchMethodException::new);
+            method.setAccessible(true);
+            APPLY_ADJACENT_BLOCK = MethodHandles.lookup().unreflect(method);
         } catch (ReflectiveOperationException e) {
             throw new AssertionError(e);
         }
@@ -42,11 +55,7 @@ public class ChunkUpgrader {
                 chunk.getPos().getEndX(), chunk.getHighestNonEmptySectionYOffset() + 15, chunk.getPos().getEndZ())) {
             BlockState state = chunk.getBlockState(pos);
             Block block = state.getBlock();
-            if (block instanceof SnowyBlock) {
-                Block above = chunk.getBlockState(otherPos.set(pos).setOffset(Direction.UP)).getBlock();
-                if (above == SNOW || above == SNOW_BLOCK)
-                    chunk.setBlockState(pos, state.with(SnowyBlock.SNOWY, true), false);
-            }
+            inPlaceFix(chunk, state, pos, otherPos);
 
             int blockId = Registry.BLOCK.getRawId(block) & 4095;
             if (BLOCKS_NEEDING_SIDE_UPDATE.get(blockId)) {
@@ -100,5 +109,73 @@ public class ChunkUpgrader {
         }
         upgradeData.put("Indices", centerIndices);
         return new UpgradeData(upgradeData);
+    }
+
+    private static void inPlaceFix(Chunk chunk, BlockState oldState, BlockPos pos, BlockPos.Mutable otherPos) {
+        Block block = oldState.getBlock();
+        if (block instanceof SnowyBlock) {
+            Block above = chunk.getBlockState(otherPos.set(pos).setOffset(Direction.UP)).getBlock();
+            if (above == SNOW || above == SNOW_BLOCK)
+                chunk.setBlockState(pos, oldState.with(SnowyBlock.SNOWY, true), false);
+        } else if (block instanceof DoorBlock && oldState.get(DoorBlock.HALF) == DoubleBlockHalf.LOWER) {
+            otherPos.set(pos).setOffset(Direction.UP);
+            BlockState above = chunk.getBlockState(otherPos);
+            if (above.getBlock() instanceof DoorBlock) {
+                chunk.setBlockState(pos, oldState.with(DoorBlock.HINGE, above.get(DoorBlock.HINGE)).with(DoorBlock.POWERED, above.get(DoorBlock.POWERED)), false);
+                chunk.setBlockState(otherPos, above.with(DoorBlock.FACING, oldState.get(DoorBlock.FACING)).with(DoorBlock.OPEN, oldState.get(DoorBlock.OPEN)), false);
+            }
+        } else if (block instanceof TallPlantBlock && oldState.get(TallPlantBlock.HALF) == DoubleBlockHalf.UPPER) {
+            BlockState below = chunk.getBlockState(otherPos.set(pos).setOffset(Direction.DOWN));
+            if (below.getBlock() instanceof TallPlantBlock)
+                chunk.setBlockState(pos, below.with(TallPlantBlock.HALF, DoubleBlockHalf.UPPER), false);
+        }
+    }
+
+    public static void fix(IWorld world, BlockPos pos, int flags) {
+        doFix(world, pos, flags);
+        for (Direction dir : Direction.values())
+            doFix(world, pos.offset(dir), flags);
+    }
+
+    private static void doFix(IWorld world, BlockPos pos, int flags) {
+        BlockState state = world.getBlockState(pos);
+        for (Direction dir : Direction.values()) {
+            BlockPos otherPos = pos.offset(dir);
+            state = applyAdjacentBlock(state, dir, world, pos, otherPos);
+        }
+        world.setBlockState(pos, state, flags | 16);
+
+        inPlaceFix(world.getChunk(pos), state, pos, new BlockPos.Mutable());
+    }
+
+    private static BlockState applyAdjacentBlock(BlockState state, Direction dir, IWorld world, BlockPos pos, BlockPos otherPos) {
+        Block block = state.getBlock();
+        if (block instanceof DoorBlock || block instanceof TallPlantBlock)
+            return state;
+
+        if (block == CHEST || block == TRAPPED_CHEST) {
+            BlockState otherState = world.getBlockState(otherPos);
+            if (dir.getAxis().isHorizontal()) {
+                Direction chestFacing = state.get(ChestBlock.FACING);
+                ChestType currentType = state.get(ChestBlock.CHEST_TYPE);
+                ChestType correctDoubleType = dir == chestFacing.rotateYClockwise() ? ChestType.LEFT : ChestType.RIGHT;
+                if (dir.getAxis() != chestFacing.getAxis()) {
+                    if (block == otherState.getBlock()) {
+                        if (currentType == ChestType.SINGLE && chestFacing == otherState.get(ChestBlock.FACING)) {
+                            return state.with(ChestBlock.CHEST_TYPE, correctDoubleType);
+                        }
+                    } else if (currentType == correctDoubleType) {
+                        return state.with(ChestBlock.CHEST_TYPE, ChestType.SINGLE);
+                    }
+                }
+            }
+            return state;
+        }
+
+        try {
+            return (BlockState) APPLY_ADJACENT_BLOCK.invoke(state, dir, world, pos, otherPos);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
     }
 }
