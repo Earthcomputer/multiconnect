@@ -833,6 +833,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         final int leavesId = Registry.BLOCK.getRawId(Blocks.OAK_LEAVES);
         final int leaves2Id = Registry.BLOCK.getRawId(Blocks.ACACIA_LEAVES);
         final int torchId = Registry.BLOCK.getRawId(Blocks.TORCH);
+        final int redstoneTorchId = Registry.BLOCK.getRawId(Blocks.REDSTONE_TORCH);
+        final int unlitRedstoneTorchId = Registry.BLOCK.getRawId(Blocks_1_12_2.UNLIT_REDSTONE_TORCH);
         final int skullId = Registry.BLOCK.getRawId(Blocks.SKELETON_SKULL);
         final int tallGrassId = Registry.BLOCK.getRawId(Blocks.GRASS);
         final int chestId = Registry.BLOCK.getRawId(Blocks.CHEST);
@@ -847,7 +849,11 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             } else if (blockId == leaves2Id) {
                 registerLeavesStates(blockId, Blocks.ACACIA_LEAVES, Blocks.DARK_OAK_LEAVES, Blocks.ACACIA_LEAVES, Blocks.ACACIA_LEAVES);
             } else if (blockId == torchId) {
-                registerHorizontalFacingStates(blockId, Blocks.TORCH, Blocks.WALL_TORCH);
+                registerTorchStates(blockId, Blocks.TORCH.getDefaultState(), Blocks.WALL_TORCH.getDefaultState());
+            } else if (blockId == redstoneTorchId) {
+                registerTorchStates(blockId, Blocks.REDSTONE_TORCH.getDefaultState(), Blocks.REDSTONE_WALL_TORCH.getDefaultState());
+            } else if (blockId == unlitRedstoneTorchId) {
+                registerTorchStates(blockId, Blocks.REDSTONE_TORCH.getDefaultState().with(RedstoneTorchBlock.LIT, false), Blocks.REDSTONE_WALL_TORCH.getDefaultState().with(WallRedstoneTorchBlock.LIT_2, false));
             } else if (blockId == skullId) {
                 final Direction[] dirs = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, Direction.DOWN, Direction.UP};
                 for (int meta = 0; meta < 16; meta++) {
@@ -920,6 +926,16 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             Block.STATE_IDS.set(leavesBlocks[type].getDefaultState().with(LeavesBlock.DISTANCE, 6), blockId << 4 | 8 | type);
             Block.STATE_IDS.set(leavesBlocks[type].getDefaultState().with(LeavesBlock.PERSISTENT, true).with(LeavesBlock.DISTANCE, 6), blockId << 4 | 12 | type);
         }
+    }
+
+    private void registerTorchStates(int blockId, BlockState torch, BlockState wallTorch) {
+        Block.STATE_IDS.set(torch, blockId << 4);
+        Block.STATE_IDS.set(wallTorch.with(WallTorchBlock.FACING, Direction.EAST), blockId << 4 | 1);
+        Block.STATE_IDS.set(wallTorch.with(WallTorchBlock.FACING, Direction.WEST), blockId << 4 | 2);
+        Block.STATE_IDS.set(wallTorch.with(WallTorchBlock.FACING, Direction.SOUTH), blockId << 4 | 3);
+        Block.STATE_IDS.set(wallTorch.with(WallTorchBlock.FACING, Direction.NORTH), blockId << 4 | 4);
+        for (int meta = 5; meta < 16; meta++)
+            Block.STATE_IDS.set(torch, blockId << 4 | meta);
     }
 
     private void registerHorizontalFacingStates(int blockId, Block block) {
@@ -1465,6 +1481,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             Fluids.FLOWING_LAVA));
         return tags;
     }
+
     public Multimap<Tag<EntityType<?>>, EntityType<?>> getEntityTypeTags() {
         Multimap<Tag<EntityType<?>>, EntityType<?>> tags = HashMultimap.create();
         tags.putAll(EntityTypeTags.SKELETONS, Arrays.asList(
