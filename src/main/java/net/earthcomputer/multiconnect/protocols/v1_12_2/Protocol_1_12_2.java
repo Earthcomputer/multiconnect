@@ -10,15 +10,14 @@ import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.transformer.*;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.WallSkullBlock;
+import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.block.enums.WallMountLocation;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.*;
 import net.minecraft.datafixer.fix.BlockStateFlattening;
+import net.minecraft.datafixer.fix.EntityTheRenameningBlock;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.Entity;
@@ -44,6 +43,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.StatType;
 import net.minecraft.state.StateManager;
+import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -823,13 +823,25 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     @Override
     protected void recomputeBlockStates() {
+        final int leavesId = Registry.BLOCK.getRawId(Blocks.OAK_LEAVES);
+        final int leaves2Id = Registry.BLOCK.getRawId(Blocks.ACACIA_LEAVES);
+        final int torchId = Registry.BLOCK.getRawId(Blocks.TORCH);
         final int skullId = Registry.BLOCK.getRawId(Blocks.SKELETON_SKULL);
         final int tallGrassId = Registry.BLOCK.getRawId(Blocks.GRASS);
+        final int chestId = Registry.BLOCK.getRawId(Blocks.CHEST);
+        final int enderChestId = Registry.BLOCK.getRawId(Blocks.ENDER_CHEST);
+        final int trappedChestId = Registry.BLOCK.getRawId(Blocks.TRAPPED_CHEST);
+        final int wallBannerId = Registry.BLOCK.getRawId(Blocks.WHITE_WALL_BANNER);
 
         ((IIdList) Block.STATE_IDS).clear();
-        Set<BlockState> addedStates = new HashSet<>();
         for (int blockId = 0; blockId < 256; blockId++) {
-            if (blockId == skullId) {
+            if (blockId == leavesId) {
+                registerLeavesStates(blockId, Blocks.OAK_LEAVES, Blocks.SPRUCE_LEAVES, Blocks.BIRCH_LEAVES, Blocks.JUNGLE_LEAVES);
+            } else if (blockId == leaves2Id) {
+                registerLeavesStates(blockId, Blocks.ACACIA_LEAVES, Blocks.DARK_OAK_LEAVES, Blocks.ACACIA_LEAVES, Blocks.ACACIA_LEAVES);
+            } else if (blockId == torchId) {
+                registerHorizontalFacingStates(blockId, Blocks.TORCH, Blocks.WALL_TORCH);
+            } else if (blockId == skullId) {
                 final Direction[] dirs = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, Direction.DOWN, Direction.UP};
                 for (int meta = 0; meta < 16; meta++) {
                     Direction dir = dirs[meta & 7];
@@ -840,7 +852,6 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                         state = Blocks.SKELETON_WALL_SKULL.getDefaultState().with(WallSkullBlock.FACING, dir);
                     }
                     Block.STATE_IDS.set(state, blockId << 4 | meta);
-                    addedStates.add(state);
                 }
             } else if (blockId == tallGrassId) {
                 Block.STATE_IDS.set(Blocks.DEAD_BUSH.getDefaultState(), blockId << 4);
@@ -848,12 +859,21 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 Block.STATE_IDS.set(Blocks.FERN.getDefaultState(), blockId << 4 | 2);
                 for (int meta = 3; meta < 16; meta++)
                     Block.STATE_IDS.set(Blocks.DEAD_BUSH.getDefaultState(), blockId << 4 | meta);
+            } else if (blockId == chestId) {
+                registerHorizontalFacingStates(blockId, Blocks.CHEST);
+            } else if (blockId == enderChestId) {
+                registerHorizontalFacingStates(blockId, Blocks.ENDER_CHEST);
+            } else if (blockId == trappedChestId) {
+                registerHorizontalFacingStates(blockId, Blocks.TRAPPED_CHEST);
+            } else if (blockId == wallBannerId) {
+                registerHorizontalFacingStates(blockId, Blocks.WHITE_WALL_BANNER);
             } else {
                 for (int meta = 0; meta < 16; meta++) {
                     Dynamic<?> dynamicState = BlockStateFlattening.lookupState(blockId << 4 | meta);
                     String fixedName = dynamicState.get("Name").asString("");
                     if (meta == 0 || fixedName.equals(BlockStateFlattening.lookupStateBlock(blockId << 4)))
                         fixedName = BlockStateReverseFlattening.reverseLookupStateBlock(blockId << 4);
+                    fixedName = EntityTheRenameningBlock.BLOCKS.getOrDefault(fixedName, fixedName);
                     Block block = Registry.BLOCK.get(new Identifier(fixedName));
                     if (block == Blocks.AIR && blockId != 0) {
                         dynamicState = BlockStateReverseFlattening.reverseLookupState(blockId << 4 | meta);
@@ -861,17 +881,22 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                         block = Registry.BLOCK.get(new Identifier(fixedName));
                     }
                     if (block != Blocks.AIR || blockId == 0) {
-                        StateManager<Block, BlockState> stateManager = block.getStateManager();
-                        BlockState state = block.getDefaultState();
+                        StateManager<Block, BlockState> stateManager = block instanceof DummyBlock ? ((DummyBlock) block).original.getBlock().getStateManager() : block.getStateManager();
+                        BlockState _default = block instanceof DummyBlock ? ((DummyBlock) block).original : block.getDefaultState();
+                        BlockState state = _default;
                         for (Map.Entry<String, String> entry : dynamicState.get("Properties").asMap(k -> k.asString(""), v -> v.asString("")).entrySet()) {
                             state = addProperty(stateManager, state, entry.getKey(), entry.getValue());
                         }
+                        if (!acceptBlockState(state))
+                            state = _default;
                         Block.STATE_IDS.set(state, blockId << 4 | meta);
-                        addedStates.add(state);
                     }
                 }
             }
         }
+        Set<BlockState> addedStates = new HashSet<>();
+        Block.STATE_IDS.iterator().forEachRemaining(addedStates::add);
+
         for (Block block : Registry.BLOCK) {
             for (BlockState state : block.getStateManager().getStates()) {
                 if (!addedStates.contains(state) && acceptBlockState(state)) {
@@ -881,10 +906,65 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         }
     }
 
+    private void registerLeavesStates(int blockId, Block... leavesBlocks) {
+        for (int type = 0; type < 4; type++) {
+            Block.STATE_IDS.set(leavesBlocks[type].getDefaultState(), blockId << 4 | type);
+            Block.STATE_IDS.set(leavesBlocks[type].getDefaultState().with(LeavesBlock.PERSISTENT, true), blockId << 4 | 4 | type);
+            Block.STATE_IDS.set(leavesBlocks[type].getDefaultState().with(LeavesBlock.DISTANCE, 6), blockId << 4 | 8 | type);
+            Block.STATE_IDS.set(leavesBlocks[type].getDefaultState().with(LeavesBlock.PERSISTENT, true).with(LeavesBlock.DISTANCE, 6), blockId << 4 | 12 | type);
+        }
+    }
+
+    private void registerHorizontalFacingStates(int blockId, Block block) {
+        registerHorizontalFacingStates(blockId, block, block);
+    }
+
+    private void registerHorizontalFacingStates(int blockId, Block standingBlock, Block wallBlock) {
+        Block.STATE_IDS.set(standingBlock.getDefaultState(), blockId << 4);
+        Block.STATE_IDS.set(standingBlock.getDefaultState(), blockId << 4 | 1);
+        Block.STATE_IDS.set(wallBlock.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.NORTH), blockId << 4 | 2);
+        Block.STATE_IDS.set(wallBlock.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.SOUTH), blockId << 4 | 3);
+        Block.STATE_IDS.set(wallBlock.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.WEST), blockId << 4 | 4);
+        Block.STATE_IDS.set(wallBlock.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.EAST), blockId << 4 | 5);
+        for (int meta = 6; meta < 16; meta++)
+            Block.STATE_IDS.set(standingBlock.getDefaultState(), blockId << 4 | meta);
+    }
+
     @SuppressWarnings("unchecked")
     private static <T extends Comparable<T>> BlockState addProperty(StateManager<Block, BlockState> stateManager, BlockState state, String propName, String valName) {
         Property<T> prop = (Property<T>) stateManager.getProperty(propName);
         return prop == null ? state : state.with(prop, prop.parse(valName).orElseGet(() -> state.get(prop)));
+    }
+
+    @Override
+    public boolean acceptBlockState(BlockState state) {
+        Block block = state.getBlock();
+        if (block == Blocks.TNT)
+            return super.acceptBlockState(state.with(TntBlock.UNSTABLE, false)); // re-add unstable because it was absent from 1.13.0 :thonkjang:
+
+        if (!super.acceptBlockState(state))
+            return false;
+
+        if (block instanceof LeavesBlock && state.get(LeavesBlock.DISTANCE) < 6)
+            return false;
+        if (block == Blocks.PISTON_HEAD && state.get(PistonHeadBlock.SHORT))
+            return false;
+        if (state.getProperties().contains(Properties.WATERLOGGED) && state.get(Properties.WATERLOGGED))
+            return false;
+        if (block == Blocks.LEVER) {
+            WallMountLocation face = state.get(LeverBlock.FACE);
+            Direction facing = state.get(LeverBlock.FACING);
+            if ((face == WallMountLocation.FLOOR || face == WallMountLocation.CEILING) && (facing == Direction.SOUTH || facing == Direction.EAST))
+                return false;
+        }
+        if (block instanceof TrapdoorBlock && state.get(TrapdoorBlock.POWERED))
+            return false;
+        if ((block == Blocks.OAK_WOOD || block == Blocks.SPRUCE_WOOD
+                || block == Blocks.BIRCH_WOOD || block == Blocks.JUNGLE_WOOD
+                || block == Blocks.ACACIA_WOOD || block == Blocks.DARK_OAK_WOOD)
+                && state.get(PillarBlock.AXIS) != Direction.Axis.Y)
+            return false;
+        return true;
     }
 
     @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})

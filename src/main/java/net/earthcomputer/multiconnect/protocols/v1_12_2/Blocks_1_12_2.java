@@ -4,6 +4,7 @@ import net.earthcomputer.multiconnect.impl.IBlockSettings;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.AbstractProtocol;
 import net.minecraft.block.*;
+import net.minecraft.block.enums.SlabType;
 import net.minecraft.datafixer.fix.BlockStateFlattening;
 import net.minecraft.datafixer.fix.EntityTheRenameningBlock;
 import net.minecraft.item.Item;
@@ -18,19 +19,19 @@ public class Blocks_1_12_2 {
 
     private static SimpleRegistry<Block> REGISTRY_1_13;
 
-    public static final Block FLOWING_WATER = new DummyBlock();
-    public static final Block FLOWING_LAVA = new DummyBlock();
-    public static final Block DOUBLE_STONE_SLAB = new DummyBlock();
-    public static final Block LIT_FURNACE = new DummyBlock();
-    public static final Block LIT_REDSTONE_ORE = new DummyBlock();
-    public static final Block UNLIT_REDSTONE_TORCH = new DummyBlock();
-    public static final Block POWERED_REPEATER = new DummyBlock();
-    public static final Block LIT_REDSTONE_LAMP = new DummyBlock();
-    public static final Block DOUBLE_WOODEN_SLAB = new DummyBlock();
-    public static final Block POWERED_COMPARATOR = new DummyBlock();
-    public static final Block DAYLIGHT_DETECTOR_INVERTED = new DummyBlock();
-    public static final Block DOUBLE_STONE_SLAB2 = new DummyBlock();
-    public static final Block PURPUR_DOUBLE_SLAB = new DummyBlock();
+    public static final Block FLOWING_WATER = new DummyBlock(WATER);
+    public static final Block FLOWING_LAVA = new DummyBlock(LAVA);
+    public static final Block DOUBLE_STONE_SLAB = new DummyBlock(STONE_SLAB.getDefaultState().with(SlabBlock.TYPE, SlabType.DOUBLE));
+    public static final Block LIT_FURNACE = new DummyBlock(FURNACE.getDefaultState().with(FurnaceBlock.LIT, true));
+    public static final Block LIT_REDSTONE_ORE = new DummyBlock(REDSTONE_ORE.getDefaultState().with(RedstoneOreBlock.LIT, true));
+    public static final Block UNLIT_REDSTONE_TORCH = new DummyBlock(REDSTONE_TORCH.getDefaultState().with(RedstoneTorchBlock.LIT, false));
+    public static final Block POWERED_REPEATER = new DummyBlock(REPEATER.getDefaultState().with(RepeaterBlock.POWERED, true));
+    public static final Block LIT_REDSTONE_LAMP = new DummyBlock(REDSTONE_LAMP.getDefaultState().with(RedstoneLampBlock.LIT, true));
+    public static final Block DOUBLE_WOODEN_SLAB = new DummyBlock(OAK_SLAB.getDefaultState().with(SlabBlock.TYPE, SlabType.DOUBLE));
+    public static final Block POWERED_COMPARATOR = new DummyBlock(COMPARATOR.getDefaultState().with(ComparatorBlock.POWERED, true));
+    public static final Block DAYLIGHT_DETECTOR_INVERTED = new DummyBlock(DAYLIGHT_DETECTOR.getDefaultState().with(DaylightDetectorBlock.INVERTED, true));
+    public static final Block DOUBLE_STONE_SLAB2 = new DummyBlock(RED_SANDSTONE_SLAB.getDefaultState().with(SlabBlock.TYPE, SlabType.DOUBLE));
+    public static final Block PURPUR_DOUBLE_SLAB = new DummyBlock(PURPUR_SLAB.getDefaultState().with(SlabBlock.TYPE, SlabType.DOUBLE));
 
     public static final Block NOTE_BLOCK = new NoteBlock_1_12_2(((IBlockSettings) ((IBlockSettings) Block.Settings.of(Material.WOOD)).callSounds(BlockSoundGroup.WOOD)).callStrength(0.8f));
     public static final Block FLOWER_POT = new FlowerPotBlock_1_12_2(AIR);
@@ -62,50 +63,53 @@ public class Blocks_1_12_2 {
     }
 
     private static void register(ISimpleRegistry<Block> registry, Block block, int id, String name) {
-        registry.register(block, id, new Identifier(name), false);
+        registry.registerInPlace(block, id, new Identifier(name), false);
     }
 
     private static void registerAliases(ISimpleRegistry<Block> registry) {
+        final int torchId = Registry.BLOCK.getRawId(TORCH);
         final int flowerPotId = Registry.BLOCK.getRawId(FLOWER_POT);
         final int skullId = Registry.BLOCK.getRawId(SKELETON_SKULL);
 
-        // TODO: improve this code now that registerInPlace exists
-
-        for (int meta = 1; meta < 16; meta++) {
-            for (int blockId = 1; blockId < 256; blockId++) {
-                if (blockId == flowerPotId) {
-                    switch (meta) {
-                        case 1: registry.register(POTTED_OAK_SAPLING, meta << 16 | blockId, new Identifier("potted_oak_sapling"), false); break;
-                        case 2: registry.register(POTTED_SPRUCE_SAPLING, meta << 16 | blockId, new Identifier("potted_spruce_sapling"), false); break;
-                        case 3: registry.register(POTTED_BIRCH_SAPLING, meta << 16 | blockId, new Identifier("potted_birch_sapling"), false); break;
-                        case 4: registry.register(POTTED_JUNGLE_SAPLING, meta << 16 | blockId, new Identifier("potted_jungle_sapling"), false); break;
-                        case 5: registry.register(POTTED_ACACIA_SAPLING, meta << 16 | blockId, new Identifier("potted_acacia_sapling"), false); break;
-                        case 6: registry.register(POTTED_DARK_OAK_SAPLING, meta << 16 | blockId, new Identifier("potted_dark_oak_sapling"), false); break;
-                        case 7: registry.register(POTTED_FERN, meta << 16 | blockId, new Identifier("potted_fern"), false); break;
-                        case 8: registry.register(POTTED_DANDELION, meta << 16 | blockId, new Identifier("potted_dandelion"), false); break;
-                        case 9: registry.register(POTTED_POPPY, meta << 16 | blockId, new Identifier("potted_poppy"), false); break;
-                        case 10: registry.register(POTTED_BLUE_ORCHID, meta << 16 | blockId, new Identifier("potted_blue_orchid"), false); break;
-                        case 11: registry.register(POTTED_ALLIUM, meta << 16 | blockId, new Identifier("potted_allium"), false); break;
-                        case 12: registry.register(POTTED_AZURE_BLUET, meta << 16 | blockId, new Identifier("potted_azure_bluet"), false); break;
-                        case 13: registry.register(POTTED_RED_TULIP, meta << 16 | blockId, new Identifier("potted_red_tulip"), false); break;
-                        case 14: registry.register(POTTED_ORANGE_TULIP, meta << 16 | blockId, new Identifier("potted_orange_tulip"), false); break;
-                        case 15: registry.register(POTTED_WHITE_TULIP, meta << 16 | blockId, new Identifier("potted_white_tulip"), false); break;
-                    }
-                } else if (blockId == skullId) {
-                    switch (meta) {
-                        case 1: registry.register(SKELETON_WALL_SKULL, meta << 16 | blockId, new Identifier("skeleton_wall_skull"), false); break;
-                        case 2: registry.register(WITHER_SKELETON_SKULL, meta << 16 | blockId, new Identifier("wither_skeleton_skull"), false); break;
-                        case 3: registry.register(WITHER_SKELETON_WALL_SKULL, meta << 16 | blockId, new Identifier("wither_skeleton_wall_skull"), false); break;
-                        case 4: registry.register(ZOMBIE_HEAD, meta << 16 | blockId, new Identifier("zombie_head"), false); break;
-                        case 5: registry.register(ZOMBIE_WALL_HEAD, meta << 16 | blockId, new Identifier("zombie_wall_head"), false); break;
-                        case 6: registry.register(PLAYER_HEAD, meta << 16 | blockId, new Identifier("player_head"), false); break;
-                        case 7: registry.register(PLAYER_WALL_HEAD, meta << 16 | blockId, new Identifier("player_wall_head"), false); break;
-                        case 8: registry.register(CREEPER_HEAD, meta << 16 | blockId, new Identifier("creeper_head"), false); break;
-                        case 9: registry.register(CREEPER_WALL_HEAD, meta << 16 | blockId, new Identifier("creeper_wall_head"), false); break;
-                        case 10: registry.register(DRAGON_HEAD, meta << 16 | blockId, new Identifier("dragon_head"), false); break;
-                        case 11: registry.register(DRAGON_WALL_HEAD, meta << 16 | blockId, new Identifier("dragon_wall_head"), false); break;
-                    }
-                } else {
+        for (int blockId = 1; blockId < 256; blockId++) {
+            if (blockId == torchId) {
+                registry.registerInPlace(WALL_TORCH, 1 << 16 | blockId, new Identifier("wall_torch"), false);
+            } else if (blockId == flowerPotId) {
+                registry.registerInPlace(POTTED_OAK_SAPLING, 1 << 16 | blockId, new Identifier("potted_oak_sapling"), false);
+                registry.registerInPlace(POTTED_SPRUCE_SAPLING, 2 << 16 | blockId, new Identifier("potted_spruce_sapling"), false);
+                registry.registerInPlace(POTTED_BIRCH_SAPLING, 3 << 16 | blockId, new Identifier("potted_birch_sapling"), false);
+                registry.registerInPlace(POTTED_JUNGLE_SAPLING, 4 << 16 | blockId, new Identifier("potted_jungle_sapling"), false);
+                registry.registerInPlace(POTTED_ACACIA_SAPLING, 5 << 16 | blockId, new Identifier("potted_acacia_sapling"), false);
+                registry.registerInPlace(POTTED_DARK_OAK_SAPLING, 6 << 16 | blockId, new Identifier("potted_dark_oak_sapling"), false);
+                registry.registerInPlace(POTTED_FERN, 7 << 16 | blockId, new Identifier("potted_fern"), false);
+                registry.registerInPlace(POTTED_DANDELION, 8 << 16 | blockId, new Identifier("potted_dandelion"), false);
+                registry.registerInPlace(POTTED_POPPY, 9 << 16 | blockId, new Identifier("potted_poppy"), false);
+                registry.registerInPlace(POTTED_BLUE_ORCHID, 10 << 16 | blockId, new Identifier("potted_blue_orchid"), false);
+                registry.registerInPlace(POTTED_ALLIUM, 11 << 16 | blockId, new Identifier("potted_allium"), false);
+                registry.registerInPlace(POTTED_AZURE_BLUET, 12 << 16 | blockId, new Identifier("potted_azure_bluet"), false);
+                registry.registerInPlace(POTTED_RED_TULIP, 13 << 16 | blockId, new Identifier("potted_red_tulip"), false);
+                registry.registerInPlace(POTTED_ORANGE_TULIP, 14 << 16 | blockId, new Identifier("potted_orange_tulip"), false);
+                registry.registerInPlace(POTTED_WHITE_TULIP, 15 << 16 | blockId, new Identifier("potted_white_tulip"), false);
+                registry.registerInPlace(POTTED_PINK_TULIP, 16 << 16 | flowerPotId, new Identifier("potted_pink_tulip"), false);
+                registry.registerInPlace(POTTED_OXEYE_DAISY, 17 << 16 | flowerPotId, new Identifier("potted_oxeye_daisy"), false);
+                registry.registerInPlace(POTTED_RED_MUSHROOM, 18 << 16 | flowerPotId, new Identifier("potted_red_mushroom"), false);
+                registry.registerInPlace(POTTED_BROWN_MUSHROOM, 19 << 16 | flowerPotId, new Identifier("potted_brown_mushroom"), false);
+                registry.registerInPlace(POTTED_DEAD_BUSH, 20 << 16 | flowerPotId, new Identifier("potted_dead_bush"), false);
+                registry.registerInPlace(POTTED_CACTUS, 21 << 16 | flowerPotId, new Identifier("potted_cactus"), false);
+            } else if (blockId == skullId) {
+                registry.registerInPlace(SKELETON_WALL_SKULL, 1 << 16 | blockId, new Identifier("skeleton_wall_skull"), false);
+                registry.registerInPlace(WITHER_SKELETON_SKULL, 2 << 16 | blockId, new Identifier("wither_skeleton_skull"), false);
+                registry.registerInPlace(WITHER_SKELETON_WALL_SKULL, 3 << 16 | blockId, new Identifier("wither_skeleton_wall_skull"), false);
+                registry.registerInPlace(ZOMBIE_HEAD, 4 << 16 | blockId, new Identifier("zombie_head"), false);
+                registry.registerInPlace(ZOMBIE_WALL_HEAD, 5 << 16 | blockId, new Identifier("zombie_wall_head"), false);
+                registry.registerInPlace(PLAYER_HEAD, 6 << 16 | blockId, new Identifier("player_head"), false);
+                registry.registerInPlace(PLAYER_WALL_HEAD, 7 << 16 | blockId, new Identifier("player_wall_head"), false);
+                registry.registerInPlace(CREEPER_HEAD, 8 << 16 | blockId, new Identifier("creeper_head"), false);
+                registry.registerInPlace(CREEPER_WALL_HEAD, 9 << 16 | blockId, new Identifier("creeper_wall_head"), false);
+                registry.registerInPlace(DRAGON_HEAD, 10 << 16 | blockId, new Identifier("dragon_head"), false);
+                registry.registerInPlace(DRAGON_WALL_HEAD, 11 << 16 | blockId, new Identifier("dragon_wall_head"), false);
+            } else {
+                for (int meta = 1; meta < 16; meta++) {
                     String fixedName = BlockStateFlattening.lookupStateBlock(blockId << 4 | meta);
                     fixedName = EntityTheRenameningBlock.BLOCKS.getOrDefault(fixedName, fixedName);
                     if ("minecraft:melon_block".equals(fixedName)) fixedName = "minecraft:melon";
@@ -114,18 +118,13 @@ public class Blocks_1_12_2 {
                     if (subBlock != AIR && Registry.BLOCK.getRawId(subBlock) == 0) {
                         while (Registry.BLOCK.get(subName) != Blocks.AIR)
                             subName = new Identifier(subName.getNamespace(), subName.getPath() + "_");
-                        registry.register(subBlock, meta << 16 | blockId, subName, false);
+                        registry.registerInPlace(subBlock, meta << 16 | blockId, subName, false);
                     }
                 }
             }
         }
 
-        registry.register(POTTED_PINK_TULIP, 16 << 16 | flowerPotId, new Identifier("potted_pink_tulip"), false);
-        registry.register(POTTED_OXEYE_DAISY, 17 << 16 | flowerPotId, new Identifier("potted_oxeye_daisy"), false);
-        registry.register(POTTED_RED_MUSHROOM, 18 << 16 | flowerPotId, new Identifier("potted_red_mushroom"), false);
-        registry.register(POTTED_BROWN_MUSHROOM, 19 << 16 | flowerPotId, new Identifier("potted_brown_mushroom"), false);
-        registry.register(POTTED_DEAD_BUSH, 20 << 16 | flowerPotId, new Identifier("potted_dead_bush"), false);
-        registry.register(POTTED_CACTUS, 21 << 16 | flowerPotId, new Identifier("potted_cactus"), false);
+
     }
 
     private static void fixBlockItems() {
