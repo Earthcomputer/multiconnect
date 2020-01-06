@@ -1,5 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
+import com.google.common.collect.Collections2;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.mojang.datafixers.Dynamic;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
@@ -29,8 +32,11 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.item.map.MapIcon;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Packet;
@@ -45,6 +51,7 @@ import net.minecraft.stat.StatType;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
+import net.minecraft.tag.*;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -966,6 +973,510 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         return true;
     }
+
+    public Multimap<Tag<Block>, Block> getBlockTags() {
+        Multimap<Tag<Block>, Block> tags = HashMultimap.create();
+        tags.putAll(BlockTags.WOOL, Arrays.asList(
+            Blocks.WHITE_WOOL,
+            Blocks.ORANGE_WOOL,
+            Blocks.MAGENTA_WOOL,
+            Blocks.LIGHT_BLUE_WOOL,
+            Blocks.YELLOW_WOOL,
+            Blocks.LIME_WOOL,
+            Blocks.PINK_WOOL,
+            Blocks.GRAY_WOOL,
+            Blocks.LIGHT_GRAY_WOOL,
+            Blocks.CYAN_WOOL,
+            Blocks.PURPLE_WOOL,
+            Blocks.BLUE_WOOL,
+            Blocks.BROWN_WOOL,
+            Blocks.GREEN_WOOL,
+            Blocks.RED_WOOL,
+            Blocks.BLACK_WOOL));
+        tags.putAll(BlockTags.PLANKS, Arrays.asList(
+            Blocks.OAK_PLANKS,
+            Blocks.SPRUCE_PLANKS,
+            Blocks.BIRCH_PLANKS,
+            Blocks.JUNGLE_PLANKS,
+            Blocks.ACACIA_PLANKS,
+            Blocks.DARK_OAK_PLANKS));
+        tags.putAll(BlockTags.STONE_BRICKS, Arrays.asList(
+            Blocks.STONE_BRICKS,
+            Blocks.MOSSY_STONE_BRICKS,
+            Blocks.CRACKED_STONE_BRICKS,
+            Blocks.CHISELED_STONE_BRICKS));
+        tags.put(BlockTags.WOODEN_BUTTONS, Blocks.OAK_BUTTON);
+        tags.putAll(BlockTags.BUTTONS, tags.get(BlockTags.WOODEN_BUTTONS));
+        tags.put(BlockTags.BUTTONS, Blocks.STONE_BUTTON);
+        tags.putAll(BlockTags.CARPETS, Arrays.asList(
+            Blocks.WHITE_CARPET,
+            Blocks.ORANGE_CARPET,
+            Blocks.MAGENTA_CARPET,
+            Blocks.LIGHT_BLUE_CARPET,
+            Blocks.YELLOW_CARPET,
+            Blocks.LIME_CARPET,
+            Blocks.PINK_CARPET,
+            Blocks.GRAY_CARPET,
+            Blocks.LIGHT_GRAY_CARPET,
+            Blocks.CYAN_CARPET,
+            Blocks.PURPLE_CARPET,
+            Blocks.BLUE_CARPET,
+            Blocks.BROWN_CARPET,
+            Blocks.GREEN_CARPET,
+            Blocks.RED_CARPET,
+            Blocks.BLACK_CARPET));
+        tags.putAll(BlockTags.WOODEN_DOORS, Arrays.asList(
+            Blocks.OAK_DOOR,
+            Blocks.SPRUCE_DOOR,
+            Blocks.BIRCH_DOOR,
+            Blocks.JUNGLE_DOOR,
+            Blocks.ACACIA_DOOR,
+            Blocks.DARK_OAK_DOOR));
+        tags.putAll(BlockTags.WOODEN_STAIRS, Arrays.asList(
+            Blocks.OAK_STAIRS,
+            Blocks.SPRUCE_STAIRS,
+            Blocks.BIRCH_STAIRS,
+            Blocks.JUNGLE_STAIRS,
+            Blocks.ACACIA_STAIRS,
+            Blocks.DARK_OAK_STAIRS));
+        tags.putAll(BlockTags.WOODEN_SLABS, Arrays.asList(
+            Blocks.OAK_SLAB,
+            Blocks.SPRUCE_SLAB,
+            Blocks.BIRCH_SLAB,
+            Blocks.JUNGLE_SLAB,
+            Blocks.ACACIA_SLAB,
+            Blocks.DARK_OAK_SLAB));
+        tags.putAll(BlockTags.WOODEN_FENCES, Arrays.asList(
+            Blocks.OAK_FENCE,
+            Blocks.ACACIA_FENCE,
+            Blocks.DARK_OAK_FENCE,
+            Blocks.SPRUCE_FENCE,
+            Blocks.BIRCH_FENCE,
+            Blocks.JUNGLE_FENCE));
+        tags.putAll(BlockTags.DOORS, tags.get(BlockTags.WOODEN_DOORS));
+        tags.put(BlockTags.DOORS, Blocks.IRON_DOOR);
+        tags.putAll(BlockTags.SAPLINGS, Arrays.asList(
+            Blocks.OAK_SAPLING,
+            Blocks.SPRUCE_SAPLING,
+            Blocks.BIRCH_SAPLING,
+            Blocks.JUNGLE_SAPLING,
+            Blocks.ACACIA_SAPLING,
+            Blocks.DARK_OAK_SAPLING));
+        tags.putAll(BlockTags.DARK_OAK_LOGS, Arrays.asList(
+            Blocks.DARK_OAK_LOG,
+            Blocks.DARK_OAK_WOOD));
+        tags.putAll(BlockTags.OAK_LOGS, Arrays.asList(
+            Blocks.OAK_LOG,
+            Blocks.OAK_WOOD));
+        tags.putAll(BlockTags.ACACIA_LOGS, Arrays.asList(
+            Blocks.ACACIA_LOG,
+            Blocks.ACACIA_WOOD));
+        tags.putAll(BlockTags.BIRCH_LOGS, Arrays.asList(
+            Blocks.BIRCH_LOG,
+            Blocks.BIRCH_WOOD));
+        tags.putAll(BlockTags.JUNGLE_LOGS, Arrays.asList(
+            Blocks.JUNGLE_LOG,
+            Blocks.JUNGLE_WOOD));
+        tags.putAll(BlockTags.SPRUCE_LOGS, Arrays.asList(
+            Blocks.SPRUCE_LOG,
+            Blocks.SPRUCE_WOOD));
+        tags.putAll(BlockTags.LOGS, tags.get(BlockTags.DARK_OAK_LOGS));
+        tags.putAll(BlockTags.LOGS, tags.get(BlockTags.OAK_LOGS));
+        tags.putAll(BlockTags.LOGS, tags.get(BlockTags.ACACIA_LOGS));
+        tags.putAll(BlockTags.LOGS, tags.get(BlockTags.BIRCH_LOGS));
+        tags.putAll(BlockTags.LOGS, tags.get(BlockTags.JUNGLE_LOGS));
+        tags.putAll(BlockTags.LOGS, tags.get(BlockTags.SPRUCE_LOGS));
+        tags.putAll(BlockTags.ANVIL, Arrays.asList(
+            Blocks.ANVIL,
+            Blocks.CHIPPED_ANVIL,
+            Blocks.DAMAGED_ANVIL));
+        tags.putAll(BlockTags.SMALL_FLOWERS, Arrays.asList(
+            Blocks.DANDELION,
+            Blocks.POPPY,
+            Blocks.BLUE_ORCHID,
+            Blocks.ALLIUM,
+            Blocks.AZURE_BLUET,
+            Blocks.RED_TULIP,
+            Blocks.ORANGE_TULIP,
+            Blocks.WHITE_TULIP,
+            Blocks.PINK_TULIP,
+            Blocks.OXEYE_DAISY));
+        tags.putAll(BlockTags.ENDERMAN_HOLDABLE, tags.get(BlockTags.SMALL_FLOWERS));
+        tags.putAll(BlockTags.ENDERMAN_HOLDABLE, Arrays.asList(
+            Blocks.GRASS_BLOCK,
+            Blocks.DIRT,
+            Blocks.COARSE_DIRT,
+            Blocks.PODZOL,
+            Blocks.SAND,
+            Blocks.RED_SAND,
+            Blocks.GRAVEL,
+            Blocks.BROWN_MUSHROOM,
+            Blocks.RED_MUSHROOM,
+            Blocks.TNT,
+            Blocks.CACTUS,
+            Blocks.CLAY,
+            Blocks.CARVED_PUMPKIN,
+            Blocks.MELON,
+            Blocks.MYCELIUM,
+            Blocks.NETHERRACK));
+        tags.putAll(BlockTags.FLOWER_POTS, Arrays.asList(
+            Blocks.FLOWER_POT,
+            Blocks.POTTED_POPPY,
+            Blocks.POTTED_BLUE_ORCHID,
+            Blocks.POTTED_ALLIUM,
+            Blocks.POTTED_AZURE_BLUET,
+            Blocks.POTTED_RED_TULIP,
+            Blocks.POTTED_ORANGE_TULIP,
+            Blocks.POTTED_WHITE_TULIP,
+            Blocks.POTTED_PINK_TULIP,
+            Blocks.POTTED_OXEYE_DAISY,
+            Blocks.POTTED_DANDELION,
+            Blocks.POTTED_OAK_SAPLING,
+            Blocks.POTTED_SPRUCE_SAPLING,
+            Blocks.POTTED_BIRCH_SAPLING,
+            Blocks.POTTED_JUNGLE_SAPLING,
+            Blocks.POTTED_ACACIA_SAPLING,
+            Blocks.POTTED_DARK_OAK_SAPLING,
+            Blocks.POTTED_RED_MUSHROOM,
+            Blocks.POTTED_BROWN_MUSHROOM,
+            Blocks.POTTED_DEAD_BUSH,
+            Blocks.POTTED_FERN,
+            Blocks.POTTED_CACTUS));
+        tags.putAll(BlockTags.BANNERS, Arrays.asList(
+            Blocks.WHITE_BANNER,
+            Blocks.ORANGE_BANNER,
+            Blocks.MAGENTA_BANNER,
+            Blocks.LIGHT_BLUE_BANNER,
+            Blocks.YELLOW_BANNER,
+            Blocks.LIME_BANNER,
+            Blocks.PINK_BANNER,
+            Blocks.GRAY_BANNER,
+            Blocks.LIGHT_GRAY_BANNER,
+            Blocks.CYAN_BANNER,
+            Blocks.PURPLE_BANNER,
+            Blocks.BLUE_BANNER,
+            Blocks.BROWN_BANNER,
+            Blocks.GREEN_BANNER,
+            Blocks.RED_BANNER,
+            Blocks.BLACK_BANNER,
+            Blocks.WHITE_WALL_BANNER,
+            Blocks.ORANGE_WALL_BANNER,
+            Blocks.MAGENTA_WALL_BANNER,
+            Blocks.LIGHT_BLUE_WALL_BANNER,
+            Blocks.YELLOW_WALL_BANNER,
+            Blocks.LIME_WALL_BANNER,
+            Blocks.PINK_WALL_BANNER,
+            Blocks.GRAY_WALL_BANNER,
+            Blocks.LIGHT_GRAY_WALL_BANNER,
+            Blocks.CYAN_WALL_BANNER,
+            Blocks.PURPLE_WALL_BANNER,
+            Blocks.BLUE_WALL_BANNER,
+            Blocks.BROWN_WALL_BANNER,
+            Blocks.GREEN_WALL_BANNER,
+            Blocks.RED_WALL_BANNER,
+            Blocks.BLACK_WALL_BANNER));
+        tags.put(BlockTags.WOODEN_PRESSURE_PLATES, Blocks.OAK_PRESSURE_PLATE);
+        tags.putAll(BlockTags.STAIRS, Arrays.asList(
+            Blocks.OAK_STAIRS,
+            Blocks.COBBLESTONE_STAIRS,
+            Blocks.SPRUCE_STAIRS,
+            Blocks.SANDSTONE_STAIRS,
+            Blocks.ACACIA_STAIRS,
+            Blocks.JUNGLE_STAIRS,
+            Blocks.BIRCH_STAIRS,
+            Blocks.DARK_OAK_STAIRS,
+            Blocks.NETHER_BRICK_STAIRS,
+            Blocks.STONE_BRICK_STAIRS,
+            Blocks.BRICK_STAIRS,
+            Blocks.PURPUR_STAIRS,
+            Blocks.QUARTZ_STAIRS,
+            Blocks.RED_SANDSTONE_STAIRS));
+        tags.putAll(BlockTags.SLABS, Arrays.asList(
+            Blocks.SMOOTH_STONE_SLAB,
+            Blocks.STONE_BRICK_SLAB,
+            Blocks.SANDSTONE_SLAB,
+            Blocks.ACACIA_SLAB,
+            Blocks.BIRCH_SLAB,
+            Blocks.DARK_OAK_SLAB,
+            Blocks.JUNGLE_SLAB,
+            Blocks.OAK_SLAB,
+            Blocks.SPRUCE_SLAB,
+            Blocks.PURPUR_SLAB,
+            Blocks.QUARTZ_SLAB,
+            Blocks.RED_SANDSTONE_SLAB,
+            Blocks.BRICK_SLAB,
+            Blocks.COBBLESTONE_SLAB,
+            Blocks.NETHER_BRICK_SLAB,
+            Blocks.PETRIFIED_OAK_SLAB));
+        tags.putAll(BlockTags.WALLS, Arrays.asList(
+            Blocks.COBBLESTONE_WALL,
+            Blocks.MOSSY_COBBLESTONE_WALL));
+        tags.putAll(BlockTags.SAND, Arrays.asList(
+            Blocks.SAND,
+            Blocks.RED_SAND));
+        tags.putAll(BlockTags.RAILS, Arrays.asList(
+            Blocks.RAIL,
+            Blocks.POWERED_RAIL,
+            Blocks.DETECTOR_RAIL,
+            Blocks.ACTIVATOR_RAIL));
+        tags.putAll(BlockTags.ICE, Arrays.asList(
+            Blocks.ICE,
+            Blocks.PACKED_ICE,
+            Blocks.BLUE_ICE,
+            Blocks.FROSTED_ICE));
+        tags.putAll(BlockTags.VALID_SPAWN, Arrays.asList(
+            Blocks.GRASS_BLOCK,
+            Blocks.PODZOL));
+        tags.putAll(BlockTags.LEAVES, Arrays.asList(
+            Blocks.JUNGLE_LEAVES,
+            Blocks.OAK_LEAVES,
+            Blocks.SPRUCE_LEAVES,
+            Blocks.DARK_OAK_LEAVES,
+            Blocks.ACACIA_LEAVES,
+            Blocks.BIRCH_LEAVES));
+        tags.putAll(BlockTags.IMPERMEABLE, Arrays.asList(
+            Blocks.GLASS,
+            Blocks.WHITE_STAINED_GLASS,
+            Blocks.ORANGE_STAINED_GLASS,
+            Blocks.MAGENTA_STAINED_GLASS,
+            Blocks.LIGHT_BLUE_STAINED_GLASS,
+            Blocks.YELLOW_STAINED_GLASS,
+            Blocks.LIME_STAINED_GLASS,
+            Blocks.PINK_STAINED_GLASS,
+            Blocks.GRAY_STAINED_GLASS,
+            Blocks.LIGHT_GRAY_STAINED_GLASS,
+            Blocks.CYAN_STAINED_GLASS,
+            Blocks.PURPLE_STAINED_GLASS,
+            Blocks.BLUE_STAINED_GLASS,
+            Blocks.BROWN_STAINED_GLASS,
+            Blocks.GREEN_STAINED_GLASS,
+            Blocks.RED_STAINED_GLASS,
+            Blocks.BLACK_STAINED_GLASS));
+        tags.put(BlockTags.WOODEN_TRAPDOORS, Blocks.OAK_TRAPDOOR);
+        tags.putAll(BlockTags.TRAPDOORS, tags.get(BlockTags.WOODEN_TRAPDOORS));
+        tags.put(BlockTags.TRAPDOORS, Blocks.IRON_TRAPDOOR);
+        tags.putAll(BlockTags.STANDING_SIGNS, Arrays.asList(
+            Blocks.OAK_SIGN,
+            Blocks.SPRUCE_SIGN,
+            Blocks.BIRCH_SIGN,
+            Blocks.ACACIA_SIGN,
+            Blocks.JUNGLE_SIGN,
+            Blocks.DARK_OAK_SIGN));
+        tags.putAll(BlockTags.WALL_SIGNS, Arrays.asList(
+            Blocks.OAK_WALL_SIGN,
+            Blocks.SPRUCE_WALL_SIGN,
+            Blocks.BIRCH_WALL_SIGN,
+            Blocks.ACACIA_WALL_SIGN,
+            Blocks.JUNGLE_WALL_SIGN,
+            Blocks.DARK_OAK_WALL_SIGN));
+        tags.putAll(BlockTags.SIGNS, tags.get(BlockTags.STANDING_SIGNS));
+        tags.putAll(BlockTags.SIGNS, tags.get(BlockTags.WALL_SIGNS));
+        tags.putAll(BlockTags.BEDS, Arrays.asList(
+            Blocks.RED_BED,
+            Blocks.BLACK_BED,
+            Blocks.BLUE_BED,
+            Blocks.BROWN_BED,
+            Blocks.CYAN_BED,
+            Blocks.GRAY_BED,
+            Blocks.GREEN_BED,
+            Blocks.LIGHT_BLUE_BED,
+            Blocks.LIGHT_GRAY_BED,
+            Blocks.LIME_BED,
+            Blocks.MAGENTA_BED,
+            Blocks.ORANGE_BED,
+            Blocks.PINK_BED,
+            Blocks.PURPLE_BED,
+            Blocks.WHITE_BED,
+            Blocks.YELLOW_BED));
+        tags.putAll(BlockTags.FENCES, tags.get(BlockTags.WOODEN_FENCES));
+        tags.put(BlockTags.FENCES, Blocks.NETHER_BRICK_FENCE);
+        tags.putAll(BlockTags.DRAGON_IMMUNE, Arrays.asList(
+            Blocks.BARRIER,
+            Blocks.BEDROCK,
+            Blocks.END_PORTAL,
+            Blocks.END_PORTAL_FRAME,
+            Blocks.END_GATEWAY,
+            Blocks.COMMAND_BLOCK,
+            Blocks.REPEATING_COMMAND_BLOCK,
+            Blocks.CHAIN_COMMAND_BLOCK,
+            Blocks.STRUCTURE_BLOCK,
+            Blocks.JIGSAW,
+            Blocks.MOVING_PISTON,
+            Blocks.OBSIDIAN,
+            Blocks.END_STONE,
+            Blocks.IRON_BARS));
+        tags.putAll(BlockTags.WITHER_IMMUNE, Arrays.asList(
+            Blocks.BARRIER,
+            Blocks.BEDROCK,
+            Blocks.END_PORTAL,
+            Blocks.END_PORTAL_FRAME,
+            Blocks.END_GATEWAY,
+            Blocks.COMMAND_BLOCK,
+            Blocks.REPEATING_COMMAND_BLOCK,
+            Blocks.CHAIN_COMMAND_BLOCK,
+            Blocks.STRUCTURE_BLOCK,
+            Blocks.JIGSAW,
+            Blocks.MOVING_PISTON));
+        tags.putAll(BlockTags.TALL_FLOWERS, Arrays.asList(
+            Blocks.SUNFLOWER,
+            Blocks.LILAC,
+            Blocks.PEONY,
+            Blocks.ROSE_BUSH));
+        tags.putAll(BlockTags.FLOWERS, tags.get(BlockTags.SMALL_FLOWERS));
+        tags.putAll(BlockTags.FLOWERS, tags.get(BlockTags.TALL_FLOWERS));
+        tags.putAll(BlockTags.CROPS, Arrays.asList(
+            Blocks.BEETROOTS,
+            Blocks.CARROTS,
+            Blocks.POTATOES,
+            Blocks.WHEAT,
+            Blocks.MELON_STEM,
+            Blocks.PUMPKIN_STEM));
+        tags.putAll(BlockTags.SHULKER_BOXES, Arrays.asList(
+            Blocks.SHULKER_BOX,
+            Blocks.BLACK_SHULKER_BOX,
+            Blocks.BLUE_SHULKER_BOX,
+            Blocks.BROWN_SHULKER_BOX,
+            Blocks.CYAN_SHULKER_BOX,
+            Blocks.GRAY_SHULKER_BOX,
+            Blocks.GREEN_SHULKER_BOX,
+            Blocks.LIGHT_BLUE_SHULKER_BOX,
+            Blocks.LIGHT_GRAY_SHULKER_BOX,
+            Blocks.LIME_SHULKER_BOX,
+            Blocks.MAGENTA_SHULKER_BOX,
+            Blocks.ORANGE_SHULKER_BOX,
+            Blocks.PINK_SHULKER_BOX,
+            Blocks.PURPLE_SHULKER_BOX,
+            Blocks.RED_SHULKER_BOX,
+            Blocks.WHITE_SHULKER_BOX,
+            Blocks.YELLOW_SHULKER_BOX));
+        tags.putAll(BlockTags.PORTALS, Arrays.asList(
+            Blocks.NETHER_PORTAL,
+            Blocks.END_PORTAL,
+            Blocks.END_GATEWAY));
+        return tags;
+    }
+
+    public Multimap<Tag<Item>, Item> getItemTags() {
+        Multimap<Tag<Block>, Block> blockTags = getBlockTags();
+        Multimap<Tag<Item>, Item> tags = HashMultimap.create();
+        copyBlockItemTags(tags, blockTags, ItemTags.WOOL, BlockTags.WOOL);
+        copyBlockItemTags(tags, blockTags, ItemTags.PLANKS, BlockTags.PLANKS);
+        copyBlockItemTags(tags, blockTags, ItemTags.STONE_BRICKS, BlockTags.STONE_BRICKS);
+        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_BUTTONS, BlockTags.WOODEN_BUTTONS);
+        copyBlockItemTags(tags, blockTags, ItemTags.BUTTONS, BlockTags.BUTTONS);
+        copyBlockItemTags(tags, blockTags, ItemTags.CARPETS, BlockTags.CARPETS);
+        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_DOORS, BlockTags.WOODEN_DOORS);
+        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_STAIRS, BlockTags.WOODEN_STAIRS);
+        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_SLABS, BlockTags.WOODEN_SLABS);
+        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_FENCES, BlockTags.WOODEN_FENCES);
+        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_PRESSURE_PLATES, BlockTags.WOODEN_PRESSURE_PLATES);
+        copyBlockItemTags(tags, blockTags, ItemTags.DOORS, BlockTags.DOORS);
+        copyBlockItemTags(tags, blockTags, ItemTags.SAPLINGS, BlockTags.SAPLINGS);
+        copyBlockItemTags(tags, blockTags, ItemTags.OAK_LOGS, BlockTags.OAK_LOGS);
+        copyBlockItemTags(tags, blockTags, ItemTags.DARK_OAK_LOGS, BlockTags.DARK_OAK_LOGS);
+        copyBlockItemTags(tags, blockTags, ItemTags.BIRCH_LOGS, BlockTags.BIRCH_LOGS);
+        copyBlockItemTags(tags, blockTags, ItemTags.ACACIA_LOGS, BlockTags.ACACIA_LOGS);
+        copyBlockItemTags(tags, blockTags, ItemTags.SPRUCE_LOGS, BlockTags.SPRUCE_LOGS);
+        copyBlockItemTags(tags, blockTags, ItemTags.JUNGLE_LOGS, BlockTags.JUNGLE_LOGS);
+        copyBlockItemTags(tags, blockTags, ItemTags.LOGS, BlockTags.LOGS);
+        copyBlockItemTags(tags, blockTags, ItemTags.SAND, BlockTags.SAND);
+        copyBlockItemTags(tags, blockTags, ItemTags.SLABS, BlockTags.SLABS);
+        copyBlockItemTags(tags, blockTags, ItemTags.WALLS, BlockTags.WALLS);
+        copyBlockItemTags(tags, blockTags, ItemTags.STAIRS, BlockTags.STAIRS);
+        copyBlockItemTags(tags, blockTags, ItemTags.ANVIL, BlockTags.ANVIL);
+        copyBlockItemTags(tags, blockTags, ItemTags.RAILS, BlockTags.RAILS);
+        copyBlockItemTags(tags, blockTags, ItemTags.LEAVES, BlockTags.LEAVES);
+        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_TRAPDOORS, BlockTags.WOODEN_TRAPDOORS);
+        copyBlockItemTags(tags, blockTags, ItemTags.TRAPDOORS, BlockTags.TRAPDOORS);
+        copyBlockItemTags(tags, blockTags, ItemTags.SMALL_FLOWERS, BlockTags.SMALL_FLOWERS);
+        copyBlockItemTags(tags, blockTags, ItemTags.BEDS, BlockTags.BEDS);
+        copyBlockItemTags(tags, blockTags, ItemTags.FENCES, BlockTags.FENCES);
+        copyBlockItemTags(tags, blockTags, ItemTags.TALL_FLOWERS, BlockTags.TALL_FLOWERS);
+        copyBlockItemTags(tags, blockTags, ItemTags.FLOWERS, BlockTags.FLOWERS);
+        tags.putAll(ItemTags.BANNERS, Arrays.asList(
+            Items.WHITE_BANNER,
+            Items.ORANGE_BANNER,
+            Items.MAGENTA_BANNER,
+            Items.LIGHT_BLUE_BANNER,
+            Items.YELLOW_BANNER,
+            Items.LIME_BANNER,
+            Items.PINK_BANNER,
+            Items.GRAY_BANNER,
+            Items.LIGHT_GRAY_BANNER,
+            Items.CYAN_BANNER,
+            Items.PURPLE_BANNER,
+            Items.BLUE_BANNER,
+            Items.BROWN_BANNER,
+            Items.GREEN_BANNER,
+            Items.RED_BANNER,
+            Items.BLACK_BANNER));
+        tags.putAll(ItemTags.BOATS, Arrays.asList(
+            Items.OAK_BOAT,
+            Items.SPRUCE_BOAT,
+            Items.BIRCH_BOAT,
+            Items.JUNGLE_BOAT,
+            Items.ACACIA_BOAT,
+            Items.DARK_OAK_BOAT));
+        tags.putAll(ItemTags.FISHES, Arrays.asList(
+            Items.COD,
+            Items.COOKED_COD,
+            Items.SALMON,
+            Items.COOKED_SALMON,
+            Items.PUFFERFISH,
+            Items.TROPICAL_FISH));
+        copyBlockItemTags(tags, blockTags, ItemTags.SIGNS, BlockTags.STANDING_SIGNS);
+        tags.putAll(ItemTags.MUSIC_DISCS, Arrays.asList(
+            Items.MUSIC_DISC_13,
+            Items.MUSIC_DISC_CAT,
+            Items.MUSIC_DISC_BLOCKS,
+            Items.MUSIC_DISC_CHIRP,
+            Items.MUSIC_DISC_FAR,
+            Items.MUSIC_DISC_MALL,
+            Items.MUSIC_DISC_MELLOHI,
+            Items.MUSIC_DISC_STAL,
+            Items.MUSIC_DISC_STRAD,
+            Items.MUSIC_DISC_WARD,
+            Items.MUSIC_DISC_11,
+            Items.MUSIC_DISC_WAIT));
+        tags.putAll(ItemTags.COALS, Arrays.asList(
+            Items.COAL,
+            Items.CHARCOAL));
+        tags.putAll(ItemTags.ARROWS, Arrays.asList(
+            Items.ARROW,
+            Items.TIPPED_ARROW,
+            Items.SPECTRAL_ARROW));
+        tags.putAll(ItemTags.LECTERN_BOOKS, Arrays.asList(
+            Items.WRITTEN_BOOK,
+            Items.WRITABLE_BOOK));
+        return tags;
+    }
+
+    protected void copyBlockItemTags(Multimap<Tag<Item>, Item> itemTags, Multimap<Tag<Block>, Block> blockTags, Tag<Item> itemTag, Tag<Block> blockTag) {
+        itemTags.putAll(itemTag, Collections2.transform(blockTags.get(blockTag), Item.BLOCK_ITEMS::get));
+    }
+
+    public Multimap<Tag<Fluid>, Fluid> getFluidTags() {
+        Multimap<Tag<Fluid>, Fluid> tags = HashMultimap.create();
+        tags.putAll(FluidTags.WATER, Arrays.asList(
+            Fluids.WATER,
+            Fluids.FLOWING_WATER));
+        tags.putAll(FluidTags.LAVA, Arrays.asList(
+            Fluids.LAVA,
+            Fluids.FLOWING_LAVA));
+        return tags;
+    }
+    public Multimap<Tag<EntityType<?>>, EntityType<?>> getEntityTypeTags() {
+        Multimap<Tag<EntityType<?>>, EntityType<?>> tags = HashMultimap.create();
+        tags.putAll(EntityTypeTags.SKELETONS, Arrays.asList(
+            EntityType.SKELETON,
+            EntityType.STRAY,
+            EntityType.WITHER_SKELETON));
+        tags.putAll(EntityTypeTags.ARROWS, Arrays.asList(
+            EntityType.ARROW,
+            EntityType.SPECTRAL_ARROW));
+        return tags;
+    }
+
 
     @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})
     @Override

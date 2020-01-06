@@ -162,6 +162,10 @@ public class Items_1_12_2 {
                 newName = EntityTheRenameningBlock.ITEMS.getOrDefault(newName, newName);
                 if (newName != null) {
                     Item subItem = REGISTRY_1_13.get(new Identifier(newName));
+                    if (subItem == null) {
+                        System.out.println("FIXME: item for " + newName + " is null!");
+                        continue;
+                    }
                     if (subItem != AIR && Registry.ITEM.getRawId(subItem) == 0) {
                         registry.registerInPlace(subItem, meta << 16 | itemId, new Identifier(newName), false);
                         OLD_ITEM_TO_NEW.put(Pair.of(baseItem, meta), subItem);
@@ -226,7 +230,7 @@ public class Items_1_12_2 {
         registerBlockItem(registry, Blocks.RED_MUSHROOM);
         registerBlockItem(registry, Blocks.GOLD_BLOCK);
         registerBlockItem(registry, Blocks.IRON_BLOCK);
-        registerBlockItem(registry, Blocks.STONE_SLAB);
+        registerBlockItem(registry, Blocks.SMOOTH_STONE_SLAB);
         registerBlockItem(registry, Blocks.BRICKS);
         registerBlockItem(registry, Blocks.TNT);
         registerBlockItem(registry, Blocks.BOOKSHELF);
@@ -269,7 +273,7 @@ public class Items_1_12_2 {
         registerBlockItem(registry, Blocks.JUNGLE_FENCE);
         registerBlockItem(registry, Blocks.DARK_OAK_FENCE);
         registerBlockItem(registry, Blocks.ACACIA_FENCE);
-        registerBlockItem(registry, Blocks.PUMPKIN);
+        registerBlockItem(registry, Blocks.CARVED_PUMPKIN);
         registerBlockItem(registry, Blocks.NETHERRACK);
         registerBlockItem(registry, Blocks.SOUL_SAND);
         registerBlockItem(registry, Blocks.GLOWSTONE);

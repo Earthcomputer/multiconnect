@@ -21,7 +21,7 @@ public class Blocks_1_12_2 {
 
     public static final Block FLOWING_WATER = new DummyBlock(WATER);
     public static final Block FLOWING_LAVA = new DummyBlock(LAVA);
-    public static final Block DOUBLE_STONE_SLAB = new DummyBlock(STONE_SLAB.getDefaultState().with(SlabBlock.TYPE, SlabType.DOUBLE));
+    public static final Block DOUBLE_STONE_SLAB = new DummyBlock(SMOOTH_STONE_SLAB.getDefaultState().with(SlabBlock.TYPE, SlabType.DOUBLE));
     public static final Block LIT_FURNACE = new DummyBlock(FURNACE.getDefaultState().with(FurnaceBlock.LIT, true));
     public static final Block LIT_REDSTONE_ORE = new DummyBlock(REDSTONE_ORE.getDefaultState().with(RedstoneOreBlock.LIT, true));
     public static final Block UNLIT_REDSTONE_TORCH = new DummyBlock(REDSTONE_TORCH.getDefaultState().with(RedstoneTorchBlock.LIT, false));
@@ -181,7 +181,7 @@ public class Blocks_1_12_2 {
         register(registry, GOLD_BLOCK, 41, "gold_block");
         register(registry, IRON_BLOCK, 42, "iron_block");
         register(registry, DOUBLE_STONE_SLAB, 43, "double_stone_slab");
-        register(registry, COBBLESTONE_SLAB, 44, "stone_slab");
+        register(registry, SMOOTH_STONE_SLAB, 44, "stone_slab");
         register(registry, BRICKS, 45, "brick_block");
         register(registry, TNT, 46, "tnt");
         register(registry, BOOKSHELF, 47, "bookshelf");

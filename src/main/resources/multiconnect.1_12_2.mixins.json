@@ -18,7 +18,9 @@
     "MixinUpgradeData",
     "MixinBlock",
     "MixinClientWorld",
-    "MixinBlockItem"
+    "MixinBlockItem",
+    "MixinRegistryTagManager",
+    "MixinTagContainer"
   ],
   "injectors": {
     "defaultRequire": 1
