@@ -814,11 +814,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(ParticleTypes.CAMPFIRE_COSY_SMOKE);
         registry.unregister(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE);
         registry.unregister(ParticleTypes.SNEEZE);
-        registry.unregister(ParticleTypes.SQUID_INK);
-        registry.unregister(ParticleTypes.BUBBLE_COLUMN_UP);
-
-        insertAfter(registry, ParticleTypes.BUBBLE, ParticleTypes.BUBBLE_COLUMN_UP, "bubble_column_up");
-        insertAfter(registry, ParticleTypes.CURRENT_DOWN, ParticleTypes.SQUID_INK, "squid_ink");
     }
 
     private void modifyEnchantmentRegistry(ISimpleRegistry<Enchantment> registry) {
