@@ -162,10 +162,8 @@ public class Items_1_12_2 {
                 newName = EntityTheRenameningBlock.ITEMS.getOrDefault(newName, newName);
                 if (newName != null) {
                     Item subItem = REGISTRY_1_13.get(new Identifier(newName));
-                    if (subItem == null) {
-                        System.out.println("FIXME: item for " + newName + " is null!");
-                        continue;
-                    }
+                    if (subItem == null)
+                        subItem = Registry.ITEM.get(new Identifier(newName));
                     if (subItem != AIR && Registry.ITEM.getRawId(subItem) == 0) {
                         registry.registerInPlace(subItem, meta << 16 | itemId, new Identifier(newName), false);
                         OLD_ITEM_TO_NEW.put(Pair.of(baseItem, meta), subItem);
