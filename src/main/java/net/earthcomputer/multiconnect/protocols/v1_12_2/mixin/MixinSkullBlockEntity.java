@@ -45,6 +45,7 @@ public abstract class MixinSkullBlockEntity extends BlockEntity {
         } else {
             world.setBlockState(pos, skullBlocks[skullType].getDefaultState().with(SkullBlock.ROTATION, state.get(SkullBlock.ROTATION)), 18);
         }
+        markDirty();
     }
 
     @Unique
@@ -55,6 +56,7 @@ public abstract class MixinSkullBlockEntity extends BlockEntity {
 
         assert world != null;
         world.setBlockState(pos, state.with(SkullBlock.ROTATION, rot & 15));
+        markDirty();
     }
 
 }
