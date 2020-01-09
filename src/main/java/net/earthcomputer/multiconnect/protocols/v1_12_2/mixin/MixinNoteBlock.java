@@ -36,6 +36,8 @@ public class MixinNoteBlock extends Block implements BlockEntityProvider {
 
     @ModifyVariable(method = "onBlockAction", ordinal = 0, at = @At("HEAD"))
     private BlockState onOnBlockAction(BlockState localState, BlockState state, World world, BlockPos pos, int type, int data) {
+        if (ConnectionInfo.protocolVersion > Protocols.V1_12_2)
+            return localState;
         Instrument instrument = type < 0 || type >= 10 ? Instrument.HARP : Instrument.values()[type];
         state = state.with(NoteBlock.INSTRUMENT, instrument).with(NoteBlock.NOTE, MathHelper.clamp(data, 0, 24));
         world.setBlockState(pos, state, 18);
