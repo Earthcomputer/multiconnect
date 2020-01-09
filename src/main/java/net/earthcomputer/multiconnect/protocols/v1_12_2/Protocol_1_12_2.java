@@ -26,11 +26,13 @@ import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.decoration.painting.PaintingMotive;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.vehicle.AbstractMinecartEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
@@ -114,11 +116,13 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     private static final Field ENTITY_CUSTOM_NAME = DataTrackerManager.getTrackedDataField(Entity.class, 2, "CUSTOM_NAME");
     private static final Field BOAT_BUBBLE_WOBBLE_TICKS = DataTrackerManager.getTrackedDataField(BoatEntity.class, 6, "BUBBLE_WOBBLE_TICKS");
     private static final Field ZOMBIE_CONVERTING_IN_WATER = DataTrackerManager.getTrackedDataField(ZombieEntity.class, 2, "CONVERTING_IN_WATER");
+    private static final Field MINECART_DISPLAY_TILE = DataTrackerManager.getTrackedDataField(AbstractMinecartEntity.class, 3, "CUSTOM_BLOCK_ID");
 
     private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_ID = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM1 = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM2 = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<String> OLD_CUSTOM_NAME = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.STRING);
+    private static final TrackedData<Integer> OLD_MINECART_DISPLAY_TILE = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
@@ -235,7 +239,10 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         ProtocolRegistry.registerInboundTranslator(ParticleS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             ParticleType<?> particleType = Registry.PARTICLE_TYPE.get(buf.readInt());
-            if (particleType != ParticleTypes.ITEM && particleType != ParticleTypes.DUST) {
+            if (particleType != ParticleTypes.FALLING_DUST
+                    && particleType != ParticleTypes.BLOCK
+                    && particleType != ParticleTypes.ITEM
+                    && particleType != ParticleTypes.DUST) {
                 buf.disablePassthroughMode();
                 buf.applyPendingReads();
                 return;
@@ -262,7 +269,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.readFloat(); // speed
             buf.readInt(); // count
             buf.disablePassthroughMode();
-            if (particleType == ParticleTypes.ITEM) {
+            if (particleType == ParticleTypes.FALLING_DUST || particleType == ParticleTypes.BLOCK) {
+                buf.pendingRead(VarInt.class, new VarInt(Blocks_1_12_2.convertToStateRegistryId(buf.readVarInt())));
+            } else if (particleType == ParticleTypes.ITEM) {
                 Item item = Registry.ITEM.get(buf.readVarInt());
                 int meta = buf.readVarInt();
                 ItemStack stack = Items_1_12_2.oldItemStackToNew(new ItemStack(item), meta);
@@ -411,6 +420,26 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 int flags = buf.readUnsignedByte();
                 buf.pendingRead(UnsignedByte.class, new UnsignedByte((short) (flags | ((flags & 2) << 1)))); // copy bit 2 to 4
             }
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(EntitySpawnS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // entity id
+            buf.readUuid(); // uuid
+            int type = buf.readByte();
+            if (type != 70) { // falling block
+                buf.disablePassthroughMode();
+                buf.applyPendingReads();
+                return;
+            }
+            buf.readDouble(); // x
+            buf.readDouble(); // y
+            buf.readDouble(); // z
+            buf.readByte(); // pitch
+            buf.readByte(); // yaw
+            buf.disablePassthroughMode();
+            buf.pendingRead(Integer.class, Blocks_1_12_2.convertToStateRegistryId(buf.readInt()));
             buf.applyPendingReads();
         });
 
@@ -752,6 +781,18 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         removeTrackedDataHandler(TrackedDataHandlerRegistry.OPTIONAL_TEXT_COMPONENT);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T readTrackedData(TrackedDataHandler<T> handler, PacketByteBuf buf) {
+        if (handler == TrackedDataHandlerRegistry.OPTIONAL_BLOCK_STATE) {
+            int stateId = buf.readVarInt();
+            if (stateId == 0)
+                return (T) Optional.empty();
+            return (T) Optional.ofNullable(Block.STATE_IDS.get(Blocks_1_12_2.convertToStateRegistryId(stateId)));
+        }
+        return super.readTrackedData(handler, buf);
+    }
+
     @Override
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (!super.acceptEntityData(clazz, data))
@@ -796,6 +837,14 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
         if (clazz == ZombieEntity.class && data == DataTrackerManager.getTrackedData(Boolean.class, ZOMBIE_CONVERTING_IN_WATER)) {
             return false;
+        }
+
+        if (clazz == AbstractMinecartEntity.class) {
+            TrackedData<Integer> displayTile = DataTrackerManager.getTrackedData(Integer.class, MINECART_DISPLAY_TILE);
+            if (data == displayTile) {
+                DataTrackerManager.registerOldTrackedData(AbstractMinecartEntity.class, OLD_MINECART_DISPLAY_TILE, 0,
+                        (entity, val) -> entity.getDataTracker().set(displayTile, Blocks_1_12_2.convertToStateRegistryId(val)));
+            }
         }
 
         return true;
