@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.block.*;
+import net.minecraft.block.enums.BedPart;
 import net.minecraft.block.enums.ChestType;
 import net.minecraft.block.enums.DoubleBlockHalf;
 import net.minecraft.datafixer.fix.ChunkPalettedStorageFix;
@@ -167,6 +168,18 @@ public class ChunkUpgrader {
                     } else if (currentType == correctDoubleType) {
                         return state.with(ChestBlock.CHEST_TYPE, ChestType.SINGLE);
                     }
+                }
+            }
+            return state;
+        }
+
+        if (block instanceof BedBlock) {
+            BedPart part = state.get(BedBlock.PART);
+            Direction facing = state.get(BedBlock.FACING);
+            if (dir == (part == BedPart.FOOT ? facing : facing.getOpposite())) {
+                BlockState otherState = world.getBlockState(otherPos);
+                if (otherState.getBlock() == block && otherState.get(BedBlock.PART) != part) {
+                    return state.with(BedBlock.OCCUPIED, otherState.get(BedBlock.OCCUPIED));
                 }
             }
             return state;
