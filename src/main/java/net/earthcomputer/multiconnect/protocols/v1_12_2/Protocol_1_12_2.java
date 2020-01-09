@@ -844,6 +844,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             if (data == displayTile) {
                 DataTrackerManager.registerOldTrackedData(AbstractMinecartEntity.class, OLD_MINECART_DISPLAY_TILE, 0,
                         (entity, val) -> entity.getDataTracker().set(displayTile, Blocks_1_12_2.convertToStateRegistryId(val)));
+                return false;
             }
         }
 
