@@ -31,6 +31,7 @@ import net.minecraft.entity.decoration.painting.PaintingMotive;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
@@ -114,11 +115,13 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     private static final Field ENTITY_CUSTOM_NAME = DataTrackerManager.getTrackedDataField(Entity.class, 2, "CUSTOM_NAME");
     private static final Field BOAT_BUBBLE_WOBBLE_TICKS = DataTrackerManager.getTrackedDataField(BoatEntity.class, 6, "BUBBLE_WOBBLE_TICKS");
     private static final Field ZOMBIE_CONVERTING_IN_WATER = DataTrackerManager.getTrackedDataField(ZombieEntity.class, 2, "CONVERTING_IN_WATER");
+    private static final Field WOLF_COLLAR_COLOR = DataTrackerManager.getTrackedDataField(WolfEntity.class, 1, "COLLAR_COLOR");
 
     private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_ID = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM1 = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM2 = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<String> OLD_CUSTOM_NAME = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.STRING);
+    private static final TrackedData<Integer> OLD_WOLF_COLLAR_COLOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
@@ -796,6 +799,13 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
         if (clazz == ZombieEntity.class && data == DataTrackerManager.getTrackedData(Boolean.class, ZOMBIE_CONVERTING_IN_WATER)) {
             return false;
+        }
+        if (clazz == WolfEntity.class) {
+            TrackedData<Integer> collarColor = DataTrackerManager.getTrackedData(Integer.class, WOLF_COLLAR_COLOR);
+            if (data == collarColor) {
+                DataTrackerManager.registerOldTrackedData(WolfEntity.class, OLD_WOLF_COLLAR_COLOR, 1, (entity, val)->entity.getDataTracker().set(collarColor, 15 - val));
+                return false;
+            }
         }
 
         return true;
