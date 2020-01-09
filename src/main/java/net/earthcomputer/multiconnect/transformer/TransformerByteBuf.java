@@ -7,12 +7,14 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.INetworkState;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.SharedConstants;
+import net.minecraft.client.network.packet.KeepAliveS2CPacket;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
+import net.minecraft.server.network.packet.KeepAliveC2SPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.PacketByteBuf;
@@ -107,11 +109,18 @@ public final class TransformerByteBuf extends PacketByteBuf {
             //noinspection ConstantConditions
             Class<? extends Packet<?>> packetClass = ((INetworkState) (Object) state).getPacketHandlers()
                     .get(NetworkSide.CLIENTBOUND).multiconnect_getPacketClassById(packetId);
+            if (!canDecodeAsync(packetClass)) {
+                ConnectionInfo.resourceReloadLock.readLock().lock();
+            }
             readTopLevelType(packetClass);
             return packetId;
         } else {
             return read(VarInt.class, () -> new VarInt(super.readVarInt())).get();
         }
+    }
+
+    public <T extends Packet<?>> boolean canDecodeAsync(Class<T> packetClass) {
+        return packetClass == KeepAliveS2CPacket.class;
     }
 
     private <T> T read(Class<T> type, Supplier<T> readMethod) {
@@ -203,11 +212,18 @@ public final class TransformerByteBuf extends PacketByteBuf {
             //noinspection ConstantConditions
             Class<? extends Packet<?>> packetClass = ((INetworkState) (Object) state).getPacketHandlers()
                     .get(NetworkSide.SERVERBOUND).multiconnect_getPacketClassById(val);
+            if (!canEncodeAsync(packetClass)) {
+                ConnectionInfo.resourceReloadLock.readLock().lock();
+            }
             writeTopLevelType(packetClass);
             return this;
         } else {
             return write(VarInt.class, new VarInt(val), v -> super.writeVarInt(v.get()));
         }
+    }
+
+    public <T extends Packet<?>> boolean canEncodeAsync(Class<T> packetClass) {
+        return packetClass == KeepAliveC2SPacket.class;
     }
 
     private <T> PacketByteBuf write(Class<T> type, T value, Consumer<T> writeMethod) {

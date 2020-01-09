@@ -75,7 +75,7 @@ public class MixinConnectScreen1 {
         if (ProtocolRegistry.isSupported(ConnectionInfo.protocolVersion)) {
             ((IHandshakePacket) packet).setVersion(ConnectionInfo.protocolVersion);
             ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
-            ConnectionInfo.protocol.setup();
+            ConnectionInfo.protocol.setup(false);
         }
         connect.send(packet);
     }

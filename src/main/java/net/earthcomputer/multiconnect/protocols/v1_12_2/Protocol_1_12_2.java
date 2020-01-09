@@ -26,7 +26,6 @@ import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.decoration.painting.PaintingMotive;
 import net.minecraft.entity.effect.StatusEffect;
@@ -577,8 +576,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         ClientPlayNetworkHandler connection = MinecraftClient.getInstance().getNetworkHandler();
-        assert connection != null;
         if (packet.getClass() == CustomPayloadC2SPacket.class) {
+            assert connection != null;
             ICustomPaylaodC2SPacket customPayload = (ICustomPaylaodC2SPacket) packet;
             String channel;
             if (customPayload.multiconnect_getChannel().equals(CustomPayloadC2SPacket.BRAND))
@@ -589,6 +588,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet.getClass() == BookUpdateC2SPacket.class) {
+            assert connection != null;
             BookUpdateC2SPacket bookUpdate = (BookUpdateC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
@@ -597,6 +597,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet.getClass() == RenameItemC2SPacket.class) {
+            assert connection != null;
             RenameItemC2SPacket renameItem = (RenameItemC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
@@ -605,6 +606,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet.getClass() == SelectVillagerTradeC2SPacket.class) {
+            assert connection != null;
             SelectVillagerTradeC2SPacket selectTrade = (SelectVillagerTradeC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
@@ -613,6 +615,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet.getClass() == UpdateBeaconC2SPacket.class) {
+            assert connection != null;
             UpdateBeaconC2SPacket updateBeacon = (UpdateBeaconC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
@@ -622,6 +625,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet.getClass() == UpdateCommandBlockC2SPacket.class) {
+            assert connection != null;
             UpdateCommandBlockC2SPacket updateCmdBlock = (UpdateCommandBlockC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
@@ -650,6 +654,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet.getClass() == UpdateCommandBlockMinecartC2SPacket.class) {
+            assert connection != null;
             UpdateCommandBlockMinecartC2SPacket updateCmdMinecart = (UpdateCommandBlockMinecartC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
@@ -661,6 +666,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet.getClass() == UpdateStructureBlockC2SPacket.class) {
+            assert connection != null;
             UpdateStructureBlockC2SPacket updateStructBlock = (UpdateStructureBlockC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
@@ -813,10 +819,12 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 return false;
             }
         }
+
         if (clazz == WolfEntity.class) {
             TrackedData<Integer> collarColor = DataTrackerManager.getTrackedData(Integer.class, WOLF_COLLAR_COLOR);
             if (data == collarColor) {
-                DataTrackerManager.registerOldTrackedData(WolfEntity.class, OLD_WOLF_COLLAR_COLOR, 1, (entity, val)->entity.getDataTracker().set(collarColor, 15 - val));
+                DataTrackerManager.registerOldTrackedData(WolfEntity.class, OLD_WOLF_COLLAR_COLOR, 1,
+                        (entity, val) -> entity.getDataTracker().set(collarColor, 15 - val));
                 return false;
             }
         }

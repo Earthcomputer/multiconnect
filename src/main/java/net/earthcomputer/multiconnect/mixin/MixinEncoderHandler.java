@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.mixin;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.Packet;
@@ -24,6 +25,8 @@ public class MixinEncoderHandler {
 
     @Unique private ThreadLocal<ChannelHandlerContext> context = new ThreadLocal<>();
 
+    @Unique private ThreadLocal<PacketByteBuf> buf = new ThreadLocal<>();
+
     @Inject(method = "encode", at = @At(value = "JUMP", opcode = Opcodes.IFNONNULL, ordinal = 1))
     private void onEncodeHead(ChannelHandlerContext context, Packet<?> packet, ByteBuf buf, CallbackInfo ci) {
         this.context.set(context);
@@ -34,7 +37,24 @@ public class MixinEncoderHandler {
         if (side == NetworkSide.SERVERBOUND)
             buf = new TransformerByteBuf(buf, context.get());
         context.set(null);
+        this.buf.set(buf);
         return buf;
+    }
+
+    @Inject(method = "encode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Packet;write(Lnet/minecraft/util/PacketByteBuf;)V", shift = At.Shift.AFTER))
+    private void postWrite(ChannelHandlerContext context, Packet<?> packet, ByteBuf buf, CallbackInfo ci) {
+        if (!((TransformerByteBuf) this.buf.get()).canEncodeAsync(packet.getClass())) {
+            ConnectionInfo.resourceReloadLock.readLock().unlock();
+        }
+        this.buf.set(null);
+    }
+
+    @Inject(method = "encode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Packet;isErrorFatal()Z"))
+    private void postWriteError(ChannelHandlerContext context, Packet<?> packet, ByteBuf buf, CallbackInfo ci) {
+        if (!((TransformerByteBuf) this.buf.get()).canEncodeAsync(packet.getClass())) {
+            ConnectionInfo.resourceReloadLock.readLock().unlock();
+        }
+        this.buf.set(null);
     }
 
 }

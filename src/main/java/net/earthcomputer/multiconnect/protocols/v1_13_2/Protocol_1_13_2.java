@@ -116,9 +116,10 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     @Override
-    public void setup() {
-        PendingChunkDataPackets.processPackets(packet -> {});
-        super.setup();
+    public void setup(boolean resourceReload) {
+        if (!resourceReload)
+            PendingChunkDataPackets.processPackets(packet -> {});
+        super.setup(resourceReload);
     }
 
     @Override

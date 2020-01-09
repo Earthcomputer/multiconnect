@@ -34,9 +34,11 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractProtocol {
 
-    public void setup() {
-        modifyPacketLists();
-        DataTrackerManager.onConnectToServer();
+    public void setup(boolean resourceReload) {
+        if (!resourceReload) {
+            modifyPacketLists();
+            DataTrackerManager.onConnectToServer();
+        }
         DefaultRegistry.restoreAll();
         DefaultRegistry.DEFAULT_REGISTRIES.keySet().forEach((registry -> {
             modifyRegistry((ISimpleRegistry<?>) registry);
@@ -44,7 +46,9 @@ public abstract class AbstractProtocol {
         }));
         recomputeBlockStates();
         refreshFlowerPotBlocks();
-        removeTrackedDataHandlers();
+        if (!resourceReload) {
+            removeTrackedDataHandlers();
+        }
         ((IMinecraftClient) MinecraftClient.getInstance()).callInitializeSearchableContainers();
         ((IMinecraftClient) MinecraftClient.getInstance()).getSearchManager().apply(MinecraftClient.getInstance().getResourceManager());
     }
