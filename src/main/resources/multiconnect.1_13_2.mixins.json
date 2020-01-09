@@ -13,7 +13,9 @@
     "MixinPlayerEntity",
     "MixinMerchantContainer",
     "MixinPlayerEntityRenderer",
-    "MixinArgumentTypes"
+    "MixinArgumentTypes",
+    "MixinEntity",
+    "MixinLivingEntity"
   ],
   "injectors": {
     "defaultRequire": 1

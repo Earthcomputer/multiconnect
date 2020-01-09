@@ -9,7 +9,8 @@
     "MixinWorldChunk",
     "MixinClientChunkManager",
     "MixinClientPlayNetworkHandler",
-    "MixinTrackerUpdatePacket"
+    "MixinTrackerUpdatePacket",
+    "MixinEntity"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -20,7 +20,10 @@
     "MixinClientWorld",
     "MixinBlockItem",
     "MixinRegistryTagManager",
-    "MixinTagContainer"
+    "MixinTagContainer",
+    "MixinEntity",
+    "MixinLivingEntity",
+    "MixinClientPlayerEntity"
   ],
   "injectors": {
     "defaultRequire": 1
