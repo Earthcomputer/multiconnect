@@ -1,14 +1,11 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
-import net.earthcomputer.multiconnect.impl.IBlockSettings;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
-import net.earthcomputer.multiconnect.protocols.AbstractProtocol;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.SlabType;
 import net.minecraft.datafixer.fix.BlockStateFlattening;
 import net.minecraft.datafixer.fix.EntityTheRenameningBlock;
 import net.minecraft.item.Item;
-import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.SimpleRegistry;
@@ -32,35 +29,6 @@ public class Blocks_1_12_2 {
     public static final Block DAYLIGHT_DETECTOR_INVERTED = new DummyBlock(DAYLIGHT_DETECTOR.getDefaultState().with(DaylightDetectorBlock.INVERTED, true));
     public static final Block DOUBLE_STONE_SLAB2 = new DummyBlock(RED_SANDSTONE_SLAB.getDefaultState().with(SlabBlock.TYPE, SlabType.DOUBLE));
     public static final Block PURPUR_DOUBLE_SLAB = new DummyBlock(PURPUR_SLAB.getDefaultState().with(SlabBlock.TYPE, SlabType.DOUBLE));
-
-    public static final Block NOTE_BLOCK = new NoteBlock_1_12_2(((IBlockSettings) ((IBlockSettings) Block.Settings.of(Material.WOOD)).callSounds(BlockSoundGroup.WOOD)).callStrength(0.8f));
-    public static final Block FLOWER_POT = new FlowerPotBlock_1_12_2(AIR);
-    public static final Block POTTED_OAK_SAPLING = new FlowerPotBlock_1_12_2(OAK_SAPLING);
-    public static final Block POTTED_SPRUCE_SAPLING = new FlowerPotBlock_1_12_2(SPRUCE_SAPLING);
-    public static final Block POTTED_BIRCH_SAPLING = new FlowerPotBlock_1_12_2(BIRCH_SAPLING);
-    public static final Block POTTED_JUNGLE_SAPLING = new FlowerPotBlock_1_12_2(JUNGLE_SAPLING);
-    public static final Block POTTED_ACACIA_SAPLING = new FlowerPotBlock_1_12_2(ACACIA_SAPLING);
-    public static final Block POTTED_DARK_OAK_SAPLING = new FlowerPotBlock_1_12_2(DARK_OAK_SAPLING);
-    public static final Block POTTED_FERN = new FlowerPotBlock_1_12_2(FERN);
-    public static final Block POTTED_DANDELION = new FlowerPotBlock_1_12_2(DANDELION);
-    public static final Block POTTED_POPPY = new FlowerPotBlock_1_12_2(POPPY);
-    public static final Block POTTED_BLUE_ORCHID = new FlowerPotBlock_1_12_2(BLUE_ORCHID);
-    public static final Block POTTED_ALLIUM = new FlowerPotBlock_1_12_2(ALLIUM);
-    public static final Block POTTED_AZURE_BLUET = new FlowerPotBlock_1_12_2(AZURE_BLUET);
-    public static final Block POTTED_RED_TULIP = new FlowerPotBlock_1_12_2(RED_TULIP);
-    public static final Block POTTED_ORANGE_TULIP = new FlowerPotBlock_1_12_2(ORANGE_TULIP);
-    public static final Block POTTED_WHITE_TULIP = new FlowerPotBlock_1_12_2(WHITE_TULIP);
-    public static final Block POTTED_PINK_TULIP = new FlowerPotBlock_1_12_2(PINK_TULIP);
-    public static final Block POTTED_OXEYE_DAISY = new FlowerPotBlock_1_12_2(OXEYE_DAISY);
-    public static final Block POTTED_RED_MUSHROOM = new FlowerPotBlock_1_12_2(RED_MUSHROOM);
-    public static final Block POTTED_BROWN_MUSHROOM = new FlowerPotBlock_1_12_2(BROWN_MUSHROOM);
-    public static final Block POTTED_DEAD_BUSH = new FlowerPotBlock_1_12_2(DEAD_BUSH);
-    public static final Block POTTED_CACTUS = new FlowerPotBlock_1_12_2(CACTUS);
-
-    static {
-        // that overrode the defaults, which we don't want unless we're actually connecting to 1.12
-        AbstractProtocol.refreshFlowerPotBlocks();
-    }
 
     // :thonkjang: made block states have 2 different IDs in 1.12
     // we use the one used in chunks as our actual IDs for efficiency,

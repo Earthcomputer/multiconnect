@@ -24,7 +24,9 @@
     "MixinEntity",
     "MixinLivingEntity",
     "MixinClientPlayerEntity",
-    "MixinItemEntity"
+    "MixinItemEntity",
+    "MixinNoteBlock",
+    "MixinFlowerPotBlock"
   ],
   "injectors": {
     "defaultRequire": 1

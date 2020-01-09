@@ -1,7 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
-import net.earthcomputer.multiconnect.protocols.AbstractProtocol;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.FlowerPotBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
@@ -10,7 +11,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Map;
+
 public class FlowerPotBlockEntity extends BlockEntity {
+
     public FlowerPotBlockEntity() {
         super(BlockEntities_1_12_2.FLOWER_POT);
     }
@@ -30,14 +37,27 @@ public class FlowerPotBlockEntity extends BlockEntity {
     public void setFlowerPotItemStack(ItemStack stack) {
         Block block;
         if (!(stack.getItem() instanceof BlockItem)) {
-            block = Blocks_1_12_2.FLOWER_POT;
+            block = Blocks.FLOWER_POT;
         } else {
             block = ((BlockItem) stack.getItem()).getBlock();
-            block = AbstractProtocol.getFlowerPotBlock(block);
-            if (block == null)
-                block = Blocks_1_12_2.FLOWER_POT;
+            block = CONTENT_TO_POTTED.getOrDefault(block, Blocks.FLOWER_POT);
         }
         assert world != null;
         world.setBlockState(pos, block.getDefaultState());
     }
+
+    private static final Map<Block, Block> CONTENT_TO_POTTED;
+    static {
+        try {
+            Field field = Arrays.stream(FlowerPotBlock.class.getDeclaredFields())
+                    .filter(f -> Modifier.isStatic(f.getModifiers()) && f.getType() == Map.class)
+                    .findFirst().orElseThrow(NoSuchFieldException::new);
+            field.setAccessible(true);
+            //noinspection unchecked
+            CONTENT_TO_POTTED = (Map<Block, Block>) field.get(null);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError(e);
+        }
+    }
+
 }

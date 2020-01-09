@@ -5,7 +5,6 @@ import com.google.common.collect.HashBiMap;
 import net.earthcomputer.multiconnect.impl.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.FlowerPotBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -45,7 +44,6 @@ public abstract class AbstractProtocol {
             postModifyRegistry(registry);
         }));
         recomputeBlockStates();
-        refreshFlowerPotBlocks();
         if (!resourceReload) {
             removeTrackedDataHandlers();
         }
@@ -205,20 +203,6 @@ public abstract class AbstractProtocol {
         insertAfter(registry, prevValue, value, defaultRegistry.defaultEntries.inverse().get(value).toString());
     }
 
-    public static void refreshFlowerPotBlocks() {
-        Map<Block, Block> flowerPots = DefaultRegistry.getFlowerPotBlocks();
-        flowerPots.clear();
-        for (Block block : Registry.BLOCK) {
-            if (block instanceof FlowerPotBlock) {
-                flowerPots.put(((FlowerPotBlock) block).getContent(), block);
-            }
-        }
-    }
-
-    public static Block getFlowerPotBlock(Block contents) {
-        return DefaultRegistry.getFlowerPotBlocks().get(contents);
-    }
-
     protected static void dumpBlockStates() {
         for (int id : ((IIdList) Block.STATE_IDS).ids()) {
             BlockState state = Block.STATE_IDS.get(id);
@@ -360,15 +344,6 @@ public abstract class AbstractProtocol {
             }
         }
 
-        private static Map<Block, Block> getFlowerPotBlocks() {
-            try {
-                //noinspection unchecked
-                return (Map<Block, Block>) FLOWER_POTS_FIELD.get(null);
-            } catch (ReflectiveOperationException e) {
-                throw new AssertionError(e);
-            }
-        }
-
         private static Int2ObjectBiMap<TrackedDataHandler<?>> getTrackedDataHandlers() {
             try {
                 //noinspection unchecked
@@ -379,7 +354,6 @@ public abstract class AbstractProtocol {
         }
 
         private static final Field SPAWN_EGGS_FIELD;
-        private static final Field FLOWER_POTS_FIELD;
         private static final Field TRACKED_DATA_HANDLERS;
         static {
             try {
@@ -387,10 +361,6 @@ public abstract class AbstractProtocol {
                         .filter(it -> it.getType() == Map.class)
                         .findFirst().orElseThrow(NoSuchFieldException::new);
                 SPAWN_EGGS_FIELD.setAccessible(true);
-                FLOWER_POTS_FIELD = Arrays.stream(FlowerPotBlock.class.getDeclaredFields())
-                        .filter(it -> it.getType() == Map.class)
-                        .findFirst().orElseThrow(NoSuchFieldException::new);
-                FLOWER_POTS_FIELD.setAccessible(true);
                 TRACKED_DATA_HANDLERS = Arrays.stream(TrackedDataHandlerRegistry.class.getDeclaredFields())
                         .filter(it -> it.getType() == Int2ObjectBiMap.class)
                         .findFirst().orElseThrow(NoSuchFieldException::new);

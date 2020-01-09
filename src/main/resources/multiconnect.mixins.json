@@ -25,7 +25,6 @@
     "MixinParticleManager",
     "MixinCustomPayloadS2C",
     "MixinPacketHandler",
-    "MixinBlockSettings",
     "MixinReloadableResourceManagerImpl",
     "MixinSplashScreen"
   ],
