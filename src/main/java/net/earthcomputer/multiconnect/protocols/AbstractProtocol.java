@@ -21,6 +21,7 @@ import net.minecraft.network.listener.PacketListener;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Int2ObjectBiMap;
+import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.Util;
 import net.minecraft.util.registry.DefaultedRegistry;
 import net.minecraft.util.registry.Registry;
@@ -140,6 +141,26 @@ public abstract class AbstractProtocol {
     public void postEntityDataRegister(Class<? extends Entity> clazz) {
     }
 
+    public <T> T readTrackedData(TrackedDataHandler<T> handler, PacketByteBuf buf) {
+        return handler.read(buf);
+    }
+
+    protected void removeTrackedDataHandlers() {
+    }
+
+    protected static void removeTrackedDataHandler(TrackedDataHandler<?> handler) {
+        Int2ObjectBiMap<TrackedDataHandler<?>> biMap = DefaultRegistry.getTrackedDataHandlers();
+        //noinspection unchecked
+        IInt2ObjectBiMap<TrackedDataHandler<?>> iBiMap = (IInt2ObjectBiMap<TrackedDataHandler<?>>) biMap;
+        int id = TrackedDataHandlerRegistry.getId(handler);
+        iBiMap.remove(handler);
+        for (; TrackedDataHandlerRegistry.get(id + 1) != null; id++) {
+            TrackedDataHandler<?> h = TrackedDataHandlerRegistry.get(id + 1);
+            iBiMap.remove(h);
+            biMap.put(h, id);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public static <T> int getUnmodifiedId(Registry<T> registry, T value) {
         DefaultRegistry<T> defaultRegistry = (DefaultRegistry<T>) DefaultRegistry.DEFAULT_REGISTRIES.get(registry);
@@ -178,22 +199,6 @@ public abstract class AbstractProtocol {
         }
 
         insertAfter(registry, prevValue, value, defaultRegistry.defaultEntries.inverse().get(value).toString());
-    }
-
-    protected void removeTrackedDataHandlers() {
-    }
-
-    protected static void removeTrackedDataHandler(TrackedDataHandler<?> handler) {
-        Int2ObjectBiMap<TrackedDataHandler<?>> biMap = DefaultRegistry.getTrackedDataHandlers();
-        //noinspection unchecked
-        IInt2ObjectBiMap<TrackedDataHandler<?>> iBiMap = (IInt2ObjectBiMap<TrackedDataHandler<?>>) biMap;
-        int id = TrackedDataHandlerRegistry.getId(handler);
-        iBiMap.remove(handler);
-        for (; TrackedDataHandlerRegistry.get(id + 1) != null; id++) {
-            TrackedDataHandler<?> h = TrackedDataHandlerRegistry.get(id + 1);
-            iBiMap.remove(h);
-            biMap.put(h, id);
-        }
     }
 
     public static void refreshFlowerPotBlocks() {

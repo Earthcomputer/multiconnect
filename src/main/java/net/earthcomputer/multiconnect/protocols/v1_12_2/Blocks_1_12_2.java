@@ -62,6 +62,22 @@ public class Blocks_1_12_2 {
         AbstractProtocol.refreshFlowerPotBlocks();
     }
 
+    // :thonkjang: made block states have 2 different IDs in 1.12
+    // we use the one used in chunks as our actual IDs for efficiency,
+    // but we have to convert the rest
+
+    public static int convertToStateRegistryId(int id) {
+        int blockId = id & 4095;
+        int meta = id >> 12 & 15;
+        return blockId << 4 | meta;
+    }
+
+    public static int convertFromStateRegistryId(int id) {
+        int blockId = id >> 4 & 4095;
+        int meta = id & 15;
+        return meta << 12 | blockId;
+    }
+
     private static void register(ISimpleRegistry<Block> registry, Block block, int id, String name) {
         registry.registerInPlace(block, id, new Identifier(name), false);
     }

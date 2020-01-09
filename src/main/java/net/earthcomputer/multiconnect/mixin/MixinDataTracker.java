@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.mixin;
 
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.IDataTracker;
 import net.minecraft.entity.Entity;
@@ -12,6 +13,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -53,6 +56,11 @@ public abstract class MixinDataTracker implements IDataTracker {
     private static <T> void onWriteEntryToPacket(PacketByteBuf buf, DataTracker.Entry<T> entry, CallbackInfo ci) {
         if (entry.getData().getId() < 0)
             ci.cancel();
+    }
+
+    @Redirect(method = "entryFromPacket", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/data/TrackedDataHandler;read(Lnet/minecraft/util/PacketByteBuf;)Ljava/lang/Object;"))
+    private static <T> T read(TrackedDataHandler<T> handler, PacketByteBuf buf) {
+        return ConnectionInfo.protocol.readTrackedData(handler, buf);
     }
 
     @Override

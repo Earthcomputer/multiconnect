@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
@@ -22,15 +21,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Entity.class)
 public abstract class MixinEntity {
 
-    @Shadow public abstract Box getBoundingBox();
-
     @Shadow public World world;
+    @Shadow protected double waterHeight;
+
+    @Shadow public abstract Box getBoundingBox();
 
     @Shadow public abstract void setVelocity(Vec3d velocity);
 
     @Shadow public abstract Vec3d getVelocity();
-
-    @Shadow protected double waterHeight;
 
     @Inject(method = "setSwimming", at = @At("HEAD"), cancellable = true)
     private void onSetSwimming(boolean swimming, CallbackInfo ci) {
