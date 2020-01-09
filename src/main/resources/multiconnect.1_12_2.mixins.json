@@ -23,7 +23,8 @@
     "MixinTagContainer",
     "MixinEntity",
     "MixinLivingEntity",
-    "MixinClientPlayerEntity"
+    "MixinClientPlayerEntity",
+    "MixinItemEntity"
   ],
   "injectors": {
     "defaultRequire": 1
