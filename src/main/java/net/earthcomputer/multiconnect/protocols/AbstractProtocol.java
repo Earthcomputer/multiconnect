@@ -163,6 +163,10 @@ public abstract class AbstractProtocol {
         }
     }
 
+    public boolean shouldBlockChangeReplaceBlockEntity(Block oldBlock, Block newBlock) {
+        return oldBlock != newBlock;
+    }
+
     @SuppressWarnings("unchecked")
     public static <T> int getUnmodifiedId(Registry<T> registry, T value) {
         DefaultRegistry<T> defaultRegistry = (DefaultRegistry<T>) DefaultRegistry.DEFAULT_REGISTRIES.get(registry);

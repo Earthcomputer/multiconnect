@@ -26,7 +26,8 @@
     "MixinCustomPayloadS2C",
     "MixinPacketHandler",
     "MixinReloadableResourceManagerImpl",
-    "MixinSplashScreen"
+    "MixinSplashScreen",
+    "MixinWorldChunk"
   ],
   "injectors": {
     "defaultRequire": 1

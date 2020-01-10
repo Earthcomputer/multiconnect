@@ -1525,6 +1525,20 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         return tags;
     }
 
+    @Override
+    public boolean shouldBlockChangeReplaceBlockEntity(Block oldBlock, Block newBlock) {
+        if (!super.shouldBlockChangeReplaceBlockEntity(oldBlock, newBlock))
+            return false;
+
+        if (oldBlock instanceof AbstractSkullBlock && newBlock instanceof AbstractSkullBlock)
+            return false;
+        if (oldBlock instanceof AbstractBannerBlock && newBlock instanceof AbstractBannerBlock)
+            return false;
+        if (oldBlock instanceof FlowerPotBlock && newBlock instanceof FlowerPotBlock)
+            return false;
+
+        return true;
+    }
 
     @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})
     @Override

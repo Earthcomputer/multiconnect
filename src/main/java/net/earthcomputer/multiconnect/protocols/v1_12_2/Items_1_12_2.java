@@ -12,6 +12,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.item.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -51,6 +52,9 @@ public class Items_1_12_2 {
                     stack = newStack;
                 }
             }
+        }
+        if (stack.getItem() instanceof BannerItem || stack.getItem() == SHIELD) {
+            stack = invertBannerColors(stack);
         }
         if (stack.getTag() != null && stack.getTag().contains("ench", 9)) {
             stack = stack.copy();
@@ -118,6 +122,9 @@ public class Items_1_12_2 {
                 entityTag.putString("id", Registry.ENTITY_TYPE.getId(((SpawnEggItem) stack.getItem()).getEntityType(oldStack.getTag())).toString());
             stack = oldStack;
         }
+        if (stack.getItem() instanceof BannerItem || stack.getItem() == SHIELD) {
+            stack = invertBannerColors(stack);
+        }
         if (stack.hasEnchantments()) {
             stack = stack.copy();
             ListTag enchantments = stack.getEnchantments();
@@ -143,6 +150,20 @@ public class Items_1_12_2 {
             stack.getSubTag("display").putString("Name", displayName);
         }
         return Pair.of(stack, meta);
+    }
+
+    private static ItemStack invertBannerColors(ItemStack stack) {
+        stack = stack.copy();
+        CompoundTag blockEntityTag = stack.getSubTag("BlockEntityTag");
+        if (blockEntityTag != null && blockEntityTag.contains("Patterns", 9)) {
+            ListTag patterns = blockEntityTag.getList("Patterns", 10);
+            for (Tag t : patterns) {
+                CompoundTag pattern = (CompoundTag) t;
+                if (pattern.contains("Color", 3))
+                    pattern.putInt("Color", 15 - pattern.getInt("Color"));
+            }
+        }
+        return stack;
     }
 
     private static void register(ISimpleRegistry<Item> registry, Item item, int id, String name) {
