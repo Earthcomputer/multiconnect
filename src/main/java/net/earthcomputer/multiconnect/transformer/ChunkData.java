@@ -1,4 +1,4 @@
 package net.earthcomputer.multiconnect.transformer;
 
-public final class CustomPayload {
+public final class ChunkData {
 }

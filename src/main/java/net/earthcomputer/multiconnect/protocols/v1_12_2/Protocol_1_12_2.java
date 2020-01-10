@@ -5,10 +5,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.mojang.datafixers.Dynamic;
 import io.netty.buffer.Unpooled;
-import net.earthcomputer.multiconnect.impl.DataTrackerManager;
-import net.earthcomputer.multiconnect.impl.IIdList;
-import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
-import net.earthcomputer.multiconnect.impl.PacketInfo;
+import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
@@ -127,73 +124,35 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     private static final TrackedData<Integer> OLD_WOLF_COLLAR_COLOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
 
     public static void registerTranslators() {
-        ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
+            int verticalStripBitmask = CurrentChunkDataPacket.get().getVerticalStripBitmask();
             buf.enablePassthroughMode();
-            int chunkX = buf.readInt();
-            int chunkZ = buf.readInt();
-            boolean fullChunk = buf.readBoolean();
-            int verticalStripBitmask = buf.readVarInt();
-            buf.disablePassthroughMode();
-            int dataLength = buf.readVarInt();
-            if (dataLength > 2097152)
-                throw new RuntimeException("Chunk Packet trying to allocate too much memory on read.");
-            byte[] data = new byte[dataLength + 256 * 3];
-            buf.readBytes(data, 0, dataLength);
-
-            PacketByteBuf inBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data.clone()));
-            PacketByteBuf outBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data));
-            outBuf.writerIndex(0);
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
-                    int paletteSize = inBuf.readByte();
-                    outBuf.writeByte(paletteSize);
+                    int paletteSize = buf.readByte();
                     if (paletteSize <= 8) {
                         // array and bimap palette data look the same enough to use the same code here
-                        int size = inBuf.readVarInt();
-                        outBuf.writeVarInt(size);
-                        for (int i = 0; i < size; i++) {
-                            int stateId = inBuf.readVarInt();
-                            if (Block.STATE_IDS.get(stateId) == null) {
-                                LOGGER.warn("Got unknown state ID " + stateId + " in palette for chunk section (" + chunkX + ", " + sectionY + ", " + chunkZ + ")");
-                                stateId = 0;
-                            }
-                            outBuf.writeVarInt(stateId);
-                        }
+                        int size = buf.readVarInt();
+                        for (int i = 0; i < size; i++)
+                            buf.readVarInt(); // state id
                     } else {
-                        inBuf.readVarInt();
+                        buf.disablePassthroughMode();
+                        buf.readVarInt(); // dummy 0
+                        buf.enablePassthroughMode();
                     }
-                    long[] chunkData = new long[paletteSize * 64];
-                    inBuf.readLongArray(chunkData);
-                    outBuf.writeLongArray(chunkData);
-                    byte[] light = new byte[16 * 16 * 16 / 2];
-                    inBuf.readBytes(light);
-                    outBuf.writeBytes(light);
-                    // since this thread is async, this code may be run before the join game packet is
-                    // processed, and therefore world would be null
-                    while (MinecraftClient.getInstance().world == null) {
-                        try {
-                            Thread.sleep(1);
-                        } catch (InterruptedException e) {
-                            return;
-                        }
-                    }
-                    if (MinecraftClient.getInstance().world.dimension.hasSkyLight()) {
-                        light = new byte[16 * 16 * 16 / 2];
-                        inBuf.readBytes(light);
-                        outBuf.writeBytes(light);
-                    }
+                    buf.readLongArray(new long[paletteSize * 64]); // chunk data
+                    buf.readBytes(new byte[16 * 16 * 16 / 2]); // block light
+                    assert MinecraftClient.getInstance().world != null;
+                    if (MinecraftClient.getInstance().world.dimension.hasSkyLight())
+                        buf.readBytes(new byte[16 * 16 * 16 / 2]); // sky light
                 }
             }
-
-            // biomes
-            if (fullChunk) {
-                for (int i = 0; i < 256; i++)
-                    outBuf.writeInt(inBuf.readByte() & 0xff);
+            buf.disablePassthroughMode();
+            if (CurrentChunkDataPacket.get().isFullChunk()) {
+                for (int i = 0; i < 256; i++) {
+                    buf.pendingRead(Integer.class, buf.readByte() & 0xff);
+                }
             }
-
-            buf.pendingRead(VarInt.class, new VarInt(outBuf.writerIndex()));
-            buf.pendingRead(byte[].class, data);
-
             buf.applyPendingReads();
         });
 

@@ -1,11 +1,13 @@
 package net.earthcomputer.multiconnect.protocols.v1_14_4;
 
 import io.netty.buffer.Unpooled;
+import net.earthcomputer.multiconnect.impl.CurrentChunkDataPacket;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15;
+import net.earthcomputer.multiconnect.transformer.ChunkData;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.BellBlock;
 import net.minecraft.block.Block;
@@ -48,62 +50,45 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
     private static final TrackedData<Float> OLD_WOLF_HEALTH = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.FLOAT);
 
     public static void registerTranslators() {
+        ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
+            if (!CurrentChunkDataPacket.get().isFullChunk())
+                return;
+            int verticalStripBitmask = CurrentChunkDataPacket.get().getVerticalStripBitmask();
+            buf.enablePassthroughMode();
+            for (int sectionY = 0; sectionY < 16; sectionY++) {
+                if ((verticalStripBitmask & (1 << sectionY)) != 0) {
+                    new ChunkSection(sectionY << 4).fromPacket(buf);
+                }
+            }
+            buf.disablePassthroughMode();
+
+            Biome[] biomeData = new Biome[256];
+            for (int i = 0; i < 256; i++) {
+                int biomeId = buf.readInt();
+                biomeData[i] = Registry.BIOME.get(biomeId);
+                if (biomeData[i] == null)
+                    throw new RuntimeException("Received invalid biome id: " + biomeId);
+            }
+
+            PendingBiomeData.setPendingBiomeData(CurrentChunkDataPacket.get().getX(), CurrentChunkDataPacket.get().getZ(), biomeData);
+
+            buf.applyPendingReads();
+        });
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            int chunkX = buf.readInt();
-            int chunkZ = buf.readInt();
+            buf.readInt();
+            buf.readInt();
             boolean isFullChunk = buf.readBoolean();
             if (!isFullChunk) {
                 buf.disablePassthroughMode();
                 buf.applyPendingReads();
                 return;
             }
-            int verticalStripBitmask = buf.readVarInt();
+            buf.readVarInt();
             buf.readCompoundTag(); // heightmaps
             buf.disablePassthroughMode();
-
-            int dataLength = buf.readVarInt();
-            if (dataLength > 2097152)
-                throw new RuntimeException("Chunk Packet trying to allocate too much memory on read.");
-            byte[] data = new byte[dataLength];
-            buf.readBytes(data);
-            PacketByteBuf inBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data.clone()));
-            PacketByteBuf outBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data));
-            outBuf.writerIndex(0);
-
-            for (int sectionY = 0; sectionY < 16; sectionY++) {
-                if ((verticalStripBitmask & (1 << sectionY)) != 0) {
-                    new ChunkSection(sectionY << 4).fromPacket(inBuf);
-                }
-            }
-            int len = inBuf.readerIndex();
-            inBuf.readerIndex(0);
-            byte[] bytes = new byte[len];
-            inBuf.readBytes(bytes);
-            outBuf.writeBytes(bytes);
-
-            int[] rawBiomeData = new int[256];
-            Biome[] biomeData = new Biome[256];
-            for (int i = 0; i < 256; i++) {
-                rawBiomeData[i] = inBuf.readInt();
-                biomeData[i] = Registry.BIOME.get(rawBiomeData[i]);
-                if (biomeData[i] == null)
-                    throw new RuntimeException("Received invalid biome id: " + rawBiomeData[i]);
-            }
-            PendingBiomeData.setPendingBiomeData(chunkX, chunkZ, biomeData);
-
-            for (int y = 0; y < 64; y++) {
-                for (int z = 0; z < 4; z++) {
-                    for (int x = 0; x < 4; x++) {
-                        int centerX = (x << 2) + 2;
-                        int centerZ = (z << 2) + 2;
-                        buf.pendingRead(Integer.class, rawBiomeData[centerZ << 4 | centerX]);
-                    }
-                }
-            }
-
-            buf.pendingRead(VarInt.class, new VarInt(outBuf.writerIndex()));
-            buf.pendingRead(byte[].class, data);
+            for (int i = 0; i < 1024; i++)
+                buf.pendingRead(Integer.class, 0);
             buf.applyPendingReads();
         });
 

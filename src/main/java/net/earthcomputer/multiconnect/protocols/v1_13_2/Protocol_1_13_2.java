@@ -2,16 +2,14 @@ package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
 import com.google.gson.JsonParseException;
 import io.netty.buffer.Unpooled;
+import net.earthcomputer.multiconnect.impl.CurrentChunkDataPacket;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
-import net.earthcomputer.multiconnect.transformer.InboundTranslator;
-import net.earthcomputer.multiconnect.transformer.OutboundTranslator;
-import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
+import net.earthcomputer.multiconnect.transformer.*;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
-import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.enums.Instrument;
@@ -156,63 +154,38 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     public static void registerTranslators() {
-        ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
-            buf.enablePassthroughMode();
-            int chunkX = buf.readInt();
-            int chunkZ = buf.readInt();
-            boolean fullChunk = buf.readBoolean();
-            int verticalStripBitmask = buf.readVarInt();
-            buf.disablePassthroughMode();
-
-            buf.pendingRead(CompoundTag.class, new CompoundTag()); // heightmaps
-
-            int dataLength = buf.readVarInt();
-            if (dataLength > 2097152)
-                throw new RuntimeException("Chunk Packet trying to allocate too much memory on read.");
-            byte[] data = new byte[dataLength];
-            buf.readBytes(data);
-
-            PacketByteBuf inBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data.clone()));
-            PacketByteBuf outBuf = new PacketByteBuf(Unpooled.wrappedBuffer(data));
-            outBuf.writerIndex(0);
-
+        ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
             PendingLightData lightData = new PendingLightData();
-            PendingLightData.setInstance(chunkX, chunkZ, lightData);
-
+            PendingLightData.setInstance(CurrentChunkDataPacket.get().getX(), CurrentChunkDataPacket.get().getZ(), lightData);
+            int verticalStripBitmask = CurrentChunkDataPacket.get().getVerticalStripBitmask();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
-                    outBuf.writeShort(0); // non-empty block count
-                    PalettedContainer<BlockState> tempContainer = new PalettedContainer<>(BLOCK_STATE_PALETTE, Block.STATE_IDS, NbtHelper::toBlockState, NbtHelper::fromBlockState, Blocks.AIR.getDefaultState());
-                    tempContainer.fromPacket(inBuf);
-                    tempContainer.toPacket(outBuf);
+                    buf.pendingRead(Short.class, (short)0);
+                    buf.enablePassthroughMode();
+                    new PalettedContainer<>(BLOCK_STATE_PALETTE, Block.STATE_IDS, NbtHelper::toBlockState, NbtHelper::fromBlockState, Blocks.AIR.getDefaultState()).fromPacket(buf);
+                    buf.disablePassthroughMode();
                     byte[] light = new byte[16 * 16 * 16 / 2];
-                    inBuf.readBytes(light);
+                    buf.readBytes(light);
                     lightData.setBlockLight(sectionY, light);
-                    // since this thread is async, this code may be run before the join game packet is
-                    // processed, and therefore world would be null
-                    while (MinecraftClient.getInstance().world == null) {
-                        try {
-                            Thread.sleep(1);
-                        } catch (InterruptedException e) {
-                            return;
-                        }
-                    }
+                    assert MinecraftClient.getInstance().world != null;
                     if (MinecraftClient.getInstance().world.dimension.hasSkyLight()) {
                         light = new byte[16 * 16 * 16 / 2];
-                        inBuf.readBytes(light);
+                        buf.readBytes(light);
                         lightData.setSkyLight(sectionY, light);
                     }
                 }
             }
+            buf.applyPendingReads();
+        });
 
-            // biomes
-            if (fullChunk) {
-                for (int i = 0; i < 256; i++)
-                    outBuf.writeInt(inBuf.readInt());
-            }
-
-            buf.pendingRead(VarInt.class, new VarInt(outBuf.writerIndex()));
-            buf.pendingRead(byte[].class, data);
+        ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readInt(); // x
+            buf.readInt(); // z
+            buf.readBoolean(); // full chunk
+            buf.readVarInt(); // vertical strip bitmask
+            buf.disablePassthroughMode();
+            buf.pendingRead(CompoundTag.class, new CompoundTag()); // heightmaps
             buf.applyPendingReads();
         });
 

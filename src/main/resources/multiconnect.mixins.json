@@ -27,7 +27,9 @@
     "MixinPacketHandler",
     "MixinReloadableResourceManagerImpl",
     "MixinSplashScreen",
-    "MixinWorldChunk"
+    "MixinWorldChunk",
+    "MixinChunkDataS2C",
+    "MixinClientPlayNetworkHandler"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -40,7 +40,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow public abstract void onVelocityUpdate(EntityVelocityUpdateS2CPacket entityVelocityUpdateS2CPacket_1);
 
-    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/packet/ChunkDataS2CPacket;getX()I"))
+    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/packet/ChunkDataS2CPacket;getReadBuffer()Lnet/minecraft/util/PacketByteBuf;", shift = At.Shift.AFTER))
     private void onChunkDataPost(ChunkDataS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             if (!PendingChunkDataPackets.isProcessingQueuedPackets()) {
