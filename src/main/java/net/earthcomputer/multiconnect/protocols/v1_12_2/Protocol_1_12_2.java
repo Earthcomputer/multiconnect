@@ -455,6 +455,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.pendingWrite(String.class, command, val -> buf.writeString(val, 32767));
             HitResult hitResult = MinecraftClient.getInstance().crosshairTarget;
             boolean hasTarget = hitResult != null && hitResult.getType() == HitResult.Type.BLOCK;
+            buf.pendingWrite(Boolean.class, () -> false, buf::writeBoolean);
             buf.pendingWrite(Boolean.class, () -> hasTarget, buf::writeBoolean);
             if (hasTarget)
                 buf.pendingWrite(BlockPos.class, ((BlockHitResult) hitResult)::getBlockPos, buf::writeBlockPos);
