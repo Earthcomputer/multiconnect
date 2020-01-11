@@ -582,7 +582,7 @@ public class Items_1_12_2 {
         register(registry, COMMAND_BLOCK_MINECART, 422, "command_block_minecart");
         register(registry, MUTTON, 423, "mutton");
         register(registry, COOKED_MUTTON, 424, "cooked_mutton");
-        register(registry, WHITE_BANNER, 425, "banner");
+        register(registry, BLACK_BANNER, 425, "banner");
         register(registry, END_CRYSTAL, 426, "end_crystal");
         register(registry, SPRUCE_DOOR, 427, "spruce_door");
         register(registry, BIRCH_DOOR, 428, "birch_door");

@@ -11,6 +11,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.*;
+import net.minecraft.recipe.Recipe;
 import net.minecraft.server.command.CommandSource;
 import net.minecraft.tag.RegistryTagContainer;
 import net.minecraft.tag.RegistryTagManager;
@@ -23,7 +24,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 @Mixin(ClientPlayNetworkHandler.class)
@@ -32,6 +35,8 @@ public abstract class MixinClientPlayNetworkHandler {
     @Shadow private MinecraftClient client;
 
     @Shadow public abstract void onSynchronizeTags(SynchronizeTagsS2CPacket packet);
+
+    @Shadow public abstract void onSynchronizeRecipes(SynchronizeRecipesS2CPacket packet);
 
     @Shadow public abstract void onCommandTree(CommandTreeS2CPacket packet);
 
@@ -47,6 +52,13 @@ public abstract class MixinClientPlayNetworkHandler {
             toTagContainer(iTagManager.getFluids(), protocol.getFluidTags());
             toTagContainer(iTagManager.getEntityTypes(), protocol.getEntityTypeTags());
             onSynchronizeTags(new SynchronizeTagsS2CPacket(tagManager));
+
+            List<Recipe<?>> recipes = new ArrayList<>();
+            List<RecipeInfo<?>> recipeInfos = protocol.getCraftingRecipes();
+            for (int i = 0; i < recipeInfos.size(); i++) {
+                recipes.add(recipeInfos.get(i).create(new Identifier(String.valueOf(i))));
+            }
+            onSynchronizeRecipes(new SynchronizeRecipesS2CPacket(recipes));
 
             CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
             Commands_1_12_2.register(dispatcher, null);

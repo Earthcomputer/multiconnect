@@ -415,7 +415,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         });
 
         ProtocolRegistry.registerOutboundTranslator(CraftRequestC2SPacket.class, buf -> {
-            buf.passthroughWrite(Integer.class); // sync id
+            buf.passthroughWrite(Byte.class); // sync id
             Supplier<Identifier> recipeId = buf.skipWrite(Identifier.class);
             buf.pendingWrite(VarInt.class, () -> {
                 try {
@@ -1483,6 +1483,10 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             EntityType.ARROW,
             EntityType.SPECTRAL_ARROW));
         return tags;
+    }
+
+    public List<RecipeInfo<?>> getCraftingRecipes() {
+        return Recipes_1_12_2.getRecipes();
     }
 
     @Override

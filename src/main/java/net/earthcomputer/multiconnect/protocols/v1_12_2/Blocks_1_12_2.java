@@ -55,8 +55,8 @@ public class Blocks_1_12_2 {
         final int flowerPotId = Registry.BLOCK.getRawId(FLOWER_POT);
         final int skullId = Registry.BLOCK.getRawId(SKELETON_SKULL);
         final int bedId = Registry.BLOCK.getRawId(WHITE_BED);
-        final int bannerId = Registry.BLOCK.getRawId(WHITE_BANNER);
-        final int wallBannerId = Registry.BLOCK.getRawId(WHITE_WALL_BANNER);
+        final int bannerId = Registry.BLOCK.getRawId(BLACK_BANNER);
+        final int wallBannerId = Registry.BLOCK.getRawId(BLACK_WALL_BANNER);
 
         for (int blockId = 1; blockId < 256; blockId++) {
             if (blockId == torchId) {
@@ -126,7 +126,7 @@ public class Blocks_1_12_2 {
                 registry.registerInPlace(BROWN_BANNER, 12 << 16 | blockId, new Identifier("brown_banner"), false);
                 registry.registerInPlace(GREEN_BANNER, 13 << 16 | blockId, new Identifier("green_banner"), false);
                 registry.registerInPlace(RED_BANNER, 14 << 16 | blockId, new Identifier("red_banner"), false);
-                registry.registerInPlace(BLACK_BANNER, 15 << 16 | blockId, new Identifier("black_banner"), false);
+                registry.registerInPlace(WHITE_BANNER, 15 << 16 | blockId, new Identifier("black_banner"), false);
             } else if (blockId == wallBannerId) {
                 registry.registerInPlace(ORANGE_WALL_BANNER, 1 << 16 | blockId, new Identifier("orange_wall_banner"), false);
                 registry.registerInPlace(MAGENTA_WALL_BANNER, 2 << 16 | blockId, new Identifier("magenta_wall_banner"), false);
@@ -142,7 +142,7 @@ public class Blocks_1_12_2 {
                 registry.registerInPlace(BROWN_WALL_BANNER, 12 << 16 | blockId, new Identifier("brown_wall_banner"), false);
                 registry.registerInPlace(GREEN_WALL_BANNER, 13 << 16 | blockId, new Identifier("green_wall_banner"), false);
                 registry.registerInPlace(RED_WALL_BANNER, 14 << 16 | blockId, new Identifier("red_wall_banner"), false);
-                registry.registerInPlace(BLACK_WALL_BANNER, 15 << 16 | blockId, new Identifier("black_wall_banner"), false);
+                registry.registerInPlace(WHITE_WALL_BANNER, 15 << 16 | blockId, new Identifier("black_wall_banner"), false);
             } else {
                 for (int meta = 1; meta < 16; meta++) {
                     String fixedName = BlockStateFlattening.lookupStateBlock(blockId << 4 | meta);
@@ -348,8 +348,8 @@ public class Blocks_1_12_2 {
         register(registry, COAL_BLOCK, 173, "coal_block");
         register(registry, PACKED_ICE, 174, "packed_ice");
         register(registry, SUNFLOWER, 175, "double_plant");
-        register(registry, WHITE_BANNER, 176, "standing_banner");
-        register(registry, WHITE_WALL_BANNER, 177, "wall_banner");
+        register(registry, BLACK_BANNER, 176, "standing_banner");
+        register(registry, BLACK_WALL_BANNER, 177, "wall_banner");
         register(registry, DAYLIGHT_DETECTOR_INVERTED, 178, "daylight_detector_inverted");
         register(registry, RED_SANDSTONE, 179, "red_sandstone");
         register(registry, RED_SANDSTONE_STAIRS, 180, "red_sandstone_stairs");
