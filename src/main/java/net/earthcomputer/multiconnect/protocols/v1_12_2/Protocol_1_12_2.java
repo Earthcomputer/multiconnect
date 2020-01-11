@@ -23,6 +23,7 @@ import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.decoration.painting.PaintingMotive;
 import net.minecraft.entity.effect.StatusEffect;
@@ -379,6 +380,26 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.applyPendingReads();
         });
 
+        ProtocolRegistry.registerInboundTranslator(EntitySpawnS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // entity id
+            buf.readUuid(); // uuid
+            int type = buf.readByte();
+            if (type != 70) { // falling block
+                buf.disablePassthroughMode();
+                buf.applyPendingReads();
+                return;
+            }
+            buf.readDouble(); // x
+            buf.readDouble(); // y
+            buf.readDouble(); // z
+            buf.readByte(); // pitch
+            buf.readByte(); // yaw
+            buf.disablePassthroughMode();
+            buf.pendingRead(Integer.class, Blocks_1_12_2.convertToStateRegistryId(buf.readInt()));
+            buf.applyPendingReads();
+        });
+
         ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<ItemStack>() {
             @Override
             public void onRead(TransformerByteBuf buf) {
@@ -723,6 +744,18 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     protected void removeTrackedDataHandlers() {
         super.removeTrackedDataHandlers();
         removeTrackedDataHandler(TrackedDataHandlerRegistry.OPTIONAL_TEXT_COMPONENT);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T readTrackedData(TrackedDataHandler<T> handler, PacketByteBuf buf) {
+        if (handler == TrackedDataHandlerRegistry.OPTIONAL_BLOCK_STATE) {
+            int stateId = buf.readVarInt();
+            if (stateId == 0)
+                return (T) Optional.empty();
+            return (T) Optional.ofNullable(Block.STATE_IDS.get(Blocks_1_12_2.convertToStateRegistryId(stateId)));
+        }
+        return super.readTrackedData(handler, buf);
     }
 
     @Override
