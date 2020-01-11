@@ -46,6 +46,7 @@ public abstract class AbstractProtocol {
         recomputeBlockStates();
         if (!resourceReload) {
             removeTrackedDataHandlers();
+            MinecraftClient.getInstance().getLanguageManager().apply(MinecraftClient.getInstance().getResourceManager());
         }
         ((IMinecraftClient) MinecraftClient.getInstance()).callInitializeSearchableContainers();
         ((IMinecraftClient) MinecraftClient.getInstance()).getSearchManager().apply(MinecraftClient.getInstance().getResourceManager());

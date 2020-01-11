@@ -1,6 +1,5 @@
 package net.earthcomputer.multiconnect.mixin;
 
-import net.earthcomputer.multiconnect.api.EnumProtocol;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.IMixinScreen;
 import net.minecraft.client.MinecraftClient;
@@ -19,7 +18,7 @@ public abstract class MixinMultiplayerScreen {
     public void createButtons(CallbackInfo ci) {
         IMixinScreen screen = (IMixinScreen) this;
 
-        protocolSelector = new ButtonWidget(5, 5, 70, 20, ConnectionInfo.forcedProtocolVersion.getDisplayName(), (buttonWidget_1) ->
+        protocolSelector = new ButtonWidget(5, 5, 70, 20, ConnectionInfo.forcedProtocolVersion.getName(), (buttonWidget_1) ->
                 ConnectionInfo.forcedProtocolVersion = ConnectionInfo.forcedProtocolVersion.next()
         );
 
@@ -29,6 +28,6 @@ public abstract class MixinMultiplayerScreen {
     @Inject(method = "render", at = @At("RETURN"))
     public void drawScreen(int p_drawScreen_1_, int p_drawScreen_2_, float p_drawScreen_3_, CallbackInfo ci) {
         MinecraftClient.getInstance().textRenderer.drawWithShadow("<- Change Version", 80, 10, 0xFFFFFF);
-        protocolSelector.setMessage(ConnectionInfo.forcedProtocolVersion.getDisplayName());
+        protocolSelector.setMessage(ConnectionInfo.forcedProtocolVersion.getName());
     }
 }

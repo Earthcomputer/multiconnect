@@ -31,7 +31,8 @@
     "MixinSplashScreen",
     "MixinWorldChunk",
     "MixinChunkDataS2C",
-    "MixinClientPlayNetworkHandler"
+    "MixinClientPlayNetworkHandler",
+    "MixinTranslationStorage"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,5 +1,8 @@
 package net.earthcomputer.multiconnect.api;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public enum EnumProtocol {
 
     AUTO("Auto", -1),
@@ -15,31 +18,46 @@ public enum EnumProtocol {
     V1_13("1.13", Protocols.V1_13),
     V1_12_2("1.12.2", Protocols.V1_12_2);
 
-    private final int dataValue;
+    private final int value;
 
-    private final String displayName;
+    private final String name;
 
     EnumProtocol(final String name, final int value) {
-        dataValue = value;
-        displayName = name;
+        this.value = value;
+        this.name = name;
     }
 
-    public int getValue() { return dataValue; }
+    public int getValue() {
+        return value;
+    }
 
-    public String getDisplayName() { return displayName; }
+    public String getName() {
+        return name;
+    }
 
-    private static EnumProtocol[] dataValues = values();
+    private static final EnumProtocol[] VALUES = values();
+    private static final Map<Integer, EnumProtocol> BY_VALUE = new HashMap<>();
+
+    public static EnumProtocol byValue(int value) {
+        return BY_VALUE.get(value);
+    }
 
     public EnumProtocol next() {
         EnumProtocol nextValue = AUTO;
 
-        for (EnumProtocol protocolValue : dataValues) {
-            if (protocolValue.dataValue > dataValue) {
+        for (EnumProtocol protocolValue : VALUES) {
+            if (protocolValue.value > value && protocolValue.value < nextValue.value) {
                 nextValue = protocolValue;
             }
         }
 
         return nextValue;
+    }
+
+    static {
+        for (EnumProtocol value : VALUES) {
+            BY_VALUE.put(value.getValue(), value);
+        }
     }
 
 }
