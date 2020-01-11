@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.mixin;
 
+import net.earthcomputer.multiconnect.api.EnumProtocol;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.GetProtocolPacketListener;
 import net.earthcomputer.multiconnect.impl.IConnectScreen;
@@ -68,6 +69,8 @@ public class MixinConnectScreen1 {
         connectScreen.multiconnect_setVersionRequestConnection(null);
 
         LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion);
+        ConnectionInfo.protocolVersion = ConnectionInfo.forcedProtocolVersion != EnumProtocol.AUTO ? ConnectionInfo.forcedProtocolVersion.getValue() : ConnectionInfo.protocolVersion;
+        LogManager.getLogger("multiconnect").info("Using Protocol: " + ConnectionInfo.protocolVersion);
     }
 
     @Redirect(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;)V", ordinal = 0))
