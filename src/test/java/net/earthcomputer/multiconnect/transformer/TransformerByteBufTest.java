@@ -175,6 +175,30 @@ public class TransformerByteBufTest {
     }
 
     @Test
+    public void testAddMore() {
+        TransformerByteBuf buf = inboundBuf(new TranslatorRegistry()
+                    .registerInboundTranslator(1, LoginHelloS2CPacket.class, buf1 -> {
+                        buf1.enablePassthroughMode();
+                        buf1.readBoolean();
+                        buf1.pendingRead(Boolean.class, false);
+                        buf1.applyPendingReads();
+                    })
+                    .registerInboundTranslator(0, LoginHelloS2CPacket.class, buf1 -> {
+                        buf1.enablePassthroughMode();
+                        buf1.readBoolean();
+                        buf1.disablePassthroughMode();
+                        buf1.pendingRead(Boolean.class, false);
+                        buf1.pendingRead(Boolean.class, false);
+                        buf1.applyPendingReads();
+                    }),
+                1);
+        assertTrue(buf.readBoolean());
+        assertFalse(buf.readBoolean());
+        assertFalse(buf.readBoolean());
+        assertFalse(buf.readBoolean());
+    }
+
+    @Test
     public void testUntransformedWrite() {
         TransformerByteBuf buf = outboundBuf(new TranslatorRegistry(), 10);
         buf.writeByte(1);

@@ -93,10 +93,14 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     public void applyPendingReads() {
         getStackFrame().pendingPendingReads.forEach((k, v) -> {
-            if (getStackFrame().pendingReads.containsKey(k))
-                getStackFrame().pendingReads.get(k).addAll(v);
-            else
+            if (getStackFrame().pendingReads.containsKey(k)) {
+                Deque<PendingValue<?>> dest = getStackFrame().pendingReads.get(k);
+                Iterator<PendingValue<?>> itr = v.descendingIterator();
+                while (itr.hasNext())
+                    dest.addFirst(itr.next());
+            } else {
                 getStackFrame().pendingReads.put(k, v);
+            }
         });
         getStackFrame().pendingPendingReads.clear();
     }
@@ -331,9 +335,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
     private static final class StackFrame {
         final Class<?> type;
         int version;
-        final Map<Class<?>, Queue<PendingValue<?>>> pendingReads = new HashMap<>();
+        final Map<Class<?>, Deque<PendingValue<?>>> pendingReads = new HashMap<>();
         boolean passthroughMode = false;
-        final Map<Class<?>, Queue<PendingValue<?>>> pendingPendingReads = new HashMap<>();
+        final Map<Class<?>, Deque<PendingValue<?>>> pendingPendingReads = new HashMap<>();
         final TreeMap<Integer, Queue<WriteInstruction>> writeInstructions = new TreeMap<>(Comparator.reverseOrder());
 
         public StackFrame(Class<?> type, int version) {
