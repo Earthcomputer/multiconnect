@@ -1,6 +1,10 @@
 ![Project icon](https://raw.githubusercontent.com/Earthcomputer/multiconnect/master/src/main/resources/assets/multiconnect/icon.png)
 
 # multiconnect
+![GitHub license](https://img.shields.io/github/license/Earthcomputer/multiconnect.svg)
+![GitHub issues](https://img.shields.io/github/issues/Earthcomputer/multiconnect.svg)
+![GitHub tag](https://img.shields.io/github/tag/Earthcomputer/multiconnect.svg)
+
 A mod to enable a Minecraft client to connect to multiple server versions.
 
 ## Installation for Players
