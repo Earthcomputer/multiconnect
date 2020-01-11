@@ -86,7 +86,7 @@ public class Entities_1_12_2 {
         register(registry, EntityType.WOLF, 95, "wolf", "Wolf");
         register(registry, EntityType.MOOSHROOM, 96, "mooshroom", "MushroomCow");
         register(registry, EntityType.SNOW_GOLEM, 97, "snowman", "SnowMan");
-        register(registry, EntityType.OCELOT, 98, "ocelot", "Ozelot");
+        register(registry, EntityType.CAT, 98, "ocelot", "Ozelot");
         register(registry, EntityType.IRON_GOLEM, 99, "villager_golem", "VillagerGolem");
         register(registry, EntityType.HORSE, 100, "horse", "Horse");
         register(registry, EntityType.RABBIT, 101, "rabbit", "Rabbit");
