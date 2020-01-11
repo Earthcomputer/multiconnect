@@ -9,6 +9,8 @@
     "MixinConnectScreen1",
     "MixinHandshakePacket",
     "MixinMinecraftClient",
+    "MixinScreen",
+    "MixinMultiplayerScreen",
     "MixinServerListIcon",
     "MixinNetworkState",
     "MixinClientConnection",
