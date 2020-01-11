@@ -21,10 +21,13 @@ This section is for when you are developing your own mod and want to use the mul
    }
    ```
    - Note: this repositories block is NOT the same as the one inside the `buildscript {}` block.
-1. If you want to use the API inside your mod, you will have to jar-in-jar it for the release. To do this, add the following to your `dependencies {}` block:
+1. If you want to use the API inside your mod, you will have to jar-in-jar it for the release and add it to the classpath. To do this, add the following to your `dependencies {}` block:
    ```groovy
    dependencies {
       // ...
+      modCompile('net.earthcomputer.multiconnect:<version>:api') {
+         transitive = false
+      }
       include('net.earthcomputer:multiconnect:<version>:api') {
          transitive = false
       }
@@ -32,25 +35,15 @@ This section is for when you are developing your own mod and want to use the mul
    ```
    - Note: replace `<version>` with the version of multiconnect you want to depend on.
    - Note: SKIP this step if your mod is NOT using the API in any way.
-1. If you want to compile your mod with the API, or if you want to run multiconnect in the development environment, add the following to your `dependencies {}` block:
+1. If you want to run multiconnect in the IDE alongside your mod, add the following to your `dependencies {}` block:
    ```groovy
    dependencies {
       // ...
-      compileOnly('net.earthcomputer:multiconnect:<version>:api') {
+      modCompile('net.earthcomputer:multiconnect:<version>') {
          transitive = false
       }
    }
    ```
-1. If you want to run multiconnect in the IDE alongside your mod, follow the previous step, and additionally add the following to your `dependencies {}` block:
-   ```groovy
-   dependencies {
-      // ...
-      compileOnly('net.earthcomputer:multiconnect:<version>') {
-         transitive = false
-      }
-   }
-   ```
-   - Note: this looks the same as the previous step, except without `:api` on the end. You need to add both the code from this step and from the previous step.
 
 ## Contributing
 1. Clone the repository
