@@ -69,7 +69,7 @@ public class MixinConnectScreen1 {
         connectScreen.multiconnect_setVersionRequestConnection(null);
 
         LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion);
-        ConnectionInfo.protocolVersion = ConnectionInfo.forcedProtocolVersion != EnumProtocol.AUTO.getValue() ? ConnectionInfo.forcedProtocolVersion : ConnectionInfo.protocolVersion;
+        ConnectionInfo.protocolVersion = ConnectionInfo.forcedProtocolVersion != EnumProtocol.AUTO ? ConnectionInfo.forcedProtocolVersion.getValue() : ConnectionInfo.protocolVersion;
         LogManager.getLogger("multiconnect").info("Using Protocol: " + ConnectionInfo.protocolVersion);
     }
 
