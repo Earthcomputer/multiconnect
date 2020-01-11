@@ -1,5 +1,8 @@
 package net.earthcomputer.multiconnect.api;
 
+/**
+ * Constants for each protocol number
+ */
 public class Protocols {
 
     public static final int V1_15_1 = 575;

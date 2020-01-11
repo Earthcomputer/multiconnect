@@ -32,6 +32,12 @@ public class MixinConnectScreen1 {
 
     @Inject(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;connect(Ljava/net/InetAddress;IZ)Lnet/minecraft/network/ClientConnection;"), cancellable = true)
     public void beforeConnect(CallbackInfo ci) throws UnknownHostException {
+        if (ConnectionInfo.forcedProtocolVersion != EnumProtocol.AUTO) {
+            ConnectionInfo.protocolVersion = ConnectionInfo.forcedProtocolVersion.getValue();
+            LogManager.getLogger("multiconnect").info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ConnectionInfo.forcedProtocolVersion.getName() + ")");
+            return;
+        }
+
         Screen screen = MinecraftClient.getInstance().currentScreen;
         if (!(screen instanceof ConnectScreen))
             return;
@@ -68,9 +74,7 @@ public class MixinConnectScreen1 {
 
         connectScreen.multiconnect_setVersionRequestConnection(null);
 
-        LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion);
-        ConnectionInfo.protocolVersion = ConnectionInfo.forcedProtocolVersion != EnumProtocol.AUTO ? ConnectionInfo.forcedProtocolVersion.getValue() : ConnectionInfo.protocolVersion;
-        LogManager.getLogger("multiconnect").info("Using Protocol: " + ConnectionInfo.protocolVersion);
+        LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion + " (" + EnumProtocol.byValue(ConnectionInfo.protocolVersion).getName() + ")");
     }
 
     @Redirect(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;)V", ordinal = 0))

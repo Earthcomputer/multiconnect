@@ -3,6 +3,9 @@ package net.earthcomputer.multiconnect.api;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Enum constants for each protocol, including the number and name of each
+ */
 public enum EnumProtocol {
 
     AUTO("Auto", -1),
