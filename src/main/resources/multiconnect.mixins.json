@@ -9,8 +9,7 @@
     "MixinConnectScreen1",
     "MixinHandshakePacket",
     "MixinMinecraftClient",
-    "MixinScreen",
-    "MixinMultiplayerScreen",
+    "MixinAddServerScreen",
     "MixinServerListIcon",
     "MixinNetworkState",
     "MixinClientConnection",
@@ -32,7 +31,9 @@
     "MixinWorldChunk",
     "MixinChunkDataS2C",
     "MixinClientPlayNetworkHandler",
-    "MixinTranslationStorage"
+    "MixinTranslationStorage",
+    "MixinServerInfo",
+    "MixinDisconnectedScreen"
   ],
   "injectors": {
     "defaultRequire": 1

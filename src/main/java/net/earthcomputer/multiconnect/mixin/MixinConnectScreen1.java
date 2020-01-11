@@ -1,15 +1,13 @@
 package net.earthcomputer.multiconnect.mixin;
 
 import net.earthcomputer.multiconnect.api.EnumProtocol;
-import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.impl.GetProtocolPacketListener;
-import net.earthcomputer.multiconnect.impl.IConnectScreen;
-import net.earthcomputer.multiconnect.impl.IHandshakePacket;
+import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.network.ServerInfo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
@@ -32,10 +30,14 @@ public class MixinConnectScreen1 {
 
     @Inject(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;connect(Ljava/net/InetAddress;IZ)Lnet/minecraft/network/ClientConnection;"), cancellable = true)
     public void beforeConnect(CallbackInfo ci) throws UnknownHostException {
-        if (ConnectionInfo.forcedProtocolVersion != EnumProtocol.AUTO) {
-            ConnectionInfo.protocolVersion = ConnectionInfo.forcedProtocolVersion.getValue();
-            LogManager.getLogger("multiconnect").info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ConnectionInfo.forcedProtocolVersion.getName() + ")");
-            return;
+        ServerInfo serverInfo = MinecraftClient.getInstance().getCurrentServerEntry();
+        if (serverInfo != null) {
+            EnumProtocol forcedVersion = ((IServerInfo) serverInfo).multiconnect_getForcedVersion();
+            if (forcedVersion != EnumProtocol.AUTO) {
+                ConnectionInfo.protocolVersion = forcedVersion.getValue();
+                LogManager.getLogger("multiconnect").info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + forcedVersion.getName() + ")");
+                return;
+            }
         }
 
         Screen screen = MinecraftClient.getInstance().currentScreen;
