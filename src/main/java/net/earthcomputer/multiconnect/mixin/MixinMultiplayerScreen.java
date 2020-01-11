@@ -19,7 +19,7 @@ public abstract class MixinMultiplayerScreen {
     public void createButtons(CallbackInfo ci) {
         IMixinScreen screen = (IMixinScreen) this;
 
-        protocolSelector = new ButtonWidget(5, 5, 70, 20, EnumProtocol.getEnumNameForValue(ConnectionInfo.forcedProtocolVersion), (buttonWidget_1) ->
+        protocolSelector = new ButtonWidget(5, 5, 70, 20, EnumProtocol.getEnumNameForValue(ConnectionInfo.forcedProtocolVersion).replace("_", ".").replace("V", ""), (buttonWidget_1) ->
                 ConnectionInfo.forcedProtocolVersion = EnumProtocol.valueOf(EnumProtocol.getEnumNameForValue(ConnectionInfo.forcedProtocolVersion)).next().getValue());
 
         screen.addGuiButtonToList(protocolSelector);
@@ -28,6 +28,6 @@ public abstract class MixinMultiplayerScreen {
     @Inject(method = "render", at = @At("RETURN"))
     public void drawScreen(int p_drawScreen_1_, int p_drawScreen_2_, float p_drawScreen_3_, CallbackInfo ci) {
         MinecraftClient.getInstance().textRenderer.drawWithShadow("<- Change Version", 80, 10, 0xFFFFFF);
-        protocolSelector.setMessage(EnumProtocol.getEnumNameForValue(ConnectionInfo.forcedProtocolVersion));
+        protocolSelector.setMessage(EnumProtocol.getEnumNameForValue(ConnectionInfo.forcedProtocolVersion).replace("_", ".").replace("V", ""));
     }
 }
