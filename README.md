@@ -1,3 +1,5 @@
+![Project icon](https://raw.githubusercontent.com/Earthcomputer/multiconnect/master/src/main/resources/assets/multiconnect/icon.png)
+
 # multiconnect
 A mod to enable a Minecraft client to connect to multiple server versions.
 
