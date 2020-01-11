@@ -47,10 +47,12 @@ public enum EnumProtocol {
 
     public EnumProtocol next() {
         EnumProtocol nextValue = AUTO;
+        int max = Integer.MAX_VALUE;
 
         for (EnumProtocol protocolValue : VALUES) {
-            if (protocolValue.value > value && protocolValue.value < nextValue.value) {
+            if (protocolValue.value > value && protocolValue.value < max) {
                 nextValue = protocolValue;
+                max = nextValue.value;
             }
         }
 
