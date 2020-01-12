@@ -37,7 +37,7 @@ public abstract class MixinAddServerScreen extends Screen {
 
     @Inject(method = "init", at = @At("RETURN"))
     private void createButtons(CallbackInfo ci) {
-        protocolSelector = new ButtonWidget(5, 5, 70, 20, currentProtocol.getName(), (buttonWidget_1) ->
+        protocolSelector = new ButtonWidget(width - 80, 5, 70, 20, currentProtocol.getName(), (buttonWidget_1) ->
                 currentProtocol = currentProtocol.next()
         );
 
@@ -46,7 +46,8 @@ public abstract class MixinAddServerScreen extends Screen {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void drawScreen(int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        MinecraftClient.getInstance().textRenderer.drawWithShadow("<- " + I18n.translate("multiconnect.changeForcedProtocol"), 80, 10, 0xFFFFFF);
+        String label = I18n.translate("multiconnect.changeForcedProtocol") + " ->";
+        font.drawWithShadow(label, width - 85 - font.getStringWidth(label), 11, 0xFFFFFF);
         protocolSelector.setMessage(currentProtocol.getName());
     }
 

@@ -52,7 +52,7 @@ public final class ServersExt {
 
     public int getForcedProtocol(String address) {
         ServerExt server = servers.get(normalizeAddress(address));
-        return server == null ? -1 : server.forcedProtocol;
+        return server == null ? EnumProtocol.AUTO.getValue() : server.forcedProtocol;
     }
 
     public boolean hasServer(String address) {

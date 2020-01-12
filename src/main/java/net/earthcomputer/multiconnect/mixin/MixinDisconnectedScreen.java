@@ -54,7 +54,7 @@ public abstract class MixinDisconnectedScreen extends Screen {
     @Inject(method = "init", at = @At("RETURN"))
     private void addButtons(CallbackInfo ci) {
         if (isProtocolReason) {
-            protocolSelector = new ButtonWidget(5, 5, 70, 20, getForcedVersion().getName(), (buttonWidget_1) ->
+            protocolSelector = new ButtonWidget(width - 80, 5, 70, 20, getForcedVersion().getName(), (buttonWidget_1) ->
                     ServersExt.getInstance().getOrCreateServer(server.address).forcedProtocol = getForcedVersion().next().getValue()
             );
 
@@ -65,7 +65,8 @@ public abstract class MixinDisconnectedScreen extends Screen {
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(IIF)V"))
     private void onRender(int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (isProtocolReason) {
-            MinecraftClient.getInstance().textRenderer.drawWithShadow("<- " + I18n.translate("multiconnect.changeForcedProtocol"), 80, 10, 0xFFFFFF);
+            String label = I18n.translate("multiconnect.changeForcedProtocol") + " ->";
+            font.drawWithShadow(label, width - 85 - font.getStringWidth(label), 11, 0xFFFFFF);
             protocolSelector.setMessage(getForcedVersion().getName());
         }
     }

@@ -40,7 +40,7 @@ public class MixinConnectScreen1 {
             address = ConnectionInfo.ip + ":" + ConnectionInfo.port;
         }
         int forcedVersion = ServersExt.getInstance().getForcedProtocol(address);
-        if (forcedVersion != -1) {
+        if (forcedVersion != EnumProtocol.AUTO.getValue()) {
             ConnectionInfo.protocolVersion = forcedVersion;
             LogManager.getLogger("multiconnect").info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + EnumProtocol.byValue(forcedVersion).getName() + ")");
             return;

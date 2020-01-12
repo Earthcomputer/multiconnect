@@ -1,4 +1,3 @@
 {
-  "multiconnect.changeForcedProtocol": "Change Version",
-  "multiconnect.wrongProtocolHint": "You may be trying to connect with the wrong version."
+  "multiconnect.changeForcedProtocol": "Version"
 }

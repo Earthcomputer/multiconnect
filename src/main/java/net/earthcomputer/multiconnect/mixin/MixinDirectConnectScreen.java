@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.mixin;
 
 import net.earthcomputer.multiconnect.api.EnumProtocol;
 import net.earthcomputer.multiconnect.impl.ServersExt;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DirectConnectScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -31,7 +30,7 @@ public class MixinDirectConnectScreen extends Screen {
 
     @Inject(method = "init", at = @At("RETURN"))
     private void createButtons(CallbackInfo ci) {
-        protocolSelector = new ButtonWidget(5, 5, 70, 20, selectedProtocol.getName(), (buttonWidget_1) ->
+        protocolSelector = new ButtonWidget(width - 80, 5, 70, 20, selectedProtocol.getName(), (buttonWidget_1) ->
                 selectedProtocol = selectedProtocol.next()
         );
 
@@ -51,7 +50,8 @@ public class MixinDirectConnectScreen extends Screen {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void drawScreen(int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        MinecraftClient.getInstance().textRenderer.drawWithShadow("<- " + I18n.translate("multiconnect.changeForcedProtocol"), 80, 10, 0xFFFFFF);
+        String label = I18n.translate("multiconnect.changeForcedProtocol") + " ->";
+        font.drawWithShadow(label, width - 85 - font.getStringWidth(label), 11, 0xFFFFFF);
         protocolSelector.setMessage(selectedProtocol.getName());
     }
 
