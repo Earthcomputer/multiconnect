@@ -42,7 +42,7 @@ public class MixinDirectConnectScreen extends Screen {
     private void onTick(CallbackInfo ci) {
         if (!addressField.getText().equals(lastAddress)) {
             lastAddress = addressField.getText();
-            if (ServersExt.getInstance().servers.containsKey(addressField.getText())) {
+            if (ServersExt.getInstance().hasServer(addressField.getText())) {
                 int protocolVersion = ServersExt.getInstance().getForcedProtocol(addressField.getText());
                 selectedProtocol = EnumProtocol.byValue(protocolVersion);
             }
@@ -57,7 +57,7 @@ public class MixinDirectConnectScreen extends Screen {
 
     @Inject(method = "saveAndClose", at = @At("HEAD"))
     private void onSaveAndClose(CallbackInfo ci) {
-        ServersExt.getInstance().servers.computeIfAbsent(addressField.getText(), k -> new ServersExt.ServerExt()).forcedProtocol = selectedProtocol.getValue();
+        ServersExt.getInstance().getOrCreateServer(addressField.getText()).forcedProtocol = selectedProtocol.getValue();
     }
 
 }

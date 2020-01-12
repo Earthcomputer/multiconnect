@@ -52,7 +52,7 @@ public abstract class MixinAddServerScreen extends Screen {
 
     @Inject(method = "addAndClose", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/booleans/BooleanConsumer;accept(Z)V", remap = false))
     private void onAddAndClose(CallbackInfo ci) {
-        ServersExt.getInstance().servers.computeIfAbsent(server.address, k -> new ServersExt.ServerExt()).forcedProtocol = currentProtocol.getValue();
+        ServersExt.getInstance().getOrCreateServer(server.address).forcedProtocol = currentProtocol.getValue();
     }
 
 }

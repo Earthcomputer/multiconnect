@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.earthcomputer.multiconnect.api.EnumProtocol;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.network.ServerAddress;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -47,12 +48,29 @@ public final class ServersExt {
 
     private ServersExt() {}
 
+    private Map<String, ServerExt> servers = new HashMap<>();
+
     public int getForcedProtocol(String address) {
-        ServerExt server = servers.get(address);
+        ServerExt server = servers.get(normalizeAddress(address));
         return server == null ? -1 : server.forcedProtocol;
     }
 
-    public Map<String, ServerExt> servers = new HashMap<>();
+    public boolean hasServer(String address) {
+        return servers.containsKey(normalizeAddress(address));
+    }
+
+    public ServerExt getServer(String address) {
+        return servers.get(normalizeAddress(address));
+    }
+
+    public ServerExt getOrCreateServer(String address) {
+        return servers.computeIfAbsent(normalizeAddress(address), k -> new ServerExt());
+    }
+
+    private static String normalizeAddress(String address) {
+        ServerAddress addr = ServerAddress.parse(address);
+        return addr.getAddress() + ":" + addr.getPort();
+    }
 
     public static class ServerExt {
 

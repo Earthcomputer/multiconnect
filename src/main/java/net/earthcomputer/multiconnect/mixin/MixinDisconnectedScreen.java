@@ -55,7 +55,7 @@ public abstract class MixinDisconnectedScreen extends Screen {
     private void addButtons(CallbackInfo ci) {
         if (isProtocolReason) {
             protocolSelector = new ButtonWidget(5, 5, 70, 20, getForcedVersion().getName(), (buttonWidget_1) ->
-                    ServersExt.getInstance().servers.computeIfAbsent(server.address, k -> new ServersExt.ServerExt()).forcedProtocol = getForcedVersion().next().getValue()
+                    ServersExt.getInstance().getOrCreateServer(server.address).forcedProtocol = getForcedVersion().next().getValue()
             );
 
             addButton(protocolSelector);
