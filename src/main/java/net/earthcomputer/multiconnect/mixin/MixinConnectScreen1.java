@@ -30,14 +30,20 @@ public class MixinConnectScreen1 {
 
     @Inject(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;connect(Ljava/net/InetAddress;IZ)Lnet/minecraft/network/ClientConnection;"), cancellable = true)
     public void beforeConnect(CallbackInfo ci) throws UnknownHostException {
+        String address;
         ServerInfo serverInfo = MinecraftClient.getInstance().getCurrentServerEntry();
         if (serverInfo != null) {
-            EnumProtocol forcedVersion = ((IServerInfo) serverInfo).multiconnect_getForcedVersion();
-            if (forcedVersion != EnumProtocol.AUTO) {
-                ConnectionInfo.protocolVersion = forcedVersion.getValue();
-                LogManager.getLogger("multiconnect").info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + forcedVersion.getName() + ")");
-                return;
-            }
+            address = serverInfo.address;
+        } else if (ConnectionInfo.port == 25565) {
+            address = ConnectionInfo.ip;
+        } else {
+            address = ConnectionInfo.ip + ":" + ConnectionInfo.port;
+        }
+        int forcedVersion = ServersExt.getInstance().getForcedProtocol(address);
+        if (forcedVersion != -1) {
+            ConnectionInfo.protocolVersion = forcedVersion;
+            LogManager.getLogger("multiconnect").info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + EnumProtocol.byValue(forcedVersion).getName() + ")");
+            return;
         }
 
         Screen screen = MinecraftClient.getInstance().currentScreen;

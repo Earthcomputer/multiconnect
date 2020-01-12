@@ -1,6 +1,8 @@
 package net.earthcomputer.multiconnect.mixin;
 
-import net.earthcomputer.multiconnect.impl.IServerInfo;
+import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import net.earthcomputer.multiconnect.api.EnumProtocol;
+import net.earthcomputer.multiconnect.impl.ServersExt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.AddServerScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -20,16 +22,23 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinAddServerScreen extends Screen {
 
     @Shadow @Final private ServerInfo server;
+
+    @Unique private EnumProtocol currentProtocol;
     @Unique private ButtonWidget protocolSelector;
 
     protected MixinAddServerScreen(Text title) {
         super(title);
     }
 
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void onConstructor(Screen parent, BooleanConsumer callback, ServerInfo server, CallbackInfo ci) {
+        currentProtocol = EnumProtocol.byValue(ServersExt.getInstance().getForcedProtocol(server.address));
+    }
+
     @Inject(method = "init", at = @At("RETURN"))
     private void createButtons(CallbackInfo ci) {
-        protocolSelector = new ButtonWidget(5, 5, 70, 20, ((IServerInfo) server).multiconnect_getForcedVersion().getName(), (buttonWidget_1) ->
-                ((IServerInfo) server).multiconnect_setForcedVersion(((IServerInfo) server).multiconnect_getForcedVersion().next())
+        protocolSelector = new ButtonWidget(5, 5, 70, 20, currentProtocol.getName(), (buttonWidget_1) ->
+                currentProtocol = currentProtocol.next()
         );
 
         addButton(protocolSelector);
@@ -38,6 +47,12 @@ public abstract class MixinAddServerScreen extends Screen {
     @Inject(method = "render", at = @At("RETURN"))
     private void drawScreen(int mouseX, int mouseY, float delta, CallbackInfo ci) {
         MinecraftClient.getInstance().textRenderer.drawWithShadow("<- " + I18n.translate("multiconnect.changeForcedProtocol"), 80, 10, 0xFFFFFF);
-        protocolSelector.setMessage(((IServerInfo) server).multiconnect_getForcedVersion().getName());
+        protocolSelector.setMessage(currentProtocol.getName());
     }
+
+    @Inject(method = "addAndClose", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/booleans/BooleanConsumer;accept(Z)V", remap = false))
+    private void onAddAndClose(CallbackInfo ci) {
+        ServersExt.getInstance().servers.computeIfAbsent(server.address, k -> new ServersExt.ServerExt()).forcedProtocol = currentProtocol.getValue();
+    }
+
 }

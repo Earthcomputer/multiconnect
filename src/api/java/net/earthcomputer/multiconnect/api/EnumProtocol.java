@@ -46,7 +46,7 @@ public enum EnumProtocol {
     private static final Map<Integer, EnumProtocol> BY_VALUE = new HashMap<>();
 
     public static EnumProtocol byValue(int value) {
-        return BY_VALUE.get(value);
+        return BY_VALUE.getOrDefault(value, AUTO);
     }
 
     public EnumProtocol next() {

@@ -32,8 +32,9 @@
     "MixinChunkDataS2C",
     "MixinClientPlayNetworkHandler",
     "MixinTranslationStorage",
-    "MixinServerInfo",
-    "MixinDisconnectedScreen"
+    "MixinServerList",
+    "MixinDisconnectedScreen",
+    "MixinDirectConnectScreen"
   ],
   "injectors": {
     "defaultRequire": 1

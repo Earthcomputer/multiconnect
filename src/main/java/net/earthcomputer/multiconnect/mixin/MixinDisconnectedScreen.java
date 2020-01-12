@@ -1,36 +1,30 @@
 package net.earthcomputer.multiconnect.mixin;
 
+import com.google.common.collect.ImmutableSet;
 import net.earthcomputer.multiconnect.api.EnumProtocol;
-import net.earthcomputer.multiconnect.impl.IServerInfo;
+import net.earthcomputer.multiconnect.impl.ServersExt;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.AddServerScreen;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerServerListWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ServerInfo;
-import net.minecraft.client.options.ServerList;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.text.Text;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Set;
+
 @Mixin(DisconnectedScreen.class)
 public abstract class MixinDisconnectedScreen extends Screen {
 
-    @Shadow private int reasonHeight;
-    @Shadow @Final private Screen parent;
-
-    @Unique private int y;
+    @Unique private static final Set<String> TRIGGER_WORDS = ImmutableSet.of("outdated", "version");
+    @Unique private ServerInfo server;
     @Unique private boolean isProtocolReason;
-    @Unique private ServerList serverList;
-    @Unique private ServerInfo selectedServer;
-    @Unique private ServerInfo editingServer;
+    @Unique private ButtonWidget protocolSelector;
 
     protected MixinDisconnectedScreen(Text title) {
         super(title);
@@ -39,10 +33,17 @@ public abstract class MixinDisconnectedScreen extends Screen {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(Screen parentScreen, String title, Text reason, CallbackInfo ci) {
         isProtocolReason = false;
-        if (MinecraftClient.getInstance().getCurrentServerEntry() != null) {
-            String reasonText = reason.asString();
+        server = MinecraftClient.getInstance().getCurrentServerEntry();
+        if (server != null) {
+            String reasonText = reason.getString().toLowerCase();
             for (EnumProtocol protocol : EnumProtocol.values()) {
                 if (protocol != EnumProtocol.AUTO && reasonText.contains(protocol.getName())) {
+                    isProtocolReason = true;
+                    break;
+                }
+            }
+            for (String word : TRIGGER_WORDS) {
+                if (reasonText.contains(word)) {
                     isProtocolReason = true;
                     break;
                 }
@@ -53,45 +54,31 @@ public abstract class MixinDisconnectedScreen extends Screen {
     @Inject(method = "init", at = @At("RETURN"))
     private void addButtons(CallbackInfo ci) {
         if (isProtocolReason) {
-            y = Math.min(height / 2 + reasonHeight / 2 + 9, height - 30) + 28;
-            addButton(new ButtonWidget(width / 2 - 100, y + 12, 200, 20, I18n.translate("multiconnect.changeForcedProtocol"),
-                    button -> {
-                editingServer = new ServerInfo(selectedServer.name, selectedServer.address, false);
-                editingServer.copyFrom(selectedServer);
-                MinecraftClient.getInstance().openScreen(new AddServerScreen(parent, this::editEntry, editingServer));
-            }));
-            ServerInfo currentServer = MinecraftClient.getInstance().getCurrentServerEntry();
-            assert currentServer != null;
-            serverList = new ServerList(MinecraftClient.getInstance());
-            serverList.loadFile();
-            for (int i = 0; i < serverList.size(); i++) {
-                ServerInfo server = serverList.get(i);
-                if (server.address.equals(currentServer.address)) {
-                    selectedServer = server;
-                }
-            }
+            protocolSelector = new ButtonWidget(5, 5, 70, 20, getForcedVersion().getName(), (buttonWidget_1) ->
+                    ServersExt.getInstance().servers.computeIfAbsent(server.address, k -> new ServersExt.ServerExt()).forcedProtocol = getForcedVersion().next().getValue()
+            );
+
+            addButton(protocolSelector);
         }
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(IIF)V"))
     private void onRender(int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (isProtocolReason) {
-            drawCenteredString(font, I18n.translate("multiconnect.wrongProtocolHint"), width / 2, y, 0xffffff);
+            MinecraftClient.getInstance().textRenderer.drawWithShadow("<- " + I18n.translate("multiconnect.changeForcedProtocol"), 80, 10, 0xFFFFFF);
+            protocolSelector.setMessage(getForcedVersion().getName());
         }
     }
 
+    @Override
+    public void removed() {
+        ServersExt.save();
+    }
+
     @Unique
-    private void editEntry(boolean accepted) {
-        if (accepted) {
-            selectedServer.name = editingServer.name;
-            selectedServer.address = editingServer.address;
-            selectedServer.copyFrom(editingServer);
-            for (ServerInfo server : IServerInfo.INSTANCES)
-                if (server.address.equals(editingServer.address))
-                    server.copyFrom(editingServer);
-            serverList.saveFile();
-        }
-        MinecraftClient.getInstance().openScreen(parent);
+    private EnumProtocol getForcedVersion() {
+        int protocolVersion = ServersExt.getInstance().getForcedProtocol(server.address);
+        return EnumProtocol.byValue(protocolVersion);
     }
 
 }
