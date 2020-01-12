@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_12.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "MixinRecipeBookWidget"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_12_1.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "MixinDownloadingTerrainScreen"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

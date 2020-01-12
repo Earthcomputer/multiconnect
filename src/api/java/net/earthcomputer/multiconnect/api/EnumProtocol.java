@@ -8,6 +8,7 @@ import java.util.Map;
  */
 public enum EnumProtocol {
 
+    // IMPORTANT: only add to the end of this enum - do not insert in the middle for new versions
     AUTO("Auto", -1),
     V1_15_1("1.15.1", Protocols.V1_15_1),
     V1_15("1.15", Protocols.V1_15),
@@ -19,7 +20,10 @@ public enum EnumProtocol {
     V1_13_2("1.13.2", Protocols.V1_13_2),
     V1_13_1("1.13.1", Protocols.V1_13_1),
     V1_13("1.13", Protocols.V1_13),
-    V1_12_2("1.12.2", Protocols.V1_12_2);
+    V1_12_2("1.12.2", Protocols.V1_12_2),
+    V1_12_1("1.12.1", Protocols.V1_12_1),
+    V1_12("1.12", Protocols.V1_12),
+    ;
 
     private final int value;
 
