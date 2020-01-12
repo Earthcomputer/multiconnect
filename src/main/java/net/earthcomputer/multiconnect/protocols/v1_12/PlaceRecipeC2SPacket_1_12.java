@@ -40,8 +40,8 @@ public class PlaceRecipeC2SPacket_1_12 implements Packet<ServerPlayPacketListene
         buf.writeShort(transactions.size());
         for (Transaction transaction : transactions) {
             buf.writeItemStack(transaction.stack);
-            buf.writeByte(transaction.from);
-            buf.writeByte(transaction.to);
+            buf.writeByte(transaction.craftingSlot);
+            buf.writeByte(transaction.invSlot);
         }
     }
 
@@ -52,13 +52,13 @@ public class PlaceRecipeC2SPacket_1_12 implements Packet<ServerPlayPacketListene
 
     public static class Transaction {
         public ItemStack stack;
-        public int from;
-        public int to;
+        public int craftingSlot;
+        public int invSlot;
 
-        public Transaction(ItemStack stack, int from, int to) {
-            this.stack = stack;
-            this.from = from;
-            this.to = to;
+        public Transaction(ItemStack stack, int craftingSlot, int invSlot) {
+            this.stack = stack.copy();
+            this.craftingSlot = craftingSlot;
+            this.invSlot = invSlot;
         }
     }
 

@@ -46,7 +46,7 @@ public abstract class MixinRecipeBookWidget implements IRecipeBookWidget {
     @Inject(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/recipebook/RecipeResultCollection;isCraftable(Lnet/minecraft/recipe/Recipe;)Z"), cancellable = true)
     private void redirectRecipeBook(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12) {
-            setRecipe(recipeBook112, recipesArea.getLastClickedRecipe(), recipesArea.getLastClickedResults());
+            handleRecipeClicked(recipeBook112, recipesArea.getLastClickedRecipe(), recipesArea.getLastClickedResults());
             if (!isWide())
                 setOpen(false);
             ci.setReturnValue(true);
@@ -55,7 +55,7 @@ public abstract class MixinRecipeBookWidget implements IRecipeBookWidget {
 
     @SuppressWarnings("unchecked")
     @Unique
-    private static <C extends Inventory> void setRecipe(RecipeBook_1_12<C> recipeBook112, Recipe<?> recipe, RecipeResultCollection results) {
+    private static <C extends Inventory> void handleRecipeClicked(RecipeBook_1_12<C> recipeBook112, Recipe<?> recipe, RecipeResultCollection results) {
         recipeBook112.handleRecipeClicked((Recipe<C>) recipe, results);
     }
 
