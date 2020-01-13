@@ -34,7 +34,8 @@
     "MixinTranslationStorage",
     "MixinServerList",
     "MixinDisconnectedScreen",
-    "MixinDirectConnectScreen"
+    "MixinDirectConnectScreen",
+    "MixinMinecraftServer"
   ],
   "injectors": {
     "defaultRequire": 1
