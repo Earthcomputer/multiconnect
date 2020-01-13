@@ -36,6 +36,7 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
 
     private final boolean singleTarget;
     private final boolean playersOnly;
+    private boolean suggestPlayerNames = true;
 
     private EntityArgumentType_1_12_2(boolean singleTarget, boolean playersOnly) {
         this.singleTarget = singleTarget;
@@ -58,6 +59,11 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
         return new EntityArgumentType_1_12_2(true, false);
     }
 
+    public EntityArgumentType_1_12_2 noSuggestPlayerNames() {
+        this.suggestPlayerNames = false;
+        return this;
+    }
+
     @Override
     public Void parse(StringReader reader) throws CommandSyntaxException {
         if (reader.canRead() && reader.peek() == '@') {
@@ -78,7 +84,7 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
         reader.setCursor(builder.getStart());
 
         CompletableFuture<Suggestions> playerCompletions;
-        if (reader.canRead() && reader.peek() == '@') {
+        if ((reader.canRead() && reader.peek() == '@') || !suggestPlayerNames) {
             playerCompletions = Suggestions.empty();
         } else {
             playerCompletions = ((CommandSource) context.getSource()).getCompletions((CommandContext<CommandSource>) context, builder.restart());

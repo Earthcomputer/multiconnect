@@ -27,7 +27,8 @@
     "MixinItemEntity",
     "MixinNoteBlock",
     "MixinFlowerPotBlock",
-    "MixinBannerBlockEntity"
+    "MixinBannerBlockEntity",
+    "MixinCommandSuggestor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -25,6 +25,13 @@ public class Commands_1_12_2 {
     public static void register(CommandDispatcher<CommandSource> dispatcher, Set<String> serverCommands) {
         registerVanilla(dispatcher, serverCommands, "time", TimeCommand::register);
         registerVanilla(dispatcher, serverCommands, "gamemode", GamemodeCommand::register);
+        registerVanilla(dispatcher, serverCommands, "difficulty", DifficultyCommand::register);
+        registerVanilla(dispatcher, serverCommands, "defaultgamemode", DefaultGamemodeCommand::register);
+        registerVanilla(dispatcher, serverCommands, "kill", KillCommand::register);
+        registerVanilla(dispatcher, serverCommands, "toggledownfall", ToggleDownfallCommand::register);
+        registerVanilla(dispatcher, serverCommands, "weather", WeatherCommand::register);
+        registerVanilla(dispatcher, serverCommands, "xp", XPCommand::register);
+        registerVanilla(dispatcher, serverCommands, "tp", TPCommand::register);
 
         if (serverCommands != null) {
             for (String command : serverCommands) {
