@@ -41,6 +41,8 @@ public class MixinConnectScreen1 {
             address = ConnectionInfo.ip + ":" + ConnectionInfo.port;
         }
         int forcedVersion = ServersExt.getInstance().getForcedProtocol(address);
+        forcedVersion = forcedVersion == ConnectionMode.AUTO.getValue() ? ConnectionInfo.globalForcedProtocolVersion.getValue() : forcedVersion;
+
         if (forcedVersion != ConnectionMode.AUTO.getValue()) {
             ConnectionInfo.protocolVersion = forcedVersion;
             LogManager.getLogger("multiconnect").info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ConnectionMode.byValue(forcedVersion).getName() + ")");
