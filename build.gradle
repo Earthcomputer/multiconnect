@@ -2,8 +2,10 @@
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
-	id 'fabric-loom' version '0.2.6-SNAPSHOT'
+	id 'fabric-loom' version '0.2.7-SNAPSHOT'
 	id 'maven-publish'
+	id 'com.matthewprenger.cursegradle' version '1.4.0'
+	id 'com.github.breadmoirai.github-release' version '2.2.10'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -105,12 +107,13 @@ test {
 	workingDir 'run'
 }
 
-def bintrayLogin = new Properties()
+def myCredentials = new Properties()
 try {
-	bintrayLogin.load(new FileReader(file('bintrayLogin.properties')))
-} catch (IOException e) {
-	bintrayLogin = null
+	myCredentials.load(new FileReader(file('myCredentials.properties')))
+} catch (IOException ignore) {
+	myCredentials = null
 }
+def isBeta = version.contains 'pre'
 
 // configure the maven publication
 publishing {
@@ -134,11 +137,50 @@ publishing {
 		maven {
 			url 'https://api.bintray.com/maven/earthcomputer/mods/multiconnect/'
 			credentials {
-				username = bintrayLogin == null ? 'foo' : bintrayLogin['user']
-				password = bintrayLogin == null ? 'bar' : bintrayLogin['pass']
+				username = myCredentials == null ? 'foo' : myCredentials['bintrayUser']
+				password = myCredentials == null ? 'bar' : myCredentials['bintrayPass']
 			}
 		}
 		// uncomment to publish to the local maven
 		// mavenLocal()
 	}
+}
+
+curseforge {
+	apiKey = myCredentials == null ? 'baz' :  myCredentials['curseForgeKey']
+
+	project {
+		id = '336018'
+		changelog = file('changelog.txt')
+		releaseType = isBeta ? 'beta' : 'release'
+		addGameVersion project.minecraft_version
+		addGameVersion 'Fabric'
+		mainArtifact remapJar.archivePath
+		afterEvaluate {
+			uploadTask.dependsOn remapJar
+		}
+	}
+
+	options {
+		forgeGradleIntegration = false
+	}
+
+}
+
+githubRelease {
+	token(myCredentials == null ? 'derp' : myCredentials['githubKey'])
+	owner 'Earthcomputer'
+	repo 'multiconnect'
+	tagName("v$version")
+	releaseName("Version $version for Minecraft ${project.minecraft_version}")
+	body(file('changelog.txt').getText('UTF-8'))
+	prerelease isBeta
+	releaseAssets remapJar.archivePath
+}
+tasks.getByName('githubRelease').dependsOn remapJar
+
+task releaseAll {
+	dependsOn publish
+	dependsOn curseforge
+	dependsOn githubRelease
 }

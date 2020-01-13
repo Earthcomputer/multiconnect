@@ -25,4 +25,5 @@ bin/
 # fabric
 
 run/
-bintrayLogin.properties
+credentials.properties
+changelog.txt
