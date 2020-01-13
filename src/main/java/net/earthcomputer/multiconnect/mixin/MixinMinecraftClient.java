@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Queue;
@@ -41,7 +42,7 @@ public abstract class MixinMinecraftClient extends ReentrantThreadExecutor<Runna
         ConnectionInfo.protocol.setup(false);
     }
 
-    @ModifyArg(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;render(Z)V"))
+    @ModifyVariable(method = "render", ordinal = 0, at = @At("HEAD"))
     private boolean shouldTick(boolean oldShouldTick) {
         if (ConnectionInfo.reloadingResources && ConnectionInfo.protocol != ProtocolRegistry.latest()) {
             return false;
