@@ -24,6 +24,7 @@ public class Commands_1_12_2 {
 
     public static void register(CommandDispatcher<CommandSource> dispatcher, Set<String> serverCommands) {
         registerVanilla(dispatcher, serverCommands, "time", TimeCommand::register);
+        registerVanilla(dispatcher, serverCommands, "gamemode", GamemodeCommand::register);
 
         if (serverCommands != null) {
             for (String command : serverCommands) {

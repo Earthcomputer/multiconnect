@@ -5,25 +5,17 @@ import net.minecraft.server.command.CommandSource;
 
 import static com.mojang.brigadier.arguments.IntegerArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
+import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EntityArgumentType_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EnumArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.UnionArgumentType.*;
 
-public class TimeCommand {
+public class GamemodeCommand {
 
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
-        dispatcher.register(literal("time")
-            .then(literal("set")
-                .then(argument("time", union(enumArg("day", "night"), integer(0)))
-                    .executes(ctx -> 0)))
-            .then(literal("add")
-                .then(argument("time", integer(0))
-                    .executes(ctx -> 0)))
-            .then(literal("query")
-                .then(literal("daytime")
-                    .executes(ctx -> 0))
-                .then(literal("day")
-                    .executes(ctx -> 0))
-                .then(literal("gametime")
+        dispatcher.register(literal("gamemode")
+            .then(argument("mode", union(enumArg("survival", "creative", "adventure", "spectator", "s", "c", "a", "sp"), integer(0, 3)))
+                .executes(ctx -> 0)
+                .then(argument("target", players())
                     .executes(ctx -> 0))));
     }
 

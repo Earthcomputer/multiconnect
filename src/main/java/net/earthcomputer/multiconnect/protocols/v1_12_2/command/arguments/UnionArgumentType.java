@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_12_2.command;
+package net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
@@ -51,7 +51,7 @@ public final class UnionArgumentType<L, R> implements ArgumentType<Either<L, R>>
                 .thenCompose(v -> mergeSuggestions(leftFuture.join(), rightFuture.join()));
     }
 
-    private static CompletableFuture<Suggestions> mergeSuggestions(Suggestions a, Suggestions b) {
+    static CompletableFuture<Suggestions> mergeSuggestions(Suggestions a, Suggestions b) {
         if (a.isEmpty() && b.isEmpty())
             return Suggestions.empty();
         if (a.isEmpty())

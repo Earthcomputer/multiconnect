@@ -516,6 +516,12 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     }
 
     @Override
+    public void setup(boolean resourceReload) {
+        TabCompletionManager.reset();
+        super.setup(resourceReload);
+    }
+
+    @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
         remove(packets, CommandSuggestionsS2CPacket.class);

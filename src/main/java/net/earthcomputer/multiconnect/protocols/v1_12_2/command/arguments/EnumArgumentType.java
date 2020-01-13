@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_12_2.command;
+package net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
