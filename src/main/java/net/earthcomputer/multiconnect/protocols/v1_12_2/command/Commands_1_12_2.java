@@ -9,10 +9,22 @@ import net.minecraft.command.suggestion.SuggestionProviders;
 import net.minecraft.server.command.CommandSource;
 
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class Commands_1_12_2 {
 
+    private static void registerVanilla(CommandDispatcher<CommandSource> dispatcher,
+                                        Set<String> serverCommands,
+                                        String name,
+                                        Consumer<CommandDispatcher<CommandSource>> registerer) {
+        if (serverCommands == null || serverCommands.contains(name)) {
+            registerer.accept(dispatcher);
+        }
+    }
+
     public static void register(CommandDispatcher<CommandSource> dispatcher, Set<String> serverCommands) {
+        registerVanilla(dispatcher, serverCommands, "time", TimeCommand::register);
+
         if (serverCommands != null) {
             for (String command : serverCommands) {
                 if (dispatcher.getRoot().getChild(command) == null) {
