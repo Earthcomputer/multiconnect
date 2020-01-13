@@ -109,7 +109,7 @@ test {
 
 def myCredentials = new Properties()
 try {
-	myCredentials.load(new FileReader(file('myCredentials.properties')))
+	myCredentials.load(new FileReader(file('credentials.properties')))
 } catch (IOException ignore) {
 	myCredentials = null
 }
@@ -181,6 +181,6 @@ tasks.getByName('githubRelease').dependsOn remapJar
 
 task releaseAll {
 	dependsOn publish
-	dependsOn curseforge
-	dependsOn githubRelease
+	dependsOn tasks.getByName('curseforge')
+	dependsOn tasks.getByName('githubRelease')
 }
