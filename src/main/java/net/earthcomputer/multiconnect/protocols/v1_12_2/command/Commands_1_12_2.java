@@ -75,6 +75,21 @@ public class Commands_1_12_2 {
         registerVanilla(dispatcher, serverCommands, "locate", LocateCommand::register);
         registerVanilla(dispatcher, serverCommands, "reload", d -> NoArgCommand.register(d, "reload"));
         registerVanilla(dispatcher, serverCommands, "function", FunctionCommand::register);
+        registerVanilla(dispatcher, serverCommands, "op", d -> Simple1ArgCommand.register(d, "op"));
+        registerVanilla(dispatcher, serverCommands, "deop", d -> Simple1ArgCommand.register(d, "deop"));
+        registerVanilla(dispatcher, serverCommands, "stop", d -> NoArgCommand.register(d, "stop"));
+        registerVanilla(dispatcher, serverCommands, "save-all", SaveAllCommand::register);
+        registerVanilla(dispatcher, serverCommands, "save-off", d -> NoArgCommand.register(d, "save-off"));
+        registerVanilla(dispatcher, serverCommands, "save-on", d -> NoArgCommand.register(d, "save-on"));
+        registerVanilla(dispatcher, serverCommands, "ban-ip", d -> Simple1ArgCommand.register(d, "ban-ip"));
+        registerVanilla(dispatcher, serverCommands, "pardon-ip", d -> Simple1ArgCommand.register(d, "pardon-ip"));
+        registerVanilla(dispatcher, serverCommands, "ban", d -> Simple1ArgCommand.register(d, "ban"));
+        registerVanilla(dispatcher, serverCommands, "banlist", BanListCommand::register);
+        registerVanilla(dispatcher, serverCommands, "pardon", d -> Simple1ArgCommand.register(d, "pardon"));
+        registerVanilla(dispatcher, serverCommands, "kick", d -> Simple1ArgCommand.register(d, "kick"));
+        registerVanilla(dispatcher, serverCommands, "list", ListCommand::register);
+        registerVanilla(dispatcher, serverCommands, "whitelist", WhitelistCommand::register);
+        registerVanilla(dispatcher, serverCommands, "setidletimeout", SetIdleTimeoutCommand::register);
 
         if (serverCommands != null) {
             for (String command : serverCommands) {
