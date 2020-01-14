@@ -19,7 +19,7 @@ public class MixinCommandSuggestor {
         return Iterators.concat(
                 Iterators.transform(itr,
                         arg -> arg != null && arg.getResult() instanceof Custom_1_12_Argument ?
-                                ((Custom_1_12_Argument) arg.getResult()).<CommandSource>getSubArgs().iterator()
+                                decorateHighlightIterator(((Custom_1_12_Argument) arg.getResult()).<CommandSource>getSubArgs().iterator())
                                 : Iterators.singletonIterator(arg))
         );
     }

@@ -6,10 +6,8 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.Items_1_12_2;
 import net.minecraft.command.arguments.ItemStringReader;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.server.command.CommandSource;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -56,7 +54,7 @@ public class ItemArgumentType_1_12_2 implements ArgumentType<Item> {
     }
 
     private static boolean isValidItem(Item item) {
-        return Items_1_12_2.newItemStackToOld(new ItemStack(item)).getLeft().getItem() == item;
+        return Registry.ITEM.getRawId(item) < 4096;
     }
 
 }

@@ -55,6 +55,8 @@ public class Commands_1_12_2 {
         registerVanilla(dispatcher, serverCommands, "testfor", TestForCommand::register);
         registerVanilla(dispatcher, serverCommands, "spreadplayers", SpreadPlayersCommand::register);
         registerVanilla(dispatcher, serverCommands, "playsound", PlaySoundCommand::register);
+        registerVanilla(dispatcher, serverCommands, "scoreboard", ScoreboardCommand::register);
+        registerVanilla(dispatcher, serverCommands, "execute", ExecuteCommand::register);
 
         if (serverCommands != null) {
             for (String command : serverCommands) {
