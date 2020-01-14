@@ -10,6 +10,9 @@ classes/
 !.idea/
 .idea/*
 !.idea/inspectionProfiles/
+!.idea/codeStyles/
+.idea/codeStyles/*
+!.idea/codeStyles/Project.xml
 *.iml
 *.ipr
 *.iws

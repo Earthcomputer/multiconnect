@@ -28,10 +28,33 @@ public class Commands_1_12_2 {
         registerVanilla(dispatcher, serverCommands, "difficulty", DifficultyCommand::register);
         registerVanilla(dispatcher, serverCommands, "defaultgamemode", DefaultGamemodeCommand::register);
         registerVanilla(dispatcher, serverCommands, "kill", KillCommand::register);
-        registerVanilla(dispatcher, serverCommands, "toggledownfall", ToggleDownfallCommand::register);
+        registerVanilla(dispatcher, serverCommands, "toggledownfall", d -> NoArgCommand.register(d, "toggledownfall"));
         registerVanilla(dispatcher, serverCommands, "weather", WeatherCommand::register);
         registerVanilla(dispatcher, serverCommands, "xp", XPCommand::register);
         registerVanilla(dispatcher, serverCommands, "tp", TPCommand::register);
+        registerVanilla(dispatcher, serverCommands, "teleport", TeleportCommand::register);
+        registerVanilla(dispatcher, serverCommands, "give", GiveCommand::register);
+        registerVanilla(dispatcher, serverCommands, "replaceitem", ReplaceItemCommand::register);
+        registerVanilla(dispatcher, serverCommands, "stats", StatsCommand::register);
+        registerVanilla(dispatcher, serverCommands, "effect", EffectCommand::register);
+        registerVanilla(dispatcher, serverCommands, "enchant", EnchantCommand::register);
+        registerVanilla(dispatcher, serverCommands, "particle", ParticleCommand::register);
+        registerVanilla(dispatcher, serverCommands, "me", d -> SayCommand.register(d, "me"));
+        registerVanilla(dispatcher, serverCommands, "seed", d -> NoArgCommand.register(d, "seed"));
+        registerVanilla(dispatcher, serverCommands, "help", d -> HelpCommand.register(d, "help"));
+        registerVanilla(dispatcher, serverCommands, "?", d -> HelpCommand.register(d, "?"));
+        registerVanilla(dispatcher, serverCommands, "debug", DebugCommand::register);
+        registerVanilla(dispatcher, serverCommands, "tell", d -> TellCommand.register(d, "tell"));
+        registerVanilla(dispatcher, serverCommands, "msg", d -> TellCommand.register(d, "msg"));
+        registerVanilla(dispatcher, serverCommands, "w", d -> TellCommand.register(d, "w"));
+        registerVanilla(dispatcher, serverCommands, "say", d -> SayCommand.register(d, "say"));
+        registerVanilla(dispatcher, serverCommands, "spawnpoint", SpawnpointCommand::register);
+        registerVanilla(dispatcher, serverCommands, "setworldspawn", SetWorldSpawnCommand::register);
+        registerVanilla(dispatcher, serverCommands, "gamerule", GameruleCommand::register);
+        registerVanilla(dispatcher, serverCommands, "clear", ClearCommand::register);
+        registerVanilla(dispatcher, serverCommands, "testfor", TestForCommand::register);
+        registerVanilla(dispatcher, serverCommands, "spreadplayers", SpreadPlayersCommand::register);
+        registerVanilla(dispatcher, serverCommands, "playsound", PlaySoundCommand::register);
 
         if (serverCommands != null) {
             for (String command : serverCommands) {
