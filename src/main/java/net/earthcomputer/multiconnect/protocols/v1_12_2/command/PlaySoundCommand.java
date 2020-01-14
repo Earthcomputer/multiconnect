@@ -17,10 +17,7 @@ public class PlaySoundCommand {
         for (String category : new String[] {"master", "music", "record", "weather", "block", "hostile", "neutral", "player", "ambient", "voice"}) {
             dispatcher.register(literal("playsound")
                 .then(argument("sound", identifier())
-                    .suggests((ctx, builder) -> {
-                        CommandSource.suggestIdentifiers(Registry.SOUND_EVENT.getIds(), builder);
-                        return builder.buildFuture();
-                    })
+                    .suggests((ctx, builder) -> CommandSource.suggestIdentifiers(Registry.SOUND_EVENT.getIds(), builder))
                     .then(literal(category)
                         .then(argument("player", players())
                             .executes(ctx -> 0)

@@ -57,6 +57,24 @@ public class Commands_1_12_2 {
         registerVanilla(dispatcher, serverCommands, "playsound", PlaySoundCommand::register);
         registerVanilla(dispatcher, serverCommands, "scoreboard", ScoreboardCommand::register);
         registerVanilla(dispatcher, serverCommands, "execute", ExecuteCommand::register);
+        registerVanilla(dispatcher, serverCommands, "trigger", TriggerCommand::register);
+        registerVanilla(dispatcher, serverCommands, "advancement", AdvancementCommand::register);
+        registerVanilla(dispatcher, serverCommands, "recipe", RecipeCommand::register);
+        registerVanilla(dispatcher, serverCommands, "summon", SummonCommand::register);
+        registerVanilla(dispatcher, serverCommands, "setblock", SetblockCommand::register);
+        registerVanilla(dispatcher, serverCommands, "fill", FillCommand::register);
+        registerVanilla(dispatcher, serverCommands, "clone", CloneCommand::register);
+        registerVanilla(dispatcher, serverCommands, "testforblocks", TestForBlocksCommand::register);
+        registerVanilla(dispatcher, serverCommands, "blockdata", BlockDataCommand::register);
+        registerVanilla(dispatcher, serverCommands, "testforblock", TestForBlockCommand::register);
+        registerVanilla(dispatcher, serverCommands, "tellraw", TellRawCommand::register);
+        registerVanilla(dispatcher, serverCommands, "worldborder", WorldborderCommand::register);
+        registerVanilla(dispatcher, serverCommands, "title", TitleCommand::register);
+        registerVanilla(dispatcher, serverCommands, "entitydata", EntityDataCommand::register);
+        registerVanilla(dispatcher, serverCommands, "stopsound", StopSoundCommand::register);
+        registerVanilla(dispatcher, serverCommands, "locate", LocateCommand::register);
+        registerVanilla(dispatcher, serverCommands, "reload", d -> NoArgCommand.register(d, "reload"));
+        registerVanilla(dispatcher, serverCommands, "function", FunctionCommand::register);
 
         if (serverCommands != null) {
             for (String command : serverCommands) {
