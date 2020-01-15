@@ -107,11 +107,10 @@ test {
 	workingDir 'run'
 }
 
-def myCredentials = new Properties()
+project.ext.credentials = new Properties()
 try {
-	myCredentials.load(new FileReader(file('credentials.properties')))
+	project.ext.credentials.load(new FileReader(file('credentials.properties')))
 } catch (IOException ignore) {
-	myCredentials = null
 }
 def isBeta = version.contains 'pre'
 
@@ -137,8 +136,8 @@ publishing {
 		maven {
 			url 'https://api.bintray.com/maven/earthcomputer/mods/multiconnect/'
 			credentials {
-				username = myCredentials == null ? 'foo' : myCredentials['bintrayUser']
-				password = myCredentials == null ? 'bar' : myCredentials['bintrayPass']
+				username = project.ext.credentials == null ? 'foo' : project.ext.credentials['bintrayUser']
+				password = project.ext.credentials == null ? 'bar' : project.ext.credentials['bintrayPass']
 			}
 		}
 		// uncomment to publish to the local maven
@@ -147,7 +146,7 @@ publishing {
 }
 
 curseforge {
-	apiKey = myCredentials == null ? 'baz' :  myCredentials['curseForgeKey']
+	apiKey = project.ext.credentials == null ? 'baz' :  project.ext.credentials['curseForgeKey']
 
 	project {
 		id = '336018'
@@ -168,7 +167,7 @@ curseforge {
 }
 
 githubRelease {
-	token(myCredentials == null ? 'derp' : myCredentials['githubKey'])
+	token(project.ext.credentials == null ? 'derp' : project.ext.credentials['githubKey'])
 	owner 'Earthcomputer'
 	repo 'multiconnect'
 	tagName("v$version")
@@ -180,7 +179,10 @@ githubRelease {
 tasks.getByName('githubRelease').dependsOn remapJar
 
 task releaseAll {
+	group = 'publishing'
 	dependsOn publish
 	dependsOn tasks.getByName('curseforge')
 	dependsOn tasks.getByName('githubRelease')
 }
+
+apply from: 'setupRealMcAccount.gradle'
