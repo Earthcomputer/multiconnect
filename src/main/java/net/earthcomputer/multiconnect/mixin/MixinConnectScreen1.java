@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.mixin;
 import net.earthcomputer.multiconnect.api.EnumProtocol;
 import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
@@ -82,7 +83,13 @@ public class MixinConnectScreen1 {
 
         connectScreen.multiconnect_setVersionRequestConnection(null);
 
-        LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion + " (" + EnumProtocol.byValue(ConnectionInfo.protocolVersion).getName() + ")");
+        if (ProtocolRegistry.isSupported(ConnectionInfo.protocolVersion)) {
+            LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion + " (" + EnumProtocol.byValue(ConnectionInfo.protocolVersion).getName() + ")");
+        } else {
+            LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion + " (unsupported), " +
+                    "falling back to " + SharedConstants.getGameVersion().getProtocolVersion() + " (" + SharedConstants.getGameVersion().getName() + ")");
+            ConnectionInfo.protocolVersion = SharedConstants.getGameVersion().getProtocolVersion();
+        }
     }
 
     @Redirect(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;)V", ordinal = 0))
