@@ -5,17 +5,18 @@
   "mixins": [
   ],
   "client": [
+    "MixinArgumentTypes",
     "MixinClientChunkManager",
     "MixinClientPlayNetworkHandler",
-    "MixinLightUpdatePacket",
-    "MixinRegistryTagManager",
+    "MixinEntity",
+    "MixinLivingEntity",
+    "MixinMerchantContainer",
     "MixinOtherClientPlayerEntity",
     "MixinPlayerEntity",
-    "MixinMerchantContainer",
     "MixinPlayerEntityRenderer",
-    "MixinArgumentTypes",
-    "MixinEntity",
-    "MixinLivingEntity"
+    "MixinRegistryTagManager",
+
+    "LightUpdatePacketAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

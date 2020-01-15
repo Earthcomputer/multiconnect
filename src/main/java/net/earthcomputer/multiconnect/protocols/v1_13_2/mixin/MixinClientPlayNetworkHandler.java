@@ -45,19 +45,20 @@ public abstract class MixinClientPlayNetworkHandler {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             if (!PendingChunkDataPackets.isProcessingQueuedPackets()) {
                 LightUpdateS2CPacket lightPacket = new LightUpdateS2CPacket();
-                @SuppressWarnings("ConstantConditions") ILightUpdatePacket iLightPacket = (ILightUpdatePacket) lightPacket;
+                //noinspection ConstantConditions
+                LightUpdatePacketAccessor lightPacketAccessor = (LightUpdatePacketAccessor) lightPacket;
 
                 PendingLightData lightData = PendingLightData.getInstance(packet.getX(), packet.getZ());
 
-                iLightPacket.setChunkX(packet.getX());
-                iLightPacket.setChunkZ(packet.getZ());
+                lightPacketAccessor.setChunkX(packet.getX());
+                lightPacketAccessor.setChunkZ(packet.getZ());
 
                 int blockLightMask = packet.getVerticalStripBitmask() << 1;
                 int skyLightMask = world.dimension.hasSkyLight() ? blockLightMask : 0;
-                iLightPacket.setBlocklightMask(blockLightMask);
-                iLightPacket.setSkylightMask(skyLightMask);
-                iLightPacket.setBlockLightUpdates(new ArrayList<>());
-                iLightPacket.setSkyLightUpdates(new ArrayList<>());
+                lightPacketAccessor.setBlocklightMask(blockLightMask);
+                lightPacketAccessor.setSkylightMask(skyLightMask);
+                lightPacketAccessor.setBlockLightUpdates(new ArrayList<>());
+                lightPacketAccessor.setSkyLightUpdates(new ArrayList<>());
 
                 for (int i = 0; i < 16; i++) {
                     byte[] blockData = lightData.getBlockLight(i);

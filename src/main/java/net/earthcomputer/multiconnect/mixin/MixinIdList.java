@@ -78,7 +78,7 @@ public class MixinIdList<T> implements IIdList {
     }
 
     @Override
-    public void clear() {
+    public void multiconnect_clear() {
         nextId = 0;
         idMap.clear();
         list.clear();
@@ -87,7 +87,7 @@ public class MixinIdList<T> implements IIdList {
     }
 
     @Override
-    public Iterable<Integer> ids() {
+    public Iterable<Integer> multiconnect_ids() {
         return Stream.concat(IntStream.range(0, list.size()).filter(i -> list.get(i) != null).boxed(),
                 highIdsMap.keySet().stream().sorted())::iterator;
     }

@@ -50,7 +50,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         for (int remapId = getNextId(); remapId > id; remapId--) {
             T toRemap = indexedEntries.get(remapId - 1);
             //noinspection unchecked
-            ((IInt2ObjectBiMap<T>) indexedEntries).remove(toRemap);
+            ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(toRemap);
             indexedEntries.put(toRemap, remapId);
         }
         setNextId(getNextId() + 1);
@@ -77,13 +77,13 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
 
         int id = indexedEntries.getId(t);
         //noinspection unchecked
-        ((IInt2ObjectBiMap<T>) indexedEntries).remove(t);
+        ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(t);
         entries.inverse().remove(t);
 
         for (int remapId = id; remapId < getNextId() - 1; remapId++) {
             T toRemap = indexedEntries.get(remapId + 1);
             //noinspection unchecked
-            ((IInt2ObjectBiMap<T>) indexedEntries).remove(toRemap);
+            ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(toRemap);
             indexedEntries.put(toRemap, remapId);
         }
         setNextId(getNextId() - 1);
@@ -101,7 +101,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
 
         int id = indexedEntries.getId(t);
         //noinspection unchecked
-        ((IInt2ObjectBiMap<T>) indexedEntries).remove(t);
+        ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(t);
         entries.inverse().remove(t);
 
         if (id == getNextId() - 1)

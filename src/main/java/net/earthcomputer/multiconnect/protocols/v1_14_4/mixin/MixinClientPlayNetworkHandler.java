@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.protocols.v1_14_4.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocols.v1_14_4.ITrackerUpdatePacket;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.PendingDataTrackerEntries;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.packet.EntityTrackerUpdateS2CPacket;
@@ -41,9 +40,9 @@ public abstract class MixinClientPlayNetworkHandler {
                 PendingDataTrackerEntries.setEntries(entityId, null);
                 EntityTrackerUpdateS2CPacket trackerPacket = new EntityTrackerUpdateS2CPacket();
                 //noinspection ConstantConditions
-                ITrackerUpdatePacket iTrackerPacket = (ITrackerUpdatePacket) trackerPacket;
-                iTrackerPacket.setId(entityId);
-                iTrackerPacket.setTrackedValues(entries);
+                TrackerUpdatePacketAccessor trackerPacketAccessor = (TrackerUpdatePacketAccessor) trackerPacket;
+                trackerPacketAccessor.setId(entityId);
+                trackerPacketAccessor.setTrackedValues(entries);
                 onEntityTrackerUpdate(trackerPacket);
             }
         }

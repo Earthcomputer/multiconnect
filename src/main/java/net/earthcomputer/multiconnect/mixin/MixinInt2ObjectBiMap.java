@@ -18,7 +18,7 @@ public abstract class MixinInt2ObjectBiMap<K> implements IInt2ObjectBiMap<K> {
     @Shadow protected abstract int findIndex(K k, int idealIndex);
 
     @Override
-    public void remove(K k) {
+    public void multiconnect_remove(K k) {
         if (k == null) throw new NullPointerException();
 
         int idealIndex = getIdealIndex(k);

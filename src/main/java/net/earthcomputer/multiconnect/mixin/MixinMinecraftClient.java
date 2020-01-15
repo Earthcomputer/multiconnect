@@ -6,7 +6,6 @@ import net.earthcomputer.multiconnect.impl.IMinecraftClient;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.color.item.ItemColors;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.search.SearchManager;
 import net.minecraft.util.thread.ReentrantThreadExecutor;
@@ -72,10 +71,6 @@ public abstract class MixinMinecraftClient extends ReentrantThreadExecutor<Runna
             executeTask(runAnywayTasks.remove());
         }
     }
-
-    @Accessor
-    @Override
-    public abstract ItemColors getItemColorMap();
 
     @Invoker
     @Override

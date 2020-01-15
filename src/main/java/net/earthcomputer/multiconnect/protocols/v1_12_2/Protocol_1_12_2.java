@@ -7,6 +7,8 @@ import com.mojang.datafixers.Dynamic;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.CommandBlockMinecartC2SAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.CustomPayloadC2SAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.transformer.*;
@@ -565,7 +567,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         ClientPlayNetworkHandler connection = MinecraftClient.getInstance().getNetworkHandler();
         if (packet.getClass() == CustomPayloadC2SPacket.class) {
             assert connection != null;
-            ICustomPaylaodC2SPacket customPayload = (ICustomPaylaodC2SPacket) packet;
+            CustomPayloadC2SAccessor customPayload = (CustomPayloadC2SAccessor) packet;
             String channel;
             if (customPayload.multiconnect_getChannel().equals(CustomPayloadC2SPacket.BRAND))
                 channel = "MC|Brand";
@@ -646,7 +648,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
             buf.writeByte(1); // command block type (minecart)
-            buf.writeInt(((ICommandBlockMinecartC2SPacket) updateCmdMinecart).getEntityId());
+            buf.writeInt(((CommandBlockMinecartC2SAccessor) updateCmdMinecart).getEntityId());
             buf.writeString(updateCmdMinecart.getCommand());
             buf.writeBoolean(updateCmdMinecart.shouldTrackOutput());
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|AdvCmd", buf));
@@ -872,7 +874,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         final int trappedChestId = Registry.BLOCK.getRawId(Blocks.TRAPPED_CHEST);
         final int wallBannerId = Registry.BLOCK.getRawId(Blocks.WHITE_WALL_BANNER);
 
-        ((IIdList) Block.STATE_IDS).clear();
+        ((IIdList) Block.STATE_IDS).multiconnect_clear();
         for (int blockId = 0; blockId < 256; blockId++) {
             if (blockId == leavesId) {
                 registerLeavesStates(blockId, Blocks.OAK_LEAVES, Blocks.SPRUCE_LEAVES, Blocks.BIRCH_LEAVES, Blocks.JUNGLE_LEAVES);

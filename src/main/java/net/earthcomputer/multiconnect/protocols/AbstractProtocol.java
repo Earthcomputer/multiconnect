@@ -95,7 +95,7 @@ public abstract class AbstractProtocol {
     }
 
     protected void recomputeBlockStates() {
-        ((IIdList) Block.STATE_IDS).clear();
+        ((IIdList) Block.STATE_IDS).multiconnect_clear();
         for (Block block : Registry.BLOCK) {
             for (BlockState state : block.getStateManager().getStates()) {
                 if (acceptBlockState(state)) {
@@ -156,10 +156,10 @@ public abstract class AbstractProtocol {
         //noinspection unchecked
         IInt2ObjectBiMap<TrackedDataHandler<?>> iBiMap = (IInt2ObjectBiMap<TrackedDataHandler<?>>) biMap;
         int id = TrackedDataHandlerRegistry.getId(handler);
-        iBiMap.remove(handler);
+        iBiMap.multiconnect_remove(handler);
         for (; TrackedDataHandlerRegistry.get(id + 1) != null; id++) {
             TrackedDataHandler<?> h = TrackedDataHandlerRegistry.get(id + 1);
-            iBiMap.remove(h);
+            iBiMap.multiconnect_remove(h);
             biMap.put(h, id);
         }
     }
@@ -209,7 +209,7 @@ public abstract class AbstractProtocol {
     }
 
     protected static void dumpBlockStates() {
-        for (int id : ((IIdList) Block.STATE_IDS).ids()) {
+        for (int id : ((IIdList) Block.STATE_IDS).multiconnect_ids()) {
             BlockState state = Block.STATE_IDS.get(id);
             assert state != null;
             StringBuilder sb = new StringBuilder().append(id).append(": ").append(Registry.BLOCK.getId(state.getBlock()));

@@ -59,7 +59,7 @@ public class MixinConnectScreen1 {
 
         HandshakeC2SPacket handshake  = new HandshakeC2SPacket(ConnectionInfo.ip, ConnectionInfo.port, NetworkState.STATUS);
         //noinspection ConstantConditions
-        ((IHandshakePacket) handshake).setVersion(-1);
+        ((HandshakePacketAccessor) handshake).setVersion(-1);
         connection.send(handshake);
         connection.send(new QueryRequestC2SPacket());
 
@@ -95,7 +95,7 @@ public class MixinConnectScreen1 {
     @Redirect(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;)V", ordinal = 0))
     public void sendHandshake(ClientConnection connect, Packet<?> packet) {
         if (ProtocolRegistry.isSupported(ConnectionInfo.protocolVersion)) {
-            ((IHandshakePacket) packet).setVersion(ConnectionInfo.protocolVersion);
+            ((HandshakePacketAccessor) packet).setVersion(ConnectionInfo.protocolVersion);
             ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
             ConnectionInfo.protocol.setup(false);
         }

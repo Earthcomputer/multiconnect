@@ -45,12 +45,12 @@ public abstract class MixinClientPlayNetworkHandler {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             RegistryTagManager tagManager = new RegistryTagManager();
             //noinspection ConstantConditions
-            IRegistryTagManager iTagManager = (IRegistryTagManager) tagManager;
+            RegistryTagManagerAccessor tagManagerAccessor = (RegistryTagManagerAccessor) tagManager;
             Protocol_1_12_2 protocol = (Protocol_1_12_2) ConnectionInfo.protocol;
-            toTagContainer(iTagManager.getBlocks(), protocol.getBlockTags());
-            toTagContainer(iTagManager.getItems(), protocol.getItemTags());
-            toTagContainer(iTagManager.getFluids(), protocol.getFluidTags());
-            toTagContainer(iTagManager.getEntityTypes(), protocol.getEntityTypeTags());
+            toTagContainer(tagManagerAccessor.getBlocks(), protocol.getBlockTags());
+            toTagContainer(tagManagerAccessor.getItems(), protocol.getItemTags());
+            toTagContainer(tagManagerAccessor.getFluids(), protocol.getFluidTags());
+            toTagContainer(tagManagerAccessor.getEntityTypes(), protocol.getEntityTypeTags());
             onSynchronizeTags(new SynchronizeTagsS2CPacket(tagManager));
 
             List<Recipe<?>> recipes = new ArrayList<>();
@@ -77,7 +77,7 @@ public abstract class MixinClientPlayNetworkHandler {
             entry.getValue().forEach(tag::add);
             map.put(id, tag.build(id));
         }
-        ((ITagContainer<T>) container).multiconnect_setEntries(map.build());
+        ((TagContainerAccessor<T>) container).multiconnect_setEntries(map.build());
     }
 
     @Inject(method = "onBlockEntityUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/packet/BlockEntityUpdateS2CPacket;getBlockEntityType()I"))

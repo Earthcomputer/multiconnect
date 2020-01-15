@@ -5,12 +5,13 @@
   "mixins": [
   ],
   "client": [
-    "MixinWorld",
-    "MixinWorldChunk",
     "MixinClientChunkManager",
     "MixinClientPlayNetworkHandler",
-    "MixinTrackerUpdatePacket",
-    "MixinEntity"
+    "MixinEntity",
+    "MixinWorld",
+    "MixinWorldChunk",
+
+    "TrackerUpdatePacketAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -3,8 +3,8 @@ package net.earthcomputer.multiconnect.impl;
 
 public interface IIdList {
 
-    void clear();
+    void multiconnect_clear();
 
-    Iterable<Integer> ids();
+    Iterable<Integer> multiconnect_ids();
 
 }
