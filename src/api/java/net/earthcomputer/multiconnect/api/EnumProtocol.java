@@ -23,6 +23,7 @@ public enum EnumProtocol {
     V1_12_2("1.12.2", Protocols.V1_12_2),
     V1_12_1("1.12.1", Protocols.V1_12_1),
     V1_12("1.12", Protocols.V1_12),
+    V1_15_2("1.15.2", Protocols.V1_15_2),
     ;
 
     private final int value;

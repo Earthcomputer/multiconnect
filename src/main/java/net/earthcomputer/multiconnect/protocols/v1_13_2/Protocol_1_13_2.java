@@ -593,7 +593,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             modifyParticleTypeRegistry((ISimpleRegistry<ParticleType<? extends ParticleEffect>>) registry);
         } else if (registry == Registry.ENCHANTMENT) {
             modifyEnchantmentRegistry((ISimpleRegistry<Enchantment>) registry);
-        } else if (registry == Registry.BLOCK_ENTITY) {
+        } else if (registry == Registry.BLOCK_ENTITY_TYPE) {
             modifyBlockEntityRegistry((ISimpleRegistry<BlockEntityType<?>>) registry);
         } else if (registry == Registry.RECIPE_SERIALIZER) {
             modifyRecipeSerializerRegistry((ISimpleRegistry<RecipeSerializer<?>>) registry);

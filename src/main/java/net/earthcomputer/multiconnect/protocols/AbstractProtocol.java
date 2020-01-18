@@ -296,7 +296,7 @@ public abstract class AbstractProtocol {
             DEFAULT_REGISTRIES.put(Registry.POTION, new DefaultRegistry<>(Registry.POTION));
             DEFAULT_REGISTRIES.put(Registry.BIOME, new DefaultRegistry<>(Registry.BIOME));
             DEFAULT_REGISTRIES.put(Registry.PARTICLE_TYPE, new DefaultRegistry<>(Registry.PARTICLE_TYPE));
-            DEFAULT_REGISTRIES.put(Registry.BLOCK_ENTITY, new DefaultRegistry<>(Registry.BLOCK_ENTITY));
+            DEFAULT_REGISTRIES.put(Registry.BLOCK_ENTITY_TYPE, new DefaultRegistry<>(Registry.BLOCK_ENTITY_TYPE));
             DEFAULT_REGISTRIES.put(Registry.CONTAINER, new DefaultRegistry<>(Registry.CONTAINER));
             DEFAULT_REGISTRIES.put(Registry.STATUS_EFFECT, new DefaultRegistry<>(Registry.STATUS_EFFECT));
             DEFAULT_REGISTRIES.put(Registry.RECIPE_SERIALIZER, new DefaultRegistry<>(Registry.RECIPE_SERIALIZER));
