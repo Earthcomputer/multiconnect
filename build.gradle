@@ -113,6 +113,8 @@ try {
 } catch (IOException ignore) {
 }
 def isBeta = version.contains 'pre'
+def changes = file('changelog.txt')
+changes = changes.exists() ? changes.getText('UTF-8') : ''
 
 // configure the maven publication
 publishing {
@@ -150,7 +152,7 @@ curseforge {
 
 	project {
 		id = '336018'
-		changelog = file('changelog.txt')
+		changelog = changes
 		releaseType = isBeta ? 'beta' : 'release'
 		addGameVersion project.minecraft_version
 		addGameVersion 'Fabric'
@@ -172,7 +174,7 @@ githubRelease {
 	repo 'multiconnect'
 	tagName("v$version")
 	releaseName("Version $version for Minecraft ${project.minecraft_version}")
-	body(file('changelog.txt').getText('UTF-8'))
+	body changes
 	prerelease isBeta
 	releaseAssets remapJar.archivePath
 }
