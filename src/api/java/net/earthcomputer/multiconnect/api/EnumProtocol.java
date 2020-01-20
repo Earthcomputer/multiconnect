@@ -29,9 +29,18 @@ public enum EnumProtocol {
 
     private final String name;
 
+    private final String assetID;
+
     EnumProtocol(final String name, final int value) {
         this.value = value;
         this.name = name;
+        this.assetID = name;
+    }
+
+    EnumProtocol(final String name, final String assetID, final int value) {
+        this.value = value;
+        this.name = name;
+        this.assetID = assetID;
     }
 
     public int getValue() {
@@ -40,6 +49,10 @@ public enum EnumProtocol {
 
     public String getName() {
         return name;
+    }
+
+    public String getAssetID() {
+        return assetID;
     }
 
     private static final EnumProtocol[] VALUES = values();

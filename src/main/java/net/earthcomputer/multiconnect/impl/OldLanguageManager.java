@@ -51,8 +51,8 @@ public class OldLanguageManager {
         if (ConnectionInfo.protocol == ProtocolRegistry.latest())
             return;
 
-        String currentVersion = EnumProtocol.byValue(ConnectionInfo.protocolVersion).getName();
-        String latestVersion = EnumProtocol.byValue(SharedConstants.getGameVersion().getProtocolVersion()).getName();
+        String currentVersion = EnumProtocol.byValue(ConnectionInfo.protocolVersion).getAssetID();
+        String latestVersion = EnumProtocol.byValue(SharedConstants.getGameVersion().getProtocolVersion()).getAssetID();
 
         Map<String, String> currentNative = getTranslations(currentVersion, nativeLang);
         Map<String, String> currentFallback = getTranslations(currentVersion, "en_us");
