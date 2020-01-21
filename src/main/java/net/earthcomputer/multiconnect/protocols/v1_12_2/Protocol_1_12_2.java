@@ -1565,7 +1565,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             modifyBiomeRegistry((ISimpleRegistry<Biome>) registry);
         } else if (registry == Registry.PARTICLE_TYPE) {
             Particles_1_12_2.registerParticles((ISimpleRegistry<ParticleType<?>>) registry);
-        } else if (registry == Registry.BLOCK_ENTITY) {
+        } else if (registry == Registry.BLOCK_ENTITY_TYPE) {
             BlockEntities_1_12_2.registerBlockEntities((ISimpleRegistry<BlockEntityType<?>>) registry);
         } else if (registry == Registry.STATUS_EFFECT) {
             modifyStatusEffectRegistry((ISimpleRegistry<StatusEffect>) registry);

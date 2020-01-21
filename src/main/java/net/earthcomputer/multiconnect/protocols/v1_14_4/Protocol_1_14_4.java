@@ -194,7 +194,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             modifyEntityTypeRegistry((ISimpleRegistry<EntityType<?>>) registry);
         } else if (registry == Registry.SOUND_EVENT) {
             modifySoundEventRegistry((ISimpleRegistry<SoundEvent>) registry);
-        } else if (registry == Registry.BLOCK_ENTITY) {
+        } else if (registry == Registry.BLOCK_ENTITY_TYPE) {
             modifyBlockEntityTypeRegistry((ISimpleRegistry<BlockEntityType<?>>) registry);
         } else if (registry == Registry.PARTICLE_TYPE) {
             modifyParticleTypeRegistry((ISimpleRegistry<ParticleType<? extends ParticleEffect>>) registry);

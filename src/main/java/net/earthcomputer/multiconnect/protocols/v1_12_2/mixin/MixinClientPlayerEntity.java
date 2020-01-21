@@ -10,12 +10,12 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ClientPlayerEntity.class)
 public class MixinClientPlayerEntity {
 
-    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isInsideWater()Z"))
+    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isTouchingWater()Z"))
     private boolean allowSprintingInWater(ClientPlayerEntity self) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             return false; // disable all water related movement
         }
-        return self.isInsideWater();
+        return self.isTouchingWater();
     }
 
 }
