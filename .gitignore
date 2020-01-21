@@ -28,6 +28,7 @@ bin/
 
 # fabric
 
-run/
+run/*
+!run/.gitkeep
 credentials.properties
 changelog.txt
