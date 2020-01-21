@@ -7,10 +7,10 @@ import com.mojang.datafixers.Dynamic;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.CommandBlockMinecartC2SAccessor;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.CustomPayloadC2SAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
+import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ZombieEntityAccessor;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
@@ -70,7 +70,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -111,13 +110,6 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     }
 
     private static final Pattern NON_IDENTIFIER_CHARS = Pattern.compile("[^a-z0-9/._\\-]");
-
-    private static final Field AREA_EFFECT_CLOUD_PARTICLE_ID = DataTrackerManager.getTrackedDataField(AreaEffectCloudEntity.class, 3, "PARTICLE_ID");
-    private static final Field ENTITY_CUSTOM_NAME = DataTrackerManager.getTrackedDataField(Entity.class, 2, "CUSTOM_NAME");
-    private static final Field BOAT_BUBBLE_WOBBLE_TICKS = DataTrackerManager.getTrackedDataField(BoatEntity.class, 6, "BUBBLE_WOBBLE_TICKS");
-    private static final Field ZOMBIE_CONVERTING_IN_WATER = DataTrackerManager.getTrackedDataField(ZombieEntity.class, 2, "CONVERTING_IN_WATER");
-    private static final Field MINECART_DISPLAY_TILE = DataTrackerManager.getTrackedDataField(AbstractMinecartEntity.class, 3, "CUSTOM_BLOCK_ID");
-    private static final Field WOLF_COLLAR_COLOR = DataTrackerManager.getTrackedDataField(WolfEntity.class, 1, "COLLAR_COLOR");
 
     private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_ID = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM1 = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
@@ -771,7 +763,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         if (!super.acceptEntityData(clazz, data))
             return false;
 
-        if (clazz == AreaEffectCloudEntity.class && data == DataTrackerManager.getTrackedData(ParticleEffect.class, AREA_EFFECT_CLOUD_PARTICLE_ID)) {
+        if (clazz == AreaEffectCloudEntity.class && data == AreaEffectCloudEntityAccessor.getParticleId()) {
             DataTrackerManager.registerOldTrackedData(AreaEffectCloudEntity.class,
                     OLD_AREA_EFFECT_CLOUD_PARTICLE_ID,
                     Registry.PARTICLE_TYPE.getRawId(ParticleTypes.ENTITY_EFFECT),
@@ -798,22 +790,22 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
 
-        if (clazz == Entity.class && data == DataTrackerManager.getTrackedData(Optional.class, ENTITY_CUSTOM_NAME)) {
+        if (clazz == Entity.class && data == EntityAccessor.getCustomName()) {
             DataTrackerManager.registerOldTrackedData(Entity.class, OLD_CUSTOM_NAME, "",
                     (entity, val) -> entity.setCustomName(val.isEmpty() ? null : new LiteralText(val)));
             return false;
         }
 
-        if (clazz == BoatEntity.class && data == DataTrackerManager.getTrackedData(Integer.class, BOAT_BUBBLE_WOBBLE_TICKS)) {
+        if (clazz == BoatEntity.class && data == BoatEntityAccessor.getBubbleWobbleTicks()) {
             return false;
         }
 
-        if (clazz == ZombieEntity.class && data == DataTrackerManager.getTrackedData(Boolean.class, ZOMBIE_CONVERTING_IN_WATER)) {
+        if (clazz == ZombieEntity.class && data == ZombieEntityAccessor.getConvertingInWater()) {
             return false;
         }
 
         if (clazz == AbstractMinecartEntity.class) {
-            TrackedData<Integer> displayTile = DataTrackerManager.getTrackedData(Integer.class, MINECART_DISPLAY_TILE);
+            TrackedData<Integer> displayTile = AbstractMinecartEntityAccessor.getCustomBlockId();
             if (data == displayTile) {
                 DataTrackerManager.registerOldTrackedData(AbstractMinecartEntity.class, OLD_MINECART_DISPLAY_TILE, 0,
                         (entity, val) -> entity.getDataTracker().set(displayTile, Blocks_1_12_2.convertToStateRegistryId(val)));
@@ -822,7 +814,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         }
 
         if (clazz == WolfEntity.class) {
-            TrackedData<Integer> collarColor = DataTrackerManager.getTrackedData(Integer.class, WOLF_COLLAR_COLOR);
+            TrackedData<Integer> collarColor = WolfEntityAccessor.getCollarColor();
             if (data == collarColor) {
                 DataTrackerManager.registerOldTrackedData(WolfEntity.class, OLD_WOLF_COLLAR_COLOR, 1,
                         (entity, val) -> entity.getDataTracker().set(collarColor, 15 - val));

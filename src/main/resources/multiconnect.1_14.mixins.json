@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_14.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "AbstractTraderEntityAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

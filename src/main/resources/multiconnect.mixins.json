@@ -36,7 +36,10 @@
     "MixinTranslationStorage",
     "MixinWorldChunk",
 
-    "HandshakePacketAccessor"
+    "HandshakePacketAccessor",
+    "SpawnEggItemAccessor",
+    "TrackedDataAccessor",
+    "TrackedDataHandlerRegistryAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

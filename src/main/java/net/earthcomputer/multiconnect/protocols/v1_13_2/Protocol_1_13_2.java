@@ -7,6 +7,7 @@ import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
@@ -63,10 +64,7 @@ import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.Palette;
 import net.minecraft.world.chunk.PalettedContainer;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
 
@@ -74,20 +72,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
     public static final Identifier CUSTOM_PAYLOAD_TRADE_LIST = new Identifier("trader_list");
     public static final Identifier CUSTOM_PAYLOAD_OPEN_BOOK = new Identifier("open_book");
-
-    private static final Field ENTITY_POSE = DataTrackerManager.getTrackedDataField(Entity.class, 6, "POSE");
-    private static final Field ENDER_EYE_ITEM = DataTrackerManager.getTrackedDataField(EnderEyeEntity.class, 0, "ITEM");
-    private static final Field FIREWORK_SHOOTER = DataTrackerManager.getTrackedDataField(FireworkEntity.class, 1, "SHOOTER_ENTITY_ID");
-    private static final Field FIREWORK_ANGLE = DataTrackerManager.getTrackedDataField(FireworkEntity.class, 2, "SHOT_AT_ANGLE");
-    private static final Field LIVING_SLEEPING_POSITION = DataTrackerManager.getTrackedDataField(LivingEntity.class, 6, "SLEEPING_POSITION");
-    private static final Field VILLAGER_DATA = DataTrackerManager.getTrackedDataField(VillagerEntity.class, 0, "VILLAGER_DATA");
-    private static final Field ZOMBIE_DROWNING = DataTrackerManager.getTrackedDataField(ZombieEntity.class, 2, "CONVERTING_IN_WATER");
-    private static final Field ZOMBIE_VILLAGER_DATA = DataTrackerManager.getTrackedDataField(ZombieVillagerEntity.class, 1, "VILLAGER_DATA");
-    private static final Field MOOSHROOM_TYPE = DataTrackerManager.getTrackedDataField(MooshroomEntity.class, 0, "TYPE");
-    private static final Field CAT_SLEEPING_WITH_OWNER = DataTrackerManager.getTrackedDataField(CatEntity.class, 1, "SLEEPING_WITH_OWNER");
-    private static final Field CAT_HEAD_DOWN = DataTrackerManager.getTrackedDataField(CatEntity.class, 2, "HEAD_DOWN");
-    private static final Field CAT_COLLAR_COLOR = DataTrackerManager.getTrackedDataField(CatEntity.class, 3, "COLLAR_COLOR");
-    private static final Field PROJECTILE_PIERCE_LEVEL = DataTrackerManager.getTrackedDataField(ProjectileEntity.class, 2, "PIERCE_LEVEL");
 
     private static final TrackedData<Integer> OLD_FIREWORK_SHOOTER = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> OLD_VILLAGER_PROFESSION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
@@ -98,20 +82,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     private static final TrackedData<Integer> OLD_HORSE_ARMOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
 
     private static SimpleRegistry<EntityType<?>> ENTITY_REGISTRY_1_13;
-
-    private static final Palette<BlockState> BLOCK_STATE_PALETTE;
-    static {
-        try {
-            Field field = Arrays.stream(ChunkSection.class.getDeclaredFields())
-                    .filter(f -> f.getType() == Palette.class)
-                    .findFirst().orElseThrow(NoSuchFieldException::new);
-            field.setAccessible(true);
-            //noinspection unchecked
-            BLOCK_STATE_PALETTE = (Palette<BlockState>) field.get(null);
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
-        }
-    }
 
     @Override
     public void setup(boolean resourceReload) {
@@ -162,7 +132,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
                     buf.pendingRead(Short.class, (short)0);
                     buf.enablePassthroughMode();
-                    new PalettedContainer<>(BLOCK_STATE_PALETTE, Block.STATE_IDS, NbtHelper::toBlockState, NbtHelper::fromBlockState, Blocks.AIR.getDefaultState()).fromPacket(buf);
+                    new PalettedContainer<>(ChunkSectionAccessor.getPalette(), Block.STATE_IDS, NbtHelper::toBlockState, NbtHelper::fromBlockState, Blocks.AIR.getDefaultState()).fromPacket(buf);
                     buf.disablePassthroughMode();
                     byte[] light = new byte[16 * 16 * 16 / 2];
                     buf.readBytes(light);
@@ -404,49 +374,49 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
     @Override
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
-        if (clazz == Entity.class && data == DataTrackerManager.getTrackedData(EntityPose.class, ENTITY_POSE))
+        if (clazz == Entity.class && data == EntityAccessor.getPose())
             return false;
-        if (clazz == EnderEyeEntity.class && data == DataTrackerManager.getTrackedData(ItemStack.class, ENDER_EYE_ITEM))
+        if (clazz == EnderEyeEntity.class && data == EnderEyeEntityAccessor.getItem())
             return false;
         if (clazz == FireworkEntity.class) {
-            TrackedData<OptionalInt> fireworkShooter = DataTrackerManager.getTrackedData(OptionalInt.class, FIREWORK_SHOOTER);
+            TrackedData<OptionalInt> fireworkShooter = FireworkEntityAccessor.getShooter();
             if (data == fireworkShooter) {
                 DataTrackerManager.registerOldTrackedData(FireworkEntity.class, OLD_FIREWORK_SHOOTER, 0,
                         (entity, val) -> entity.getDataTracker().set(fireworkShooter, val <= 0 ? OptionalInt.empty() : OptionalInt.of(val)));
                 return false;
             }
-            if (data == DataTrackerManager.getTrackedData(Boolean.class, FIREWORK_ANGLE))
+            if (data == FireworkEntityAccessor.getShotAtAngle())
                 return false;
         }
-        if (clazz == LivingEntity.class && data == DataTrackerManager.getTrackedData(Optional.class, LIVING_SLEEPING_POSITION))
+        if (clazz == LivingEntity.class && data == LivingEntityAccessor.getSleepingPosition())
             return false;
         if (clazz == VillagerEntity.class) {
-            TrackedData<VillagerData> villagerData = DataTrackerManager.getTrackedData(VillagerData.class, VILLAGER_DATA);
+            TrackedData<VillagerData> villagerData = VillagerEntityAccessor.getVillagerData();
             if (data == villagerData) {
                 DataTrackerManager.registerOldTrackedData(VillagerEntity.class, OLD_VILLAGER_PROFESSION, 0,
                         (entity, val) -> entity.getDataTracker().set(villagerData, entity.getVillagerData().withProfession(getVillagerProfession(val))));
                 return false;
             }
         }
-        if (clazz == ZombieEntity.class && data == DataTrackerManager.getTrackedData(Boolean.class, ZOMBIE_DROWNING))
+        if (clazz == ZombieEntity.class && data == ZombieEntityAccessor.getConvertingInWater())
             DataTrackerManager.registerOldTrackedData(ZombieEntity.class, OLD_ZOMBIE_ATTACKING, false, MobEntity::setAttacking);
         if (clazz == ZombieVillagerEntity.class) {
-            TrackedData<VillagerData> villagerData = DataTrackerManager.getTrackedData(VillagerData.class, ZOMBIE_VILLAGER_DATA);
+            TrackedData<VillagerData> villagerData = ZombieVillagerEntityAccessor.getVillagerData();
             if (data == villagerData) {
                 DataTrackerManager.registerOldTrackedData(ZombieVillagerEntity.class, OLD_ZOMBIE_VILLAGER_PROFESSION, 0,
                         (entity, val) -> entity.getDataTracker().set(villagerData, entity.getVillagerData().withProfession(getVillagerProfession(val))));
                 return false;
             }
         }
-        if (clazz == MooshroomEntity.class && data == DataTrackerManager.getTrackedData(String.class, MOOSHROOM_TYPE))
+        if (clazz == MooshroomEntity.class && data == MooshroomEntityAccessor.getType())
             return false;
         if (clazz == CatEntity.class) {
-            if (data == DataTrackerManager.getTrackedData(Boolean.class, CAT_SLEEPING_WITH_OWNER)
-                || data == DataTrackerManager.getTrackedData(Boolean.class, CAT_HEAD_DOWN)
-                || data == DataTrackerManager.getTrackedData(Integer.class, CAT_COLLAR_COLOR))
+            if (data == CatEntityAccessor.getSleepingWithOwner()
+                || data == CatEntityAccessor.getHeadDown()
+                || data == CatEntityAccessor.getCollarColor())
                 return false;
         }
-        if (clazz == ProjectileEntity.class && data == DataTrackerManager.getTrackedData(Byte.class, PROJECTILE_PIERCE_LEVEL))
+        if (clazz == ProjectileEntity.class && data == ProjectileEntityAccessor.getPierceLevel())
             return false;
         return super.acceptEntityData(clazz, data);
     }

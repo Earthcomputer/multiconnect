@@ -1,14 +1,16 @@
 package net.earthcomputer.multiconnect.protocols.v1_14_4;
 
-import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.impl.CurrentChunkDataPacket;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.EndermanEntityAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.LivingEntityAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.TridentEntityAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.WolfEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15;
 import net.earthcomputer.multiconnect.transformer.ChunkData;
-import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.BellBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -31,21 +33,14 @@ import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkSection;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.List;
 
 public class Protocol_1_14_4 extends Protocol_1_15 {
-
-    private static final Field ENDERMAN_HAS_SCREAMED = DataTrackerManager.getTrackedDataField(EndermanEntity.class, 2, "field_20618");
-    private static final Field LIVING_STINGER_COUNT = DataTrackerManager.getTrackedDataField(LivingEntity.class, 5, "STINGER_COUNT");
-    private static final Field TRIDENT_HAS_ENCHANTMENT_GLINT = DataTrackerManager.getTrackedDataField(TridentEntity.class, 1, "field_21514");
-    private static final Field WOLF_BEGGING = DataTrackerManager.getTrackedDataField(WolfEntity.class, 0, "BEGGING");
 
     private static final TrackedData<Float> OLD_WOLF_HEALTH = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.FLOAT);
 
@@ -267,13 +262,13 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
 
     @Override
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
-        if (clazz == LivingEntity.class && data == DataTrackerManager.getTrackedData(Integer.class, LIVING_STINGER_COUNT))
+        if (clazz == LivingEntity.class && data == LivingEntityAccessor.getStingerCount())
             return false;
-        if (clazz == TridentEntity.class && data == DataTrackerManager.getTrackedData(Boolean.class, TRIDENT_HAS_ENCHANTMENT_GLINT))
+        if (clazz == TridentEntity.class && data == TridentEntityAccessor.getHasEnchantmentGlint())
             return false;
-        if (clazz == WolfEntity.class && data == DataTrackerManager.getTrackedData(Boolean.class, WOLF_BEGGING))
+        if (clazz == WolfEntity.class && data == WolfEntityAccessor.getBegging())
             DataTrackerManager.registerOldTrackedData(WolfEntity.class, OLD_WOLF_HEALTH, 20f, LivingEntity::setHealth);
-        if (clazz == EndermanEntity.class && data == DataTrackerManager.getTrackedData(Boolean.class, ENDERMAN_HAS_SCREAMED))
+        if (clazz == EndermanEntity.class && data == EndermanEntityAccessor.getHasScreamed())
             return false;
 
         return super.acceptEntityData(clazz, data);

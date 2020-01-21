@@ -26,10 +26,20 @@
     "MixinUpgradeData",
     "MixinWorldChunk",
 
+    "AbstractMinecartEntityAccessor",
+    "AreaEffectCloudEntityAccessor",
+    "BoatEntityAccessor",
+    "ChunkPalettedStorageFixAccessor",
     "CommandBlockMinecartC2SAccessor",
+    "CrackParticleAccessor",
     "CustomPayloadC2SAccessor",
+    "EntityAccessor",
+    "FlowerPotBlockAccessor",
     "RegistryTagManagerAccessor",
-    "TagContainerAccessor"
+    "SuspendParticleAccessor",
+    "TagContainerAccessor",
+    "UpgradeDataAccessor",
+    "WolfEntityAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

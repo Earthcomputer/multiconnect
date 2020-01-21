@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_13.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "ProjectileEntityAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

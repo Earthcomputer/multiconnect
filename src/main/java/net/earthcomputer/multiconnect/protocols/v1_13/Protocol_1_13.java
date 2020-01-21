@@ -1,8 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_13;
 
-import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_13.mixin.ProjectileEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_13_1.Protocol_1_13_1;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -16,12 +16,7 @@ import net.minecraft.server.network.packet.BookUpdateC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.registry.Registry;
 
-import java.lang.reflect.Field;
-import java.util.Optional;
-
 public class Protocol_1_13 extends Protocol_1_13_1 {
-
-    private static final Field PROJECTILE_UUID = DataTrackerManager.getTrackedDataField(ProjectileEntity.class, 1, "OPTIONAL_UUID");
 
     public static void registerTranslators() {
         ProtocolRegistry.registerOutboundTranslator(BookUpdateC2SPacket.class, buf -> {
@@ -57,7 +52,7 @@ public class Protocol_1_13 extends Protocol_1_13_1 {
 
     @Override
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
-        if (clazz == ProjectileEntity.class && data == DataTrackerManager.getTrackedData(Optional.class, PROJECTILE_UUID))
+        if (clazz == ProjectileEntity.class && data == ProjectileEntityAccessor.getOptionalUuid())
             return false;
         return super.acceptEntityData(clazz, data);
     }

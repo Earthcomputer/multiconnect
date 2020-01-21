@@ -3,6 +3,8 @@ package net.earthcomputer.multiconnect.protocols;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import net.earthcomputer.multiconnect.impl.*;
+import net.earthcomputer.multiconnect.mixin.SpawnEggItemAccessor;
+import net.earthcomputer.multiconnect.mixin.TrackedDataHandlerRegistryAccessor;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -26,7 +28,6 @@ import net.minecraft.util.registry.DefaultedRegistry;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.SimpleRegistry;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -152,7 +153,7 @@ public abstract class AbstractProtocol {
     }
 
     protected static void removeTrackedDataHandler(TrackedDataHandler<?> handler) {
-        Int2ObjectBiMap<TrackedDataHandler<?>> biMap = DefaultRegistry.getTrackedDataHandlers();
+        Int2ObjectBiMap<TrackedDataHandler<?>> biMap = TrackedDataHandlerRegistryAccessor.getHandlers();
         //noinspection unchecked
         IInt2ObjectBiMap<TrackedDataHandler<?>> iBiMap = (IInt2ObjectBiMap<TrackedDataHandler<?>>) biMap;
         int id = TrackedDataHandlerRegistry.getId(handler);
@@ -281,11 +282,11 @@ public abstract class AbstractProtocol {
             DEFAULT_REGISTRIES.forEach((DefaultRegistry::restore));
             Item.BLOCK_ITEMS.clear();
             Item.BLOCK_ITEMS.putAll(DEFAULT_BLOCK_ITEMS);
-            getSpawnEggItems().clear();
-            getSpawnEggItems().putAll(DEFAULT_SPAWN_EGG_ITEMS);
-            getTrackedDataHandlers().clear();
+            SpawnEggItemAccessor.getSpawnEggs().clear();
+            SpawnEggItemAccessor.getSpawnEggs().putAll(DEFAULT_SPAWN_EGG_ITEMS);
+            TrackedDataHandlerRegistryAccessor.getHandlers().clear();
             for (TrackedDataHandler<?> handler : DEFAULT_TRACKED_DATA_HANDLERS)
-                getTrackedDataHandlers().put(handler, DEFAULT_TRACKED_DATA_HANDLERS.getId(handler));
+                TrackedDataHandlerRegistryAccessor.getHandlers().put(handler, DEFAULT_TRACKED_DATA_HANDLERS.getId(handler));
         }
 
         public static void initialize() {
@@ -303,9 +304,9 @@ public abstract class AbstractProtocol {
             DEFAULT_REGISTRIES.put(Registry.SOUND_EVENT, new DefaultRegistry<>(Registry.SOUND_EVENT));
 
             DEFAULT_BLOCK_ITEMS.putAll(Item.BLOCK_ITEMS);
-            DEFAULT_SPAWN_EGG_ITEMS.putAll(getSpawnEggItems());
-            for (TrackedDataHandler<?> handler : getTrackedDataHandlers())
-                DEFAULT_TRACKED_DATA_HANDLERS.put(handler, getTrackedDataHandlers().getId(handler));
+            DEFAULT_SPAWN_EGG_ITEMS.putAll(SpawnEggItemAccessor.getSpawnEggs());
+            for (TrackedDataHandler<?> handler : TrackedDataHandlerRegistryAccessor.getHandlers())
+                DEFAULT_TRACKED_DATA_HANDLERS.put(handler, TrackedDataHandlerRegistryAccessor.getHandlers().getId(handler));
 
             //noinspection unchecked
             ((ISimpleRegistry<Block>) Registry.BLOCK).addRegisterListener(block -> {
@@ -333,46 +334,11 @@ public abstract class AbstractProtocol {
             });
             //noinspection unchecked
             ((ISimpleRegistry<EntityType<?>>) Registry.ENTITY_TYPE).addUnregisterListener(entityType -> {
-                if (getSpawnEggItems().containsKey(entityType)) {
+                if (SpawnEggItemAccessor.getSpawnEggs().containsKey(entityType)) {
                     //noinspection unchecked
-                    ((ISimpleRegistry<Item>) Registry.ITEM).unregister(getSpawnEggItems().remove(entityType));
+                    ((ISimpleRegistry<Item>) Registry.ITEM).unregister(SpawnEggItemAccessor.getSpawnEggs().remove(entityType));
                 }
             });
-        }
-
-        private static Map<EntityType<?>, SpawnEggItem> getSpawnEggItems() {
-            try {
-                //noinspection unchecked
-                return (Map<EntityType<?>, SpawnEggItem>) SPAWN_EGGS_FIELD.get(null);
-            } catch (ReflectiveOperationException e) {
-                throw new AssertionError(e);
-            }
-        }
-
-        private static Int2ObjectBiMap<TrackedDataHandler<?>> getTrackedDataHandlers() {
-            try {
-                //noinspection unchecked
-                return (Int2ObjectBiMap<TrackedDataHandler<?>>) TRACKED_DATA_HANDLERS.get(null);
-            } catch (ReflectiveOperationException e) {
-                throw new AssertionError(e);
-            }
-        }
-
-        private static final Field SPAWN_EGGS_FIELD;
-        private static final Field TRACKED_DATA_HANDLERS;
-        static {
-            try {
-                SPAWN_EGGS_FIELD = Arrays.stream(SpawnEggItem.class.getDeclaredFields())
-                        .filter(it -> it.getType() == Map.class)
-                        .findFirst().orElseThrow(NoSuchFieldException::new);
-                SPAWN_EGGS_FIELD.setAccessible(true);
-                TRACKED_DATA_HANDLERS = Arrays.stream(TrackedDataHandlerRegistry.class.getDeclaredFields())
-                        .filter(it -> it.getType() == Int2ObjectBiMap.class)
-                        .findFirst().orElseThrow(NoSuchFieldException::new);
-                TRACKED_DATA_HANDLERS.setAccessible(true);
-            } catch (ReflectiveOperationException e) {
-                throw new AssertionError(e);
-            }
         }
     }
 

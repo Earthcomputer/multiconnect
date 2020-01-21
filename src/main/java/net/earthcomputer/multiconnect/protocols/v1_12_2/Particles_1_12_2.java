@@ -6,6 +6,8 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.earthcomputer.multiconnect.impl.IParticleManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.CrackParticleAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.SuspendParticleAccessor;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -21,8 +23,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
-
-import java.lang.reflect.Constructor;
 
 import static net.minecraft.particle.ParticleTypes.*;
 
@@ -160,14 +160,7 @@ public class Particles_1_12_2 {
 
         @Override
         public Particle createParticle(DefaultParticleType type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
-            SuspendParticle particle;
-            try {
-                Constructor<SuspendParticle> ctor = SuspendParticle.class.getDeclaredConstructor(World.class, double.class, double.class, double.class, double.class, double.class, double.class);
-                ctor.setAccessible(true);
-                particle = ctor.newInstance(world, x, y, z, xSpeed, ySpeed, zSpeed);
-            } catch (ReflectiveOperationException e) {
-                throw new AssertionError(e);
-            }
+            SuspendParticle particle = SuspendParticleAccessor.constructor(world, x, y, z, xSpeed, ySpeed, zSpeed);
             particle.setSprite(sprite);
             return particle;
         }
@@ -176,13 +169,7 @@ public class Particles_1_12_2 {
     private static class SnowShovelFactory implements ParticleFactory<DefaultParticleType> {
         @Override
         public Particle createParticle(DefaultParticleType type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
-            try {
-                Constructor<CrackParticle> ctor = CrackParticle.class.getDeclaredConstructor(World.class, double.class, double.class, double.class, double.class, double.class, double.class, ItemStack.class);
-                ctor.setAccessible(true);
-                return ctor.newInstance(world, x, y, z, xSpeed, ySpeed, zSpeed, new ItemStack(Blocks.SNOW_BLOCK));
-            } catch (ReflectiveOperationException e) {
-                throw new AssertionError(e);
-            }
+            return CrackParticleAccessor.constructor(world, x, y, z, xSpeed, ySpeed, zSpeed, new ItemStack(Blocks.SNOW_BLOCK));
         }
     }
 

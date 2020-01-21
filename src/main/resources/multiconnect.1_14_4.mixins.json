@@ -11,7 +11,11 @@
     "MixinWorld",
     "MixinWorldChunk",
 
-    "TrackerUpdatePacketAccessor"
+    "EndermanEntityAccessor",
+    "LivingEntityAccessor",
+    "TrackerUpdatePacketAccessor",
+    "TridentEntityAccessor",
+    "WolfEntityAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

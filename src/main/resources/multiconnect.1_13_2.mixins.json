@@ -16,7 +16,18 @@
     "MixinPlayerEntityRenderer",
     "MixinRegistryTagManager",
 
-    "LightUpdatePacketAccessor"
+    "CatEntityAccessor",
+    "ChunkSectionAccessor",
+    "EnderEyeEntityAccessor",
+    "EntityAccessor",
+    "FireworkEntityAccessor",
+    "LightUpdatePacketAccessor",
+    "LivingEntityAccessor",
+    "MooshroomEntityAccessor",
+    "ProjectileEntityAccessor",
+    "VillagerEntityAccessor",
+    "ZombieEntityAccessor",
+    "ZombieVillagerEntityAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

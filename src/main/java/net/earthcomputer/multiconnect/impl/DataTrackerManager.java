@@ -1,14 +1,12 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.fabricmc.loader.api.FabricLoader;
+import net.earthcomputer.multiconnect.mixin.TrackedDataAccessor;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.BiConsumer;
 
@@ -36,21 +34,6 @@ public class DataTrackerManager {
     private static int nextAbsentId = -1;
     private static Set<DataTracker> trackerInstances = Collections.newSetFromMap(new WeakHashMap<>());
 
-    private static final Field TRACKED_DATA_ID;
-    static {
-        try {
-            Field modifiers = Field.class.getDeclaredField("modifiers");
-            modifiers.setAccessible(true);
-            TRACKED_DATA_ID = Arrays.stream(TrackedData.class.getDeclaredFields())
-                    .filter(field -> field.getType() == int.class)
-                    .findAny().orElseThrow(NoSuchFieldException::new);
-            TRACKED_DATA_ID.setAccessible(true);
-            modifiers.set(TRACKED_DATA_ID, TRACKED_DATA_ID.getModifiers() & ~Modifier.FINAL);
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
-        }
-    }
-
     public static synchronized void addTrackerInstance(DataTracker instance) {
         trackerInstances.add(instance);
     }
@@ -68,19 +51,11 @@ public class DataTrackerManager {
         if (ConnectionInfo.protocol.acceptEntityData(clazz, data)) {
             int id = getNextId(clazz);
             NEXT_IDS.put(clazz, id + 1);
-            setId(data, id);
+            ((TrackedDataAccessor) data).setId(id);
             oldTrackedData.computeIfAbsent(clazz, k -> new ArrayList<>()).add(Pair.of(data, _default));
             oldTrackedDataHandlers.put(data, handler);
         } else {
-            setId(data, nextAbsentId--);
-        }
-    }
-
-    private static void setId(TrackedData<?> data, int id) {
-        try {
-            TRACKED_DATA_ID.set(data, id);
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
+            ((TrackedDataAccessor) data).setId(nextAbsentId--);
         }
     }
 
@@ -116,9 +91,9 @@ public class DataTrackerManager {
         if (ConnectionInfo.protocol.acceptEntityData(clazz, data)) {
             int id = getNextId(clazz);
             NEXT_IDS.put(clazz, id + 1);
-            setId(data, id);
+            ((TrackedDataAccessor) data).setId(id);
         } else {
-            setId(data, nextAbsentId--);
+            ((TrackedDataAccessor) data).setId(nextAbsentId--);
         }
     }
 
@@ -181,30 +156,6 @@ public class DataTrackerManager {
     @SuppressWarnings("unchecked")
     private static <T, U> void doHandleTrackedData(BiConsumer<U, T> handler, Entity entity, Object val) {
         handler.accept((U) entity, (T) val);
-    }
-
-    public static Field getTrackedDataField(Class<? extends Entity> clazz, int index, String nameForDebug) {
-        try {
-            Field field = Arrays.stream(clazz.getDeclaredFields())
-                    .filter(f -> f.getType() == TrackedData.class)
-                    .skip(index).findFirst().orElseThrow(NoSuchFieldException::new);
-            field.setAccessible(true);
-            if (FabricLoader.getInstance().isDevelopmentEnvironment())
-                if (!field.getName().equals(nameForDebug))
-                    throw new AssertionError("Field name " + field.getName() + " does not match " + nameForDebug);
-            return field;
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T> TrackedData<T> getTrackedData(Class<T> type, Field trackedDataField) {
-        try {
-            return (TrackedData<T>) trackedDataField.get(null);
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
-        }
     }
 
 }

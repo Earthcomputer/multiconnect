@@ -2,11 +2,12 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.ChunkPalettedStorageFixAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.UpgradeDataAccessor;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.BedPart;
 import net.minecraft.block.enums.ChestType;
 import net.minecraft.block.enums.DoubleBlockHalf;
-import net.minecraft.datafixer.fix.ChunkPalettedStorageFix;
 import net.minecraft.nbt.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -16,36 +17,11 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.chunk.WorldChunk;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.BitSet;
 import java.util.function.IntConsumer;
 
 import static net.minecraft.block.Blocks.*;
 
 public class ChunkUpgrader {
-
-    private static final BitSet BLOCKS_NEEDING_SIDE_UPDATE;
-    private static final MethodHandle APPLY_ADJACENT_BLOCK;
-    static {
-        try {
-            Field field = Arrays.stream(ChunkPalettedStorageFix.class.getDeclaredFields())
-                    .filter(f -> f.getType() == BitSet.class)
-                    .findFirst().orElseThrow(NoSuchFieldException::new);
-            field.setAccessible(true);
-            BLOCKS_NEEDING_SIDE_UPDATE = (BitSet) field.get(null);
-            Method method = Arrays.stream(UpgradeData.class.getDeclaredMethods())
-                    .filter(m -> Arrays.equals(m.getParameterTypes(), new Object[]{BlockState.class, Direction.class, IWorld.class, BlockPos.class, BlockPos.class}))
-                    .findFirst().orElseThrow(NoSuchMethodException::new);
-            method.setAccessible(true);
-            APPLY_ADJACENT_BLOCK = MethodHandles.lookup().unreflect(method);
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
-        }
-    }
 
     public static UpgradeData fixChunk(WorldChunk chunk) {
         IntList centerIndicesToUpgrade = new IntArrayList();
@@ -59,7 +35,7 @@ public class ChunkUpgrader {
             inPlaceFix(chunk, state, pos, otherPos);
 
             int blockId = Registry.BLOCK.getRawId(block) & 4095;
-            if (BLOCKS_NEEDING_SIDE_UPDATE.get(blockId)) {
+            if (ChunkPalettedStorageFixAccessor.getBlocksNeedingSideUpdate().get(blockId)) {
                 boolean west = (pos.getX() & 15) == 0;
                 boolean east = (pos.getX() & 15) == 15;
                 boolean north = (pos.getZ() & 15) == 0;
@@ -185,10 +161,6 @@ public class ChunkUpgrader {
             return state;
         }
 
-        try {
-            return (BlockState) APPLY_ADJACENT_BLOCK.invoke(state, dir, world, pos, otherPos);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
+        return UpgradeDataAccessor.callApplyAdjacentBlock(state, dir, world, pos, otherPos);
     }
 }
