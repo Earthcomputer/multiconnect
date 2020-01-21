@@ -4,8 +4,8 @@
       <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="1" />
       <option name="PACKAGES_TO_USE_IMPORT_ON_DEMAND">
         <value>
-          <package name="net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.*" withSubpackages="true" static="true" />
-          <package name="net.minecraft.command.arguments.*" withSubpackages="true" static="true" />
+          <package name="net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments" withSubpackages="true" static="true" />
+          <package name="net.minecraft.command.arguments" withSubpackages="true" static="true" />
           <package name="com.mojang.brigadier.arguments" withSubpackages="true" static="true" />
           <package name="net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2" withSubpackages="true" static="true" />
         </value>
