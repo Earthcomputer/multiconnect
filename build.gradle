@@ -1,11 +1,6 @@
-
-import net.fabricmc.loom.task.RemapJarTask
-
 plugins {
-	id 'fabric-loom' version '0.2.7-SNAPSHOT'
+	id 'fabric-loom' version '0.2.6-SNAPSHOT'
 	id 'maven-publish'
-	id 'com.matthewprenger.cursegradle' version '1.4.0'
-	id 'com.github.breadmoirai.github-release' version '2.2.10'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -15,8 +10,16 @@ archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
-sourceSets {
-	api
+minecraft {
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:1.15.2"
+	mappings "net.fabricmc:yarn:1.15.2+build.7:v2"
+	modCompile "net.fabricmc:fabric-loader:0.7.6+build.180"
+
+	//Fabric api
+	modCompile "net.fabricmc.fabric-api:fabric-api:0.4.29+build.290-1.15"
 }
 
 processResources {
@@ -43,75 +46,13 @@ tasks.withType(JavaCompile) {
 // if it is present.
 // If you remove this task, sources will not be generated.
 task sourcesJar(type: Jar, dependsOn: classes) {
-	archiveClassifier = "sources"
+	classifier = "sources"
 	from sourceSets.main.allSource
 }
-
-task apiJar(type: Jar, dependsOn: apiClasses) {
-	archiveClassifier = 'api-dev'
-	from (sourceSets.api.output) {
-		include "fabric.mod.json"
-		expand "version": project.version
-	}
-	from (sourceSets.api.output) {
-		exclude "fabric.mod.json"
-	}
-	from 'LICENSE'
-}
-
-task remapApiJar(type: RemapJarTask, dependsOn: project.apiJar) {
-	input = apiJar.archiveFile
-	classifier = 'api'
-	addNestedDependencies = false
-}
-
-remapJar.dependsOn remapApiJar
 
 jar {
 	from "LICENSE"
 }
-
-repositories {
-	maven {
-		url 'https://jitpack.io/'
-	}
-}
-
-dependencies {
-	//to change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modCompile "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
-	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
-
-	modCompile("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
-		transitive = false // to stop it using its own fabric-loader
-	}
-	include "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
-
-	compile sourceSets.api.output
-	include files(remapApiJar.archivePath)
-
-	testCompile 'org.junit.jupiter:junit-jupiter-api:5.5.2'
-	testRuntimeOnly 'com.github.Earthcomputer.junit5:junit-jupiter-engine:8785ac4d'
-	testCompile 'org.mockito:mockito-all:1.10.19'
-}
-
-test {
-	useJUnitPlatform()
-	systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
-	systemProperty 'org.junit.TestClassResolver', 'net.earthcomputer.multiconnect.TestingExtension'
-	workingDir 'run'
-}
-
-project.ext.credentials = new Properties()
-try {
-	project.ext.credentials.load(new FileReader(file('credentials.properties')))
-} catch (IOException ignore) {
-}
-def isBeta = version.contains 'pre'
-def changes = file('changelog.txt')
-changes = changes.exists() ? changes.getText('UTF-8') : ''
 
 // configure the maven publication
 publishing {
@@ -124,63 +65,14 @@ publishing {
 			artifact(sourcesJar) {
 				builtBy remapSourcesJar
 			}
-			artifact(remapApiJar) {
-				builtBy remapApiJar
-			}
 		}
 	}
 
 	// select the repositories you want to publish to
 	repositories {
-		maven {
-			url 'https://api.bintray.com/maven/earthcomputer/mods/multiconnect/'
-			credentials {
-				username = project.ext.credentials == null ? 'foo' : project.ext.credentials['bintrayUser']
-				password = project.ext.credentials == null ? 'bar' : project.ext.credentials['bintrayPass']
-			}
-		}
 		// uncomment to publish to the local maven
 		// mavenLocal()
 	}
-}
-
-curseforge {
-	project {
-		apiKey = project.ext.credentials == null ? 'baz' :  project.ext.credentials['curseForgeKey']
-		id = '336018'
-		changelog = changes
-		releaseType = isBeta ? 'beta' : 'release'
-		addGameVersion project.minecraft_version
-		addGameVersion 'Fabric'
-		mainArtifact remapJar.archivePath
-		afterEvaluate {
-			uploadTask.dependsOn remapJar
-		}
-	}
-
-	options {
-		forgeGradleIntegration = false
-	}
-
-}
-
-githubRelease {
-	token(project.ext.credentials == null ? 'derp' : project.ext.credentials['githubKey'].toString())
-	owner 'Earthcomputer'
-	repo 'multiconnect'
-	tagName("v$version")
-	releaseName("Version $version for Minecraft ${project.minecraft_version}")
-	body changes
-	prerelease isBeta
-	releaseAssets remapJar.archivePath
-}
-tasks.getByName('githubRelease').dependsOn remapJar
-
-task releaseAll {
-	group = 'publishing'
-	dependsOn publish
-	dependsOn tasks.getByName('curseforge')
-	dependsOn tasks.getByName('githubRelease')
 }
 
 apply from: 'setupRealMcAccount.gradle'

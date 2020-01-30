@@ -1,8 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.packet.GuiOpenS2CPacket;
 import net.minecraft.client.network.packet.OpenContainerS2CPacket;
+import net.minecraft.client.network.packet.OpenHorseContainerS2CPacket;
 import net.minecraft.container.ContainerType;
 import net.minecraft.network.Packet;
 import net.minecraft.text.Text;
@@ -37,10 +37,10 @@ public class GuiOpenS2CPacket_1_13_2 implements Packet<ClientPlayNetworkHandler>
             handler.onOpenContainer(new OpenContainerS2CPacket(syncId, slotCount <= 27 ? ContainerType.GENERIC_9X3 : ContainerType.GENERIC_9X6, title));
         } else if ("minecraft:villager".equals(type)) {
             handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.MERCHANT, title));
-        } else if ("EntityHorse".equals(type)) {
-            // "GuiOpen" packet is only for horses
-            handler.onGuiOpen(new GuiOpenS2CPacket(syncId, slotCount, horseId));
-        } else if (slotCount <= 0) {
+        } else // "GuiOpen" packet is only for horses
+            if ("EntityHorse".equals(type))
+                handler.onOpenHorseContainer(new OpenHorseContainerS2CPacket(syncId, slotCount, horseId));
+            else if (slotCount <= 0) {
             if ("minecraft:crafting_table".equals(type)) {
                 handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.CRAFTING, title));
             } else if ("minecraft:enchanting_table".equals(type)) {

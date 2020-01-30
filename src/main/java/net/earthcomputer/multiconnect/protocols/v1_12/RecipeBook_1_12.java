@@ -48,11 +48,11 @@ public class RecipeBook_1_12<C extends Inventory> {
         }
 
         if (craftable) {
-            tryPlaceRecipe(recipe, container.slotList);
+            tryPlaceRecipe(recipe, container.slots);
         } else {
             // clear craft matrix and show ghost recipe
             List<PlaceRecipeC2SPacket_1_12.Transaction> transactionFromMatrix = clearCraftMatrix();
-            recipeBookWidget.showGhostRecipe(recipe, container.slotList);
+            recipeBookWidget.showGhostRecipe(recipe, container.slots);
 
             if (!transactionFromMatrix.isEmpty()) {
                 short transactionId = mc.player.container.getNextActionId(mc.player.inventory);
