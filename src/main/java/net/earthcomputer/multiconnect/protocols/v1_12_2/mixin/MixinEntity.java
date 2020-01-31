@@ -92,9 +92,8 @@ public abstract class MixinEntity {
 
     @Inject(method = "isTouchingWater", at = @At(value = "RETURN"), cancellable = true)
     private void correctStatus(CallbackInfoReturnable<Boolean> cir) {
-        if (cir.getReturnValueZ() && !isSubmergedIn(FluidTags.WATER, true) && getWaterHeight() < 0.28888931871D) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2 && cir.getReturnValueZ() && !isSubmergedIn(FluidTags.WATER, true) && getWaterHeight() < 0.28888931871D) {
             cir.setReturnValue(false);
         }
     }
-
 }
