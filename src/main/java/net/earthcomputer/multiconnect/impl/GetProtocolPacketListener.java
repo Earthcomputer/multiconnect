@@ -1,10 +1,10 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.minecraft.client.network.packet.QueryPongS2CPacket;
-import net.minecraft.client.network.packet.QueryResponseS2CPacket;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.listener.ClientQueryPacketListener;
-import net.minecraft.server.network.packet.QueryPingC2SPacket;
+import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket;
+import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket;
+import net.minecraft.network.packet.s2c.query.QueryResponseS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 

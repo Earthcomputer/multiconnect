@@ -12,7 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.packet.BookUpdateC2SPacket;
+import net.minecraft.network.packet.c2s.play.BookUpdateC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.registry.Registry;
 

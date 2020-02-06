@@ -71,7 +71,7 @@ public abstract class MixinMerchantContainer extends Container {
 
         int slot;
         for (slot = 3; slot < 39; slot++) {
-            ItemStack stack = slotList.get(slot).getStack();
+            ItemStack stack = slots.get(slot).getStack();
             if (stack.getItem() == stackNeeded.getItem() && ItemStack.areTagsEqual(stack, stackNeeded)) {
                 break;
             }

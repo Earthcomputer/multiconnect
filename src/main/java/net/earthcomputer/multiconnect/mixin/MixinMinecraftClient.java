@@ -62,7 +62,7 @@ public abstract class MixinMinecraftClient extends ReentrantThreadExecutor<Runna
         };
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE_STRING", target = "Lnet/minecraft/util/profiler/DisableableProfiler;push(Ljava/lang/String;)V", args = "ldc=tick"))
+    @Inject(method = "render", at = @At(value = "INVOKE_STRING", target = "Lnet/minecraft/util/profiler/Profiler;push(Ljava/lang/String;)V", args = "ldc=tick"))
     private void executeRunAnywayTasks(boolean tick, CallbackInfo ci) {
         while (true) {
             Runnable task = runAnywayTasks.peek();

@@ -4,10 +4,10 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.*;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.packet.*;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.math.Vec3d;
@@ -40,7 +40,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow public abstract void onVelocityUpdate(EntityVelocityUpdateS2CPacket entityVelocityUpdateS2CPacket_1);
 
-    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/packet/ChunkDataS2CPacket;getReadBuffer()Lnet/minecraft/util/PacketByteBuf;", shift = At.Shift.AFTER))
+    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ChunkDataS2CPacket;getReadBuffer()Lnet/minecraft/util/PacketByteBuf;", shift = At.Shift.AFTER))
     private void onChunkDataPost(ChunkDataS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             if (!PendingChunkDataPackets.isProcessingQueuedPackets()) {
@@ -86,7 +86,7 @@ public abstract class MixinClientPlayNetworkHandler {
         }
     }
 
-    @Inject(method = "onCustomPayload", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/packet/CustomPayloadS2CPacket;getChannel()Lnet/minecraft/util/Identifier;"), cancellable = true)
+    @Inject(method = "onCustomPayload", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/CustomPayloadS2CPacket;getChannel()Lnet/minecraft/util/Identifier;"), cancellable = true)
     private void onOnCustomPayload(CustomPayloadS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             Identifier channel = packet.getChannel();

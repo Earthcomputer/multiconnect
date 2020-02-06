@@ -15,7 +15,6 @@ import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.enums.Instrument;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.packet.*;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.*;
@@ -37,11 +36,12 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.Packet;
+import net.minecraft.network.packet.c2s.play.*;
+import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.recipe.RecipeSerializer;
-import net.minecraft.server.network.packet.*;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.LiteralText;
@@ -93,10 +93,10 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
-        insertAfter(packets, GuiCloseS2CPacket.class, PacketInfo.of(GuiOpenS2CPacket_1_13_2.class, GuiOpenS2CPacket_1_13_2::new));
+        insertAfter(packets, CloseContainerS2CPacket.class, PacketInfo.of(GuiOpenS2CPacket_1_13_2.class, GuiOpenS2CPacket_1_13_2::new));
         remove(packets, TagQueryResponseS2CPacket.class);
         insertAfter(packets, EntityStatusS2CPacket.class, PacketInfo.of(TagQueryResponseS2CPacket.class, TagQueryResponseS2CPacket::new));
-        remove(packets, GuiOpenS2CPacket.class);
+        remove(packets, OpenHorseContainerS2CPacket.class);
         remove(packets, LightUpdateS2CPacket.class);
         remove(packets, EntityS2CPacket.class);
         insertAfter(packets, SetTradeOffersS2CPacket.class, PacketInfo.of(EntityS2CPacket.class, EntityS2CPacket::new));

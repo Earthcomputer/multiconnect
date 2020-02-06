@@ -10,7 +10,7 @@ import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.packet.*;
+import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.server.command.CommandSource;
 import net.minecraft.tag.RegistryTagContainer;
@@ -80,7 +80,7 @@ public abstract class MixinClientPlayNetworkHandler {
         ((TagContainerAccessor<T>) container).multiconnect_setEntries(map.build());
     }
 
-    @Inject(method = "onBlockEntityUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/packet/BlockEntityUpdateS2CPacket;getBlockEntityType()I"))
+    @Inject(method = "onBlockEntityUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/BlockEntityUpdateS2CPacket;getBlockEntityType()I"))
     private void onOnBlockEntityUpdate(BlockEntityUpdateS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             assert client.world != null;

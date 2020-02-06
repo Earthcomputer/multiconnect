@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.mixin;
 
 import net.earthcomputer.multiconnect.impl.CurrentChunkDataPacket;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.packet.ChunkDataS2CPacket;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

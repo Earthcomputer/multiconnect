@@ -4,10 +4,10 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.suggestion.Suggestion;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.packet.CommandSuggestionsS2CPacket;
-import net.minecraft.client.network.packet.CommandTreeS2CPacket;
+import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket;
+import net.minecraft.network.packet.s2c.play.CommandSuggestionsS2CPacket;
+import net.minecraft.network.packet.s2c.play.CommandTreeS2CPacket;
 import net.minecraft.server.command.CommandSource;
-import net.minecraft.server.network.packet.RequestCommandCompletionsC2SPacket;
 
 import java.util.ArrayDeque;
 import java.util.List;

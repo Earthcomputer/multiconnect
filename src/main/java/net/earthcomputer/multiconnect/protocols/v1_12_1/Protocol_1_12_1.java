@@ -3,8 +3,8 @@ package net.earthcomputer.multiconnect.protocols.v1_12_1;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Protocol_1_12_2;
 import net.earthcomputer.multiconnect.transformer.VarInt;
-import net.minecraft.client.network.packet.KeepAliveS2CPacket;
-import net.minecraft.server.network.packet.KeepAliveC2SPacket;
+import net.minecraft.network.packet.c2s.play.KeepAliveC2SPacket;
+import net.minecraft.network.packet.s2c.play.KeepAliveS2CPacket;
 
 import java.util.function.Supplier;
 

@@ -5,7 +5,7 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.server.network.packet.KeepAliveC2SPacket;
+import net.minecraft.network.packet.c2s.play.KeepAliveC2SPacket;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;

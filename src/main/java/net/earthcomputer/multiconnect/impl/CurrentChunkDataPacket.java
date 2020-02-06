@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.minecraft.client.network.packet.ChunkDataS2CPacket;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

@@ -1,10 +1,10 @@
 package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.packet.GuiOpenS2CPacket;
-import net.minecraft.client.network.packet.OpenContainerS2CPacket;
 import net.minecraft.container.ContainerType;
 import net.minecraft.network.Packet;
+import net.minecraft.network.packet.s2c.play.OpenContainerS2CPacket;
+import net.minecraft.network.packet.s2c.play.OpenHorseContainerS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.PacketByteBuf;
 
@@ -38,8 +38,7 @@ public class GuiOpenS2CPacket_1_13_2 implements Packet<ClientPlayNetworkHandler>
         } else if ("minecraft:villager".equals(type)) {
             handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.MERCHANT, title));
         } else if ("EntityHorse".equals(type)) {
-            // "GuiOpen" packet is only for horses
-            handler.onGuiOpen(new GuiOpenS2CPacket(syncId, slotCount, horseId));
+            handler.onOpenHorseContainer(new OpenHorseContainerS2CPacket(syncId, slotCount, horseId));
         } else if (slotCount <= 0) {
             if ("minecraft:crafting_table".equals(type)) {
                 handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.CRAFTING, title));

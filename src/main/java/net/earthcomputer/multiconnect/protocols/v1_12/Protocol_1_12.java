@@ -2,9 +2,9 @@ package net.earthcomputer.multiconnect.protocols.v1_12;
 
 import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.v1_12_1.Protocol_1_12_1;
-import net.minecraft.client.network.packet.CraftFailedResponseS2CPacket;
-import net.minecraft.server.network.packet.CraftRequestC2SPacket;
-import net.minecraft.server.network.packet.TeleportConfirmC2SPacket;
+import net.minecraft.network.packet.c2s.play.CraftRequestC2SPacket;
+import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
+import net.minecraft.network.packet.s2c.play.CraftFailedResponseS2CPacket;
 
 import java.util.List;
 
