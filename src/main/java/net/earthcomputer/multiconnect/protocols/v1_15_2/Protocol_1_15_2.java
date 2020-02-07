@@ -88,6 +88,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
+        registry.unregister(Items.COMPOSTER);
+        insertAfter(registry, Items.JIGSAW, Items.COMPOSTER, "composter");
         registry.unregister(Items.field_22013);
         registry.unregister(Items.field_22015);
         registry.unregister(Items.field_22031);
