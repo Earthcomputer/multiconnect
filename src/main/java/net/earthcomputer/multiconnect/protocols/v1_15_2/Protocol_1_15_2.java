@@ -32,8 +32,6 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             modifyBiomeRegistry((ISimpleRegistry<Biome>) registry);
         } else if (registry == Registry.PARTICLE_TYPE) {
             modifyParticleTypeRegistry((ISimpleRegistry<ParticleType<? extends ParticleEffect>>) registry);
-        } else if (registry == Registry.BLOCK_ENTITY_TYPE) {
-            modifyBlockEntityRegistry((ISimpleRegistry<BlockEntityType<?>>) registry);
         } else if (registry == Registry.SOUND_EVENT) {
             modifySoundEventRegistry((ISimpleRegistry<SoundEvent>) registry);
         }
@@ -160,10 +158,6 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(ParticleTypes.CRIMSON_SPORE);
         registry.unregister(ParticleTypes.SOUL_FIRE_FLAME);
         registry.unregister(ParticleTypes.WARPED_SPORE);
-    }
-
-    private void modifyBlockEntityRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
-        //registry.unregister(BlockEntityType.);
     }
 
     private void modifySoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
