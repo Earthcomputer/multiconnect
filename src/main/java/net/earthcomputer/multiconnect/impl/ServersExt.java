@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.impl;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.earthcomputer.multiconnect.api.EnumProtocol;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.ServerAddress;
 import org.apache.logging.log4j.LogManager;
@@ -52,7 +51,7 @@ public final class ServersExt {
 
     public int getForcedProtocol(String address) {
         ServerExt server = servers.get(normalizeAddress(address));
-        return server == null ? EnumProtocol.AUTO.getValue() : server.forcedProtocol;
+        return server == null ? ConnectionMode.AUTO.getValue() : server.forcedProtocol;
     }
 
     public boolean hasServer(String address) {
@@ -74,7 +73,7 @@ public final class ServersExt {
 
     public static class ServerExt {
 
-        public int forcedProtocol = EnumProtocol.AUTO.getValue();
+        public int forcedProtocol = ConnectionMode.AUTO.getValue();
 
     }
 

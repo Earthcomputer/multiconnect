@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.mixin;
 
-import net.earthcomputer.multiconnect.api.EnumProtocol;
+import net.earthcomputer.multiconnect.impl.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.ServersExt;
 import net.minecraft.client.gui.screen.DirectConnectScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -21,7 +21,7 @@ public class MixinDirectConnectScreen extends Screen {
     @Shadow private TextFieldWidget addressField;
 
     @Unique private String lastAddress;
-    @Unique private EnumProtocol selectedProtocol = EnumProtocol.AUTO;
+    @Unique private ConnectionMode selectedProtocol = ConnectionMode.AUTO;
     @Unique private ButtonWidget protocolSelector;
 
     protected MixinDirectConnectScreen(Text title) {
@@ -43,7 +43,7 @@ public class MixinDirectConnectScreen extends Screen {
             lastAddress = addressField.getText();
             if (ServersExt.getInstance().hasServer(addressField.getText())) {
                 int protocolVersion = ServersExt.getInstance().getForcedProtocol(addressField.getText());
-                selectedProtocol = EnumProtocol.byValue(protocolVersion);
+                selectedProtocol = ConnectionMode.byValue(protocolVersion);
             }
         }
     }
