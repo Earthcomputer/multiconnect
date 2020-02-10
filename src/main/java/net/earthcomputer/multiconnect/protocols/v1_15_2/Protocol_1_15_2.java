@@ -3,7 +3,10 @@ package net.earthcomputer.multiconnect.protocols.v1_15_2;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.WallBlock;
+import net.minecraft.block.enums.WallShape;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -17,6 +20,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
 
 public class Protocol_1_15_2 extends Protocol_1_16 {
+
     @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})
     @Override
     public void modifyRegistry(ISimpleRegistry<?> registry) {
@@ -245,5 +249,17 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.BLOCK_SOUL_SOIL_PLACE);
         registry.unregister(SoundEvents.BLOCK_SOUL_SOIL_HIT);
         registry.unregister(SoundEvents.BLOCK_SOUL_SOIL_FALL);
+    }
+
+    @Override
+    public boolean acceptBlockState(BlockState state) {
+        if (state.getBlock() instanceof WallBlock
+                && (state.get(WallBlock.EAST_SHAPE) == WallShape.TALL
+                || state.get(WallBlock.NORTH_SHAPE) == WallShape.TALL
+                || state.get(WallBlock.SOUTH_SHAPE) == WallShape.TALL
+                || state.get(WallBlock.WEST_SHAPE) == WallShape.TALL))
+            return false;
+
+        return super.acceptBlockState(state);
     }
 }
