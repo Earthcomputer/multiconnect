@@ -8,6 +8,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface HandshakePacketAccessor {
 
     @Accessor
-    void setVersion(int version);
+    void setProtocolVersion(int version);
 
 }
