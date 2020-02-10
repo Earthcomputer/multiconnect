@@ -1,7 +1,9 @@
 package net.earthcomputer.multiconnect.api;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Enum constants for each protocol, including the number and name of each
@@ -59,6 +61,7 @@ public enum EnumProtocol {
 
     private static final EnumProtocol[] VALUES = values();
     private static final Map<Integer, EnumProtocol> BY_VALUE = new HashMap<>();
+    private static final Set<String> VALID_ASSET_IDS = new HashSet<>();
 
     public static EnumProtocol byValue(int value) {
         return BY_VALUE.getOrDefault(value, AUTO);
@@ -78,9 +81,14 @@ public enum EnumProtocol {
         return nextValue;
     }
 
+    public static boolean isSupportedAssetId(String assetId) {
+        return VALID_ASSET_IDS.contains(assetId);
+    }
+
     static {
         for (EnumProtocol value : VALUES) {
             BY_VALUE.put(value.getValue(), value);
+            VALID_ASSET_IDS.add(value.getAssetID());
         }
     }
 

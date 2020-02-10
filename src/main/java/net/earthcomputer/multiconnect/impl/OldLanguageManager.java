@@ -100,7 +100,7 @@ public class OldLanguageManager {
 
         versionUrls = new HashMap<>();
         for (VersionManifest.Version version : manifest.versions) {
-            if ("release".equals(version.type)) {
+            if (EnumProtocol.isSupportedAssetId(version.id)) {
                 versionUrls.put(version.id, version.url);
             }
         }
@@ -303,7 +303,6 @@ public class OldLanguageManager {
         List<Version> versions;
         static class Version {
             String id;
-            String type;
             String url;
         }
     }
