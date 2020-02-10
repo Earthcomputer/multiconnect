@@ -99,7 +99,7 @@ public class OldLanguageManager {
 
         versionUrls = new HashMap<>();
         for (VersionManifest.Version version : manifest.versions) {
-            if (EnumProtocol.isSupportedAssetId(version.id)) {
+            if (ConnectionMode.isSupportedAssetId(version.id)) {
                 versionUrls.put(version.id, version.url);
             }
         }

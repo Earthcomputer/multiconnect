@@ -3,9 +3,7 @@ package net.earthcomputer.multiconnect.impl;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.api.Protocols;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Enum constants for each protocol, and the auto connection mode
@@ -62,6 +60,7 @@ public enum ConnectionMode implements IProtocol {
     private static final ConnectionMode[] VALUES = values();
     private static final ConnectionMode[] PROTOCOLS = Arrays.stream(VALUES).filter(it -> it != AUTO).toArray(ConnectionMode[]::new);
     private static final Map<Integer, ConnectionMode> BY_VALUE = new HashMap<>();
+    private static final Set<String> VALID_ASSET_IDS = new HashSet<>();
 
     public static ConnectionMode byValue(int value) {
         return BY_VALUE.getOrDefault(value, AUTO);
@@ -79,9 +78,14 @@ public enum ConnectionMode implements IProtocol {
         return VALUES[(ordinal() + 1) % VALUES.length];
     }
 
+    public static boolean isSupportedAssetId(String assetId) {
+        return VALID_ASSET_IDS.contains(assetId);
+    }
+
     static {
         for (ConnectionMode value : VALUES) {
             BY_VALUE.put(value.getValue(), value);
+            VALID_ASSET_IDS.add(value.getAssetId());
         }
     }
 
