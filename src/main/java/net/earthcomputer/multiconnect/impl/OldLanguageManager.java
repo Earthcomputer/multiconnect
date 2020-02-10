@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.impl;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import net.earthcomputer.multiconnect.api.EnumProtocol;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
@@ -51,8 +50,8 @@ public class OldLanguageManager {
         if (ConnectionInfo.protocol == ProtocolRegistry.latest())
             return;
 
-        String currentVersion = EnumProtocol.byValue(ConnectionInfo.protocolVersion).getAssetID();
-        String latestVersion = EnumProtocol.byValue(SharedConstants.getGameVersion().getProtocolVersion()).getAssetID();
+        String currentVersion = ConnectionMode.byValue(ConnectionInfo.protocolVersion).getAssetId();
+        String latestVersion = ConnectionMode.byValue(SharedConstants.getGameVersion().getProtocolVersion()).getAssetId();
 
         Map<String, String> currentNative = getTranslations(currentVersion, nativeLang);
         Map<String, String> currentFallback = getTranslations(currentVersion, "en_us");

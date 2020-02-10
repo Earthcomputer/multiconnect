@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.mixin;
 
 import com.google.common.collect.ImmutableSet;
-import net.earthcomputer.multiconnect.api.EnumProtocol;
+import net.earthcomputer.multiconnect.impl.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.ServersExt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
@@ -36,8 +36,8 @@ public abstract class MixinDisconnectedScreen extends Screen {
         server = MinecraftClient.getInstance().getCurrentServerEntry();
         if (server != null) {
             String reasonText = reason.getString().toLowerCase();
-            for (EnumProtocol protocol : EnumProtocol.values()) {
-                if (protocol != EnumProtocol.AUTO && reasonText.contains(protocol.getName())) {
+            for (ConnectionMode protocol : ConnectionMode.values()) {
+                if (protocol != ConnectionMode.AUTO && reasonText.contains(protocol.getName())) {
                     isProtocolReason = true;
                     break;
                 }
@@ -77,9 +77,9 @@ public abstract class MixinDisconnectedScreen extends Screen {
     }
 
     @Unique
-    private EnumProtocol getForcedVersion() {
+    private ConnectionMode getForcedVersion() {
         int protocolVersion = ServersExt.getInstance().getForcedProtocol(server.address);
-        return EnumProtocol.byValue(protocolVersion);
+        return ConnectionMode.byValue(protocolVersion);
     }
 
 }

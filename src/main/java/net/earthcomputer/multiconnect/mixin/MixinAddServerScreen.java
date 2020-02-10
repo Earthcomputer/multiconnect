@@ -1,9 +1,8 @@
 package net.earthcomputer.multiconnect.mixin;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import net.earthcomputer.multiconnect.api.EnumProtocol;
+import net.earthcomputer.multiconnect.impl.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.ServersExt;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.AddServerScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -23,7 +22,7 @@ public abstract class MixinAddServerScreen extends Screen {
 
     @Shadow @Final private ServerInfo server;
 
-    @Unique private EnumProtocol currentProtocol;
+    @Unique private ConnectionMode currentProtocol;
     @Unique private ButtonWidget protocolSelector;
 
     protected MixinAddServerScreen(Text title) {
@@ -32,7 +31,7 @@ public abstract class MixinAddServerScreen extends Screen {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onConstructor(Screen parent, BooleanConsumer callback, ServerInfo server, CallbackInfo ci) {
-        currentProtocol = EnumProtocol.byValue(ServersExt.getInstance().getForcedProtocol(server.address));
+        currentProtocol = ConnectionMode.byValue(ServersExt.getInstance().getForcedProtocol(server.address));
     }
 
     @Inject(method = "init", at = @At("RETURN"))

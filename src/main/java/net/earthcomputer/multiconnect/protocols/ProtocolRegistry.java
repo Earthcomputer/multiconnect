@@ -29,10 +29,6 @@ public class ProtocolRegistry {
 
     private static TranslatorRegistry translatorRegistry = new TranslatorRegistry();
 
-    public static boolean isSupported(int version) {
-        return protocols.containsKey(version);
-    }
-
     public static AbstractProtocol get(int version) {
         return protocols.get(version);
     }

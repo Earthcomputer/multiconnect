@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.mixin;
 
-import net.earthcomputer.multiconnect.api.EnumProtocol;
+import net.earthcomputer.multiconnect.impl.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.SharedConstants;
@@ -41,9 +41,9 @@ public class MixinConnectScreen1 {
             address = ConnectionInfo.ip + ":" + ConnectionInfo.port;
         }
         int forcedVersion = ServersExt.getInstance().getForcedProtocol(address);
-        if (forcedVersion != EnumProtocol.AUTO.getValue()) {
+        if (forcedVersion != ConnectionMode.AUTO.getValue()) {
             ConnectionInfo.protocolVersion = forcedVersion;
-            LogManager.getLogger("multiconnect").info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + EnumProtocol.byValue(forcedVersion).getName() + ")");
+            LogManager.getLogger("multiconnect").info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ConnectionMode.byValue(forcedVersion).getName() + ")");
             return;
         }
 
@@ -83,8 +83,8 @@ public class MixinConnectScreen1 {
 
         connectScreen.multiconnect_setVersionRequestConnection(null);
 
-        if (ProtocolRegistry.isSupported(ConnectionInfo.protocolVersion)) {
-            LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion + " (" + EnumProtocol.byValue(ConnectionInfo.protocolVersion).getName() + ")");
+        if (ConnectionMode.isSupportedProtocol(ConnectionInfo.protocolVersion)) {
+            LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion + " (" + ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName() + ")");
         } else {
             LogManager.getLogger("multiconnect").info("Discovered server protocol: " + ConnectionInfo.protocolVersion + " (unsupported), " +
                     "falling back to " + SharedConstants.getGameVersion().getProtocolVersion() + " (" + SharedConstants.getGameVersion().getName() + ")");
@@ -94,7 +94,7 @@ public class MixinConnectScreen1 {
 
     @Redirect(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;)V", ordinal = 0))
     public void sendHandshake(ClientConnection connect, Packet<?> packet) {
-        if (ProtocolRegistry.isSupported(ConnectionInfo.protocolVersion)) {
+        if (ConnectionMode.isSupportedProtocol(ConnectionInfo.protocolVersion)) {
             ((HandshakePacketAccessor) packet).setProtocolVersion(ConnectionInfo.protocolVersion);
             ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
             ConnectionInfo.protocol.setup(false);
