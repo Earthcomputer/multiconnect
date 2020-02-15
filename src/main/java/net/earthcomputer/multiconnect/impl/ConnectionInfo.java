@@ -11,6 +11,7 @@ public class ConnectionInfo {
 
     public static String ip;
     public static int port = -1;
+    public static ConnectionMode globalForcedProtocolVersion = ConnectionMode.AUTO;
     public static int protocolVersion = SharedConstants.getGameVersion().getProtocolVersion();
     public static AbstractProtocol protocol = ProtocolRegistry.latest();
     public static boolean reloadingResources = false;
