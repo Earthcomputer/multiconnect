@@ -250,6 +250,25 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.BLOCK_SOUL_SOIL_PLACE);
         registry.unregister(SoundEvents.BLOCK_SOUL_SOIL_HIT);
         registry.unregister(SoundEvents.BLOCK_SOUL_SOIL_FALL);
+
+        registry.unregister(SoundEvents.field_22256);
+        registry.unregister(SoundEvents.field_22257);
+        registry.unregister(SoundEvents.field_22258);
+        registry.unregister(SoundEvents.field_22259);
+        registry.unregister(SoundEvents.field_22260);
+        registry.unregister(SoundEvents.field_22261);
+        registry.unregister(SoundEvents.field_22262);
+
+        registry.unregister(SoundEvents.field_22263);
+        registry.unregister(SoundEvents.field_22264);
+        registry.unregister(SoundEvents.field_22265);
+        registry.unregister(SoundEvents.field_22266);
+        registry.unregister(SoundEvents.field_22267);
+        registry.unregister(SoundEvents.field_22268);
+        registry.unregister(SoundEvents.field_22269);
+        registry.unregister(SoundEvents.field_22270);
+        registry.unregister(SoundEvents.field_22271);
+        registry.unregister(SoundEvents.field_22272);
     }
 
     @Override
