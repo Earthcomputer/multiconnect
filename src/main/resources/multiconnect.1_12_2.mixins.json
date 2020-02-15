@@ -25,6 +25,7 @@
     "MixinSkullBlockEntity",
     "MixinUpgradeData",
     "MixinWorldChunk",
+    "MixinTextSerializer",
 
     "AbstractMinecartEntityAccessor",
     "AreaEffectCloudEntityAccessor",
