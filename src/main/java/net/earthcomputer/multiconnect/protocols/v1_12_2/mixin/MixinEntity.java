@@ -5,6 +5,7 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.tag.FluidTags;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -29,6 +30,10 @@ public abstract class MixinEntity {
     @Shadow public abstract void setVelocity(Vec3d velocity);
 
     @Shadow public abstract Vec3d getVelocity();
+
+    @Shadow public abstract double getWaterHeight();
+
+    @Shadow public abstract boolean isSubmergedIn(Tag<Fluid> fluidTag, boolean requireLoadedChunk);
 
     @Inject(method = "setSwimming", at = @At("HEAD"), cancellable = true)
     private void onSetSwimming(boolean swimming, CallbackInfo ci) {
@@ -85,4 +90,10 @@ public abstract class MixinEntity {
         ci.setReturnValue(foundFluid);
     }
 
+    @Inject(method = "isTouchingWater", at = @At(value = "RETURN"), cancellable = true)
+    private void correctStatus(CallbackInfoReturnable<Boolean> cir) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2 && cir.getReturnValueZ() && !isSubmergedIn(FluidTags.WATER, true) && getWaterHeight() < 0.28888931871D) {
+            cir.setReturnValue(false);
+        }
+    }
 }
