@@ -129,6 +129,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.NETHERITE_BLOCK);
         registry.unregister(Items.ANCIENT_DEBRIS);
         registry.unregister(Items.HOGLIN_SPAWN_EGG);
+        registry.unregister(Items.field_22401);
         registry.unregister(Items.CRIMSON_SIGN);
         registry.unregister(Items.WARPED_SIGN);
         registry.unregister(Items.NETHERITE_SCRAP);
