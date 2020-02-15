@@ -287,7 +287,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.readUuid(); // uuid
             buf.disablePassthroughMode();
             PaintingMotive motive = OLD_MOTIVE_NAMES.getOrDefault(buf.readString(13), PaintingMotive.KEBAB);
-            buf.pendingRead(VarInt.class, new VarInt(Registry.MOTIVE.getRawId(motive)));
+            buf.pendingRead(VarInt.class, new VarInt(Registry.PAINTING_MOTIVE.getRawId(motive)));
             buf.applyPendingReads();
         });
 

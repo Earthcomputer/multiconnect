@@ -129,7 +129,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.NETHERITE_BLOCK);
         registry.unregister(Items.ANCIENT_DEBRIS);
         registry.unregister(Items.HOGLIN_SPAWN_EGG);
-        registry.unregister(Items.field_22401);
+        registry.unregister(Items.PIGLIN_SPAWN_EGG);
         registry.unregister(Items.CRIMSON_SIGN);
         registry.unregister(Items.WARPED_SIGN);
         registry.unregister(Items.NETHERITE_SCRAP);
@@ -147,6 +147,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
         registry.unregister(EntityType.HOGLIN);
+        registry.unregister(EntityType.PIGLIN);
     }
 
     private static void modifyBiomeRegistry(ISimpleRegistry<Biome> registry) {
@@ -251,24 +252,26 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.BLOCK_SOUL_SOIL_HIT);
         registry.unregister(SoundEvents.BLOCK_SOUL_SOIL_FALL);
 
-        registry.unregister(SoundEvents.field_22256);
-        registry.unregister(SoundEvents.field_22257);
-        registry.unregister(SoundEvents.field_22258);
-        registry.unregister(SoundEvents.field_22259);
-        registry.unregister(SoundEvents.field_22260);
-        registry.unregister(SoundEvents.field_22261);
-        registry.unregister(SoundEvents.field_22262);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_ADMIRING_ITEM);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_ANGRY);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_CELEBRATE);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_DEATH);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_JEALOUS);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_HURT);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_RETREAT);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_STEP);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_CONVERTED_TO_ZOMBIFIED);
 
-        registry.unregister(SoundEvents.field_22263);
-        registry.unregister(SoundEvents.field_22264);
-        registry.unregister(SoundEvents.field_22265);
-        registry.unregister(SoundEvents.field_22266);
-        registry.unregister(SoundEvents.field_22267);
-        registry.unregister(SoundEvents.field_22268);
-        registry.unregister(SoundEvents.field_22269);
-        registry.unregister(SoundEvents.field_22270);
-        registry.unregister(SoundEvents.field_22271);
-        registry.unregister(SoundEvents.field_22272);
+        registry.unregister(SoundEvents.ENTITY_HOGLIN_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_HOGLIN_ANGRY);
+        registry.unregister(SoundEvents.ENTITY_HOGLIN_ATTACK);
+        registry.unregister(SoundEvents.ENTITY_HOGLIN_DEATH);
+        registry.unregister(SoundEvents.ENTITY_HOGLIN_HURT);
+        registry.unregister(SoundEvents.ENTITY_HOGLIN_RETREAT);
+        registry.unregister(SoundEvents.ENTITY_HOGLIN_STEP);
+
+        registry.unregister(SoundEvents.ENTITY_SNOW_GOLEM_SHEAR);
     }
 
     @Override
