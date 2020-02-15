@@ -49,7 +49,7 @@ public class MixinEncoderHandler {
         this.buf.set(null);
     }
 
-    @Inject(method = "encode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Packet;isWritingErrorSkippable()Z"))
+    @Inject(method = "encode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Packet;isErrorFatal()Z"))
     private void postWriteError(ChannelHandlerContext context, Packet<?> packet, ByteBuf buf, CallbackInfo ci) {
         if (!((TransformerByteBuf) this.buf.get()).canEncodeAsync(packet.getClass())) {
             ConnectionInfo.resourceReloadLock.readLock().unlock();
