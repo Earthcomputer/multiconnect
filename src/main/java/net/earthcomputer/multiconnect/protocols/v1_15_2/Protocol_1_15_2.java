@@ -165,6 +165,70 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     private void modifySoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+        registry.unregister(SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE);
+        insertAfter(registry, SoundEvents.ITEM_BOOK_PUT, SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE, "entity.fishing_bobber.retrieve");
+        registry.unregister(SoundEvents.ENTITY_FISHING_BOBBER_SPLASH);
+        insertAfter(registry, SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE, SoundEvents.ENTITY_FISHING_BOBBER_SPLASH, "entity.fishing_bobber.splash");
+        registry.unregister(SoundEvents.ENTITY_FISHING_BOBBER_THROW);
+        insertAfter(registry, SoundEvents.ENTITY_FISHING_BOBBER_SPLASH, SoundEvents.ENTITY_FISHING_BOBBER_THROW, "entity.fishing_bobber.throw");
+
+        registry.unregister(SoundEvents.BLOCK_WOOL_BREAK);
+        insertAfter(registry, SoundEvents.ITEM_CHORUS_FRUIT_TELEPORT, SoundEvents.BLOCK_WOOL_BREAK, "block.wool.break");
+        registry.unregister(SoundEvents.BLOCK_WOOL_FALL);
+        insertAfter(registry, SoundEvents.BLOCK_WOOL_BREAK, SoundEvents.BLOCK_WOOL_FALL, "block.wool.fall");
+        registry.unregister(SoundEvents.BLOCK_WOOL_HIT);
+        insertAfter(registry, SoundEvents.BLOCK_WOOL_FALL, SoundEvents.BLOCK_WOOL_HIT, "block.wool.hit");
+        registry.unregister(SoundEvents.BLOCK_WOOL_PLACE);
+        insertAfter(registry, SoundEvents.BLOCK_WOOL_HIT, SoundEvents.BLOCK_WOOL_PLACE, "block.wool.place");
+        registry.unregister(SoundEvents.BLOCK_WOOL_STEP);
+        insertAfter(registry, SoundEvents.BLOCK_WOOL_PLACE, SoundEvents.BLOCK_WOOL_STEP, "block.wool.step");
+
+        registry.unregister(SoundEvents.BLOCK_WET_GRASS_BREAK);
+        insertAfter(registry, SoundEvents.BLOCK_GRASS_STEP, SoundEvents.BLOCK_WET_GRASS_BREAK, "block.wet_grass.break");
+        registry.unregister(SoundEvents.BLOCK_WET_GRASS_FALL);
+        insertAfter(registry, SoundEvents.BLOCK_WET_GRASS_BREAK, SoundEvents.BLOCK_WET_GRASS_FALL, "block.wet_grass.fall");
+        registry.unregister(SoundEvents.BLOCK_WET_GRASS_HIT);
+        insertAfter(registry, SoundEvents.BLOCK_WET_GRASS_FALL, SoundEvents.BLOCK_WET_GRASS_HIT, "block.wet_grass.hit");
+        registry.unregister(SoundEvents.BLOCK_WET_GRASS_PLACE);
+        insertAfter(registry, SoundEvents.BLOCK_WET_GRASS_HIT, SoundEvents.BLOCK_WET_GRASS_PLACE, "block.wet_grass.place");
+        registry.unregister(SoundEvents.BLOCK_WET_GRASS_STEP);
+        insertAfter(registry, SoundEvents.BLOCK_WET_GRASS_PLACE, SoundEvents.BLOCK_WET_GRASS_STEP, "block.wet_grass.step");
+
+        registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_BREAK);
+        insertAfter(registry, SoundEvents.BLOCK_WET_GRASS_STEP, SoundEvents.BLOCK_CORAL_BLOCK_BREAK, "block.coral_block.break");
+        registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_FALL);
+        insertAfter(registry, SoundEvents.BLOCK_CORAL_BLOCK_BREAK, SoundEvents.BLOCK_CORAL_BLOCK_FALL, "block.coral_block.fall");
+        registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_HIT);
+        insertAfter(registry, SoundEvents.BLOCK_CORAL_BLOCK_FALL, SoundEvents.BLOCK_CORAL_BLOCK_HIT, "block.coral_block.hit");
+        registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_PLACE);
+        insertAfter(registry, SoundEvents.BLOCK_CORAL_BLOCK_HIT, SoundEvents.BLOCK_CORAL_BLOCK_PLACE, "block.coral_block.place");
+        registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_STEP);
+        insertAfter(registry, SoundEvents.BLOCK_CORAL_BLOCK_PLACE, SoundEvents.BLOCK_CORAL_BLOCK_STEP, "block.coral_block.step");
+
+        registry.unregister(SoundEvents.ENTITY_RAVAGER_AMBIENT);
+        insertAfter(registry, SoundEvents.ENTITY_HUSK_STEP, SoundEvents.ENTITY_RAVAGER_AMBIENT, "entity.ravager.ambient");
+        registry.unregister(SoundEvents.ENTITY_RAVAGER_ATTACK);
+        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_AMBIENT, SoundEvents.ENTITY_RAVAGER_ATTACK, "entity.ravager.attack");
+        registry.unregister(SoundEvents.ENTITY_RAVAGER_CELEBRATE);
+        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_ATTACK, SoundEvents.ENTITY_RAVAGER_CELEBRATE, "entity.ravager.celebrate");
+        registry.unregister(SoundEvents.ENTITY_RAVAGER_DEATH);
+        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_CELEBRATE, SoundEvents.ENTITY_RAVAGER_DEATH, "entity.ravager.death");
+        registry.unregister(SoundEvents.ENTITY_RAVAGER_HURT);
+        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_DEATH, SoundEvents.ENTITY_RAVAGER_HURT, "entity.ravager.hurt");
+        registry.unregister(SoundEvents.ENTITY_RAVAGER_STEP);
+        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_HURT, SoundEvents.ENTITY_RAVAGER_STEP, "entity.ravager.step");
+        registry.unregister(SoundEvents.ENTITY_RAVAGER_STUNNED);
+        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_STEP, SoundEvents.ENTITY_RAVAGER_STUNNED, "entity.ravager.stunned");
+        registry.unregister(SoundEvents.ENTITY_RAVAGER_ROAR);
+        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_STUNNED, SoundEvents.ENTITY_RAVAGER_ROAR, "entity.ravager.roar");
+
+        registry.unregister(SoundEvents.ENTITY_MAGMA_CUBE_DEATH_SMALL);
+        insertAfter(registry, SoundEvents.BLOCK_SLIME_BLOCK_STEP, SoundEvents.ENTITY_MAGMA_CUBE_DEATH_SMALL, "entity.magma_cube.death_small");
+        registry.unregister(SoundEvents.ENTITY_MAGMA_CUBE_HURT_SMALL);
+        insertAfter(registry, SoundEvents.ENTITY_MAGMA_CUBE_DEATH_SMALL, SoundEvents.ENTITY_MAGMA_CUBE_HURT_SMALL, "entity.magma_cube.hurt_small");
+        registry.unregister(SoundEvents.ENTITY_MAGMA_CUBE_SQUISH_SMALL);
+        insertAfter(registry, SoundEvents.ENTITY_MAGMA_CUBE_HURT_SMALL, SoundEvents.ENTITY_MAGMA_CUBE_SQUISH_SMALL, "entity.magma_cube.squish_small");
+
         registry.unregister(SoundEvents.BLOCK_ANCIENT_DEBRIS_BREAK);
         registry.unregister(SoundEvents.BLOCK_ANCIENT_DEBRIS_STEP);
         registry.unregister(SoundEvents.BLOCK_ANCIENT_DEBRIS_PLACE);
