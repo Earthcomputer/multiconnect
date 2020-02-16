@@ -229,6 +229,31 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.ENTITY_MAGMA_CUBE_SQUISH_SMALL);
         insertAfter(registry, SoundEvents.ENTITY_MAGMA_CUBE_HURT_SMALL, SoundEvents.ENTITY_MAGMA_CUBE_SQUISH_SMALL, "entity.magma_cube.squish_small");
 
+        registry.unregister(SoundEvents.MUSIC_DISC_11);
+        insertAfter(registry, SoundEvents.EVENT_RAID_HORN, SoundEvents.MUSIC_DISC_11, "music_disc.11");
+        registry.unregister(SoundEvents.MUSIC_DISC_13);
+        insertAfter(registry, SoundEvents.MUSIC_DISC_11, SoundEvents.MUSIC_DISC_13, "music_disc.13");
+        registry.unregister(SoundEvents.MUSIC_DISC_BLOCKS);
+        insertAfter(registry, SoundEvents.MUSIC_DISC_13, SoundEvents.MUSIC_DISC_BLOCKS, "music_disc.blocks");
+        registry.unregister(SoundEvents.MUSIC_DISC_CAT);
+        insertAfter(registry, SoundEvents.MUSIC_DISC_BLOCKS, SoundEvents.MUSIC_DISC_CAT, "music_disc.cat");
+        registry.unregister(SoundEvents.MUSIC_DISC_CHIRP);
+        insertAfter(registry, SoundEvents.MUSIC_DISC_CAT, SoundEvents.MUSIC_DISC_CHIRP, "music_disc.chirp");
+        registry.unregister(SoundEvents.MUSIC_DISC_FAR);
+        insertAfter(registry, SoundEvents.MUSIC_DISC_CHIRP, SoundEvents.MUSIC_DISC_FAR, "music_disc.far");
+        registry.unregister(SoundEvents.MUSIC_DISC_MALL);
+        insertAfter(registry, SoundEvents.MUSIC_DISC_FAR, SoundEvents.MUSIC_DISC_MALL, "music_disc.mall");
+        registry.unregister(SoundEvents.MUSIC_DISC_MELLOHI);
+        insertAfter(registry, SoundEvents.MUSIC_DISC_MALL, SoundEvents.MUSIC_DISC_MELLOHI, "music_disc.mellohi");
+        registry.unregister(SoundEvents.MUSIC_DISC_STAL);
+        insertAfter(registry, SoundEvents.MUSIC_DISC_MELLOHI, SoundEvents.MUSIC_DISC_STAL, "music_disc.stal");
+        registry.unregister(SoundEvents.MUSIC_DISC_STRAD);
+        insertAfter(registry, SoundEvents.MUSIC_DISC_STAL, SoundEvents.MUSIC_DISC_STRAD, "music_disc.strad");
+        registry.unregister(SoundEvents.MUSIC_DISC_WAIT);
+        insertAfter(registry, SoundEvents.MUSIC_DISC_STRAD, SoundEvents.MUSIC_DISC_WAIT, "music_disc.wait");
+        registry.unregister(SoundEvents.MUSIC_DISC_WARD);
+        insertAfter(registry, SoundEvents.MUSIC_DISC_WAIT, SoundEvents.MUSIC_DISC_WARD, "music_disc.ward");
+
         registry.unregister(SoundEvents.BLOCK_ANCIENT_DEBRIS_BREAK);
         registry.unregister(SoundEvents.BLOCK_ANCIENT_DEBRIS_STEP);
         registry.unregister(SoundEvents.BLOCK_ANCIENT_DEBRIS_PLACE);
