@@ -65,7 +65,7 @@ public class Entities_1_12_2 {
         register(registry, EntityType.ZOMBIE, 54, "zombie", "Zombie");
         register(registry, EntityType.SLIME, 55, "slime", "Slime");
         register(registry, EntityType.GHAST, 56, "ghast", "Ghast");
-        register(registry, EntityType.ZOMBIE_PIGMAN, 57, "zombie_pigman", "PigZombie");
+        register(registry, EntityType.ZOMBIFIED_PIGLIN, 57, "zombie_pigman", "PigZombie");
         register(registry, EntityType.ENDERMAN, 58, "enderman", "Enderman");
         register(registry, EntityType.CAVE_SPIDER, 59, "cave_spider", "CaveSpider");
         register(registry, EntityType.SILVERFISH, 60, "silverfish", "Silverfish");

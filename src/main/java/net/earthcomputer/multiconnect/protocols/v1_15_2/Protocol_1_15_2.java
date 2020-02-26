@@ -50,8 +50,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Blocks.WARPED_FENCE);
         registry.unregister(Blocks.CRIMSON_FENCE_GATE);
         registry.unregister(Blocks.WARPED_FENCE_GATE);
-        registry.unregister(Blocks.CRIMSON_FUNGI);
-        registry.unregister(Blocks.WARPED_FUNGI);
+        registry.unregister(Blocks.CRIMSON_FUNGUS);
+        registry.unregister(Blocks.WARPED_FUNGUS);
         registry.unregister(Blocks.NETHER_SPROUTS);
         registry.unregister(Blocks.CRIMSON_NYLIUM);
         registry.unregister(Blocks.WARPED_NYLIUM);
@@ -85,10 +85,17 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Blocks.WARPED_WART_BLOCK);
         registry.unregister(Blocks.WEEPING_VINES);
         registry.unregister(Blocks.WEEPING_VINES_PLANT);
+        registry.unregister(Blocks.TARGET);
+        registry.unregister(Blocks.CRYING_OBSIDIAN);
+        registry.unregister(Blocks.POTTED_CRIMSON_FUNGUS);
+        registry.unregister(Blocks.POTTED_WARPED_FUNGUS);
+        registry.unregister(Blocks.POTTED_CRIMSON_ROOTS);
+        registry.unregister(Blocks.POTTED_WARPED_ROOTS);
     }
 
     private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
         registry.unregister(Items.COMPOSTER);
+        rename(registry, Items.ZOMBIFIED_PIGLIN_SPAWN_EGG, "zombie_pigman_spawn_egg");
         insertAfter(registry, Items.JIGSAW, Items.COMPOSTER, "composter");
         registry.unregister(Items.CRIMSON_NYLIUM);
         registry.unregister(Items.WARPED_NYLIUM);
@@ -143,9 +150,13 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.NETHERITE_AXE);
         registry.unregister(Items.NETHERITE_PICKAXE);
         registry.unregister(Items.NETHERITE_HOE);
+
+        registry.unregister(Items.field_22420); // Target
+        registry.unregister(Items.field_22421); // Crying Obsidian
     }
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
+        rename(registry, EntityType.ZOMBIFIED_PIGLIN, "zombie_pigman");
         registry.unregister(EntityType.HOGLIN);
         registry.unregister(EntityType.PIGLIN);
     }
@@ -162,6 +173,9 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(ParticleTypes.CRIMSON_SPORE);
         registry.unregister(ParticleTypes.SOUL_FIRE_FLAME);
         registry.unregister(ParticleTypes.WARPED_SPORE);
+        registry.unregister(ParticleTypes.DRIPPING_OBSIDIAN_TEAR);
+        registry.unregister(ParticleTypes.FALLING_OBSIDIAN_TEAR);
+        registry.unregister(ParticleTypes.LANDING_OBSIDIAN_TEAR);
     }
 
     private void modifySoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
@@ -295,11 +309,11 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.BLOCK_NETHER_SPROUTS_PLACE);
         registry.unregister(SoundEvents.BLOCK_NETHER_SPROUTS_HIT);
         registry.unregister(SoundEvents.BLOCK_NETHER_SPROUTS_FALL);
-        registry.unregister(SoundEvents.BLOCK_FUNGI_BREAK);
-        registry.unregister(SoundEvents.BLOCK_FUNGI_STEP);
-        registry.unregister(SoundEvents.BLOCK_FUNGI_PLACE);
-        registry.unregister(SoundEvents.BLOCK_FUNGI_HIT);
-        registry.unregister(SoundEvents.BLOCK_FUNGI_FALL);
+        registry.unregister(SoundEvents.BLOCK_FUNGUS_BREAK);
+        registry.unregister(SoundEvents.BLOCK_FUNGUS_STEP);
+        registry.unregister(SoundEvents.BLOCK_FUNGUS_PLACE);
+        registry.unregister(SoundEvents.BLOCK_FUNGUS_HIT);
+        registry.unregister(SoundEvents.BLOCK_FUNGUS_FALL);
         registry.unregister(SoundEvents.BLOCK_WEEPING_VINES_BREAK);
         registry.unregister(SoundEvents.BLOCK_WEEPING_VINES_STEP);
         registry.unregister(SoundEvents.BLOCK_WEEPING_VINES_PLACE);
