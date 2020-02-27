@@ -156,7 +156,6 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
-        rename(registry, EntityType.ZOMBIFIED_PIGLIN, "zombie_pigman");
         registry.unregister(EntityType.HOGLIN);
         registry.unregister(EntityType.PIGLIN);
     }
