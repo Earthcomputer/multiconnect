@@ -395,7 +395,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.AMBIENT_WARPED_FOREST_ADDITIONS);
         registry.unregister(SoundEvents.AMBIENT_WARPED_FOREST_LOOP);
         registry.unregister(SoundEvents.AMBIENT_WARPED_FOREST_MOOD);
-        
+
         registry.unregister(SoundEvents.BLOCK_SMITHING_TABLE_USE);
     }
 

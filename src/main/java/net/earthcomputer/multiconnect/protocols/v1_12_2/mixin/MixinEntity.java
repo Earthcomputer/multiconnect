@@ -56,20 +56,20 @@ public abstract class MixinEntity {
         boolean foundFluid = false;
         Vec3d pushVec = Vec3d.ZERO;
 
-        try (BlockPos.PooledMutable pos = BlockPos.PooledMutable.get()) {
-            for (int x = minX; x < maxX; x++) {
-                for (int y = minY - 1; y < maxY; y++) {
-                    for (int z = minZ; z < maxZ; z++) {
-                        pos.set(x, y, z);
-                        FluidState state = world.getFluidState(pos);
-                        if (state.matches(fluidTag)) {
-                            double height = y + state.getHeight(world, pos);
-                            if (height >= box.y1 - 0.4)
-                                waterHeight = Math.max(height - box.y1 + 0.4, waterHeight);
-                            if (y >= minY && maxY >= height) {
-                                foundFluid = true;
-                                pushVec = pushVec.add(state.getVelocity(world, pos));
-                            }
+        BlockPos.Mutable mutable = new BlockPos.Mutable();
+
+        for (int x = minX; x < maxX; x++) {
+            for (int y = minY - 1; y < maxY; y++) {
+                for (int z = minZ; z < maxZ; z++) {
+                    mutable.set(x, y, z);
+                    FluidState state = world.getFluidState(mutable);
+                    if (state.matches(fluidTag)) {
+                        double height = y + state.getHeight(world, mutable);
+                        if (height >= box.y1 - 0.4)
+                            waterHeight = Math.max(height - box.y1 + 0.4, waterHeight);
+                        if (y >= minY && maxY >= height) {
+                            foundFluid = true;
+                            pushVec = pushVec.add(state.getVelocity(world, mutable));
                         }
                     }
                 }
