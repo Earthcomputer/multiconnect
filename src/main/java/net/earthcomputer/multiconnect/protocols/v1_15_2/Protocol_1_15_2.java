@@ -91,6 +91,10 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Blocks.POTTED_WARPED_FUNGUS);
         registry.unregister(Blocks.POTTED_CRIMSON_ROOTS);
         registry.unregister(Blocks.POTTED_WARPED_ROOTS);
+        registry.unregister(Blocks.WARPED_HYPHAE);
+        registry.unregister(Blocks.STRIPPED_WARPED_HYPHAE);
+        registry.unregister(Blocks.CRIMSON_HYPHAE);
+        registry.unregister(Blocks.STRIPPED_CRIMSON_HYPHAE);
     }
 
     private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
@@ -105,8 +109,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.WARPED_STEM);
         registry.unregister(Items.STRIPPED_CRIMSON_STEM);
         registry.unregister(Items.STRIPPED_WARPED_STEM);
-        registry.unregister(Items.CRIMSON_FUNGI);
-        registry.unregister(Items.WARPED_FUNGI);
+        registry.unregister(Items.CRIMSON_FUNGUS);
+        registry.unregister(Items.WARPED_FUNGUS);
         registry.unregister(Items.CRIMSON_ROOTS);
         registry.unregister(Items.WARPED_ROOTS);
         registry.unregister(Items.NETHER_SPROUTS);
@@ -150,9 +154,13 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.NETHERITE_AXE);
         registry.unregister(Items.NETHERITE_PICKAXE);
         registry.unregister(Items.NETHERITE_HOE);
+        registry.unregister(Items.TARGET);
+        registry.unregister(Items.CRYING_OBSIDIAN);
 
-        registry.unregister(Items.field_22420); // Target
-        registry.unregister(Items.field_22421); // Crying Obsidian
+        registry.unregister(Items.field_22487); // Stripped Warped Hyphae
+        registry.unregister(Items.field_22488); // Stripped Crimson Hyphae
+        registry.unregister(Items.field_22489); // Warped Hyphae
+        registry.unregister(Items.field_22490); // Crimson Hyphae
     }
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
@@ -374,6 +382,21 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.ENTITY_HOGLIN_STEP);
 
         registry.unregister(SoundEvents.ENTITY_SNOW_GOLEM_SHEAR);
+
+        registry.unregister(SoundEvents.AMBIENT_CRIMSON_FOREST_ADDITIONS);
+        registry.unregister(SoundEvents.AMBIENT_CRIMSON_FOREST_LOOP);
+        registry.unregister(SoundEvents.AMBIENT_CRIMSON_FOREST_MOOD);
+        registry.unregister(SoundEvents.AMBIENT_NETHER_WASTES_ADDITIONS);
+        registry.unregister(SoundEvents.AMBIENT_NETHER_WASTES_LOOP);
+        registry.unregister(SoundEvents.AMBIENT_NETHER_WASTES_MOOD);
+        registry.unregister(SoundEvents.AMBIENT_SOUL_SAND_VALLEY_ADDITIONS);
+        registry.unregister(SoundEvents.AMBIENT_SOUL_SAND_VALLEY_LOOP);
+        registry.unregister(SoundEvents.AMBIENT_SOUL_SAND_VALLEY_MOOD);
+        registry.unregister(SoundEvents.AMBIENT_WARPED_FOREST_ADDITIONS);
+        registry.unregister(SoundEvents.AMBIENT_WARPED_FOREST_LOOP);
+        registry.unregister(SoundEvents.AMBIENT_WARPED_FOREST_MOOD);
+        
+        registry.unregister(SoundEvents.BLOCK_SMITHING_TABLE_USE);
     }
 
     @Override
