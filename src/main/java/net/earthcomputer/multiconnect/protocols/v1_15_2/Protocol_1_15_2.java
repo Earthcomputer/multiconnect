@@ -95,6 +95,9 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Blocks.STRIPPED_WARPED_HYPHAE);
         registry.unregister(Blocks.CRIMSON_HYPHAE);
         registry.unregister(Blocks.STRIPPED_CRIMSON_HYPHAE);
+        registry.unregister(Blocks.NETHER_GOLD_ORE);
+        registry.unregister(Blocks.TWISTING_VINES);
+        registry.unregister(Blocks.TWISTING_VINES_PLANT);
     }
 
     private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
@@ -161,6 +164,9 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.field_22488); // Stripped Crimson Hyphae
         registry.unregister(Items.field_22489); // Warped Hyphae
         registry.unregister(Items.field_22490); // Crimson Hyphae
+
+        registry.unregister(Items.field_23069); // Nether Gold Ore
+        registry.unregister(Items.field_23070); // Twisting Vines
     }
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
@@ -179,6 +185,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(ParticleTypes.ASH);
         registry.unregister(ParticleTypes.CRIMSON_SPORE);
         registry.unregister(ParticleTypes.SOUL_FIRE_FLAME);
+        registry.unregister(ParticleTypes.SOUL);
         registry.unregister(ParticleTypes.WARPED_SPORE);
         registry.unregister(ParticleTypes.DRIPPING_OBSIDIAN_TEAR);
         registry.unregister(ParticleTypes.FALLING_OBSIDIAN_TEAR);
@@ -361,6 +368,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.BLOCK_SOUL_SOIL_PLACE);
         registry.unregister(SoundEvents.BLOCK_SOUL_SOIL_HIT);
         registry.unregister(SoundEvents.BLOCK_SOUL_SOIL_FALL);
+        registry.unregister(SoundEvents.PARTICLE_SOUL_ESCAPE);
 
         registry.unregister(SoundEvents.ENTITY_PIGLIN_ADMIRING_ITEM);
         registry.unregister(SoundEvents.ENTITY_PIGLIN_AMBIENT);
