@@ -7,7 +7,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
-import net.minecraft.util.PacketByteBuf;
+import net.minecraft.network.PacketByteBuf;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -58,7 +58,7 @@ public abstract class MixinDataTracker implements IDataTracker {
             ci.cancel();
     }
 
-    @Redirect(method = "entryFromPacket", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/data/TrackedDataHandler;read(Lnet/minecraft/util/PacketByteBuf;)Ljava/lang/Object;"))
+    @Redirect(method = "entryFromPacket", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/data/TrackedDataHandler;read(Lnet/minecraft/network/PacketByteBuf;)Ljava/lang/Object;"))
     private static <T> T read(TrackedDataHandler<T> handler, PacketByteBuf buf) {
         return ConnectionInfo.protocol.readTrackedData(handler, buf);
     }

@@ -6,8 +6,8 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.Packet;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.PacketEncoder;
-import net.minecraft.util.PacketByteBuf;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -41,7 +41,7 @@ public class MixinEncoderHandler {
         return buf;
     }
 
-    @Inject(method = "encode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Packet;write(Lnet/minecraft/util/PacketByteBuf;)V", shift = At.Shift.AFTER))
+    @Inject(method = "encode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Packet;write(Lnet/minecraft/network/PacketByteBuf;)V", shift = At.Shift.AFTER))
     private void postWrite(ChannelHandlerContext context, Packet<?> packet, ByteBuf buf, CallbackInfo ci) {
         if (!((TransformerByteBuf) this.buf.get()).canEncodeAsync(packet.getClass())) {
             ConnectionInfo.resourceReloadLock.readLock().unlock();

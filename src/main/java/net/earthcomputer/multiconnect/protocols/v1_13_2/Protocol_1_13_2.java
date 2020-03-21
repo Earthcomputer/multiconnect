@@ -27,6 +27,7 @@ import net.minecraft.entity.passive.CatEntity;
 import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.entity.passive.MooshroomEntity;
 import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -48,7 +49,6 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
@@ -93,16 +93,16 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
-        insertAfter(packets, CloseContainerS2CPacket.class, PacketInfo.of(GuiOpenS2CPacket_1_13_2.class, GuiOpenS2CPacket_1_13_2::new));
+        insertAfter(packets, CloseScreenS2CPacket.class, PacketInfo.of(GuiOpenS2CPacket_1_13_2.class, GuiOpenS2CPacket_1_13_2::new));
         remove(packets, TagQueryResponseS2CPacket.class);
         insertAfter(packets, EntityStatusS2CPacket.class, PacketInfo.of(TagQueryResponseS2CPacket.class, TagQueryResponseS2CPacket::new));
-        remove(packets, OpenHorseContainerS2CPacket.class);
+        remove(packets, OpenHorseScreenS2CPacket.class);
         remove(packets, LightUpdateS2CPacket.class);
         remove(packets, EntityS2CPacket.class);
         insertAfter(packets, SetTradeOffersS2CPacket.class, PacketInfo.of(EntityS2CPacket.class, EntityS2CPacket::new));
         remove(packets, SetTradeOffersS2CPacket.class);
         remove(packets, OpenWrittenBookS2CPacket.class);
-        remove(packets, OpenContainerS2CPacket.class);
+        remove(packets, OpenScreenS2CPacket.class);
         insertAfter(packets, PlayerPositionLookS2CPacket.class, PacketInfo.of(UseBedS2CPacket.class, UseBedS2CPacket::new));
         remove(packets, ChunkRenderDistanceCenterS2CPacket.class);
         remove(packets, ChunkLoadDistanceS2CPacket.class);
@@ -376,12 +376,12 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == Entity.class && data == EntityAccessor.getPose())
             return false;
-        if (clazz == EnderEyeEntity.class && data == EnderEyeEntityAccessor.getItem())
+        if (clazz == EyeOfEnderEntity.class && data == EnderEyeEntityAccessor.getItem())
             return false;
-        if (clazz == FireworkEntity.class) {
+        if (clazz == FireworkRocketEntity.class) {
             TrackedData<OptionalInt> fireworkShooter = FireworkEntityAccessor.getShooter();
             if (data == fireworkShooter) {
-                DataTrackerManager.registerOldTrackedData(FireworkEntity.class, OLD_FIREWORK_SHOOTER, 0,
+                DataTrackerManager.registerOldTrackedData(FireworkRocketEntity.class, OLD_FIREWORK_SHOOTER, 0,
                         (entity, val) -> entity.getDataTracker().set(fireworkShooter, val <= 0 ? OptionalInt.empty() : OptionalInt.of(val)));
                 return false;
             }

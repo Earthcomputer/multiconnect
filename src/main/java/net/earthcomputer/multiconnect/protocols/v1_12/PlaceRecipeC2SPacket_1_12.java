@@ -2,8 +2,8 @@ package net.earthcomputer.multiconnect.protocols.v1_12;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.Packet;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ServerPlayPacketListener;
-import net.minecraft.util.PacketByteBuf;
 
 import java.util.List;
 

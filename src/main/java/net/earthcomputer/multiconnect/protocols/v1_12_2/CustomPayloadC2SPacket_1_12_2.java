@@ -1,8 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import net.minecraft.network.Packet;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ServerPlayPacketListener;
-import net.minecraft.util.PacketByteBuf;
 
 public class CustomPayloadC2SPacket_1_12_2 implements Packet<ServerPlayPacketListener> {
 

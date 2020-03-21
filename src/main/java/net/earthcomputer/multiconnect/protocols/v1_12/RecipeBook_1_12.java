@@ -6,14 +6,14 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.recipebook.RecipeBookWidget;
 import net.minecraft.client.gui.screen.recipebook.RecipeResultCollection;
-import net.minecraft.container.CraftingContainer;
-import net.minecraft.container.Slot;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.RecipeFinder;
 import net.minecraft.recipe.ShapedRecipe;
+import net.minecraft.screen.AbstractRecipeScreenHandler;
+import net.minecraft.screen.slot.Slot;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
@@ -25,9 +25,9 @@ public class RecipeBook_1_12<C extends Inventory> {
     private MinecraftClient mc = MinecraftClient.getInstance();
     private RecipeBookWidget recipeBookWidget;
     private IRecipeBookWidget iRecipeBookWidget;
-    private CraftingContainer<C> container;
+    private AbstractRecipeScreenHandler<C> container;
 
-    public RecipeBook_1_12(RecipeBookWidget recipeBookWidget, IRecipeBookWidget iRecipeBookWidget, CraftingContainer<C> container) {
+    public RecipeBook_1_12(RecipeBookWidget recipeBookWidget, IRecipeBookWidget iRecipeBookWidget, AbstractRecipeScreenHandler<C> container) {
         this.recipeBookWidget = recipeBookWidget;
         this.iRecipeBookWidget = iRecipeBookWidget;
         this.container = container;
@@ -55,7 +55,7 @@ public class RecipeBook_1_12<C extends Inventory> {
             recipeBookWidget.showGhostRecipe(recipe, container.slots);
 
             if (!transactionFromMatrix.isEmpty()) {
-                short transactionId = mc.player.container.getNextActionId(mc.player.inventory);
+                short transactionId = mc.player.currentScreenHandler.getNextActionId(mc.player.inventory);
                 mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionFromMatrix, new ArrayList<>()));
 
                 if (iRecipeBookWidget.getRecipeBook().isFilteringCraftable()) {
@@ -116,7 +116,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                 List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsFromMatrix = clearCraftMatrix();
                 List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsToMatrix = new ArrayList<>();
                 placeRecipe(recipe, slots, actualCount, inputItemIds, transactionsToMatrix);
-                short transactionId = mc.player.container.getNextActionId(mc.player.inventory);
+                short transactionId = mc.player.currentScreenHandler.getNextActionId(mc.player.inventory);
                 mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionsFromMatrix, transactionsToMatrix));
                 mc.player.inventory.markDirty();
             }

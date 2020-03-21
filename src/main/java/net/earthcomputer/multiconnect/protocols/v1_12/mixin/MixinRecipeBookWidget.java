@@ -9,11 +9,11 @@ import net.minecraft.client.gui.screen.recipebook.RecipeBookGhostSlots;
 import net.minecraft.client.gui.screen.recipebook.RecipeBookResults;
 import net.minecraft.client.gui.screen.recipebook.RecipeBookWidget;
 import net.minecraft.client.gui.screen.recipebook.RecipeResultCollection;
-import net.minecraft.client.recipe.book.ClientRecipeBook;
-import net.minecraft.container.CraftingContainer;
+import net.minecraft.client.recipebook.ClientRecipeBook;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.RecipeFinder;
+import net.minecraft.screen.AbstractRecipeScreenHandler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,7 +37,7 @@ public abstract class MixinRecipeBookWidget implements IRecipeBookWidget {
     @Unique private RecipeBook_1_12<?> recipeBook112;
 
     @Inject(method = "initialize", at = @At("RETURN"))
-    private void onInitialize(int parentWidth, int parentHeight, MinecraftClient mc, boolean isNarrow, CraftingContainer<?> craftingContainer, CallbackInfo ci) {
+    private void onInitialize(int parentWidth, int parentHeight, MinecraftClient mc, boolean isNarrow, AbstractRecipeScreenHandler<?> craftingContainer, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12) {
             recipeBook112 = new RecipeBook_1_12<>((RecipeBookWidget) (Object) this, this, craftingContainer);
         }

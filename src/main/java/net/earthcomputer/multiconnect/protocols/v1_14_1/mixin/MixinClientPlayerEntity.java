@@ -20,7 +20,7 @@ public class MixinClientPlayerEntity {
             return _this.isSwimming();
     }
 
-    @Inject(method = "method_20623", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isWalking", at = @At("HEAD"), cancellable = true)
     public void easierUnderwaterSprinting(CallbackInfoReturnable<Boolean> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_14_1) {
             ci.setReturnValue(((ClientPlayerEntity) (Object) this).input.movementForward >= 0.8);

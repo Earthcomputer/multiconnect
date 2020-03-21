@@ -24,7 +24,6 @@
     "LightUpdatePacketAccessor",
     "LivingEntityAccessor",
     "MooshroomEntityAccessor",
-    "ProjectileEntityAccessor",
     "VillagerEntityAccessor",
     "ZombieEntityAccessor",
     "ZombieVillagerEntityAccessor"

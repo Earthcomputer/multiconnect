@@ -98,6 +98,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Blocks.NETHER_GOLD_ORE);
         registry.unregister(Blocks.TWISTING_VINES);
         registry.unregister(Blocks.TWISTING_VINES_PLANT);
+        registry.unregister(Blocks.POLISHED_BASALT);
+        registry.unregister(Blocks.RESPAWN_ANCHOR);
     }
 
     private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
@@ -159,14 +161,17 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.NETHERITE_HOE);
         registry.unregister(Items.TARGET);
         registry.unregister(Items.CRYING_OBSIDIAN);
+        registry.unregister(Items.RESPAWN_ANCHOR);
 
         registry.unregister(Items.field_22487); // Stripped Warped Hyphae
         registry.unregister(Items.field_22488); // Stripped Crimson Hyphae
         registry.unregister(Items.field_22489); // Warped Hyphae
         registry.unregister(Items.field_22490); // Crimson Hyphae
 
-        registry.unregister(Items.field_23069); // Nether Gold Ore
+        registry.unregister(Items.field_23140); // Nether Gold Ore
         registry.unregister(Items.field_23070); // Twisting Vines
+
+        registry.unregister(Items.field_23069); // Polished Basalt
     }
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {

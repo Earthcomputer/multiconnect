@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.mixin;
 
 import net.earthcomputer.multiconnect.impl.IInt2ObjectBiMap;
-import net.minecraft.util.Int2ObjectBiMap;
+import net.minecraft.util.collection.Int2ObjectBiMap;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 

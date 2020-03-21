@@ -5,8 +5,12 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.container.*;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.MerchantScreenHandler;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.screen.slot.Slot;
+import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.village.TraderInventory;
 import net.minecraft.village.TraderOfferList;
 import org.spongepowered.asm.mixin.*;
@@ -15,14 +19,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(MerchantContainer.class)
-public abstract class MixinMerchantContainer extends Container {
+@Mixin(MerchantScreenHandler.class)
+public abstract class MixinMerchantContainer extends ScreenHandler {
 
     @Shadow @Final private TraderInventory traderInventory;
 
     @Shadow public abstract TraderOfferList getRecipes();
 
-    protected MixinMerchantContainer(ContainerType<?> type, int syncId) {
+    protected MixinMerchantContainer(ScreenHandlerType<?> type, int syncId) {
         super(type, syncId);
     }
 

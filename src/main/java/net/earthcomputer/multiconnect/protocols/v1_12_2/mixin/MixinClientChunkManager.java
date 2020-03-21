@@ -6,7 +6,7 @@ import net.earthcomputer.multiconnect.protocols.v1_12_2.ChunkUpgrader;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.IUpgradableChunk;
 import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.PacketByteBuf;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.UpgradeData;

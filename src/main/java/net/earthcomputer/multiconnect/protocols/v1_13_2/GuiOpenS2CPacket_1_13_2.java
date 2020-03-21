@@ -1,12 +1,12 @@
 package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.container.ContainerType;
 import net.minecraft.network.Packet;
-import net.minecraft.network.packet.s2c.play.OpenContainerS2CPacket;
-import net.minecraft.network.packet.s2c.play.OpenHorseContainerS2CPacket;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.s2c.play.OpenHorseScreenS2CPacket;
+import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket;
+import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.text.Text;
-import net.minecraft.util.PacketByteBuf;
 
 public class GuiOpenS2CPacket_1_13_2 implements Packet<ClientPlayNetworkHandler> {
 
@@ -34,36 +34,36 @@ public class GuiOpenS2CPacket_1_13_2 implements Packet<ClientPlayNetworkHandler>
     @Override
     public void apply(ClientPlayNetworkHandler handler) {
         if ("minecraft:container".equals(type)) {
-            handler.onOpenContainer(new OpenContainerS2CPacket(syncId, slotCount <= 27 ? ContainerType.GENERIC_9X3 : ContainerType.GENERIC_9X6, title));
+            handler.onOpenScreen(new OpenScreenS2CPacket(syncId, slotCount <= 27 ? ScreenHandlerType.GENERIC_9X3 : ScreenHandlerType.GENERIC_9X6, title));
         } else if ("minecraft:villager".equals(type)) {
-            handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.MERCHANT, title));
+            handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.MERCHANT, title));
         } else if ("EntityHorse".equals(type)) {
-            handler.onOpenHorseContainer(new OpenHorseContainerS2CPacket(syncId, slotCount, horseId));
+            handler.onOpenHorseScreen(new OpenHorseScreenS2CPacket(syncId, slotCount, horseId));
         } else if (slotCount <= 0) {
             if ("minecraft:crafting_table".equals(type)) {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.CRAFTING, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.CRAFTING, title));
             } else if ("minecraft:enchanting_table".equals(type)) {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.ENCHANTMENT, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.ENCHANTMENT, title));
             } else if ("minecraft:anvil".equals(type)) {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.ANVIL, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.ANVIL, title));
             }
         } else {
             if ("minecraft:chest".equals(type)) {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, slotCount <= 27 ? ContainerType.GENERIC_9X3 : ContainerType.GENERIC_9X6, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, slotCount <= 27 ? ScreenHandlerType.GENERIC_9X3 : ScreenHandlerType.GENERIC_9X6, title));
             } else if ("minecraft:hopper".equals(type)) {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.HOPPER, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.HOPPER, title));
             } else if ("minecraft:furnace".equals(type)) {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.FURNACE, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.FURNACE, title));
             } else if ("minecraft:brewing_stand".equals(type)) {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.BREWING_STAND, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.BREWING_STAND, title));
             } else if ("minecraft:beacon".equals(type)) {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.BEACON, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.BEACON, title));
             } else if ("minecraft:dispenser".equals(type) || "minecraft:dropper".equals(type)) {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.GENERIC_3X3, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.GENERIC_3X3, title));
             } else if ("minecraft:shulker_box".equals(type)) {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, ContainerType.SHULKER_BOX, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.SHULKER_BOX, title));
             } else {
-                handler.onOpenContainer(new OpenContainerS2CPacket(syncId, slotCount <= 27 ? ContainerType.GENERIC_9X3 : ContainerType.GENERIC_9X6, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, slotCount <= 27 ? ScreenHandlerType.GENERIC_9X3 : ScreenHandlerType.GENERIC_9X6, title));
             }
         }
     }
