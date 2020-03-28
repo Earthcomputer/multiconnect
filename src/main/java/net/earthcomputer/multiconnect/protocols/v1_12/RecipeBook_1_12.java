@@ -243,16 +243,16 @@ public class RecipeBook_1_12<C extends Inventory> {
         if (fromSlot == -1) {
             return null;
         } else {
-            ItemStack stack = playerInv.getInvStack(fromSlot).copy();
+            ItemStack stack = playerInv.getStack(fromSlot).copy();
 
             if (stack.isEmpty()) {
                 LogManager.getLogger().error("Matched: " + stackNeeded.getTranslationKey() + " with empty item.");
                 return null;
             } else {
                 if (stack.getCount() > 1) {
-                    playerInv.takeInvStack(fromSlot, 1);
+                    playerInv.removeStack(fromSlot, 1);
                 } else {
-                    playerInv.removeInvStack(fromSlot);
+                    playerInv.removeStack(fromSlot);
                 }
 
                 stack.setCount(1);

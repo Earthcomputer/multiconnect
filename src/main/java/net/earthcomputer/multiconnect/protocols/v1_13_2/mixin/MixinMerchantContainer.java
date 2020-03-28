@@ -45,23 +45,23 @@ public abstract class MixinMerchantContainer extends ScreenHandler {
         assert interactionManager != null;
 
         // move 1st input slot to inventory
-        if (!traderInventory.getInvStack(0).isEmpty()) {
-            int count = traderInventory.getInvStack(0).getCount();
+        if (!traderInventory.getStack(0).isEmpty()) {
+            int count = traderInventory.getStack(0).getCount();
             interactionManager.clickSlot(syncId, 0, 0, SlotActionType.QUICK_MOVE, player);
-            if (count == traderInventory.getInvStack(0).getCount())
+            if (count == traderInventory.getStack(0).getCount())
                 return;
         }
 
         // move 2nd input slot to inventory
-        if (!traderInventory.getInvStack(1).isEmpty()) {
-            int count = traderInventory.getInvStack(1).getCount();
+        if (!traderInventory.getStack(1).isEmpty()) {
+            int count = traderInventory.getStack(1).getCount();
             interactionManager.clickSlot(syncId, 1, 0, SlotActionType.QUICK_MOVE, player);
-            if (count == traderInventory.getInvStack(1).getCount())
+            if (count == traderInventory.getStack(1).getCount())
                 return;
         }
 
         // refill the slots
-        if (traderInventory.getInvStack(0).isEmpty() && traderInventory.getInvStack(1).isEmpty()) {
+        if (traderInventory.getStack(0).isEmpty() && traderInventory.getStack(1).isEmpty()) {
             autofill(interactionManager, player, 0, getRecipes().get(recipeId).getAdjustedFirstBuyItem());
             autofill(interactionManager, player, 1, getRecipes().get(recipeId).getSecondBuyItem());
         }

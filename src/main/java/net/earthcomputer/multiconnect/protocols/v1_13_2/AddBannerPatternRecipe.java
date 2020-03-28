@@ -26,8 +26,8 @@ public class AddBannerPatternRecipe extends SpecialCraftingRecipe {
     @Override
     public boolean matches(CraftingInventory inv, World world) {
         boolean foundBanner = false;
-        for (int i = 0; i < inv.getInvSize(); i++) {
-            ItemStack stack = inv.getInvStack(i);
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack stack = inv.getStack(i);
             if (stack.getItem() instanceof BannerItem) {
                 if (foundBanner)
                     return false;
@@ -43,8 +43,8 @@ public class AddBannerPatternRecipe extends SpecialCraftingRecipe {
     public ItemStack craft(CraftingInventory inv) {
         ItemStack result = ItemStack.EMPTY;
 
-        for (int i = 0; i < inv.getInvSize(); i++) {
-            ItemStack stack = inv.getInvStack(i);
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack stack = inv.getStack(i);
             if (!stack.isEmpty() && stack.getItem() instanceof BannerItem) {
                 result = stack.copy();
                 result.setCount(1);
@@ -55,8 +55,8 @@ public class AddBannerPatternRecipe extends SpecialCraftingRecipe {
         BannerPattern_1_13_2 pattern = getBannerPattern(inv);
         if (pattern != null) {
             DyeColor color = DyeColor.WHITE;
-            for (int i = 0; i < inv.getInvSize(); i++) {
-                Item item = inv.getInvStack(i).getItem();
+            for (int i = 0; i < inv.size(); i++) {
+                Item item = inv.getStack(i).getItem();
                 if (item instanceof DyeItem) {
                     color = ((DyeItem) item).getColor();
                 }
@@ -98,8 +98,8 @@ public class AddBannerPatternRecipe extends SpecialCraftingRecipe {
             if (pattern.hasBaseStack()) {
                 boolean foundBaseItem = false;
                 boolean foundDye = false;
-                for (int i = 0; i < inv.getInvSize(); i++) {
-                    ItemStack stack = inv.getInvStack(i);
+                for (int i = 0; i < inv.size(); i++) {
+                    ItemStack stack = inv.getStack(i);
                     if (!stack.isEmpty() && !(stack.getItem() instanceof BannerItem)) {
                         if (stack.getItem() instanceof DyeItem) {
                             if (foundDye) {
@@ -118,12 +118,12 @@ public class AddBannerPatternRecipe extends SpecialCraftingRecipe {
                 }
                 if (!foundBaseItem || !foundDye)
                     matches = false;
-            } else if (inv.getInvSize() == pattern.getRecipePattern().length * pattern.getRecipePattern()[0].length()) {
+            } else if (inv.size() == pattern.getRecipePattern().length * pattern.getRecipePattern()[0].length()) {
                 DyeColor patternColor = null;
-                for (int i = 0; i < inv.getInvSize(); i++) {
+                for (int i = 0; i < inv.size(); i++) {
                     int row = i / 3;
                     int col = i % 3;
-                    ItemStack stack = inv.getInvStack(i);
+                    ItemStack stack = inv.getStack(i);
                     Item item = stack.getItem();
                     if (!stack.isEmpty() && !(item instanceof BannerItem)) {
                         if (!(item instanceof DyeItem)) {

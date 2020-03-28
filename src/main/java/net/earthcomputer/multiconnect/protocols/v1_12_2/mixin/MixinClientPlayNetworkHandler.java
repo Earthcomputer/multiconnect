@@ -86,7 +86,7 @@ public abstract class MixinClientPlayNetworkHandler {
             assert client.world != null;
             BlockEntity be = client.world.getBlockEntity(packet.getPos());
             if (packet.getBlockEntityType() == 5 && be instanceof FlowerPotBlockEntity) {
-                be.fromTag(packet.getCompoundTag());
+                be.fromTag(be.getCachedState(), packet.getCompoundTag());
             }
         }
     }

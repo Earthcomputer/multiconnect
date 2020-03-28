@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.FlowerPotBlockAccessor;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.item.BlockItem;
@@ -18,8 +19,8 @@ public class FlowerPotBlockEntity extends BlockEntity {
     }
 
     @Override
-    public void fromTag(CompoundTag tag) {
-        super.fromTag(tag);
+    public void fromTag(BlockState blockState, CompoundTag tag) {
+        super.fromTag(blockState, tag);
         Item flowerPotItem;
         if (tag.contains("Item", 8))
             flowerPotItem = Registry.ITEM.get(new Identifier(tag.getString("Item")));

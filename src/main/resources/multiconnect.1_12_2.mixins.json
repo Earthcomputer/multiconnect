@@ -5,6 +5,7 @@
   "mixins": [
   ],
   "client": [
+    "MixinAbstractBlock",
     "MixinAreaEffectCloudEntity",
     "MixinBannerBlockEntity",
     "MixinBedBlockEntity",

@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ClientPlayerEntity.class)
 public class MixinClientPlayerEntity {
 
-    @Redirect(method = "isInSneakingPose", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSwimming()Z"))
+    @Redirect(method = "isInSneakingPose", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;field_23093:Z"))
     public boolean redirectIsSneakingWhileSwimming(ClientPlayerEntity _this) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_14_1)
             return false;

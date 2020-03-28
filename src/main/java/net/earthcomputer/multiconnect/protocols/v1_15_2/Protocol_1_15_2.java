@@ -100,6 +100,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Blocks.TWISTING_VINES_PLANT);
         registry.unregister(Blocks.POLISHED_BASALT);
         registry.unregister(Blocks.RESPAWN_ANCHOR);
+        registry.unregister(Blocks.LODESTONE);
     }
 
     private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
@@ -162,21 +163,24 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.TARGET);
         registry.unregister(Items.CRYING_OBSIDIAN);
         registry.unregister(Items.RESPAWN_ANCHOR);
+        registry.unregister(Items.LODESTONE);
+        registry.unregister(Items.WARPED_FUNGUS_ON_A_STICK);
+        registry.unregister(Items.STRIDER_SPAWN_EGG);
 
-        registry.unregister(Items.field_22487); // Stripped Warped Hyphae
-        registry.unregister(Items.field_22488); // Stripped Crimson Hyphae
-        registry.unregister(Items.field_22489); // Warped Hyphae
-        registry.unregister(Items.field_22490); // Crimson Hyphae
-
-        registry.unregister(Items.field_23140); // Nether Gold Ore
-        registry.unregister(Items.field_23070); // Twisting Vines
+        registry.unregister(Items.field_22487); // Stripped Crimson Hyphae
+        registry.unregister(Items.field_22488); // Stripped Warped Hyphae
+        registry.unregister(Items.field_22489); // Crimson Hyphae
+        registry.unregister(Items.field_22490); // Warped Hyphae
 
         registry.unregister(Items.field_23069); // Polished Basalt
+        registry.unregister(Items.field_23140); // Nether Gold Ore
+        registry.unregister(Items.field_23070); // Twisting Vines
     }
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
         registry.unregister(EntityType.HOGLIN);
         registry.unregister(EntityType.PIGLIN);
+        registry.unregister(EntityType.STRIDER);
     }
 
     private static void modifyBiomeRegistry(ISimpleRegistry<Biome> registry) {
@@ -195,6 +199,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(ParticleTypes.DRIPPING_OBSIDIAN_TEAR);
         registry.unregister(ParticleTypes.FALLING_OBSIDIAN_TEAR);
         registry.unregister(ParticleTypes.LANDING_OBSIDIAN_TEAR);
+        registry.unregister(ParticleTypes.REVERSE_PORTAL);
     }
 
     private void modifySoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
@@ -410,6 +415,17 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.AMBIENT_WARPED_FOREST_MOOD);
 
         registry.unregister(SoundEvents.BLOCK_SMITHING_TABLE_USE);
+
+        registry.unregister(SoundEvents.BLOCK_LODESTONE_BREAK);
+        registry.unregister(SoundEvents.BLOCK_LODESTONE_STEP);
+        registry.unregister(SoundEvents.BLOCK_LODESTONE_PLACE);
+        registry.unregister(SoundEvents.BLOCK_LODESTONE_HIT);
+        registry.unregister(SoundEvents.BLOCK_LODESTONE_FALL);
+        registry.unregister(SoundEvents.ITEM_LODESTONE_COMPASS_LOCK);
+        registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_AMBIENT);
+        registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE);
+        registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE);
+        registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_SET_SPAWN);
     }
 
     @Override

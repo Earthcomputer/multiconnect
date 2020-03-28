@@ -254,7 +254,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
 
     @Override
     public boolean acceptBlockState(BlockState state) {
-        if (state.getBlock() == Blocks.BELL && state.get(BellBlock.field_20648)) // powered
+        if (state.getBlock() == Blocks.BELL && state.get(BellBlock.POWERED)) // powered
             return false;
 
         return super.acceptBlockState(state);

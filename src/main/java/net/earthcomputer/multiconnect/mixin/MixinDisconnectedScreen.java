@@ -66,7 +66,7 @@ public abstract class MixinDisconnectedScreen extends Screen {
     private void onRender(int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (isProtocolReason) {
             String label = I18n.translate("multiconnect.changeForcedProtocol") + " ->";
-            font.drawWithShadow(label, width - 85 - font.getStringWidth(label), 11, 0xFFFFFF);
+            textRenderer.drawWithShadow(label, width - 85 - textRenderer.getStringWidth(label), 11, 0xFFFFFF);
             protocolSelector.setMessage(getForcedVersion().getName());
         }
     }

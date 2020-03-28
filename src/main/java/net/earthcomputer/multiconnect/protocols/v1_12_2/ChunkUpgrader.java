@@ -91,18 +91,18 @@ public class ChunkUpgrader {
     private static void inPlaceFix(Chunk chunk, BlockState oldState, BlockPos pos, BlockPos.Mutable otherPos) {
         Block block = oldState.getBlock();
         if (block instanceof SnowyBlock) {
-            Block above = chunk.getBlockState(otherPos.set(pos).setOffset(Direction.UP)).getBlock();
+            Block above = chunk.getBlockState(otherPos.set(pos).move(Direction.UP)).getBlock();
             if (above == SNOW || above == SNOW_BLOCK)
                 chunk.setBlockState(pos, oldState.with(SnowyBlock.SNOWY, true), false);
         } else if (block instanceof DoorBlock && oldState.get(DoorBlock.HALF) == DoubleBlockHalf.LOWER) {
-            otherPos.set(pos).setOffset(Direction.UP);
+            otherPos.set(pos).move(Direction.UP);
             BlockState above = chunk.getBlockState(otherPos);
             if (above.getBlock() instanceof DoorBlock) {
                 chunk.setBlockState(pos, oldState.with(DoorBlock.HINGE, above.get(DoorBlock.HINGE)).with(DoorBlock.POWERED, above.get(DoorBlock.POWERED)), false);
                 chunk.setBlockState(otherPos, above.with(DoorBlock.FACING, oldState.get(DoorBlock.FACING)).with(DoorBlock.OPEN, oldState.get(DoorBlock.OPEN)), false);
             }
         } else if (block instanceof TallPlantBlock && oldState.get(TallPlantBlock.HALF) == DoubleBlockHalf.UPPER) {
-            BlockState below = chunk.getBlockState(otherPos.set(pos).setOffset(Direction.DOWN));
+            BlockState below = chunk.getBlockState(otherPos.set(pos).move(Direction.DOWN));
             if (below.getBlock() instanceof TallPlantBlock)
                 chunk.setBlockState(pos, below.with(TallPlantBlock.HALF, DoubleBlockHalf.UPPER), false);
         }

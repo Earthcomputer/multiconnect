@@ -25,8 +25,8 @@ public abstract class MixinBedBlockEntity extends BlockEntity {
     }
 
     @Override
-    public void fromTag(CompoundTag tag) {
-        super.fromTag(tag);
+    public void fromTag(BlockState blockState, CompoundTag tag) {
+        super.fromTag(blockState, tag);
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             if (tag.contains("color"))
                 setBedColor(tag.getInt("color"));

@@ -7,8 +7,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.TntBlock;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.data.TrackedData;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.BookUpdateC2SPacket;
 import net.minecraft.util.Hand;
@@ -46,12 +44,5 @@ public class Protocol_1_13 extends Protocol_1_13_1 {
         if (state.getBlock() == Blocks.TNT && state.get(TntBlock.UNSTABLE))
             return false;
         return super.acceptBlockState(state);
-    }
-
-    @Override
-    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
-        //if (clazz == ProjectileEntity.class && data == ProjectileEntityAccessor.getOptionalUuid())
-        //    return false;
-        return super.acceptEntityData(clazz, data);
     }
 }

@@ -28,7 +28,7 @@ import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.entity.passive.MooshroomEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
+import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -416,7 +416,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 || data == CatEntityAccessor.getCollarColor())
                 return false;
         }
-        if (clazz == ProjectileEntity.class && data == ProjectileEntityAccessor.getPierceLevel())
+        if (clazz == PersistentProjectileEntity.class && data == ProjectileEntityAccessor.getPierceLevel())
             return false;
         return super.acceptEntityData(clazz, data);
     }
