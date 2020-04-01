@@ -1,6 +1,8 @@
 package net.earthcomputer.multiconnect.impl;
 
 import com.google.common.collect.BiMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.Int2ObjectBiMap;
 import net.minecraft.util.registry.SimpleRegistry;
@@ -13,7 +15,9 @@ public interface ISimpleRegistry<T> {
 
     void setNextId(int nextId);
 
-    Int2ObjectBiMap<T> getIndexedEntries();
+    Int2ObjectMap<T> getIndexedEntries();
+
+    Object2IntMap<T> getField_23632();
 
     BiMap<Identifier, T> getEntries();
 

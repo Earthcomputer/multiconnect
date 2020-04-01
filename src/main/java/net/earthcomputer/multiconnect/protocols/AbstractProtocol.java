@@ -265,7 +265,10 @@ public abstract class AbstractProtocol {
         public void restore(SimpleRegistry<T> registry) {
             @SuppressWarnings("unchecked") ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
             iregistry.getIndexedEntries().clear();
-            defaultIndexedEntries.iterator().forEachRemaining(t -> iregistry.getIndexedEntries().put(t, defaultIndexedEntries.getId(t)));
+            defaultIndexedEntries.iterator().forEachRemaining(t -> {
+                iregistry.getIndexedEntries().put(defaultIndexedEntries.getId(t), t);
+                iregistry.getField_23632().put(t, defaultIndexedEntries.getId(t));
+            });
             iregistry.getEntries().clear();
             iregistry.getEntries().putAll(defaultEntries);
             iregistry.setNextId(defaultNextId);

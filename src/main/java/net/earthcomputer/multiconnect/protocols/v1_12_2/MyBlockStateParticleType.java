@@ -6,6 +6,6 @@ import net.minecraft.particle.ParticleType;
 public class MyBlockStateParticleType extends ParticleType<BlockStateParticleEffect> {
 
     protected MyBlockStateParticleType(boolean ignoreRange) {
-        super(ignoreRange, BlockStateParticleEffect.PARAMETERS_FACTORY);
+        super(ignoreRange, BlockStateParticleEffect.PARAMETERS_FACTORY, BlockStateParticleEffect.field_23633);
     }
 }
