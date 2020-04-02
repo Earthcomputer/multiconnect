@@ -1,8 +1,6 @@
 package net.earthcomputer.multiconnect.mixin;
 
 import com.google.common.collect.BiMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.earthcomputer.multiconnect.impl.IInt2ObjectBiMap;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.minecraft.util.Identifier;
@@ -21,8 +19,7 @@ import java.util.function.Consumer;
 @Mixin(SimpleRegistry.class)
 public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
 
-    @Shadow @Final protected Int2ObjectMap<T> indexedEntries;
-    @Shadow @Final protected Object2IntMap<T> field_23632;
+    @Shadow @Final protected Int2ObjectBiMap<T> indexedEntries;
     @Shadow @Final protected BiMap<Identifier, T> entries;
     @Shadow protected Object[] randomEntries;
     @Shadow private int nextId;
@@ -39,11 +36,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
 
     @Accessor
     @Override
-    public abstract Int2ObjectMap<T> getIndexedEntries();
-
-    @Accessor
-    @Override
-    public abstract Object2IntMap<T> getField_23632();
+    public abstract Int2ObjectBiMap<T> getIndexedEntries();
 
     @Accessor
     @Override
@@ -56,10 +49,9 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     public void register(T t, int id, Identifier name, boolean sideEffects) {
         for (int remapId = getNextId(); remapId > id; remapId--) {
             T toRemap = indexedEntries.get(remapId - 1);
-            //noinspection unchecked - TODO
-            //((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(toRemap);
-            indexedEntries.put(remapId, toRemap);
-            field_23632.put(toRemap, remapId);
+            //noinspection unchecked
+            ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(toRemap);
+            indexedEntries.put(toRemap, remapId);
         }
         setNextId(getNextId() + 1);
         set(id, name, t);
@@ -83,17 +75,16 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         if (!entries.containsValue(t))
             return;
 
-        int id = field_23632.getInt(t);
-        //noinspection unchecked - TODO
-        //((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(t);
+        int id = indexedEntries.getId(t);
+        //noinspection unchecked
+        ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(t);
         entries.inverse().remove(t);
 
         for (int remapId = id; remapId < getNextId() - 1; remapId++) {
             T toRemap = indexedEntries.get(remapId + 1);
-            //noinspection unchecked - TODO
-            //((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(toRemap);
-            indexedEntries.put(remapId, toRemap);
-            field_23632.put(toRemap, remapId);
+            //noinspection unchecked
+            ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(toRemap);
+            indexedEntries.put(toRemap, remapId);
         }
         setNextId(getNextId() - 1);
 
@@ -108,9 +99,9 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         if (!entries.containsValue(t))
             return;
 
-        int id = field_23632.getInt(t);
-        //noinspection unchecked - TODO
-        //((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(t);
+        int id = indexedEntries.getId(t);
+        //noinspection unchecked
+        ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(t);
         entries.inverse().remove(t);
 
         if (id == getNextId() - 1)
@@ -150,8 +141,8 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     @Override
     public SimpleRegistry<T> copy() {
         SimpleRegistry<T> newRegistry = new SimpleRegistry<>();
-        for (T t : indexedEntries.values()) {
-            newRegistry.set(field_23632.getInt(t), entries.inverse().get(t), t);
+        for (T t : indexedEntries) {
+            newRegistry.set(indexedEntries.getId(t), entries.inverse().get(t), t);
         }
         return newRegistry;
     }

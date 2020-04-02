@@ -101,13 +101,6 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Blocks.POLISHED_BASALT);
         registry.unregister(Blocks.RESPAWN_ANCHOR);
         registry.unregister(Blocks.LODESTONE);
-
-        registry.unregister(Blocks.NEITHER_PORTAL);
-        registry.unregister(Blocks.ZONE);
-        registry.unregister(Blocks.NETHERITE_STAIRS);
-        registry.unregister(Blocks.ANT);
-        registry.unregister(Blocks.BOOK_BOX);
-        registry.unregister(Blocks.CURSOR);
     }
 
     private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
@@ -180,18 +173,14 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.POLISHED_BASALT);
         registry.unregister(Items.NETHER_GOLD_ORE);
         registry.unregister(Items.TWISTING_VINES);
-
-        registry.unregister(Items.field_23409); // Netherite Stairs
-        registry.unregister(Items.field_23410); // Book Box
-        registry.unregister(Items.FOOTPRINT);
-        registry.unregister(Items.field_23412); // Cursor
-        registry.unregister(Items.FINE_ITEM);
+        registry.unregister(Items.ZOGLIN_SPAWN_EGG);
     }
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
         registry.unregister(EntityType.HOGLIN);
         registry.unregister(EntityType.PIGLIN);
         registry.unregister(EntityType.STRIDER);
+        registry.unregister(EntityType.ZOGLIN);
     }
 
     private static void modifyBiomeRegistry(ISimpleRegistry<Biome> registry) {
@@ -199,10 +188,6 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Biomes.SOUL_SAND_VALLEY);
         registry.unregister(Biomes.CRIMSON_FOREST);
         registry.unregister(Biomes.WARPED_FOREST);
-
-        registry.unregister(Biomes.BETWEEN);
-        registry.unregister(Biomes.SHAPES);
-        registry.unregister(Biomes.BUSY);
     }
 
     private void modifyParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
@@ -441,8 +426,6 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE);
         registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE);
         registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_SET_SPAWN);
-
-        registry.unregister(SoundEvents.AWESOME_INTRO);
     }
 
     @Override
