@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.api;
 
-import net.minecraft.SharedConstants;
+import net.minecraft.util.SharedConstants;
+import net.minecraftforge.fml.common.Mod;
 
 import java.util.Collections;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.List;
 /**
  * The MultiConnect API
  */
+@Mod("multiconnect-api")
 public class MultiConnectAPI {
 
     static MultiConnectAPI INSTANCE = new MultiConnectAPI();
@@ -24,14 +26,14 @@ public class MultiConnectAPI {
      * or the current game version if not connected to a server
      */
     public int getProtocolVersion() {
-        return SharedConstants.getGameVersion().getProtocolVersion();
+        return SharedConstants.getVersion().getProtocolVersion();
     }
 
     /**
      * Gets a supported {@link IProtocol} object by its protocol version, or <tt>null</tt> if the protocol is not supported
      */
     public IProtocol byProtocolVersion(int version) {
-        return version == SharedConstants.getGameVersion().getProtocolVersion() ? CurrentVersionProtocol.INSTANCE : null;
+        return version == SharedConstants.getVersion().getProtocolVersion() ? CurrentVersionProtocol.INSTANCE : null;
     }
 
     /**
@@ -46,12 +48,12 @@ public class MultiConnectAPI {
 
         @Override
         public int getValue() {
-            return SharedConstants.getGameVersion().getProtocolVersion();
+            return SharedConstants.getVersion().getProtocolVersion();
         }
 
         @Override
         public String getName() {
-            return SharedConstants.getGameVersion().getName();
+            return SharedConstants.getVersion().getName();
         }
     }
 

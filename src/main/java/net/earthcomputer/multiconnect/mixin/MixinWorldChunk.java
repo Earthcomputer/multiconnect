@@ -4,14 +4,14 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(WorldChunk.class)
+@Mixin(Chunk.class)
 public class MixinWorldChunk {
 
     @Unique private boolean shouldReplaceBlockEntity;
@@ -22,10 +22,10 @@ public class MixinWorldChunk {
         return oldState;
     }
 
-    @Redirect(method = "setBlockState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;removeBlockEntity(Lnet/minecraft/util/math/BlockPos;)V"))
+    @Redirect(method = "setBlockState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;removeTileEntity(Lnet/minecraft/util/math/BlockPos;)V"))
     private void redirectRemoveBlockEntity(World world, BlockPos pos) {
         if (shouldReplaceBlockEntity)
-            world.removeBlockEntity(pos);
+            world.removeTileEntity(pos);
     }
 
 }

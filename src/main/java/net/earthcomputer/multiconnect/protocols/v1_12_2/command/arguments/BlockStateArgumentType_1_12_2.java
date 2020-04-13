@@ -9,9 +9,10 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.BlockStateReverseFlattening;
 import net.minecraft.block.Block;
-import net.minecraft.command.arguments.BlockArgumentParser;
-import net.minecraft.server.command.CommandSource;
-import net.minecraft.util.Identifier;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.command.arguments.BlockStateParser;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -41,15 +42,15 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
         List<ParsedArgument<?, ?>> result = new ArrayList<>();
 
         int start = reader.getCursor();
-        Identifier id = Identifier.fromCommandInput(reader);
-        if (!Registry.BLOCK.containsId(id)) {
+        ResourceLocation id = ResourceLocation.read(reader);
+        if (!Registry.BLOCK.containsKey(id)) {
             reader.setCursor(start);
-            throw BlockArgumentParser.INVALID_BLOCK_ID_EXCEPTION.createWithContext(reader, id);
+            throw BlockStateParser.STATE_BAD_ID.createWithContext(reader, id);
         }
-        Block block = Registry.BLOCK.get(id);
+        Block block = Registry.BLOCK.getOrDefault(id);
         if (!isValidBlock(block)) {
             reader.setCursor(start);
-            throw BlockArgumentParser.INVALID_BLOCK_ID_EXCEPTION.createWithContext(reader, id);
+            throw BlockStateParser.STATE_BAD_ID.createWithContext(reader, id);
         }
 
         result.add(new ParsedArgument<>(start, reader.getCursor(), block));
@@ -87,11 +88,11 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
             String property = reader.readUnquotedString();
             if (alreadySeen.contains(property)) {
                 reader.setCursor(propStart);
-                throw BlockArgumentParser.DUPLICATE_PROPERTY_EXCEPTION.createWithContext(reader, id, property);
+                throw BlockStateParser.STATE_DUPLICATE_PROPERTY.createWithContext(reader, id, property);
             }
             if (!properties.contains(property)) {
                 reader.setCursor(propStart);
-                throw BlockArgumentParser.UNKNOWN_PROPERTY_EXCEPTION.createWithContext(reader, id, property);
+                throw BlockStateParser.STATE_UNKNOWN_PROPERTY.createWithContext(reader, id, property);
             }
             alreadySeen.add(property);
             reader.expect('=');
@@ -99,7 +100,7 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
             String value = reader.readUnquotedString();
             if (!BlockStateReverseFlattening.OLD_PROPERTY_VALUES.get(Pair.of(id, property)).contains(value)) {
                 reader.setCursor(valueStart);
-                throw BlockArgumentParser.INVALID_PROPERTY_EXCEPTION.createWithContext(reader, id, property, value);
+                throw BlockStateParser.STATE_INVALID_PROPERTY_VALUE.createWithContext(reader, id, property, value);
             }
             if (reader.canRead() && reader.peek() != ' ')
                 reader.expect(',');
@@ -113,11 +114,11 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         int spaceIndex = builder.getRemaining().indexOf(' ');
         if (spaceIndex == -1) {
-            CommandSource.suggestIdentifiers(Registry.BLOCK.getIds().stream().filter(id -> isValidBlock(Registry.BLOCK.get(id))), builder);
+            ISuggestionProvider.func_212476_a(Registry.BLOCK.keySet().stream().filter(id -> isValidBlock(Registry.BLOCK.getOrDefault(id))), builder);
             return builder.buildFuture();
         }
 
-        Identifier blockId = Identifier.tryParse(builder.getInput().substring(builder.getStart(), builder.getStart() + spaceIndex));
+        ResourceLocation blockId = ResourceLocation.tryCreate(builder.getInput().substring(builder.getStart(), builder.getStart() + spaceIndex));
 
         String propertiesStr = builder.getInput().substring(builder.getStart() + spaceIndex + 1);
 
@@ -126,21 +127,21 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
         builder = builder.createOffset(builder.getStart() + spaceIndex + commaIndex + 2);
 
         if (commaIndex == -1 && equalsIndex == -1) {
-            CommandSource.suggestMatching(new String[] {"default"}, builder);
+            ISuggestionProvider.suggest(new String[] {"default"}, builder);
             if (test)
-                CommandSource.suggestMatching(new String[] {"*"}, builder);
+                ISuggestionProvider.suggest(new String[] {"*"}, builder);
         }
 
         if (blockId == null || !BlockStateReverseFlattening.OLD_PROPERTIES.containsKey(blockId))
             return builder.buildFuture();
 
         if (equalsIndex <= commaIndex) {
-            CommandSource.suggestMatching(BlockStateReverseFlattening.OLD_PROPERTIES.get(blockId).stream().map(str -> str + "="), builder);
+            ISuggestionProvider.suggest(BlockStateReverseFlattening.OLD_PROPERTIES.get(blockId).stream().map(str -> str + "="), builder);
         } else {
             String property = builder.getInput().substring(builder.getStart(), builder.getStart() + equalsIndex - commaIndex - 1);
             List<String> values = BlockStateReverseFlattening.OLD_PROPERTY_VALUES.get(Pair.of(blockId, property));
             builder = builder.createOffset(builder.getStart() + equalsIndex - commaIndex);
-            CommandSource.suggestMatching(values, builder);
+            ISuggestionProvider.suggest(values, builder);
         }
 
         return builder.buildFuture();
@@ -152,7 +153,7 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
     }
 
     private static boolean isValidBlock(Block block) {
-        return Registry.BLOCK.getRawId(block) < 256;
+        return Registry.BLOCK.getId(block) < 256;
     }
 
 }

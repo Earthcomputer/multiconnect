@@ -7,8 +7,9 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.Dynamic2CommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.server.command.CommandSource;
-import net.minecraft.text.LiteralText;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.util.text.StringTextComponent;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,7 +18,7 @@ import java.util.concurrent.CompletableFuture;
 public final class EnumArgumentType implements ArgumentType<String> {
 
     private static final Dynamic2CommandExceptionType INVALID_ENUM_EXCEPTION =
-            new Dynamic2CommandExceptionType((actual, expected) -> new LiteralText("Invalid enum \"" + actual + "\", expected one of " + String.join(", ", (String[]) expected)));
+            new Dynamic2CommandExceptionType((actual, expected) -> new StringTextComponent("Invalid enum \"" + actual + "\", expected one of " + String.join(", ", (String[]) expected)));
 
     private final String[] values;
     private boolean caseSensitive = true;
@@ -64,7 +65,7 @@ public final class EnumArgumentType implements ArgumentType<String> {
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        CommandSource.suggestMatching(values, builder);
+        ISuggestionProvider.suggest(values, builder);
         return builder.buildFuture();
     }
 

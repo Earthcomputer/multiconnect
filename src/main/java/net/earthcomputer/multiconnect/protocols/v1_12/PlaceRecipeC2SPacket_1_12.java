@@ -1,13 +1,13 @@
 package net.earthcomputer.multiconnect.protocols.v1_12;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.Packet;
-import net.minecraft.network.listener.ServerPlayPacketListener;
-import net.minecraft.util.PacketByteBuf;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.play.IServerPlayNetHandler;
 
 import java.util.List;
 
-public class PlaceRecipeC2SPacket_1_12 implements Packet<ServerPlayPacketListener> {
+public class PlaceRecipeC2SPacket_1_12 implements IPacket<IServerPlayNetHandler> {
 
     private int syncId;
     private short transactionId;
@@ -24,19 +24,19 @@ public class PlaceRecipeC2SPacket_1_12 implements Packet<ServerPlayPacketListene
     }
 
     @Override
-    public void read(PacketByteBuf buf) {
+    public void readPacketData(PacketBuffer buf) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void write(PacketByteBuf buf) {
+    public void writePacketData(PacketBuffer buf) {
         buf.writeByte(syncId);
         buf.writeShort(transactionId);
         writeTransactions(buf, transactionsFromMatrix);
         writeTransactions(buf, transactionsToMatrix);
     }
 
-    private void writeTransactions(PacketByteBuf buf, List<Transaction> transactions) {
+    private void writeTransactions(PacketBuffer buf, List<Transaction> transactions) {
         buf.writeShort(transactions.size());
         for (Transaction transaction : transactions) {
             buf.writeItemStack(transaction.stack);
@@ -46,7 +46,7 @@ public class PlaceRecipeC2SPacket_1_12 implements Packet<ServerPlayPacketListene
     }
 
     @Override
-    public void apply(ServerPlayPacketListener listener) {
+    public void processPacket(IServerPlayNetHandler listener) {
         throw new UnsupportedOperationException();
     }
 

@@ -4,23 +4,19 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.impl.INetworkState;
+import net.earthcomputer.multiconnect.impl.IProtocolType;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
-import net.minecraft.SharedConstants;
-import net.minecraft.client.network.packet.KeepAliveS2CPacket;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.NetworkSide;
-import net.minecraft.network.NetworkState;
-import net.minecraft.network.Packet;
-import net.minecraft.server.network.packet.KeepAliveC2SPacket;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.PacketByteBuf;
-import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.*;
+import net.minecraft.network.play.client.CKeepAlivePacket;
+import net.minecraft.network.play.server.SKeepAlivePacket;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SharedConstants;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.SectionPos;
+import net.minecraft.util.text.ITextComponent;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -36,7 +32,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 
-public final class TransformerByteBuf extends PacketByteBuf {
+public final class TransformerByteBuf extends PacketBuffer {
 
     private final ChannelHandlerContext context;
     private final TranslatorRegistry translatorRegistry;
@@ -60,26 +56,26 @@ public final class TransformerByteBuf extends PacketByteBuf {
         transformationEnabled = true;
         stack.push(new StackFrame(type, ConnectionInfo.protocolVersion));
         List<Pair<Integer, InboundTranslator<?>>> translators = (List<Pair<Integer, InboundTranslator<?>>>) (List<?>)
-                translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
+                translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getVersion().getProtocolVersion());
         for (Pair<Integer, InboundTranslator<?>> translator : translators) {
             getStackFrame().version = translator.getLeft();
             translator.getRight().onRead(this);
         }
-        getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
+        getStackFrame().version = SharedConstants.getVersion().getProtocolVersion();
         return this;
     }
 
     @SuppressWarnings("unchecked")
     public TransformerByteBuf writeTopLevelType(Class<?> type) {
         transformationEnabled = true;
-        stack.push(new StackFrame(type, SharedConstants.getGameVersion().getProtocolVersion()));
+        stack.push(new StackFrame(type, SharedConstants.getVersion().getProtocolVersion()));
         List<Pair<Integer, OutboundTranslator<?>>> translators = (List<Pair<Integer, OutboundTranslator<?>>>) (List<?>)
-                translatorRegistry.getOutboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
+                translatorRegistry.getOutboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getVersion().getProtocolVersion());
         for (Pair<Integer, OutboundTranslator<?>> translator : translators) {
             translator.getRight().onWrite(this);
             getStackFrame().version = translator.getLeft();
         }
-        getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
+        getStackFrame().version = SharedConstants.getVersion().getProtocolVersion();
         return this;
     }
 
@@ -109,10 +105,10 @@ public final class TransformerByteBuf extends PacketByteBuf {
     public int readVarInt() {
         if (!transformationEnabled) {
             int packetId = super.readVarInt();
-            NetworkState state = context.channel().attr(ClientConnection.ATTR_KEY_PROTOCOL).get();
+            ProtocolType state = context.channel().attr(NetworkManager.PROTOCOL_ATTRIBUTE_KEY).get();
             //noinspection ConstantConditions
-            Class<? extends Packet<?>> packetClass = ((INetworkState) (Object) state).getPacketHandlers()
-                    .get(NetworkSide.CLIENTBOUND).multiconnect_getPacketClassById(packetId);
+            Class<? extends IPacket<?>> packetClass = ((IProtocolType) (Object) state).getField_229711_h_()
+                    .get(PacketDirection.CLIENTBOUND).multiconnect_getPacketClassById(packetId);
             if (!canDecodeAsync(packetClass)) {
                 ConnectionInfo.resourceReloadLock.readLock().lock();
             }
@@ -123,8 +119,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
         }
     }
 
-    public <T extends Packet<?>> boolean canDecodeAsync(Class<T> packetClass) {
-        return packetClass == KeepAliveS2CPacket.class;
+    public <T extends IPacket<?>> boolean canDecodeAsync(Class<T> packetClass) {
+        return packetClass == SKeepAlivePacket.class;
     }
 
     private <T> T read(Class<T> type, Supplier<T> readMethod) {
@@ -156,19 +152,19 @@ public final class TransformerByteBuf extends PacketByteBuf {
         if (pendingReads != null && !pendingReads.isEmpty()) {
             PendingValue<STORED> pendingValue = pendingReads.poll();
             value = pendingValue.value;
-            translators = translatorRegistry.getInboundTranslators(type, pendingValue.version, SharedConstants.getGameVersion().getProtocolVersion());
+            translators = translatorRegistry.getInboundTranslators(type, pendingValue.version, SharedConstants.getVersion().getProtocolVersion());
             for (Pair<Integer, InboundTranslator<STORED>> translator : translators) {
                 getStackFrame().version = translator.getLeft();
                 translator.getRight().onRead(this);
             }
         } else {
-            translators = translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
+            translators = translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getVersion().getProtocolVersion());
             for (Pair<Integer, InboundTranslator<STORED>> translator : translators) {
                 getStackFrame().version = translator.getLeft();
                 translator.getRight().onRead(this);
             }
 
-            getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
+            getStackFrame().version = SharedConstants.getVersion().getProtocolVersion();
             if (!passthroughMode && translators.isEmpty()) {
                 RETURN ret = readMethod.get();
                 if (!getStackFrame().pendingPendingReads.isEmpty())
@@ -209,13 +205,13 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public PacketByteBuf writeVarInt(int val) {
+    public PacketBuffer writeVarInt(int val) {
         if (!transformationEnabled) {
             super.writeVarInt(val);
-            NetworkState state = context.channel().attr(ClientConnection.ATTR_KEY_PROTOCOL).get();
+            ProtocolType state = context.channel().attr(NetworkManager.PROTOCOL_ATTRIBUTE_KEY).get();
             //noinspection ConstantConditions
-            Class<? extends Packet<?>> packetClass = ((INetworkState) (Object) state).getPacketHandlers()
-                    .get(NetworkSide.SERVERBOUND).multiconnect_getPacketClassById(val);
+            Class<? extends IPacket<?>> packetClass = ((IProtocolType) (Object) state).getField_229711_h_()
+                    .get(PacketDirection.SERVERBOUND).multiconnect_getPacketClassById(val);
             if (!canEncodeAsync(packetClass)) {
                 ConnectionInfo.resourceReloadLock.readLock().lock();
             }
@@ -226,11 +222,11 @@ public final class TransformerByteBuf extends PacketByteBuf {
         }
     }
 
-    public <T extends Packet<?>> boolean canEncodeAsync(Class<T> packetClass) {
-        return packetClass == KeepAliveC2SPacket.class;
+    public <T extends IPacket<?>> boolean canEncodeAsync(Class<T> packetClass) {
+        return packetClass == CKeepAlivePacket.class;
     }
 
-    private <T> PacketByteBuf write(Class<T> type, T value, Consumer<T> writeMethod) {
+    private <T> PacketBuffer write(Class<T> type, T value, Consumer<T> writeMethod) {
         if (!transformationEnabled || forceSuper) {
             forceSuper = false;
             writeMethod.accept(value);
@@ -277,14 +273,14 @@ public final class TransformerByteBuf extends PacketByteBuf {
         getStackFrame().version = version;
 
         if (!skipWrite) {
-            stack.push(new StackFrame(type, SharedConstants.getGameVersion().getProtocolVersion()));
-            translators = translatorRegistry.getOutboundTranslators(type, minVersion, SharedConstants.getGameVersion().getProtocolVersion());
+            stack.push(new StackFrame(type, SharedConstants.getVersion().getProtocolVersion()));
+            translators = translatorRegistry.getOutboundTranslators(type, minVersion, SharedConstants.getVersion().getProtocolVersion());
             for (Pair<Integer, OutboundTranslator<T>> translator : translators) {
                 translator.getRight().onWrite(this);
                 getStackFrame().version = translator.getLeft();
             }
 
-            getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
+            getStackFrame().version = SharedConstants.getVersion().getProtocolVersion();
             writeMethod.accept(value);
 
             stack.pop();
@@ -485,8 +481,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
         return read(BlockPos.class, super::readBlockPos);
     }
 
-    public BlockHitResult readBlockHitResult() {
-        return read(BlockHitResult.class, super::readBlockHitResult);
+    public BlockRayTraceResult readBlockHitResult() {
+        return read(BlockRayTraceResult.class, super::readBlockRay);
     }
 
     @Override
@@ -500,23 +496,23 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public ChunkSectionPos readChunkSectionPos() {
-        return read(ChunkSectionPos.class, super::readChunkSectionPos);
+    public SectionPos readSectionPos() {
+        return read(SectionPos.class, super::readSectionPos);
     }
 
     @Override
-    public <T extends Enum<T>> T readEnumConstant(Class<T> type) {
-        return read(type, () -> super.readEnumConstant(type));
+    public <T extends Enum<T>> T readEnumValue(Class<T> type) {
+        return read(type, () -> super.readEnumValue(type));
     }
 
     @Override
-    public CompoundTag readCompoundTag() {
-        return read(CompoundTag.class, super::readCompoundTag);
+    public CompoundNBT readCompoundTag() {
+        return read(CompoundNBT.class, super::readCompoundTag);
     }
 
     @Override
-    public Date readDate() {
-        return read(Date.class, super::readDate);
+    public Date readTime() {
+        return read(Date.class, super::readTime);
     }
 
     @Override
@@ -677,13 +673,13 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public int[] readIntArray() {
-        return read(int[].class, super::readIntArray);
+    public int[] readVarIntArray() {
+        return read(int[].class, super::readVarIntArray);
     }
 
     @Override
-    public int[] readIntArray(int len) {
-        return read(int[].class, () -> super.readIntArray(len));
+    public int[] readVarIntArray(int len) {
+        return read(int[].class, () -> super.readVarIntArray(len));
     }
 
     @Override
@@ -708,8 +704,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public Text readText() {
-        return read(Text.class, super::readText);
+    public ITextComponent readTextComponent() {
+        return read(ITextComponent.class, super::readTextComponent);
     }
 
     @Override
@@ -718,8 +714,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public UUID readUuid() {
-        return read(UUID.class, super::readUuid);
+    public UUID readUniqueId() {
+        return read(UUID.class, super::readUniqueId);
     }
 
     @Override
@@ -738,8 +734,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public Identifier readIdentifier() {
-        return read(Identifier.class, super::readIdentifier);
+    public ResourceLocation readResourceLocation() {
+        return read(ResourceLocation.class, super::readResourceLocation);
     }
 
     @Override
@@ -828,61 +824,61 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public PacketByteBuf writeByteArray(byte[] val) {
+    public PacketBuffer writeByteArray(byte[] val) {
         return write(byte[].class, val, super::writeByteArray);
     }
 
     @Override
-    public PacketByteBuf writeIntArray(int[] val) {
-        return write(int[].class, val, super::writeIntArray);
+    public PacketBuffer writeVarIntArray(int[] val) {
+        return write(int[].class, val, super::writeVarIntArray);
     }
 
     @Override
-    public PacketByteBuf writeLongArray(long[] val) {
+    public PacketBuffer writeLongArray(long[] val) {
         return write(long[].class, val, super::writeLongArray);
     }
 
     @Override
-    public PacketByteBuf writeBlockPos(BlockPos val) {
+    public PacketBuffer writeBlockPos(BlockPos val) {
         return write(BlockPos.class, val, super::writeBlockPos);
     }
 
     @Override
-    public PacketByteBuf writeEnumConstant(Enum<?> val) {
+    public PacketBuffer writeEnumValue(Enum<?> val) {
         return writeEnumConstant0(val);
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Enum<T>> PacketByteBuf writeEnumConstant0(Enum<T> val) {
+    private <T extends Enum<T>> PacketBuffer writeEnumConstant0(Enum<T> val) {
         Class<?> clazz = val.getClass();
         for (Class<?> sup = clazz.getSuperclass(); sup != Enum.class; sup = clazz.getSuperclass())
             clazz = sup;
-        return write((Class<T>)clazz, (T)val, super::writeEnumConstant);
+        return write((Class<T>)clazz, (T)val, super::writeEnumValue);
     }
 
     @Override
-    public PacketByteBuf writeCompoundTag(CompoundTag val) {
-        return write(CompoundTag.class, val, super::writeCompoundTag);
+    public PacketBuffer writeCompoundTag(CompoundNBT val) {
+        return write(CompoundNBT.class, val, super::writeCompoundTag);
     }
 
     @Override
-    public PacketByteBuf writeItemStack(ItemStack val) {
+    public PacketBuffer writeItemStack(ItemStack val) {
         return write(ItemStack.class, val, super::writeItemStack);
     }
 
     @Override
-    public PacketByteBuf writeIdentifier(Identifier val) {
-        return write(Identifier.class, val, super::writeIdentifier);
+    public PacketBuffer writeResourceLocation(ResourceLocation val) {
+        return write(ResourceLocation.class, val, super::writeResourceLocation);
     }
 
     @Override
-    public PacketByteBuf writeDate(Date val) {
-        return write(Date.class, val, super::writeDate);
+    public PacketBuffer writeTime(Date val) {
+        return write(Date.class, val, super::writeTime);
     }
 
     @Override
-    public void writeBlockHitResult(BlockHitResult val) {
-        write(BlockHitResult.class, val, super::writeBlockHitResult);
+    public void writeBlockRay(BlockRayTraceResult val) {
+        write(BlockRayTraceResult.class, val, super::writeBlockRay);
     }
 
     @Override
@@ -1029,27 +1025,27 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public PacketByteBuf writeText(Text val) {
-        return write(Text.class, val, super::writeText);
+    public PacketBuffer writeTextComponent(ITextComponent val) {
+        return write(ITextComponent.class, val, super::writeTextComponent);
     }
 
     @Override
-    public PacketByteBuf writeUuid(UUID val) {
-        return write(UUID.class, val, super::writeUuid);
+    public PacketBuffer writeUniqueId(UUID val) {
+        return write(UUID.class, val, super::writeUniqueId);
     }
 
     @Override
-    public PacketByteBuf writeVarLong(long val) {
+    public PacketBuffer writeVarLong(long val) {
         return write(VarLong.class, new VarLong(val), v -> super.writeVarLong(v.get()));
     }
 
     @Override
-    public PacketByteBuf writeString(String val) {
+    public PacketBuffer writeString(String val) {
         return write(String.class, val, super::writeString);
     }
 
     @Override
-    public PacketByteBuf writeString(String val, int len) {
+    public PacketBuffer writeString(String val, int len) {
         return write(String.class, val, v -> super.writeString(v, len));
     }
 

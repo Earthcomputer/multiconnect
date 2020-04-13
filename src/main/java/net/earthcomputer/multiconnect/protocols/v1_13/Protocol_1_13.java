@@ -7,19 +7,19 @@ import net.earthcomputer.multiconnect.protocols.v1_13_1.Protocol_1_13_1;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.TntBlock;
+import net.minecraft.block.TNTBlock;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.projectile.ProjectileEntity;
+import net.minecraft.entity.projectile.AbstractArrowEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.packet.BookUpdateC2SPacket;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.play.client.CEditBookPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.registry.Registry;
 
 public class Protocol_1_13 extends Protocol_1_13_1 {
 
     public static void registerTranslators() {
-        ProtocolRegistry.registerOutboundTranslator(BookUpdateC2SPacket.class, buf -> {
+        ProtocolRegistry.registerOutboundTranslator(CEditBookPacket.class, buf -> {
             buf.passthroughWrite(ItemStack.class); // book item
             buf.passthroughWrite(Boolean.class); // signed
             buf.skipWrite(Hand.class); // hand
@@ -45,14 +45,14 @@ public class Protocol_1_13 extends Protocol_1_13_1 {
 
     @Override
     public boolean acceptBlockState(BlockState state) {
-        if (state.getBlock() == Blocks.TNT && state.get(TntBlock.UNSTABLE))
+        if (state.getBlock() == Blocks.TNT && state.get(TNTBlock.UNSTABLE))
             return false;
         return super.acceptBlockState(state);
     }
 
     @Override
-    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
-        if (clazz == ProjectileEntity.class && data == ProjectileEntityAccessor.getOptionalUuid())
+    public boolean acceptEntityData(Class<? extends Entity> clazz, DataParameter<?> data) {
+        if (clazz == AbstractArrowEntity.class && data == ProjectileEntityAccessor.getOptionalUuid())
             return false;
         return super.acceptEntityData(clazz, data);
     }

@@ -11,7 +11,7 @@ import java.util.Map;
 @Mixin(FlowerPotBlock.class)
 public interface FlowerPotBlockAccessor {
 
-    @Accessor("CONTENT_TO_POTTED")
+    @Accessor("field_196451_b")
     static Map<Block, Block> getContentToPotted() {
         return MixinHelper.fakeInstance();
     }

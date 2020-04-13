@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
-import net.minecraft.world.chunk.UpgradeData;
+import net.minecraft.util.palette.UpgradeData;
 
 public interface IUpgradableChunk {
 

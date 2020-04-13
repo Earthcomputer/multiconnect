@@ -1,19 +1,19 @@
 package net.earthcomputer.multiconnect.protocols.v1_14_4.mixin;
 
-import net.minecraft.client.network.packet.EntityTrackerUpdateS2CPacket;
-import net.minecraft.entity.data.DataTracker;
+import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.play.server.SEntityMetadataPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.List;
 
-@Mixin(EntityTrackerUpdateS2CPacket.class)
+@Mixin(SEntityMetadataPacket.class)
 public interface TrackerUpdatePacketAccessor {
 
     @Accessor
-    void setId(int id);
+    void setEntityId(int id);
 
     @Accessor
-    void setTrackedValues(List<DataTracker.Entry<?>> entries);
+    void setDataManagerEntries(List<EntityDataManager.DataEntry<?>> entries);
 
 }

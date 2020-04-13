@@ -10,10 +10,11 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.TabCompletionManager;
-import net.minecraft.command.arguments.EntitySummonArgumentType;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.command.arguments.EntitySummonArgument;
 import net.minecraft.entity.EntityType;
-import net.minecraft.server.command.CommandSource;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 
 import java.util.*;
@@ -77,7 +78,7 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
     @SuppressWarnings("unchecked")
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        if (!(context.getSource() instanceof CommandSource))
+        if (!(context.getSource() instanceof ISuggestionProvider))
             return builder.buildFuture();
 
         StringReader reader = new StringReader(builder.getInput());
@@ -87,7 +88,7 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
         if ((reader.canRead() && reader.peek() == '@') || !suggestPlayerNames) {
             playerCompletions = Suggestions.empty();
         } else {
-            playerCompletions = ((CommandSource) context.getSource()).getCompletions((CommandContext<CommandSource>) context, builder.restart());
+            playerCompletions = ((ISuggestionProvider) context.getSource()).getSuggestionsFromServer((CommandContext<ISuggestionProvider>) context, builder.restart());
         }
 
         EntitySelectorParser parser = new EntitySelectorParser(reader, singleTarget, playersOnly);
@@ -235,7 +236,7 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
 
             suggestor = builder -> {
                 SuggestionsBuilder normalOptionBuilder = builder.createOffset(start);
-                CommandSource.suggestMatching(SELECTOR_OPTIONS.keySet().stream()
+                ISuggestionProvider.suggest(SELECTOR_OPTIONS.keySet().stream()
                         .filter(opt -> SELECTOR_OPTIONS.get(opt).isAllowed(this))
                         .filter(opt -> !seenOptionsCopy.contains(opt))
                         .map(opt -> opt + "=")
@@ -244,12 +245,12 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
 
                 SuggestionsBuilder scoreOptionBuilder = builder.createOffset(start);
                 CompletableFuture<Suggestions> scoreOptions = getScoreObjectives().thenCompose(objectives -> {
-                    CommandSource.suggestMatching(objectives.stream()
+                    ISuggestionProvider.suggest(objectives.stream()
                             .map(str -> "score_" + str)
                             .filter(str -> !seenOptionsCopy.contains(str))
                             .map(str -> str + "="),
                             scoreOptionBuilder);
-                    CommandSource.suggestMatching(objectives.stream()
+                    ISuggestionProvider.suggest(objectives.stream()
                             .map(str -> "score_" + str + "_min")
                             .filter(str -> !seenOptionsCopy.contains(str))
                             .map(str -> str + "="),
@@ -365,8 +366,8 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
             parser.suggestor = builder -> {
                 SuggestionsBuilder newBuilder = builder.createOffset(start);
                 return TabCompletionManager.requestCustomCompletion("/scoreboard teams remove ").thenCompose(teams -> {
-                    CommandSource.suggestMatching(teams, newBuilder);
-                    CommandSource.suggestMatching(teams.stream().map(str -> "!" + str), newBuilder);
+                    ISuggestionProvider.suggest(teams, newBuilder);
+                    ISuggestionProvider.suggest(teams.stream().map(str -> "!" + str), newBuilder);
                     return newBuilder.buildFuture();
                 });
             };
@@ -384,22 +385,22 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
                 parser.suggestor = builder -> {
                     builder = builder.createOffset(start);
                     if (parser.playersOnly) {
-                        CommandSource.suggestIdentifiers(Collections.singleton(new Identifier("player")), builder);
+                        ISuggestionProvider.suggestIterable(Collections.singleton(new ResourceLocation("player")), builder);
                     } else {
-                        CommandSource.suggestIdentifiers(Registry.ENTITY_TYPE.getIds(), builder);
-                        CommandSource.suggestIdentifiers(Registry.ENTITY_TYPE.getIds(), builder, "!");
+                        ISuggestionProvider.suggestIterable(Registry.ENTITY_TYPE.keySet(), builder);
+                        ISuggestionProvider.suggestIterable(Registry.ENTITY_TYPE.keySet(), builder, "!");
                     }
                     return builder.buildFuture();
                 };
                 boolean inverted = parser.parseIsInverted();
-                Identifier entityId = Identifier.fromCommandInput(parser.reader);
-                if (!Registry.ENTITY_TYPE.containsId(entityId)) {
+                ResourceLocation entityId = ResourceLocation.read(parser.reader);
+                if (!Registry.ENTITY_TYPE.containsKey(entityId)) {
                     parser.reader.setCursor(start);
-                    throw EntitySummonArgumentType.NOT_FOUND_EXCEPTION.createWithContext(parser.reader, entityId);
+                    throw EntitySummonArgument.ENTITY_UNKNOWN_TYPE.createWithContext(parser.reader, entityId);
                 }
                 if (!inverted) {
                     parser.typeKnown = true;
-                    if (Registry.ENTITY_TYPE.get(entityId) == EntityType.PLAYER) {
+                    if (Registry.ENTITY_TYPE.getOrDefault(entityId) == EntityType.PLAYER) {
                         parser.playersOnly = true;
                     } else {
                         parser.cannotSelectPlayers = true;

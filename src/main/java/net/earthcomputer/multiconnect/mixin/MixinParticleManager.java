@@ -2,13 +2,13 @@ package net.earthcomputer.multiconnect.mixin;
 
 import net.earthcomputer.multiconnect.impl.IParticleManager;
 import net.earthcomputer.multiconnect.protocols.AbstractProtocol;
+import net.minecraft.client.particle.IAnimatedSprite;
+import net.minecraft.client.particle.IParticleFactory;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleFactory;
 import net.minecraft.client.particle.ParticleManager;
-import net.minecraft.client.particle.SpriteProvider;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.particle.ParticleType;
-import net.minecraft.util.Identifier;
+import net.minecraft.particles.IParticleData;
+import net.minecraft.particles.ParticleType;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.ArrayUtils;
@@ -35,7 +35,7 @@ public class MixinParticleManager implements IParticleManager {
     static {
         try {
             Class<?> ssp = Arrays.stream(ParticleManager.class.getDeclaredClasses())
-                    .filter(cls -> ArrayUtils.contains(cls.getInterfaces(), SpriteProvider.class))
+                    .filter(cls -> ArrayUtils.contains(cls.getInterfaces(), IAnimatedSprite.class))
                     .findFirst().orElseThrow(ClassNotFoundException::new);
             SSP_CTOR = ssp.getDeclaredConstructor(ParticleManager.class);
             SSP_CTOR.setAccessible(true);
@@ -44,48 +44,48 @@ public class MixinParticleManager implements IParticleManager {
         }
     }
 
-    @Shadow @Final private Map<Identifier, Object> spriteAwareFactories;
+    @Shadow @Final private Map<ResourceLocation, Object> sprites;
     @Shadow protected World world;
 
-    @Unique private Map<Identifier, ParticleFactory<?>> customFactories = new HashMap<>();
+    @Unique private Map<ResourceLocation, IParticleFactory<?>> customFactories = new HashMap<>();
 
     @SuppressWarnings("unchecked")
-    @Inject(method = "createParticle", at = @At("HEAD"), cancellable = true)
-    private <T extends ParticleEffect> void onCreateParticle(T effect, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, CallbackInfoReturnable<Particle> ci) {
-        ParticleFactory<T> customFactory = (ParticleFactory<T>) customFactories.get(Registry.PARTICLE_TYPE.getId(effect.getType()));
+    @Inject(method = "makeParticle", at = @At("HEAD"), cancellable = true)
+    private <T extends IParticleData> void onCreateParticle(T effect, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, CallbackInfoReturnable<Particle> ci) {
+        IParticleFactory<T> customFactory = (IParticleFactory<T>) customFactories.get(Registry.PARTICLE_TYPE.getKey(effect.getType()));
         if (customFactory != null)
-            ci.setReturnValue(customFactory.createParticle(effect, world, x, y, z, xSpeed, ySpeed, zSpeed));
+            ci.setReturnValue(customFactory.makeParticle(effect, world, x, y, z, xSpeed, ySpeed, zSpeed));
     }
 
-    @Redirect(method = "createParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/Registry;getRawId(Ljava/lang/Object;)I"))
+    /*@Redirect(method = "makeParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/Registry;getRawId(Ljava/lang/Object;)I"))
     private int redirectRawId(Registry<ParticleType<?>> registry, Object type) {
         return AbstractProtocol.getUnmodifiedId(registry, (ParticleType<?>) type);
-    }
+    }*/
 
-    @ModifyVariable(method = "loadTextureList", ordinal = 0, at = @At("HEAD"))
-    private Identifier modifyIdentifier(Identifier id) {
-        Identifier unmodifiedName = AbstractProtocol.getUnmodifiedName(Registry.PARTICLE_TYPE, Registry.PARTICLE_TYPE.get(id));
+    @ModifyVariable(method = "loadTextureLists", ordinal = 0, at = @At("HEAD"))
+    private ResourceLocation modifyResourceLocation(ResourceLocation id) {
+        ResourceLocation unmodifiedName = AbstractProtocol.getUnmodifiedName(Registry.PARTICLE_TYPE, Registry.PARTICLE_TYPE.getOrDefault(id));
         return unmodifiedName == null ? id : unmodifiedName;
     }
 
     @Override
-    public <T extends ParticleEffect> void multiconnect_registerFactory(ParticleType<T> type, ParticleFactory<T> factory) {
-        customFactories.put(Registry.PARTICLE_TYPE.getId(type), factory);
+    public <T extends IParticleData> void multiconnect_registerFactory(ParticleType<T> type, IParticleFactory<T> factory) {
+        customFactories.put(Registry.PARTICLE_TYPE.getKey(type), factory);
     }
 
     @Override
-    public <T extends ParticleEffect> void multiconnect_registerSpriteAwareFactory(ParticleType<T> type,
-                                                                                   Function<SpriteProvider, ParticleFactory<T>> spriteAwareFactory) {
+    public <T extends IParticleData> void multiconnect_registerSpriteAwareFactory(ParticleType<T> type,
+                                                                                   Function<IAnimatedSprite, IParticleFactory<T>> spriteAwareFactory) {
         // https://stackoverflow.com/questions/26775676/explicit-use-of-lambdametafactory
-        SpriteProvider spriteProvider;
+        IAnimatedSprite spriteProvider;
         try {
-            spriteProvider = (SpriteProvider) SSP_CTOR.newInstance((ParticleManager) (Object) this);
+            spriteProvider = (IAnimatedSprite) SSP_CTOR.newInstance((ParticleManager) (Object) this);
         } catch (Throwable e) {
             throw new AssertionError(e);
         }
 
-        Identifier id = Registry.PARTICLE_TYPE.getId(type);
-        spriteAwareFactories.put(id, spriteProvider);
+        ResourceLocation id = Registry.PARTICLE_TYPE.getKey(type);
+        sprites.put(id, spriteProvider);
         customFactories.put(id, spriteAwareFactory.apply(spriteProvider));
     }
 }

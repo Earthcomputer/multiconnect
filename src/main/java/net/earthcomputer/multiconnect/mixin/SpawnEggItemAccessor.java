@@ -11,7 +11,7 @@ import java.util.Map;
 @Mixin(SpawnEggItem.class)
 public interface SpawnEggItemAccessor {
 
-    @Accessor("SPAWN_EGGS")
+    @Accessor("EGGS")
     static Map<EntityType<?>, SpawnEggItem> getSpawnEggs() {
         return MixinHelper.fakeInstance();
     }

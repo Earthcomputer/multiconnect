@@ -2,9 +2,9 @@ package net.earthcomputer.multiconnect.mixin;
 
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.IConnectScreen;
-import net.minecraft.client.gui.screen.ConnectScreen;
+import net.minecraft.client.gui.screen.ConnectingScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.network.ClientConnection;
+import net.minecraft.network.NetworkManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -14,10 +14,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-@Mixin(ConnectScreen.class)
+@Mixin(ConnectingScreen.class)
 public abstract class MixinConnectScreen implements IConnectScreen {
 
-    @Unique private AtomicReference<ClientConnection> versionRequestConnection = new AtomicReference<>();
+    @Unique private AtomicReference<NetworkManager> versionRequestConnection = new AtomicReference<>();
 
     @Inject(method = "connect", at = @At("HEAD"))
     public void onConnect(String ip, int port, CallbackInfo ci) {
@@ -25,24 +25,24 @@ public abstract class MixinConnectScreen implements IConnectScreen {
         ConnectionInfo.port = port;
     }
 
-    @Accessor
+    @Accessor("cancel")
     @Override
     public abstract boolean isConnectingCancelled();
 
     @Accessor
     @Override
-    public abstract Screen getParent();
+    public abstract Screen getPreviousGuiScreen();
 
     @Override
-    public void multiconnect_setVersionRequestConnection(ClientConnection connection) {
+    public void multiconnect_setVersionRequestConnection(NetworkManager connection) {
         versionRequestConnection.set(connection);
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void onTick(CallbackInfo ci) {
-        ClientConnection versionRequestConnection = this.versionRequestConnection.get();
+        NetworkManager versionRequestConnection = this.versionRequestConnection.get();
         if (versionRequestConnection != null) {
-            if (versionRequestConnection.isOpen())
+            if (versionRequestConnection.isChannelOpen())
                 versionRequestConnection.tick();
             else
                 versionRequestConnection.handleDisconnection();

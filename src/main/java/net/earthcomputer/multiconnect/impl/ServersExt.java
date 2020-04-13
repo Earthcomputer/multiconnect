@@ -2,8 +2,8 @@ package net.earthcomputer.multiconnect.impl;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.ServerAddress;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ServerAddress;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -15,7 +15,7 @@ public final class ServersExt {
 
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final File configFile = new File(FabricLoader.getInstance().getConfigDirectory(), "multiconnect/servers_ext.json");
+    private static final File configFile = new File(Minecraft.getInstance().gameDir, "config/multiconnect/servers_ext.json");
     private static ServersExt instance;
 
     public static ServersExt getInstance() {
@@ -67,8 +67,8 @@ public final class ServersExt {
     }
 
     private static String normalizeAddress(String address) {
-        ServerAddress addr = ServerAddress.parse(address);
-        return addr.getAddress() + ":" + addr.getPort();
+        ServerAddress addr = ServerAddress.fromString(address);
+        return addr.getIP() + ":" + addr.getPort();
     }
 
     public static class ServerExt {

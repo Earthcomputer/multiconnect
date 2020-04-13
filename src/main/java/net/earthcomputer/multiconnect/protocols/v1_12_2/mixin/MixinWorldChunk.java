@@ -2,16 +2,16 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 
 import net.earthcomputer.multiconnect.protocols.v1_12_2.IUpgradableChunk;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.UpgradeData;
-import net.minecraft.world.chunk.WorldChunk;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(WorldChunk.class)
+@Mixin(Chunk.class)
 public abstract class MixinWorldChunk implements IUpgradableChunk {
 
     @Shadow @Final private World world;
@@ -41,7 +41,7 @@ public abstract class MixinWorldChunk implements IUpgradableChunk {
                     }
                 }
             }
-            clientUpgradeData.upgrade((WorldChunk) (Object) this);
+            clientUpgradeData.postProcessChunk((Chunk) (Object) this);
             clientUpgradeData = null;
         }
     }

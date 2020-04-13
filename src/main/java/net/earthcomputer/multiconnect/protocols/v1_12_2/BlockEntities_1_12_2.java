@@ -3,12 +3,13 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.AbstractProtocol;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.EntityType;
+import net.minecraft.tileentity.TileEntityType;
 
 public class BlockEntities_1_12_2 {
 
-    public static final BlockEntityType<NoteBlockBlockEntity> NOTE_BLOCK = BlockEntityType.Builder.create(NoteBlockBlockEntity::new, Blocks.NOTE_BLOCK).build(null);
-    public static final BlockEntityType<FlowerPotBlockEntity> FLOWER_POT = BlockEntityType.Builder.create(FlowerPotBlockEntity::new,
+    public static final TileEntityType<NoteBlockBlockEntity> NOTE_BLOCK = TileEntityType.Builder.create(NoteBlockBlockEntity::new, Blocks.NOTE_BLOCK).build(null);
+    public static final TileEntityType<FlowerPotBlockEntity> FLOWER_POT = TileEntityType.Builder.create(FlowerPotBlockEntity::new,
             Blocks.FLOWER_POT,
             Blocks.POTTED_OAK_SAPLING,
             Blocks.POTTED_SPRUCE_SAPLING,
@@ -33,10 +34,10 @@ public class BlockEntities_1_12_2 {
             Blocks.POTTED_CACTUS
     ).build(null);
 
-    public static void registerBlockEntities(ISimpleRegistry<BlockEntityType<?>> registry) {
-        registry.unregister(BlockEntityType.CONDUIT);
-        AbstractProtocol.insertAfter(registry, BlockEntityType.MOB_SPAWNER, NOTE_BLOCK, "noteblock");
-        AbstractProtocol.insertAfter(registry, BlockEntityType.COMPARATOR, FLOWER_POT, "flower_pot");
+    public static void registerBlockEntities(ISimpleRegistry<TileEntityType<?>> registry) {
+        registry.unregister(TileEntityType.CONDUIT);
+        AbstractProtocol.insertAfter(registry, TileEntityType.MOB_SPAWNER, NOTE_BLOCK, "noteblock");
+        AbstractProtocol.insertAfter(registry, TileEntityType.COMPARATOR, FLOWER_POT, "flower_pot");
     }
 
 }

@@ -2,13 +2,13 @@ package net.earthcomputer.multiconnect.protocols.v1_13_2.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.container.*;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.multiplayer.PlayerController;
+import net.minecraft.inventory.MerchantInventory;
+import net.minecraft.inventory.container.*;
 import net.minecraft.item.ItemStack;
-import net.minecraft.village.TraderInventory;
-import net.minecraft.village.TraderOfferList;
+import net.minecraft.item.MerchantOffers;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,76 +18,76 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(MerchantContainer.class)
 public abstract class MixinMerchantContainer extends Container {
 
-    @Shadow @Final private TraderInventory traderInventory;
+    @Shadow @Final private MerchantInventory merchantInventory;
 
-    @Shadow public abstract TraderOfferList getRecipes();
+    @Shadow public abstract MerchantOffers getOffers();
 
     protected MixinMerchantContainer(ContainerType<?> type, int syncId) {
         super(type, syncId);
     }
 
-    @Inject(method = "switchTo", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "func_217046_g", at = @At("HEAD"), cancellable = true)
     private void onSwitchTo(int recipeId, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion > Protocols.V1_13_2)
             return;
         ci.cancel();
 
-        if (recipeId >= getRecipes().size())
+        if (recipeId >= getOffers().size())
             return;
 
-        ClientPlayerInteractionManager interactionManager = MinecraftClient.getInstance().interactionManager;
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        PlayerController interactionManager = Minecraft.getInstance().playerController;
+        ClientPlayerEntity player = Minecraft.getInstance().player;
         assert player != null;
         assert interactionManager != null;
 
         // move 1st input slot to inventory
-        if (!traderInventory.getInvStack(0).isEmpty()) {
-            int count = traderInventory.getInvStack(0).getCount();
-            interactionManager.clickSlot(syncId, 0, 0, SlotActionType.QUICK_MOVE, player);
-            if (count == traderInventory.getInvStack(0).getCount())
+        if (!merchantInventory.getStackInSlot(0).isEmpty()) {
+            int count = merchantInventory.getStackInSlot(0).getCount();
+            interactionManager.windowClick(windowId, 0, 0, ClickType.QUICK_MOVE, player);
+            if (count == merchantInventory.getStackInSlot(0).getCount())
                 return;
         }
 
         // move 2nd input slot to inventory
-        if (!traderInventory.getInvStack(1).isEmpty()) {
-            int count = traderInventory.getInvStack(1).getCount();
-            interactionManager.clickSlot(syncId, 1, 0, SlotActionType.QUICK_MOVE, player);
-            if (count == traderInventory.getInvStack(1).getCount())
+        if (!merchantInventory.getStackInSlot(1).isEmpty()) {
+            int count = merchantInventory.getStackInSlot(1).getCount();
+            interactionManager.windowClick(windowId, 1, 0, ClickType.QUICK_MOVE, player);
+            if (count == merchantInventory.getStackInSlot(1).getCount())
                 return;
         }
 
         // refill the slots
-        if (traderInventory.getInvStack(0).isEmpty() && traderInventory.getInvStack(1).isEmpty()) {
-            autofill(interactionManager, player, 0, getRecipes().get(recipeId).getAdjustedFirstBuyItem());
-            autofill(interactionManager, player, 1, getRecipes().get(recipeId).getSecondBuyItem());
+        if (merchantInventory.getStackInSlot(0).isEmpty() && merchantInventory.getStackInSlot(1).isEmpty()) {
+            autofill(interactionManager, player, 0, getOffers().get(recipeId).func_222205_b());
+            autofill(interactionManager, player, 1, getOffers().get(recipeId).getBuyingStackSecond());
         }
     }
 
     @Unique
-    private void autofill(ClientPlayerInteractionManager interactionManager, ClientPlayerEntity player,
+    private void autofill(PlayerController interactionManager, ClientPlayerEntity player,
                           int inputSlot, ItemStack stackNeeded) {
         if (stackNeeded.isEmpty())
             return;
 
         int slot;
         for (slot = 3; slot < 39; slot++) {
-            ItemStack stack = slotList.get(slot).getStack();
-            if (stack.getItem() == stackNeeded.getItem() && ItemStack.areTagsEqual(stack, stackNeeded)) {
+            ItemStack stack = inventorySlots.get(slot).getStack();
+            if (stack.getItem() == stackNeeded.getItem() && ItemStack.areItemStackTagsEqual(stack, stackNeeded)) {
                 break;
             }
         }
         if (slot == 39)
             return;
 
-        boolean wasHoldingItem = !player.inventory.getCursorStack().isEmpty();
-        interactionManager.clickSlot(syncId, slot, 0, SlotActionType.PICKUP, player);
-        interactionManager.clickSlot(syncId, slot, 0, SlotActionType.PICKUP_ALL, player);
-        interactionManager.clickSlot(syncId, inputSlot, 0, SlotActionType.PICKUP, player);
+        boolean wasHoldingItem = !player.inventory.getItemStack().isEmpty();
+        interactionManager.windowClick(windowId, slot, 0, ClickType.PICKUP, player);
+        interactionManager.windowClick(windowId, slot, 0, ClickType.PICKUP_ALL, player);
+        interactionManager.windowClick(windowId, inputSlot, 0, ClickType.PICKUP, player);
         if (wasHoldingItem)
-            interactionManager.clickSlot(syncId, slot, 0, SlotActionType.PICKUP, player);
+            interactionManager.windowClick(windowId, slot, 0, ClickType.PICKUP, player);
     }
 
-    @Inject(method = "canInsertIntoSlot", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "canMergeSlot", at = @At("HEAD"), cancellable = true)
     private void modifyCanInsertIntoSlot(ItemStack stack, Slot slot, CallbackInfoReturnable<Boolean> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2)
             ci.setReturnValue(true);

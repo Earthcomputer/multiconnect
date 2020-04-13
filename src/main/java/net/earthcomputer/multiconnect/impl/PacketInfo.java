@@ -1,10 +1,10 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.minecraft.network.Packet;
+import net.minecraft.network.IPacket;
 
 import java.util.function.Supplier;
 
-public final class PacketInfo<T extends Packet<?>> {
+public final class PacketInfo<T extends IPacket<?>> {
 
     private final Class<T> packetClass;
     private final Supplier<T> factory;
@@ -14,7 +14,7 @@ public final class PacketInfo<T extends Packet<?>> {
         this.factory = factory;
     }
 
-    public static <T extends Packet<?>> PacketInfo of(Class<T> packetClass, Supplier<T> factory) {
+    public static <T extends IPacket<?>> PacketInfo of(Class<T> packetClass, Supplier<T> factory) {
         return new PacketInfo<>(packetClass, factory);
     }
 

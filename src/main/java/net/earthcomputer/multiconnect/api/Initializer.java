@@ -1,32 +1,30 @@
 package net.earthcomputer.multiconnect.api;
 
-import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.impl.ConnectionMode;
-import net.fabricmc.api.ModInitializer;
+import net.minecraftforge.fml.common.Mod;
+import org.spongepowered.asm.launch.MixinBootstrap;
+import org.spongepowered.asm.mixin.Mixins;
+import org.spongepowered.asm.mixin.connect.IMixinConnector;
 
-import java.util.Arrays;
-import java.util.List;
+/**
+ * Used to inject MultiConnect into Forge
+ */
+@Mod("multiconnect")
+public class Initializer implements IMixinConnector {
 
-// In the api package so we can access MultiConnectAPI.INSTANCE
-public class Initializer implements ModInitializer {
     @Override
-    public void onInitialize() {
-        MultiConnectAPI.INSTANCE = new MultiConnectAPI() {
-            @Override
-            public int getProtocolVersion() {
-                return ConnectionInfo.protocolVersion;
-            }
-
-            @Override
-            public IProtocol byProtocolVersion(int version) {
-                ConnectionMode protocol = ConnectionMode.byValue(version);
-                return protocol == ConnectionMode.AUTO ? null : protocol;
-            }
-
-            @Override
-            public List<IProtocol> getSupportedProtocols() {
-                return Arrays.asList(ConnectionMode.protocolValues());
-            }
-        };
+    public void connect() {
+        MixinBootstrap.init();
+        Mixins.addConfigurations("multiconnect.mixins.json",
+                "multiconnect.1_14_4.mixins.json",
+                "multiconnect.1_14_3.mixins.json",
+                "multiconnect.1_14_1.mixins.json",
+                "multiconnect.1_14.mixins.json",
+                "multiconnect.1_13_2.mixins.json",
+                "multiconnect.1_13.mixins.json",
+                "multiconnect.1_12_2.mixins.json",
+                "multiconnect.1_12_1.mixins.json",
+                "multiconnect.1_12.mixins.json");
     }
+
 }
+

@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ClientWorld.class)
 public class MixinClientWorld {
 
-    @Inject(method = "setBlockStateWithoutNeighborUpdates", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "invalidateRegionAndSetBlock", at = @At("HEAD"), cancellable = true)
     private void onSetBlockWithoutNeighborUpdates(BlockPos pos, BlockState state, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             ((ClientWorld) (Object) this).setBlockState(pos, state);

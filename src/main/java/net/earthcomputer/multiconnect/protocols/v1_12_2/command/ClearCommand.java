@@ -1,17 +1,17 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import net.minecraft.server.command.CommandSource;
+import net.minecraft.command.ISuggestionProvider;
 
 import static com.mojang.brigadier.arguments.IntegerArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EntityArgumentType_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.ItemArgumentType_1_12_2.*;
-import static net.minecraft.command.arguments.NbtCompoundTagArgumentType.*;
+import static net.minecraft.command.arguments.NBTCompoundTagArgument.*;
 
 public class ClearCommand {
 
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
+    public static void register(CommandDispatcher<ISuggestionProvider> dispatcher) {
         dispatcher.register(literal("clear")
             .executes(ctx -> 0)
             .then(argument("player", players())
@@ -22,7 +22,7 @@ public class ClearCommand {
                         .executes(ctx -> 0)
                         .then(argument("maxCount", integer(-1))
                             .executes(ctx -> 0)
-                            .then(argument("nbt", nbtCompound())
+                            .then(argument("nbt", nbt())
                                 .executes(ctx -> 0)))))));
     }
 

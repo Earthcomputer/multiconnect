@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ParticleManager.class)
 public class MixinParticleManager {
 
-    @Inject(method = "registerDefaultFactories", at = @At("RETURN"))
+    @Inject(method = "registerFactories", at = @At("RETURN"))
     private void onRegisterFactories(CallbackInfo ci) {
         Particles_1_12_2.registerParticleFactories((IParticleManager) this);
     }

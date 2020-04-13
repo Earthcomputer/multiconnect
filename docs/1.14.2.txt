@@ -1,5 +1,5 @@
 Changes compared to 1.14.1:
 - Protocol version updated 480 -> 485
 - Changes to ClientPlayerEntity.isInSneakingPose and tickMovement
-- Change to handling of ChunkDataS2CPacket when isFullChunk is false (probably don't want to implement this)
+- Change to handling of SChunkDataPacket when isFullChunk is false (probably don't want to implement this)
 - Possibility of bugged double merchant sounds with this bridge?

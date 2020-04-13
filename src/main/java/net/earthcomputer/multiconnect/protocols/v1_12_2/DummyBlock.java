@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Material;
+import net.minecraft.block.material.Material;
 
 class DummyBlock extends AirBlock {
 
@@ -14,7 +14,7 @@ class DummyBlock extends AirBlock {
     }
 
     DummyBlock(BlockState original) {
-        super(Block.Settings.of(Material.AIR));
+        super(Block.Properties.create(Material.AIR));
         this.original = original;
     }
 }

@@ -2,20 +2,20 @@ package net.earthcomputer.multiconnect.protocols.v1_12_1.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screen.DownloadTerrainScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.server.network.packet.KeepAliveC2SPacket;
-import net.minecraft.text.Text;
+import net.minecraft.network.play.client.CKeepAlivePacket;
+import net.minecraft.util.text.ITextComponent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(DownloadingTerrainScreen.class)
+@Mixin(DownloadTerrainScreen.class)
 public abstract class MixinDownloadingTerrainScreen extends Screen {
 
     @Unique private int tickCounter;
 
-    protected MixinDownloadingTerrainScreen(Text title) {
+    protected MixinDownloadingTerrainScreen(ITextComponent title) {
         super(title);
     }
 
@@ -26,7 +26,7 @@ public abstract class MixinDownloadingTerrainScreen extends Screen {
 
             if (tickCounter % 20 == 0) {
                 //noinspection ConstantConditions
-                MinecraftClient.getInstance().getNetworkHandler().sendPacket(new KeepAliveC2SPacket());
+                Minecraft.getInstance().getConnection().sendPacket(new CKeepAlivePacket());
             }
         }
     }

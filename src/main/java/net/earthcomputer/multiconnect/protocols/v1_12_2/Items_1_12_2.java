@@ -5,17 +5,17 @@ import com.google.common.collect.HashBiMap;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.datafixer.fix.EntityTheRenameningBlock;
-import net.minecraft.datafixer.fix.ItemInstanceTheFlatteningFix;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.*;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.text.LiteralText;
-import net.minecraft.util.Identifier;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.datafix.fixes.EntityRenaming1510;
+import net.minecraft.util.datafix.fixes.ItemStackDataFlattening;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.text.StringTextComponent;
 import org.apache.commons.lang3.tuple.Pair;
 
 import static net.minecraft.item.Items.*;
@@ -41,11 +41,11 @@ public class Items_1_12_2 {
             stack.setDamage(meta);
         }
         else if (stack.getItem() == BAT_SPAWN_EGG) {
-            CompoundTag entityTag = stack.getSubTag("EntityTag");
+            CompoundNBT entityTag = stack.getChildTag("EntityTag");
             if (entityTag != null) {
                 String entityId = entityTag.getString("id");
-                EntityType<?> entityType = Registry.ENTITY_TYPE.get(new Identifier(entityId));
-                newItem = SpawnEggItem.forEntity(entityType);
+                EntityType<?> entityType = Registry.ENTITY_TYPE.getOrDefault(new ResourceLocation(entityId));
+                newItem = SpawnEggItem.getEgg(entityType);
                 if (newItem != null) {
                     ItemStack newStack = new ItemStack(newItem, stack.getCount());
                     newStack.setTag(stack.getTag());
@@ -59,11 +59,11 @@ public class Items_1_12_2 {
         if (stack.getTag() != null && stack.getTag().contains("ench", 9)) {
             stack = stack.copy();
             assert stack.getTag() != null;
-            ListTag enchantments = stack.getTag().getList("ench", 10);
+            ListNBT enchantments = stack.getTag().getList("ench", 10);
             for (int i = 0; i < enchantments.size(); i++) {
-                CompoundTag ench = enchantments.getCompound(i);
+                CompoundNBT ench = enchantments.getCompound(i);
                 int id = ench.getInt("id");
-                Identifier name = Registry.ENCHANTMENT.getId(Registry.ENCHANTMENT.get(id));
+                ResourceLocation name = Registry.ENCHANTMENT.getKey(Registry.ENCHANTMENT.getByValue(id));
                 if (name == null) {
                     enchantments.remove(i);
                     i--;
@@ -74,11 +74,11 @@ public class Items_1_12_2 {
             stack.getTag().put("Enchantments", enchantments);
             stack.getTag().remove("ench");
         }
-        if (stack.hasCustomName()) {
+        if (stack.hasDisplayName()) {
             stack = stack.copy();
             //noinspection ConstantConditions
-            String displayName = stack.getSubTag("display").getString("Name");
-            stack.setCustomName(new LiteralText(displayName));
+            String displayName = stack.getChildTag("display").getString("Name");
+            stack.setDisplayName(new StringTextComponent(displayName));
         }
         return stack;
     }
@@ -96,7 +96,7 @@ public class Items_1_12_2 {
             meta = FilledMapItem.getMapId(stack);
             if (stack.getTag() != null) {
                 stack = stack.copy();
-                CompoundTag tag = stack.getTag();
+                CompoundNBT tag = stack.getTag();
                 assert tag != null;
                 tag.remove("map");
                 if (tag.isEmpty())
@@ -107,7 +107,7 @@ public class Items_1_12_2 {
             meta = stack.getDamage();
             if (stack.getTag() != null) {
                 stack = stack.copy();
-                CompoundTag tag = stack.getTag();
+                CompoundNBT tag = stack.getTag();
                 assert tag != null;
                 tag.remove("Damage");
                 if (tag.isEmpty())
@@ -117,48 +117,48 @@ public class Items_1_12_2 {
         else if (stack.getItem() instanceof SpawnEggItem) {
             ItemStack oldStack = new ItemStack(BAT_SPAWN_EGG, stack.getCount());
             oldStack.setTag(stack.getTag() == null ? null : stack.getTag().copy());
-            CompoundTag entityTag = oldStack.getOrCreateSubTag("EntityTag");
+            CompoundNBT entityTag = oldStack.getOrCreateChildTag("EntityTag");
             if (!entityTag.contains("id", 8))
-                entityTag.putString("id", Registry.ENTITY_TYPE.getId(((SpawnEggItem) stack.getItem()).getEntityType(oldStack.getTag())).toString());
+                entityTag.putString("id", Registry.ENTITY_TYPE.getKey(((SpawnEggItem) stack.getItem()).getType(oldStack.getTag())).toString());
             stack = oldStack;
         }
         if (stack.getItem() instanceof BannerItem || stack.getItem() == SHIELD) {
             stack = invertBannerColors(stack);
         }
-        if (stack.hasEnchantments()) {
+        if (stack.isEnchanted()) {
             stack = stack.copy();
-            ListTag enchantments = stack.getEnchantments();
+            ListNBT enchantments = stack.getEnchantmentTagList();
             for (int i = 0; i < enchantments.size(); i++) {
-                CompoundTag ench = enchantments.getCompound(i);
-                Identifier name = Identifier.tryParse(ench.getString("id"));
-                Enchantment enchObj = Registry.ENCHANTMENT.get(name);
+                CompoundNBT ench = enchantments.getCompound(i);
+                ResourceLocation name = ResourceLocation.tryCreate(ench.getString("id"));
+                Enchantment enchObj = Registry.ENCHANTMENT.getOrDefault(name);
                 if (enchObj == null) {
                     enchantments.remove(i);
                     i--;
                 } else {
-                    ench.putInt("id", Registry.ENCHANTMENT.getRawId(enchObj));
+                    ench.putInt("id", Registry.ENCHANTMENT.getId(enchObj));
                 }
             }
             assert stack.getTag() != null;
             stack.getTag().put("ench", enchantments);
             stack.getTag().remove("Enchantments");
         }
-        if (stack.hasCustomName()) {
+        if (stack.hasDisplayName()) {
             stack = stack.copy();
-            String displayName = stack.getName().asFormattedString();
+            String displayName = stack.getDisplayName().getFormattedText();
             //noinspection ConstantConditions
-            stack.getSubTag("display").putString("Name", displayName);
+            stack.getChildTag("display").putString("Name", displayName);
         }
         return Pair.of(stack, meta);
     }
 
     private static ItemStack invertBannerColors(ItemStack stack) {
         stack = stack.copy();
-        CompoundTag blockEntityTag = stack.getSubTag("BlockEntityTag");
+        CompoundNBT blockEntityTag = stack.getChildTag("BlockEntityTag");
         if (blockEntityTag != null && blockEntityTag.contains("Patterns", 9)) {
-            ListTag patterns = blockEntityTag.getList("Patterns", 10);
-            for (Tag t : patterns) {
-                CompoundTag pattern = (CompoundTag) t;
+            ListNBT patterns = blockEntityTag.getList("Patterns", 10);
+            for (INBT t : patterns) {
+                CompoundNBT pattern = (CompoundNBT) t;
                 if (pattern.contains("Color", 3))
                     pattern.putInt("Color", 15 - pattern.getInt("Color"));
             }
@@ -167,26 +167,26 @@ public class Items_1_12_2 {
     }
 
     private static void register(ISimpleRegistry<Item> registry, Item item, int id, String name) {
-        registry.registerInPlace(item, id, new Identifier(name), false);
+        registry.registerInPlace(item, id, new ResourceLocation(name), false);
     }
 
     private static void registerBlockItem(ISimpleRegistry<Item> registry, Block block) {
-        registry.registerInPlace(Item.BLOCK_ITEMS.getOrDefault(block, AIR), Registry.BLOCK.getRawId(block), Registry.BLOCK.getId(block), false);
+        registry.registerInPlace(Item.BLOCK_TO_ITEM.getOrDefault(block, AIR), Registry.BLOCK.getId(block), Registry.BLOCK.getKey(block), false);
     }
 
     private static void registerAliases(ISimpleRegistry<Item> registry) {
         for (int meta = 1; meta < 16; meta++) {
             for (int itemId = 1; itemId < 453; itemId++) {
-                Item baseItem = Registry.ITEM.get(itemId);
-                String baseName = Registry.ITEM.getId(baseItem).toString();
-                String newName = ItemInstanceTheFlatteningFix.getItem(baseName, meta);
-                newName = EntityTheRenameningBlock.ITEMS.getOrDefault(newName, newName);
+                Item baseItem = Registry.ITEM.getByValue(itemId);
+                String baseName = Registry.ITEM.getKey(baseItem).toString();
+                String newName = ItemStackDataFlattening.updateItem(baseName, meta);
+                newName = EntityRenaming1510.ITEM_RENAME_MAP.getOrDefault(newName, newName);
                 if (newName != null) {
-                    Item subItem = REGISTRY_1_13.get(new Identifier(newName));
+                    Item subItem = REGISTRY_1_13.getOrDefault(new ResourceLocation(newName));
                     if (subItem == null)
-                        subItem = Registry.ITEM.get(new Identifier(newName));
-                    if (subItem != AIR && Registry.ITEM.getRawId(subItem) == 0) {
-                        registry.registerInPlace(subItem, meta << 16 | itemId, new Identifier(newName), false);
+                        subItem = Registry.ITEM.getOrDefault(new ResourceLocation(newName));
+                    if (subItem != AIR && Registry.ITEM.getId(subItem) == 0) {
+                        registry.registerInPlace(subItem, meta << 16 | itemId, new ResourceLocation(newName), false);
                         OLD_ITEM_TO_NEW.put(Pair.of(baseItem, meta), subItem);
                     }
                 }
@@ -194,11 +194,11 @@ public class Items_1_12_2 {
         }
 
         int nextHighBits = 16;
-        int spawnEggId = Registry.ITEM.getRawId(BAT_SPAWN_EGG);
+        int spawnEggId = Registry.ITEM.getId(BAT_SPAWN_EGG);
         for (EntityType entityType : Registry.ENTITY_TYPE) {
-            SpawnEggItem item = SpawnEggItem.forEntity(entityType);
+            SpawnEggItem item = SpawnEggItem.getEgg(entityType);
             if (item != null && item != BAT_SPAWN_EGG) {
-                registry.registerInPlace(item, nextHighBits << 16 | spawnEggId, REGISTRY_1_13.getId(item), false);
+                registry.registerInPlace(item, nextHighBits << 16 | spawnEggId, REGISTRY_1_13.getKey(item), false);
                 nextHighBits++;
             }
         }

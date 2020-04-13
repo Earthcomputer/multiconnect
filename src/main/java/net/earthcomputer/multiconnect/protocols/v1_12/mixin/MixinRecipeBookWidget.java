@@ -4,16 +4,16 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_12.IRecipeBookWidget;
 import net.earthcomputer.multiconnect.protocols.v1_12.RecipeBook_1_12;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.recipebook.RecipeBookGhostSlots;
-import net.minecraft.client.gui.screen.recipebook.RecipeBookResults;
-import net.minecraft.client.gui.screen.recipebook.RecipeBookWidget;
-import net.minecraft.client.gui.screen.recipebook.RecipeResultCollection;
-import net.minecraft.client.recipe.book.ClientRecipeBook;
-import net.minecraft.container.CraftingContainer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.recipebook.GhostRecipe;
+import net.minecraft.client.gui.recipebook.RecipeBookGui;
+import net.minecraft.client.gui.recipebook.RecipeBookPage;
+import net.minecraft.client.gui.recipebook.RecipeList;
+import net.minecraft.client.util.ClientRecipeBook;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeFinder;
+import net.minecraft.inventory.container.RecipeBookContainer;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.RecipeItemHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,47 +25,47 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(RecipeBookWidget.class)
+@Mixin(RecipeBookGui.class)
 public abstract class MixinRecipeBookWidget implements IRecipeBookWidget {
 
-    @Shadow @Final protected RecipeBookResults recipesArea;
+    @Shadow @Final protected RecipeBookPage recipeBookPage;
 
-    @Shadow protected abstract boolean isWide();
+    @Shadow protected abstract boolean isOffsetNextToMainGUI();
 
-    @Shadow protected abstract void setOpen(boolean opened);
+    @Shadow protected abstract void setVisible(boolean opened);
 
     @Unique private RecipeBook_1_12<?> recipeBook112;
 
-    @Inject(method = "initialize", at = @At("RETURN"))
-    private void onInitialize(int parentWidth, int parentHeight, MinecraftClient mc, boolean isNarrow, CraftingContainer<?> craftingContainer, CallbackInfo ci) {
+    @Inject(method = "init", at = @At("RETURN"))
+    private void onInitialize(int parentWidth, int parentHeight, Minecraft mc, boolean isNarrow, RecipeBookContainer<?> craftingContainer, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12) {
-            recipeBook112 = new RecipeBook_1_12<>((RecipeBookWidget) (Object) this, this, craftingContainer);
+            recipeBook112 = new RecipeBook_1_12((RecipeBookGui) (Object) this, this, craftingContainer);
         }
     }
 
-    @Inject(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/recipebook/RecipeResultCollection;isCraftable(Lnet/minecraft/recipe/Recipe;)Z"), cancellable = true)
+    @Inject(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/recipebook/RecipeList;isCraftable(Lnet/minecraft/item/crafting/IRecipe;)Z"), cancellable = true)
     private void redirectRecipeBook(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12) {
-            handleRecipeClicked(recipeBook112, recipesArea.getLastClickedRecipe(), recipesArea.getLastClickedResults());
-            if (!isWide())
-                setOpen(false);
+            handleRecipeClicked(recipeBook112, recipeBookPage.getLastClickedRecipe(), recipeBookPage.getLastClickedRecipeList());
+            if (!isOffsetNextToMainGUI())
+                setVisible(false);
             ci.setReturnValue(true);
         }
     }
 
     @SuppressWarnings("unchecked")
     @Unique
-    private static <C extends Inventory> void handleRecipeClicked(RecipeBook_1_12<C> recipeBook112, Recipe<?> recipe, RecipeResultCollection results) {
-        recipeBook112.handleRecipeClicked((Recipe<C>) recipe, results);
+    private static <C extends Inventory> void handleRecipeClicked(RecipeBook_1_12<C> recipeBook112, IRecipe<?> recipe, RecipeList results) {
+        recipeBook112.handleRecipeClicked((IRecipe<C>) recipe, results);
     }
 
-    @Invoker("isWide")
+    @Invoker("isOffsetNextToMainGUI")
     @Override
     public abstract boolean multiconnect_isWide();
 
     @Accessor
     @Override
-    public abstract RecipeBookGhostSlots getGhostSlots();
+    public abstract GhostRecipe getGhostRecipe();
 
     @Accessor
     @Override
@@ -73,5 +73,5 @@ public abstract class MixinRecipeBookWidget implements IRecipeBookWidget {
 
     @Accessor
     @Override
-    public abstract RecipeFinder getRecipeFinder();
+    public abstract RecipeItemHelper getStackedContents();
 }

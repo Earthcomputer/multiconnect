@@ -3,11 +3,11 @@ package net.earthcomputer.multiconnect.protocols.v1_14_4.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.PendingDataTrackerEntries;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.packet.EntityTrackerUpdateS2CPacket;
-import net.minecraft.client.network.packet.MobSpawnS2CPacket;
-import net.minecraft.client.network.packet.PlayerSpawnS2CPacket;
-import net.minecraft.entity.data.DataTracker;
+import net.minecraft.client.network.play.ClientPlayNetHandler;
+import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.play.server.SEntityMetadataPacket;
+import net.minecraft.network.play.server.SSpawnMobPacket;
+import net.minecraft.network.play.server.SSpawnPlayerPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -17,33 +17,33 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-@Mixin(ClientPlayNetworkHandler.class)
+@Mixin(ClientPlayNetHandler.class)
 public abstract class MixinClientPlayNetworkHandler {
 
-    @Shadow public abstract void onEntityTrackerUpdate(EntityTrackerUpdateS2CPacket packet);
+    @Shadow public abstract void handleEntityMetadata(SEntityMetadataPacket packet);
 
-    @Inject(method = "onMobSpawn", at = @At("RETURN"))
-    private void onOnMobSpawn(MobSpawnS2CPacket packet, CallbackInfo ci) {
-        applyPendingEntityTrackerValues(packet.getId());
+    @Inject(method = "handleSpawnMob", at = @At("RETURN"))
+    private void onOnMobSpawn(SSpawnMobPacket packet, CallbackInfo ci) {
+        applyPendingEntityTrackerValues(packet.getEntityID());
     }
 
-    @Inject(method = "onPlayerSpawn", at = @At("RETURN"))
-    private void onOnPlayerSpawn(PlayerSpawnS2CPacket packet, CallbackInfo ci) {
-        applyPendingEntityTrackerValues(packet.getId());
+    @Inject(method = "handleSpawnPlayer", at = @At("RETURN"))
+    private void onOnPlayerSpawn(SSpawnPlayerPacket packet, CallbackInfo ci) {
+        applyPendingEntityTrackerValues(packet.getEntityID());
     }
 
     @Unique
     private void applyPendingEntityTrackerValues(int entityId) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_14_4) {
-            List<DataTracker.Entry<?>> entries = PendingDataTrackerEntries.getEntries(entityId);
+            List<EntityDataManager.DataEntry<?>> entries = PendingDataTrackerEntries.getRegistryObjects(entityId);
             if (entries != null) {
                 PendingDataTrackerEntries.setEntries(entityId, null);
-                EntityTrackerUpdateS2CPacket trackerPacket = new EntityTrackerUpdateS2CPacket();
+                SEntityMetadataPacket trackerPacket = new SEntityMetadataPacket();
                 //noinspection ConstantConditions
                 TrackerUpdatePacketAccessor trackerPacketAccessor = (TrackerUpdatePacketAccessor) trackerPacket;
-                trackerPacketAccessor.setId(entityId);
-                trackerPacketAccessor.setTrackedValues(entries);
-                onEntityTrackerUpdate(trackerPacket);
+                trackerPacketAccessor.setEntityId(entityId);
+                trackerPacketAccessor.setDataManagerEntries(entries);
+                handleEntityMetadata(trackerPacket);
             }
         }
     }

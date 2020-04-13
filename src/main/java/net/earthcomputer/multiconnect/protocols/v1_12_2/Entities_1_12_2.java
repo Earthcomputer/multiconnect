@@ -2,12 +2,12 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.minecraft.entity.EntityType;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
 
 public class Entities_1_12_2 {
 
     private static void register(ISimpleRegistry<EntityType<?>> registry, EntityType<?> entity, int id, String name, String oldName) {
-        registry.register(entity, id, new Identifier(name), false);
+        registry.register(entity, id, new ResourceLocation(name), false);
     }
 
     public static void registerEntities(ISimpleRegistry<EntityType<?>> registry) {

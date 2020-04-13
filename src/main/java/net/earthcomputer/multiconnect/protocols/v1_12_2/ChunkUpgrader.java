@@ -5,17 +5,17 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.ChunkPalettedStorageFixAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.UpgradeDataAccessor;
 import net.minecraft.block.*;
-import net.minecraft.block.enums.BedPart;
-import net.minecraft.block.enums.ChestType;
-import net.minecraft.block.enums.DoubleBlockHalf;
 import net.minecraft.nbt.*;
+import net.minecraft.state.properties.BedPart;
+import net.minecraft.state.properties.ChestType;
+import net.minecraft.state.properties.DoubleBlockHalf;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.UpgradeData;
-import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.chunk.IChunk;
 
 import java.util.function.IntConsumer;
 
@@ -23,18 +23,18 @@ import static net.minecraft.block.Blocks.*;
 
 public class ChunkUpgrader {
 
-    public static UpgradeData fixChunk(WorldChunk chunk) {
+    public static UpgradeData fixChunk(Chunk chunk) {
         IntList centerIndicesToUpgrade = new IntArrayList();
         int sidesToUpgrade = 0;
 
         BlockPos.Mutable otherPos = new BlockPos.Mutable();
-        for (BlockPos pos : BlockPos.iterate(chunk.getPos().getStartX(), 0, chunk.getPos().getStartZ(),
-                chunk.getPos().getEndX(), chunk.getHighestNonEmptySectionYOffset() + 15, chunk.getPos().getEndZ())) {
+        for (BlockPos pos : BlockPos.getAllInBoxMutable(chunk.getPos().getXStart(), 0, chunk.getPos().getZStart(),
+                chunk.getPos().getXEnd(), chunk.getTopFilledSegment() + 15, chunk.getPos().getZEnd())) {
             BlockState state = chunk.getBlockState(pos);
             Block block = state.getBlock();
             inPlaceFix(chunk, state, pos, otherPos);
 
-            int blockId = Registry.BLOCK.getRawId(block) & 4095;
+            int blockId = Registry.BLOCK.getId(block) & 4095;
             if (ChunkPalettedStorageFixAccessor.getBlocksNeedingSideUpdate().get(blockId)) {
                 boolean west = (pos.getX() & 15) == 0;
                 boolean east = (pos.getX() & 15) == 15;
@@ -69,42 +69,42 @@ public class ChunkUpgrader {
         if (centerIndicesToUpgrade.isEmpty() && sidesToUpgrade == 0)
             return null;
 
-        CompoundTag upgradeData = new CompoundTag();
+        CompoundNBT upgradeData = new CompoundNBT();
         upgradeData.putInt("Sides", sidesToUpgrade);
-        CompoundTag centerIndices = new CompoundTag();
+        CompoundNBT centerIndices = new CompoundNBT();
         centerIndicesToUpgrade.forEach((IntConsumer) index -> {
             int low = index & 4095;
             int high = index >>> 12;
-            Tag tag = centerIndices.get(String.valueOf(high));
+            INBT tag = centerIndices.get(String.valueOf(high));
             if (tag == null)
-                centerIndices.put(String.valueOf(high), tag = new ListTag());
-            ((ListTag) tag).add(IntTag.of(low));
+                centerIndices.put(String.valueOf(high), tag = new ListNBT());
+            ((ListNBT) tag).add(IntNBT.valueOf(low));
         });
-        for (String key : centerIndices.getKeys()) {
+        for (String key : centerIndices.keySet()) {
             //noinspection ConstantConditions
-            centerIndices.put(key, new IntArrayTag(((ListTag) centerIndices.get(key)).stream().mapToInt(val -> ((IntTag) val).getInt()).toArray()));
+            centerIndices.put(key, new IntArrayNBT(((ListNBT) centerIndices.get(key)).stream().mapToInt(val -> ((IntNBT) val).getInt()).toArray()));
         }
         upgradeData.put("Indices", centerIndices);
         return new UpgradeData(upgradeData);
     }
 
-    private static void inPlaceFix(Chunk chunk, BlockState oldState, BlockPos pos, BlockPos.Mutable otherPos) {
+    private static void inPlaceFix(IChunk chunk, BlockState oldState, BlockPos pos, BlockPos.Mutable otherPos) {
         Block block = oldState.getBlock();
-        if (block instanceof SnowyBlock) {
-            Block above = chunk.getBlockState(otherPos.set(pos).setOffset(Direction.UP)).getBlock();
+        if (block instanceof SnowyDirtBlock) {
+            Block above = chunk.getBlockState(otherPos.setPos(pos).offset(Direction.UP)).getBlock();
             if (above == SNOW || above == SNOW_BLOCK)
-                chunk.setBlockState(pos, oldState.with(SnowyBlock.SNOWY, true), false);
+                chunk.setBlockState(pos, oldState.with(SnowyDirtBlock.SNOWY, true), false);
         } else if (block instanceof DoorBlock && oldState.get(DoorBlock.HALF) == DoubleBlockHalf.LOWER) {
-            otherPos.set(pos).setOffset(Direction.UP);
+            otherPos.setPos(pos).offset(Direction.UP);
             BlockState above = chunk.getBlockState(otherPos);
             if (above.getBlock() instanceof DoorBlock) {
                 chunk.setBlockState(pos, oldState.with(DoorBlock.HINGE, above.get(DoorBlock.HINGE)).with(DoorBlock.POWERED, above.get(DoorBlock.POWERED)), false);
                 chunk.setBlockState(otherPos, above.with(DoorBlock.FACING, oldState.get(DoorBlock.FACING)).with(DoorBlock.OPEN, oldState.get(DoorBlock.OPEN)), false);
             }
-        } else if (block instanceof TallPlantBlock && oldState.get(TallPlantBlock.HALF) == DoubleBlockHalf.UPPER) {
-            BlockState below = chunk.getBlockState(otherPos.set(pos).setOffset(Direction.DOWN));
-            if (below.getBlock() instanceof TallPlantBlock)
-                chunk.setBlockState(pos, below.with(TallPlantBlock.HALF, DoubleBlockHalf.UPPER), false);
+        } else if (block instanceof DoublePlantBlock && oldState.get(DoublePlantBlock.HALF) == DoubleBlockHalf.UPPER) {
+            BlockState below = chunk.getBlockState(otherPos.setPos(pos).offset(Direction.DOWN));
+            if (below.getBlock() instanceof DoublePlantBlock)
+                chunk.setBlockState(pos, below.with(DoublePlantBlock.HALF, DoubleBlockHalf.UPPER), false);
         }
     }
 
@@ -127,22 +127,22 @@ public class ChunkUpgrader {
 
     private static BlockState applyAdjacentBlock(BlockState state, Direction dir, IWorld world, BlockPos pos, BlockPos otherPos) {
         Block block = state.getBlock();
-        if (block instanceof DoorBlock || block instanceof TallPlantBlock)
+        if (block instanceof DoorBlock || block instanceof DoublePlantBlock)
             return state;
 
         if (block == CHEST || block == TRAPPED_CHEST) {
             BlockState otherState = world.getBlockState(otherPos);
             if (dir.getAxis().isHorizontal()) {
                 Direction chestFacing = state.get(ChestBlock.FACING);
-                ChestType currentType = state.get(ChestBlock.CHEST_TYPE);
-                ChestType correctDoubleType = dir == chestFacing.rotateYClockwise() ? ChestType.LEFT : ChestType.RIGHT;
+                ChestType currentType = state.get(ChestBlock.TYPE);
+                ChestType correctDoubleType = dir == chestFacing.rotateY() ? ChestType.LEFT : ChestType.RIGHT;
                 if (dir.getAxis() != chestFacing.getAxis()) {
                     if (block == otherState.getBlock()) {
                         if (currentType == ChestType.SINGLE && chestFacing == otherState.get(ChestBlock.FACING)) {
-                            return state.with(ChestBlock.CHEST_TYPE, correctDoubleType);
+                            return state.with(ChestBlock.TYPE, correctDoubleType);
                         }
                     } else if (currentType == correctDoubleType) {
-                        return state.with(ChestBlock.CHEST_TYPE, ChestType.SINGLE);
+                        return state.with(ChestBlock.TYPE, ChestType.SINGLE);
                     }
                 }
             }
@@ -151,7 +151,7 @@ public class ChunkUpgrader {
 
         if (block instanceof BedBlock) {
             BedPart part = state.get(BedBlock.PART);
-            Direction facing = state.get(BedBlock.FACING);
+            Direction facing = state.get(BedBlock.HORIZONTAL_FACING);
             if (dir == (part == BedPart.FOOT ? facing : facing.getOpposite())) {
                 BlockState otherState = world.getBlockState(otherPos);
                 if (otherState.getBlock() == block && otherState.get(BedBlock.PART) != part) {
@@ -161,6 +161,6 @@ public class ChunkUpgrader {
             return state;
         }
 
-        return UpgradeDataAccessor.callApplyAdjacentBlock(state, dir, world, pos, otherPos);
+        return UpgradeDataAccessor.callFunc_196987_a(state, dir, world, pos, otherPos);
     }
 }

@@ -1,11 +1,11 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.minecraft.entity.data.TrackedData;
+import net.minecraft.network.datasync.DataParameter;
 
 public interface IDataTracker {
 
     void multiconnect_recomputeEntries();
 
-    <T> TrackedData<T> multiconnect_getActualTrackedData(TrackedData<T> data);
+    <T> DataParameter<T> multiconnect_getActualDataParameter(DataParameter<T> data);
 
 }

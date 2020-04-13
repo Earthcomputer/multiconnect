@@ -1,10 +1,10 @@
 package net.earthcomputer.multiconnect.mixin;
 
 import com.google.common.collect.BiMap;
-import net.earthcomputer.multiconnect.impl.IInt2ObjectBiMap;
+import net.earthcomputer.multiconnect.impl.IIntIdentityHashBiMap;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Int2ObjectBiMap;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.IntIdentityHashBiMap;
 import net.minecraft.util.registry.SimpleRegistry;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,52 +19,52 @@ import java.util.function.Consumer;
 @Mixin(SimpleRegistry.class)
 public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
 
-    @Shadow @Final protected Int2ObjectBiMap<T> indexedEntries;
-    @Shadow @Final protected BiMap<Identifier, T> entries;
-    @Shadow protected Object[] randomEntries;
-    @Shadow private int nextId;
+    @Shadow @Final protected IntIdentityHashBiMap<T> underlyingIntegerMap;
+    @Shadow @Final protected BiMap<ResourceLocation, T> registryObjects;
+    @Shadow protected Object[] values;
+    @Shadow private int nextFreeId;
 
-    @Shadow public abstract <V extends T> V set(int int_1, Identifier identifier_1, V object_1);
-
-    @Accessor
-    @Override
-    public abstract int getNextId();
+    @Shadow public abstract <V extends T> V register(int int_1, ResourceLocation identifier_1, V object_1);
 
     @Accessor
     @Override
-    public abstract void setNextId(int nextId);
+    public abstract int getNextFreeId();
 
     @Accessor
     @Override
-    public abstract Int2ObjectBiMap<T> getIndexedEntries();
+    public abstract void setNextFreeId(int nextFreeId);
 
     @Accessor
     @Override
-    public abstract BiMap<Identifier, T> getEntries();
+    public abstract IntIdentityHashBiMap<T> getUnderlyingIntegerMap();
+
+    @Accessor
+    @Override
+    public abstract BiMap<ResourceLocation, T> getRegistryObjects();
 
     @Unique private List<Consumer<T>> registerListeners = new ArrayList<>(0);
     @Unique private List<Consumer<T>> unregisterListeners = new ArrayList<>(0);
 
     @Override
-    public void register(T t, int id, Identifier name, boolean sideEffects) {
-        for (int remapId = getNextId(); remapId > id; remapId--) {
-            T toRemap = indexedEntries.get(remapId - 1);
+    public void register(T t, int id, ResourceLocation name, boolean sideEffects) {
+        for (int remapId = getNextFreeId(); remapId > id; remapId--) {
+            T toRemap = underlyingIntegerMap.getByValue(remapId - 1);
             //noinspection unchecked
-            ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(toRemap);
-            indexedEntries.put(toRemap, remapId);
+            ((IIntIdentityHashBiMap<T>) underlyingIntegerMap).multiconnect_remove(toRemap);
+            underlyingIntegerMap.put(toRemap, remapId);
         }
-        setNextId(getNextId() + 1);
-        set(id, name, t);
+        setNextFreeId(getNextFreeId() + 1);
+        register(id, name, t);
 
         if (sideEffects)
             registerListeners.forEach(listener -> listener.accept(t));
     }
 
     @Override
-    public void registerInPlace(T t, int id, Identifier name, boolean sideEffects) {
-        if (id == getNextId())
-            setNextId(id + 1);
-        set(id, name, t);
+    public void registerInPlace(T t, int id, ResourceLocation name, boolean sideEffects) {
+        if (id == getNextFreeId())
+            setNextFreeId(id + 1);
+        register(id, name, t);
 
         if (sideEffects)
             registerListeners.forEach(listener -> listener.accept(t));
@@ -72,23 +72,23 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
 
     @Override
     public void unregister(T t, boolean sideEffects) {
-        if (!entries.containsValue(t))
+        if (!registryObjects.containsValue(t))
             return;
 
-        int id = indexedEntries.getId(t);
+        int id = underlyingIntegerMap.getId(t);
         //noinspection unchecked
-        ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(t);
-        entries.inverse().remove(t);
+        ((IIntIdentityHashBiMap<T>) underlyingIntegerMap).multiconnect_remove(t);
+        registryObjects.inverse().remove(t);
 
-        for (int remapId = id; remapId < getNextId() - 1; remapId++) {
-            T toRemap = indexedEntries.get(remapId + 1);
+        for (int remapId = id; remapId < getNextFreeId() - 1; remapId++) {
+            T toRemap = underlyingIntegerMap.getByValue(remapId + 1);
             //noinspection unchecked
-            ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(toRemap);
-            indexedEntries.put(toRemap, remapId);
+            ((IIntIdentityHashBiMap<T>) underlyingIntegerMap).multiconnect_remove(toRemap);
+            underlyingIntegerMap.put(toRemap, remapId);
         }
-        setNextId(getNextId() - 1);
+        setNextFreeId(getNextFreeId() - 1);
 
-        randomEntries = null;
+        values = null;
 
         if (sideEffects)
             unregisterListeners.forEach(listener -> listener.accept(t));
@@ -96,18 +96,18 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
 
     @Override
     public void purge(T t, boolean sideEffects) {
-        if (!entries.containsValue(t))
+        if (!registryObjects.containsValue(t))
             return;
 
-        int id = indexedEntries.getId(t);
+        int id = underlyingIntegerMap.getId(t);
         //noinspection unchecked
-        ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(t);
-        entries.inverse().remove(t);
+        ((IIntIdentityHashBiMap<T>) underlyingIntegerMap).multiconnect_remove(t);
+        registryObjects.inverse().remove(t);
 
-        if (id == getNextId() - 1)
-            setNextId(id);
+        if (id == getNextFreeId() - 1)
+            setNextFreeId(id);
 
-        randomEntries = null;
+        values = null;
 
         if (sideEffects)
             unregisterListeners.forEach(listener -> listener.accept(t));
@@ -116,16 +116,16 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     @Override
     public void clear(boolean sideEffects) {
         if (sideEffects) {
-            for (int id = getNextId() - 1; id >= 0; id--) {
-                T value = indexedEntries.get(id);
+            for (int id = getNextFreeId() - 1; id >= 0; id--) {
+                T value = underlyingIntegerMap.getByValue(id);
                 if (value != null)
                     unregisterListeners.forEach(listener -> listener.accept(value));
             }
         }
-        entries.clear();
-        indexedEntries.clear();
-        randomEntries = null;
-        setNextId(0);
+        registryObjects.clear();
+        underlyingIntegerMap.clear();
+        values = null;
+        setNextFreeId(0);
     }
 
     @Override
@@ -141,19 +141,19 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     @Override
     public SimpleRegistry<T> copy() {
         SimpleRegistry<T> newRegistry = new SimpleRegistry<>();
-        for (T t : indexedEntries) {
-            newRegistry.set(indexedEntries.getId(t), entries.inverse().get(t), t);
+        for (T t : underlyingIntegerMap) {
+            newRegistry.register(underlyingIntegerMap.getId(t), registryObjects.inverse().get(t), t);
         }
         return newRegistry;
     }
 
     @Override
     public void dump() {
-        for (int id = 0; id < nextId; id++) {
+        for (int id = 0; id < nextFreeId; id++) {
             try {
-                T val = indexedEntries.get(id);
+                T val = underlyingIntegerMap.getByValue(id);
                 if (val != null)
-                    System.out.println(id + ": " + entries.inverse().get(val));
+                    System.out.println(id + ": " + registryObjects.inverse().get(val));
             } catch (Throwable t) {
                 System.out.println(id + ": ERROR: " + t);
             }

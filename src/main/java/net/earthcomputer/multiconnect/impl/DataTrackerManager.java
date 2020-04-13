@@ -1,10 +1,10 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.earthcomputer.multiconnect.mixin.TrackedDataAccessor;
+import net.earthcomputer.multiconnect.mixin.DataParameterAccessor;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandler;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.datasync.IDataSerializer;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -26,20 +26,20 @@ public class DataTrackerManager {
      * Reregisters also happen when connecting to a new server.
      */
 
-    private static Map<Class<? extends Entity>, List<TrackedData<?>>> DEFAULT_DATA = new HashMap<>();
+    private static Map<Class<? extends Entity>, List<DataParameter<?>>> DEFAULT_DATA = new HashMap<>();
     private static Map<Class<? extends Entity>, Integer> NEXT_IDS = new HashMap<>();
-    private static Map<Class<? extends Entity>, List<Pair<TrackedData<?>, ?>>> oldTrackedData = new HashMap<>();
-    private static Map<TrackedData<?>, BiConsumer<?, ?>> oldTrackedDataHandlers = new IdentityHashMap<>();
+    private static Map<Class<? extends Entity>, List<Pair<DataParameter<?>, ?>>> oldDataParameter = new HashMap<>();
+    private static Map<DataParameter<?>, BiConsumer<?, ?>> oldIDataSerializers = new IdentityHashMap<>();
     private static volatile boolean dirty = false;
     private static int nextAbsentId = -1;
-    private static Set<DataTracker> trackerInstances = Collections.newSetFromMap(new WeakHashMap<>());
+    private static Set<EntityDataManager> trackerInstances = Collections.newSetFromMap(new WeakHashMap<>());
 
-    public static synchronized void addTrackerInstance(DataTracker instance) {
+    public static synchronized void addTrackerInstance(EntityDataManager instance) {
         trackerInstances.add(instance);
     }
 
-    public static <T> TrackedData<T> createOldTrackedData(TrackedDataHandler<T> type) {
-        return type.create(-1);
+    public static <T> DataParameter<T> createOldDataParameter(IDataSerializer<T> type) {
+        return type.createKey(-1);
     }
 
     /**
@@ -47,30 +47,30 @@ public class DataTrackerManager {
      * tracked data no longer in the current version. Will insert the new data before the current data being
      * checked.
      */
-    public static <T, U extends Entity> void registerOldTrackedData(Class<U> clazz, TrackedData<T> data, T _default, BiConsumer<? super U, ? super T> handler) {
+    public static <T, U extends Entity> void registerOldDataParameter(Class<U> clazz, DataParameter<T> data, T _default, BiConsumer<? super U, ? super T> handler) {
         if (ConnectionInfo.protocol.acceptEntityData(clazz, data)) {
-            int id = getNextId(clazz);
+            int id = getNextFreeId(clazz);
             NEXT_IDS.put(clazz, id + 1);
-            ((TrackedDataAccessor) data).setId(id);
-            oldTrackedData.computeIfAbsent(clazz, k -> new ArrayList<>()).add(Pair.of(data, _default));
-            oldTrackedDataHandlers.put(data, handler);
+            ((DataParameterAccessor) data).setId(id);
+            oldDataParameter.computeIfAbsent(clazz, k -> new ArrayList<>()).add(Pair.of(data, _default));
+            oldIDataSerializers.put(data, handler);
         } else {
-            ((TrackedDataAccessor) data).setId(nextAbsentId--);
+            ((DataParameterAccessor) data).setId(nextAbsentId--);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private static int getNextId(Class<? extends Entity> clazz) {
+    private static int getNextFreeId(Class<? extends Entity> clazz) {
         Integer ret = NEXT_IDS.get(clazz);
         if (ret == null) {
-            int nextId = clazz == Entity.class ? 0 : getNextId((Class<? extends Entity>) clazz.getSuperclass());
+            int nextId = clazz == Entity.class ? 0 : getNextFreeId((Class<? extends Entity>) clazz.getSuperclass());
             NEXT_IDS.put(clazz, nextId);
             return nextId;
         }
         return ret;
     }
 
-    public static synchronized void onRegisterData(Class<? extends Entity> clazz, TrackedData<?> data) {
+    public static synchronized void onRegisterData(Class<? extends Entity> clazz, DataParameter<?> data) {
         DEFAULT_DATA.computeIfAbsent(clazz, k -> new ArrayList<>()).add(data);
         dirty = true;
     }
@@ -87,13 +87,13 @@ public class DataTrackerManager {
             reregisterAll();
     }
 
-    private static void reregisterData(Class<? extends Entity> clazz, TrackedData<?> data) {
+    private static void reregisterData(Class<? extends Entity> clazz, DataParameter<?> data) {
         if (ConnectionInfo.protocol.acceptEntityData(clazz, data)) {
-            int id = getNextId(clazz);
+            int id = getNextFreeId(clazz);
             NEXT_IDS.put(clazz, id + 1);
-            ((TrackedDataAccessor) data).setId(id);
+            ((DataParameterAccessor) data).setId(id);
         } else {
-            ((TrackedDataAccessor) data).setId(nextAbsentId--);
+            ((DataParameterAccessor) data).setId(nextAbsentId--);
         }
     }
 
@@ -104,13 +104,13 @@ public class DataTrackerManager {
     private static void reregisterAll() {
         nextAbsentId = -1;
         NEXT_IDS.clear();
-        oldTrackedData.clear();
-        oldTrackedDataHandlers.clear();
+        oldDataParameter.clear();
+        oldIDataSerializers.clear();
         Set<Class<? extends Entity>> alreadyReregistered = new HashSet<>();
         for (Class<? extends Entity> clazz : DEFAULT_DATA.keySet()) {
             reregisterDataForClass(clazz, alreadyReregistered);
         }
-        for (DataTracker tracker : trackerInstances) {
+        for (EntityDataManager tracker : trackerInstances) {
             ((IDataTracker) tracker).multiconnect_recomputeEntries();
         }
         dirty = false;
@@ -125,16 +125,16 @@ public class DataTrackerManager {
             reregisterDataForClass((Class<? extends Entity>) clazz.getSuperclass(), alreadyReregistered);
 
         if (DEFAULT_DATA.containsKey(clazz))
-            for (TrackedData<?> data : DEFAULT_DATA.get(clazz))
+            for (DataParameter<?> data : DEFAULT_DATA.get(clazz))
                 reregisterData(clazz, data);
         ConnectionInfo.protocol.postEntityDataRegister(clazz);
     }
 
-    public static synchronized void startTrackingOldTrackedData(Entity entity) {
+    public static synchronized void startTrackingOldDataParameter(Entity entity) {
         for (Class<?> clazz = entity.getClass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
-            List<Pair<TrackedData<?>, ?>> trackedData = oldTrackedData.get(clazz);
+            List<Pair<DataParameter<?>, ?>> trackedData = oldDataParameter.get(clazz);
             if (trackedData != null) {
-                for (Pair<TrackedData<?>, ?> pair : trackedData) {
+                for (Pair<DataParameter<?>, ?> pair : trackedData) {
                     doStartTracking(entity, pair.getLeft(), pair.getRight());
                 }
             }
@@ -142,19 +142,19 @@ public class DataTrackerManager {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> void doStartTracking(Entity entity, TrackedData<T> data, Object _default) {
-        entity.getDataTracker().startTracking(data, (T) _default);
+    private static <T> void doStartTracking(Entity entity, DataParameter<T> data, Object _default) {
+        entity.getDataManager().register(data, (T) _default);
     }
 
-    public static synchronized void handleOldTrackedData(Entity entity, TrackedData<?> data) {
-        data = ((IDataTracker) entity.getDataTracker()).multiconnect_getActualTrackedData(data);
-        BiConsumer<?, ?> handler = oldTrackedDataHandlers.get(data);
+    public static synchronized void handleOldDataParameter(Entity entity, DataParameter<?> data) {
+        data = ((IDataTracker) entity.getDataManager()).multiconnect_getActualDataParameter(data);
+        BiConsumer<?, ?> handler = oldIDataSerializers.get(data);
         if (handler != null)
-            doHandleTrackedData(handler, entity, entity.getDataTracker().get(data));
+            doHandleDataParameter(handler, entity, entity.getDataManager().get(data));
     }
 
     @SuppressWarnings("unchecked")
-    private static <T, U> void doHandleTrackedData(BiConsumer<U, T> handler, Entity entity, Object val) {
+    private static <T, U> void doHandleDataParameter(BiConsumer<U, T> handler, Entity entity, Object val) {
         handler.accept((U) entity, (T) val);
     }
 

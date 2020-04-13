@@ -1,17 +1,17 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.minecraft.client.particle.ParticleFactory;
-import net.minecraft.client.particle.SpriteProvider;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.particle.ParticleType;
+import net.minecraft.client.particle.IAnimatedSprite;
+import net.minecraft.client.particle.IParticleFactory;
+import net.minecraft.particles.IParticleData;
+import net.minecraft.particles.ParticleType;
 
 import java.util.function.Function;
 
 public interface IParticleManager {
 
-    <T extends ParticleEffect> void multiconnect_registerFactory(ParticleType<T> type, ParticleFactory<T> factory);
+    <T extends IParticleData> void multiconnect_registerFactory(ParticleType<T> type, IParticleFactory<T> factory);
 
-    <T extends ParticleEffect> void multiconnect_registerSpriteAwareFactory(ParticleType<T> type,
-                                                                            Function<SpriteProvider, ParticleFactory<T>> spriteAwareFactory);
+    <T extends IParticleData> void multiconnect_registerSpriteAwareFactory(ParticleType<T> type,
+                                                                            Function<IAnimatedSprite, IParticleFactory<T>> spriteAwareFactory);
 
 }

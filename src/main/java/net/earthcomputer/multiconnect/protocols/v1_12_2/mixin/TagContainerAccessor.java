@@ -1,16 +1,16 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 
-import net.minecraft.tag.Tag;
-import net.minecraft.tag.TagContainer;
-import net.minecraft.util.Identifier;
+import net.minecraft.tags.Tag;
+import net.minecraft.tags.TagCollection;
+import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Map;
 
-@Mixin(TagContainer.class)
+@Mixin(TagCollection.class)
 public interface TagContainerAccessor<T> {
 
-    @Accessor("entries")
-    void multiconnect_setEntries(Map<Identifier, Tag<T>> entries);
+    @Accessor("tagMap")
+    void multiconnect_setEntries(Map<ResourceLocation, Tag<T>> entries);
 }

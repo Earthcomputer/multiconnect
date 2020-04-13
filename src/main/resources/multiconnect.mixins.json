@@ -20,12 +20,12 @@
     "MixinEncoderHandler",
     "MixinEntity",
     "MixinIdList",
-    "MixinInt2ObjectBiMap",
+    "MixinIntIdentityHashBiMap",
     "MixinItemColors",
     "MixinItemModels",
     "MixinMinecraftClient",
     "MixinMinecraftServer",
-    "MixinNetworkState",
+    "MixinProtocolType",
     "MixinPacketHandler",
     "MixinParticleManager",
     "MixinReloadableResourceManagerImpl",
@@ -38,8 +38,8 @@
     "MixinMultiplayerScreen",
     "HandshakePacketAccessor",
     "SpawnEggItemAccessor",
-    "TrackedDataAccessor",
-    "TrackedDataHandlerRegistryAccessor"
+    "DataParameterAccessor",
+    "DataSerializersAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

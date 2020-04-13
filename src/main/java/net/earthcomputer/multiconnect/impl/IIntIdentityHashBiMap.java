@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.impl;
 
-public interface IInt2ObjectBiMap<K> {
+public interface IIntIdentityHashBiMap<K> {
 
     void multiconnect_remove(K k);
 

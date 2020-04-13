@@ -7,9 +7,10 @@ import com.mojang.brigadier.context.ParsedArgument;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.command.arguments.BlockPosArgumentType;
-import net.minecraft.command.arguments.RotationArgumentType;
-import net.minecraft.server.command.CommandSource;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.command.arguments.BlockPosArgument;
+import net.minecraft.command.arguments.RotationArgument;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +21,8 @@ public final class TPArgumentType implements ArgumentType<Custom_1_12_Argument> 
 
     private EntityArgumentType_1_12_2 victim = EntityArgumentType_1_12_2.entities().noSuggestPlayerNames();
     private EntityArgumentType_1_12_2 target = EntityArgumentType_1_12_2.oneEntity().noSuggestPlayerNames();
-    private BlockPosArgumentType blockPos = BlockPosArgumentType.blockPos();
-    private RotationArgumentType rotation = RotationArgumentType.rotation();
+    private BlockPosArgument blockPos = BlockPosArgument.blockPos();
+    private RotationArgument rotation = RotationArgument.rotation();
 
     private TPArgumentType() {
     }
@@ -107,7 +108,7 @@ public final class TPArgumentType implements ArgumentType<Custom_1_12_Argument> 
                     reader.skip();
                     isCoordinateArg(reader);
                     reader.skip();
-                    suggestions.add(CommandSource.suggestMatching(new String[] {"~", "~ ~"}, builder.createOffset(reader.getCursor())));
+                    suggestions.add(ISuggestionProvider.suggest(new String[] {"~", "~ ~"}, builder.createOffset(reader.getCursor())));
                 }
             }
         }

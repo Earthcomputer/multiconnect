@@ -1,33 +1,33 @@
 package net.earthcomputer.multiconnect.impl;
 
 import com.google.common.collect.BiMap;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Int2ObjectBiMap;
+import net.minecraft.util.IntIdentityHashBiMap;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.SimpleRegistry;
 
 import java.util.function.Consumer;
 
 public interface ISimpleRegistry<T> {
 
-    int getNextId();
+    int getNextFreeId();
 
-    void setNextId(int nextId);
+    void setNextFreeId(int nextId);
 
-    Int2ObjectBiMap<T> getIndexedEntries();
+    IntIdentityHashBiMap<T> getUnderlyingIntegerMap();
 
-    BiMap<Identifier, T> getEntries();
+    BiMap<ResourceLocation, T> getRegistryObjects();
 
-    default void register(T t, int id, Identifier name) {
+    default void register(T t, int id, ResourceLocation name) {
         register(t, id, name, true);
     }
 
-    void register(T t, int id, Identifier name, boolean sideEffects);
+    void register(T t, int id, ResourceLocation name, boolean sideEffects);
 
-    default void registerInPlace(T t, int id, Identifier name) {
+    default void registerInPlace(T t, int id, ResourceLocation name) {
         registerInPlace(t, id, name, true);
     }
 
-    void registerInPlace(T t, int id, Identifier name, boolean sideEffects);
+    void registerInPlace(T t, int id, ResourceLocation name, boolean sideEffects);
 
     default void unregister(T t) {
         unregister(t, true);

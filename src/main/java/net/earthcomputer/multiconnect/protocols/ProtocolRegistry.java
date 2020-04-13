@@ -18,7 +18,7 @@ import net.earthcomputer.multiconnect.protocols.v1_15_2.Protocol_1_15_2;
 import net.earthcomputer.multiconnect.transformer.InboundTranslator;
 import net.earthcomputer.multiconnect.transformer.OutboundTranslator;
 import net.earthcomputer.multiconnect.transformer.TranslatorRegistry;
-import net.minecraft.SharedConstants;
+import net.minecraft.util.SharedConstants;
 
 import static net.earthcomputer.multiconnect.api.Protocols.*;
 
@@ -33,7 +33,7 @@ public class ProtocolRegistry {
     }
 
     public static AbstractProtocol latest() {
-        return protocols.get(SharedConstants.getGameVersion().getProtocolVersion());
+        return protocols.get(SharedConstants.getVersion().getProtocolVersion());
     }
 
     public static TranslatorRegistry getTranslatorRegistry() {

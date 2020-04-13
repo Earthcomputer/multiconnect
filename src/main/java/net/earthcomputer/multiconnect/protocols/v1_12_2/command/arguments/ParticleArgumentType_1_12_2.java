@@ -6,10 +6,10 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.command.arguments.ParticleArgumentType;
-import net.minecraft.particle.ParticleType;
-import net.minecraft.server.command.CommandSource;
-import net.minecraft.util.Identifier;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.command.arguments.ParticleArgument;
+import net.minecraft.particles.ParticleType;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 
 import java.util.Arrays;
@@ -29,17 +29,17 @@ public class ParticleArgumentType_1_12_2 implements ArgumentType<ParticleType<?>
     @Override
     public ParticleType<?> parse(StringReader reader) throws CommandSyntaxException {
         int start = reader.getCursor();
-        Identifier id = Identifier.fromCommandInput(reader);
-        if (!Registry.PARTICLE_TYPE.containsId(id)) {
+        ResourceLocation id = ResourceLocation.read(reader);
+        if (!Registry.PARTICLE_TYPE.containsKey(id)) {
             reader.setCursor(start);
-            throw ParticleArgumentType.UNKNOWN_PARTICLE_EXCEPTION.createWithContext(reader, id);
+            throw ParticleArgument.PARTICLE_NOT_FOUND.createWithContext(reader, id);
         }
-        return Registry.PARTICLE_TYPE.get(id);
+        return Registry.PARTICLE_TYPE.getOrDefault(id);
     }
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        CommandSource.suggestIdentifiers(Registry.PARTICLE_TYPE.getIds(), builder);
+        ISuggestionProvider.suggestIterable(Registry.PARTICLE_TYPE.keySet(), builder);
         return builder.buildFuture();
     }
 

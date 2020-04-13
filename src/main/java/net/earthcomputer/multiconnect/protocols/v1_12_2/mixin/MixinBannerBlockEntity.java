@@ -3,13 +3,13 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.block.*;
-import net.minecraft.block.entity.BannerBlockEntity;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.util.DyeColor;
+import net.minecraft.item.DyeColor;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.tileentity.BannerTileEntity;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -20,10 +20,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.EnumMap;
 import java.util.Map;
 
-@Mixin(BannerBlockEntity.class)
-public class MixinBannerBlockEntity extends BlockEntity {
+@Mixin(BannerTileEntity.class)
+public class MixinBannerBlockEntity extends TileEntity {
 
-    @Shadow private ListTag patternListTag;
+    @Shadow private ListNBT patterns;
 
     @Unique private static final Map<DyeColor, Block> WALL_BANNERS_BY_COLOR = new EnumMap<>(DyeColor.class);
     static {
@@ -45,22 +45,22 @@ public class MixinBannerBlockEntity extends BlockEntity {
         WALL_BANNERS_BY_COLOR.put(DyeColor.BLACK, Blocks.BLACK_WALL_BANNER);
     }
 
-    public MixinBannerBlockEntity(BlockEntityType<?> type) {
+    public MixinBannerBlockEntity(TileEntityType<?> type) {
         super(type);
     }
 
-    @Inject(method = "fromTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/BlockEntity;fromTag(Lnet/minecraft/nbt/CompoundTag;)V", shift = At.Shift.AFTER))
-    private void readBase(CompoundTag tag, CallbackInfo ci) {
+    @Inject(method = "read", at = @At(value = "INVOKE", target = "Lnet/minecraft/tileentity/TileEntity;read(Lnet/minecraft/nbt/CompoundNBT;)V", shift = At.Shift.AFTER))
+    private void readBase(CompoundNBT tag, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             setBaseColor(DyeColor.byId(15 - tag.getInt("Base")));
         }
     }
 
-    @Inject(method = "fromTag", at = @At("RETURN"))
-    private void onFromTag(CompoundTag tag, CallbackInfo ci) {
-        for (Tag t : patternListTag) {
-            if (t instanceof CompoundTag) {
-                CompoundTag pattern = (CompoundTag) t;
+    @Inject(method = "read", at = @At("RETURN"))
+    private void onFromTag(CompoundNBT tag, CallbackInfo ci) {
+        for (INBT t : patterns) {
+            if (t instanceof CompoundNBT) {
+                CompoundNBT pattern = (CompoundNBT) t;
                 pattern.putInt("Color", 15 - pattern.getInt("Color"));
             }
         }
@@ -68,15 +68,15 @@ public class MixinBannerBlockEntity extends BlockEntity {
 
     @Unique
     private void setBaseColor(DyeColor color) {
-        BlockState state = getCachedState();
-        if (!getType().supports(state.getBlock()))
+        BlockState state = getBlockState();
+        if (!getType().isValidBlock(state.getBlock()))
             return;
 
         BlockState newState;
         if (state.getBlock() instanceof WallBannerBlock) {
-            newState = WALL_BANNERS_BY_COLOR.get(color).getDefaultState().with(WallBannerBlock.FACING, state.get(WallBannerBlock.FACING));
+            newState = WALL_BANNERS_BY_COLOR.get(color).getDefaultState().with(WallBannerBlock.HORIZONTAL_FACING, state.get(WallBannerBlock.HORIZONTAL_FACING));
         } else {
-            newState = BannerBlock.getForColor(color).getDefaultState().with(BannerBlock.ROTATION, state.get(BannerBlock.ROTATION));
+            newState = BannerBlock.forColor(color).getDefaultState().with(BannerBlock.ROTATION, state.get(BannerBlock.ROTATION));
         }
         assert world != null;
         world.setBlockState(getPos(), newState, 18);

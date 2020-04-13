@@ -2,14 +2,14 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
 
 import static net.minecraft.enchantment.Enchantments.*;
 
 public class Enchantments_1_12_2 {
 
     private static void register(ISimpleRegistry<Enchantment> registry, Enchantment enchantment, int id, String name) {
-        registry.register(enchantment, id, new Identifier(name), false);
+        registry.register(enchantment, id, new ResourceLocation(name), false);
     }
 
     public static void registerEnchantments(ISimpleRegistry<Enchantment> registry) {

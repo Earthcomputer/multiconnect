@@ -3,8 +3,8 @@ package net.earthcomputer.multiconnect.impl;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.SharedConstants;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.SharedConstants;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,7 +29,7 @@ public class OldLanguageManager {
 
     private static final Pattern ARG_PATTERN = Pattern.compile("%(\\d+\\$)?[\\d.]*[dfs]");
     private static final Pattern LANG_ASSET_PATTERN = Pattern.compile("minecraft/lang/([a-zA-Z_]+)\\.(json|lang)");
-    private static final File CACHE_DIR = new File(FabricLoader.getInstance().getConfigDirectory(), "multiconnect/caches");
+    private static final File CACHE_DIR = new File(Minecraft.getInstance().gameDir, "config/multiconnect/caches");
     private static final URL VERSION_MANIFEST = createURL("https://launchermeta.mojang.com/mc/game/version_manifest.json");
     private static final String ASSET_URL_FORMAT = "https://resources.download.minecraft.net/%s/%s";
 
@@ -51,7 +51,7 @@ public class OldLanguageManager {
             return;
 
         String currentVersion = ConnectionMode.byValue(ConnectionInfo.protocolVersion).getAssetId();
-        String latestVersion = ConnectionMode.byValue(SharedConstants.getGameVersion().getProtocolVersion()).getAssetId();
+        String latestVersion = ConnectionMode.byValue(SharedConstants.getVersion().getProtocolVersion()).getAssetId();
 
         Map<String, String> currentNative = getTranslations(currentVersion, nativeLang);
         Map<String, String> currentFallback = getTranslations(currentVersion, "en_us");

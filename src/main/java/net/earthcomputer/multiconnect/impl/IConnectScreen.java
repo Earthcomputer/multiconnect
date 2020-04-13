@@ -1,14 +1,14 @@
 package net.earthcomputer.multiconnect.impl;
 
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.network.ClientConnection;
+import net.minecraft.network.NetworkManager;
 
 public interface IConnectScreen {
 
     boolean isConnectingCancelled();
 
-    Screen getParent();
+    Screen getPreviousGuiScreen();
 
-    void multiconnect_setVersionRequestConnection(ClientConnection connection);
+    void multiconnect_setVersionRequestConnection(NetworkManager connection);
 
 }

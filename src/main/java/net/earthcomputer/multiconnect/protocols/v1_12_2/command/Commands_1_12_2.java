@@ -5,24 +5,25 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import net.minecraft.command.suggestion.SuggestionProviders;
-import net.minecraft.server.command.CommandSource;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.command.arguments.SuggestionProviders;
 
 import java.util.Set;
 import java.util.function.Consumer;
 
 public class Commands_1_12_2 {
 
-    private static void registerVanilla(CommandDispatcher<CommandSource> dispatcher,
+    private static void registerVanilla(CommandDispatcher<ISuggestionProvider> dispatcher,
                                         Set<String> serverCommands,
                                         String name,
-                                        Consumer<CommandDispatcher<CommandSource>> registerer) {
+                                        Consumer<CommandDispatcher<ISuggestionProvider>> registerer) {
         if (serverCommands == null || serverCommands.contains(name)) {
             registerer.accept(dispatcher);
         }
     }
 
-    public static void register(CommandDispatcher<CommandSource> dispatcher, Set<String> serverCommands) {
+    public static void register(CommandDispatcher<ISuggestionProvider> dispatcher, Set<String> serverCommands) {
         registerVanilla(dispatcher, serverCommands, "time", TimeCommand::register);
         registerVanilla(dispatcher, serverCommands, "gamemode", GamemodeCommand::register);
         registerVanilla(dispatcher, serverCommands, "difficulty", DifficultyCommand::register);
@@ -104,11 +105,11 @@ public class Commands_1_12_2 {
         }
     }
 
-    public static LiteralArgumentBuilder<CommandSource> literal(String name) {
+    public static LiteralArgumentBuilder<ISuggestionProvider> literal(String name) {
         return LiteralArgumentBuilder.literal(name);
     }
 
-    public static <T> RequiredArgumentBuilder<CommandSource, T> argument(String name, ArgumentType<T> type) {
+    public static <T> RequiredArgumentBuilder<ISuggestionProvider, T> argument(String name, ArgumentType<T> type) {
         return RequiredArgumentBuilder.argument(name, type);
     }
 

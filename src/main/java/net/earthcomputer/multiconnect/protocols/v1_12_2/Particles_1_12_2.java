@@ -4,37 +4,41 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import net.earthcomputer.multiconnect.impl.IParticleManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.CrackParticleAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.SuspendParticleAccessor;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.*;
-import net.minecraft.client.render.*;
-import net.minecraft.client.texture.TextureManager;
+import net.minecraft.client.renderer.ActiveRenderInfo;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
-import net.minecraft.particle.BlockStateParticleEffect;
-import net.minecraft.particle.DefaultParticleType;
-import net.minecraft.particle.ParticleType;
-import net.minecraft.util.Identifier;
+import net.minecraft.particles.BasicParticleType;
+import net.minecraft.particles.BlockParticleData;
+import net.minecraft.particles.ParticleType;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
 
-import static net.minecraft.particle.ParticleTypes.*;
+import static net.minecraft.particles.ParticleTypes.*;
 
 public class Particles_1_12_2 {
 
     private static BiMap<ParticleType<?>, String> OLD_NAMES = HashBiMap.create();
 
-    public static final DefaultParticleType DEPTH_SUSPEND = new MyParticleType(false);
-    public static final DefaultParticleType FOOTSTEP = new MyParticleType(false);
-    public static final DefaultParticleType SNOW_SHOVEL = new MyParticleType(false);
-    public static final ParticleType<BlockStateParticleEffect> BLOCK_DUST = new MyBlockStateParticleType(false);
-    public static final DefaultParticleType TAKE = new MyParticleType(false);
+    public static final BasicParticleType DEPTH_SUSPEND = new MyParticleType(false);
+    public static final BasicParticleType FOOTSTEP = new MyParticleType(false);
+    public static final BasicParticleType SNOW_SHOVEL = new MyParticleType(false);
+    public static final ParticleType<BlockParticleData> BLOCK_DUST = new MyBlockStateParticleType(false);
+    public static final BasicParticleType TAKE = new MyParticleType(false);
 
     static {
         OLD_NAMES.put(POOF, "explode");
@@ -89,7 +93,7 @@ public class Particles_1_12_2 {
     }
 
     private static void register(ISimpleRegistry<ParticleType<?>> registry, ParticleType<?> particle, int id, String name) {
-        registry.register(particle, id, new Identifier(name), false);
+        registry.register(particle, id, new ResourceLocation(name), false);
     }
 
     public static void registerParticles(ISimpleRegistry<ParticleType<?>> registry) {
@@ -152,29 +156,29 @@ public class Particles_1_12_2 {
         particleManager.multiconnect_registerFactory(BLOCK_DUST, new OldBlockDustParticle.Factory());
     }
 
-    private static class DepthSuspendFactory implements ParticleFactory<DefaultParticleType> {
-        private SpriteProvider sprite;
-        public DepthSuspendFactory(SpriteProvider sprite) {
+    private static class DepthSuspendFactory implements IParticleFactory<BasicParticleType> {
+        private IAnimatedSprite sprite;
+        public DepthSuspendFactory(IAnimatedSprite sprite) {
             this.sprite = sprite;
         }
 
         @Override
-        public Particle createParticle(DefaultParticleType type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
-            SuspendParticle particle = SuspendParticleAccessor.constructor(world, x, y, z, xSpeed, ySpeed, zSpeed);
-            particle.setSprite(sprite);
+        public Particle makeParticle(BasicParticleType type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+            SuspendedTownParticle particle = SuspendParticleAccessor.constructor(world, x, y, z, xSpeed, ySpeed, zSpeed);
+            particle.selectSpriteRandomly(sprite);
             return particle;
         }
     }
 
-    private static class SnowShovelFactory implements ParticleFactory<DefaultParticleType> {
+    private static class SnowShovelFactory implements IParticleFactory<BasicParticleType> {
         @Override
-        public Particle createParticle(DefaultParticleType type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+        public Particle makeParticle(BasicParticleType type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
             return CrackParticleAccessor.constructor(world, x, y, z, xSpeed, ySpeed, zSpeed, new ItemStack(Blocks.SNOW_BLOCK));
         }
     }
 
     public static class FootprintParticle extends Particle {
-        private static final Identifier FOOTPRINT_TEXTURE = new Identifier("textures/particle/footprint.png");
+        private static final ResourceLocation FOOTPRINT_TEXTURE = new ResourceLocation("textures/particle/footprint.png");
         private int ticks;
         private final int maxTicks = 200;
         private final TextureManager textureManager;
@@ -182,14 +186,14 @@ public class Particles_1_12_2 {
         private FootprintParticle(TextureManager textureManager, World world, double x, double y, double z) {
             super(world, x, y, z, 0, 0, 0);
             this.textureManager = textureManager;
-            this.velocityX = 0;
-            this.velocityY = 0;
-            this.velocityZ = 0;
+            this.motionX = 0;
+            this.motionY = 0;
+            this.motionZ = 0;
         }
 
         @SuppressWarnings("deprecation")
         @Override
-        public void buildGeometry(VertexConsumer vc, Camera camera, float delta) {
+        public void renderParticle(IVertexBuilder vc, ActiveRenderInfo camera, float delta) {
             if (!(vc instanceof BufferBuilder)) return;
 
             float alpha = (ticks + delta) / maxTicks;
@@ -201,19 +205,19 @@ public class Particles_1_12_2 {
 
             RenderSystem.disableLighting();
             final float radius = 0.125f;
-            Vec3d cameraPos = camera.getPos();
-            float x = (float) (this.x - cameraPos.getX());
-            float y = (float) (this.y - cameraPos.getY());
-            float z = (float) (this.z - cameraPos.getZ());
-            float light = world.getBrightness(new BlockPos(this.x, this.y, this.z));
+            Vec3d cameraPos = camera.getProjectedView();
+            float x = (float) (this.posX - cameraPos.getX());
+            float y = (float) (this.posY - cameraPos.getY());
+            float z = (float) (this.posZ - cameraPos.getZ());
+            float light = world.getBrightness(new BlockPos(this.posX, this.posY, this.posZ));
             textureManager.bindTexture(FOOTPRINT_TEXTURE);
             RenderSystem.enableBlend();
-            RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
-            ((BufferBuilder) vc).begin(GL11.GL_QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
-            vc.vertex(x - radius, y, z + radius).texture(0, 1).color(light, light, light, alpha).next();
-            vc.vertex(x + radius, y, z + radius).texture(1, 1).color(light, light, light, alpha).next();
-            vc.vertex(x + radius, y, z - radius).texture(1, 0).color(light, light, light, alpha).next();
-            vc.vertex(x - radius, y, z - radius).texture(0, 0).color(light, light, light, alpha).next();
+            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+            ((BufferBuilder) vc).begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+            vc.pos(x - radius, y, z + radius).tex(0, 1).color(light, light, light, alpha).endVertex();
+            vc.pos(x + radius, y, z + radius).tex(1, 1).color(light, light, light, alpha).endVertex();
+            vc.pos(x + radius, y, z - radius).tex(1, 0).color(light, light, light, alpha).endVertex();
+            vc.pos(x - radius, y, z - radius).tex(0, 0).color(light, light, light, alpha).endVertex();
             Tessellator.getInstance().draw();
             RenderSystem.disableBlend();
             RenderSystem.enableLighting();
@@ -223,35 +227,35 @@ public class Particles_1_12_2 {
         public void tick() {
             ticks++;
             if (ticks == maxTicks)
-                markDead();
+                setExpired();
         }
 
         @Override
-        public ParticleTextureSheet getType() {
-            return ParticleTextureSheet.CUSTOM;
+        public IParticleRenderType getRenderType() {
+            return IParticleRenderType.CUSTOM;
         }
 
-        public static class Factory implements ParticleFactory<DefaultParticleType> {
+        public static class Factory implements IParticleFactory<BasicParticleType> {
             @Override
-            public Particle createParticle(DefaultParticleType type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
-                return new FootprintParticle(MinecraftClient.getInstance().getTextureManager(), world, x, y, z);
+            public Particle makeParticle(BasicParticleType type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+                return new FootprintParticle(Minecraft.getInstance().getTextureManager(), world, x, y, z);
             }
         }
     }
 
-    private static class OldBlockDustParticle extends BlockDustParticle {
+    private static class OldBlockDustParticle extends DiggingParticle {
 
         public OldBlockDustParticle(World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, BlockState state) {
             super(world, x, y, z, xSpeed, ySpeed, zSpeed, state);
-            velocityX = xSpeed;
-            velocityY = ySpeed;
-            velocityZ = zSpeed;
+            motionX = xSpeed;
+            motionY = ySpeed;
+            motionZ = zSpeed;
         }
 
-        public static class Factory implements ParticleFactory<BlockStateParticleEffect> {
+        public static class Factory implements IParticleFactory<BlockParticleData> {
 
             @Override
-            public Particle createParticle(BlockStateParticleEffect type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+            public Particle makeParticle(BlockParticleData type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
                 return new OldBlockDustParticle(world, x, y, z, xSpeed, ySpeed, zSpeed, type.getBlockState());
             }
         }

@@ -1,19 +1,19 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.minecraft.network.Packet;
-import net.minecraft.network.listener.PacketListener;
+import net.minecraft.network.INetHandler;
+import net.minecraft.network.IPacket;
 
 import java.util.List;
 import java.util.function.Supplier;
 
-public interface IPacketHandler<T extends PacketListener> {
+public interface IPacketHandler<T extends INetHandler> {
 
     void multiconnect_clear();
 
-    <P extends Packet<T>> IPacketHandler<T> multiconnect_register(Class<P> clazz, Supplier<P> factory);
+    <P extends IPacket<T>> IPacketHandler<T> multiconnect_register(Class<P> clazz, Supplier<P> factory);
 
-    Class<? extends Packet<T>> multiconnect_getPacketClassById(int id);
+    Class<? extends IPacket<T>> multiconnect_getPacketClassById(int id);
 
-    List<PacketInfo<? extends Packet<T>>> multiconnect_values();
+    List<PacketInfo<? extends IPacket<T>>> multiconnect_values();
 
 }

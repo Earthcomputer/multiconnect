@@ -13,59 +13,59 @@ import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ZombieEntityAccessor;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.enums.WallMountLocation;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.packet.*;
-import net.minecraft.datafixer.fix.BlockStateFlattening;
-import net.minecraft.datafixer.fix.EntityTheRenameningBlock;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.network.play.ClientPlayNetHandler;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandler;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.decoration.painting.PaintingMotive;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.item.BoatEntity;
+import net.minecraft.entity.item.PaintingType;
+import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
+import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.entity.passive.WolfEntity;
-import net.minecraft.entity.vehicle.AbstractMinecartEntity;
-import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.map.MapIcon;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Packet;
-import net.minecraft.particle.*;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.IDataSerializer;
+import net.minecraft.network.play.client.*;
+import net.minecraft.network.play.server.*;
+import net.minecraft.particles.*;
+import net.minecraft.potion.Effect;
+import net.minecraft.potion.Effects;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
-import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.server.network.packet.*;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.stat.StatType;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.Properties;
-import net.minecraft.state.property.Property;
-import net.minecraft.tag.*;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.PacketByteBuf;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
+import net.minecraft.scoreboard.ScoreCriteria;
+import net.minecraft.state.IProperty;
+import net.minecraft.state.StateContainer;
+import net.minecraft.state.properties.AttachFace;
+import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.stats.StatType;
+import net.minecraft.tags.*;
+import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.util.datafix.fixes.BlockStateFlatteningMap;
+import net.minecraft.util.datafix.fixes.EntityRenaming1510;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.storage.MapDecoration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -79,48 +79,48 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final Map<String, PaintingMotive> OLD_MOTIVE_NAMES = new HashMap<>();
+    private static final Map<String, PaintingType> OLD_MOTIVE_NAMES = new HashMap<>();
     static {
-        OLD_MOTIVE_NAMES.put("Kebab", PaintingMotive.KEBAB);
-        OLD_MOTIVE_NAMES.put("Aztec", PaintingMotive.AZTEC);
-        OLD_MOTIVE_NAMES.put("Alban", PaintingMotive.ALBAN);
-        OLD_MOTIVE_NAMES.put("Aztec2", PaintingMotive.AZTEC2);
-        OLD_MOTIVE_NAMES.put("Bomb", PaintingMotive.BOMB);
-        OLD_MOTIVE_NAMES.put("Plant", PaintingMotive.PLANT);
-        OLD_MOTIVE_NAMES.put("Wasteland", PaintingMotive.WASTELAND);
-        OLD_MOTIVE_NAMES.put("Pool", PaintingMotive.POOL);
-        OLD_MOTIVE_NAMES.put("Courbet", PaintingMotive.COURBET);
-        OLD_MOTIVE_NAMES.put("Sea", PaintingMotive.SEA);
-        OLD_MOTIVE_NAMES.put("Sunset", PaintingMotive.SUNSET);
-        OLD_MOTIVE_NAMES.put("Creebet", PaintingMotive.CREEBET);
-        OLD_MOTIVE_NAMES.put("Wanderer", PaintingMotive.WANDERER);
-        OLD_MOTIVE_NAMES.put("Graham", PaintingMotive.GRAHAM);
-        OLD_MOTIVE_NAMES.put("Match", PaintingMotive.MATCH);
-        OLD_MOTIVE_NAMES.put("Bust", PaintingMotive.BUST);
-        OLD_MOTIVE_NAMES.put("Stage", PaintingMotive.STAGE);
-        OLD_MOTIVE_NAMES.put("Void", PaintingMotive.VOID);
-        OLD_MOTIVE_NAMES.put("SkullAndRoses", PaintingMotive.SKULL_AND_ROSES);
-        OLD_MOTIVE_NAMES.put("Wither", PaintingMotive.WITHER);
-        OLD_MOTIVE_NAMES.put("Fighters", PaintingMotive.FIGHTERS);
-        OLD_MOTIVE_NAMES.put("Pointer", PaintingMotive.POINTER);
-        OLD_MOTIVE_NAMES.put("Pigscene", PaintingMotive.PIGSCENE);
-        OLD_MOTIVE_NAMES.put("BurningSkull", PaintingMotive.BURNING_SKULL);
-        OLD_MOTIVE_NAMES.put("Skeleton", PaintingMotive.SKELETON);
-        OLD_MOTIVE_NAMES.put("DonkeyKong", PaintingMotive.DONKEY_KONG);
+        OLD_MOTIVE_NAMES.put("Kebab", PaintingType.KEBAB);
+        OLD_MOTIVE_NAMES.put("Aztec", PaintingType.AZTEC);
+        OLD_MOTIVE_NAMES.put("Alban", PaintingType.ALBAN);
+        OLD_MOTIVE_NAMES.put("Aztec2", PaintingType.AZTEC2);
+        OLD_MOTIVE_NAMES.put("Bomb", PaintingType.BOMB);
+        OLD_MOTIVE_NAMES.put("Plant", PaintingType.PLANT);
+        OLD_MOTIVE_NAMES.put("Wasteland", PaintingType.WASTELAND);
+        OLD_MOTIVE_NAMES.put("Pool", PaintingType.POOL);
+        OLD_MOTIVE_NAMES.put("Courbet", PaintingType.COURBET);
+        OLD_MOTIVE_NAMES.put("Sea", PaintingType.SEA);
+        OLD_MOTIVE_NAMES.put("Sunset", PaintingType.SUNSET);
+        OLD_MOTIVE_NAMES.put("Creebet", PaintingType.CREEBET);
+        OLD_MOTIVE_NAMES.put("Wanderer", PaintingType.WANDERER);
+        OLD_MOTIVE_NAMES.put("Graham", PaintingType.GRAHAM);
+        OLD_MOTIVE_NAMES.put("Match", PaintingType.MATCH);
+        OLD_MOTIVE_NAMES.put("Bust", PaintingType.BUST);
+        OLD_MOTIVE_NAMES.put("Stage", PaintingType.STAGE);
+        OLD_MOTIVE_NAMES.put("Void", PaintingType.VOID);
+        OLD_MOTIVE_NAMES.put("SkullAndRoses", PaintingType.SKULL_AND_ROSES);
+        OLD_MOTIVE_NAMES.put("Wither", PaintingType.WITHER);
+        OLD_MOTIVE_NAMES.put("Fighters", PaintingType.FIGHTERS);
+        OLD_MOTIVE_NAMES.put("Pointer", PaintingType.POINTER);
+        OLD_MOTIVE_NAMES.put("Pigscene", PaintingType.PIGSCENE);
+        OLD_MOTIVE_NAMES.put("BurningSkull", PaintingType.BURNING_SKULL);
+        OLD_MOTIVE_NAMES.put("Skeleton", PaintingType.SKELETON);
+        OLD_MOTIVE_NAMES.put("DonkeyKong", PaintingType.DONKEY_KONG);
     }
 
     private static final Pattern NON_IDENTIFIER_CHARS = Pattern.compile("[^a-z0-9/._\\-]");
 
-    private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_ID = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM1 = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM2 = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<String> OLD_CUSTOM_NAME = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.STRING);
-    private static final TrackedData<Integer> OLD_MINECART_DISPLAY_TILE = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> OLD_WOLF_COLLAR_COLOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    private static final DataParameter<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_ID = DataTrackerManager.createOldDataParameter(DataSerializers.VARINT);
+    private static final DataParameter<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM1 = DataTrackerManager.createOldDataParameter(DataSerializers.VARINT);
+    private static final DataParameter<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM2 = DataTrackerManager.createOldDataParameter(DataSerializers.VARINT);
+    private static final DataParameter<String> OLD_CUSTOM_NAME = DataTrackerManager.createOldDataParameter(DataSerializers.STRING);
+    private static final DataParameter<Integer> OLD_MINECART_DISPLAY_TILE = DataTrackerManager.createOldDataParameter(DataSerializers.VARINT);
+    private static final DataParameter<Integer> OLD_WOLF_COLLAR_COLOR = DataTrackerManager.createOldDataParameter(DataSerializers.VARINT);
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            int verticalStripBitmask = CurrentChunkDataPacket.get().getVerticalStripBitmask();
+            int verticalStripBitmask = CurrentChunkDataPacket.get().getAvailableSections();
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
@@ -137,8 +137,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                     }
                     buf.readLongArray(new long[paletteSize * 64]); // chunk data
                     buf.readBytes(new byte[16 * 16 * 16 / 2]); // block light
-                    assert MinecraftClient.getInstance().world != null;
-                    if (MinecraftClient.getInstance().world.dimension.hasSkyLight())
+                    assert Minecraft.getInstance().world != null;
+                    if (Minecraft.getInstance().world.dimension.hasSkyLight())
                         buf.readBytes(new byte[16 * 16 * 16 / 2]); // sky light
                 }
             }
@@ -151,28 +151,28 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(CustomPayloadS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SCustomPayloadPlayPacket.class, buf -> {
             String channel = buf.readString();
-            Identifier newChannel;
+            ResourceLocation newChannel;
             if ("MC|Brand".equals(channel)) {
-                newChannel = CustomPayloadS2CPacket.BRAND;
+                newChannel = SCustomPayloadPlayPacket.BRAND;
             } else if ("MC|TrList".equals(channel)) {
                 newChannel = Protocol_1_13_2.CUSTOM_PAYLOAD_TRADE_LIST;
             } else if ("MC|BOpen".equals(channel)) {
                 newChannel = Protocol_1_13_2.CUSTOM_PAYLOAD_OPEN_BOOK;
             } else {
-                newChannel = new Identifier(NON_IDENTIFIER_CHARS.matcher(channel.toLowerCase(Locale.ENGLISH)).replaceAll("_"));
+                newChannel = new ResourceLocation(NON_IDENTIFIER_CHARS.matcher(channel.toLowerCase(Locale.ENGLISH)).replaceAll("_"));
             }
-            buf.pendingRead(Identifier.class, newChannel);
+            buf.pendingRead(ResourceLocation.class, newChannel);
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(PlaySoundIdS2CPacket.class, buf -> {
-            buf.pendingRead(Identifier.class, new Identifier(buf.readString(256)));
+        ProtocolRegistry.registerInboundTranslator(SPlaySoundPacket.class, buf -> {
+            buf.pendingRead(ResourceLocation.class, new ResourceLocation(buf.readString(256)));
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(MapUpdateS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SMapDataPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt(); // map id
             buf.readByte(); // map scale
@@ -181,7 +181,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.disablePassthroughMode();
             for (int i = 0; i < iconCount; i++) {
                 int metadata = buf.readByte();
-                buf.pendingRead(MapIcon.Type.class, MapIcon.Type.byId((byte) ((metadata >> 4) & 15)));
+                buf.pendingRead(MapDecoration.Type.class, MapDecoration.Type.byIcon((byte) ((metadata >> 4) & 15)));
                 buf.enablePassthroughMode();
                 buf.readByte(); // icon x
                 buf.readByte(); // icon y
@@ -192,9 +192,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(ParticleS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SSpawnParticlePacket.class, buf -> {
             buf.enablePassthroughMode();
-            ParticleType<?> particleType = Registry.PARTICLE_TYPE.get(buf.readInt());
+            ParticleType<?> particleType = Registry.PARTICLE_TYPE.getByValue(buf.readInt());
             if (particleType != ParticleTypes.ITEM && particleType != ParticleTypes.DUST) {
                 buf.disablePassthroughMode();
                 buf.applyPendingReads();
@@ -223,7 +223,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.readInt(); // count
             buf.disablePassthroughMode();
             if (particleType == ParticleTypes.ITEM) {
-                Item item = Registry.ITEM.get(buf.readVarInt());
+                Item item = Registry.ITEM.getByValue(buf.readVarInt());
                 int meta = buf.readVarInt();
                 ItemStack stack = Items_1_12_2.oldItemStackToNew(new ItemStack(item), meta);
                 buf.pendingRead(ItemStack.class, stack);
@@ -236,17 +236,17 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(CraftFailedResponseS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SPlaceGhostRecipePacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readByte(); // sync id
             buf.disablePassthroughMode();
-            buf.pendingRead(Identifier.class, new Identifier(String.valueOf(buf.readVarInt())));
+            buf.pendingRead(ResourceLocation.class, new ResourceLocation(String.valueOf(buf.readVarInt())));
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(UnlockRecipesS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SRecipeBookPacket.class, buf -> {
             buf.enablePassthroughMode();
-            UnlockRecipesS2CPacket.Action action = buf.readEnumConstant(UnlockRecipesS2CPacket.Action.class);
+            SRecipeBookPacket.State action = buf.readEnumValue(SRecipeBookPacket.State.class);
             buf.readBoolean(); // gui open
             buf.readBoolean(); // filtering craftable
             buf.pendingRead(Boolean.class, false); // furnace gui open
@@ -254,61 +254,61 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             int idChangeCount = buf.readVarInt();
             buf.disablePassthroughMode();
             for (int i = 0; i < idChangeCount; i++) {
-                buf.pendingRead(Identifier.class, new Identifier(String.valueOf(buf.readVarInt())));
+                buf.pendingRead(ResourceLocation.class, new ResourceLocation(String.valueOf(buf.readVarInt())));
             }
-            if (action == UnlockRecipesS2CPacket.Action.INIT) {
+            if (action == SRecipeBookPacket.State.INIT) {
                 buf.enablePassthroughMode();
                 int idInitCount = buf.readVarInt();
                 buf.disablePassthroughMode();
                 for (int i = 0; i < idInitCount; i++) {
-                    buf.pendingRead(Identifier.class, new Identifier(String.valueOf(buf.readVarInt())));
+                    buf.pendingRead(ResourceLocation.class, new ResourceLocation(String.valueOf(buf.readVarInt())));
                 }
             }
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(ScoreboardObjectiveUpdateS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SScoreboardObjectivePacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readString(16); // name
             int mode = buf.readByte();
             buf.disablePassthroughMode();
             if (mode == 0 || mode == 2) {
-                buf.pendingRead(Text.class, new LiteralText(buf.readString(32))); // display name
+                buf.pendingRead(ITextComponent.class, new StringTextComponent(buf.readString(32))); // display name
                 String renderTypeName = buf.readString(16);
-                ScoreboardCriterion.RenderType renderType = "hearts".equals(renderTypeName) ? ScoreboardCriterion.RenderType.HEARTS : ScoreboardCriterion.RenderType.INTEGER;
-                buf.pendingRead(ScoreboardCriterion.RenderType.class, renderType);
+                ScoreCriteria.RenderType renderType = "hearts".equals(renderTypeName) ? ScoreCriteria.RenderType.HEARTS : ScoreCriteria.RenderType.INTEGER;
+                buf.pendingRead(ScoreCriteria.RenderType.class, renderType);
             }
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(PaintingSpawnS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SSpawnPaintingPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt(); // id
-            buf.readUuid(); // uuid
+            buf.readUniqueId(); // uuid
             buf.disablePassthroughMode();
-            PaintingMotive motive = OLD_MOTIVE_NAMES.getOrDefault(buf.readString(13), PaintingMotive.KEBAB);
-            buf.pendingRead(VarInt.class, new VarInt(Registry.MOTIVE.getRawId(motive)));
+            PaintingType motive = OLD_MOTIVE_NAMES.getOrDefault(buf.readString(13), PaintingType.KEBAB);
+            buf.pendingRead(VarInt.class, new VarInt(Registry.MOTIVE.getId(motive)));
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(StatisticsS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SStatisticsPacket.class, buf -> {
             int count = buf.readVarInt();
             List<Pair<StatType<?>, Integer>> stats = new ArrayList<>(count);
             for (int i = 0; i < count; i++) {
-                Identifier stat = new Identifier(buf.readString(32767));
+                ResourceLocation stat = new ResourceLocation(buf.readString(32767));
                 int value = buf.readVarInt();
-                if (Registry.STAT_TYPE.containsId(stat))
-                    stats.add(Pair.of(Registry.STAT_TYPE.get(stat), value));
+                if (Registry.STATS.containsKey(stat))
+                    stats.add(Pair.of(Registry.STATS.getOrDefault(stat), value));
             }
             buf.pendingRead(VarInt.class, new VarInt(stats.size()));
             for (Pair<StatType<?>, Integer> stat : stats) {
-                buf.pendingRead(VarInt.class, new VarInt(Registry.STAT_TYPE.getRawId(stat.getLeft())));
+                buf.pendingRead(VarInt.class, new VarInt(Registry.STATS.getId(stat.getLeft())));
                 buf.pendingRead(VarInt.class, new VarInt(stat.getRight()));
             }
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(CommandSuggestionsS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(STabCompletePacket.class, buf -> {
             TabCompletionManager.Entry entry = TabCompletionManager.nextEntry();
             if (entry == null) {
                 LOGGER.error("Received unrequested tab completion packet");
@@ -340,44 +340,44 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(TeamS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(STeamsPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readString(16); // team name
             int mode = buf.readByte();
             buf.disablePassthroughMode();
             if (mode == 0 || mode == 2) {
-                buf.pendingRead(Text.class, new LiteralText(buf.readString(32))); // display name
-                LiteralText prefix = new LiteralText(buf.readString(16));
-                LiteralText suffix = new LiteralText(buf.readString(16));
+                buf.pendingRead(ITextComponent.class, new StringTextComponent(buf.readString(32))); // display name
+                StringTextComponent prefix = new StringTextComponent(buf.readString(16));
+                StringTextComponent suffix = new StringTextComponent(buf.readString(16));
                 buf.enablePassthroughMode();
                 buf.readByte(); // flags
                 buf.readString(32); // name tag visibility rule
                 buf.readString(32); // collision rule
                 buf.disablePassthroughMode();
-                Formatting color = Formatting.byColorIndex(buf.readByte());
-                buf.pendingRead(Formatting.class, color);
-                buf.pendingRead(Text.class, prefix);
-                buf.pendingRead(Text.class, suffix);
+                TextFormatting color = TextFormatting.fromColorIndex(buf.readByte());
+                buf.pendingRead(TextFormatting.class, color);
+                buf.pendingRead(ITextComponent.class, prefix);
+                buf.pendingRead(ITextComponent.class, suffix);
             }
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(BossBarS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SUpdateBossInfoPacket.class, buf -> {
             buf.enablePassthroughMode();
-            buf.readUuid(); // uuid
-            BossBarS2CPacket.Type type = buf.readEnumConstant(BossBarS2CPacket.Type.class);
+            buf.readUniqueId(); // uuid
+            SUpdateBossInfoPacket.Operation type = buf.readEnumValue(SUpdateBossInfoPacket.Operation.class);
             buf.disablePassthroughMode();
-            if (type == BossBarS2CPacket.Type.UPDATE_PROPERTIES) {
+            if (type == SUpdateBossInfoPacket.Operation.UPDATE_PROPERTIES) {
                 int flags = buf.readUnsignedByte();
                 buf.pendingRead(UnsignedByte.class, new UnsignedByte((short) (flags | ((flags & 2) << 1)))); // copy bit 2 to 4
             }
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(EntitySpawnS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SSpawnObjectPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt(); // entity id
-            buf.readUuid(); // uuid
+            buf.readUniqueId(); // uuid
             int type = buf.readByte();
             if (type != 70) { // falling block
                 buf.disablePassthroughMode();
@@ -405,13 +405,13 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 }
                 byte count = buf.readByte();
                 short meta = buf.readShort();
-                CompoundTag tag = buf.readCompoundTag();
+                CompoundNBT tag = buf.readCompoundTag();
                 if (tag == null)
-                    tag = new CompoundTag();
+                    tag = new CompoundNBT();
                 tag.putShort("Damage", meta);
                 buf.pendingRead(Short.class, itemId);
                 buf.pendingRead(Byte.class, count);
-                buf.pendingRead(CompoundTag.class, tag);
+                buf.pendingRead(CompoundNBT.class, tag);
                 buf.applyPendingReads();
             }
 
@@ -429,9 +429,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             }
         });
 
-        ProtocolRegistry.registerOutboundTranslator(CraftRequestC2SPacket.class, buf -> {
+        ProtocolRegistry.registerOutboundTranslator(CPlaceRecipePacket.class, buf -> {
             buf.passthroughWrite(Byte.class); // sync id
-            Supplier<Identifier> recipeId = buf.skipWrite(Identifier.class);
+            Supplier<ResourceLocation> recipeId = buf.skipWrite(ResourceLocation.class);
             buf.pendingWrite(VarInt.class, () -> {
                 try {
                     return new VarInt(Integer.parseInt(recipeId.get().getPath()));
@@ -441,11 +441,11 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             }, val -> buf.writeVarInt(val.get()));
         });
 
-        ProtocolRegistry.registerOutboundTranslator(RecipeBookDataC2SPacket.class, buf -> {
-            Supplier<RecipeBookDataC2SPacket.Mode> mode = buf.passthroughWrite(RecipeBookDataC2SPacket.Mode.class);
+        ProtocolRegistry.registerOutboundTranslator(CRecipeInfoPacket.class, buf -> {
+            Supplier<CRecipeInfoPacket.Purpose> mode = buf.passthroughWrite(CRecipeInfoPacket.Purpose.class);
             buf.whenWrite(() -> {
-                if (mode.get() == RecipeBookDataC2SPacket.Mode.SHOWN) {
-                    Supplier<Identifier> recipeId = buf.skipWrite(Identifier.class);
+                if (mode.get() == CRecipeInfoPacket.Purpose.SHOWN) {
+                    Supplier<ResourceLocation> recipeId = buf.skipWrite(ResourceLocation.class);
                     buf.pendingWrite(Integer.class, () -> {
                         try {
                             return Integer.parseInt(recipeId.get().getPath());
@@ -453,7 +453,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                             return 0;
                         }
                     }, buf::writeInt);
-                } else if (mode.get() == RecipeBookDataC2SPacket.Mode.SETTINGS) {
+                } else if (mode.get() == CRecipeInfoPacket.Purpose.SETTINGS) {
                     buf.passthroughWrite(Boolean.class); // is gui open
                     buf.passthroughWrite(Boolean.class); // filtering craftable
                     buf.skipWrite(Boolean.class); // furnace gui open
@@ -462,18 +462,18 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             });
         });
 
-        ProtocolRegistry.registerOutboundTranslator(RequestCommandCompletionsC2SPacket.class, buf -> {
+        ProtocolRegistry.registerOutboundTranslator(CTabCompletePacket.class, buf -> {
             Supplier<VarInt> completionId = buf.skipWrite(VarInt.class);
             Supplier<String> command = buf.skipWrite(String.class);
 
             buf.whenWrite(() -> TabCompletionManager.addTabCompletionRequest(completionId.get().get(), command.get()));
             buf.pendingWrite(String.class, command, val -> buf.writeString(val, 32767));
-            HitResult hitResult = MinecraftClient.getInstance().crosshairTarget;
-            boolean hasTarget = hitResult != null && hitResult.getType() == HitResult.Type.BLOCK;
+            RayTraceResult hitResult = Minecraft.getInstance().objectMouseOver;
+            boolean hasTarget = hitResult != null && hitResult.getType() == RayTraceResult.Type.BLOCK;
             buf.pendingWrite(Boolean.class, () -> false, buf::writeBoolean);
             buf.pendingWrite(Boolean.class, () -> hasTarget, buf::writeBoolean);
             if (hasTarget)
-                buf.pendingWrite(BlockPos.class, ((BlockHitResult) hitResult)::getBlockPos, buf::writeBlockPos);
+                buf.pendingWrite(BlockPos.class, ((BlockRayTraceResult) hitResult)::getPos, buf::writeBlockPos);
         });
 
         ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<ItemStack>() {
@@ -485,15 +485,15 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                         buf.pendingWrite(Short.class, itemId, (Consumer<Short>) buf::writeShort);
                     } else {
                         Supplier<Byte> count = buf.skipWrite(Byte.class);
-                        Supplier<CompoundTag> tag = buf.skipWrite(CompoundTag.class);
+                        Supplier<CompoundNBT> tag = buf.skipWrite(CompoundNBT.class);
                         buf.whenWrite(() -> {
-                            CompoundTag oldTag = tag.get();
+                            CompoundNBT oldTag = tag.get();
                             int meta = oldTag.getInt("Damage");
                             oldTag.remove("Damage");
                             buf.pendingWrite(Short.class, itemId, (Consumer<Short>) buf::writeShort);
                             buf.pendingWrite(Byte.class, count, (Consumer<Byte>) buf::writeByte);
                             buf.pendingWrite(Short.class, () -> (short) meta, (Consumer<Short>) buf::writeShort);
-                            buf.pendingWrite(CompoundTag.class, () -> oldTag.isEmpty() ? null : oldTag, buf::writeCompoundTag);
+                            buf.pendingWrite(CompoundNBT.class, () -> oldTag.isEmpty() ? null : oldTag, buf::writeCompoundTag);
                         });
                     }
                 });
@@ -518,104 +518,104 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
-        remove(packets, CommandSuggestionsS2CPacket.class);
-        insertAfter(packets, DifficultyS2CPacket.class, PacketInfo.of(CommandSuggestionsS2CPacket.class, CommandSuggestionsS2CPacket::new));
-        remove(packets, CommandTreeS2CPacket.class);
-        remove(packets, TagQueryResponseS2CPacket.class);
-        remove(packets, LookAtS2CPacket.class);
-        remove(packets, StopSoundS2CPacket.class);
-        remove(packets, SynchronizeRecipesS2CPacket.class);
-        remove(packets, SynchronizeTagsS2CPacket.class);
+        remove(packets, STabCompletePacket.class);
+        insertAfter(packets, SServerDifficultyPacket.class, PacketInfo.of(STabCompletePacket.class, STabCompletePacket::new));
+        remove(packets, SCommandListPacket.class);
+        remove(packets, SQueryNBTResponsePacket.class);
+        remove(packets, SPlayerLookPacket.class);
+        remove(packets, SStopSoundPacket.class);
+        remove(packets, SUpdateRecipesPacket.class);
+        remove(packets, STagsListPacket.class);
         return packets;
     }
 
     @Override
     public List<PacketInfo<?>> getServerboundPackets() {
         List<PacketInfo<?>> packets = super.getServerboundPackets();
-        remove(packets, RequestCommandCompletionsC2SPacket.class);
-        insertAfter(packets, TeleportConfirmC2SPacket.class, PacketInfo.of(RequestCommandCompletionsC2SPacket.class, RequestCommandCompletionsC2SPacket::new));
-        remove(packets, QueryBlockNbtC2SPacket.class);
-        remove(packets, BookUpdateC2SPacket.class);
-        remove(packets, QueryEntityNbtC2SPacket.class);
-        remove(packets, PickFromInventoryC2SPacket.class);
-        remove(packets, RenameItemC2SPacket.class);
-        remove(packets, SelectVillagerTradeC2SPacket.class);
-        remove(packets, UpdateBeaconC2SPacket.class);
-        remove(packets, UpdateCommandBlockC2SPacket.class);
-        remove(packets, UpdateCommandBlockMinecartC2SPacket.class);
-        remove(packets, UpdateStructureBlockC2SPacket.class);
-        remove(packets, CustomPayloadC2SPacket.class);
-        insertAfter(packets, GuiCloseC2SPacket.class, PacketInfo.of(CustomPayloadC2SPacket_1_12_2.class, CustomPayloadC2SPacket_1_12_2::new));
+        remove(packets, CTabCompletePacket.class);
+        insertAfter(packets, CConfirmTeleportPacket.class, PacketInfo.of(CTabCompletePacket.class, CTabCompletePacket::new));
+        remove(packets, CQueryTileEntityNBTPacket.class);
+        remove(packets, CEditBookPacket.class);
+        remove(packets, CQueryEntityNBTPacket.class);
+        remove(packets, CPickItemPacket.class);
+        remove(packets, CRenameItemPacket.class);
+        remove(packets, CSelectTradePacket.class);
+        remove(packets, CUpdateBeaconPacket.class);
+        remove(packets, CUpdateCommandBlockPacket.class);
+        remove(packets, CUpdateMinecartCommandBlockPacket.class);
+        remove(packets, CUpdateStructureBlockPacket.class);
+        remove(packets, CCustomPayloadPacket.class);
+        insertAfter(packets, CCloseWindowPacket.class, PacketInfo.of(CustomPayloadC2SPacket_1_12_2.class, CustomPayloadC2SPacket_1_12_2::new));
         return packets;
     }
 
     @Override
-    public boolean onSendPacket(Packet<?> packet) {
+    public boolean onSendPacket(IPacket<?> packet) {
         if (!super.onSendPacket(packet))
             return false;
-        if (packet.getClass() == QueryBlockNbtC2SPacket.class || packet.getClass() == QueryEntityNbtC2SPacket.class) {
+        if (packet.getClass() == CQueryTileEntityNBTPacket.class || packet.getClass() == CQueryEntityNBTPacket.class) {
             return false;
         }
-        ClientPlayNetworkHandler connection = MinecraftClient.getInstance().getNetworkHandler();
-        if (packet.getClass() == CustomPayloadC2SPacket.class) {
+        ClientPlayNetHandler connection = Minecraft.getInstance().getConnection();
+        if (packet.getClass() == CCustomPayloadPacket.class) {
             assert connection != null;
             CustomPayloadC2SAccessor customPayload = (CustomPayloadC2SAccessor) packet;
             String channel;
-            if (customPayload.multiconnect_getChannel().equals(CustomPayloadC2SPacket.BRAND))
+            if (customPayload.multiconnect_getChannel().equals(CCustomPayloadPacket.BRAND))
                 channel = "MC|Brand";
             else
                 channel = customPayload.multiconnect_getChannel().toString();
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(channel, customPayload.multiconnect_getData()));
             return false;
         }
-        if (packet.getClass() == BookUpdateC2SPacket.class) {
+        if (packet.getClass() == CEditBookPacket.class) {
             assert connection != null;
-            BookUpdateC2SPacket bookUpdate = (BookUpdateC2SPacket) packet;
+            CEditBookPacket bookUpdate = (CEditBookPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
-            buf.writeItemStack(bookUpdate.getBook());
-            connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(bookUpdate.wasSigned() ? "MC|BSign" : "MC|BEdit", buf));
+            buf.writeItemStack(bookUpdate.getStack());
+            connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(bookUpdate.shouldUpdateAll() ? "MC|BSign" : "MC|BEdit", buf));
             return false;
         }
-        if (packet.getClass() == RenameItemC2SPacket.class) {
+        if (packet.getClass() == CRenameItemPacket.class) {
             assert connection != null;
-            RenameItemC2SPacket renameItem = (RenameItemC2SPacket) packet;
+            CRenameItemPacket renameItem = (CRenameItemPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
-            buf.writeString(renameItem.getItemName(), 32767);
+            buf.writeString(renameItem.getName(), 32767);
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|ItemName", buf));
             return false;
         }
-        if (packet.getClass() == SelectVillagerTradeC2SPacket.class) {
+        if (packet.getClass() == CSelectTradePacket.class) {
             assert connection != null;
-            SelectVillagerTradeC2SPacket selectTrade = (SelectVillagerTradeC2SPacket) packet;
+            CSelectTradePacket selectTrade = (CSelectTradePacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
-            buf.writeInt(selectTrade.method_12431());
+            buf.writeInt(selectTrade.func_210353_a());
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|TrSel", buf));
             return false;
         }
-        if (packet.getClass() == UpdateBeaconC2SPacket.class) {
+        if (packet.getClass() == CUpdateBeaconPacket.class) {
             assert connection != null;
-            UpdateBeaconC2SPacket updateBeacon = (UpdateBeaconC2SPacket) packet;
+            CUpdateBeaconPacket updateBeacon = (CUpdateBeaconPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
-            buf.writeInt(updateBeacon.getPrimaryEffectId());
-            buf.writeInt(updateBeacon.getSecondaryEffectId());
+            buf.writeInt(updateBeacon.getPrimaryEffect());
+            buf.writeInt(updateBeacon.getSecondaryEffect());
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|Beacon", buf));
             return false;
         }
-        if (packet.getClass() == UpdateCommandBlockC2SPacket.class) {
+        if (packet.getClass() == CUpdateCommandBlockPacket.class) {
             assert connection != null;
-            UpdateCommandBlockC2SPacket updateCmdBlock = (UpdateCommandBlockC2SPacket) packet;
+            CUpdateCommandBlockPacket updateCmdBlock = (CUpdateCommandBlockPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
-            buf.writeInt(updateCmdBlock.getBlockPos().getX());
-            buf.writeInt(updateCmdBlock.getBlockPos().getY());
-            buf.writeInt(updateCmdBlock.getBlockPos().getZ());
+            buf.writeInt(updateCmdBlock.getPos().getX());
+            buf.writeInt(updateCmdBlock.getPos().getY());
+            buf.writeInt(updateCmdBlock.getPos().getZ());
             buf.writeString(updateCmdBlock.getCommand());
             buf.writeBoolean(updateCmdBlock.shouldTrackOutput());
-            switch (updateCmdBlock.getType()) {
+            switch (updateCmdBlock.getMode()) {
                 case AUTO:
                     buf.writeString("AUTO");
                     break;
@@ -626,17 +626,17 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                     buf.writeString("SEQUENCE");
                     break;
                 default:
-                    LOGGER.error("Unknown command block type: " + updateCmdBlock.getType());
+                    LOGGER.error("Unknown command block type: " + updateCmdBlock.getMode());
                     return false;
             }
             buf.writeBoolean(updateCmdBlock.isConditional());
-            buf.writeBoolean(updateCmdBlock.isAlwaysActive());
+            buf.writeBoolean(updateCmdBlock.isAuto());
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|AutoCmd", buf));
             return false;
         }
-        if (packet.getClass() == UpdateCommandBlockMinecartC2SPacket.class) {
+        if (packet.getClass() == CUpdateMinecartCommandBlockPacket.class) {
             assert connection != null;
-            UpdateCommandBlockMinecartC2SPacket updateCmdMinecart = (UpdateCommandBlockMinecartC2SPacket) packet;
+            CUpdateMinecartCommandBlockPacket updateCmdMinecart = (CUpdateMinecartCommandBlockPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
             buf.writeByte(1); // command block type (minecart)
@@ -646,15 +646,15 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|AdvCmd", buf));
             return false;
         }
-        if (packet.getClass() == UpdateStructureBlockC2SPacket.class) {
+        if (packet.getClass() == CUpdateStructureBlockPacket.class) {
             assert connection != null;
-            UpdateStructureBlockC2SPacket updateStructBlock = (UpdateStructureBlockC2SPacket) packet;
+            CUpdateStructureBlockPacket updateStructBlock = (CUpdateStructureBlockPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
             buf.writeInt(updateStructBlock.getPos().getX());
             buf.writeInt(updateStructBlock.getPos().getY());
             buf.writeInt(updateStructBlock.getPos().getZ());
-            switch (updateStructBlock.getAction()) {
+            switch (updateStructBlock.func_210384_b()) {
                 case UPDATE_DATA:
                     buf.writeByte(1);
                     break;
@@ -668,7 +668,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                     buf.writeByte(4);
                     break;
                 default:
-                    LOGGER.error("Unknown structure block action: " + updateStructBlock.getAction());
+                    LOGGER.error("Unknown structure block action: " + updateStructBlock.getMode());
                     return false;
             }
             switch (updateStructBlock.getMode()) {
@@ -688,10 +688,10 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                     LOGGER.error("Unknown structure block mode: " + updateStructBlock.getMode());
                     return false;
             }
-            buf.writeString(updateStructBlock.getStructureName());
-            buf.writeInt(updateStructBlock.getOffset().getX());
-            buf.writeInt(updateStructBlock.getOffset().getY());
-            buf.writeInt(updateStructBlock.getOffset().getZ());
+            buf.writeString(updateStructBlock.getName());
+            buf.writeInt(updateStructBlock.getPosition().getX());
+            buf.writeInt(updateStructBlock.getPosition().getY());
+            buf.writeInt(updateStructBlock.getPosition().getZ());
             buf.writeInt(updateStructBlock.getSize().getX());
             buf.writeInt(updateStructBlock.getSize().getY());
             buf.writeInt(updateStructBlock.getSize().getZ());
@@ -727,7 +727,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                     return false;
             }
             buf.writeString(updateStructBlock.getMetadata());
-            buf.writeBoolean(updateStructBlock.getIgnoreEntities());
+            buf.writeBoolean(updateStructBlock.shouldIgnoreEntities());
             buf.writeBoolean(updateStructBlock.shouldShowAir());
             buf.writeBoolean(updateStructBlock.shouldShowBoundingBox());
             buf.writeFloat(updateStructBlock.getIntegrity());
@@ -741,58 +741,58 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     }
 
     @Override
-    protected void removeTrackedDataHandlers() {
-        super.removeTrackedDataHandlers();
-        removeTrackedDataHandler(TrackedDataHandlerRegistry.OPTIONAL_TEXT_COMPONENT);
+    protected void removeIDataSerializers() {
+        super.removeIDataSerializers();
+        removeIDataSerializer(DataSerializers.OPTIONAL_TEXT_COMPONENT);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T readTrackedData(TrackedDataHandler<T> handler, PacketByteBuf buf) {
-        if (handler == TrackedDataHandlerRegistry.OPTIONAL_BLOCK_STATE) {
+    public <T> T readDataParameter(IDataSerializer<T> handler, PacketBuffer buf) {
+        if (handler == DataSerializers.OPTIONAL_BLOCK_STATE) {
             int stateId = buf.readVarInt();
             if (stateId == 0)
                 return (T) Optional.empty();
-            return (T) Optional.ofNullable(Block.STATE_IDS.get(Blocks_1_12_2.convertToStateRegistryId(stateId)));
+            return (T) Optional.ofNullable(Block.BLOCK_STATE_IDS.getByValue(Blocks_1_12_2.convertToStateRegistryId(stateId)));
         }
-        return super.readTrackedData(handler, buf);
+        return super.readDataParameter(handler, buf);
     }
 
     @Override
-    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+    public boolean acceptEntityData(Class<? extends Entity> clazz, DataParameter<?> data) {
         if (!super.acceptEntityData(clazz, data))
             return false;
 
         if (clazz == AreaEffectCloudEntity.class && data == AreaEffectCloudEntityAccessor.getParticleId()) {
-            DataTrackerManager.registerOldTrackedData(AreaEffectCloudEntity.class,
+            DataTrackerManager.registerOldDataParameter(AreaEffectCloudEntity.class,
                     OLD_AREA_EFFECT_CLOUD_PARTICLE_ID,
-                    Registry.PARTICLE_TYPE.getRawId(ParticleTypes.ENTITY_EFFECT),
+                    Registry.PARTICLE_TYPE.getId(ParticleTypes.ENTITY_EFFECT),
                     (entity, val) -> {
-                ParticleType<?> type = Registry.PARTICLE_TYPE.get(val);
+                ParticleType<?> type = Registry.PARTICLE_TYPE.getByValue(val);
                 if (type == null)
                     type = ParticleTypes.ENTITY_EFFECT;
                 setParticleType(entity, type);
             });
-            DataTrackerManager.registerOldTrackedData(AreaEffectCloudEntity.class,
+            DataTrackerManager.registerOldDataParameter(AreaEffectCloudEntity.class,
                     OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM1,
                     0,
                     (entity, val) -> {
                 ((IAreaEffectCloudEntity) entity).multiconnect_setParam1(val);
-                setParticleType(entity, entity.getParticleType().getType());
+                setParticleType(entity, entity.getParticleData().getType());
             });
-            DataTrackerManager.registerOldTrackedData(AreaEffectCloudEntity.class,
+            DataTrackerManager.registerOldDataParameter(AreaEffectCloudEntity.class,
                     OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM2,
                     0,
                     (entity, val) -> {
                 ((IAreaEffectCloudEntity) entity).multiconnect_setParam2(val);
-                setParticleType(entity, entity.getParticleType().getType());
+                setParticleType(entity, entity.getParticleData().getType());
             });
             return false;
         }
 
         if (clazz == Entity.class && data == EntityAccessor.getCustomName()) {
-            DataTrackerManager.registerOldTrackedData(Entity.class, OLD_CUSTOM_NAME, "",
-                    (entity, val) -> entity.setCustomName(val.isEmpty() ? null : new LiteralText(val)));
+            DataTrackerManager.registerOldDataParameter(Entity.class, OLD_CUSTOM_NAME, "",
+                    (entity, val) -> entity.setCustomName(val.isEmpty() ? null : new StringTextComponent(val)));
             return false;
         }
 
@@ -805,19 +805,19 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         }
 
         if (clazz == AbstractMinecartEntity.class) {
-            TrackedData<Integer> displayTile = AbstractMinecartEntityAccessor.getCustomBlockId();
+            DataParameter<Integer> displayTile = AbstractMinecartEntityAccessor.getCustomBlockId();
             if (data == displayTile) {
-                DataTrackerManager.registerOldTrackedData(AbstractMinecartEntity.class, OLD_MINECART_DISPLAY_TILE, 0,
-                        (entity, val) -> entity.getDataTracker().set(displayTile, Blocks_1_12_2.convertToStateRegistryId(val)));
+                DataTrackerManager.registerOldDataParameter(AbstractMinecartEntity.class, OLD_MINECART_DISPLAY_TILE, 0,
+                        (entity, val) -> entity.getDataManager().set(displayTile, Blocks_1_12_2.convertToStateRegistryId(val)));
                 return false;
             }
         }
 
         if (clazz == WolfEntity.class) {
-            TrackedData<Integer> collarColor = WolfEntityAccessor.getCollarColor();
+            DataParameter<Integer> collarColor = WolfEntityAccessor.getCollarColor();
             if (data == collarColor) {
-                DataTrackerManager.registerOldTrackedData(WolfEntity.class, OLD_WOLF_COLLAR_COLOR, 1,
-                        (entity, val) -> entity.getDataTracker().set(collarColor, 15 - val));
+                DataTrackerManager.registerOldDataParameter(WolfEntity.class, OLD_WOLF_COLLAR_COLOR, 1,
+                        (entity, val) -> entity.getDataManager().set(collarColor, 15 - val));
                 return false;
             }
         }
@@ -827,46 +827,46 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     private static void setParticleType(AreaEffectCloudEntity entity, ParticleType<?> type) {
         IAreaEffectCloudEntity iaece = (IAreaEffectCloudEntity) entity;
-        if (type.getParametersFactory() == ItemStackParticleEffect.PARAMETERS_FACTORY) {
-            Item item = Registry.ITEM.get(iaece.multiconnect_getParam1());
+        if (type.getDeserializer() == ItemParticleData.DESERIALIZER) {
+            Item item = Registry.ITEM.getByValue(iaece.multiconnect_getParam1());
             int meta = iaece.multiconnect_getParam2();
             ItemStack stack = Items_1_12_2.oldItemStackToNew(new ItemStack(item), meta);
-            entity.setParticleType(createParticle(type, buf -> buf.writeItemStack(stack)));
-        } else if (type.getParametersFactory() == BlockStateParticleEffect.PARAMETERS_FACTORY) {
-            entity.setParticleType(createParticle(type, buf -> buf.writeVarInt(iaece.multiconnect_getParam1())));
-        } else if (type.getParametersFactory() == DustParticleEffect.PARAMETERS_FACTORY) {
-            entity.setParticleType(createParticle(type, buf -> {
+            entity.setParticleData(createParticle(type, buf -> buf.writeItemStack(stack)));
+        } else if (type.getDeserializer() == BlockParticleData.DESERIALIZER) {
+            entity.setParticleData(createParticle(type, buf -> buf.writeVarInt(iaece.multiconnect_getParam1())));
+        } else if (type.getDeserializer() == RedstoneParticleData.DESERIALIZER) {
+            entity.setParticleData(createParticle(type, buf -> {
                 buf.writeFloat(1);
                 buf.writeFloat(0);
                 buf.writeFloat(0);
                 buf.writeFloat(1);
             }));
         } else {
-            entity.setParticleType(createParticle(type, buf -> {}));
+            entity.setParticleData(createParticle(type, buf -> {}));
         }
     }
 
-    private static <T extends ParticleEffect> T createParticle(ParticleType<T> type, Consumer<PacketByteBuf> function) {
-        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+    private static <T extends IParticleData> T createParticle(ParticleType<T> type, Consumer<PacketBuffer> function) {
+        PacketBuffer buf = new PacketBuffer(Unpooled.buffer());
         function.accept(buf);
-        return type.getParametersFactory().read(type, buf);
+        return type.getDeserializer().read(type, buf);
     }
 
     @Override
     protected void recomputeBlockStates() {
-        final int leavesId = Registry.BLOCK.getRawId(Blocks.OAK_LEAVES);
-        final int leaves2Id = Registry.BLOCK.getRawId(Blocks.ACACIA_LEAVES);
-        final int torchId = Registry.BLOCK.getRawId(Blocks.TORCH);
-        final int redstoneTorchId = Registry.BLOCK.getRawId(Blocks.REDSTONE_TORCH);
-        final int unlitRedstoneTorchId = Registry.BLOCK.getRawId(Blocks_1_12_2.UNLIT_REDSTONE_TORCH);
-        final int skullId = Registry.BLOCK.getRawId(Blocks.SKELETON_SKULL);
-        final int tallGrassId = Registry.BLOCK.getRawId(Blocks.GRASS);
-        final int chestId = Registry.BLOCK.getRawId(Blocks.CHEST);
-        final int enderChestId = Registry.BLOCK.getRawId(Blocks.ENDER_CHEST);
-        final int trappedChestId = Registry.BLOCK.getRawId(Blocks.TRAPPED_CHEST);
-        final int wallBannerId = Registry.BLOCK.getRawId(Blocks.WHITE_WALL_BANNER);
+        final int leavesId = Registry.BLOCK.getId(Blocks.OAK_LEAVES);
+        final int leaves2Id = Registry.BLOCK.getId(Blocks.ACACIA_LEAVES);
+        final int torchId = Registry.BLOCK.getId(Blocks.TORCH);
+        final int redstoneTorchId = Registry.BLOCK.getId(Blocks.REDSTONE_TORCH);
+        final int unlitRedstoneTorchId = Registry.BLOCK.getId(Blocks_1_12_2.UNLIT_REDSTONE_TORCH);
+        final int skullId = Registry.BLOCK.getId(Blocks.SKELETON_SKULL);
+        final int tallGrassId = Registry.BLOCK.getId(Blocks.GRASS);
+        final int chestId = Registry.BLOCK.getId(Blocks.CHEST);
+        final int enderChestId = Registry.BLOCK.getId(Blocks.ENDER_CHEST);
+        final int trappedChestId = Registry.BLOCK.getId(Blocks.TRAPPED_CHEST);
+        final int wallBannerId = Registry.BLOCK.getId(Blocks.WHITE_WALL_BANNER);
 
-        ((IIdList) Block.STATE_IDS).multiconnect_clear();
+        ((IIdList) Block.BLOCK_STATE_IDS).multiconnect_clear();
         for (int blockId = 0; blockId < 256; blockId++) {
             if (blockId == leavesId) {
                 registerLeavesStates(blockId, Blocks.OAK_LEAVES, Blocks.SPRUCE_LEAVES, Blocks.BIRCH_LEAVES, Blocks.JUNGLE_LEAVES);
@@ -877,7 +877,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             } else if (blockId == redstoneTorchId) {
                 registerTorchStates(blockId, Blocks.REDSTONE_TORCH.getDefaultState(), Blocks.REDSTONE_WALL_TORCH.getDefaultState());
             } else if (blockId == unlitRedstoneTorchId) {
-                registerTorchStates(blockId, Blocks.REDSTONE_TORCH.getDefaultState().with(RedstoneTorchBlock.LIT, false), Blocks.REDSTONE_WALL_TORCH.getDefaultState().with(WallRedstoneTorchBlock.LIT_2, false));
+                registerTorchStates(blockId, Blocks.REDSTONE_TORCH.getDefaultState().with(RedstoneTorchBlock.LIT, false), Blocks.REDSTONE_WALL_TORCH.getDefaultState().with(RedstoneWallTorchBlock.REDSTONE_TORCH_LIT, false));
             } else if (blockId == skullId) {
                 final Direction[] dirs = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, Direction.DOWN, Direction.UP};
                 for (int meta = 0; meta < 16; meta++) {
@@ -888,14 +888,14 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                     } else {
                         state = Blocks.SKELETON_WALL_SKULL.getDefaultState().with(WallSkullBlock.FACING, dir);
                     }
-                    Block.STATE_IDS.set(state, blockId << 4 | meta);
+                    Block.BLOCK_STATE_IDS.put(state, blockId << 4 | meta);
                 }
             } else if (blockId == tallGrassId) {
-                Block.STATE_IDS.set(Blocks.DEAD_BUSH.getDefaultState(), blockId << 4);
-                Block.STATE_IDS.set(Blocks.GRASS.getDefaultState(), blockId << 4 | 1);
-                Block.STATE_IDS.set(Blocks.FERN.getDefaultState(), blockId << 4 | 2);
+                Block.BLOCK_STATE_IDS.put(Blocks.DEAD_BUSH.getDefaultState(), blockId << 4);
+                Block.BLOCK_STATE_IDS.put(Blocks.GRASS.getDefaultState(), blockId << 4 | 1);
+                Block.BLOCK_STATE_IDS.put(Blocks.FERN.getDefaultState(), blockId << 4 | 2);
                 for (int meta = 3; meta < 16; meta++)
-                    Block.STATE_IDS.set(Blocks.DEAD_BUSH.getDefaultState(), blockId << 4 | meta);
+                    Block.BLOCK_STATE_IDS.put(Blocks.DEAD_BUSH.getDefaultState(), blockId << 4 | meta);
             } else if (blockId == chestId) {
                 registerHorizontalFacingStates(blockId, Blocks.CHEST);
             } else if (blockId == enderChestId) {
@@ -906,19 +906,19 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 registerHorizontalFacingStates(blockId, Blocks.WHITE_WALL_BANNER);
             } else {
                 for (int meta = 0; meta < 16; meta++) {
-                    Dynamic<?> dynamicState = BlockStateFlattening.lookupState(blockId << 4 | meta);
+                    Dynamic<?> dynamicState = BlockStateFlatteningMap.getFixedNBTForID(blockId << 4 | meta);
                     String fixedName = dynamicState.get("Name").asString("");
-                    if (meta == 0 || fixedName.equals(BlockStateFlattening.lookupStateBlock(blockId << 4)))
+                    if (meta == 0 || fixedName.equals(BlockStateFlatteningMap.updateId(blockId << 4)))
                         fixedName = BlockStateReverseFlattening.reverseLookupStateBlock(blockId << 4);
-                    fixedName = EntityTheRenameningBlock.BLOCKS.getOrDefault(fixedName, fixedName);
-                    Block block = Registry.BLOCK.get(new Identifier(fixedName));
+                    fixedName = EntityRenaming1510.BLOCK_RENAME_MAP.getOrDefault(fixedName, fixedName);
+                    Block block = Registry.BLOCK.getOrDefault(new ResourceLocation(fixedName));
                     if (block == Blocks.AIR && blockId != 0) {
                         dynamicState = BlockStateReverseFlattening.reverseLookupState(blockId << 4 | meta);
                         fixedName = dynamicState.get("Name").asString("");
-                        block = Registry.BLOCK.get(new Identifier(fixedName));
+                        block = Registry.BLOCK.getOrDefault(new ResourceLocation(fixedName));
                     }
                     if (block != Blocks.AIR || blockId == 0) {
-                        StateManager<Block, BlockState> stateManager = block instanceof DummyBlock ? ((DummyBlock) block).original.getBlock().getStateManager() : block.getStateManager();
+                        StateContainer<Block, BlockState> stateManager = block instanceof DummyBlock ? ((DummyBlock) block).original.getBlock().getStateContainer() : block.getStateContainer();
                         BlockState _default = block instanceof DummyBlock ? ((DummyBlock) block).original : block.getDefaultState();
                         BlockState state = _default;
                         for (Map.Entry<String, String> entry : dynamicState.get("Properties").asMap(k -> k.asString(""), v -> v.asString("")).entrySet()) {
@@ -926,18 +926,18 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                         }
                         if (!acceptBlockState(state))
                             state = _default;
-                        Block.STATE_IDS.set(state, blockId << 4 | meta);
+                        Block.BLOCK_STATE_IDS.put(state, blockId << 4 | meta);
                     }
                 }
             }
         }
         Set<BlockState> addedStates = new HashSet<>();
-        Block.STATE_IDS.iterator().forEachRemaining(addedStates::add);
+        Block.BLOCK_STATE_IDS.iterator().forEachRemaining(addedStates::add);
 
         for (Block block : Registry.BLOCK) {
-            for (BlockState state : block.getStateManager().getStates()) {
+            for (BlockState state : block.getStateContainer().getValidStates()) {
                 if (!addedStates.contains(state) && acceptBlockState(state)) {
-                    Block.STATE_IDS.add(state);
+                    Block.BLOCK_STATE_IDS.add(state);
                 }
             }
         }
@@ -945,21 +945,21 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     private void registerLeavesStates(int blockId, Block... leavesBlocks) {
         for (int type = 0; type < 4; type++) {
-            Block.STATE_IDS.set(leavesBlocks[type].getDefaultState(), blockId << 4 | type);
-            Block.STATE_IDS.set(leavesBlocks[type].getDefaultState().with(LeavesBlock.PERSISTENT, true), blockId << 4 | 4 | type);
-            Block.STATE_IDS.set(leavesBlocks[type].getDefaultState().with(LeavesBlock.DISTANCE, 6), blockId << 4 | 8 | type);
-            Block.STATE_IDS.set(leavesBlocks[type].getDefaultState().with(LeavesBlock.PERSISTENT, true).with(LeavesBlock.DISTANCE, 6), blockId << 4 | 12 | type);
+            Block.BLOCK_STATE_IDS.put(leavesBlocks[type].getDefaultState(), blockId << 4 | type);
+            Block.BLOCK_STATE_IDS.put(leavesBlocks[type].getDefaultState().with(LeavesBlock.PERSISTENT, true), blockId << 4 | 4 | type);
+            Block.BLOCK_STATE_IDS.put(leavesBlocks[type].getDefaultState().with(LeavesBlock.DISTANCE, 6), blockId << 4 | 8 | type);
+            Block.BLOCK_STATE_IDS.put(leavesBlocks[type].getDefaultState().with(LeavesBlock.PERSISTENT, true).with(LeavesBlock.DISTANCE, 6), blockId << 4 | 12 | type);
         }
     }
 
     private void registerTorchStates(int blockId, BlockState torch, BlockState wallTorch) {
-        Block.STATE_IDS.set(torch, blockId << 4);
-        Block.STATE_IDS.set(wallTorch.with(WallTorchBlock.FACING, Direction.EAST), blockId << 4 | 1);
-        Block.STATE_IDS.set(wallTorch.with(WallTorchBlock.FACING, Direction.WEST), blockId << 4 | 2);
-        Block.STATE_IDS.set(wallTorch.with(WallTorchBlock.FACING, Direction.SOUTH), blockId << 4 | 3);
-        Block.STATE_IDS.set(wallTorch.with(WallTorchBlock.FACING, Direction.NORTH), blockId << 4 | 4);
+        Block.BLOCK_STATE_IDS.put(torch, blockId << 4);
+        Block.BLOCK_STATE_IDS.put(wallTorch.with(WallTorchBlock.HORIZONTAL_FACING, Direction.EAST), blockId << 4 | 1);
+        Block.BLOCK_STATE_IDS.put(wallTorch.with(WallTorchBlock.HORIZONTAL_FACING, Direction.WEST), blockId << 4 | 2);
+        Block.BLOCK_STATE_IDS.put(wallTorch.with(WallTorchBlock.HORIZONTAL_FACING, Direction.SOUTH), blockId << 4 | 3);
+        Block.BLOCK_STATE_IDS.put(wallTorch.with(WallTorchBlock.HORIZONTAL_FACING, Direction.NORTH), blockId << 4 | 4);
         for (int meta = 5; meta < 16; meta++)
-            Block.STATE_IDS.set(torch, blockId << 4 | meta);
+            Block.BLOCK_STATE_IDS.put(torch, blockId << 4 | meta);
     }
 
     private void registerHorizontalFacingStates(int blockId, Block block) {
@@ -967,27 +967,27 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     }
 
     private void registerHorizontalFacingStates(int blockId, Block standingBlock, Block wallBlock) {
-        Block.STATE_IDS.set(standingBlock.getDefaultState(), blockId << 4);
-        Block.STATE_IDS.set(standingBlock.getDefaultState(), blockId << 4 | 1);
-        Block.STATE_IDS.set(wallBlock.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.NORTH), blockId << 4 | 2);
-        Block.STATE_IDS.set(wallBlock.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.SOUTH), blockId << 4 | 3);
-        Block.STATE_IDS.set(wallBlock.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.WEST), blockId << 4 | 4);
-        Block.STATE_IDS.set(wallBlock.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.EAST), blockId << 4 | 5);
+        Block.BLOCK_STATE_IDS.put(standingBlock.getDefaultState(), blockId << 4);
+        Block.BLOCK_STATE_IDS.put(standingBlock.getDefaultState(), blockId << 4 | 1);
+        Block.BLOCK_STATE_IDS.put(wallBlock.getDefaultState().with(HorizontalFaceBlock.HORIZONTAL_FACING, Direction.NORTH), blockId << 4 | 2);
+        Block.BLOCK_STATE_IDS.put(wallBlock.getDefaultState().with(HorizontalFaceBlock.HORIZONTAL_FACING, Direction.SOUTH), blockId << 4 | 3);
+        Block.BLOCK_STATE_IDS.put(wallBlock.getDefaultState().with(HorizontalFaceBlock.HORIZONTAL_FACING, Direction.WEST), blockId << 4 | 4);
+        Block.BLOCK_STATE_IDS.put(wallBlock.getDefaultState().with(HorizontalFaceBlock.HORIZONTAL_FACING, Direction.EAST), blockId << 4 | 5);
         for (int meta = 6; meta < 16; meta++)
-            Block.STATE_IDS.set(standingBlock.getDefaultState(), blockId << 4 | meta);
+            Block.BLOCK_STATE_IDS.put(standingBlock.getDefaultState(), blockId << 4 | meta);
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends Comparable<T>> BlockState addProperty(StateManager<Block, BlockState> stateManager, BlockState state, String propName, String valName) {
-        Property<T> prop = (Property<T>) stateManager.getProperty(propName);
-        return prop == null ? state : state.with(prop, prop.parse(valName).orElseGet(() -> state.get(prop)));
+    private static <T extends Comparable<T>> BlockState addProperty(StateContainer<Block, BlockState> stateManager, BlockState state, String propName, String valName) {
+        IProperty<T> prop = (IProperty<T>) stateManager.getProperty(propName);
+        return prop == null ? state : state.with(prop, prop.parseValue(valName).orElseGet(() -> state.get(prop)));
     }
 
     @Override
     public boolean acceptBlockState(BlockState state) {
         Block block = state.getBlock();
         if (block == Blocks.TNT)
-            return super.acceptBlockState(state.with(TntBlock.UNSTABLE, false)); // re-add unstable because it was absent from 1.13.0 :thonkjang:
+            return super.acceptBlockState(state.with(TNTBlock.UNSTABLE, false)); // re-add unstable because it was absent from 1.13.0 :thonkjang:
 
         if (!super.acceptBlockState(state))
             return false;
@@ -996,20 +996,20 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         if (block == Blocks.PISTON_HEAD && state.get(PistonHeadBlock.SHORT))
             return false;
-        if (state.getProperties().contains(Properties.WATERLOGGED) && state.get(Properties.WATERLOGGED))
+        if (state.getProperties().contains(BlockStateProperties.WATERLOGGED) && state.get(BlockStateProperties.WATERLOGGED))
             return false;
         if (block == Blocks.LEVER) {
-            WallMountLocation face = state.get(LeverBlock.FACE);
-            Direction facing = state.get(LeverBlock.FACING);
-            if ((face == WallMountLocation.FLOOR || face == WallMountLocation.CEILING) && (facing == Direction.SOUTH || facing == Direction.EAST))
+            AttachFace face = state.get(LeverBlock.FACE);
+            Direction facing = state.get(LeverBlock.HORIZONTAL_FACING);
+            if ((face == AttachFace.FLOOR || face == AttachFace.CEILING) && (facing == Direction.SOUTH || facing == Direction.EAST))
                 return false;
         }
-        if (block instanceof TrapdoorBlock && state.get(TrapdoorBlock.POWERED))
+        if (block instanceof TrapDoorBlock && state.get(TrapDoorBlock.POWERED))
             return false;
         if ((block == Blocks.OAK_WOOD || block == Blocks.SPRUCE_WOOD
                 || block == Blocks.BIRCH_WOOD || block == Blocks.JUNGLE_WOOD
                 || block == Blocks.ACACIA_WOOD || block == Blocks.DARK_OAK_WOOD)
-                && state.get(PillarBlock.AXIS) != Direction.Axis.Y)
+                && state.get(RotatedPillarBlock.AXIS) != Direction.Axis.Y)
             return false;
         return true;
     }
@@ -1492,7 +1492,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     }
 
     protected void copyBlockItemTags(Multimap<Tag<Item>, Item> itemTags, Multimap<Tag<Block>, Block> blockTags, Tag<Item> itemTag, Tag<Block> blockTag) {
-        itemTags.putAll(itemTag, Collections2.transform(blockTags.get(blockTag), Item.BLOCK_ITEMS::get));
+        itemTags.putAll(itemTag, Collections2.transform(blockTags.get(blockTag), Item.BLOCK_TO_ITEM::get));
     }
 
     public Multimap<Tag<Fluid>, Fluid> getFluidTags() {
@@ -1558,9 +1558,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         } else if (registry == Registry.PARTICLE_TYPE) {
             Particles_1_12_2.registerParticles((ISimpleRegistry<ParticleType<?>>) registry);
         } else if (registry == Registry.BLOCK_ENTITY_TYPE) {
-            BlockEntities_1_12_2.registerBlockEntities((ISimpleRegistry<BlockEntityType<?>>) registry);
-        } else if (registry == Registry.STATUS_EFFECT) {
-            modifyStatusEffectRegistry((ISimpleRegistry<StatusEffect>) registry);
+            BlockEntities_1_12_2.registerBlockEntities((ISimpleRegistry<TileEntityType<?>>) registry);
+        } else if (registry == Registry.EFFECTS) {
+            modifyStatusEffectRegistry((ISimpleRegistry<Effect>) registry);
         } else if (registry == Registry.SOUND_EVENT) {
             modifySoundRegistry((ISimpleRegistry<SoundEvent>) registry);
         }
@@ -1636,10 +1636,10 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         rename(registry, Biomes.MODIFIED_BADLANDS_PLATEAU, "mutated_mesa_clear_rock");
     }
 
-    private static void modifyStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {
-        registry.unregister(StatusEffects.SLOW_FALLING);
-        registry.unregister(StatusEffects.CONDUIT_POWER);
-        registry.unregister(StatusEffects.DOLPHINS_GRACE);
+    private static void modifyStatusEffectRegistry(ISimpleRegistry<Effect> registry) {
+        registry.unregister(Effects.SLOW_FALLING);
+        registry.unregister(Effects.CONDUIT_POWER);
+        registry.unregister(Effects.DOLPHINS_GRACE);
     }
 
     private static void modifySoundRegistry(ISimpleRegistry<SoundEvent> registry) {

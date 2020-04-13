@@ -2,11 +2,11 @@ package net.earthcomputer.multiconnect.protocols.v1_14_4.mixin;
 
 import net.earthcomputer.multiconnect.protocols.v1_14_4.IBiomeStorage_1_14_4;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(WorldChunk.class)
+@Mixin(Chunk.class)
 public class MixinWorldChunk implements IBiomeStorage_1_14_4 {
 
     @Unique private Biome[] biomeArray_1_14_4;

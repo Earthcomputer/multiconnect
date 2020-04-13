@@ -15,24 +15,24 @@ import net.minecraft.block.BellBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.client.network.packet.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.EndermanEntity;
+import net.minecraft.entity.monster.EndermanEntity;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.projectile.TridentEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.particle.ParticleType;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.play.server.*;
+import net.minecraft.particles.IParticleData;
+import net.minecraft.particles.ParticleType;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.SoundEvent;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkSection;
@@ -42,17 +42,17 @@ import java.util.List;
 
 public class Protocol_1_14_4 extends Protocol_1_15 {
 
-    private static final TrackedData<Float> OLD_WOLF_HEALTH = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.FLOAT);
+    private static final DataParameter<Float> OLD_WOLF_HEALTH = DataTrackerManager.createOldDataParameter(DataSerializers.FLOAT);
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
             if (!CurrentChunkDataPacket.get().isFullChunk())
                 return;
-            int verticalStripBitmask = CurrentChunkDataPacket.get().getVerticalStripBitmask();
+            int verticalStripBitmask = CurrentChunkDataPacket.get().getAvailableSections();
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
-                    new ChunkSection(sectionY << 4).fromPacket(buf);
+                    new ChunkSection(sectionY << 4).read(buf);
                 }
             }
             buf.disablePassthroughMode();
@@ -60,16 +60,16 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             Biome[] biomeData = new Biome[256];
             for (int i = 0; i < 256; i++) {
                 int biomeId = buf.readInt();
-                biomeData[i] = Registry.BIOME.get(biomeId);
+                biomeData[i] = Registry.BIOME.getByValue(biomeId);
                 if (biomeData[i] == null)
                     throw new RuntimeException("Received invalid biome id: " + biomeId);
             }
 
-            PendingBiomeData.setPendingBiomeData(CurrentChunkDataPacket.get().getX(), CurrentChunkDataPacket.get().getZ(), biomeData);
+            PendingBiomeData.setPendingBiomeData(CurrentChunkDataPacket.get().getChunkX(), CurrentChunkDataPacket.get().getChunkZ(), biomeData);
 
             buf.applyPendingReads();
         });
-        ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SChunkDataPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readInt();
             buf.readInt();
@@ -87,7 +87,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SJoinGamePacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readInt(); // player id
             buf.readUnsignedByte(); // game mode
@@ -102,10 +102,10 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(MobSpawnS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SSpawnMobPacket.class, buf -> {
             buf.enablePassthroughMode();
             int entityId = buf.readVarInt();
-            buf.readUuid();
+            buf.readUniqueId();
             buf.readVarInt();
             buf.readDouble();
             buf.readDouble();
@@ -118,7 +118,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.readShort();
             buf.disablePassthroughMode();
             try {
-                PendingDataTrackerEntries.setEntries(entityId, DataTracker.deserializePacket(buf));
+                PendingDataTrackerEntries.setEntries(entityId, EntityDataManager.readEntries(buf));
             } catch (IOException e) {
                 // I don't even know why it's declared to throw an IOException
                 throw new AssertionError(e);
@@ -126,7 +126,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(ParticleS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SSpawnParticlePacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readInt(); // type
             buf.readBoolean(); // long distance
@@ -140,7 +140,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SRespawnPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readInt(); // dimension
             buf.disablePassthroughMode();
@@ -148,10 +148,10 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(PlayerSpawnS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SSpawnPlayerPacket.class, buf -> {
             buf.enablePassthroughMode();
             int entityId = buf.readVarInt();
-            buf.readUuid();
+            buf.readUniqueId();
             buf.readDouble();
             buf.readDouble();
             buf.readDouble();
@@ -159,7 +159,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.readByte();
             buf.disablePassthroughMode();
             try {
-                PendingDataTrackerEntries.setEntries(entityId, DataTracker.deserializePacket(buf));
+                PendingDataTrackerEntries.setEntries(entityId, EntityDataManager.readEntries(buf));
             } catch (IOException e) {
                 // I don't even know why it's declared to throw an IOException
                 throw new AssertionError(e);
@@ -171,8 +171,8 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
-        remove(packets, PlayerActionResponseS2CPacket.class);
-        insertAfter(packets, SynchronizeTagsS2CPacket.class, PacketInfo.of(PlayerActionResponseS2CPacket.class, PlayerActionResponseS2CPacket::new));
+        remove(packets, SPlayerDiggingPacket.class);
+        insertAfter(packets, STagsListPacket.class, PacketInfo.of(SPlayerDiggingPacket.class, SPlayerDiggingPacket::new));
         return packets;
     }
 
@@ -190,9 +190,9 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
         } else if (registry == Registry.SOUND_EVENT) {
             modifySoundEventRegistry((ISimpleRegistry<SoundEvent>) registry);
         } else if (registry == Registry.BLOCK_ENTITY_TYPE) {
-            modifyBlockEntityTypeRegistry((ISimpleRegistry<BlockEntityType<?>>) registry);
+            modifyBlockEntityTypeRegistry((ISimpleRegistry<TileEntityType<?>>) registry);
         } else if (registry == Registry.PARTICLE_TYPE) {
-            modifyParticleTypeRegistry((ISimpleRegistry<ParticleType<? extends ParticleEffect>>) registry);
+            modifyParticleTypeRegistry((ISimpleRegistry<ParticleType<? extends IParticleData>>) registry);
         }
     }
 
@@ -219,7 +219,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
         registry.unregister(SoundEvents.ENTITY_BEE_LOOP);
         registry.unregister(SoundEvents.ENTITY_BEE_STING);
         registry.unregister(SoundEvents.ENTITY_BEE_POLLINATE);
-        registry.unregister(SoundEvents.BLOCK_BEEHIVE_DRIP);
+        registry.unregister(SoundEvents.BLOCK_BEEHIVE_DROP);
         registry.unregister(SoundEvents.BLOCK_BEEHIVE_ENTER);
         registry.unregister(SoundEvents.BLOCK_BEEHIVE_EXIT);
         registry.unregister(SoundEvents.BLOCK_BEEHIVE_SHEAR);
@@ -231,8 +231,8 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
         registry.unregister(SoundEvents.BLOCK_HONEY_BLOCK_SLIDE);
         registry.unregister(SoundEvents.BLOCK_HONEY_BLOCK_STEP);
         registry.unregister(SoundEvents.ITEM_HONEY_BOTTLE_DRINK);
-        registry.unregister(SoundEvents.ENTITY_IRON_GOLEM_DAMAGE);
-        registry.unregister(SoundEvents.ENTITY_IRON_GOLEM_REPAIR);
+        registry.unregister(SoundEvents.field_226143_fP_);
+        registry.unregister(SoundEvents.field_226142_fM_);
 
         insertAfter(registry, SoundEvents.ENTITY_PARROT_IMITATE_ENDER_DRAGON, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_ENDERMAN, "entity.parrot.imitate.enderman");
         insertAfter(registry, SoundEvents.ENTITY_PARROT_IMITATE_MAGMA_CUBE, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_PANDA, "entity.parrot.imitate.panda");
@@ -241,11 +241,11 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
         insertAfter(registry, SoundEvents.ENTITY_PARROT_IMITATE_ZOMBIE, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_ZOMBIE_PIGMAN, "entity.parrot.imitate.zombie_pigman");
     }
 
-    private void modifyBlockEntityTypeRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
-        registry.unregister(BlockEntityType.BEEHIVE);
+    private void modifyBlockEntityTypeRegistry(ISimpleRegistry<TileEntityType<?>> registry) {
+        registry.unregister(TileEntityType.BEEHIVE);
     }
 
-    private void modifyParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
+    private void modifyParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends IParticleData>> registry) {
         registry.unregister(ParticleTypes.DRIPPING_HONEY);
         registry.unregister(ParticleTypes.FALLING_HONEY);
         registry.unregister(ParticleTypes.LANDING_HONEY);
@@ -254,20 +254,20 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
 
     @Override
     public boolean acceptBlockState(BlockState state) {
-        if (state.getBlock() == Blocks.BELL && state.get(BellBlock.field_20648)) // powered
+        if (state.getBlock() == Blocks.BELL && state.get(BellBlock.field_226883_b_)) // powered
             return false;
 
         return super.acceptBlockState(state);
     }
 
     @Override
-    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+    public boolean acceptEntityData(Class<? extends Entity> clazz, DataParameter<?> data) {
         if (clazz == LivingEntity.class && data == LivingEntityAccessor.getStingerCount())
             return false;
         if (clazz == TridentEntity.class && data == TridentEntityAccessor.getHasEnchantmentGlint())
             return false;
         if (clazz == WolfEntity.class && data == WolfEntityAccessor.getBegging())
-            DataTrackerManager.registerOldTrackedData(WolfEntity.class, OLD_WOLF_HEALTH, 20f, LivingEntity::setHealth);
+            DataTrackerManager.registerOldDataParameter(WolfEntity.class, OLD_WOLF_HEALTH, 20f, LivingEntity::setHealth);
         if (clazz == EndermanEntity.class && data == EndermanEntityAccessor.getHasScreamed())
             return false;
 

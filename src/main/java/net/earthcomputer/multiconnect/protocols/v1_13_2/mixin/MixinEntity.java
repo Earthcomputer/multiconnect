@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(Entity.class)
 public class MixinEntity {
 
-    @ModifyConstant(method = "movementInputToVelocity", constant = @Constant(doubleValue = 1E-7))
+    @ModifyConstant(method = "getAbsoluteMotion", constant = @Constant(doubleValue = 1E-7))
     private static double fixVelocityEpsilon(double epsilon) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2)
             return 1E-4;

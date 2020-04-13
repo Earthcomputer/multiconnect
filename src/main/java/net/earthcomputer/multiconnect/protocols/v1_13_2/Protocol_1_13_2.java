@@ -12,57 +12,56 @@ import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.enums.Instrument;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.packet.*;
+import net.minecraft.client.Minecraft;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.*;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.*;
+import net.minecraft.entity.item.EyeOfEnderEntity;
+import net.minecraft.entity.item.FireworkRocketEntity;
+import net.minecraft.entity.merchant.villager.VillagerData;
+import net.minecraft.entity.merchant.villager.VillagerEntity;
+import net.minecraft.entity.merchant.villager.VillagerProfession;
+import net.minecraft.entity.monster.AbstractIllagerEntity;
+import net.minecraft.entity.monster.AbstractSkeletonEntity;
+import net.minecraft.entity.monster.ZombieEntity;
+import net.minecraft.entity.monster.ZombieVillagerEntity;
 import net.minecraft.entity.passive.CatEntity;
-import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.entity.passive.MooshroomEntity;
-import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
+import net.minecraft.entity.passive.horse.HorseEntity;
+import net.minecraft.entity.projectile.AbstractArrowEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtHelper;
-import net.minecraft.nbt.StringTag;
-import net.minecraft.network.Packet;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.particle.ParticleType;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.recipe.RecipeSerializer;
-import net.minecraft.server.network.packet.*;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.PacketByteBuf;
-import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.item.crafting.IRecipeSerializer;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.NBTUtil;
+import net.minecraft.nbt.StringNBT;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.play.client.*;
+import net.minecraft.network.play.server.*;
+import net.minecraft.particles.IParticleData;
+import net.minecraft.particles.ParticleType;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.potion.Effect;
+import net.minecraft.potion.Effects;
+import net.minecraft.state.properties.NoteBlockInstrument;
+import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.SectionPos;
+import net.minecraft.util.palette.PalettedContainer;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.SimpleRegistry;
-import net.minecraft.village.VillagerData;
-import net.minecraft.village.VillagerProfession;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.Palette;
-import net.minecraft.world.chunk.PalettedContainer;
 
 import java.util.List;
 import java.util.OptionalInt;
@@ -70,16 +69,16 @@ import java.util.function.Supplier;
 
 public class Protocol_1_13_2 extends Protocol_1_14 {
 
-    public static final Identifier CUSTOM_PAYLOAD_TRADE_LIST = new Identifier("trader_list");
-    public static final Identifier CUSTOM_PAYLOAD_OPEN_BOOK = new Identifier("open_book");
+    public static final ResourceLocation CUSTOM_PAYLOAD_TRADE_LIST = new ResourceLocation("trader_list");
+    public static final ResourceLocation CUSTOM_PAYLOAD_OPEN_BOOK = new ResourceLocation("open_book");
 
-    private static final TrackedData<Integer> OLD_FIREWORK_SHOOTER = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> OLD_VILLAGER_PROFESSION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Byte> OLD_ILLAGER_FLAGS = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BYTE);
-    private static final TrackedData<Boolean> OLD_SKELETON_ATTACKING = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> OLD_ZOMBIE_ATTACKING = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Integer> OLD_ZOMBIE_VILLAGER_PROFESSION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> OLD_HORSE_ARMOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    private static final DataParameter<Integer> OLD_FIREWORK_SHOOTER = DataTrackerManager.createOldDataParameter(DataSerializers.VARINT);
+    private static final DataParameter<Integer> OLD_VILLAGER_PROFESSION = DataTrackerManager.createOldDataParameter(DataSerializers.VARINT);
+    private static final DataParameter<Byte> OLD_ILLAGER_FLAGS = DataTrackerManager.createOldDataParameter(DataSerializers.BYTE);
+    private static final DataParameter<Boolean> OLD_SKELETON_ATTACKING = DataTrackerManager.createOldDataParameter(DataSerializers.BOOLEAN);
+    private static final DataParameter<Boolean> OLD_ZOMBIE_ATTACKING = DataTrackerManager.createOldDataParameter(DataSerializers.BOOLEAN);
+    private static final DataParameter<Integer> OLD_ZOMBIE_VILLAGER_PROFESSION = DataTrackerManager.createOldDataParameter(DataSerializers.VARINT);
+    private static final DataParameter<Integer> OLD_HORSE_ARMOR = DataTrackerManager.createOldDataParameter(DataSerializers.VARINT);
 
     private static SimpleRegistry<EntityType<?>> ENTITY_REGISTRY_1_13;
 
@@ -93,52 +92,52 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
-        insertAfter(packets, GuiCloseS2CPacket.class, PacketInfo.of(GuiOpenS2CPacket_1_13_2.class, GuiOpenS2CPacket_1_13_2::new));
-        remove(packets, TagQueryResponseS2CPacket.class);
-        insertAfter(packets, EntityStatusS2CPacket.class, PacketInfo.of(TagQueryResponseS2CPacket.class, TagQueryResponseS2CPacket::new));
-        remove(packets, GuiOpenS2CPacket.class);
-        remove(packets, LightUpdateS2CPacket.class);
-        remove(packets, EntityS2CPacket.class);
-        insertAfter(packets, SetTradeOffersS2CPacket.class, PacketInfo.of(EntityS2CPacket.class, EntityS2CPacket::new));
-        remove(packets, SetTradeOffersS2CPacket.class);
-        remove(packets, OpenWrittenBookS2CPacket.class);
-        remove(packets, OpenContainerS2CPacket.class);
-        insertAfter(packets, PlayerPositionLookS2CPacket.class, PacketInfo.of(UseBedS2CPacket.class, UseBedS2CPacket::new));
-        remove(packets, ChunkRenderDistanceCenterS2CPacket.class);
-        remove(packets, ChunkLoadDistanceS2CPacket.class);
-        remove(packets, StopSoundS2CPacket.class);
-        insertAfter(packets, PlaySoundFromEntityS2CPacket.class, PacketInfo.of(StopSoundS2CPacket.class, StopSoundS2CPacket::new));
-        remove(packets, PlaySoundFromEntityS2CPacket.class);
+        insertAfter(packets, SOpenHorseWindowPacket.class, PacketInfo.of(GuiOpenS2CPacket_1_13_2.class, GuiOpenS2CPacket_1_13_2::new));
+        remove(packets, SQueryNBTResponsePacket.class);
+        insertAfter(packets, SEntityStatusPacket .class, PacketInfo.of(SQueryNBTResponsePacket.class, SQueryNBTResponsePacket::new));
+        remove(packets, SOpenHorseWindowPacket.class);
+        remove(packets, SUpdateLightPacket.class);
+        remove(packets, SEntityPacket.class);
+        insertAfter(packets, SMerchantOffersPacket.class, PacketInfo.of(SEntityPacket.class, SEntityPacket::new));
+        remove(packets, SMerchantOffersPacket.class);
+        remove(packets, SOpenBookWindowPacket.class);
+        remove(packets, SOpenWindowPacket.class);
+        insertAfter(packets, SPlayerPositionLookPacket.class, PacketInfo.of(UseBedS2CPacket.class, UseBedS2CPacket::new));
+        remove(packets, SUpdateChunkPositionPacket.class);
+        remove(packets, SUpdateViewDistancePacket.class);
+        remove(packets, SStopSoundPacket.class);
+        insertAfter(packets, SSpawnMovingSoundEffectPacket.class, PacketInfo.of(SStopSoundPacket.class, SStopSoundPacket::new));
+        remove(packets, SSpawnMovingSoundEffectPacket.class);
         return packets;
     }
 
     @Override
     public List<PacketInfo<?>> getServerboundPackets() {
         List<PacketInfo<?>> packets = super.getServerboundPackets();
-        remove(packets, UpdateDifficultyC2SPacket.class);
-        remove(packets, PlayerMoveC2SPacket.class);
-        insertAfter(packets, UpdateDifficultyLockC2SPacket.class, PacketInfo.of(PlayerMoveC2SPacket.class, PlayerMoveC2SPacket::new));
-        remove(packets, UpdateDifficultyLockC2SPacket.class);
-        remove(packets, UpdateJigsawC2SPacket.class);
+        remove(packets, CSetDifficultyPacket.class);
+        remove(packets, CPlayerPacket.class);
+        insertAfter(packets, CLockDifficultyPacket.class, PacketInfo.of(CPlayerPacket.class, CPlayerPacket::new));
+        remove(packets, CLockDifficultyPacket.class);
+        remove(packets, CUpdateJigsawBlockPacket.class);
         return packets;
     }
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
             PendingLightData lightData = new PendingLightData();
-            PendingLightData.setInstance(CurrentChunkDataPacket.get().getX(), CurrentChunkDataPacket.get().getZ(), lightData);
-            int verticalStripBitmask = CurrentChunkDataPacket.get().getVerticalStripBitmask();
+            PendingLightData.setInstance(CurrentChunkDataPacket.get().getChunkX(), CurrentChunkDataPacket.get().getChunkZ(), lightData);
+            int verticalStripBitmask = CurrentChunkDataPacket.get().getAvailableSections();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
                     buf.pendingRead(Short.class, (short)0);
                     buf.enablePassthroughMode();
-                    new PalettedContainer<>(ChunkSectionAccessor.getPalette(), Block.STATE_IDS, NbtHelper::toBlockState, NbtHelper::fromBlockState, Blocks.AIR.getDefaultState()).fromPacket(buf);
+                    new PalettedContainer<>(ChunkSectionAccessor.getPalette(), Block.BLOCK_STATE_IDS, NBTUtil::readBlockState, NBTUtil::writeBlockState, Blocks.AIR.getDefaultState()).read(buf);
                     buf.disablePassthroughMode();
                     byte[] light = new byte[16 * 16 * 16 / 2];
                     buf.readBytes(light);
                     lightData.setBlockLight(sectionY, light);
-                    assert MinecraftClient.getInstance().world != null;
-                    if (MinecraftClient.getInstance().world.dimension.hasSkyLight()) {
+                    assert Minecraft.getInstance().world != null;
+                    if (Minecraft.getInstance().world.dimension.hasSkyLight()) {
                         light = new byte[16 * 16 * 16 / 2];
                         buf.readBytes(light);
                         lightData.setSkyLight(sectionY, light);
@@ -148,24 +147,24 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SChunkDataPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readInt(); // x
             buf.readInt(); // z
             buf.readBoolean(); // full chunk
             buf.readVarInt(); // vertical strip bitmask
             buf.disablePassthroughMode();
-            buf.pendingRead(CompoundTag.class, new CompoundTag()); // heightmaps
+            buf.pendingRead(CompoundNBT.class, new CompoundNBT()); // heightmaps
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SJoinGamePacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readInt(); // player id
             buf.readUnsignedByte(); // gamemode
             buf.readInt(); // dimension
             buf.disablePassthroughMode();
-            PendingDifficulty.setPendingDifficulty(Difficulty.byOrdinal(buf.readUnsignedByte()));
+            PendingDifficulty.setPendingDifficulty(Difficulty.byId(buf.readUnsignedByte()));
             buf.enablePassthroughMode();
             buf.readUnsignedByte(); // max players
             buf.readString(16); // generator type
@@ -174,7 +173,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(MapUpdateS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SMapDataPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt(); // id
             buf.readByte(); // scale
@@ -184,7 +183,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(EntityAttachS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SMountEntityPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readInt(); // attached id
             buf.disablePassthroughMode();
@@ -194,15 +193,15 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SRespawnPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readInt(); // dimension
             buf.disablePassthroughMode();
-            PendingDifficulty.setPendingDifficulty(Difficulty.byOrdinal(buf.readUnsignedByte()));
+            PendingDifficulty.setPendingDifficulty(Difficulty.byId(buf.readUnsignedByte()));
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(DifficultyS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SServerDifficultyPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readUnsignedByte(); // difficulty
             buf.disablePassthroughMode();
@@ -210,10 +209,10 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(EntitySpawnS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SSpawnObjectPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt(); // id
-            buf.readUuid(); // uuid
+            buf.readUniqueId(); // uuid
             buf.disablePassthroughMode();
 
             int typeId = buf.readByte() & 0xff;
@@ -223,7 +222,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             byte pitch = buf.readByte();
             byte yaw = buf.readByte();
             int entityData = buf.readInt();
-            typeId = Registry.ENTITY_TYPE.getRawId(mapObjectId(typeId, entityData));
+            typeId = Registry.ENTITY_TYPE.getId(mapObjectId(typeId, entityData));
 
             buf.pendingRead(VarInt.class, new VarInt(typeId));
             buf.pendingRead(Double.class, x);
@@ -236,18 +235,18 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(SynchronizeRecipesS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(SUpdateRecipesPacket.class, buf -> {
             buf.enablePassthroughMode();
             int recipeCount = buf.readVarInt();
             buf.disablePassthroughMode();
 
             for (int i = 0; i < recipeCount; i++) {
-                Identifier recipeId = buf.readIdentifier();
-                Identifier serializerId = new Identifier(buf.readString(32767));
-                buf.pendingRead(Identifier.class, serializerId);
-                buf.pendingRead(Identifier.class, recipeId);
+                ResourceLocation recipeId = buf.readResourceLocation();
+                ResourceLocation serializerId = new ResourceLocation(buf.readString(32767));
+                buf.pendingRead(ResourceLocation.class, serializerId);
+                buf.pendingRead(ResourceLocation.class, recipeId);
                 buf.enablePassthroughMode();
-                Registry.RECIPE_SERIALIZER.getOrEmpty(serializerId)
+                Registry.RECIPE_SERIALIZER.getValue(serializerId)
                         .orElseThrow(() -> new IllegalArgumentException("Unknown recipe serializer " + serializerId))
                         .read(recipeId, buf);
                 buf.disablePassthroughMode();
@@ -276,13 +275,13 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 if (stack.hasTag()) {
                     assert stack.getTag() != null;
                     if (stack.getTag().contains("display", 10)) {
-                        CompoundTag display = stack.getTag().getCompound("display");
+                        CompoundNBT display = stack.getTag().getCompound("display");
                         if (display.contains("Lore", 9)) {
-                            ListTag lore = display.getList("Lore", 8);
+                            ListNBT lore = display.getList("Lore", 8);
                             display.put("multiconnect:1.13.2/oldLore", lore);
-                            ListTag newLore = new ListTag();
+                            ListNBT newLore = new ListNBT();
                             for (int i = 0; i < lore.size(); i++) {
-                                newLore.add(StringTag.of(Text.Serializer.toJson(new LiteralText(lore.getString(i)))));
+                                newLore.add(StringNBT.valueOf(ITextComponent.Serializer.toJson(new StringTextComponent(lore.getString(i)))));
                             }
                             display.put("Lore", newLore);
                         }
@@ -292,21 +291,21 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             }
         });
 
-        ProtocolRegistry.registerOutboundTranslator(PlayerInteractBlockC2SPacket.class, buf -> {
+        ProtocolRegistry.registerOutboundTranslator(CPlayerTryUseItemOnBlockPacket.class, buf -> {
             Supplier<Hand> hand = buf.skipWrite(Hand.class);
-            Supplier<BlockHitResult> hitResult = buf.skipWrite(BlockHitResult.class);
-            buf.pendingWrite(BlockPos.class, () -> hitResult.get().getBlockPos(), buf::writeBlockPos);
-            buf.pendingWrite(Direction.class, () -> hitResult.get().getSide(), buf::writeEnumConstant);
-            buf.pendingWrite(Hand.class, hand, buf::writeEnumConstant);
-            buf.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().x - hitResult.get().getBlockPos().getX()), buf::writeFloat);
-            buf.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().y - hitResult.get().getBlockPos().getY()), buf::writeFloat);
-            buf.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().z - hitResult.get().getBlockPos().getZ()), buf::writeFloat);
+            Supplier<BlockRayTraceResult> hitResult = buf.skipWrite(BlockRayTraceResult.class);
+            buf.pendingWrite(BlockPos.class, () -> hitResult.get().getPos(), buf::writeBlockPos);
+            buf.pendingWrite(Direction.class, () -> hitResult.get().getFace(), buf::writeEnumValue);
+            buf.pendingWrite(Hand.class, hand, buf::writeEnumValue);
+            buf.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().getX() - hitResult.get().getPos().getX()), buf::writeFloat);
+            buf.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().getY() - hitResult.get().getPos().getY()), buf::writeFloat);
+            buf.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().getZ() - hitResult.get().getPos().getZ()), buf::writeFloat);
         });
 
-        ProtocolRegistry.registerOutboundTranslator(RecipeBookDataC2SPacket.class, buf -> {
-            Supplier<RecipeBookDataC2SPacket.Mode> mode = buf.passthroughWrite(RecipeBookDataC2SPacket.Mode.class);
+        ProtocolRegistry.registerOutboundTranslator(CRecipeInfoPacket.class, buf -> {
+            Supplier<CRecipeInfoPacket.Purpose> mode = buf.passthroughWrite(CRecipeInfoPacket.Purpose.class);
             buf.whenWrite(() -> {
-                if (mode.get() == RecipeBookDataC2SPacket.Mode.SETTINGS) {
+                if (mode.get() == CRecipeInfoPacket.Purpose.SETTINGS) {
                     buf.passthroughWrite(Boolean.class); // gui open
                     buf.passthroughWrite(Boolean.class); // filtering craftable
                     buf.passthroughWrite(Boolean.class); // furnace gui open
@@ -339,16 +338,16 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 if (stack.hasTag()) {
                     assert stack.getTag() != null;
                     if (stack.getTag().contains("display", 10)) {
-                        CompoundTag display = stack.getTag().getCompound("display");
+                        CompoundNBT display = stack.getTag().getCompound("display");
                         if (display.contains("multiconnect:1.13.2/oldLore", 9) || display.contains("Lore", 9)) {
                             stack = stack.copy();
-                            ListTag lore = display.contains("multiconnect:1.13.2/oldLore", 9) ? display.getList("multiconnect:1.13.2/oldLore", 8) : display.getList("Lore", 8);
-                            ListTag newLore = new ListTag();
+                            ListNBT lore = display.contains("multiconnect:1.13.2/oldLore", 9) ? display.getList("multiconnect:1.13.2/oldLore", 8) : display.getList("Lore", 8);
+                            ListNBT newLore = new ListNBT();
                             for (int i = 0; i < lore.size(); i++) {
                                 try {
-                                    Text text = Text.Serializer.fromJson(lore.getString(i));
+                                    ITextComponent text = ITextComponent.Serializer.fromJson(lore.getString(i));
                                     if (text == null) throw new JsonParseException("text null");
-                                    newLore.add(StringTag.of(text.asFormattedString()));
+                                    newLore.add(StringNBT.valueOf(text.getFormattedText()));
                                 } catch (JsonParseException e) {
                                     newLore.add(lore.get(i));
                                 }
@@ -364,25 +363,25 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     @Override
-    public boolean onSendPacket(Packet<?> packet) {
+    public boolean onSendPacket(IPacket<?> packet) {
         if (!super.onSendPacket(packet))
             return false;
-        if (packet instanceof PlayerMoveC2SPacket || packet instanceof VehicleMoveC2SPacket)
+        if (packet instanceof CPlayerPacket || packet instanceof CMoveVehiclePacket)
             updateCameraPosition();
         return true;
     }
 
     @Override
-    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+    public boolean acceptEntityData(Class<? extends Entity> clazz, DataParameter<?> data) {
         if (clazz == Entity.class && data == EntityAccessor.getPose())
             return false;
-        if (clazz == EnderEyeEntity.class && data == EnderEyeEntityAccessor.getItem())
+        if (clazz == EyeOfEnderEntity.class && data == EnderEyeEntityAccessor.getItem())
             return false;
-        if (clazz == FireworkEntity.class) {
-            TrackedData<OptionalInt> fireworkShooter = FireworkEntityAccessor.getShooter();
+        if (clazz == FireworkRocketEntity.class) {
+            DataParameter<OptionalInt> fireworkShooter = FireworkEntityAccessor.getShooter();
             if (data == fireworkShooter) {
-                DataTrackerManager.registerOldTrackedData(FireworkEntity.class, OLD_FIREWORK_SHOOTER, 0,
-                        (entity, val) -> entity.getDataTracker().set(fireworkShooter, val <= 0 ? OptionalInt.empty() : OptionalInt.of(val)));
+                DataTrackerManager.registerOldDataParameter(FireworkRocketEntity.class, OLD_FIREWORK_SHOOTER, 0,
+                        (entity, val) -> entity.getDataManager().set(fireworkShooter, val <= 0 ? OptionalInt.empty() : OptionalInt.of(val)));
                 return false;
             }
             if (data == FireworkEntityAccessor.getShotAtAngle())
@@ -391,20 +390,20 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         if (clazz == LivingEntity.class && data == LivingEntityAccessor.getSleepingPosition())
             return false;
         if (clazz == VillagerEntity.class) {
-            TrackedData<VillagerData> villagerData = VillagerEntityAccessor.getVillagerData();
+            DataParameter<VillagerData> villagerData = VillagerEntityAccessor.getVillagerData();
             if (data == villagerData) {
-                DataTrackerManager.registerOldTrackedData(VillagerEntity.class, OLD_VILLAGER_PROFESSION, 0,
-                        (entity, val) -> entity.getDataTracker().set(villagerData, entity.getVillagerData().withProfession(getVillagerProfession(val))));
+                DataTrackerManager.registerOldDataParameter(VillagerEntity.class, OLD_VILLAGER_PROFESSION, 0,
+                        (entity, val) -> entity.getDataManager().set(villagerData, entity.getVillagerData().withProfession(getVillagerProfession(val))));
                 return false;
             }
         }
         if (clazz == ZombieEntity.class && data == ZombieEntityAccessor.getConvertingInWater())
-            DataTrackerManager.registerOldTrackedData(ZombieEntity.class, OLD_ZOMBIE_ATTACKING, false, MobEntity::setAttacking);
+            DataTrackerManager.registerOldDataParameter(ZombieEntity.class, OLD_ZOMBIE_ATTACKING, false, MobEntity::setAggroed);
         if (clazz == ZombieVillagerEntity.class) {
-            TrackedData<VillagerData> villagerData = ZombieVillagerEntityAccessor.getVillagerData();
+            DataParameter<VillagerData> villagerData = ZombieVillagerEntityAccessor.getVillagerData();
             if (data == villagerData) {
-                DataTrackerManager.registerOldTrackedData(ZombieVillagerEntity.class, OLD_ZOMBIE_VILLAGER_PROFESSION, 0,
-                        (entity, val) -> entity.getDataTracker().set(villagerData, entity.getVillagerData().withProfession(getVillagerProfession(val))));
+                DataTrackerManager.registerOldDataParameter(ZombieVillagerEntity.class, OLD_ZOMBIE_VILLAGER_PROFESSION, 0,
+                        (entity, val) -> entity.getDataManager().set(villagerData, entity.getVillagerData().withProfession(getVillagerProfession(val))));
                 return false;
             }
         }
@@ -416,32 +415,32 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 || data == CatEntityAccessor.getCollarColor())
                 return false;
         }
-        if (clazz == ProjectileEntity.class && data == ProjectileEntityAccessor.getPierceLevel())
+        if (clazz == AbstractArrowEntity.class && data == ProjectileEntityAccessor.getPierceLevel())
             return false;
         return super.acceptEntityData(clazz, data);
     }
 
     @Override
     public void postEntityDataRegister(Class<? extends Entity> clazz) {
-        if (clazz == IllagerEntity.class)
-            DataTrackerManager.registerOldTrackedData(IllagerEntity.class, OLD_ILLAGER_FLAGS, (byte)0,
-                    (entity, val) -> entity.setAttacking((val & 1) != 0));
+        if (clazz == AbstractIllagerEntity.class)
+            DataTrackerManager.registerOldDataParameter(AbstractIllagerEntity.class, OLD_ILLAGER_FLAGS, (byte)0,
+                    (entity, val) -> entity.setAggroed((val & 1) != 0));
         if (clazz == AbstractSkeletonEntity.class)
-            DataTrackerManager.registerOldTrackedData(AbstractSkeletonEntity.class, OLD_SKELETON_ATTACKING, false, MobEntity::setAttacking);
+            DataTrackerManager.registerOldDataParameter(AbstractSkeletonEntity.class, OLD_SKELETON_ATTACKING, false, MobEntity::setAggroed);
         if (clazz == HorseEntity.class)
-            DataTrackerManager.registerOldTrackedData(HorseEntity.class, OLD_HORSE_ARMOR, 0, (entity, val) -> {
+            DataTrackerManager.registerOldDataParameter(HorseEntity.class, OLD_HORSE_ARMOR, 0, (entity, val) -> {
                 switch (val) {
                     case 1:
-                        entity.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.IRON_HORSE_ARMOR));
+                        entity.setItemStackToSlot(EquipmentSlotType.CHEST, new ItemStack(Items.IRON_HORSE_ARMOR));
                         break;
                     case 2:
-                        entity.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.GOLDEN_HORSE_ARMOR));
+                        entity.setItemStackToSlot(EquipmentSlotType.CHEST, new ItemStack(Items.GOLDEN_HORSE_ARMOR));
                         break;
                     case 3:
-                        entity.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_HORSE_ARMOR));
+                        entity.setItemStackToSlot(EquipmentSlotType.CHEST, new ItemStack(Items.DIAMOND_HORSE_ARMOR));
                         break;
                     default:
-                        entity.equipStack(EquipmentSlot.CHEST, ItemStack.EMPTY);
+                        entity.setItemStackToSlot(EquipmentSlotType.CHEST, ItemStack.EMPTY);
                 }
             });
         super.postEntityDataRegister(clazz);
@@ -522,7 +521,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             case 3:
                 return EntityType.AREA_EFFECT_CLOUD;
             default:
-                return ENTITY_REGISTRY_1_13.get(id);
+                return ENTITY_REGISTRY_1_13.getByValue(id);
         }
     }
 
@@ -557,16 +556,16 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             modifyEntityTypeRegistry((ISimpleRegistry<EntityType<?>>) registry);
         } else if (registry == Registry.BIOME) {
             modifyBiomeRegistry((ISimpleRegistry<Biome>) registry);
-        } else if (registry == Registry.STATUS_EFFECT) {
-            modifyStatusEffectRegistry((ISimpleRegistry<StatusEffect>) registry);
+        } else if (registry == Registry.EFFECTS) {
+            modifyStatusEffectRegistry((ISimpleRegistry<Effect>) registry);
         } else if (registry == Registry.PARTICLE_TYPE) {
-            modifyParticleTypeRegistry((ISimpleRegistry<ParticleType<? extends ParticleEffect>>) registry);
+            modifyParticleTypeRegistry((ISimpleRegistry<ParticleType<? extends IParticleData>>) registry);
         } else if (registry == Registry.ENCHANTMENT) {
             modifyEnchantmentRegistry((ISimpleRegistry<Enchantment>) registry);
         } else if (registry == Registry.BLOCK_ENTITY_TYPE) {
-            modifyBlockEntityRegistry((ISimpleRegistry<BlockEntityType<?>>) registry);
+            modifyBlockEntityRegistry((ISimpleRegistry<TileEntityType<?>>) registry);
         } else if (registry == Registry.RECIPE_SERIALIZER) {
-            modifyRecipeSerializerRegistry((ISimpleRegistry<RecipeSerializer<?>>) registry);
+            modifyRecipeSerializerRegistry((ISimpleRegistry<IRecipeSerializer<?>>) registry);
         } else if (registry == Registry.SOUND_EVENT) {
             modifySoundEventRegistry((ISimpleRegistry<SoundEvent>) registry);
         }
@@ -725,9 +724,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
         registry.unregister(EntityType.CAT);
-        int ocelotId = Registry.ENTITY_TYPE.getRawId(EntityType.OCELOT);
+        int ocelotId = Registry.ENTITY_TYPE.getId(EntityType.OCELOT);
         registry.unregister(EntityType.OCELOT);
-        registry.register(EntityType.CAT, ocelotId, new Identifier("ocelot"));
+        registry.register(EntityType.CAT, ocelotId, new ResourceLocation("ocelot"));
         registry.unregister(EntityType.FOX);
         registry.unregister(EntityType.PANDA);
         registry.unregister(EntityType.PILLAGER);
@@ -744,12 +743,12 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(Biomes.BAMBOO_JUNGLE_HILLS);
     }
 
-    private void modifyStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {
-        registry.unregister(StatusEffects.BAD_OMEN);
-        registry.unregister(StatusEffects.HERO_OF_THE_VILLAGE);
+    private void modifyStatusEffectRegistry(ISimpleRegistry<Effect> registry) {
+        registry.unregister(Effects.BAD_OMEN);
+        registry.unregister(Effects.HERO_OF_THE_VILLAGE);
     }
 
-    private void modifyParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
+    private void modifyParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends IParticleData>> registry) {
         registry.unregister(ParticleTypes.FALLING_LAVA);
         registry.unregister(ParticleTypes.LANDING_LAVA);
         registry.unregister(ParticleTypes.FALLING_WATER);
@@ -766,23 +765,23 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(Enchantments.PIERCING);
     }
 
-    private void modifyBlockEntityRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
-        registry.unregister(BlockEntityType.BARREL);
-        registry.unregister(BlockEntityType.SMOKER);
-        registry.unregister(BlockEntityType.BLAST_FURNACE);
-        registry.unregister(BlockEntityType.LECTERN);
-        registry.unregister(BlockEntityType.BELL);
-        registry.unregister(BlockEntityType.JIGSAW);
-        registry.unregister(BlockEntityType.CAMPFIRE);
+    private void modifyBlockEntityRegistry(ISimpleRegistry<TileEntityType<?>> registry) {
+        registry.unregister(TileEntityType.BARREL);
+        registry.unregister(TileEntityType.SMOKER);
+        registry.unregister(TileEntityType.BLAST_FURNACE);
+        registry.unregister(TileEntityType.LECTERN);
+        registry.unregister(TileEntityType.BELL);
+        registry.unregister(TileEntityType.JIGSAW);
+        registry.unregister(TileEntityType.CAMPFIRE);
     }
 
-    private void modifyRecipeSerializerRegistry(ISimpleRegistry<RecipeSerializer<?>> registry) {
-        registry.unregister(RecipeSerializer.SUSPICIOUS_STEW);
-        registry.unregister(RecipeSerializer.BLASTING);
-        registry.unregister(RecipeSerializer.SMOKING);
-        registry.unregister(RecipeSerializer.CAMPFIRE_COOKING);
-        registry.unregister(RecipeSerializer.STONECUTTING);
-        registry.register(AddBannerPatternRecipe.SERIALIZER, registry.getNextId(), new Identifier("crafting_special_banneraddpattern"));
+    private void modifyRecipeSerializerRegistry(ISimpleRegistry<IRecipeSerializer<?>> registry) {
+        registry.unregister(IRecipeSerializer.CRAFTING_SPECIAL_SUSPICIOUSSTEW);
+        registry.unregister(IRecipeSerializer.BLASTING);
+        registry.unregister(IRecipeSerializer.SMOKING);
+        registry.unregister(IRecipeSerializer.CAMPFIRE_COOKING);
+        registry.unregister(IRecipeSerializer.STONECUTTING);
+        registry.register(AddBannerPatternRecipe.SERIALIZER, registry.getNextFreeId(), new ResourceLocation("crafting_special_banneraddpattern"));
     }
 
     private void modifySoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
@@ -1376,10 +1375,10 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     public boolean acceptBlockState(BlockState state) {
         Block block = state.getBlock();
         if (block == Blocks.NOTE_BLOCK) {
-            Instrument instrument = state.get(NoteBlock.INSTRUMENT);
-            if (instrument == Instrument.IRON_XYLOPHONE || instrument == Instrument.COW_BELL
-                    || instrument == Instrument.DIDGERIDOO || instrument == Instrument.BIT
-                    || instrument == Instrument.BANJO || instrument == Instrument.PLING)
+            NoteBlockInstrument instrument = state.get(NoteBlock.INSTRUMENT);
+            if (instrument == NoteBlockInstrument.IRON_XYLOPHONE || instrument == NoteBlockInstrument.COW_BELL
+                    || instrument == NoteBlockInstrument.DIDGERIDOO || instrument == NoteBlockInstrument.BIT
+                    || instrument == NoteBlockInstrument.BANJO || instrument == NoteBlockInstrument.PLING)
                 return false;
         }
 
@@ -1387,8 +1386,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     public static void updateCameraPosition() {
-        assert MinecraftClient.getInstance().getNetworkHandler() != null;
-        ChunkSectionPos chunkPos = ChunkSectionPos.from(MinecraftClient.getInstance().player);
-        MinecraftClient.getInstance().getNetworkHandler().onChunkRenderDistanceCenter(new ChunkRenderDistanceCenterS2CPacket(chunkPos.getSectionX(), chunkPos.getSectionZ()));
+        assert Minecraft.getInstance().getConnection() != null;
+        SectionPos chunkPos = SectionPos.from(Minecraft.getInstance().player);
+        Minecraft.getInstance().getConnection().handleChunkPositionPacket(new SUpdateChunkPositionPacket(chunkPos.getSectionX(), chunkPos.getSectionZ()));
     }
 }

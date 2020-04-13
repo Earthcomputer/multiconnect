@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import net.minecraft.server.command.CommandSource;
+import net.minecraft.command.ISuggestionProvider;
 
 import static com.mojang.brigadier.arguments.IntegerArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
@@ -10,7 +10,7 @@ import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments
 
 public class DifficultyCommand {
 
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
+    public static void register(CommandDispatcher<ISuggestionProvider> dispatcher) {
         dispatcher.register(literal("difficulty")
             .then(argument("newDifficulty", union(enumArg("peaceful", "easy", "normal", "hard", "p", "e", "n", "h").caseInsensitive(), integer(0, 3)))
                 .executes(ctx -> 0)));

@@ -3,9 +3,9 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
-import net.minecraft.command.suggestion.SuggestionProviders;
-import net.minecraft.server.command.CommandSource;
-import net.minecraft.util.Formatting;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.command.arguments.SuggestionProviders;
+import net.minecraft.util.text.TextFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,13 +17,13 @@ import static com.mojang.brigadier.arguments.StringArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EntityArgumentType_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EnumArgumentType.*;
-import static net.minecraft.command.arguments.ColorArgumentType.*;
-import static net.minecraft.command.arguments.NbtCompoundTagArgumentType.*;
-import static net.minecraft.command.arguments.ObjectiveCriteriaArgumentType.*;
+import static net.minecraft.command.arguments.ColorArgument.color;
+import static net.minecraft.command.arguments.NBTCompoundTagArgument.nbt;
+import static net.minecraft.command.arguments.ObjectiveCriteriaArgument.objectiveCriteria;
 
 public class ScoreboardCommand {
 
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
+    public static void register(CommandDispatcher<ISuggestionProvider> dispatcher) {
         dispatcher.register(literal("scoreboard")
             .then(literal("objectives")
                 .then(literal("list")
@@ -51,7 +51,7 @@ public class ScoreboardCommand {
                             .suggests(SuggestionProviders.ASK_SERVER)
                             .then(argument("score", integer())
                                 .executes(ctx -> 0)
-                                .then(argument("nbt", nbtCompound())
+                                .then(argument("nbt", nbt())
                                     .executes(ctx -> 0))))))
                 .then(literal("add")
                     .then(argument("player", entities())
@@ -59,7 +59,7 @@ public class ScoreboardCommand {
                             .suggests(SuggestionProviders.ASK_SERVER)
                             .then(argument("count", integer(0))
                                 .executes(ctx -> 0)
-                                .then(argument("nbt", nbtCompound())
+                                .then(argument("nbt", nbt())
                                     .executes(ctx -> 0))))))
                 .then(literal("remove")
                     .then(argument("player", entities())
@@ -67,7 +67,7 @@ public class ScoreboardCommand {
                             .suggests(SuggestionProviders.ASK_SERVER)
                             .then(argument("count", integer(0))
                                 .executes(ctx -> 0)
-                                .then(argument("nbt", nbtCompound())
+                                .then(argument("nbt", nbt())
                                     .executes(ctx -> 0))))))
                 .then(literal("reset")
                     .then(argument("player", entities())
@@ -106,12 +106,12 @@ public class ScoreboardCommand {
                         .then(literal("add")
                             .then(argument("tagName", word())
                                 .executes(ctx -> 0)
-                                .then(argument("nbt", nbtCompound())
+                                .then(argument("nbt", nbt())
                                     .executes(ctx -> 0))))
                         .then(literal("remove")
                             .then(argument("tagName", word())
                                 .executes(ctx -> 0)
-                                .then(argument("nbt", nbtCompound())
+                                .then(argument("nbt", nbt())
                                     .executes(ctx -> 0))))
                         .then(literal("list")
                             .executes(ctx -> 0)))))
@@ -165,17 +165,17 @@ public class ScoreboardCommand {
         slots.add("list");
         slots.add("sidebar");
         slots.add("belowName");
-        for (Formatting formatting : Formatting.values()) {
+        for (TextFormatting formatting : TextFormatting.values()) {
             if (formatting.isColor()) {
-                slots.add("sidebar.team." + formatting.getName().toLowerCase(Locale.ENGLISH));
+                slots.add("sidebar.team." + formatting.getFriendlyName().toLowerCase(Locale.ENGLISH));
             }
         }
         return slots.toArray(new String[0]);
     }
 
-    private static CommandNode<CommandSource> addPlayerList(ArgumentBuilder<CommandSource, ?> parentBuilder) {
-        CommandNode<CommandSource> parent = parentBuilder.executes(ctx -> 0).build();
-        CommandNode<CommandSource> child = argument("player", entities())
+    private static CommandNode<ISuggestionProvider> addPlayerList(ArgumentBuilder<ISuggestionProvider, ?> parentBuilder) {
+        CommandNode<ISuggestionProvider> parent = parentBuilder.executes(ctx -> 0).build();
+        CommandNode<ISuggestionProvider> child = argument("player", entities())
                 .executes(ctx -> 0)
                 .redirect(parent)
                 .build();

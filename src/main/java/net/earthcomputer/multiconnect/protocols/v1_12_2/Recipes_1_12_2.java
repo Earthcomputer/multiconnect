@@ -2,9 +2,9 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import net.earthcomputer.multiconnect.protocols.v1_13_2.AddBannerPatternRecipe;
 import net.minecraft.block.Blocks;
-import net.minecraft.item.ItemConvertible;
 import net.minecraft.item.Items;
-import net.minecraft.recipe.*;
+import net.minecraft.item.crafting.*;
+import net.minecraft.util.IItemProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,17 +14,17 @@ public class Recipes_1_12_2 {
     public static List<RecipeInfo<?>> getRecipes() {
         List<RecipeInfo<?>> recipes = new ArrayList<>();
 
-        recipes.add(RecipeInfo.of(ArmorDyeRecipe::new, RecipeSerializer.ARMOR_DYE, Items.LEATHER_HELMET));
-        recipes.add(RecipeInfo.of(BookCloningRecipe::new, RecipeSerializer.BOOK_CLONING, Items.WRITABLE_BOOK, 2));
-        recipes.add(RecipeInfo.of(MapCloningRecipe::new, RecipeSerializer.MAP_CLONING, Items.FILLED_MAP, 2));
-        recipes.add(RecipeInfo.of(MapExtendingRecipe::new, RecipeSerializer.MAP_EXTENDING, Items.FILLED_MAP));
-        recipes.add(RecipeInfo.of(FireworkRocketRecipe::new, RecipeSerializer.FIREWORK_ROCKET, Items.FIREWORK_ROCKET));
-        recipes.add(RecipeInfo.of(RepairItemRecipe::new, RecipeSerializer.REPAIR_ITEM, Items.WOODEN_SWORD));
-        recipes.add(RecipeInfo.of(TippedArrowRecipe::new, RecipeSerializer.TIPPED_ARROW, Items.TIPPED_ARROW));
-        recipes.add(RecipeInfo.of(BannerDuplicateRecipe::new, RecipeSerializer.BANNER_DUPLICATE, Items.WHITE_BANNER, 2));
+        recipes.add(RecipeInfo.of(ArmorDyeRecipe::new, IRecipeSerializer.CRAFTING_SPECIAL_ARMORDYE, Items.LEATHER_HELMET));
+        recipes.add(RecipeInfo.of(BookCloningRecipe::new, IRecipeSerializer.CRAFTING_SPECIAL_BOOKCLONING, Items.WRITABLE_BOOK, 2));
+        recipes.add(RecipeInfo.of(MapCloningRecipe::new, IRecipeSerializer.CRAFTING_SPECIAL_MAPCLONING, Items.FILLED_MAP, 2));
+        recipes.add(RecipeInfo.of(MapExtendingRecipe::new, IRecipeSerializer.CRAFTING_SPECIAL_MAPEXTENDING, Items.FILLED_MAP));
+        recipes.add(RecipeInfo.of(FireworkRocketRecipe::new, IRecipeSerializer.CRAFTING_SPECIAL_FIREWORK_ROCKET, Items.FIREWORK_ROCKET));
+        recipes.add(RecipeInfo.of(RepairItemRecipe::new, IRecipeSerializer.CRAFTING_SPECIAL_REPAIRITEM, Items.WOODEN_SWORD));
+        recipes.add(RecipeInfo.of(TippedArrowRecipe::new, IRecipeSerializer.CRAFTING_SPECIAL_TIPPEDARROW, Items.TIPPED_ARROW));
+        recipes.add(RecipeInfo.of(BannerDuplicateRecipe::new, IRecipeSerializer.CRAFTING_SPECIAL_BANNERDUPLICATE, Items.WHITE_BANNER, 2));
         recipes.add(RecipeInfo.of(AddBannerPatternRecipe::new, AddBannerPatternRecipe.SERIALIZER, Items.WHITE_BANNER));
-        recipes.add(RecipeInfo.of(ShieldDecorationRecipe::new, RecipeSerializer.SHIELD_DECORATION, Items.SHIELD));
-        recipes.add(RecipeInfo.of(ShulkerBoxColoringRecipe::new, RecipeSerializer.SHULKER_BOX, Items.WHITE_SHULKER_BOX));
+        recipes.add(RecipeInfo.of(ShieldRecipes::new, IRecipeSerializer.CRAFTING_SPECIAL_SHIELD, Items.SHIELD));
+        recipes.add(RecipeInfo.of(ShulkerBoxColoringRecipe::new, IRecipeSerializer.CRAFTING_SPECIAL_SHULKERBOXCOLORING, Items.WHITE_SHULKER_BOX));
 
         recipes.add(RecipeInfo.shapeless("wool", Blocks.YELLOW_WOOL, Items.YELLOW_DYE, Blocks.WHITE_WOOL));
         recipes.add(RecipeInfo.shaped("stained_hardened_clay", 8, Blocks.YELLOW_TERRACOTTA, "###", "#X#", "###", '#', Blocks.TERRACOTTA, 'X', Items.YELLOW_DYE));
@@ -329,7 +329,7 @@ public class Recipes_1_12_2 {
         recipes.add(RecipeInfo.shaped(Blocks.FLOWER_POT, "# #", " # ", '#', Items.BRICK));
         recipes.add(RecipeInfo.shapeless(Items.FLINT_AND_STEEL, Items.IRON_INGOT, Items.FLINT));
         recipes.add(RecipeInfo.shaped(Items.FISHING_ROD, "  #", " #X", "# X", '#', Items.STICK, 'X', Blocks.TRIPWIRE));
-        recipes.add(RecipeInfo.shapeless(3, Items.FIRE_CHARGE, new ItemConvertible[] {Items.GUNPOWDER}, new ItemConvertible[] {Items.BLAZE_POWDER}, new ItemConvertible[] {Items.COAL, Items.CHARCOAL}));
+        recipes.add(RecipeInfo.shapeless(3, Items.FIRE_CHARGE, new IItemProvider[] {Items.GUNPOWDER}, new IItemProvider[] {Items.BLAZE_POWDER}, new IItemProvider[] {Items.COAL, Items.CHARCOAL}));
         recipes.add(RecipeInfo.shapeless(Items.FERMENTED_SPIDER_EYE, Items.SPIDER_EYE, Blocks.BROWN_MUSHROOM, Items.SUGAR));
         recipes.add(RecipeInfo.shaped("wooden_fence_gate", Blocks.OAK_FENCE_GATE, "#W#", "#W#", '#', Items.STICK, 'W', Blocks.OAK_PLANKS));
         recipes.add(RecipeInfo.shaped("wooden_fence", 3, Blocks.OAK_FENCE, "W#W", "W#W", '#', Items.STICK, 'W', Blocks.OAK_PLANKS));

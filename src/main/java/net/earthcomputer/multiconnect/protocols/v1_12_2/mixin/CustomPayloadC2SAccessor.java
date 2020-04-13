@@ -1,17 +1,17 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 
-import net.minecraft.server.network.packet.CustomPayloadC2SPacket;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.PacketByteBuf;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.play.client.CCustomPayloadPacket;
+import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(CustomPayloadC2SPacket.class)
+@Mixin(CCustomPayloadPacket.class)
 public interface CustomPayloadC2SAccessor {
 
     @Accessor("channel")
-    Identifier multiconnect_getChannel();
+    ResourceLocation multiconnect_getChannel();
 
     @Accessor("data")
-    PacketByteBuf multiconnect_getData();
+    PacketBuffer multiconnect_getData();
 }

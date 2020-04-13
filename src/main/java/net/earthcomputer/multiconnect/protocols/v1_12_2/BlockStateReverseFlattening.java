@@ -1,8 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.mojang.datafixers.Dynamic;
-import net.minecraft.datafixer.fix.BlockStateFlattening;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.datafix.fixes.BlockStateFlatteningMap;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
@@ -12,8 +12,8 @@ import java.util.Map;
 public class BlockStateReverseFlattening {
 
     public static final Dynamic[] IDS_TO_OLD_STATES = new Dynamic[4096];
-    public static final Map<Identifier, List<String>> OLD_PROPERTIES = new HashMap<>();
-    public static final Map<Pair<Identifier, String>, List<String>> OLD_PROPERTY_VALUES = new HashMap<>();
+    public static final Map<ResourceLocation, List<String>> OLD_PROPERTIES = new HashMap<>();
+    public static final Map<Pair<ResourceLocation, String>, List<String>> OLD_PROPERTY_VALUES = new HashMap<>();
 
     public static Dynamic<?> reverseLookupState(int stateId) {
         if (stateId < 0 || stateId >= IDS_TO_OLD_STATES.length)
@@ -35,7 +35,7 @@ public class BlockStateReverseFlattening {
 
     static {
         // load block state flattening class
-        BlockStateFlattening.lookupStateBlock(0);
+        BlockStateFlatteningMap.updateId(0);
     }
 
 }

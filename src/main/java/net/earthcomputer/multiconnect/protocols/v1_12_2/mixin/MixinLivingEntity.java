@@ -22,14 +22,14 @@ public abstract class MixinLivingEntity extends Entity {
     }
 
     @Inject(method = "travel",
-            slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/entity/effect/StatusEffects;LEVITATION:Lnet/minecraft/entity/effect/StatusEffect;", ordinal = 0)),
+            slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/potion/Effects;LEVITATION:Lnet/minecraft/potion/Effect;", ordinal = 0)),
             at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;fallDistance:F", ordinal = 0))
     private void captureFallDistance(Vec3d travelVec, CallbackInfo ci) {
         oldFallDistance = fallDistance;
     }
 
     @Inject(method = "travel",
-            slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/entity/effect/StatusEffects;LEVITATION:Lnet/minecraft/entity/effect/StatusEffect;", ordinal = 0)),
+            slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/potion/Effects;LEVITATION:Lnet/minecraft/potion/Effect;", ordinal = 0)),
             at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;fallDistance:F", ordinal = 0, shift = At.Shift.AFTER))
     private void dontResetLevitationFallDistance(Vec3d travelVec, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
@@ -52,21 +52,21 @@ public abstract class MixinLivingEntity extends Entity {
     @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSprinting()Z", ordinal = 1))
     private boolean modifySwimSprintFallSpeed(LivingEntity self) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            Vec3d velocity = getVelocity();
+            Vec3d velocity = getMotion();
             setVelocity(velocity.x, velocity.y - 0.02, velocity.z);
             return true; // to skip the if statement body
         }
         return self.isSprinting();
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;waterHeight:D"))
+    @Redirect(method = "livingTick", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;submergedHeight:D"))
     private double redirectWaterHeight(LivingEntity entity) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             // If you're in water, you're in water, even if you're almost at the surface
-            if (entity.getWaterHeight() > 0)
+            if (entity.getSubmergedHeight() > 0)
                 return 1;
         }
-        return entity.getWaterHeight();
+        return entity.getSubmergedHeight();
     }
 
 }

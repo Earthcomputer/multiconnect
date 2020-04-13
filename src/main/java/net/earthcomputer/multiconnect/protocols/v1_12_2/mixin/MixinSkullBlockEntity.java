@@ -3,25 +3,25 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.entity.SkullBlockEntity;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.SkullTileEntity;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(SkullBlockEntity.class)
-public abstract class MixinSkullBlockEntity extends BlockEntity {
+@Mixin(SkullTileEntity.class)
+public abstract class MixinSkullBlockEntity extends TileEntity {
 
-    public MixinSkullBlockEntity(BlockEntityType<?> type) {
+    public MixinSkullBlockEntity(TileEntityType<?> type) {
         super(type);
     }
 
-    @Inject(method = "fromTag", at = @At("RETURN"))
-    private void onFromTag(CompoundTag tag, CallbackInfo ci) {
+    @Inject(method = "read", at = @At("RETURN"))
+    private void onFromTag(CompoundNBT tag, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             setSkullType(tag.getByte("SkullType"));
             setRotation(tag.getByte("Rot"));
@@ -30,8 +30,8 @@ public abstract class MixinSkullBlockEntity extends BlockEntity {
 
     @Unique
     public void setSkullType(int skullType) {
-        BlockState state = getCachedState();
-        if (!getType().supports(state.getBlock()))
+        BlockState state = getBlockState();
+        if (!getType().isValidBlock(state.getBlock()))
             return;
 
         if (skullType < 0 || skullType > 5)
@@ -49,8 +49,8 @@ public abstract class MixinSkullBlockEntity extends BlockEntity {
 
     @Unique
     public void setRotation(int rot) {
-        BlockState state = getCachedState();
-        if (!getType().supports(state.getBlock()) || !(state.getBlock() instanceof SkullBlock))
+        BlockState state = getBlockState();
+        if (!getType().isValidBlock(state.getBlock()) || !(state.getBlock() instanceof SkullBlock))
             return;
 
         assert world != null;

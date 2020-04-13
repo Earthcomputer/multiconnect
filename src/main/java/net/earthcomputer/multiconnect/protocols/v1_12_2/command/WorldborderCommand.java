@@ -1,17 +1,17 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import net.minecraft.server.command.CommandSource;
+import net.minecraft.command.ISuggestionProvider;
 
 import static com.mojang.brigadier.arguments.DoubleArgumentType.*;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.*;
 import static com.mojang.brigadier.arguments.LongArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
-import static net.minecraft.command.arguments.Vec2ArgumentType.*;
+import static net.minecraft.command.arguments.Vec2Argument.vec2;
 
 public class WorldborderCommand {
 
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
+    public static void register(CommandDispatcher<ISuggestionProvider> dispatcher) {
         dispatcher.register(literal("worldborder")
             .then(literal("set")
                 .then(argument("sizeInBlocks", doubleArg(1, 6E7))

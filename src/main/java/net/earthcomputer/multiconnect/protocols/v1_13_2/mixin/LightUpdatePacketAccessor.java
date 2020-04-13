@@ -1,12 +1,12 @@
 package net.earthcomputer.multiconnect.protocols.v1_13_2.mixin;
 
-import net.minecraft.client.network.packet.LightUpdateS2CPacket;
+import net.minecraft.network.play.server.SUpdateLightPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.List;
 
-@Mixin(LightUpdateS2CPacket.class)
+@Mixin(SUpdateLightPacket.class)
 public interface LightUpdatePacketAccessor {
 
     @Accessor
@@ -16,14 +16,14 @@ public interface LightUpdatePacketAccessor {
     void setChunkZ(int chunkZ);
 
     @Accessor
-    void setSkylightMask(int skylightMask);
+    void setSkyLightUpdateMask(int skylightMask);
 
     @Accessor
-    void setBlocklightMask(int blocklightMask);
+    void setBlockLightUpdateMask(int blocklightMask);
 
     @Accessor
-    void setBlockLightUpdates(List<byte[]> blockLightUpdates);
+    void setBlockLightData(List<byte[]> blockLightUpdates);
 
     @Accessor
-    void setSkyLightUpdates(List<byte[]> skyLightUpdates);
+    void setSkyLightData(List<byte[]> skyLightUpdates);
 }

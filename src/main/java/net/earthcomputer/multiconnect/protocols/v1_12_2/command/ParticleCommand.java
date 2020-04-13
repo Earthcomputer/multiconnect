@@ -1,7 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import net.minecraft.server.command.CommandSource;
+import net.minecraft.command.ISuggestionProvider;
+import net.minecraft.command.ISuggestionProvider;
 
 import static com.mojang.brigadier.arguments.DoubleArgumentType.*;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.*;
@@ -9,11 +10,11 @@ import static com.mojang.brigadier.arguments.StringArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EntityArgumentType_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.ParticleArgumentType_1_12_2.*;
-import static net.minecraft.command.arguments.Vec3ArgumentType.*;
+import static net.minecraft.command.arguments.Vec3Argument.vec3;
 
 public class ParticleCommand {
 
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
+    public static void register(CommandDispatcher<ISuggestionProvider> dispatcher) {
         dispatcher.register(literal("particle")
             .then(argument("type", particle()))
                 .then(argument("pos", vec3())
@@ -26,7 +27,7 @@ public class ParticleCommand {
                                         .executes(ctx -> 0)
                                         .then(argument("mode", word())
                                             .suggests((ctx, builder) -> {
-                                                CommandSource.suggestMatching(new String[] {"normal", "force"}, builder);
+                                                ISuggestionProvider.suggest(new String[] {"normal", "force"}, builder);
                                                 return builder.buildFuture();
                                             })
                                             .executes(ctx -> 0)

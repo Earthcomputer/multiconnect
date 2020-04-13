@@ -1,11 +1,11 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.minecraft.client.search.SearchManager;
+import net.minecraft.client.util.SearchTreeManager;
 
 public interface IMinecraftClient {
 
-    void callInitializeSearchableContainers();
+    void callPopulateSearchTreeManager();
 
-    SearchManager getSearchManager();
+    SearchTreeManager getSearchTreeManager();
 
 }

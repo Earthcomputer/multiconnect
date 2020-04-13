@@ -1,19 +1,19 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.minecraft.client.network.packet.ChunkDataS2CPacket;
+import net.minecraft.network.play.server.SChunkDataPacket;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class CurrentChunkDataPacket {
 
-    private static Deque<ChunkDataS2CPacket> packets = new ArrayDeque<>();
+    private static Deque<SChunkDataPacket> packets = new ArrayDeque<>();
 
-    public static ChunkDataS2CPacket get() {
+    public static SChunkDataPacket get() {
         return packets.peek();
     }
 
-    public static void push(ChunkDataS2CPacket packet) {
+    public static void push(SChunkDataPacket packet) {
         packets.push(packet);
     }
 

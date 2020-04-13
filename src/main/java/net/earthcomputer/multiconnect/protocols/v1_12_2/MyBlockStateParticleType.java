@@ -1,11 +1,11 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
-import net.minecraft.particle.BlockStateParticleEffect;
-import net.minecraft.particle.ParticleType;
+import net.minecraft.particles.BlockParticleData;
+import net.minecraft.particles.ParticleType;
 
-public class MyBlockStateParticleType extends ParticleType<BlockStateParticleEffect> {
+public class MyBlockStateParticleType extends ParticleType<BlockParticleData> {
 
     protected MyBlockStateParticleType(boolean ignoreRange) {
-        super(ignoreRange, BlockStateParticleEffect.PARAMETERS_FACTORY);
+        super(ignoreRange, BlockParticleData.DESERIALIZER);
     }
 }

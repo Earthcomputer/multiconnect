@@ -4,23 +4,23 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.EntityType;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
-import net.minecraft.tag.RegistryTagContainer;
-import net.minecraft.tag.RegistryTagManager;
+import net.minecraft.tags.NetworkTagCollection;
+import net.minecraft.tags.NetworkTagManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(RegistryTagManager.class)
+@Mixin(NetworkTagManager.class)
 public interface RegistryTagManagerAccessor {
 
     @Accessor
-    RegistryTagContainer<Block> getBlocks();
+    NetworkTagCollection<Block> getBlocks();
 
     @Accessor
-    RegistryTagContainer<Item> getItems();
+    NetworkTagCollection<Item> getItems();
 
     @Accessor
-    RegistryTagContainer<Fluid> getFluids();
+    NetworkTagCollection<Fluid> getFluids();
 
     @Accessor
-    RegistryTagContainer<EntityType<?>> getEntityTypes();
+    NetworkTagCollection<EntityType<?>> getEntityTypes();
 }
