@@ -70,14 +70,15 @@ public abstract class MixinClientPlayNetworkHandler {
     @SuppressWarnings("unchecked")
     @Unique
     private <T> void toTagContainer(RegistryTagContainer<T> container, Multimap<Tag<T>, T> tags) {
-        ImmutableMap.Builder<Identifier, Tag<T>> map = new ImmutableMap.Builder<>();
+        // TODO: Needs Rewrite for 1.16 Support (After 20w12a)
+        /*ImmutableMap.Builder<Identifier, Tag<T>> map = new ImmutableMap.Builder<>();
         for (Map.Entry<Tag<T>, Collection<T>> entry : tags.asMap().entrySet()) {
             Identifier id = entry.getKey().getId();
             Tag.Builder<T> tag = Tag.Builder.create();
             entry.getValue().forEach(tag::add);
             map.put(id, tag.build(id));
         }
-        ((TagContainerAccessor<T>) container).multiconnect_setEntries(map.build());
+        ((TagContainerAccessor<T>) container).multiconnect_setEntries(map.build());*/
     }
 
     @Inject(method = "onBlockEntityUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/BlockEntityUpdateS2CPacket;getBlockEntityType()I"))

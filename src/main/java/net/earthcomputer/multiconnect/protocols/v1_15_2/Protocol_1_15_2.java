@@ -101,6 +101,28 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Blocks.POLISHED_BASALT);
         registry.unregister(Blocks.RESPAWN_ANCHOR);
         registry.unregister(Blocks.LODESTONE);
+        registry.unregister(Blocks.CHAIN);
+        registry.unregister(Blocks.SOUL_CAMPFIRE);
+        registry.unregister(Blocks.BLACKSTONE);
+        registry.unregister(Blocks.BLACKSTONE_STAIRS);
+        registry.unregister(Blocks.BLACKSTONE_WALL);
+        registry.unregister(Blocks.BLACKSTONE_SLAB);
+        registry.unregister(Blocks.POLISHED_BLACKSTONE);
+        registry.unregister(Blocks.POLISHED_BLACKSTONE_BRICKS);
+        registry.unregister(Blocks.CRACKED_POLISHED_BLACKSTONE_BRICKS);
+        registry.unregister(Blocks.CHISELED_POLISHED_BLACKSTONE);
+        registry.unregister(Blocks.POLISHED_BLACKSTONE_BRICK_SLAB);
+        registry.unregister(Blocks.POLISHED_BLACKSTONE_BRICK_STAIRS);
+        registry.unregister(Blocks.POLISHED_BLACKSTONE_BRICK_WALL);
+        registry.unregister(Blocks.GILDED_BLACKSTONE);
+        registry.unregister(Blocks.POLISHED_BLACKSTONE_STAIRS);
+        registry.unregister(Blocks.POLISHED_BLACKSTONE_SLAB);
+        registry.unregister(Blocks.POLISHED_BLACKSTONE_PRESSURE_PLATE);
+        registry.unregister(Blocks.POLISHED_BLACKSTONE_BUTTON);
+        registry.unregister(Blocks.POLISHED_BLACKSTONE_WALL);
+        registry.unregister(Blocks.CHISELED_NETHER_BRICKS);
+        registry.unregister(Blocks.CRACKED_NETHER_BRICKS);
+        registry.unregister(Blocks.QUARTZ_BRICKS);
     }
 
     private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
@@ -174,6 +196,30 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.NETHER_GOLD_ORE);
         registry.unregister(Items.TWISTING_VINES);
         registry.unregister(Items.ZOGLIN_SPAWN_EGG);
+        registry.unregister(Items.CHAIN);
+        registry.unregister(Items.CRACKED_NETHER_BRICKS);
+        registry.unregister(Items.CHISELED_NETHER_BRICKS);
+        registry.unregister(Items.QUARTZ_BRICKS);
+        registry.unregister(Items.MUSIC_DISC_PIGSTEP);
+        registry.unregister(Items.PIGLIN_BANNER_PATTERN);
+        registry.unregister(Items.SOUL_CAMPFIRE);
+        registry.unregister(Items.BLACKSTONE);
+        registry.unregister(Items.BLACKSTONE_SLAB);
+        registry.unregister(Items.BLACKSTONE_STAIRS);
+        registry.unregister(Items.BLACKSTONE_WALL);
+        registry.unregister(Items.GILDED_BLACKSTONE);
+        registry.unregister(Items.POLISHED_BLACKSTONE);
+        registry.unregister(Items.POLISHED_BLACKSTONE_SLAB);
+        registry.unregister(Items.POLISHED_BLACKSTONE_STAIRS);
+        registry.unregister(Items.POLISHED_BLACKSTONE_WALL);
+        registry.unregister(Items.POLISHED_BLACKSTONE_BUTTON);
+        registry.unregister(Items.POLISHED_BLACKSTONE_PRESSURE_PLATE);
+        registry.unregister(Items.CHISELED_POLISHED_BLACKSTONE);
+        registry.unregister(Items.POLISHED_BLACKSTONE_BRICKS);
+        registry.unregister(Items.POLISHED_BLACKSTONE_BRICK_SLAB);
+        registry.unregister(Items.POLISHED_BLACKSTONE_BRICK_STAIRS);
+        registry.unregister(Items.POLISHED_BLACKSTONE_BRICK_WALL);
+        registry.unregister(Items.CRACKED_POLISHED_BLACKSTONE_BRICKS);
     }
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
@@ -188,6 +234,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Biomes.SOUL_SAND_VALLEY);
         registry.unregister(Biomes.CRIMSON_FOREST);
         registry.unregister(Biomes.WARPED_FOREST);
+        registry.unregister(Biomes.BASALT_DELTAS);
     }
 
     private void modifyParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
@@ -200,6 +247,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(ParticleTypes.FALLING_OBSIDIAN_TEAR);
         registry.unregister(ParticleTypes.LANDING_OBSIDIAN_TEAR);
         registry.unregister(ParticleTypes.REVERSE_PORTAL);
+        registry.unregister(ParticleTypes.WHITE_ASH);
     }
 
     private void modifySoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
@@ -426,6 +474,20 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE);
         registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE);
         registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_SET_SPAWN);
+
+        registry.unregister(SoundEvents.AMBIENT_BASALT_DELTAS_ADDITIONS);
+        registry.unregister(SoundEvents.AMBIENT_BASALT_DELTAS_LOOP);
+        registry.unregister(SoundEvents.AMBIENT_BASALT_DELTAS_MOOD);
+
+        registry.unregister(SoundEvents.MUSIC_NETHER_BASALT_DELTAS);
+        registry.unregister(SoundEvents.MUSIC_NETHER_NETHER_WASTES);
+        registry.unregister(SoundEvents.MUSIC_NETHER_SOUL_SAND_VALLEY);
+        registry.unregister(SoundEvents.MUSIC_NETHER_CRIMSON_FOREST);
+        registry.unregister(SoundEvents.MUSIC_NETHER_WARPED_FOREST);
+
+        insertAfter(registry, SoundEvents.MUSIC_MENU, SoundEvents.MUSIC_NETHER_NETHER_WASTES, "music.nether");
+
+        registry.unregister(SoundEvents.MUSIC_DISC_PIGSTEP);
     }
 
     @Override

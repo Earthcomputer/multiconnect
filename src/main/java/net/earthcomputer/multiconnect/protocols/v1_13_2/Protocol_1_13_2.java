@@ -966,7 +966,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(SoundEvents.MUSIC_END);
         registry.unregister(SoundEvents.MUSIC_GAME);
         registry.unregister(SoundEvents.MUSIC_MENU);
-        registry.unregister(SoundEvents.MUSIC_NETHER);
+        registry.unregister(SoundEvents.MUSIC_NETHER_NETHER_WASTES);
         registry.unregister(SoundEvents.MUSIC_UNDER_WATER);
         registry.unregister(SoundEvents.BLOCK_NETHER_WART_BREAK);
         registry.unregister(SoundEvents.ITEM_NETHER_WART_PLANT);
@@ -1350,8 +1350,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         insertAfter(registry, SoundEvents.MUSIC_DRAGON, SoundEvents.MUSIC_END, "music.end");
         insertAfter(registry, SoundEvents.MUSIC_END, SoundEvents.MUSIC_GAME, "music.game");
         insertAfter(registry, SoundEvents.MUSIC_GAME, SoundEvents.MUSIC_MENU, "music.menu");
-        insertAfter(registry, SoundEvents.MUSIC_MENU, SoundEvents.MUSIC_NETHER, "music.nether");
-        insertAfter(registry, SoundEvents.MUSIC_NETHER, SoundEvents.MUSIC_UNDER_WATER, "music.under_water");
+        insertAfter(registry, SoundEvents.MUSIC_MENU, SoundEvents.MUSIC_NETHER_NETHER_WASTES, "music.nether");
+        insertAfter(registry, SoundEvents.MUSIC_NETHER_NETHER_WASTES, SoundEvents.MUSIC_UNDER_WATER, "music.under_water");
         insertAfter(registry, SoundEvents.MUSIC_UNDER_WATER, SoundEvents.MUSIC_DISC_11, "music_disc.11");
         insertAfter(registry, SoundEvents.MUSIC_DISC_11, SoundEvents.MUSIC_DISC_13, "music_disc.13");
         insertAfter(registry, SoundEvents.MUSIC_DISC_13, SoundEvents.MUSIC_DISC_BLOCKS, "music_disc.blocks");
