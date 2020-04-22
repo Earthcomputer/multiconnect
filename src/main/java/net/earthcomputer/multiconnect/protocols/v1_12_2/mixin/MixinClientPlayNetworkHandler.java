@@ -1,7 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
@@ -69,16 +68,14 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @SuppressWarnings("unchecked")
     @Unique
-    private <T> void toTagContainer(RegistryTagContainer<T> container, Multimap<Tag<T>, T> tags) {
+    private <T> void toTagContainer(RegistryTagContainer<T> container, Multimap<Tag.Identified<T>, T> tags) {
         // TODO: Needs Rewrite for 1.16 Support (After 20w12a)
-        /*ImmutableMap.Builder<Identifier, Tag<T>> map = new ImmutableMap.Builder<>();
-        for (Map.Entry<Tag<T>, Collection<T>> entry : tags.asMap().entrySet()) {
+        Map<Identifier, Tag<T>> map = HashBiMap.create();
+        for (Map.Entry<Tag.Identified<T>, Collection<T>> entry : tags.asMap().entrySet()) {
             Identifier id = entry.getKey().getId();
-            Tag.Builder<T> tag = Tag.Builder.create();
-            entry.getValue().forEach(tag::add);
-            map.put(id, tag.build(id));
+            map.put(id, entry.getKey());
         }
-        ((TagContainerAccessor<T>) container).multiconnect_setEntries(map.build());*/
+        ((TagContainerAccessor<T>) container).multiconnect_setEntries(ImmutableBiMap.copyOf(map));
     }
 
     @Inject(method = "onBlockEntityUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/BlockEntityUpdateS2CPacket;getBlockEntityType()I"))

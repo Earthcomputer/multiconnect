@@ -1014,8 +1014,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         return true;
     }
 
-    public Multimap<Tag<Block>, Block> getBlockTags() {
-        Multimap<Tag<Block>, Block> tags = HashMultimap.create();
+    public Multimap<Tag.Identified<Block>, Block> getBlockTags() {
+        Multimap<Tag.Identified<Block>, Block> tags = HashMultimap.create();
         tags.putAll(BlockTags.WOOL, Arrays.asList(
             Blocks.WHITE_WOOL,
             Blocks.ORANGE_WOOL,
@@ -1396,9 +1396,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         return tags;
     }
 
-    public Multimap<Tag<Item>, Item> getItemTags() {
-        Multimap<Tag<Block>, Block> blockTags = getBlockTags();
-        Multimap<Tag<Item>, Item> tags = HashMultimap.create();
+    public Multimap<Tag.Identified<Item>, Item> getItemTags() {
+        Multimap<Tag.Identified<Block>, Block> blockTags = getBlockTags();
+        Multimap<Tag.Identified<Item>, Item> tags = HashMultimap.create();
         copyBlockItemTags(tags, blockTags, ItemTags.WOOL, BlockTags.WOOL);
         copyBlockItemTags(tags, blockTags, ItemTags.PLANKS, BlockTags.PLANKS);
         copyBlockItemTags(tags, blockTags, ItemTags.STONE_BRICKS, BlockTags.STONE_BRICKS);
@@ -1491,12 +1491,12 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         return tags;
     }
 
-    protected void copyBlockItemTags(Multimap<Tag<Item>, Item> itemTags, Multimap<Tag<Block>, Block> blockTags, Tag<Item> itemTag, Tag<Block> blockTag) {
+    protected void copyBlockItemTags(Multimap<Tag.Identified<Item>, Item> itemTags, Multimap<Tag.Identified<Block>, Block> blockTags, Tag.Identified<Item> itemTag, Tag.Identified<Block> blockTag) {
         itemTags.putAll(itemTag, Collections2.transform(blockTags.get(blockTag), Item.BLOCK_ITEMS::get));
     }
 
-    public Multimap<Tag<Fluid>, Fluid> getFluidTags() {
-        Multimap<Tag<Fluid>, Fluid> tags = HashMultimap.create();
+    public Multimap<Tag.Identified<Fluid>, Fluid> getFluidTags() {
+        Multimap<Tag.Identified<Fluid>, Fluid> tags = HashMultimap.create();
         tags.putAll(FluidTags.WATER, Arrays.asList(
             Fluids.WATER,
             Fluids.FLOWING_WATER));
@@ -1506,8 +1506,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         return tags;
     }
 
-    public Multimap<Tag<EntityType<?>>, EntityType<?>> getEntityTypeTags() {
-        Multimap<Tag<EntityType<?>>, EntityType<?>> tags = HashMultimap.create();
+    public Multimap<Tag.Identified<EntityType<?>>, EntityType<?>> getEntityTypeTags() {
+        Multimap<Tag.Identified<EntityType<?>>, EntityType<?>> tags = HashMultimap.create();
         tags.putAll(EntityTypeTags.SKELETONS, Arrays.asList(
             EntityType.SKELETON,
             EntityType.STRAY,
