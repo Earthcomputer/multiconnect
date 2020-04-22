@@ -9,6 +9,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -54,7 +56,7 @@ public abstract class MixinDisconnectedScreen extends Screen {
     @Inject(method = "init", at = @At("RETURN"))
     private void addButtons(CallbackInfo ci) {
         if (isProtocolReason) {
-            protocolSelector = new ButtonWidget(width - 80, 5, 70, 20, getForcedVersion().getName(), (buttonWidget_1) ->
+            protocolSelector = new ButtonWidget(width - 80, 5, 70, 20, new LiteralText(getForcedVersion().getName()), (buttonWidget_1) ->
                     ServersExt.getInstance().getOrCreateServer(server.address).forcedProtocol = getForcedVersion().next().getValue()
             );
 
@@ -62,12 +64,12 @@ public abstract class MixinDisconnectedScreen extends Screen {
         }
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(IIF)V"))
-    private void onRender(int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"))
+    private void onRender(MatrixStack matrixStack, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (isProtocolReason) {
             String label = I18n.translate("multiconnect.changeForcedProtocol") + " ->";
-            textRenderer.drawWithShadow(label, width - 85 - textRenderer.getStringWidth(label), 11, 0xFFFFFF);
-            protocolSelector.setMessage(getForcedVersion().getName());
+            textRenderer.drawWithShadow(matrixStack, label, width - 85 - textRenderer.getStringWidth(label), 11, 0xFFFFFF);
+            protocolSelector.setMessage(new LiteralText(getForcedVersion().getName()));
         }
     }
 

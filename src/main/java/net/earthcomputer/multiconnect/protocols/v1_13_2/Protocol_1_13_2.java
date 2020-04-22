@@ -348,7 +348,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                                 try {
                                     Text text = Text.Serializer.fromJson(lore.getString(i));
                                     if (text == null) throw new JsonParseException("text null");
-                                    newLore.add(StringTag.of(text.asFormattedString()));
+                                    newLore.add(StringTag.of(text.asString()));
                                 } catch (JsonParseException e) {
                                     newLore.add(lore.get(i));
                                 }

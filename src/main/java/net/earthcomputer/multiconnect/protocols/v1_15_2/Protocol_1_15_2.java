@@ -78,9 +78,9 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Blocks.NETHERITE_BLOCK);
         registry.unregister(Blocks.SHROOMLIGHT);
         registry.unregister(Blocks.SOUL_FIRE);
-        registry.unregister(Blocks.SOUL_FIRE_LANTERN);
-        registry.unregister(Blocks.SOUL_FIRE_TORCH);
-        registry.unregister(Blocks.SOUL_FIRE_WALL_TORCH);
+        registry.unregister(Blocks.SOUL_LANTERN);
+        registry.unregister(Blocks.SOUL_TORCH);
+        registry.unregister(Blocks.SOUL_WALL_TORCH);
         registry.unregister(Blocks.SOUL_SOIL);
         registry.unregister(Blocks.WARPED_WART_BLOCK);
         registry.unregister(Blocks.WEEPING_VINES);

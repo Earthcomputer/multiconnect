@@ -145,7 +145,7 @@ public class Items_1_12_2 {
         }
         if (stack.hasCustomName()) {
             stack = stack.copy();
-            String displayName = stack.getName().asFormattedString();
+            String displayName = stack.getName().asString();
             //noinspection ConstantConditions
             stack.getSubTag("display").putString("Name", displayName);
         }

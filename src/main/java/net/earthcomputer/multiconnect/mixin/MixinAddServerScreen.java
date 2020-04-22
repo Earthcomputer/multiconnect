@@ -8,6 +8,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -36,7 +38,7 @@ public abstract class MixinAddServerScreen extends Screen {
 
     @Inject(method = "init", at = @At("RETURN"))
     private void createButtons(CallbackInfo ci) {
-        protocolSelector = new ButtonWidget(width - 80, 5, 70, 20, currentProtocol.getName(), (buttonWidget_1) ->
+        protocolSelector = new ButtonWidget(width - 80, 5, 70, 20, new LiteralText(currentProtocol.getName()), (buttonWidget_1) ->
                 currentProtocol = currentProtocol.next()
         );
 
@@ -44,10 +46,10 @@ public abstract class MixinAddServerScreen extends Screen {
     }
 
     @Inject(method = "render", at = @At("RETURN"))
-    private void drawScreen(int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    private void drawScreen(MatrixStack matrixStack, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         String label = I18n.translate("multiconnect.changeForcedProtocol") + " ->";
-        textRenderer.drawWithShadow(label, width - 85 - textRenderer.getStringWidth(label), 11, 0xFFFFFF);
-        protocolSelector.setMessage(currentProtocol.getName());
+        textRenderer.drawWithShadow(matrixStack, label, width - 85 - textRenderer.getStringWidth(label), 11, 0xFFFFFF);
+        protocolSelector.setMessage(new LiteralText(currentProtocol.getName()));
     }
 
     @Inject(method = "addAndClose", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/booleans/BooleanConsumer;accept(Z)V", remap = false))
