@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinMinecraftServer {
 
     @Inject(method = "reloadDataPacks", at = @At("RETURN"))
-    private void onReloadDataPacks(LevelProperties levelProperties, CallbackInfo ci) {
+    private void onReloadDataPacks(CallbackInfo ci) {
         ConnectionInfo.stopReloadingResources();
     }
 

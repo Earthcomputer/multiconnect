@@ -26,7 +26,7 @@ public abstract class MixinClientChunkManager {
     @Shadow public abstract WorldChunk getChunk(int x, int z, ChunkStatus status, boolean create);
 
     @Inject(method = "loadChunkFromPacket", at = @At("RETURN"))
-    private void onLoadChunkFromPacket(int x, int z, BiomeArray biomes, PacketByteBuf buf, CompoundTag heightmaps, int verticalStripBitmask, CallbackInfoReturnable<WorldChunk> ci) {
+    private void onLoadChunkFromPacket(int x, int z, BiomeArray biomes, PacketByteBuf buf, CompoundTag heightmaps, int verticalStripBitmask, boolean bl, CallbackInfoReturnable<WorldChunk> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             if (ci.getReturnValue() != null) {
                 synchronized (LOCK) {

@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_15_2;
 
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
+import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -10,6 +11,9 @@ import net.minecraft.block.enums.WallShape;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.c2s.play.UpdateJigsawC2SPacket;
+import net.minecraft.network.packet.s2c.play.PlayerActionResponseS2CPacket;
+import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
@@ -18,6 +22,8 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
+
+import java.util.List;
 
 public class Protocol_1_15_2 extends Protocol_1_16 {
 
@@ -37,6 +43,13 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         } else if (registry == Registry.SOUND_EVENT) {
             modifySoundEventRegistry((ISimpleRegistry<SoundEvent>) registry);
         }
+    }
+
+    @Override
+    public List<PacketInfo<?>> getServerboundPackets() {
+        List<PacketInfo<?>> packets = super.getServerboundPackets();
+        remove(packets, UpdateJigsawC2SPacket.class);
+        return packets;
     }
 
     private void modifyBlockRegistry(ISimpleRegistry<Block> registry) {

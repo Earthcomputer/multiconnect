@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinClientChunkManager {
 
     @Inject(method = "loadChunkFromPacket", at = @At("RETURN"))
-    private void onLoadChunkFromPacket(int x, int z, BiomeArray biomeArray, PacketByteBuf buf, CompoundTag heightmaps, int verticalStripMask, CallbackInfoReturnable<WorldChunk> ci) {
+    private void onLoadChunkFromPacket(int x, int z, BiomeArray biomeArray, PacketByteBuf buf, CompoundTag heightmaps, int verticalStripMask, boolean bl, CallbackInfoReturnable<WorldChunk> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_14_4) {
             if (ci.getReturnValue() != null) {
                 Biome[] biomeData = PendingBiomeData.getPendingBiomeData(x, z);

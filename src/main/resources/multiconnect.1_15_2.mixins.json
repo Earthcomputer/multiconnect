@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_15_2.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "MixinLoginSuccessS2CPacket"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

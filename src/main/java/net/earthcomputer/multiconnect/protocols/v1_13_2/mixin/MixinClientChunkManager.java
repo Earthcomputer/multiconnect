@@ -36,7 +36,7 @@ public class MixinClientChunkManager {
     @Unique private int lastCenterZ;
 
     @Inject(method = "loadChunkFromPacket", at = @At(value = "INVOKE", target = "Lorg/apache/logging/log4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V", ordinal = 0, remap = false), cancellable = true)
-    private void cancelErrorMessage(int x, int z, BiomeArray biomeArray, PacketByteBuf buf, CompoundTag tag, int verticalStripMask, CallbackInfoReturnable<WorldChunk> ci) {
+    private void cancelErrorMessage(int x, int z, BiomeArray biomeArray, PacketByteBuf buf, CompoundTag tag, int verticalStripMask, boolean bl, CallbackInfoReturnable<WorldChunk> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2 && !PendingChunkDataPackets.isProcessingQueuedPackets())
             ci.setReturnValue(null);
     }
@@ -49,7 +49,7 @@ public class MixinClientChunkManager {
     }
 
     @Inject(method = "loadChunkFromPacket", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/WorldChunk;getSectionArray()[Lnet/minecraft/world/chunk/ChunkSection;"))
-    private void recalculateHeightmaps(int x, int z, BiomeArray biomeArray, PacketByteBuf buf, CompoundTag tag, int verticalStripMask, CallbackInfoReturnable<WorldChunk> ci) {
+    private void recalculateHeightmaps(int x, int z, BiomeArray biomeArray, PacketByteBuf buf, CompoundTag tag, int verticalStripMask, boolean bl, CallbackInfoReturnable<WorldChunk> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             WorldChunk chunk = this.chunk.get();
             for (ChunkSection section : chunk.getSectionArray()) {
