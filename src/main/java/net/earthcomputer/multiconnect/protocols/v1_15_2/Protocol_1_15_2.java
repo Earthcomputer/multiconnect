@@ -13,6 +13,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.UpdateJigsawC2SPacket;
 import net.minecraft.network.packet.s2c.play.PlayerActionResponseS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerSpawnPositionS2CPacket;
+import net.minecraft.network.packet.s2c.play.ScoreboardPlayerUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleType;
@@ -43,6 +45,14 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         } else if (registry == Registry.SOUND_EVENT) {
             modifySoundEventRegistry((ISimpleRegistry<SoundEvent>) registry);
         }
+    }
+
+    @Override
+    public List<PacketInfo<?>> getClientboundPackets() {
+        List<PacketInfo<?>> packets = super.getClientboundPackets();
+        remove(packets, PlayerSpawnPositionS2CPacket.class);
+        insertAfter(packets, ScoreboardPlayerUpdateS2CPacket.class, PacketInfo.of(PlayerSpawnPositionS2CPacket.class, PlayerSpawnPositionS2CPacket::new));
+        return packets;
     }
 
     @Override
