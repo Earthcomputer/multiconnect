@@ -6,7 +6,8 @@
   ],
   "client": [
     "MixinLoginSuccessS2CPacket",
-    "MixinSplitterHandler"
+    "MixinSplitterHandler",
+    "MixinIdentifier"
   ],
   "injectors": {
     "defaultRequire": 1
