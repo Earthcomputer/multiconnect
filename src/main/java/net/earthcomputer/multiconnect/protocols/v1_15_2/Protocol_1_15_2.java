@@ -2,6 +2,8 @@ package net.earthcomputer.multiconnect.protocols.v1_15_2;
 
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
+import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAttributesFixAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -12,15 +14,13 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.UpdateJigsawC2SPacket;
-import net.minecraft.network.packet.s2c.play.PlayerActionResponseS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerSpawnPositionS2CPacket;
-import net.minecraft.network.packet.s2c.play.ScoreboardPlayerUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
+import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
@@ -28,6 +28,30 @@ import net.minecraft.world.biome.Biomes;
 import java.util.List;
 
 public class Protocol_1_15_2 extends Protocol_1_16 {
+
+    public static void registerTranslators() {
+        ProtocolRegistry.registerInboundTranslator(EntityAttributesS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // entity id
+            int count = buf.readInt();
+            buf.disablePassthroughMode();
+            for (int i = 0; i < count; i++) {
+                String oldId = buf.readString(64);
+                String newId = RenameItemStackAttributesFixAccessor.getRenames().getOrDefault(oldId, oldId).toLowerCase();
+                buf.pendingRead(Identifier.class, new Identifier(newId));
+                buf.enablePassthroughMode();
+                buf.readDouble(); // base value
+                int modifierCount = buf.readVarInt();
+                for (int j = 0; j < modifierCount; j++) {
+                    buf.readUuid(); // uuid
+                    buf.readDouble(); // value
+                    buf.readByte(); // type
+                }
+                buf.disablePassthroughMode();
+            }
+            buf.applyPendingReads();
+        });
+    }
 
     @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})
     @Override
