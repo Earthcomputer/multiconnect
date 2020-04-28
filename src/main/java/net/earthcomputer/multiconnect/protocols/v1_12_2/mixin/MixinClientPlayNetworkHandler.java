@@ -26,7 +26,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class MixinClientPlayNetworkHandler {
@@ -43,13 +42,11 @@ public abstract class MixinClientPlayNetworkHandler {
     private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             RegistryTagManager tagManager = new RegistryTagManager();
-            //noinspection ConstantConditions
-            RegistryTagManagerAccessor tagManagerAccessor = (RegistryTagManagerAccessor) tagManager;
             Protocol_1_12_2 protocol = (Protocol_1_12_2) ConnectionInfo.protocol;
-            toTagContainer(tagManagerAccessor.getBlocks(), protocol.getBlockTags());
-            toTagContainer(tagManagerAccessor.getItems(), protocol.getItemTags());
-            toTagContainer(tagManagerAccessor.getFluids(), protocol.getFluidTags());
-            toTagContainer(tagManagerAccessor.getEntityTypes(), protocol.getEntityTypeTags());
+            toTagContainer(tagManager.blocks(), protocol.getBlockTags());
+            toTagContainer(tagManager.items(), protocol.getItemTags());
+            toTagContainer(tagManager.fluids(), protocol.getFluidTags());
+            toTagContainer(tagManager.entityTypes(), protocol.getEntityTypeTags());
             onSynchronizeTags(new SynchronizeTagsS2CPacket(tagManager));
 
             List<Recipe<?>> recipes = new ArrayList<>();
@@ -69,13 +66,11 @@ public abstract class MixinClientPlayNetworkHandler {
     @SuppressWarnings("unchecked")
     @Unique
     private <T> void toTagContainer(RegistryTagContainer<T> container, Multimap<Tag.Identified<T>, T> tags) {
-        // TODO: Needs Rewrite for 1.16 Support (After 20w12a)
-        Map<Identifier, Tag<T>> map = HashBiMap.create();
-        for (Map.Entry<Tag.Identified<T>, Collection<T>> entry : tags.asMap().entrySet()) {
-            Identifier id = entry.getKey().getId();
-            map.put(id, entry.getKey());
+        BiMap<Identifier, Tag<T>> entries = ((TagContainerAccessor<T>) container).multiconnect_getEntries();
+        for (Tag.Identified<T> tag : tags.keySet()) {
+            Collection<T> elements = tags.get(tag);
+            entries.put(tag.getId(), Tag.of(ImmutableSet.copyOf(elements)));
         }
-        ((TagContainerAccessor<T>) container).multiconnect_setEntries(ImmutableBiMap.copyOf(map));
     }
 
     @Inject(method = "onBlockEntityUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/BlockEntityUpdateS2CPacket;getBlockEntityType()I"))

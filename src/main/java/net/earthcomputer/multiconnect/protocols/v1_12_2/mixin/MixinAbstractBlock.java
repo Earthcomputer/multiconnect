@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractBlock.class)
 public class MixinAbstractBlock {
-    @Inject(method = "hasBlockEntity", at = @At("HEAD"))
+    @Inject(method = "hasBlockEntity", at = @At("RETURN"), cancellable = true)
     public void hasBlockEntity(CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(ConnectionInfo.protocolVersion <= Protocols.V1_12_2 || cir.getReturnValue());
     }

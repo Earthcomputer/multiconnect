@@ -1295,20 +1295,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         tags.put(BlockTags.WOODEN_TRAPDOORS, Blocks.OAK_TRAPDOOR);
         tags.putAll(BlockTags.TRAPDOORS, tags.get(BlockTags.WOODEN_TRAPDOORS));
         tags.put(BlockTags.TRAPDOORS, Blocks.IRON_TRAPDOOR);
-        tags.putAll(BlockTags.STANDING_SIGNS, Arrays.asList(
-            Blocks.OAK_SIGN,
-            Blocks.SPRUCE_SIGN,
-            Blocks.BIRCH_SIGN,
-            Blocks.ACACIA_SIGN,
-            Blocks.JUNGLE_SIGN,
-            Blocks.DARK_OAK_SIGN));
-        tags.putAll(BlockTags.WALL_SIGNS, Arrays.asList(
-            Blocks.OAK_WALL_SIGN,
-            Blocks.SPRUCE_WALL_SIGN,
-            Blocks.BIRCH_WALL_SIGN,
-            Blocks.ACACIA_WALL_SIGN,
-            Blocks.JUNGLE_WALL_SIGN,
-            Blocks.DARK_OAK_WALL_SIGN));
+        tags.put(BlockTags.STANDING_SIGNS, Blocks.OAK_SIGN);
+        tags.put(BlockTags.WALL_SIGNS, Blocks.OAK_WALL_SIGN);
         tags.putAll(BlockTags.SIGNS, tags.get(BlockTags.STANDING_SIGNS));
         tags.putAll(BlockTags.SIGNS, tags.get(BlockTags.WALL_SIGNS));
         tags.putAll(BlockTags.BEDS, Arrays.asList(

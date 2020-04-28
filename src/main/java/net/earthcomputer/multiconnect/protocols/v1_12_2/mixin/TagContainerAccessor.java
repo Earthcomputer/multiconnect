@@ -13,5 +13,5 @@ import java.util.Map;
 public interface TagContainerAccessor<T> {
 
     @Accessor("entries")
-    void multiconnect_setEntries(BiMap<Identifier, Tag<T>> entries);
+    BiMap<Identifier, Tag<T>> multiconnect_getEntries();
 }

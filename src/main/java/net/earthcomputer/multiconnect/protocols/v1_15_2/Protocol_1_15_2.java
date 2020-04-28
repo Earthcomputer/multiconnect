@@ -13,6 +13,7 @@ import net.minecraft.block.enums.WallShape;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.c2s.play.JigsawGeneratingC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateJigsawC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleEffect;
@@ -82,6 +83,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     @Override
     public List<PacketInfo<?>> getServerboundPackets() {
         List<PacketInfo<?>> packets = super.getServerboundPackets();
+        remove(packets, JigsawGeneratingC2SPacket.class);
         remove(packets, UpdateJigsawC2SPacket.class);
         return packets;
     }
