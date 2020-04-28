@@ -16,7 +16,7 @@ public class MixinCachedTag<T> {
 
     @Shadow private Tag<T> currentTag;
 
-    @Inject(method = "get", at = @At("HEAD"))
+    @Inject(method = "get()Lnet/minecraft/tag/Tag;", at = @At("HEAD"))
     private void onGet(CallbackInfoReturnable<Tag<T>> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2 && currentTag == null) {
             currentTag = Tag.of(Collections.emptySet());
