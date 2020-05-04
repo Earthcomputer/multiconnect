@@ -77,6 +77,8 @@ public class OldLanguageManager {
             }
         }
 
+        // As Latest Natives also can be effected from bundled languages,
+        // Ensure that the final translations accept them if not already present
         for (String key : latestNative.keySet()) {
             if (!currentNative.containsKey(key) && !currentFallback.containsKey(key)) {
                 if (!passedTranslations.containsKey(key) || argCount(latestNative.get(key)) != argCount(passedTranslations.get(key))) {
@@ -229,7 +231,7 @@ public class OldLanguageManager {
         String latestVersion = latestMode.getAssetId(), fileEnding = (latestMode.getValue() <= ConnectionMode.V1_12_2.getValue()) ? ".lang" : ".json";
 
         if (version.equals(latestVersion)) {
-            // If the version being retrieved is the native/latest version
+            // If the version being retrieved is for the native/latest version
             // Retrieve the language file itself directly from MC's Assets
             try {
                 resource = MinecraftClient.getInstance().getResourceManager().getResource(new Identifier("minecraft", "lang/" + langCode + fileEnding));
@@ -242,6 +244,9 @@ public class OldLanguageManager {
                 }
             }
 
+            // If the version being retrieved is for the native/latest version
+            // Retrieve the Optifine language file itself directly from MC's Assets
+            // Note: In this case, we DO want to use en_us, if using en_gb
             try {
                 optifineResource = MinecraftClient.getInstance().getResourceManager().getResource(new Identifier("minecraft", "optifine/lang/" + (langCode.equals("en_gb") ? "en_us" : langCode) + ".lang"));
             } catch (IOException catch01) {
@@ -252,48 +257,54 @@ public class OldLanguageManager {
                 }
             }
 
+            // If able to retrieve the local resource(s),
+            // Create native directory and files for them
             if (!errored) {
                 langFile = new File(CACHE_DIR, "native/data" + fileEnding);
                 ofLangFile = new File(CACHE_DIR, "native/optifine.lang");
                 if (!langFile.exists()) {
-                    langFile.getParentFile().mkdirs();
                     try {
-                        langFile.createNewFile();
+                        if (!langFile.getParentFile().mkdirs() && !langFile.createNewFile()) {
+                            LOGGER.warn("Unable to make temporary language data");
+                        }
                     } catch (IOException ex) {
-                        ex.printStackTrace();
+                        LOGGER.warn("Unable to create temporary language data");
+                        errored = true;
                     }
                 }
                 if (!ofLangFile.exists()) {
-                    ofLangFile.getParentFile().mkdirs();
                     try {
-                        ofLangFile.createNewFile();
+                        if (!ofLangFile.getParentFile().mkdirs() && !ofLangFile.createNewFile()) {
+                            LOGGER.warn("Unable to make temporary optifine language data");
+                        }
                     } catch (IOException ex) {
-                        ex.printStackTrace();
+                        LOGGER.warn("Unable to create temporary optifine language data");
                     }
                 }
 
+                // Use the Initially Retrieved Local resources,
+                // And copy them to their appropriate files
                 try {
                     FileUtils.copyInputStreamToFile(resource.getInputStream(), langFile);
 
-                    if (optifineResource != null && (ofLangFile.exists() || (ofLangFile.delete() && ofLangFile.getParentFile().mkdirs()))) {
+                    if (optifineResource != null) {
                         FileUtils.copyInputStreamToFile(optifineResource.getInputStream(), ofLangFile);
                     }
-                    LOGGER.info("Pre-Test success");
                     return new Pair<>(langFile, ofLangFile);
                 } catch (IOException e) {
-                    e.printStackTrace();
                     if (!langFile.delete()) {
                         LOGGER.warn("Unable to remove temporary native language file, may not exist");
+                        errored = true;
                     }
                     if (!ofLangFile.delete()) {
                         LOGGER.warn("Unable to remove optifine temporary native language file, may not exist");
                     }
-                    LOGGER.warn("Unable to write temporary native language file");
-                    errored = true;
+                    LOGGER.warn("Unable to write temporary native language file(s)");
                 }
             }
         }
 
+        // Alternatively, use the Asset Url if Local Resources somehow fail
         if (!version.equals(latestVersion) || errored) {
             try {
                 String url = getLangFileUrls(version).get(langCode);
@@ -350,8 +361,9 @@ public class OldLanguageManager {
             }
         }
 
+        // If Optifine Language Data has been retrieved,
+        // Ensure it is also parsed into final translations
         if (ofLangFile != null) {
-            LOGGER.info("Attempt Test Marker");
             try {
                 for (String line : FileUtils.readLines(ofLangFile, StandardCharsets.UTF_8)) {
                     if (line.contains("=") && !line.startsWith("#")) {
