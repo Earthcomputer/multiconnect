@@ -5,6 +5,7 @@ import com.google.gson.JsonSyntaxException;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
+import net.minecraft.client.MinecraftClient;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,6 +38,17 @@ public class OldLanguageManager {
     private static Map<String, String> versionAssetUrls = new HashMap<>();
     private static Map<String, Map<String, String>> langFileUrls = new HashMap<>();
     private static Map<String, Map<String, File>> langFiles = new HashMap<>();
+
+    public static void reloadLanguages() {
+        MinecraftClient.getInstance().getLanguageManager().apply(MinecraftClient.getInstance().getResourceManager());
+        if (FabricLoader.getInstance().isModLoaded("optifabric")) {
+            try {
+                Class.forName("net.optifine.Lang").getMethod("resourcesReloaded").invoke(null);
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException("Failed to force OptiFine to reload language files!", e);
+            }
+        }
+    }
 
     private static URL createURL(String url) {
         try {
