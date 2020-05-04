@@ -51,26 +51,28 @@ public class OldLanguageManager {
     }
 
     public static void addExtraTranslations(String nativeLang, Map<String, String> passedTranslations, BiConsumer<String, String> translations) {
-        if (ConnectionInfo.protocol == ProtocolRegistry.latest())
-            return;
+        Map<String, String> currentNative = new HashMap<>(), currentFallback = new HashMap<>(), latestNative = new HashMap<>(), latestFallback = new HashMap<>();
 
-        String currentVersion = ConnectionMode.byValue(ConnectionInfo.protocolVersion).getAssetId();
         String latestVersion = ConnectionMode.byValue(SharedConstants.getGameVersion().getProtocolVersion()).getAssetId();
+        latestNative = getTranslations(latestVersion, nativeLang);
+        latestFallback = getTranslations(latestVersion, "en_us");
 
-        Map<String, String> currentNative = getTranslations(currentVersion, nativeLang);
-        Map<String, String> currentFallback = getTranslations(currentVersion, "en_us");
-        Map<String, String> latestNative = getTranslations(latestVersion, nativeLang);
-        Map<String, String> latestFallback = getTranslations(latestVersion, "en_us");
+        if (ConnectionInfo.protocol != ProtocolRegistry.latest()) {
+            String currentVersion = ConnectionMode.byValue(ConnectionInfo.protocolVersion).getAssetId();
 
-        for (String key : currentNative.keySet()) {
-            if (!latestNative.containsKey(key) || argCount(currentNative.get(key)) != argCount(latestNative.get(key))) {
-                translations.accept(key, currentNative.get(key));
+            currentNative = getTranslations(currentVersion, nativeLang);
+            currentFallback = getTranslations(currentVersion, "en_us");
+
+            for (String key : currentNative.keySet()) {
+                if (!latestNative.containsKey(key) || argCount(currentNative.get(key)) != argCount(latestNative.get(key))) {
+                    translations.accept(key, currentNative.get(key));
+                }
             }
-        }
-        for (String key : currentFallback.keySet()) {
-            if (!currentNative.containsKey(key)) {
-                if (!latestFallback.containsKey(key) || argCount(currentFallback.get(key)) != argCount(latestFallback.get(key))) {
-                    translations.accept(key, currentFallback.get(key));
+            for (String key : currentFallback.keySet()) {
+                if (!currentNative.containsKey(key)) {
+                    if (!latestFallback.containsKey(key) || argCount(currentFallback.get(key)) != argCount(latestFallback.get(key))) {
+                        translations.accept(key, currentFallback.get(key));
+                    }
                 }
             }
         }
