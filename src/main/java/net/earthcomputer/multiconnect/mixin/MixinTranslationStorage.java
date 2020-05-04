@@ -20,7 +20,7 @@ public class MixinTranslationStorage {
 
     @Inject(method = "load(Lnet/minecraft/resource/ResourceManager;Ljava/util/List;)V", at = @At("RETURN"))
     private void onLoad(ResourceManager resourceManager, List<String> languages, CallbackInfo ci) {
-        OldLanguageManager.addExtraTranslations(languages.get(languages.size() - 1), translations, translations::put);
+        OldLanguageManager.addExtraTranslations(languages.get(languages.size() - 1), translations::put);
     }
 
 }
