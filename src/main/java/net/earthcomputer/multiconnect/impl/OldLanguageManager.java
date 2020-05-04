@@ -5,6 +5,10 @@ import com.google.gson.JsonSyntaxException;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.resource.Resource;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,7 +50,7 @@ public class OldLanguageManager {
         }
     }
 
-    public static void addExtraTranslations(String nativeLang, BiConsumer<String, String> translations) {
+    public static void addExtraTranslations(String nativeLang, Map<String, String> passedTranslations, BiConsumer<String, String> translations) {
         if (ConnectionInfo.protocol == ProtocolRegistry.latest())
             return;
 
@@ -67,6 +71,21 @@ public class OldLanguageManager {
             if (!currentNative.containsKey(key)) {
                 if (!latestFallback.containsKey(key) || argCount(currentFallback.get(key)) != argCount(latestFallback.get(key))) {
                     translations.accept(key, currentFallback.get(key));
+                }
+            }
+        }
+
+        for (String key : latestNative.keySet()) {
+            if (!currentNative.containsKey(key) && !currentFallback.containsKey(key)) {
+                if (!passedTranslations.containsKey(key) || argCount(latestNative.get(key)) != argCount(passedTranslations.get(key))) {
+                    translations.accept(key, latestNative.get(key));
+                }
+            }
+        }
+        for (String key : latestFallback.keySet()) {
+            if (!currentNative.containsKey(key) && !currentFallback.containsKey(key) && !latestNative.containsKey(key)) {
+                if (!passedTranslations.containsKey(key) || argCount(latestFallback.get(key)) != argCount(passedTranslations.get(key))) {
+                    translations.accept(key, latestFallback.get(key));
                 }
             }
         }
@@ -188,36 +207,116 @@ public class OldLanguageManager {
         return urls;
     }
 
-    private static File getLangFile(String version, String langCode) {
+    private static Pair<File, File> getLangFile(String version, String langCode) {
         langCode = langCode.toLowerCase(Locale.ENGLISH);
         // en_us is in the jar file rather than in the assets, we don't want to have to download the whole jar
         if ("en_us".equals(langCode))
             langCode = "en_gb";
 
         if (langFiles.computeIfAbsent(version, k -> new HashMap<>()).containsKey(langCode))
-            return langFiles.get(version).get(langCode);
+            return new Pair<>(langFiles.get(version).get(langCode), null);
 
         URL langUrl;
-        try {
-            String url = getLangFileUrls(version).get(langCode);
-            if (url == null) {
+        File langFile = null, ofLangFile = null;
+
+        Resource resource = null, optifineResource = null;
+
+        boolean errored = false;
+
+        ConnectionMode latestMode = ConnectionMode.byValue(SharedConstants.getGameVersion().getProtocolVersion());
+        String latestVersion = latestMode.getAssetId(), fileEnding = (latestMode.getValue() <= ConnectionMode.V1_12_2.getValue()) ? ".lang" : ".json";
+
+        if (version.equals(latestVersion)) {
+            // If the version being retrieved is the native/latest version
+            // Retrieve the language file itself directly from MC's Assets
+            try {
+                resource = MinecraftClient.getInstance().getResourceManager().getResource(new Identifier("minecraft", "lang/" + langCode + fileEnding));
+            } catch (IOException catch01) {
+                try {
+                    resource = MinecraftClient.getInstance().getResourceManager().getResource(new Identifier("minecraft", "lang/en_us" + fileEnding));
+                } catch (IOException e) {
+                    LOGGER.warn("Unable to locate local language file for " + langCode + ", reverting to url");
+                    errored = true;
+                }
+            }
+
+            try {
+                optifineResource = MinecraftClient.getInstance().getResourceManager().getResource(new Identifier("minecraft", "optifine/lang/" + (langCode.equals("en_gb") ? "en_us" : langCode) + ".lang"));
+            } catch (IOException catch01) {
+                try {
+                    optifineResource = MinecraftClient.getInstance().getResourceManager().getResource(new Identifier("minecraft", "optifine/lang/en_us.lang"));
+                } catch (IOException e) {
+                    LOGGER.warn("Unable to locate optifine language file for " + langCode + ", ignoring");
+                }
+            }
+
+            if (!errored) {
+                langFile = new File(CACHE_DIR, "native/data" + fileEnding);
+                ofLangFile = new File(CACHE_DIR, "native/optifine.lang");
+                if (!langFile.exists()) {
+                    langFile.getParentFile().mkdirs();
+                    try {
+                        langFile.createNewFile();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                if (!ofLangFile.exists()) {
+                    ofLangFile.getParentFile().mkdirs();
+                    try {
+                        ofLangFile.createNewFile();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+
+                try {
+                    FileUtils.copyInputStreamToFile(resource.getInputStream(), langFile);
+
+                    if (optifineResource != null && (ofLangFile.exists() || (ofLangFile.delete() && ofLangFile.getParentFile().mkdirs()))) {
+                        FileUtils.copyInputStreamToFile(optifineResource.getInputStream(), ofLangFile);
+                    }
+                    LOGGER.info("Pre-Test success");
+                    return new Pair<>(langFile, ofLangFile);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    if (!langFile.delete()) {
+                        LOGGER.warn("Unable to remove temporary native language file, may not exist");
+                    }
+                    if (!ofLangFile.delete()) {
+                        LOGGER.warn("Unable to remove optifine temporary native language file, may not exist");
+                    }
+                    LOGGER.warn("Unable to write temporary native language file");
+                    errored = true;
+                }
+            }
+        }
+
+        if (!version.equals(latestVersion) || errored) {
+            try {
+                String url = getLangFileUrls(version).get(langCode);
+                if (url == null) {
+                    langFiles.get(version).put(langCode, null);
+                    return null;
+                }
+                langUrl = new URL(url);
+            } catch (MalformedURLException e) {
+                LOGGER.error("Malformed lang url for " + version + "/" + langCode);
                 langFiles.get(version).put(langCode, null);
                 return null;
             }
-            langUrl = new URL(url);
-        } catch (MalformedURLException e) {
-            LOGGER.error("Malformed lang url for " + version + "/" + langCode);
-            langFiles.get(version).put(langCode, null);
-            return null;
-        }
 
-        File langFile = download(langUrl, version + "/" + langCode + ".lang");
+            langFile = download(langUrl, version + "/" + langCode + ".lang");
+        }
         langFiles.get(version).put(langCode, langFile);
-        return langFile;
+        return new Pair<>(langFile, null);
     }
 
     private static Map<String, String> getTranslations(String version, String langCode) {
-        File langFile = getLangFile(version, langCode);
+        Pair<File, File> langFileSet = getLangFile(version, langCode);
+        File langFile = langFileSet.getLeft(), ofLangFile = langFileSet.getRight();
+        Map<String, String> finalTranslations = new HashMap<>();
+        boolean isLangNew = false;
         if (langFile == null)
             return Collections.emptyMap();
 
@@ -226,7 +325,8 @@ public class OldLanguageManager {
             Map<String, Object> translations = GSON.fromJson(new FileReader(langFile), Map.class);
             translations.keySet().removeIf(k -> !(translations.get(k) instanceof String));
             //noinspection unchecked
-            return (Map<String, String>) (Object) translations;
+            finalTranslations = (Map<String, String>) (Object) translations;
+            isLangNew = true;
         } catch (JsonSyntaxException e) {
             // expected - old lang file format
         } catch (IOException e) {
@@ -234,19 +334,34 @@ public class OldLanguageManager {
             return Collections.emptyMap();
         }
 
-        Map<String, String> translations = new HashMap<>();
-        try {
-            for (String line : FileUtils.readLines(langFile, StandardCharsets.UTF_8)) {
-                if (line.contains("=") && !line.startsWith("#")) {
-                    String[] parts = line.split("=", 2);
-                    translations.put(parts[0], parts[1]);
+        if (!isLangNew) {
+            try {
+                for (String line : FileUtils.readLines(langFile, StandardCharsets.UTF_8)) {
+                    if (line.contains("=") && !line.startsWith("#")) {
+                        String[] parts = line.split("=", 2);
+                        finalTranslations.put(parts[0], parts[1]);
+                    }
                 }
+            } catch (IOException e) {
+                LOGGER.error("Failed to read lang file in old format " + version + "/" + langCode, e);
+                return Collections.emptyMap();
             }
-        } catch (IOException e) {
-            LOGGER.error("Failed to read lang file in old format " + version + "/" + langCode, e);
-            return Collections.emptyMap();
         }
-        return translations;
+
+        if (ofLangFile != null) {
+            LOGGER.info("Attempt Test Marker");
+            try {
+                for (String line : FileUtils.readLines(ofLangFile, StandardCharsets.UTF_8)) {
+                    if (line.contains("=") && !line.startsWith("#")) {
+                        String[] parts = line.split("=", 2);
+                        finalTranslations.put(parts[0], parts[1]);
+                    }
+                }
+            } catch (IOException e) {
+                LOGGER.warn("Failed to read optifine lang file in old format (" + langCode + ")", e);
+            }
+        }
+        return finalTranslations;
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
