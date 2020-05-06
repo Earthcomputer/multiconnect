@@ -45,7 +45,7 @@ public class OldLanguageManager {
             try {
                 Class.forName("net.optifine.Lang").getMethod("resourcesReloaded").invoke(null);
             } catch (ReflectiveOperationException e) {
-                throw new RuntimeException("Failed to force OptiFine to reload language files!", e);
+                LOGGER.error("Failed to force OptiFine to reload language files!", e);
             }
         }
     }
