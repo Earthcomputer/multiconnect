@@ -3,11 +3,12 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_15_2.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "RenameItemStackAttributesFixAccessor"
   ],
   "client": [
+    "MixinJigsawBlockScreen",
     "MixinLoginSuccessS2CPacket",
-    "MixinSplitterHandler"
+    "MixinSplitterHandler",
+    "RenameItemStackAttributesFixAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

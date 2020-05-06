@@ -6,14 +6,13 @@ import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAttributesFixAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.WallBlock;
+import net.minecraft.block.*;
+import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.JigsawGeneratingC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateJigsawC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
@@ -27,6 +26,8 @@ import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.ItemTags;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
@@ -69,6 +70,14 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.pendingRead(Boolean.class, Boolean.TRUE); // keep attributes
             buf.applyPendingReads();
         });
+        ProtocolRegistry.registerOutboundTranslator(UpdateJigsawC2SPacket.class, buf -> {
+            buf.passthroughWrite(BlockPos.class); // pos
+            buf.skipWrite(Identifier.class); // name
+            buf.passthroughWrite(Identifier.class); // target
+            buf.passthroughWrite(Identifier.class); // pool
+            buf.passthroughWrite(String.class); // final state
+            buf.skipWrite(String.class); // joint type
+        });
     }
 
     @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})
@@ -101,8 +110,15 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     public List<PacketInfo<?>> getServerboundPackets() {
         List<PacketInfo<?>> packets = super.getServerboundPackets();
         remove(packets, JigsawGeneratingC2SPacket.class);
-        remove(packets, UpdateJigsawC2SPacket.class);
         return packets;
+    }
+
+    @Override
+    public boolean onSendPacket(Packet<?> packet) {
+        if (packet instanceof JigsawGeneratingC2SPacket) {
+            return false;
+        }
+        return super.onSendPacket(packet);
     }
 
     private void modifyBlockRegistry(ISimpleRegistry<Block> registry) {
@@ -554,6 +570,20 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         insertAfter(registry, SoundEvents.MUSIC_MENU, SoundEvents.MUSIC_NETHER_NETHER_WASTES, "music.nether");
 
         registry.unregister(SoundEvents.MUSIC_DISC_PIGSTEP);
+    }
+
+    @Override
+    protected void recomputeStatesForBlock(Block block) {
+        if (block == Blocks.JIGSAW) {
+            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.DOWN_EAST));
+            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.UP_EAST));
+            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.NORTH_UP));
+            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.SOUTH_UP));
+            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.WEST_UP));
+            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.EAST_UP));
+        } else {
+            super.recomputeStatesForBlock(block);
+        }
     }
 
     @Override

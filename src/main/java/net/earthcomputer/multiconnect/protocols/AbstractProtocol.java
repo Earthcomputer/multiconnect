@@ -101,10 +101,14 @@ public abstract class AbstractProtocol {
     protected void recomputeBlockStates() {
         ((IIdList) Block.STATE_IDS).multiconnect_clear();
         for (Block block : Registry.BLOCK) {
-            for (BlockState state : block.getStateManager().getStates()) {
-                if (acceptBlockState(state)) {
-                    Block.STATE_IDS.add(state);
-                }
+            recomputeStatesForBlock(block);
+        }
+    }
+
+    protected void recomputeStatesForBlock(Block block) {
+        for (BlockState state : block.getStateManager().getStates()) {
+            if (acceptBlockState(state)) {
+                Block.STATE_IDS.add(state);
             }
         }
     }
