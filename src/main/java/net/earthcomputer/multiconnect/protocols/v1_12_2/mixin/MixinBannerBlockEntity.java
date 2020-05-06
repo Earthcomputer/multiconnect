@@ -58,10 +58,12 @@ public class MixinBannerBlockEntity extends BlockEntity {
 
     @Inject(method = "fromTag", at = @At("RETURN"))
     private void onFromTag(CompoundTag tag, CallbackInfo ci) {
-        for (Tag t : patternListTag) {
-            if (t instanceof CompoundTag) {
-                CompoundTag pattern = (CompoundTag) t;
-                pattern.putInt("Color", 15 - pattern.getInt("Color"));
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
+            for (Tag t : patternListTag) {
+                if (t instanceof CompoundTag) {
+                    CompoundTag pattern = (CompoundTag) t;
+                    pattern.putInt("Color", 15 - pattern.getInt("Color"));
+                }
             }
         }
     }
