@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinEntity {
 
     @Shadow public World world;
-    @Shadow protected Object2DoubleMap<Tag<Fluid>> waterHeight;
+    @Shadow protected Object2DoubleMap<Tag<Fluid>> fluidHeight;
 
     @Shadow public abstract Box getBoundingBox();
 
@@ -82,7 +82,7 @@ public abstract class MixinEntity {
             setVelocity(getVelocity().add(pushVec));
         }
 
-        this.waterHeight.put(fluidTag, waterHeight);
+        this.fluidHeight.put(fluidTag, waterHeight);
         ci.setReturnValue(foundFluid);
     }
 

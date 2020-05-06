@@ -62,14 +62,14 @@ public abstract class MixinLivingEntity extends Entity {
         return self.isSprinting();
     }*/
 
-    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getWaterHeight(Lnet/minecraft/tag/Tag;)D"))
-    private double redirectWaterHeight(LivingEntity entity, Tag<Fluid> tag) {
+    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getFluidHeight(Lnet/minecraft/tag/Tag;)D"))
+    private double redirectFluidHeight(LivingEntity entity, Tag<Fluid> tag) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2 && tag == FluidTags.WATER) {
             // If you're in water, you're in water, even if you're almost at the surface
-            if (entity.getWaterHeight(tag) > 0)
+            if (entity.getFluidHeight(tag) > 0)
                 return 1;
         }
-        return entity.getWaterHeight(tag);
+        return entity.getFluidHeight(tag);
     }
 
 }

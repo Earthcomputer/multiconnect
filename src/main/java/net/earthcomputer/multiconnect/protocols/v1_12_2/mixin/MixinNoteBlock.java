@@ -29,7 +29,7 @@ public class MixinNoteBlock extends Block implements BlockEntityProvider {
         return hasBlockEntity() ? new NoteBlockBlockEntity() : null;
     }
 
-    @ModifyVariable(method = "onBlockAction", ordinal = 0, at = @At("HEAD"))
+    @ModifyVariable(method = "onSyncedBlockEvent", ordinal = 0, at = @At("HEAD"))
     private BlockState onOnBlockAction(BlockState localState, BlockState state, World world, BlockPos pos, int type, int data) {
         if (ConnectionInfo.protocolVersion > Protocols.V1_12_2)
             return localState;
