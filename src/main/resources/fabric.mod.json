@@ -31,6 +31,7 @@
     "multiconnect.1_12_1.mixins.json",
     "multiconnect.1_12.mixins.json"
   ],
+  "accessWidener": "multiconnect.accesswidener",
 
   "entrypoints": {
     "main": [

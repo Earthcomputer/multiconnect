@@ -25,6 +25,11 @@ public class MixinNoteBlock extends Block implements BlockEntityProvider {
     }
 
     @Override
+    public boolean hasBlockEntity() {
+        return ConnectionInfo.protocolVersion <= Protocols.V1_12_2;
+    }
+
+    @Override
     public BlockEntity createBlockEntity(BlockView view) {
         return hasBlockEntity() ? new NoteBlockBlockEntity() : null;
     }

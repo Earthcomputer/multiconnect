@@ -14,7 +14,6 @@
     "CustomPayloadC2SAccessor",
     "EntityAccessor",
     "FlowerPotBlockAccessor",
-    "MixinAbstractBlock",
     "MixinAreaEffectCloudEntity",
     "MixinBannerBlockEntity",
     "MixinBedBlockEntity",

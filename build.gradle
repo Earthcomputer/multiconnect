@@ -71,6 +71,10 @@ jar {
 	from "LICENSE"
 }
 
+minecraft {
+	accessWidener = file('src/main/resources/multiconnect.accesswidener')
+}
+
 repositories {
 	maven {
 		url 'https://jitpack.io/'
