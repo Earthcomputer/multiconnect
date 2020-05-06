@@ -15,6 +15,7 @@ import net.minecraft.item.Items;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.JigsawGeneratingC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateJigsawC2SPacket;
+import net.minecraft.network.packet.s2c.login.LoginSuccessS2CPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleType;
@@ -26,6 +27,7 @@ import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.ItemTags;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.dynamic.DynamicSerializableUuid;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
@@ -35,10 +37,20 @@ import net.minecraft.world.biome.Biomes;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public class Protocol_1_15_2 extends Protocol_1_16 {
 
     public static void registerTranslators() {
+        ProtocolRegistry.registerInboundTranslator(LoginSuccessS2CPacket.class, buf -> {
+            UUID uuid = UUID.fromString(buf.readString(36));
+            int[] uuidArray = DynamicSerializableUuid.method_26275(uuid);
+            buf.pendingRead(Integer.class, uuidArray[0]);
+            buf.pendingRead(Integer.class, uuidArray[1]);
+            buf.pendingRead(Integer.class, uuidArray[2]);
+            buf.pendingRead(Integer.class, uuidArray[3]);
+            buf.applyPendingReads();
+        });
         ProtocolRegistry.registerInboundTranslator(EntityAttributesS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt(); // entity id

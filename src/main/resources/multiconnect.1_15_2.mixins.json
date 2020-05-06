@@ -6,7 +6,6 @@
   ],
   "client": [
     "MixinJigsawBlockScreen",
-    "MixinLoginSuccessS2CPacket",
     "MixinSplitterHandler",
     "RenameItemStackAttributesFixAccessor"
   ],
