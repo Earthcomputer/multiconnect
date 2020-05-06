@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableSet;
 import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.mixin.SpawnEggItemAccessor;
 import net.earthcomputer.multiconnect.mixin.TrackedDataHandlerRegistryAccessor;
@@ -13,6 +14,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
 import net.minecraft.item.SpawnEggItem;
 import net.minecraft.network.NetworkSide;
@@ -21,6 +23,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.state.property.Property;
+import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.collection.Int2ObjectBiMap;
@@ -163,6 +166,37 @@ public abstract class AbstractProtocol {
             iBiMap.multiconnect_remove(h);
             biMap.put(h, id);
         }
+    }
+
+    public Map<Tag.Identified<Block>, Set<Block>> getExtraBlockTags() {
+        return new HashMap<>();
+    }
+
+    public Map<Tag.Identified<Item>, Set<Item>> getExtraItemTags() {
+        return new HashMap<>();
+    }
+
+    public Map<Tag.Identified<Fluid>, Set<Fluid>> getExtraFluidTags() {
+        return new HashMap<>();
+    }
+
+    public Map<Tag.Identified<EntityType<?>>, Set<EntityType<?>>> getExtraEntityTags() {
+        return new HashMap<>();
+    }
+
+    protected <T> Set<T> getExistingTags(Map<Tag.Identified<T>, Set<T>> tags, Tag.Identified<T> tag) {
+        ImmutableSet.Builder<T> builder = ImmutableSet.builder();
+        try {
+            builder.addAll(tag.values());
+        } catch (IllegalStateException e) {
+            // tag may not have been initialized, ignore
+        }
+        builder.addAll(tags.get(tag));
+        return builder.build();
+    }
+
+    protected Set<Item> copyBlocks(Map<Tag.Identified<Block>, Set<Block>> blockTags, Tag.Identified<Block> blockTag) {
+        return getExistingTags(blockTags, blockTag).stream().map(Block::asItem).collect(Collectors.toSet());
     }
 
     public boolean shouldBlockChangeReplaceBlockEntity(Block oldBlock, Block newBlock) {

@@ -14,6 +14,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.particle.*;
 import net.minecraft.client.render.*;
 import net.minecraft.client.texture.TextureManager;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.DefaultParticleType;
@@ -21,7 +22,6 @@ import net.minecraft.particle.ParticleType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
 
 import static net.minecraft.particle.ParticleTypes.*;
@@ -159,7 +159,7 @@ public class Particles_1_12_2 {
         }
 
         @Override
-        public Particle createParticle(DefaultParticleType type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+        public Particle createParticle(DefaultParticleType type, ClientWorld world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
             SuspendParticle particle = SuspendParticleAccessor.constructor(world, x, y, z, xSpeed, ySpeed, zSpeed);
             particle.setSprite(sprite);
             return particle;
@@ -168,7 +168,7 @@ public class Particles_1_12_2 {
 
     private static class SnowShovelFactory implements ParticleFactory<DefaultParticleType> {
         @Override
-        public Particle createParticle(DefaultParticleType type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+        public Particle createParticle(DefaultParticleType type, ClientWorld world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
             return CrackParticleAccessor.constructor(world, x, y, z, xSpeed, ySpeed, zSpeed, new ItemStack(Blocks.SNOW_BLOCK));
         }
     }
@@ -179,7 +179,7 @@ public class Particles_1_12_2 {
         private final int maxTicks = 200;
         private final TextureManager textureManager;
 
-        private FootprintParticle(TextureManager textureManager, World world, double x, double y, double z) {
+        private FootprintParticle(TextureManager textureManager, ClientWorld world, double x, double y, double z) {
             super(world, x, y, z, 0, 0, 0);
             this.textureManager = textureManager;
             this.velocityX = 0;
@@ -233,7 +233,7 @@ public class Particles_1_12_2 {
 
         public static class Factory implements ParticleFactory<DefaultParticleType> {
             @Override
-            public Particle createParticle(DefaultParticleType type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+            public Particle createParticle(DefaultParticleType type, ClientWorld world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
                 return new FootprintParticle(MinecraftClient.getInstance().getTextureManager(), world, x, y, z);
             }
         }
@@ -241,7 +241,7 @@ public class Particles_1_12_2 {
 
     private static class OldBlockDustParticle extends BlockDustParticle {
 
-        public OldBlockDustParticle(World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, BlockState state) {
+        public OldBlockDustParticle(ClientWorld world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, BlockState state) {
             super(world, x, y, z, xSpeed, ySpeed, zSpeed, state);
             velocityX = xSpeed;
             velocityY = ySpeed;
@@ -251,7 +251,7 @@ public class Particles_1_12_2 {
         public static class Factory implements ParticleFactory<BlockStateParticleEffect> {
 
             @Override
-            public Particle createParticle(BlockStateParticleEffect type, World world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+            public Particle createParticle(BlockStateParticleEffect type, ClientWorld world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
                 return new OldBlockDustParticle(world, x, y, z, xSpeed, ySpeed, zSpeed, type.getBlockState());
             }
         }

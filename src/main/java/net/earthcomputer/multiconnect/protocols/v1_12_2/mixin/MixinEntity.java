@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.entity.Entity;
@@ -22,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinEntity {
 
     @Shadow public World world;
-    @Shadow protected double waterHeight;
+    @Shadow protected Object2DoubleMap<Tag<Fluid>> waterHeight;
 
     @Shadow public abstract Box getBoundingBox();
 
@@ -81,7 +82,7 @@ public abstract class MixinEntity {
             setVelocity(getVelocity().add(pushVec));
         }
 
-        this.waterHeight = waterHeight;
+        this.waterHeight.put(fluidTag, waterHeight);
         ci.setReturnValue(foundFluid);
     }
 

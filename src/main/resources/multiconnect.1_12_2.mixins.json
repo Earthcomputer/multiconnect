@@ -21,7 +21,6 @@
     "MixinBlock",
     "MixinBlockItem",
     "MixinBlockStateFlattening",
-    "MixinCachedTag",
     "MixinClientChunkManager",
     "MixinClientPlayerEntity",
     "MixinClientPlayNetworkHandler",
@@ -37,7 +36,6 @@
     "MixinUpgradeData",
     "MixinWorldChunk",
     "SuspendParticleAccessor",
-    "TagContainerAccessor",
     "UpgradeDataAccessor",
     "WolfEntityAccessor"
   ],

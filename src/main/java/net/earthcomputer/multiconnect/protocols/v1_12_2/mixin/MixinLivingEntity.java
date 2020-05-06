@@ -5,6 +5,9 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.tag.FluidTags;
+import net.minecraft.tag.Tag;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -59,14 +62,14 @@ public abstract class MixinLivingEntity extends Entity {
         return self.isSprinting();
     }*/
 
-    @Redirect(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;waterHeight:D"))
-    private double redirectWaterHeight(LivingEntity entity) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
+    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getWaterHeight(Lnet/minecraft/tag/Tag;)D"))
+    private double redirectWaterHeight(LivingEntity entity, Tag<Fluid> tag) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2 && tag == FluidTags.WATER) {
             // If you're in water, you're in water, even if you're almost at the surface
-            if (entity.getWaterHeight() > 0)
+            if (entity.getWaterHeight(tag) > 0)
                 return 1;
         }
-        return entity.getWaterHeight();
+        return entity.getWaterHeight(tag);
     }
 
 }

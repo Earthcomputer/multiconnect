@@ -4,6 +4,7 @@ import com.google.common.collect.*;
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.mixin.TagContainerAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.*;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.minecraft.block.entity.BlockEntity;

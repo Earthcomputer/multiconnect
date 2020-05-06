@@ -6,11 +6,11 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleFactory;
 import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.particle.SpriteProvider;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.world.World;
 import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -45,7 +45,7 @@ public class MixinParticleManager implements IParticleManager {
     }
 
     @Shadow @Final private Map<Identifier, Object> spriteAwareFactories;
-    @Shadow protected World world;
+    @Shadow protected ClientWorld world;
 
     @Unique private Map<Identifier, ParticleFactory<?>> customFactories = new HashMap<>();
 
