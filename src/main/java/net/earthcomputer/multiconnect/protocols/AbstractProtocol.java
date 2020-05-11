@@ -195,7 +195,10 @@ public abstract class AbstractProtocol {
         } catch (IllegalStateException e) {
             // tag may not have been initialized, ignore
         }
-        builder.addAll(tags.get(tag));
+        Set<T> alreadyAddedTags = tags.get(tag);
+        if (alreadyAddedTags != null) {
+            builder.addAll(alreadyAddedTags);
+        }
         return builder.build();
     }
 
