@@ -1,14 +1,17 @@
 package net.earthcomputer.multiconnect.protocols.v1_15_2;
 
 import com.google.common.collect.ImmutableSet;
+import net.earthcomputer.multiconnect.impl.CurrentChunkDataPacket;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAttributesFixAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
+import net.earthcomputer.multiconnect.transformer.ChunkData;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
+import net.minecraft.class_5196;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -29,7 +32,7 @@ import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.dynamic.DynamicSerializableUuid;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
@@ -42,6 +45,34 @@ import java.util.UUID;
 public class Protocol_1_15_2 extends Protocol_1_16 {
 
     public static void registerTranslators() {
+        // TODO: heightmaps
+        // TODO: make sure older version translators don't rely on PackedIntArray implementation in passthrough mode anymore
+        ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
+            int verticalStripBitmask = CurrentChunkDataPacket.get().getVerticalStripBitmask();
+            buf.enablePassthroughMode();
+            for (int sectionY = 0; sectionY < 16; sectionY++) {
+                if ((verticalStripBitmask & (1 << sectionY)) != 0) {
+                    buf.readShort(); // non-empty block count
+                    int paletteSize = buf.readByte();
+                    if (paletteSize <= 8) {
+                        // array and bimap palette data look the same enough to use the same code here
+                        int size = buf.readVarInt();
+                        for (int i = 0; i < size; i++)
+                            buf.readVarInt(); // state id
+                    }
+                    if (paletteSize == 0 || MathHelper.isPowerOfTwo(paletteSize)) {
+                        buf.readLongArray(new long[paletteSize * 64]);
+                    } else {
+                        buf.disablePassthroughMode();
+                        long[] oldData = buf.readLongArray(new long[paletteSize * 64]);
+                        buf.pendingRead(long[].class, class_5196.method_27288(4096, paletteSize, oldData));
+                        buf.enablePassthroughMode();
+                    }
+                }
+            }
+            buf.disablePassthroughMode();
+            buf.applyPendingReads();
+        });
         ProtocolRegistry.registerInboundTranslator(LoginSuccessS2CPacket.class, buf -> {
             UUID uuid = UUID.fromString(buf.readString(36));
             int[] uuidArray = DynamicSerializableUuid.method_26275(uuid);
