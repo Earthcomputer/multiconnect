@@ -317,6 +317,29 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
+        registry.unregister(EntityType.DONKEY);
+        insertAfter(registry, EntityType.CREEPER, EntityType.DONKEY, "donkey");
+        registry.unregister(EntityType.EVOKER);
+        insertAfter(registry, EntityType.EVOKER_FANGS, EntityType.EVOKER, "evoker");
+        registry.unregister(EntityType.IRON_GOLEM);
+        insertAfter(registry, EntityType.VILLAGER, EntityType.IRON_GOLEM, "iron_golem");
+        registry.unregister(EntityType.PHANTOM);
+        insertAfter(registry, EntityType.ZOMBIE_VILLAGER, EntityType.PHANTOM, "phantom");
+        registry.unregister(EntityType.PILLAGER);
+        insertAfter(registry, EntityType.VINDICATOR, EntityType.PILLAGER, "pillager");
+        registry.unregister(EntityType.PUFFERFISH);
+        insertAfter(registry, EntityType.PIG, EntityType.PUFFERFISH, "pufferfish");
+        registry.unregister(EntityType.RAVAGER);
+        insertAfter(registry, EntityType.PHANTOM, EntityType.RAVAGER, "ravager");
+        registry.unregister(EntityType.TRADER_LLAMA);
+        registry.unregister(EntityType.TROPICAL_FISH);
+        registry.unregister(EntityType.TURTLE);
+        insertAfter(registry, EntityType.STRAY, EntityType.TRADER_LLAMA, "trader_llama");
+        insertAfter(registry, EntityType.TRADER_LLAMA, EntityType.TROPICAL_FISH, "tropical_fish");
+        insertAfter(registry, EntityType.TROPICAL_FISH, EntityType.TURTLE, "turtle");
+        registry.unregister(EntityType.ZOMBIFIED_PIGLIN);
+        insertAfter(registry, EntityType.PUFFERFISH, EntityType.ZOMBIFIED_PIGLIN, "zombie_pigman");
+
         registry.unregister(EntityType.HOGLIN);
         registry.unregister(EntityType.PIGLIN);
         registry.unregister(EntityType.STRIDER);
