@@ -277,6 +277,14 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
+        registry.unregister(Items.SUGAR_CANE);
+        registry.unregister(Items.KELP);
+        registry.unregister(Items.BAMBOO);
+        insertAfter(registry, Items.CLAY_BALL, Items.SUGAR_CANE, "sugar_cane");
+        insertAfter(registry, Items.SUGAR_CANE, Items.KELP, "kelp");
+        insertAfter(registry, Items.DRIED_KELP_BLOCK, Items.BAMBOO, "bamboo");
+        registry.unregister(Items.STONE_BUTTON);
+        insertAfter(registry, Items.REDSTONE_TORCH, Items.STONE_BUTTON, "stone_button");
         registry.unregister(Items.COMPOSTER);
         rename(registry, Items.ZOMBIFIED_PIGLIN_SPAWN_EGG, "zombie_pigman_spawn_egg");
         insertAfter(registry, Items.JIGSAW, Items.COMPOSTER, "composter");
