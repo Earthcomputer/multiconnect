@@ -1,10 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 
-import com.google.common.collect.*;
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.mixin.TagContainerAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.*;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.minecraft.block.entity.BlockEntity;
@@ -13,19 +11,15 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.server.command.CommandSource;
-import net.minecraft.tag.RegistryTagContainer;
 import net.minecraft.tag.RegistryTagManager;
-import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @Mixin(ClientPlayNetworkHandler.class)
@@ -42,14 +36,9 @@ public abstract class MixinClientPlayNetworkHandler {
     @Inject(method = "onGameJoin", at = @At("RETURN"))
     private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            RegistryTagManager tagManager = new RegistryTagManager();
-            Protocol_1_12_2 protocol = (Protocol_1_12_2) ConnectionInfo.protocol;
-            toTagContainer(tagManager.blocks(), protocol.getBlockTags());
-            toTagContainer(tagManager.items(), protocol.getItemTags());
-            toTagContainer(tagManager.fluids(), protocol.getFluidTags());
-            toTagContainer(tagManager.entityTypes(), protocol.getEntityTypeTags());
-            onSynchronizeTags(new SynchronizeTagsS2CPacket(tagManager));
+            onSynchronizeTags(new SynchronizeTagsS2CPacket(new RegistryTagManager()));
 
+            Protocol_1_12_2 protocol = (Protocol_1_12_2) ConnectionInfo.protocol;
             List<Recipe<?>> recipes = new ArrayList<>();
             List<RecipeInfo<?>> recipeInfos = protocol.getCraftingRecipes();
             for (int i = 0; i < recipeInfos.size(); i++) {
@@ -61,16 +50,6 @@ public abstract class MixinClientPlayNetworkHandler {
             Commands_1_12_2.register(dispatcher, null);
             onCommandTree(new CommandTreeS2CPacket(dispatcher.getRoot()));
             TabCompletionManager.requestCommandList();
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    @Unique
-    private <T> void toTagContainer(RegistryTagContainer<T> container, Multimap<Tag.Identified<T>, T> tags) {
-        BiMap<Identifier, Tag<T>> entries = ((TagContainerAccessor<T>) container).multiconnect_getEntries();
-        for (Tag.Identified<T> tag : tags.keySet()) {
-            Collection<T> elements = tags.get(tag);
-            entries.put(tag.getId(), Tag.of(ImmutableSet.copyOf(elements)));
         }
     }
 

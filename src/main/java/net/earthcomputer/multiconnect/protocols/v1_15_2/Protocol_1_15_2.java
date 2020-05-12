@@ -1,9 +1,9 @@
 package net.earthcomputer.multiconnect.protocols.v1_15_2;
 
-import com.google.common.collect.ImmutableSet;
 import net.earthcomputer.multiconnect.impl.CurrentChunkDataPacket;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
+import net.earthcomputer.multiconnect.impl.TagRegistry;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAttributesFixAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
@@ -17,6 +17,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.LongArrayTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.JigsawGeneratingC2SPacket;
@@ -31,7 +32,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.ItemTags;
-import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.dynamic.DynamicSerializableUuid;
 import net.minecraft.util.math.BlockPos;
@@ -41,8 +41,6 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 public class Protocol_1_15_2 extends Protocol_1_16 {
@@ -80,7 +78,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             CompoundTag heightmaps = buf.readCompoundTag();
             if (heightmaps != null) {
                 for (String key : heightmaps.getKeys()) {
-                    net.minecraft.nbt.Tag tag = heightmaps.get(key);
+                    Tag tag = heightmaps.get(key);
                     if (tag instanceof LongArrayTag) {
                         heightmaps.putLongArray(key, class_5196.method_27288(256, 9, ((LongArrayTag) tag).getLongArray()));
                     }
@@ -738,67 +736,62 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     @Override
-    public Map<Tag.Identified<Block>, Set<Block>> getExtraBlockTags() {
-        Map<Tag.Identified<Block>, Set<Block>> tags = super.getExtraBlockTags();
-        tags.put(BlockTags.CRIMSON_STEMS, ImmutableSet.of());
-        tags.put(BlockTags.WARPED_STEMS, ImmutableSet.of());
-        tags.put(BlockTags.LOGS_THAT_BURN, ImmutableSet.<Block>builder()
-                .addAll(getExistingTags(tags, BlockTags.LOGS))
-                .build());
-        tags.put(BlockTags.STONE_PRESSURE_PLATES, ImmutableSet.of(Blocks.STONE_PRESSURE_PLATE));
-        tags.put(BlockTags.PRESSURE_PLATES, ImmutableSet.<Block>builder()
-                .addAll(getExistingTags(tags, BlockTags.WOODEN_PRESSURE_PLATES))
-                .addAll(getExistingTags(tags, BlockTags.PRESSURE_PLATES))
-                .build());
-        tags.put(BlockTags.WITHER_SUMMON_BASE_BLOCKS, ImmutableSet.of(Blocks.SOUL_SAND));
-        tags.put(BlockTags.FIRE, ImmutableSet.of(Blocks.FIRE));
-        tags.put(BlockTags.NYLIUM, ImmutableSet.of());
-        tags.put(BlockTags.WART_BLOCKS, ImmutableSet.of());
-        tags.put(BlockTags.BEACON_BASE_BLOCKS, ImmutableSet.of(Blocks.EMERALD_BLOCK, Blocks.DIAMOND_BLOCK, Blocks.GOLD_BLOCK, Blocks.IRON_BLOCK));
-        tags.put(BlockTags.SOUL_SPEED_BLOCKS, ImmutableSet.of());
-        tags.put(BlockTags.WALL_POST_OVERRIDE, ImmutableSet.<Block>builder()
-                .add(Blocks.TORCH, Blocks.REDSTONE_TORCH, Blocks.TRIPWIRE)
-                .addAll(getExistingTags(tags, BlockTags.SIGNS))
-                .addAll(getExistingTags(tags, BlockTags.BANNERS))
-                .addAll(getExistingTags(tags, BlockTags.PRESSURE_PLATES))
-                .build());
-        tags.put(BlockTags.CLIMBABLE, ImmutableSet.of(Blocks.LADDER, Blocks.VINE, Blocks.SCAFFOLDING));
-        tags.put(BlockTags.PIGLIN_REPELLENTS, ImmutableSet.of());
-        tags.put(BlockTags.HOGLIN_REPELLENTS, ImmutableSet.of());
-        tags.put(BlockTags.GOLD_ORES, ImmutableSet.of(Blocks.GOLD_ORE));
-        tags.put(BlockTags.SOUL_FIRE_BASE_BLOCKS, ImmutableSet.of());
-        tags.put(BlockTags.NON_FLAMMABLE_WOOD, ImmutableSet.of());
-        tags.put(BlockTags.STRIDER_WARM_BLOCKS, ImmutableSet.of());
-        tags.put(BlockTags.CAMPFIRES, ImmutableSet.of(Blocks.CAMPFIRE));
-        tags.put(BlockTags.GUARDED_BY_PIGLINS, ImmutableSet.of());
-        return tags;
+    public void addExtraBlockTags(TagRegistry<Block> tags) {
+        tags.add(BlockTags.CRIMSON_STEMS);
+        tags.add(BlockTags.WARPED_STEMS);
+        tags.addTag(BlockTags.LOGS_THAT_BURN, BlockTags.LOGS);
+        tags.add(BlockTags.STONE_PRESSURE_PLATES, Blocks.STONE_PRESSURE_PLATE);
+        tags.addTag(BlockTags.PRESSURE_PLATES, BlockTags.WOODEN_PRESSURE_PLATES);
+        tags.addTag(BlockTags.PRESSURE_PLATES, BlockTags.STONE_PRESSURE_PLATES);
+        tags.add(BlockTags.WITHER_SUMMON_BASE_BLOCKS, Blocks.SOUL_SAND);
+        tags.add(BlockTags.FIRE, Blocks.FIRE);
+        tags.add(BlockTags.NYLIUM);
+        tags.add(BlockTags.WART_BLOCKS);
+        tags.add(BlockTags.BEACON_BASE_BLOCKS, Blocks.EMERALD_BLOCK, Blocks.DIAMOND_BLOCK, Blocks.GOLD_BLOCK, Blocks.IRON_BLOCK);
+        tags.add(BlockTags.SOUL_SPEED_BLOCKS);
+        tags.add(BlockTags.WALL_POST_OVERRIDE, Blocks.REDSTONE_TORCH, Blocks.TRIPWIRE);
+        tags.addTag(BlockTags.WALL_POST_OVERRIDE, BlockTags.SIGNS);
+        tags.addTag(BlockTags.WALL_POST_OVERRIDE, BlockTags.BANNERS);
+        tags.addTag(BlockTags.WALL_POST_OVERRIDE, BlockTags.PRESSURE_PLATES);
+        tags.add(BlockTags.CLIMBABLE, Blocks.LADDER, Blocks.VINE, Blocks.SCAFFOLDING);
+        tags.add(BlockTags.PIGLIN_REPELLENTS);
+        tags.add(BlockTags.HOGLIN_REPELLENTS);
+        tags.add(BlockTags.GOLD_ORES, Blocks.GOLD_ORE);
+        tags.add(BlockTags.SOUL_FIRE_BASE_BLOCKS);
+        tags.add(BlockTags.NON_FLAMMABLE_WOOD);
+        tags.add(BlockTags.STRIDER_WARM_BLOCKS);
+        tags.add(BlockTags.CAMPFIRES, Blocks.CAMPFIRE);
+        tags.add(BlockTags.GUARDED_BY_PIGLINS);
+        super.addExtraBlockTags(tags);
     }
 
     @Override
-    public Map<Tag.Identified<Item>, Set<Item>> getExtraItemTags() {
-        Map<Tag.Identified<Block>, Set<Block>> blockTags = getExtraBlockTags();
-        Map<Tag.Identified<Item>, Set<Item>> tags = super.getExtraItemTags();
-        tags.put(ItemTags.CRIMSON_STEMS, copyBlocks(blockTags, BlockTags.CRIMSON_STEMS));
-        tags.put(ItemTags.WARPED_STEMS, copyBlocks(blockTags, BlockTags.WARPED_STEMS));
-        tags.put(ItemTags.LOGS_THAT_BURN, copyBlocks(blockTags, BlockTags.LOGS_THAT_BURN));
-        tags.put(ItemTags.GOLD_ORES, copyBlocks(blockTags, BlockTags.GOLD_ORES));
-        tags.put(ItemTags.SOUL_FIRE_BASE_BLOCKS, copyBlocks(blockTags, BlockTags.SOUL_FIRE_BASE_BLOCKS));
-        tags.put(ItemTags.CREEPER_DROP_MUSIC_DISCS, getExistingTags(tags, ItemTags.MUSIC_DISCS));
-        tags.put(ItemTags.BEACON_PAYMENT_ITEMS, ImmutableSet.of(Items.EMERALD, Items.DIAMOND, Items.GOLD_INGOT, Items.IRON_INGOT));
-        tags.put(ItemTags.PIGLIN_REPELLENTS, ImmutableSet.of());
-        tags.put(ItemTags.NON_FLAMMABLE_WOOD, ImmutableSet.of());
-        tags.put(ItemTags.STONE_TOOL_MATERIALS, ImmutableSet.of(Items.COBBLESTONE));
-        tags.put(ItemTags.FURNACE_MATERIALS, ImmutableSet.of(Items.COBBLESTONE));
-        return tags;
+    public void addExtraItemTags(TagRegistry<Item> tags, TagRegistry<Block> blockTags) {
+        copyBlocks(tags, blockTags, ItemTags.CRIMSON_STEMS, BlockTags.CRIMSON_STEMS);
+        copyBlocks(tags, blockTags, ItemTags.WARPED_STEMS, BlockTags.WARPED_STEMS);
+        copyBlocks(tags, blockTags, ItemTags.LOGS_THAT_BURN, BlockTags.LOGS_THAT_BURN);
+        copyBlocks(tags, blockTags, ItemTags.GOLD_ORES, BlockTags.GOLD_ORES);
+        copyBlocks(tags, blockTags, ItemTags.SOUL_FIRE_BASE_BLOCKS, BlockTags.SOUL_FIRE_BASE_BLOCKS);
+        tags.addTag(ItemTags.CREEPER_DROP_MUSIC_DISCS, ItemTags.MUSIC_DISCS);
+        tags.add(ItemTags.BEACON_PAYMENT_ITEMS, Items.EMERALD, Items.DIAMOND, Items.GOLD_INGOT, Items.IRON_INGOT);
+        tags.add(ItemTags.PIGLIN_REPELLENTS);
+        tags.add(ItemTags.NON_FLAMMABLE_WOOD);
+        tags.add(ItemTags.STONE_TOOL_MATERIALS, Items.COBBLESTONE);
+        tags.add(ItemTags.FURNACE_MATERIALS, Items.COBBLESTONE);
+        super.addExtraItemTags(tags, blockTags);
     }
 
     @Override
-    public Map<Tag.Identified<EntityType<?>>, Set<EntityType<?>>> getExtraEntityTags() {
-        Map<Tag.Identified<EntityType<?>>, Set<EntityType<?>>> tags = super.getExtraEntityTags();
-        tags.put(EntityTypeTags.IMPACT_PROJECTILES, ImmutableSet.<EntityType<?>>builder()
-                .addAll(getExistingTags(tags, EntityTypeTags.ARROWS))
-                .add(EntityType.SNOWBALL, EntityType.FIREBALL, EntityType.SMALL_FIREBALL, EntityType.EGG, EntityType.TRIDENT, EntityType.DRAGON_FIREBALL, EntityType.WITHER_SKULL)
-                .build());
-        return tags;
+    public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
+        tags.addTag(EntityTypeTags.IMPACT_PROJECTILES, EntityTypeTags.ARROWS);
+        tags.add(EntityTypeTags.IMPACT_PROJECTILES,
+                EntityType.SNOWBALL,
+                EntityType.FIREBALL,
+                EntityType.SMALL_FIREBALL,
+                EntityType.EGG,
+                EntityType.TRIDENT,
+                EntityType.DRAGON_FIREBALL,
+                EntityType.WITHER_SKULL);
+        super.addExtraEntityTags(tags);
     }
 }

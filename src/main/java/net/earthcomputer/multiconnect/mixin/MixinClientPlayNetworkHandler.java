@@ -4,6 +4,8 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.CurrentChunkDataPacket;
+import net.earthcomputer.multiconnect.impl.TagRegistry;
+import net.minecraft.block.Block;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
@@ -16,8 +18,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.HashSet;
+import java.util.function.Consumer;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public class MixinClientPlayNetworkHandler {
@@ -34,24 +36,23 @@ public class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onSynchronizeTags", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
     private void onOnSynchronizeTags(SynchronizeTagsS2CPacket packet, CallbackInfo ci) {
-        setExtraTags(packet.getTagManager().blocks(), ConnectionInfo.protocol.getExtraBlockTags());
-        setExtraTags(packet.getTagManager().items(), ConnectionInfo.protocol.getExtraItemTags());
-        setExtraTags(packet.getTagManager().fluids(), ConnectionInfo.protocol.getExtraFluidTags());
-        setExtraTags(packet.getTagManager().entityTypes(), ConnectionInfo.protocol.getExtraEntityTags());
+        TagRegistry<Block> blockTags = setExtraTags(packet.getTagManager().blocks(), ConnectionInfo.protocol::addExtraBlockTags);
+        setExtraTags(packet.getTagManager().items(), itemTags -> ConnectionInfo.protocol.addExtraItemTags(itemTags, blockTags));
+        setExtraTags(packet.getTagManager().fluids(), ConnectionInfo.protocol::addExtraFluidTags);
+        setExtraTags(packet.getTagManager().entityTypes(), ConnectionInfo.protocol::addExtraEntityTags);
     }
 
     @SuppressWarnings("unchecked")
     @Unique
-    private static <T> void setExtraTags(TagContainer<T> container, Map<Tag.Identified<T>, Set<T>> extraTags) {
-        if (extraTags.isEmpty()) {
-            return;
-        }
+    private static <T> TagRegistry<T> setExtraTags(TagContainer<T> container, Consumer<TagRegistry<T>> tagsAdder) {
         TagContainerAccessor<T> accessor = (TagContainerAccessor<T>) container;
-        BiMap<Identifier, Tag<T>> tags = HashBiMap.create(accessor.multiconnect_getEntries());
-        for (Tag.Identified<T> tag : extraTags.keySet()) {
-            tags.put(tag.getId(), Tag.of(extraTags.get(tag)));
-        }
-        accessor.multiconnect_setEntries(tags);
+        TagRegistry<T> tags = new TagRegistry<>();
+        container.getEntries().forEach((id, tag) -> tags.put(id, new HashSet<>(tag.values())));
+        tagsAdder.accept(tags);
+        BiMap<Identifier, Tag<T>> tagBiMap = HashBiMap.create(tags.size());
+        tags.forEach((id, set) -> tagBiMap.put(id, Tag.of(set)));
+        accessor.multiconnect_setEntries(tagBiMap);
+        return tags;
     }
 
 }

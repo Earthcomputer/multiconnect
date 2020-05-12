@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_13;
 
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
+import net.earthcomputer.multiconnect.impl.TagRegistry;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_1.Protocol_1_13_1;
 import net.minecraft.block.Block;
@@ -9,6 +10,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.TntBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.BookUpdateC2SPacket;
+import net.minecraft.tag.BlockTags;
 import net.minecraft.util.Hand;
 import net.minecraft.util.registry.Registry;
 
@@ -44,5 +46,13 @@ public class Protocol_1_13 extends Protocol_1_13_1 {
         if (state.getBlock() == Blocks.TNT && state.get(TntBlock.UNSTABLE))
             return false;
         return super.acceptBlockState(state);
+    }
+
+    @Override
+    public void addExtraBlockTags(TagRegistry<Block> tags) {
+        tags.add(BlockTags.UNDERWATER_BONEMEALS, Blocks.SEAGRASS);
+        tags.addTag(BlockTags.UNDERWATER_BONEMEALS, BlockTags.CORALS);
+        tags.addTag(BlockTags.UNDERWATER_BONEMEALS, BlockTags.WALL_CORALS);
+        super.addExtraBlockTags(tags);
     }
 }

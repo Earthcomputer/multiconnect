@@ -1,9 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_14_4;
 
-import net.earthcomputer.multiconnect.impl.CurrentChunkDataPacket;
-import net.earthcomputer.multiconnect.impl.DataTrackerManager;
-import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
-import net.earthcomputer.multiconnect.impl.PacketInfo;
+import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.EndermanEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.LivingEntityAccessor;
@@ -34,9 +31,11 @@ import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.tag.BlockTags;
+import net.minecraft.tag.EntityTypeTags;
+import net.minecraft.tag.ItemTags;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.ChunkSection;
 
 import java.io.IOException;
 import java.util.List;
@@ -273,5 +272,50 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             return false;
 
         return super.acceptEntityData(clazz, data);
+    }
+
+    @Override
+    public void addExtraBlockTags(TagRegistry<Block> tags) {
+        tags.add(BlockTags.TALL_FLOWERS, Blocks.SUNFLOWER, Blocks.LILAC, Blocks.PEONY, Blocks.ROSE_BUSH);
+        tags.addTag(BlockTags.FLOWERS, BlockTags.SMALL_FLOWERS);
+        tags.addTag(BlockTags.FLOWERS, BlockTags.TALL_FLOWERS);
+        tags.add(BlockTags.BEEHIVES);
+        tags.add(BlockTags.CROPS, Blocks.BEETROOTS, Blocks.CARROTS, Blocks.POTATOES, Blocks.WHEAT, Blocks.MELON_STEM, Blocks.PUMPKIN_STEM);
+        tags.add(BlockTags.BEE_GROWABLES);
+        tags.add(BlockTags.SHULKER_BOXES,
+                Blocks.SHULKER_BOX,
+                Blocks.BLACK_SHULKER_BOX,
+                Blocks.BLUE_SHULKER_BOX,
+                Blocks.BROWN_SHULKER_BOX,
+                Blocks.CYAN_SHULKER_BOX,
+                Blocks.GRAY_SHULKER_BOX,
+                Blocks.GREEN_SHULKER_BOX,
+                Blocks.LIGHT_BLUE_SHULKER_BOX,
+                Blocks.LIGHT_GRAY_SHULKER_BOX,
+                Blocks.LIME_SHULKER_BOX,
+                Blocks.MAGENTA_SHULKER_BOX,
+                Blocks.ORANGE_SHULKER_BOX,
+                Blocks.PINK_SHULKER_BOX,
+                Blocks.PURPLE_SHULKER_BOX,
+                Blocks.RED_SHULKER_BOX,
+                Blocks.WHITE_SHULKER_BOX,
+                Blocks.YELLOW_SHULKER_BOX);
+        tags.add(BlockTags.PORTALS, Blocks.NETHER_PORTAL, Blocks.END_PORTAL, Blocks.END_GATEWAY);
+        super.addExtraBlockTags(tags);
+    }
+
+    @Override
+    public void addExtraItemTags(TagRegistry<Item> tags, TagRegistry<Block> blockTags) {
+        copyBlocks(tags, blockTags, ItemTags.TALL_FLOWERS, BlockTags.TALL_FLOWERS);
+        copyBlocks(tags, blockTags, ItemTags.FLOWERS, BlockTags.FLOWERS);
+        tags.add(ItemTags.LECTERN_BOOKS, Items.WRITTEN_BOOK, Items.WRITABLE_BOOK);
+        super.addExtraItemTags(tags, blockTags);
+    }
+
+    @Override
+    public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
+        tags.add(EntityTypeTags.BEEHIVE_INHABITORS);
+        tags.add(EntityTypeTags.ARROWS, EntityType.ARROW, EntityType.SPECTRAL_ARROW);
+        super.addExtraEntityTags(tags);
     }
 }

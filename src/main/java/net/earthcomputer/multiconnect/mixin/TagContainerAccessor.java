@@ -12,8 +12,5 @@ import java.util.Map;
 @Mixin(TagContainer.class)
 public interface TagContainerAccessor<T> {
     @Accessor("entries")
-    BiMap<Identifier, Tag<T>> multiconnect_getEntries();
-
-    @Accessor("entries")
     void multiconnect_setEntries(BiMap<Identifier, Tag<T>> entries);
 }

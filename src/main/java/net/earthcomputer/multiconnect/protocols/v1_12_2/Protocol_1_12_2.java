@@ -1,8 +1,5 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
-import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import com.mojang.datafixers.Dynamic;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.impl.*;
@@ -1009,9 +1006,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         return true;
     }
 
-    public Multimap<Tag.Identified<Block>, Block> getBlockTags() {
-        Multimap<Tag.Identified<Block>, Block> tags = HashMultimap.create();
-        tags.putAll(BlockTags.WOOL, Arrays.asList(
+    @Override
+    public void addExtraBlockTags(TagRegistry<Block> tags) {
+        tags.add(BlockTags.WOOL,
             Blocks.WHITE_WOOL,
             Blocks.ORANGE_WOOL,
             Blocks.MAGENTA_WOOL,
@@ -1027,23 +1024,23 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             Blocks.BROWN_WOOL,
             Blocks.GREEN_WOOL,
             Blocks.RED_WOOL,
-            Blocks.BLACK_WOOL));
-        tags.putAll(BlockTags.PLANKS, Arrays.asList(
+            Blocks.BLACK_WOOL);
+        tags.add(BlockTags.PLANKS,
             Blocks.OAK_PLANKS,
             Blocks.SPRUCE_PLANKS,
             Blocks.BIRCH_PLANKS,
             Blocks.JUNGLE_PLANKS,
             Blocks.ACACIA_PLANKS,
-            Blocks.DARK_OAK_PLANKS));
-        tags.putAll(BlockTags.STONE_BRICKS, Arrays.asList(
+            Blocks.DARK_OAK_PLANKS);
+        tags.add(BlockTags.STONE_BRICKS,
             Blocks.STONE_BRICKS,
             Blocks.MOSSY_STONE_BRICKS,
             Blocks.CRACKED_STONE_BRICKS,
-            Blocks.CHISELED_STONE_BRICKS));
-        tags.put(BlockTags.WOODEN_BUTTONS, Blocks.OAK_BUTTON);
-        tags.putAll(BlockTags.BUTTONS, tags.get(BlockTags.WOODEN_BUTTONS));
-        tags.put(BlockTags.BUTTONS, Blocks.STONE_BUTTON);
-        tags.putAll(BlockTags.CARPETS, Arrays.asList(
+            Blocks.CHISELED_STONE_BRICKS);
+        tags.add(BlockTags.WOODEN_BUTTONS, Blocks.OAK_BUTTON);
+        tags.addTag(BlockTags.BUTTONS, BlockTags.WOODEN_BUTTONS);
+        tags.add(BlockTags.BUTTONS, Blocks.STONE_BUTTON);
+        tags.add(BlockTags.CARPETS,
             Blocks.WHITE_CARPET,
             Blocks.ORANGE_CARPET,
             Blocks.MAGENTA_CARPET,
@@ -1059,85 +1056,66 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             Blocks.BROWN_CARPET,
             Blocks.GREEN_CARPET,
             Blocks.RED_CARPET,
-            Blocks.BLACK_CARPET));
-        tags.putAll(BlockTags.WOODEN_DOORS, Arrays.asList(
+            Blocks.BLACK_CARPET);
+        tags.add(BlockTags.WOODEN_DOORS,
             Blocks.OAK_DOOR,
             Blocks.SPRUCE_DOOR,
             Blocks.BIRCH_DOOR,
             Blocks.JUNGLE_DOOR,
             Blocks.ACACIA_DOOR,
-            Blocks.DARK_OAK_DOOR));
-        tags.putAll(BlockTags.WOODEN_STAIRS, Arrays.asList(
+            Blocks.DARK_OAK_DOOR);
+        tags.add(BlockTags.WOODEN_STAIRS,
             Blocks.OAK_STAIRS,
             Blocks.SPRUCE_STAIRS,
             Blocks.BIRCH_STAIRS,
             Blocks.JUNGLE_STAIRS,
             Blocks.ACACIA_STAIRS,
-            Blocks.DARK_OAK_STAIRS));
-        tags.putAll(BlockTags.WOODEN_SLABS, Arrays.asList(
+            Blocks.DARK_OAK_STAIRS);
+        tags.add(BlockTags.WOODEN_SLABS,
             Blocks.OAK_SLAB,
             Blocks.SPRUCE_SLAB,
             Blocks.BIRCH_SLAB,
             Blocks.JUNGLE_SLAB,
             Blocks.ACACIA_SLAB,
-            Blocks.DARK_OAK_SLAB));
-        tags.putAll(BlockTags.WOODEN_FENCES, Arrays.asList(
-            Blocks.OAK_FENCE,
-            Blocks.ACACIA_FENCE,
-            Blocks.DARK_OAK_FENCE,
-            Blocks.SPRUCE_FENCE,
-            Blocks.BIRCH_FENCE,
-            Blocks.JUNGLE_FENCE));
-        tags.putAll(BlockTags.DOORS, tags.get(BlockTags.WOODEN_DOORS));
-        tags.put(BlockTags.DOORS, Blocks.IRON_DOOR);
-        tags.putAll(BlockTags.SAPLINGS, Arrays.asList(
+            Blocks.DARK_OAK_SLAB);
+        tags.addTag(BlockTags.DOORS, BlockTags.WOODEN_DOORS);
+        tags.add(BlockTags.DOORS, Blocks.IRON_DOOR);
+        tags.add(BlockTags.SAPLINGS,
             Blocks.OAK_SAPLING,
             Blocks.SPRUCE_SAPLING,
             Blocks.BIRCH_SAPLING,
             Blocks.JUNGLE_SAPLING,
             Blocks.ACACIA_SAPLING,
-            Blocks.DARK_OAK_SAPLING));
-        tags.putAll(BlockTags.DARK_OAK_LOGS, Arrays.asList(
+            Blocks.DARK_OAK_SAPLING);
+        tags.add(BlockTags.DARK_OAK_LOGS,
             Blocks.DARK_OAK_LOG,
-            Blocks.DARK_OAK_WOOD));
-        tags.putAll(BlockTags.OAK_LOGS, Arrays.asList(
+            Blocks.DARK_OAK_WOOD);
+        tags.add(BlockTags.OAK_LOGS,
             Blocks.OAK_LOG,
-            Blocks.OAK_WOOD));
-        tags.putAll(BlockTags.ACACIA_LOGS, Arrays.asList(
+            Blocks.OAK_WOOD);
+        tags.add(BlockTags.ACACIA_LOGS,
             Blocks.ACACIA_LOG,
-            Blocks.ACACIA_WOOD));
-        tags.putAll(BlockTags.BIRCH_LOGS, Arrays.asList(
+            Blocks.ACACIA_WOOD);
+        tags.add(BlockTags.BIRCH_LOGS,
             Blocks.BIRCH_LOG,
-            Blocks.BIRCH_WOOD));
-        tags.putAll(BlockTags.JUNGLE_LOGS, Arrays.asList(
+            Blocks.BIRCH_WOOD);
+        tags.add(BlockTags.JUNGLE_LOGS,
             Blocks.JUNGLE_LOG,
-            Blocks.JUNGLE_WOOD));
-        tags.putAll(BlockTags.SPRUCE_LOGS, Arrays.asList(
+            Blocks.JUNGLE_WOOD);
+        tags.add(BlockTags.SPRUCE_LOGS,
             Blocks.SPRUCE_LOG,
-            Blocks.SPRUCE_WOOD));
-        tags.putAll(BlockTags.LOGS, tags.get(BlockTags.DARK_OAK_LOGS));
-        tags.putAll(BlockTags.LOGS, tags.get(BlockTags.OAK_LOGS));
-        tags.putAll(BlockTags.LOGS, tags.get(BlockTags.ACACIA_LOGS));
-        tags.putAll(BlockTags.LOGS, tags.get(BlockTags.BIRCH_LOGS));
-        tags.putAll(BlockTags.LOGS, tags.get(BlockTags.JUNGLE_LOGS));
-        tags.putAll(BlockTags.LOGS, tags.get(BlockTags.SPRUCE_LOGS));
-        tags.putAll(BlockTags.ANVIL, Arrays.asList(
+            Blocks.SPRUCE_WOOD);
+        tags.addTag(BlockTags.LOGS, BlockTags.DARK_OAK_LOGS);
+        tags.addTag(BlockTags.LOGS, BlockTags.OAK_LOGS);
+        tags.addTag(BlockTags.LOGS, BlockTags.ACACIA_LOGS);
+        tags.addTag(BlockTags.LOGS, BlockTags.BIRCH_LOGS);
+        tags.addTag(BlockTags.LOGS, BlockTags.JUNGLE_LOGS);
+        tags.addTag(BlockTags.LOGS, BlockTags.SPRUCE_LOGS);
+        tags.add(BlockTags.ANVIL,
             Blocks.ANVIL,
             Blocks.CHIPPED_ANVIL,
-            Blocks.DAMAGED_ANVIL));
-        tags.putAll(BlockTags.SMALL_FLOWERS, Arrays.asList(
-            Blocks.DANDELION,
-            Blocks.POPPY,
-            Blocks.BLUE_ORCHID,
-            Blocks.ALLIUM,
-            Blocks.AZURE_BLUET,
-            Blocks.RED_TULIP,
-            Blocks.ORANGE_TULIP,
-            Blocks.WHITE_TULIP,
-            Blocks.PINK_TULIP,
-            Blocks.OXEYE_DAISY));
-        tags.putAll(BlockTags.ENDERMAN_HOLDABLE, tags.get(BlockTags.SMALL_FLOWERS));
-        tags.putAll(BlockTags.ENDERMAN_HOLDABLE, Arrays.asList(
+            Blocks.DAMAGED_ANVIL);
+        tags.add(BlockTags.ENDERMAN_HOLDABLE,
             Blocks.GRASS_BLOCK,
             Blocks.DIRT,
             Blocks.COARSE_DIRT,
@@ -1153,8 +1131,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             Blocks.CARVED_PUMPKIN,
             Blocks.MELON,
             Blocks.MYCELIUM,
-            Blocks.NETHERRACK));
-        tags.putAll(BlockTags.FLOWER_POTS, Arrays.asList(
+            Blocks.NETHERRACK);
+        tags.add(BlockTags.FLOWER_POTS,
             Blocks.FLOWER_POT,
             Blocks.POTTED_POPPY,
             Blocks.POTTED_BLUE_ORCHID,
@@ -1176,8 +1154,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             Blocks.POTTED_BROWN_MUSHROOM,
             Blocks.POTTED_DEAD_BUSH,
             Blocks.POTTED_FERN,
-            Blocks.POTTED_CACTUS));
-        tags.putAll(BlockTags.BANNERS, Arrays.asList(
+            Blocks.POTTED_CACTUS);
+        tags.add(BlockTags.BANNERS,
             Blocks.WHITE_BANNER,
             Blocks.ORANGE_BANNER,
             Blocks.MAGENTA_BANNER,
@@ -1209,9 +1187,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             Blocks.BROWN_WALL_BANNER,
             Blocks.GREEN_WALL_BANNER,
             Blocks.RED_WALL_BANNER,
-            Blocks.BLACK_WALL_BANNER));
-        tags.put(BlockTags.WOODEN_PRESSURE_PLATES, Blocks.OAK_PRESSURE_PLATE);
-        tags.putAll(BlockTags.STAIRS, Arrays.asList(
+            Blocks.BLACK_WALL_BANNER);
+        tags.add(BlockTags.WOODEN_PRESSURE_PLATES, Blocks.OAK_PRESSURE_PLATE);
+        tags.add(BlockTags.STAIRS,
             Blocks.OAK_STAIRS,
             Blocks.COBBLESTONE_STAIRS,
             Blocks.SPRUCE_STAIRS,
@@ -1225,8 +1203,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             Blocks.BRICK_STAIRS,
             Blocks.PURPUR_STAIRS,
             Blocks.QUARTZ_STAIRS,
-            Blocks.RED_SANDSTONE_STAIRS));
-        tags.putAll(BlockTags.SLABS, Arrays.asList(
+            Blocks.RED_SANDSTONE_STAIRS);
+        tags.add(BlockTags.SLABS,
             Blocks.SMOOTH_STONE_SLAB,
             Blocks.STONE_BRICK_SLAB,
             Blocks.SANDSTONE_SLAB,
@@ -1242,34 +1220,31 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             Blocks.BRICK_SLAB,
             Blocks.COBBLESTONE_SLAB,
             Blocks.NETHER_BRICK_SLAB,
-            Blocks.PETRIFIED_OAK_SLAB));
-        tags.putAll(BlockTags.WALLS, Arrays.asList(
-            Blocks.COBBLESTONE_WALL,
-            Blocks.MOSSY_COBBLESTONE_WALL));
-        tags.putAll(BlockTags.SAND, Arrays.asList(
+            Blocks.PETRIFIED_OAK_SLAB);
+        tags.add(BlockTags.SAND,
             Blocks.SAND,
-            Blocks.RED_SAND));
-        tags.putAll(BlockTags.RAILS, Arrays.asList(
+            Blocks.RED_SAND);
+        tags.add(BlockTags.RAILS,
             Blocks.RAIL,
             Blocks.POWERED_RAIL,
             Blocks.DETECTOR_RAIL,
-            Blocks.ACTIVATOR_RAIL));
-        tags.putAll(BlockTags.ICE, Arrays.asList(
+            Blocks.ACTIVATOR_RAIL);
+        tags.add(BlockTags.ICE,
             Blocks.ICE,
             Blocks.PACKED_ICE,
             Blocks.BLUE_ICE,
-            Blocks.FROSTED_ICE));
-        tags.putAll(BlockTags.VALID_SPAWN, Arrays.asList(
+            Blocks.FROSTED_ICE);
+        tags.add(BlockTags.VALID_SPAWN,
             Blocks.GRASS_BLOCK,
-            Blocks.PODZOL));
-        tags.putAll(BlockTags.LEAVES, Arrays.asList(
+            Blocks.PODZOL);
+        tags.add(BlockTags.LEAVES,
             Blocks.JUNGLE_LEAVES,
             Blocks.OAK_LEAVES,
             Blocks.SPRUCE_LEAVES,
             Blocks.DARK_OAK_LEAVES,
             Blocks.ACACIA_LEAVES,
-            Blocks.BIRCH_LEAVES));
-        tags.putAll(BlockTags.IMPERMEABLE, Arrays.asList(
+            Blocks.BIRCH_LEAVES);
+        tags.add(BlockTags.IMPERMEABLE,
             Blocks.GLASS,
             Blocks.WHITE_STAINED_GLASS,
             Blocks.ORANGE_STAINED_GLASS,
@@ -1286,137 +1261,43 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             Blocks.BROWN_STAINED_GLASS,
             Blocks.GREEN_STAINED_GLASS,
             Blocks.RED_STAINED_GLASS,
-            Blocks.BLACK_STAINED_GLASS));
-        tags.put(BlockTags.WOODEN_TRAPDOORS, Blocks.OAK_TRAPDOOR);
-        tags.putAll(BlockTags.TRAPDOORS, tags.get(BlockTags.WOODEN_TRAPDOORS));
-        tags.put(BlockTags.TRAPDOORS, Blocks.IRON_TRAPDOOR);
-        tags.put(BlockTags.STANDING_SIGNS, Blocks.OAK_SIGN);
-        tags.put(BlockTags.WALL_SIGNS, Blocks.OAK_WALL_SIGN);
-        tags.putAll(BlockTags.SIGNS, tags.get(BlockTags.STANDING_SIGNS));
-        tags.putAll(BlockTags.SIGNS, tags.get(BlockTags.WALL_SIGNS));
-        tags.putAll(BlockTags.BEDS, Arrays.asList(
-            Blocks.RED_BED,
-            Blocks.BLACK_BED,
-            Blocks.BLUE_BED,
-            Blocks.BROWN_BED,
-            Blocks.CYAN_BED,
-            Blocks.GRAY_BED,
-            Blocks.GREEN_BED,
-            Blocks.LIGHT_BLUE_BED,
-            Blocks.LIGHT_GRAY_BED,
-            Blocks.LIME_BED,
-            Blocks.MAGENTA_BED,
-            Blocks.ORANGE_BED,
-            Blocks.PINK_BED,
-            Blocks.PURPLE_BED,
-            Blocks.WHITE_BED,
-            Blocks.YELLOW_BED));
-        tags.putAll(BlockTags.FENCES, tags.get(BlockTags.WOODEN_FENCES));
-        tags.put(BlockTags.FENCES, Blocks.NETHER_BRICK_FENCE);
-        tags.putAll(BlockTags.DRAGON_IMMUNE, Arrays.asList(
-            Blocks.BARRIER,
-            Blocks.BEDROCK,
-            Blocks.END_PORTAL,
-            Blocks.END_PORTAL_FRAME,
-            Blocks.END_GATEWAY,
-            Blocks.COMMAND_BLOCK,
-            Blocks.REPEATING_COMMAND_BLOCK,
-            Blocks.CHAIN_COMMAND_BLOCK,
-            Blocks.STRUCTURE_BLOCK,
-            Blocks.JIGSAW,
-            Blocks.MOVING_PISTON,
-            Blocks.OBSIDIAN,
-            Blocks.END_STONE,
-            Blocks.IRON_BARS));
-        tags.putAll(BlockTags.WITHER_IMMUNE, Arrays.asList(
-            Blocks.BARRIER,
-            Blocks.BEDROCK,
-            Blocks.END_PORTAL,
-            Blocks.END_PORTAL_FRAME,
-            Blocks.END_GATEWAY,
-            Blocks.COMMAND_BLOCK,
-            Blocks.REPEATING_COMMAND_BLOCK,
-            Blocks.CHAIN_COMMAND_BLOCK,
-            Blocks.STRUCTURE_BLOCK,
-            Blocks.JIGSAW,
-            Blocks.MOVING_PISTON));
-        tags.putAll(BlockTags.TALL_FLOWERS, Arrays.asList(
-            Blocks.SUNFLOWER,
-            Blocks.LILAC,
-            Blocks.PEONY,
-            Blocks.ROSE_BUSH));
-        tags.putAll(BlockTags.FLOWERS, tags.get(BlockTags.SMALL_FLOWERS));
-        tags.putAll(BlockTags.FLOWERS, tags.get(BlockTags.TALL_FLOWERS));
-        tags.putAll(BlockTags.CROPS, Arrays.asList(
-            Blocks.BEETROOTS,
-            Blocks.CARROTS,
-            Blocks.POTATOES,
-            Blocks.WHEAT,
-            Blocks.MELON_STEM,
-            Blocks.PUMPKIN_STEM));
-        tags.putAll(BlockTags.SHULKER_BOXES, Arrays.asList(
-            Blocks.SHULKER_BOX,
-            Blocks.BLACK_SHULKER_BOX,
-            Blocks.BLUE_SHULKER_BOX,
-            Blocks.BROWN_SHULKER_BOX,
-            Blocks.CYAN_SHULKER_BOX,
-            Blocks.GRAY_SHULKER_BOX,
-            Blocks.GREEN_SHULKER_BOX,
-            Blocks.LIGHT_BLUE_SHULKER_BOX,
-            Blocks.LIGHT_GRAY_SHULKER_BOX,
-            Blocks.LIME_SHULKER_BOX,
-            Blocks.MAGENTA_SHULKER_BOX,
-            Blocks.ORANGE_SHULKER_BOX,
-            Blocks.PINK_SHULKER_BOX,
-            Blocks.PURPLE_SHULKER_BOX,
-            Blocks.RED_SHULKER_BOX,
-            Blocks.WHITE_SHULKER_BOX,
-            Blocks.YELLOW_SHULKER_BOX));
-        tags.putAll(BlockTags.PORTALS, Arrays.asList(
-            Blocks.NETHER_PORTAL,
-            Blocks.END_PORTAL,
-            Blocks.END_GATEWAY));
-        return tags;
+            Blocks.BLACK_STAINED_GLASS);
+        tags.add(BlockTags.WOODEN_TRAPDOORS, Blocks.OAK_TRAPDOOR);
+        tags.addTag(BlockTags.TRAPDOORS, BlockTags.WOODEN_TRAPDOORS);
+        tags.add(BlockTags.TRAPDOORS, Blocks.IRON_TRAPDOOR);
+        super.addExtraBlockTags(tags);
     }
 
-    public Multimap<Tag.Identified<Item>, Item> getItemTags() {
-        Multimap<Tag.Identified<Block>, Block> blockTags = getBlockTags();
-        Multimap<Tag.Identified<Item>, Item> tags = HashMultimap.create();
-        copyBlockItemTags(tags, blockTags, ItemTags.WOOL, BlockTags.WOOL);
-        copyBlockItemTags(tags, blockTags, ItemTags.PLANKS, BlockTags.PLANKS);
-        copyBlockItemTags(tags, blockTags, ItemTags.STONE_BRICKS, BlockTags.STONE_BRICKS);
-        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_BUTTONS, BlockTags.WOODEN_BUTTONS);
-        copyBlockItemTags(tags, blockTags, ItemTags.BUTTONS, BlockTags.BUTTONS);
-        copyBlockItemTags(tags, blockTags, ItemTags.CARPETS, BlockTags.CARPETS);
-        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_DOORS, BlockTags.WOODEN_DOORS);
-        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_STAIRS, BlockTags.WOODEN_STAIRS);
-        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_SLABS, BlockTags.WOODEN_SLABS);
-        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_FENCES, BlockTags.WOODEN_FENCES);
-        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_PRESSURE_PLATES, BlockTags.WOODEN_PRESSURE_PLATES);
-        copyBlockItemTags(tags, blockTags, ItemTags.DOORS, BlockTags.DOORS);
-        copyBlockItemTags(tags, blockTags, ItemTags.SAPLINGS, BlockTags.SAPLINGS);
-        copyBlockItemTags(tags, blockTags, ItemTags.OAK_LOGS, BlockTags.OAK_LOGS);
-        copyBlockItemTags(tags, blockTags, ItemTags.DARK_OAK_LOGS, BlockTags.DARK_OAK_LOGS);
-        copyBlockItemTags(tags, blockTags, ItemTags.BIRCH_LOGS, BlockTags.BIRCH_LOGS);
-        copyBlockItemTags(tags, blockTags, ItemTags.ACACIA_LOGS, BlockTags.ACACIA_LOGS);
-        copyBlockItemTags(tags, blockTags, ItemTags.SPRUCE_LOGS, BlockTags.SPRUCE_LOGS);
-        copyBlockItemTags(tags, blockTags, ItemTags.JUNGLE_LOGS, BlockTags.JUNGLE_LOGS);
-        copyBlockItemTags(tags, blockTags, ItemTags.LOGS, BlockTags.LOGS);
-        copyBlockItemTags(tags, blockTags, ItemTags.SAND, BlockTags.SAND);
-        copyBlockItemTags(tags, blockTags, ItemTags.SLABS, BlockTags.SLABS);
-        copyBlockItemTags(tags, blockTags, ItemTags.WALLS, BlockTags.WALLS);
-        copyBlockItemTags(tags, blockTags, ItemTags.STAIRS, BlockTags.STAIRS);
-        copyBlockItemTags(tags, blockTags, ItemTags.ANVIL, BlockTags.ANVIL);
-        copyBlockItemTags(tags, blockTags, ItemTags.RAILS, BlockTags.RAILS);
-        copyBlockItemTags(tags, blockTags, ItemTags.LEAVES, BlockTags.LEAVES);
-        copyBlockItemTags(tags, blockTags, ItemTags.WOODEN_TRAPDOORS, BlockTags.WOODEN_TRAPDOORS);
-        copyBlockItemTags(tags, blockTags, ItemTags.TRAPDOORS, BlockTags.TRAPDOORS);
-        copyBlockItemTags(tags, blockTags, ItemTags.SMALL_FLOWERS, BlockTags.SMALL_FLOWERS);
-        copyBlockItemTags(tags, blockTags, ItemTags.BEDS, BlockTags.BEDS);
-        copyBlockItemTags(tags, blockTags, ItemTags.FENCES, BlockTags.FENCES);
-        copyBlockItemTags(tags, blockTags, ItemTags.TALL_FLOWERS, BlockTags.TALL_FLOWERS);
-        copyBlockItemTags(tags, blockTags, ItemTags.FLOWERS, BlockTags.FLOWERS);
-        tags.putAll(ItemTags.BANNERS, Arrays.asList(
+    @Override
+    public void addExtraItemTags(TagRegistry<Item> tags, TagRegistry<Block> blockTags) {
+        copyBlocks(tags, blockTags, ItemTags.WOOL, BlockTags.WOOL);
+        copyBlocks(tags, blockTags, ItemTags.PLANKS, BlockTags.PLANKS);
+        copyBlocks(tags, blockTags, ItemTags.STONE_BRICKS, BlockTags.STONE_BRICKS);
+        copyBlocks(tags, blockTags, ItemTags.WOODEN_BUTTONS, BlockTags.WOODEN_BUTTONS);
+        copyBlocks(tags, blockTags, ItemTags.BUTTONS, BlockTags.BUTTONS);
+        copyBlocks(tags, blockTags, ItemTags.CARPETS, BlockTags.CARPETS);
+        copyBlocks(tags, blockTags, ItemTags.WOODEN_DOORS, BlockTags.WOODEN_DOORS);
+        copyBlocks(tags, blockTags, ItemTags.WOODEN_STAIRS, BlockTags.WOODEN_STAIRS);
+        copyBlocks(tags, blockTags, ItemTags.WOODEN_SLABS, BlockTags.WOODEN_SLABS);
+        copyBlocks(tags, blockTags, ItemTags.WOODEN_PRESSURE_PLATES, BlockTags.WOODEN_PRESSURE_PLATES);
+        copyBlocks(tags, blockTags, ItemTags.DOORS, BlockTags.DOORS);
+        copyBlocks(tags, blockTags, ItemTags.SAPLINGS, BlockTags.SAPLINGS);
+        copyBlocks(tags, blockTags, ItemTags.OAK_LOGS, BlockTags.OAK_LOGS);
+        copyBlocks(tags, blockTags, ItemTags.DARK_OAK_LOGS, BlockTags.DARK_OAK_LOGS);
+        copyBlocks(tags, blockTags, ItemTags.BIRCH_LOGS, BlockTags.BIRCH_LOGS);
+        copyBlocks(tags, blockTags, ItemTags.ACACIA_LOGS, BlockTags.ACACIA_LOGS);
+        copyBlocks(tags, blockTags, ItemTags.SPRUCE_LOGS, BlockTags.SPRUCE_LOGS);
+        copyBlocks(tags, blockTags, ItemTags.JUNGLE_LOGS, BlockTags.JUNGLE_LOGS);
+        copyBlocks(tags, blockTags, ItemTags.LOGS, BlockTags.LOGS);
+        copyBlocks(tags, blockTags, ItemTags.SAND, BlockTags.SAND);
+        copyBlocks(tags, blockTags, ItemTags.SLABS, BlockTags.SLABS);
+        copyBlocks(tags, blockTags, ItemTags.STAIRS, BlockTags.STAIRS);
+        copyBlocks(tags, blockTags, ItemTags.ANVIL, BlockTags.ANVIL);
+        copyBlocks(tags, blockTags, ItemTags.RAILS, BlockTags.RAILS);
+        copyBlocks(tags, blockTags, ItemTags.LEAVES, BlockTags.LEAVES);
+        copyBlocks(tags, blockTags, ItemTags.WOODEN_TRAPDOORS, BlockTags.WOODEN_TRAPDOORS);
+        copyBlocks(tags, blockTags, ItemTags.TRAPDOORS, BlockTags.TRAPDOORS);
+        tags.add(ItemTags.BANNERS,
             Items.WHITE_BANNER,
             Items.ORANGE_BANNER,
             Items.MAGENTA_BANNER,
@@ -1432,73 +1313,29 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             Items.BROWN_BANNER,
             Items.GREEN_BANNER,
             Items.RED_BANNER,
-            Items.BLACK_BANNER));
-        tags.putAll(ItemTags.BOATS, Arrays.asList(
+            Items.BLACK_BANNER);
+        tags.add(ItemTags.BOATS,
             Items.OAK_BOAT,
             Items.SPRUCE_BOAT,
             Items.BIRCH_BOAT,
             Items.JUNGLE_BOAT,
             Items.ACACIA_BOAT,
-            Items.DARK_OAK_BOAT));
-        tags.putAll(ItemTags.FISHES, Arrays.asList(
+            Items.DARK_OAK_BOAT);
+        tags.add(ItemTags.FISHES,
             Items.COD,
             Items.COOKED_COD,
             Items.SALMON,
             Items.COOKED_SALMON,
             Items.PUFFERFISH,
-            Items.TROPICAL_FISH));
-        copyBlockItemTags(tags, blockTags, ItemTags.SIGNS, BlockTags.STANDING_SIGNS);
-        tags.putAll(ItemTags.MUSIC_DISCS, Arrays.asList(
-            Items.MUSIC_DISC_13,
-            Items.MUSIC_DISC_CAT,
-            Items.MUSIC_DISC_BLOCKS,
-            Items.MUSIC_DISC_CHIRP,
-            Items.MUSIC_DISC_FAR,
-            Items.MUSIC_DISC_MALL,
-            Items.MUSIC_DISC_MELLOHI,
-            Items.MUSIC_DISC_STAL,
-            Items.MUSIC_DISC_STRAD,
-            Items.MUSIC_DISC_WARD,
-            Items.MUSIC_DISC_11,
-            Items.MUSIC_DISC_WAIT));
-        tags.putAll(ItemTags.COALS, Arrays.asList(
-            Items.COAL,
-            Items.CHARCOAL));
-        tags.putAll(ItemTags.ARROWS, Arrays.asList(
-            Items.ARROW,
-            Items.TIPPED_ARROW,
-            Items.SPECTRAL_ARROW));
-        tags.putAll(ItemTags.LECTERN_BOOKS, Arrays.asList(
-            Items.WRITTEN_BOOK,
-            Items.WRITABLE_BOOK));
-        return tags;
+            Items.TROPICAL_FISH);
+        super.addExtraItemTags(tags, blockTags);
     }
 
-    protected void copyBlockItemTags(Multimap<Tag.Identified<Item>, Item> itemTags, Multimap<Tag.Identified<Block>, Block> blockTags, Tag.Identified<Item> itemTag, Tag.Identified<Block> blockTag) {
-        itemTags.putAll(itemTag, Collections2.transform(blockTags.get(blockTag), Item.BLOCK_ITEMS::get));
-    }
-
-    public Multimap<Tag.Identified<Fluid>, Fluid> getFluidTags() {
-        Multimap<Tag.Identified<Fluid>, Fluid> tags = HashMultimap.create();
-        tags.putAll(FluidTags.WATER, Arrays.asList(
-            Fluids.WATER,
-            Fluids.FLOWING_WATER));
-        tags.putAll(FluidTags.LAVA, Arrays.asList(
-            Fluids.LAVA,
-            Fluids.FLOWING_LAVA));
-        return tags;
-    }
-
-    public Multimap<Tag.Identified<EntityType<?>>, EntityType<?>> getEntityTypeTags() {
-        Multimap<Tag.Identified<EntityType<?>>, EntityType<?>> tags = HashMultimap.create();
-        tags.putAll(EntityTypeTags.SKELETONS, Arrays.asList(
-            EntityType.SKELETON,
-            EntityType.STRAY,
-            EntityType.WITHER_SKELETON));
-        tags.putAll(EntityTypeTags.ARROWS, Arrays.asList(
-            EntityType.ARROW,
-            EntityType.SPECTRAL_ARROW));
-        return tags;
+    @Override
+    public void addExtraFluidTags(TagRegistry<Fluid> tags) {
+        tags.add(FluidTags.WATER, Fluids.WATER, Fluids.FLOWING_WATER);
+        tags.add(FluidTags.LAVA, Fluids.LAVA, Fluids.FLOWING_LAVA);
+        super.addExtraFluidTags(tags);
     }
 
     public List<RecipeInfo<?>> getCraftingRecipes() {

@@ -1,8 +1,8 @@
 package net.earthcomputer.multiconnect.protocols;
 
 import com.google.common.collect.BiMap;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableSet;
 import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.mixin.SpawnEggItemAccessor;
 import net.earthcomputer.multiconnect.mixin.TrackedDataHandlerRegistryAccessor;
@@ -172,38 +172,20 @@ public abstract class AbstractProtocol {
         }
     }
 
-    public Map<Tag.Identified<Block>, Set<Block>> getExtraBlockTags() {
-        return new HashMap<>();
+    public void addExtraBlockTags(TagRegistry<Block> tags) {
     }
 
-    public Map<Tag.Identified<Item>, Set<Item>> getExtraItemTags() {
-        return new HashMap<>();
+    public void addExtraItemTags(TagRegistry<Item> tags, TagRegistry<Block> blockTags) {
     }
 
-    public Map<Tag.Identified<Fluid>, Set<Fluid>> getExtraFluidTags() {
-        return new HashMap<>();
+    public void addExtraFluidTags(TagRegistry<Fluid> tags) {
     }
 
-    public Map<Tag.Identified<EntityType<?>>, Set<EntityType<?>>> getExtraEntityTags() {
-        return new HashMap<>();
+    public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
     }
 
-    protected <T> Set<T> getExistingTags(Map<Tag.Identified<T>, Set<T>> tags, Tag.Identified<T> tag) {
-        ImmutableSet.Builder<T> builder = ImmutableSet.builder();
-        try {
-            builder.addAll(tag.values());
-        } catch (IllegalStateException e) {
-            // tag may not have been initialized, ignore
-        }
-        Set<T> alreadyAddedTags = tags.get(tag);
-        if (alreadyAddedTags != null) {
-            builder.addAll(alreadyAddedTags);
-        }
-        return builder.build();
-    }
-
-    protected Set<Item> copyBlocks(Map<Tag.Identified<Block>, Set<Block>> blockTags, Tag.Identified<Block> blockTag) {
-        return getExistingTags(blockTags, blockTag).stream().map(Block::asItem).collect(Collectors.toSet());
+    protected void copyBlocks(TagRegistry<Item> tags, TagRegistry<Block> blockTags, Tag.Identified<Item> tag, Tag.Identified<Block> blockTag) {
+        tags.add(tag, Collections2.transform(blockTags.get(blockTag.getId()), Block::asItem));
     }
 
     public boolean shouldBlockChangeReplaceBlockEntity(Block oldBlock, Block newBlock) {
