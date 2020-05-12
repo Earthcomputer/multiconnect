@@ -15,6 +15,8 @@ import net.minecraft.class_5196;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.LongArrayTag;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.JigsawGeneratingC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateJigsawC2SPacket;
@@ -71,6 +73,25 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
                 }
             }
             buf.disablePassthroughMode();
+            buf.applyPendingReads();
+        });
+        ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readInt(); // x
+            buf.readInt(); // z
+            buf.readBoolean(); // full chunk
+            buf.readVarInt(); // vertical strip bitmask
+            buf.disablePassthroughMode();
+            CompoundTag heightmaps = buf.readCompoundTag();
+            if (heightmaps != null) {
+                for (String key : heightmaps.getKeys()) {
+                    net.minecraft.nbt.Tag tag = heightmaps.get(key);
+                    if (tag instanceof LongArrayTag) {
+                        heightmaps.putLongArray(key, class_5196.method_27288(256, 9, ((LongArrayTag) tag).getLongArray()));
+                    }
+                }
+            }
+            buf.pendingRead(CompoundTag.class, heightmaps);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(LoginSuccessS2CPacket.class, buf -> {
