@@ -538,6 +538,16 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.BLOCK_BONE_BLOCK_HIT);
         registry.unregister(SoundEvents.BLOCK_BONE_BLOCK_PLACE);
         registry.unregister(SoundEvents.BLOCK_BONE_BLOCK_STEP);
+        registry.unregister(SoundEvents.BLOCK_CHAIN_BREAK);
+        registry.unregister(SoundEvents.BLOCK_CHAIN_FALL);
+        registry.unregister(SoundEvents.BLOCK_CHAIN_HIT);
+        registry.unregister(SoundEvents.BLOCK_CHAIN_PLACE);
+        registry.unregister(SoundEvents.BLOCK_CHAIN_STEP);
+        registry.unregister(SoundEvents.BLOCK_GILDED_BLACKSTONE_BREAK);
+        registry.unregister(SoundEvents.BLOCK_GILDED_BLACKSTONE_FALL);
+        registry.unregister(SoundEvents.BLOCK_GILDED_BLACKSTONE_HIT);
+        registry.unregister(SoundEvents.BLOCK_GILDED_BLACKSTONE_PLACE);
+        registry.unregister(SoundEvents.BLOCK_GILDED_BLACKSTONE_STEP);
         registry.unregister(SoundEvents.BLOCK_ROOTS_BREAK);
         registry.unregister(SoundEvents.BLOCK_ROOTS_STEP);
         registry.unregister(SoundEvents.BLOCK_ROOTS_PLACE);
@@ -628,8 +638,26 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.ENTITY_HOGLIN_HURT);
         registry.unregister(SoundEvents.ENTITY_HOGLIN_RETREAT);
         registry.unregister(SoundEvents.ENTITY_HOGLIN_STEP);
+        registry.unregister(SoundEvents.ENTITY_HOGLIN_CONVERTED_TO_ZOMBIFIED);
 
         registry.unregister(SoundEvents.ENTITY_SNOW_GOLEM_SHEAR);
+
+        registry.unregister(SoundEvents.ENTITY_STRIDER_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_STRIDER_HAPPY);
+        registry.unregister(SoundEvents.ENTITY_STRIDER_RETREAT);
+        registry.unregister(SoundEvents.ENTITY_STRIDER_DEATH);
+        registry.unregister(SoundEvents.ENTITY_STRIDER_HURT);
+        registry.unregister(SoundEvents.ENTITY_STRIDER_STEP);
+        registry.unregister(SoundEvents.ENTITY_STRIDER_STEP_LAVA);
+        registry.unregister(SoundEvents.ENTITY_STRIDER_EAT);
+        registry.unregister(SoundEvents.ENTITY_STRIDER_SADDLE);
+
+        registry.unregister(SoundEvents.ENTITY_ZOGLIN_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_ZOGLIN_ANGRY);
+        registry.unregister(SoundEvents.ENTITY_ZOGLIN_ATTACK);
+        registry.unregister(SoundEvents.ENTITY_ZOGLIN_DEATH);
+        registry.unregister(SoundEvents.ENTITY_ZOGLIN_HURT);
+        registry.unregister(SoundEvents.ENTITY_ZOGLIN_STEP);
 
         registry.unregister(SoundEvents.AMBIENT_CRIMSON_FOREST_ADDITIONS);
         registry.unregister(SoundEvents.AMBIENT_CRIMSON_FOREST_LOOP);
@@ -645,6 +673,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.AMBIENT_WARPED_FOREST_MOOD);
 
         registry.unregister(SoundEvents.BLOCK_SMITHING_TABLE_USE);
+        registry.unregister(SoundEvents.BLOCK_VINE_STEP);
 
         registry.unregister(SoundEvents.BLOCK_LODESTONE_BREAK);
         registry.unregister(SoundEvents.BLOCK_LODESTONE_STEP);
@@ -656,6 +685,11 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE);
         registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE);
         registry.unregister(SoundEvents.BLOCK_RESPAWN_ANCHOR_SET_SPAWN);
+        registry.unregister(SoundEvents.BLOCK_NETHER_GOLD_ORE_BREAK);
+        registry.unregister(SoundEvents.BLOCK_NETHER_GOLD_ORE_FALL);
+        registry.unregister(SoundEvents.BLOCK_NETHER_GOLD_ORE_HIT);
+        registry.unregister(SoundEvents.BLOCK_NETHER_GOLD_ORE_PLACE);
+        registry.unregister(SoundEvents.BLOCK_NETHER_GOLD_ORE_STEP);
 
         registry.unregister(SoundEvents.AMBIENT_BASALT_DELTAS_ADDITIONS);
         registry.unregister(SoundEvents.AMBIENT_BASALT_DELTAS_LOOP);
@@ -670,6 +704,11 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         insertAfter(registry, SoundEvents.MUSIC_MENU, SoundEvents.MUSIC_NETHER_NETHER_WASTES, "music.nether");
 
         registry.unregister(SoundEvents.MUSIC_DISC_PIGSTEP);
+
+        rename(registry, SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_AMBIENT, "entity.zombie_pigman.ambient");
+        rename(registry, SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_ANGRY, "entity.zombie_pigman.angry");
+        rename(registry, SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_DEATH, "entity.zombie_pigman.death");
+        rename(registry, SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_HURT, "entity.zombie_pigman.hurt");
     }
 
     @Override
