@@ -1,7 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
 import com.google.gson.JsonParseException;
-import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.impl.CurrentChunkDataPacket;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
@@ -9,6 +8,7 @@ import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
+import net.earthcomputer.multiconnect.protocols.v1_15_2.Protocol_1_15_2;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.minecraft.block.*;
@@ -60,8 +60,6 @@ import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.Palette;
 import net.minecraft.world.chunk.PalettedContainer;
 
 import java.util.List;
@@ -132,7 +130,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
                     buf.pendingRead(Short.class, (short)0);
                     buf.enablePassthroughMode();
-                    new PalettedContainer<>(ChunkSectionAccessor.getPalette(), Block.STATE_IDS, NbtHelper::toBlockState, NbtHelper::fromBlockState, Blocks.AIR.getDefaultState()).fromPacket(buf);
+                    Protocol_1_15_2.skipPalettedContainer(buf);
                     buf.disablePassthroughMode();
                     byte[] light = new byte[16 * 16 * 16 / 2];
                     buf.readBytes(light);

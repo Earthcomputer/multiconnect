@@ -124,13 +124,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
-                    int paletteSize = buf.readByte();
-                    if (paletteSize <= 8) {
-                        // array and bimap palette data look the same enough to use the same code here
-                        int size = buf.readVarInt();
-                        for (int i = 0; i < size; i++)
-                            buf.readVarInt(); // state id
-                    } else {
+                    int paletteSize = ChunkData.skipPalette(buf);
+                    if (paletteSize > 8) {
                         buf.disablePassthroughMode();
                         buf.readVarInt(); // dummy 0
                         buf.enablePassthroughMode();

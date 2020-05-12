@@ -18,6 +18,7 @@ import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.LongArrayTag;
 import net.minecraft.network.Packet;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.JigsawGeneratingC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateJigsawC2SPacket;
 import net.minecraft.network.packet.s2c.login.LoginSuccessS2CPacket;
@@ -47,22 +48,16 @@ import java.util.UUID;
 public class Protocol_1_15_2 extends Protocol_1_16 {
 
     public static void registerTranslators() {
-        // TODO: heightmaps
-        // TODO: make sure older version translators don't rely on PackedIntArray implementation in passthrough mode anymore
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
             int verticalStripBitmask = CurrentChunkDataPacket.get().getVerticalStripBitmask();
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
                     buf.readShort(); // non-empty block count
-                    int paletteSize = buf.readByte();
-                    if (paletteSize <= 8) {
-                        // array and bimap palette data look the same enough to use the same code here
-                        int size = buf.readVarInt();
-                        for (int i = 0; i < size; i++)
-                            buf.readVarInt(); // state id
-                    }
+                    int paletteSize = ChunkData.skipPalette(buf);
+                    // translate from packed chunk data to aligned
                     if (paletteSize == 0 || MathHelper.isPowerOfTwo(paletteSize)) {
+                        // shortcut, for powers of 2, elements are already aligned
                         buf.readLongArray(new long[paletteSize * 64]);
                     } else {
                         buf.disablePassthroughMode();
@@ -142,6 +137,16 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.passthroughWrite(String.class); // final state
             buf.skipWrite(String.class); // joint type
         });
+    }
+
+    public static void skipChunkSection(PacketByteBuf buf) {
+        buf.readShort(); // non-empty block count
+        skipPalettedContainer(buf);
+    }
+
+    public static void skipPalettedContainer(PacketByteBuf buf) {
+        int paletteSize = ChunkData.skipPalette(buf);
+        buf.readLongArray(new long[paletteSize * 64]); // chunk data
     }
 
     @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})

@@ -10,6 +10,7 @@ import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.LivingEntityAccess
 import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.TridentEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.WolfEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15;
+import net.earthcomputer.multiconnect.protocols.v1_15_2.Protocol_1_15_2;
 import net.earthcomputer.multiconnect.transformer.ChunkData;
 import net.minecraft.block.BellBlock;
 import net.minecraft.block.Block;
@@ -52,7 +53,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
-                    new ChunkSection(sectionY << 4).fromPacket(buf);
+                    Protocol_1_15_2.skipChunkSection(buf);
                 }
             }
             buf.disablePassthroughMode();
