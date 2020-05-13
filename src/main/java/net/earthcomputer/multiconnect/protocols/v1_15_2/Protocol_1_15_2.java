@@ -96,6 +96,24 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.pendingRead(Integer.class, uuidArray[3]);
             buf.applyPendingReads();
         });
+        ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readInt(); // player id
+            buf.readUnsignedByte(); // game mode
+            buf.readInt(); // dimension type
+            buf.readLong(); // sah256 seed
+            buf.readUnsignedByte(); // max players
+            buf.disablePassthroughMode();
+            String genType = buf.readString(16);
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // chunk load distance
+            buf.readBoolean(); // reduced debug info
+            buf.readBoolean(); // show death screen
+            buf.disablePassthroughMode();
+            buf.pendingRead(Boolean.class, "debug_all_block_states".equalsIgnoreCase(genType)); // debug mode
+            buf.pendingRead(Boolean.class, "flat".equalsIgnoreCase(genType)); // flat world
+            buf.applyPendingReads();
+        });
         ProtocolRegistry.registerInboundTranslator(EntityAttributesS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt(); // entity id
@@ -122,8 +140,10 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.readInt(); // dimension id
             buf.readLong(); // sha256 seed
             buf.readUnsignedByte(); // game mode
-            buf.readString(16); // generator type
             buf.disablePassthroughMode();
+            String genType = buf.readString(16);
+            buf.pendingRead(Boolean.class, "debug_all_block_states".equalsIgnoreCase(genType)); // debug mode
+            buf.pendingRead(Boolean.class, "flat".equalsIgnoreCase(genType)); // flat world
             buf.pendingRead(Boolean.class, Boolean.TRUE); // keep attributes
             buf.applyPendingReads();
         });
