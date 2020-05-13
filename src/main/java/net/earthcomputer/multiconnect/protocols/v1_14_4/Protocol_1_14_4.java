@@ -268,7 +268,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             return false;
         if (clazz == WolfEntity.class && data == WolfEntityAccessor.getBegging())
             DataTrackerManager.registerOldTrackedData(WolfEntity.class, OLD_WOLF_HEALTH, 20f, LivingEntity::setHealth);
-        if (clazz == EndermanEntity.class && data == EndermanEntityAccessor.getHasScreamed())
+        if (clazz == EndermanEntity.class && data == EndermanEntityAccessor.getProvoked())
             return false;
 
         return super.acceptEntityData(clazz, data);

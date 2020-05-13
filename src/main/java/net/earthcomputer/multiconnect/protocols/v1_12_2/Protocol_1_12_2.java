@@ -130,7 +130,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                     buf.readLongArray(new long[paletteSize * 64]); // chunk data
                     buf.readBytes(new byte[16 * 16 * 16 / 2]); // block light
                     assert MinecraftClient.getInstance().world != null;
-                    if (MinecraftClient.getInstance().world.dimension.hasSkyLight())
+                    if (MinecraftClient.getInstance().world.method_27983().hasSkyLight())
                         buf.readBytes(new byte[16 * 16 * 16 / 2]); // sky light
                 }
             }

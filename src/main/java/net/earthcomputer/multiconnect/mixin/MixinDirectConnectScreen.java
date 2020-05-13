@@ -53,7 +53,7 @@ public class MixinDirectConnectScreen extends Screen {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void drawScreen(MatrixStack matrixStack, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        textRenderer.drawWithShadow(matrixStack, forceProtocolLabel, width - 85 - textRenderer.getStringWidth(forceProtocolLabel), 11, 0xFFFFFF);
+        textRenderer.drawWithShadow(matrixStack, forceProtocolLabel, width - 85 - textRenderer.getWidth(forceProtocolLabel), 11, 0xFFFFFF);
         protocolSelector.setMessage(new LiteralText(selectedProtocol.getName()));
     }
 

@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(EndermanEntity.class)
 public interface EndermanEntityAccessor {
 
-    @Accessor("field_20618")
-    static TrackedData<Boolean> getHasScreamed() {
+    @Accessor("PROVOKED")
+    static TrackedData<Boolean> getProvoked() {
         return MixinHelper.fakeInstance();
     }
 

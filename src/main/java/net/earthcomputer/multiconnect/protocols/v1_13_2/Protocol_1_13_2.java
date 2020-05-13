@@ -134,7 +134,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                     buf.readBytes(light);
                     lightData.setBlockLight(sectionY, light);
                     assert MinecraftClient.getInstance().world != null;
-                    if (MinecraftClient.getInstance().world.dimension.hasSkyLight()) {
+                    if (MinecraftClient.getInstance().world.method_27983().hasSkyLight()) {
                         light = new byte[16 * 16 * 16 / 2];
                         buf.readBytes(light);
                         lightData.setSkyLight(sectionY, light);
