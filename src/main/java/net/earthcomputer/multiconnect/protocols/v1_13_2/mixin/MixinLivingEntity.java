@@ -23,14 +23,6 @@ public abstract class MixinLivingEntity extends Entity {
         super(type, world);
     }
 
-    @ModifyConstant(method = "getMovementSpeed(F)F", constant = @Constant(floatValue = 0.21600002f))
-    private float modifyMovementFactor(float oldFactor) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            return 0.546f * 0.546f * 0.546f;
-        }
-        return oldFactor;
-    }
-
     @Redirect(method = "travel", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;jumping:Z"))
     private boolean disableJumpOnLadder(LivingEntity self) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
