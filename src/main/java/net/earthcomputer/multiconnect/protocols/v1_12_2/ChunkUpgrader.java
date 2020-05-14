@@ -12,7 +12,7 @@ import net.minecraft.nbt.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.world.IWorld;
+import net.minecraft.world.WorldAccess;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.chunk.WorldChunk;
@@ -108,13 +108,13 @@ public class ChunkUpgrader {
         }
     }
 
-    public static void fix(IWorld world, BlockPos pos, int flags) {
+    public static void fix(WorldAccess world, BlockPos pos, int flags) {
         doFix(world, pos, flags);
         for (Direction dir : Direction.values())
             doFix(world, pos.offset(dir), flags);
     }
 
-    private static void doFix(IWorld world, BlockPos pos, int flags) {
+    private static void doFix(WorldAccess world, BlockPos pos, int flags) {
         BlockState state = world.getBlockState(pos);
         for (Direction dir : Direction.values()) {
             BlockPos otherPos = pos.offset(dir);
@@ -125,7 +125,7 @@ public class ChunkUpgrader {
         inPlaceFix(world.getChunk(pos), state, pos, new BlockPos.Mutable());
     }
 
-    private static BlockState applyAdjacentBlock(BlockState state, Direction dir, IWorld world, BlockPos pos, BlockPos otherPos) {
+    private static BlockState applyAdjacentBlock(BlockState state, Direction dir, WorldAccess world, BlockPos pos, BlockPos otherPos) {
         Block block = state.getBlock();
         if (block instanceof DoorBlock || block instanceof TallPlantBlock)
             return state;
