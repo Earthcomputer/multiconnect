@@ -2,7 +2,7 @@
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
-	id 'fabric-loom' version '0.2.7-SNAPSHOT'
+	id 'fabric-loom' version '0.4-SNAPSHOT'
 	id 'maven-publish'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
 	id 'com.github.breadmoirai.github-release' version '2.2.10'
@@ -72,7 +72,7 @@ jar {
 }
 
 minecraft {
-	accessWidener = file('src/main/resources/multiconnect.accesswidener')
+	accessWidener 'src/main/resources/multiconnect.accesswidener'
 }
 
 repositories {
@@ -96,6 +96,7 @@ dependencies {
 	compile sourceSets.api.output
 	include files(remapApiJar.archivePath)
 
+	sourceSets.test.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 	testCompile 'org.junit.jupiter:junit-jupiter-api:5.5.2'
 	testRuntimeOnly 'com.github.Earthcomputer.junit5:junit-jupiter-engine:8785ac4d'
 	testCompile 'org.mockito:mockito-all:1.10.19'
