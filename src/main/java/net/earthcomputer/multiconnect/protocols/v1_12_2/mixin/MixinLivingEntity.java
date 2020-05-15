@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class MixinLivingEntity extends Entity {
@@ -50,14 +51,11 @@ public abstract class MixinLivingEntity extends Entity {
         return self.isSprinting();
     }
 
-    @Redirect(method = "method_26317(DZLnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSprinting()Z", ordinal = 0))
-    private boolean modifySwimSprintFallSpeed(LivingEntity self) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            Vec3d velocity = getVelocity();
-            setVelocity(velocity.x, velocity.y - 0.02, velocity.z);
-            return true; // to skip the if statement body
+    @Inject(method = "method_26317(DZLnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At("HEAD"), cancellable = true)
+    private void modifySwimSprintFallSpeed(double gravity, boolean movingDown, Vec3d velocity, CallbackInfoReturnable<Vec3d> ci) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2 && !hasNoGravity()) {
+            ci.setReturnValue(new Vec3d(velocity.x, velocity.y - 0.02, velocity.z));
         }
-        return self.isSprinting();
     }
 
     @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getFluidHeight(Lnet/minecraft/tag/Tag;)D"))
