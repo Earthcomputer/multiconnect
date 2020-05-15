@@ -50,9 +50,7 @@ public abstract class MixinLivingEntity extends Entity {
         return self.isSprinting();
     }
 
-    // TODO: when @At(reverse = true) is added to mixin:
-    //@Redirect(method = "travel", slice = @Slice(to = @At(value = "INVOKE", target = "Ljava/lang/Math;abs(D)D", ordinal = 0, remap = false)), at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSprinting()Z", ordinal = 0, reverse = true))
-    /*@Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSprinting()Z", ordinal = 1))
+    @Redirect(method = "method_26317(DZLnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSprinting()Z", ordinal = 0))
     private boolean modifySwimSprintFallSpeed(LivingEntity self) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             Vec3d velocity = getVelocity();
@@ -60,7 +58,7 @@ public abstract class MixinLivingEntity extends Entity {
             return true; // to skip the if statement body
         }
         return self.isSprinting();
-    }*/
+    }
 
     @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getFluidHeight(Lnet/minecraft/tag/Tag;)D"))
     private double redirectFluidHeight(LivingEntity entity, Tag<Fluid> tag) {
