@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_14_4;
 
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.EndermanEntityAccessor;
@@ -176,43 +177,34 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
         return packets;
     }
 
-    @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})
     @Override
-    public void modifyRegistry(ISimpleRegistry<?> registry) {
-        super.modifyRegistry(registry);
-
-        if (registry == Registry.BLOCK) {
-            modifyBlockRegistry((ISimpleRegistry<Block>) registry);
-        } else if (registry == Registry.ITEM) {
-            modifyItemRegistry((ISimpleRegistry<Item>) registry);
-        } else if (registry == Registry.ENTITY_TYPE) {
-            modifyEntityTypeRegistry((ISimpleRegistry<EntityType<?>>) registry);
-        } else if (registry == Registry.SOUND_EVENT) {
-            modifySoundEventRegistry((ISimpleRegistry<SoundEvent>) registry);
-        } else if (registry == Registry.BLOCK_ENTITY_TYPE) {
-            modifyBlockEntityTypeRegistry((ISimpleRegistry<BlockEntityType<?>>) registry);
-        } else if (registry == Registry.PARTICLE_TYPE) {
-            modifyParticleTypeRegistry((ISimpleRegistry<ParticleType<? extends ParticleEffect>>) registry);
-        }
+    public void mutateRegistries(RegistryMutator mutator) {
+        super.mutateRegistries(mutator);
+        mutator.mutate(Protocols.V1_14_4, Registry.BLOCK, this::mutateBlockRegistry);
+        mutator.mutate(Protocols.V1_14_4, Registry.ITEM, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_14_4, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_14_4, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_14_4, Registry.BLOCK_ENTITY_TYPE, this::mutateBlockEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_14_4, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
     }
 
-    private void modifyBlockRegistry(ISimpleRegistry<Block> registry) {
+    private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
         registry.unregister(Blocks.BEE_NEST);
         registry.unregister(Blocks.BEEHIVE);
         registry.unregister(Blocks.HONEY_BLOCK);
         registry.unregister(Blocks.HONEYCOMB_BLOCK);
     }
 
-    private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
+    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
         registry.unregister(Items.HONEYCOMB);
         registry.unregister(Items.HONEY_BOTTLE);
     }
 
-    private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
+    private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
         registry.unregister(EntityType.BEE);
     }
 
-    private void modifySoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
         registry.unregister(SoundEvents.ENTITY_BEE_DEATH);
         registry.unregister(SoundEvents.ENTITY_BEE_HURT);
         registry.unregister(SoundEvents.ENTITY_BEE_LOOP_AGGRESSIVE);
@@ -241,11 +233,11 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
         insertAfter(registry, SoundEvents.ENTITY_PARROT_IMITATE_ZOMBIE, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_ZOMBIE_PIGMAN, "entity.parrot.imitate.zombie_pigman");
     }
 
-    private void modifyBlockEntityTypeRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
+    private void mutateBlockEntityTypeRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
         registry.unregister(BlockEntityType.BEEHIVE);
     }
 
-    private void modifyParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
+    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
         registry.unregister(ParticleTypes.DRIPPING_HONEY);
         registry.unregister(ParticleTypes.FALLING_HONEY);
         registry.unregister(ParticleTypes.LANDING_HONEY);

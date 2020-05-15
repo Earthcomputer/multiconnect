@@ -1,9 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_15_2;
 
-import net.earthcomputer.multiconnect.impl.CurrentChunkDataPacket;
-import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
-import net.earthcomputer.multiconnect.impl.PacketInfo;
-import net.earthcomputer.multiconnect.impl.TagRegistry;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAttributesFixAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
@@ -167,22 +165,15 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         buf.readLongArray(new long[paletteSize * 64]); // chunk data
     }
 
-    @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})
     @Override
-    public void modifyRegistry(ISimpleRegistry<?> registry) {
-        if (registry == Registry.BLOCK) {
-            modifyBlockRegistry((ISimpleRegistry<Block>) registry);
-        } else if (registry == Registry.ITEM) {
-            modifyItemRegistry((ISimpleRegistry<Item>) registry);
-        }  else if (registry == Registry.ENTITY_TYPE) {
-            modifyEntityTypeRegistry((ISimpleRegistry<EntityType<?>>) registry);
-        } else if (registry == Registry.BIOME) {
-            modifyBiomeRegistry((ISimpleRegistry<Biome>) registry);
-        } else if (registry == Registry.PARTICLE_TYPE) {
-            modifyParticleTypeRegistry((ISimpleRegistry<ParticleType<? extends ParticleEffect>>) registry);
-        } else if (registry == Registry.SOUND_EVENT) {
-            modifySoundEventRegistry((ISimpleRegistry<SoundEvent>) registry);
-        }
+    public void mutateRegistries(RegistryMutator mutator) {
+        super.mutateRegistries(mutator);
+        mutator.mutate(Protocols.V1_15_2, Registry.BLOCK, this::mutateBlockRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.ITEM, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.BIOME, this::mutateBiomeRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
     }
 
     @Override
@@ -208,7 +199,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         return super.onSendPacket(packet);
     }
 
-    private void modifyBlockRegistry(ISimpleRegistry<Block> registry) {
+    private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
         registry.unregister(Blocks.ANCIENT_DEBRIS);
         registry.unregister(Blocks.BASALT);
         registry.unregister(Blocks.CRIMSON_BUTTON);
@@ -294,7 +285,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Blocks.QUARTZ_BRICKS);
     }
 
-    private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
+    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
         registry.unregister(Items.SUGAR_CANE);
         registry.unregister(Items.KELP);
         registry.unregister(Items.BAMBOO);
@@ -304,50 +295,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.STONE_BUTTON);
         insertAfter(registry, Items.REDSTONE_TORCH, Items.STONE_BUTTON, "stone_button");
         registry.unregister(Items.COMPOSTER);
-        rename(registry, Items.ZOMBIFIED_PIGLIN_SPAWN_EGG, "zombie_pigman_spawn_egg");
         insertAfter(registry, Items.JIGSAW, Items.COMPOSTER, "composter");
-        registry.unregister(Items.CRIMSON_NYLIUM);
-        registry.unregister(Items.WARPED_NYLIUM);
-        registry.unregister(Items.CRIMSON_PLANKS);
-        registry.unregister(Items.WARPED_PLANKS);
-        registry.unregister(Items.CRIMSON_STEM);
-        registry.unregister(Items.WARPED_STEM);
-        registry.unregister(Items.STRIPPED_CRIMSON_STEM);
-        registry.unregister(Items.STRIPPED_WARPED_STEM);
-        registry.unregister(Items.CRIMSON_FUNGUS);
-        registry.unregister(Items.WARPED_FUNGUS);
-        registry.unregister(Items.CRIMSON_ROOTS);
-        registry.unregister(Items.WARPED_ROOTS);
-        registry.unregister(Items.NETHER_SPROUTS);
-        registry.unregister(Items.WEEPING_VINES);
-        registry.unregister(Items.CRIMSON_SLAB);
-        registry.unregister(Items.WARPED_SLAB);
-        registry.unregister(Items.CRIMSON_PRESSURE_PLATE);
-        registry.unregister(Items.WARPED_PRESSURE_PLATE);
-        registry.unregister(Items.CRIMSON_FENCE);
-        registry.unregister(Items.WARPED_FENCE);
-        registry.unregister(Items.SOUL_SOIL);
-        registry.unregister(Items.BASALT);
-        registry.unregister(Items.SOUL_TORCH);
-        registry.unregister(Items.CRIMSON_TRAPDOOR);
-        registry.unregister(Items.WARPED_TRAPDOOR);
-        registry.unregister(Items.CRIMSON_FENCE_GATE);
-        registry.unregister(Items.WARPED_FENCE_GATE);
-        registry.unregister(Items.CRIMSON_STAIRS);
-        registry.unregister(Items.WARPED_STAIRS);
-        registry.unregister(Items.CRIMSON_BUTTON);
-        registry.unregister(Items.WARPED_BUTTON);
-        registry.unregister(Items.WARPED_WART_BLOCK);
-        registry.unregister(Items.CRIMSON_DOOR);
-        registry.unregister(Items.WARPED_DOOR);
-        registry.unregister(Items.SOUL_LANTERN);
-        registry.unregister(Items.SHROOMLIGHT);
-        registry.unregister(Items.NETHERITE_BLOCK);
-        registry.unregister(Items.ANCIENT_DEBRIS);
-        registry.unregister(Items.HOGLIN_SPAWN_EGG);
-        registry.unregister(Items.PIGLIN_SPAWN_EGG);
-        registry.unregister(Items.CRIMSON_SIGN);
-        registry.unregister(Items.WARPED_SIGN);
         registry.unregister(Items.NETHERITE_SCRAP);
         registry.unregister(Items.NETHERITE_INGOT);
         registry.unregister(Items.NETHERITE_HELMET);
@@ -359,47 +307,13 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.NETHERITE_AXE);
         registry.unregister(Items.NETHERITE_PICKAXE);
         registry.unregister(Items.NETHERITE_HOE);
-        registry.unregister(Items.TARGET);
-        registry.unregister(Items.CRYING_OBSIDIAN);
-        registry.unregister(Items.RESPAWN_ANCHOR);
-        registry.unregister(Items.LODESTONE);
         registry.unregister(Items.WARPED_FUNGUS_ON_A_STICK);
-        registry.unregister(Items.STRIDER_SPAWN_EGG);
-        registry.unregister(Items.STRIPPED_CRIMSON_HYPHAE);
-        registry.unregister(Items.STRIPPED_WARPED_HYPHAE);
-        registry.unregister(Items.CRIMSON_HYPHAE);
-        registry.unregister(Items.WARPED_HYPHAE);
-        registry.unregister(Items.POLISHED_BASALT);
-        registry.unregister(Items.NETHER_GOLD_ORE);
-        registry.unregister(Items.TWISTING_VINES);
-        registry.unregister(Items.ZOGLIN_SPAWN_EGG);
-        registry.unregister(Items.CHAIN);
-        registry.unregister(Items.CRACKED_NETHER_BRICKS);
-        registry.unregister(Items.CHISELED_NETHER_BRICKS);
-        registry.unregister(Items.QUARTZ_BRICKS);
         registry.unregister(Items.MUSIC_DISC_PIGSTEP);
         registry.unregister(Items.PIGLIN_BANNER_PATTERN);
-        registry.unregister(Items.SOUL_CAMPFIRE);
-        registry.unregister(Items.BLACKSTONE);
-        registry.unregister(Items.BLACKSTONE_SLAB);
-        registry.unregister(Items.BLACKSTONE_STAIRS);
-        registry.unregister(Items.BLACKSTONE_WALL);
-        registry.unregister(Items.GILDED_BLACKSTONE);
-        registry.unregister(Items.POLISHED_BLACKSTONE);
-        registry.unregister(Items.POLISHED_BLACKSTONE_SLAB);
-        registry.unregister(Items.POLISHED_BLACKSTONE_STAIRS);
-        registry.unregister(Items.POLISHED_BLACKSTONE_WALL);
-        registry.unregister(Items.POLISHED_BLACKSTONE_BUTTON);
-        registry.unregister(Items.POLISHED_BLACKSTONE_PRESSURE_PLATE);
-        registry.unregister(Items.CHISELED_POLISHED_BLACKSTONE);
-        registry.unregister(Items.POLISHED_BLACKSTONE_BRICKS);
-        registry.unregister(Items.POLISHED_BLACKSTONE_BRICK_SLAB);
-        registry.unregister(Items.POLISHED_BLACKSTONE_BRICK_STAIRS);
-        registry.unregister(Items.POLISHED_BLACKSTONE_BRICK_WALL);
-        registry.unregister(Items.CRACKED_POLISHED_BLACKSTONE_BRICKS);
+        rename(registry, Items.ZOMBIFIED_PIGLIN_SPAWN_EGG, "zombie_pigman_spawn_egg");
     }
 
-    private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
+    private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
         registry.unregister(EntityType.DONKEY);
         insertAfter(registry, EntityType.CREEPER, EntityType.DONKEY, "donkey");
         registry.unregister(EntityType.EVOKER);
@@ -429,7 +343,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(EntityType.ZOGLIN);
     }
 
-    private static void modifyBiomeRegistry(ISimpleRegistry<Biome> registry) {
+    private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
         rename(registry, Biomes.NETHER_WASTES, "nether");
         registry.unregister(Biomes.SOUL_SAND_VALLEY);
         registry.unregister(Biomes.CRIMSON_FOREST);
@@ -437,7 +351,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Biomes.BASALT_DELTAS);
     }
 
-    private void modifyParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
+    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
         registry.unregister(ParticleTypes.ASH);
         registry.unregister(ParticleTypes.CRIMSON_SPORE);
         registry.unregister(ParticleTypes.SOUL_FIRE_FLAME);
@@ -450,7 +364,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(ParticleTypes.WHITE_ASH);
     }
 
-    private void modifySoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
         registry.unregister(SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE);
         insertAfter(registry, SoundEvents.ITEM_BOOK_PUT, SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE, "entity.fishing_bobber.retrieve");
         registry.unregister(SoundEvents.ENTITY_FISHING_BOBBER_SPLASH);

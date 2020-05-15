@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.mojang.datafixers.Dynamic;
 import io.netty.buffer.Unpooled;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.*;
@@ -10,16 +11,13 @@ import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ZombieEntityAccessor;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.enums.WallMountLocation;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.datafixer.fix.BlockStateFlattening;
 import net.minecraft.datafixer.fix.EntityTheRenameningBlock;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -1357,36 +1355,23 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         return true;
     }
 
-    @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})
     @Override
-    public void modifyRegistry(ISimpleRegistry<?> registry) {
-        super.modifyRegistry(registry);
-
+    public void mutateRegistries(RegistryMutator mutator) {
+        super.mutateRegistries(mutator);
         // just fucking nuke them all, it's the flattening after all
-        if (registry == Registry.BLOCK) {
-            Blocks_1_12_2.registerBlocks((ISimpleRegistry<Block>) registry);
-        } else if (registry == Registry.ITEM) {
-            Items_1_12_2.registerItems((ISimpleRegistry<Item>) registry);
-        } else if (registry == Registry.ENTITY_TYPE) {
-            Entities_1_12_2.registerEntities((ISimpleRegistry<EntityType<?>>) registry);
-        } else if (registry == Registry.ENCHANTMENT) {
-            Enchantments_1_12_2.registerEnchantments((ISimpleRegistry<Enchantment>) registry);
-        } else if (registry == Registry.POTION) {
-            modifyPotionRegistry((ISimpleRegistry<Potion>) registry);
-        } else if (registry == Registry.BIOME) {
-            modifyBiomeRegistry((ISimpleRegistry<Biome>) registry);
-        } else if (registry == Registry.PARTICLE_TYPE) {
-            Particles_1_12_2.registerParticles((ISimpleRegistry<ParticleType<?>>) registry);
-        } else if (registry == Registry.BLOCK_ENTITY_TYPE) {
-            BlockEntities_1_12_2.registerBlockEntities((ISimpleRegistry<BlockEntityType<?>>) registry);
-        } else if (registry == Registry.STATUS_EFFECT) {
-            modifyStatusEffectRegistry((ISimpleRegistry<StatusEffect>) registry);
-        } else if (registry == Registry.SOUND_EVENT) {
-            modifySoundRegistry((ISimpleRegistry<SoundEvent>) registry);
-        }
+        mutator.mutate(Protocols.V1_12_2, Registry.BLOCK, Blocks_1_12_2::registerBlocks);
+        mutator.mutate(Protocols.V1_12_2, Registry.ITEM, Items_1_12_2::registerItems);
+        mutator.mutate(Protocols.V1_12_2, Registry.ENTITY_TYPE, Entities_1_12_2::registerEntities);
+        mutator.mutate(Protocols.V1_12_2, Registry.ENCHANTMENT, Enchantments_1_12_2::registerEnchantments);
+        mutator.mutate(Protocols.V1_12_2, Registry.POTION, this::mutatePotionRegistry);
+        mutator.mutate(Protocols.V1_12_2, Registry.BIOME, this::mutateBiomeRegistry);
+        mutator.mutate(Protocols.V1_12_2, Registry.PARTICLE_TYPE, Particles_1_12_2::registerParticles);
+        mutator.mutate(Protocols.V1_12_2, Registry.BLOCK_ENTITY_TYPE, BlockEntities_1_12_2::registerBlockEntities);
+        mutator.mutate(Protocols.V1_12_2, Registry.STATUS_EFFECT, this::mutateStatusEffectRegistry);
+        mutator.mutate(Protocols.V1_12_2, Registry.SOUND_EVENT, this::mutateSoundRegistry);
     }
 
-    private static void modifyPotionRegistry(ISimpleRegistry<Potion> registry) {
+    private void mutatePotionRegistry(ISimpleRegistry<Potion> registry) {
         registry.unregister(Potions.STRONG_SLOWNESS);
         registry.unregister(Potions.TURTLE_MASTER);
         registry.unregister(Potions.LONG_TURTLE_MASTER);
@@ -1395,7 +1380,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         registry.unregister(Potions.LONG_SLOW_FALLING);
     }
 
-    private static void modifyBiomeRegistry(ISimpleRegistry<Biome> registry) {
+    private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
         rename(registry, Biomes.MOUNTAINS, "extreme_hills");
         rename(registry, Biomes.SWAMP, "swampland");
         rename(registry, Biomes.NETHER_WASTES, "hell");
@@ -1456,13 +1441,13 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         rename(registry, Biomes.MODIFIED_BADLANDS_PLATEAU, "mutated_mesa_clear_rock");
     }
 
-    private static void modifyStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {
+    private void mutateStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {
         registry.unregister(StatusEffects.SLOW_FALLING);
         registry.unregister(StatusEffects.CONDUIT_POWER);
         registry.unregister(StatusEffects.DOLPHINS_GRACE);
     }
 
-    private static void modifySoundRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundRegistry(ISimpleRegistry<SoundEvent> registry) {
         registry.unregister(SoundEvents.AMBIENT_UNDERWATER_ENTER);
         registry.unregister(SoundEvents.AMBIENT_UNDERWATER_EXIT);
         registry.unregister(SoundEvents.AMBIENT_UNDERWATER_LOOP);

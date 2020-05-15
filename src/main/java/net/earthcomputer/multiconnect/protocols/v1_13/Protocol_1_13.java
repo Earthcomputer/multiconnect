@@ -1,6 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_13;
 
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
+import net.earthcomputer.multiconnect.impl.RegistryMutator;
 import net.earthcomputer.multiconnect.impl.TagRegistry;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_1.Protocol_1_13_1;
@@ -24,13 +26,10 @@ public class Protocol_1_13 extends Protocol_1_13_1 {
         });
     }
 
-    @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})
     @Override
-    public void modifyRegistry(ISimpleRegistry<?> registry) {
-        super.modifyRegistry(registry);
-        if (registry == Registry.BLOCK) {
-            modifyBlockRegistry((ISimpleRegistry<Block>) registry);
-        }
+    public void mutateRegistries(RegistryMutator mutator) {
+        super.mutateRegistries(mutator);
+        mutator.mutate(Protocols.V1_13, Registry.BLOCK, this::modifyBlockRegistry);
     }
 
     private void modifyBlockRegistry(ISimpleRegistry<Block> registry) {

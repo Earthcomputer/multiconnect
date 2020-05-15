@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
 import com.google.gson.JsonParseException;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.*;
@@ -540,35 +541,22 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         }
     }
 
-    @SuppressWarnings({"EqualsBetweenInconvertibleTypes", "unchecked"})
     @Override
-    public void modifyRegistry(ISimpleRegistry<?> registry) {
-        super.modifyRegistry(registry);
-
-        if (registry == Registry.BLOCK) {
-            modifyBlockRegistry((ISimpleRegistry<Block>) registry);
-        } else if (registry == Registry.ITEM) {
-            modifyItemRegistry((ISimpleRegistry<Item>) registry);
-        } else if (registry == Registry.ENTITY_TYPE) {
-            modifyEntityTypeRegistry((ISimpleRegistry<EntityType<?>>) registry);
-        } else if (registry == Registry.BIOME) {
-            modifyBiomeRegistry((ISimpleRegistry<Biome>) registry);
-        } else if (registry == Registry.STATUS_EFFECT) {
-            modifyStatusEffectRegistry((ISimpleRegistry<StatusEffect>) registry);
-        } else if (registry == Registry.PARTICLE_TYPE) {
-            modifyParticleTypeRegistry((ISimpleRegistry<ParticleType<? extends ParticleEffect>>) registry);
-        } else if (registry == Registry.ENCHANTMENT) {
-            modifyEnchantmentRegistry((ISimpleRegistry<Enchantment>) registry);
-        } else if (registry == Registry.BLOCK_ENTITY_TYPE) {
-            modifyBlockEntityRegistry((ISimpleRegistry<BlockEntityType<?>>) registry);
-        } else if (registry == Registry.RECIPE_SERIALIZER) {
-            modifyRecipeSerializerRegistry((ISimpleRegistry<RecipeSerializer<?>>) registry);
-        } else if (registry == Registry.SOUND_EVENT) {
-            modifySoundEventRegistry((ISimpleRegistry<SoundEvent>) registry);
-        }
+    public void mutateRegistries(RegistryMutator mutator) {
+        super.mutateRegistries(mutator);
+        mutator.mutate(Protocols.V1_13_2, Registry.BLOCK, this::mutateBlockRegistry);
+        mutator.mutate(Protocols.V1_13_2, Registry.ITEM, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_13_2, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_13_2, Registry.BIOME, this::mutateBiomeRegistry);
+        mutator.mutate(Protocols.V1_13_2, Registry.STATUS_EFFECT, this::mutateStatusEffectRegistry);
+        mutator.mutate(Protocols.V1_13_2, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
+        mutator.mutate(Protocols.V1_13_2, Registry.ENCHANTMENT, this::mutateEnchantmentRegistry);
+        mutator.mutate(Protocols.V1_13_2, Registry.BLOCK_ENTITY_TYPE, this::mutateBlockEntityRegistry);
+        mutator.mutate(Protocols.V1_13_2, Registry.RECIPE_SERIALIZER, this::mutateRecipeSerializerRegistry);
+        mutator.mutate(Protocols.V1_13_2, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
     }
 
-    private void modifyBlockRegistry(ISimpleRegistry<Block> registry) {
+    private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
         registry.unregister(Blocks.BAMBOO);
         registry.unregister(Blocks.BAMBOO_SAPLING);
         registry.unregister(Blocks.POTTED_BAMBOO);
@@ -696,7 +684,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         rename(registry, Blocks.SMOOTH_STONE_SLAB, "stone_slab");
     }
 
-    private void modifyItemRegistry(ISimpleRegistry<Item> registry) {
+    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
         registry.unregister(Items.CROSSBOW);
         registry.unregister(Items.BLUE_DYE);
         registry.unregister(Items.BROWN_DYE);
@@ -714,12 +702,13 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         rename(registry, Items.RED_DYE, "rose_red");
         rename(registry, Items.GREEN_DYE, "cactus_green");
         rename(registry, Items.YELLOW_DYE, "dandelion_yellow");
+        rename(registry, Items.SMOOTH_STONE_SLAB, "stone_slab");
 
         registry.unregister(Items.CAT_SPAWN_EGG);
         insertAfter(registry, Items.MULE_SPAWN_EGG, Items.CAT_SPAWN_EGG, "ocelot_spawn_egg");
     }
 
-    private void modifyEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
+    private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
         registry.unregister(EntityType.CAT);
         int ocelotId = Registry.ENTITY_TYPE.getRawId(EntityType.OCELOT);
         registry.unregister(EntityType.OCELOT);
@@ -735,17 +724,17 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         ENTITY_REGISTRY_1_13 = registry.copy();
     }
 
-    private void modifyBiomeRegistry(ISimpleRegistry<Biome> registry) {
+    private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
         registry.unregister(Biomes.BAMBOO_JUNGLE);
         registry.unregister(Biomes.BAMBOO_JUNGLE_HILLS);
     }
 
-    private void modifyStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {
+    private void mutateStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {
         registry.unregister(StatusEffects.BAD_OMEN);
         registry.unregister(StatusEffects.HERO_OF_THE_VILLAGE);
     }
 
-    private void modifyParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
+    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
         registry.unregister(ParticleTypes.FALLING_LAVA);
         registry.unregister(ParticleTypes.LANDING_LAVA);
         registry.unregister(ParticleTypes.FALLING_WATER);
@@ -756,13 +745,13 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(ParticleTypes.SNEEZE);
     }
 
-    private void modifyEnchantmentRegistry(ISimpleRegistry<Enchantment> registry) {
+    private void mutateEnchantmentRegistry(ISimpleRegistry<Enchantment> registry) {
         registry.unregister(Enchantments.QUICK_CHARGE);
         registry.unregister(Enchantments.MULTISHOT);
         registry.unregister(Enchantments.PIERCING);
     }
 
-    private void modifyBlockEntityRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
+    private void mutateBlockEntityRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
         registry.unregister(BlockEntityType.BARREL);
         registry.unregister(BlockEntityType.SMOKER);
         registry.unregister(BlockEntityType.BLAST_FURNACE);
@@ -772,7 +761,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(BlockEntityType.CAMPFIRE);
     }
 
-    private void modifyRecipeSerializerRegistry(ISimpleRegistry<RecipeSerializer<?>> registry) {
+    private void mutateRecipeSerializerRegistry(ISimpleRegistry<RecipeSerializer<?>> registry) {
         registry.unregister(RecipeSerializer.SUSPICIOUS_STEW);
         registry.unregister(RecipeSerializer.BLASTING);
         registry.unregister(RecipeSerializer.SMOKING);
@@ -781,7 +770,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.register(AddBannerPatternRecipe.SERIALIZER, registry.getNextId(), new Identifier("crafting_special_banneraddpattern"));
     }
 
-    private void modifySoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
         registry.unregister(SoundEvents.ITEM_ARMOR_EQUIP_CHAIN);
         registry.unregister(SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND);
         registry.unregister(SoundEvents.ITEM_ARMOR_EQUIP_ELYTRA);

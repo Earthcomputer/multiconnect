@@ -43,10 +43,10 @@ public abstract class AbstractProtocol {
             DataTrackerManager.onConnectToServer();
         }
         DefaultRegistry.restoreAll();
-        DefaultRegistry.DEFAULT_REGISTRIES.keySet().forEach((registry -> {
-            modifyRegistry((ISimpleRegistry<?>) registry);
-            postModifyRegistry(registry);
-        }));
+        RegistryMutator mutator = new RegistryMutator();
+        mutateRegistries(mutator);
+        mutator.runMutations(DefaultRegistry.DEFAULT_REGISTRIES.keySet());
+        DefaultRegistry.DEFAULT_REGISTRIES.keySet().forEach((this::postMutateRegistry));
         recomputeBlockStates();
         if (!resourceReload) {
             removeTrackedDataHandlers();
@@ -125,11 +125,11 @@ public abstract class AbstractProtocol {
         return true;
     }
 
-    public void modifyRegistry(ISimpleRegistry<?> registry) {
+    public void mutateRegistries(RegistryMutator mutator) {
     }
 
     @SuppressWarnings("unchecked")
-    protected <T> void postModifyRegistry(Registry<T> registry) {
+    protected <T> void postMutateRegistry(Registry<T> registry) {
         if (!(registry instanceof SimpleRegistry)) return;
         if (registry instanceof DefaultedRegistry) return;
         ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
@@ -351,6 +351,7 @@ public abstract class AbstractProtocol {
             ((ISimpleRegistry<EntityType<?>>) Registry.ENTITY_TYPE).addRegisterListener(entityType -> {
                 if (DEFAULT_SPAWN_EGG_ITEMS.containsKey(entityType)) {
                     SpawnEggItem item = DEFAULT_SPAWN_EGG_ITEMS.get(entityType);
+                    SpawnEggItemAccessor.getSpawnEggs().put(entityType, item);
                     //noinspection unchecked
                     reregister((ISimpleRegistry<Item>) Registry.ITEM, item);
                 }
