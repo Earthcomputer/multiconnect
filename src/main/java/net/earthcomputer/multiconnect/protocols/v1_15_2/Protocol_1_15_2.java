@@ -696,6 +696,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         tags.add(BlockTags.STRIDER_WARM_BLOCKS);
         tags.add(BlockTags.CAMPFIRES, Blocks.CAMPFIRE);
         tags.add(BlockTags.GUARDED_BY_PIGLINS);
+        tags.addTag(BlockTags.PREVENT_MOB_SPAWNING_INSIDE, BlockTags.RAILS);
         super.addExtraBlockTags(tags);
     }
 
@@ -709,6 +710,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         tags.addTag(ItemTags.CREEPER_DROP_MUSIC_DISCS, ItemTags.MUSIC_DISCS);
         tags.add(ItemTags.BEACON_PAYMENT_ITEMS, Items.EMERALD, Items.DIAMOND, Items.GOLD_INGOT, Items.IRON_INGOT);
         tags.add(ItemTags.PIGLIN_REPELLENTS);
+        tags.add(ItemTags.PIGLIN_LOVED);
         tags.add(ItemTags.NON_FLAMMABLE_WOOD);
         tags.add(ItemTags.STONE_TOOL_MATERIALS, Items.COBBLESTONE);
         tags.add(ItemTags.FURNACE_MATERIALS, Items.COBBLESTONE);
