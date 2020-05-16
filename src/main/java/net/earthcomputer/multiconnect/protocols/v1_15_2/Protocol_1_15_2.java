@@ -646,12 +646,12 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     @Override
     protected void recomputeStatesForBlock(Block block) {
         if (block == Blocks.JIGSAW) {
-            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.DOWN_EAST));
-            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.UP_EAST));
             Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.NORTH_UP));
+            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.EAST_UP));
             Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.SOUTH_UP));
             Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.WEST_UP));
-            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.EAST_UP));
+            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.UP_EAST));
+            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.DOWN_EAST));
         } else {
             super.recomputeStatesForBlock(block);
         }
