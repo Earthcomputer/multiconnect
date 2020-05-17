@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
+import com.google.common.base.Joiner;
 import com.mojang.datafixers.Dynamic;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.api.Protocols;
@@ -46,6 +47,7 @@ import net.minecraft.scoreboard.ScoreboardCriterion;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.StatType;
+import net.minecraft.stat.Stats;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
@@ -62,6 +64,7 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -105,6 +108,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     }
 
     private static final Pattern NON_IDENTIFIER_CHARS = Pattern.compile("[^a-z0-9/._\\-]");
+    private static final Joiner DOT_JOINER = Joiner.on('.');
 
     private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_ID = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_PARAM1 = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
@@ -283,16 +287,18 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
         ProtocolRegistry.registerInboundTranslator(StatisticsS2CPacket.class, buf -> {
             int count = buf.readVarInt();
-            List<Pair<StatType<?>, Integer>> stats = new ArrayList<>(count);
+            List<Triple<StatType<Object>, Object, Integer>> stats = new ArrayList<>(count);
             for (int i = 0; i < count; i++) {
-                Identifier stat = new Identifier(buf.readString(32767));
+                String stat = buf.readString(32767);
+                Pair<StatType<Object>, Object> statKey = translateStat(stat);
                 int value = buf.readVarInt();
-                if (Registry.STAT_TYPE.containsId(stat))
-                    stats.add(Pair.of(Registry.STAT_TYPE.get(stat), value));
+                if (statKey != null)
+                    stats.add(Triple.of(statKey.getLeft(), statKey.getRight(), value));
             }
             buf.pendingRead(VarInt.class, new VarInt(stats.size()));
-            for (Pair<StatType<?>, Integer> stat : stats) {
+            for (Triple<StatType<Object>, Object, Integer> stat : stats) {
                 buf.pendingRead(VarInt.class, new VarInt(Registry.STAT_TYPE.getRawId(stat.getLeft())));
+                buf.pendingRead(VarInt.class, new VarInt(stat.getLeft().getRegistry().getRawId(stat.getMiddle())));
                 buf.pendingRead(VarInt.class, new VarInt(stat.getRight()));
             }
             buf.applyPendingReads();
@@ -497,6 +503,117 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 return to;
             }
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Pair<StatType<T>, T> translateStat(String statName) {
+        String[] parts = statName.split("\\.");
+        if (parts.length < 2 || !parts[0].equals("stat")) {
+            return null;
+        }
+
+        if (parts.length == 2) {
+            Identifier customStat = translateCustomStat(parts[1]);
+            if (customStat == null) {
+                return null;
+            }
+            return Pair.of((StatType<T>) Stats.CUSTOM, (T) customStat);
+        }
+
+        StatType<T> type;
+        switch (parts[1]) {
+            case "mineBlock":
+                type = (StatType<T>) Stats.MINED;
+                break;
+            case "craftItem":
+                type = (StatType<T>) Stats.CRAFTED;
+                break;
+            case "useItem":
+                type = (StatType<T>) Stats.USED;
+                break;
+            case "breakItem":
+                type = (StatType<T>) Stats.BROKEN;
+                break;
+            case "pickup":
+                type = (StatType<T>) Stats.PICKED_UP;
+                break;
+            case "drop":
+                type = (StatType<T>) Stats.DROPPED;
+                break;
+            case "killEntity":
+                type = (StatType<T>) Stats.KILLED;
+                break;
+            case "entityKilledBy":
+                type = (StatType<T>) Stats.KILLED_BY;
+                break;
+            default:
+                return null;
+        }
+
+        if (parts.length < 4) {
+            return null;
+        }
+        Identifier id = Identifier.tryParse(parts[2] + ":" + DOT_JOINER.join(Arrays.asList(parts).subList(3, parts.length)));
+        if (id == null || !type.getRegistry().containsId(id)) {
+            return null;
+        }
+        return Pair.of(type, type.getRegistry().get(id));
+    }
+
+    private static Identifier translateCustomStat(String id) {
+        switch (id) {
+            case "jump": return Stats.JUMP;
+            case "drop": return Stats.DROP;
+            case "deaths": return Stats.DEATHS;
+            case "mobKills": return Stats.MOB_KILLS;
+            case "pigOneCm": return Stats.PIG_ONE_CM;
+            case "flyOneCm": return Stats.FLY_ONE_CM;
+            case "leaveGame": return Stats.LEAVE_GAME;
+            case "diveOneCm": return Stats.WALK_UNDER_WATER_ONE_CM;
+            case "swimOneCm": return Stats.SWIM_ONE_CM;
+            case "fallOneCm": return Stats.FALL_ONE_CM;
+            case "walkOneCm": return Stats.WALK_ONE_CM;
+            case "boatOneCm": return Stats.BOAT_ONE_CM;
+            case "sneakTime": return Stats.SNEAK_TIME;
+            case "horseOneCm": return Stats.HORSE_ONE_CM;
+            case "sleepInBed": return Stats.SLEEP_IN_BED;
+            case "fishCaught": return Stats.FISH_CAUGHT;
+            case "climbOneCm": return Stats.CLIMB_ONE_CM;
+            case "aviateOneCm": return Stats.AVIATE_ONE_CM;
+            case "crouchOneCm": return Stats.CROUCH_ONE_CM;
+            case "sprintOneCm": return Stats.SPRINT_ONE_CM;
+            case "animalsBred": return Stats.ANIMALS_BRED;
+            case "chestOpened": return Stats.OPEN_CHEST;
+            case "damageTaken": return Stats.DAMAGE_TAKEN;
+            case "damageDealt": return Stats.DAMAGE_DEALT;
+            case "playerKills": return Stats.PLAYER_KILLS;
+            case "armorCleaned": return Stats.CLEAN_ARMOR;
+            case "flowerPotted": return Stats.POT_FLOWER;
+            case "recordPlayed": return Stats.PLAY_RECORD;
+            case "cauldronUsed": return Stats.USE_CAULDRON;
+            case "bannerCleaned": return Stats.CLEAN_BANNER;
+            case "itemEnchanted": return Stats.ENCHANT_ITEM;
+            case "playOneMinute": return Stats.PLAY_ONE_MINUTE;
+            case "minecartOneCm": return Stats.MINECART_ONE_CM;
+            case "timeSinceDeath": return Stats.TIME_SINCE_DEATH;
+            case "cauldronFilled": return Stats.FILL_CAULDRON;
+            case "noteblockTuned": return Stats.TUNE_NOTEBLOCK;
+            case "noteblockPlayed": return Stats.PLAY_NOTEBLOCK;
+            case "cakeSlicesEaten": return Stats.EAT_CAKE_SLICE;
+            case "hopperInspected": return Stats.INSPECT_HOPPER;
+            case "shulkerBoxOpened": return Stats.OPEN_SHULKER_BOX;
+            case "talkedToVillager": return Stats.TALKED_TO_VILLAGER;
+            case "enderchestOpened": return Stats.OPEN_ENDERCHEST;
+            case "dropperInspected": return Stats.INSPECT_DROPPER;
+            case "beaconInteraction": return Stats.INTERACT_WITH_BEACON;
+            case "furnaceInteraction": return Stats.INTERACT_WITH_FURNACE;
+            case "dispenserInspected": return Stats.INSPECT_DISPENSER;
+            case "tradedWithVillager": return Stats.TRADED_WITH_VILLAGER;
+            case "trappedChestTriggered": return Stats.TRIGGER_TRAPPED_CHEST;
+            case "brewingstandInteraction": return Stats.INTERACT_WITH_BREWINGSTAND;
+            case "craftingTableInteraction": return Stats.INTERACT_WITH_CRAFTING_TABLE;
+            default: return null;
+        }
     }
 
     @Override
