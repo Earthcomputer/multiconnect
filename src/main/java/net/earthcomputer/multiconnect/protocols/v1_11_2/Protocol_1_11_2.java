@@ -7,6 +7,7 @@ import net.earthcomputer.multiconnect.impl.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.v1_12.PlaceRecipeC2SPacket_1_12;
 import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
+import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -25,6 +26,8 @@ import net.minecraft.network.packet.s2c.play.AdvancementUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityS2CPacket;
 import net.minecraft.network.packet.s2c.play.SelectAdvancementTabS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnlockRecipesS2CPacket;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.registry.Registry;
 
 import java.util.List;
@@ -84,6 +87,7 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
         mutator.mutate(Protocols.V1_11_2, Registry.BLOCK, this::mutateBlockRegistry);
         mutator.mutate(Protocols.V1_11_2, Registry.ITEM, this::mutateItemRegistry);
         mutator.mutate(Protocols.V1_11_2, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_11_2, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
     }
 
     private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
@@ -114,6 +118,65 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
     private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
         registry.purge(EntityType.ILLUSIONER);
         registry.purge(EntityType.PARROT);
+    }
+
+    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+        registry.unregister(SoundEvents.ENTITY_BOAT_PADDLE_LAND);
+        registry.unregister(SoundEvents.ENTITY_BOAT_PADDLE_WATER);
+        registry.unregister(SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE);
+        registry.unregister(SoundEvents.ENTITY_ENDER_EYE_DEATH);
+        registry.unregister(SoundEvents.BLOCK_END_PORTAL_FRAME_FILL);
+        registry.unregister(SoundEvents.BLOCK_END_PORTAL_SPAWN);
+        registry.unregister(SoundEvents.ENTITY_ILLUSIONER_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_ILLUSIONER_CAST_SPELL);
+        registry.unregister(SoundEvents.ENTITY_ILLUSIONER_DEATH);
+        registry.unregister(SoundEvents.ENTITY_ILLUSIONER_HURT);
+        registry.unregister(SoundEvents.ENTITY_ILLUSIONER_MIRROR_MOVE);
+        registry.unregister(SoundEvents.ENTITY_ILLUSIONER_PREPARE_BLINDNESS);
+        registry.unregister(SoundEvents.ENTITY_ILLUSIONER_PREPARE_MIRROR);
+        registry.unregister(SoundEvents.BLOCK_NOTE_BLOCK_BELL);
+        registry.unregister(SoundEvents.BLOCK_NOTE_BLOCK_CHIME);
+        registry.unregister(SoundEvents.BLOCK_NOTE_BLOCK_FLUTE);
+        registry.unregister(SoundEvents.BLOCK_NOTE_BLOCK_GUITAR);
+        registry.unregister(SoundEvents.BLOCK_NOTE_BLOCK_XYLOPHONE);
+        registry.unregister(SoundEvents.ENTITY_PARROT_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_PARROT_DEATH);
+        registry.unregister(SoundEvents.ENTITY_PARROT_EAT);
+        registry.unregister(SoundEvents.ENTITY_PARROT_FLY);
+        registry.unregister(SoundEvents.ENTITY_PARROT_HURT);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_BLAZE);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_CREEPER);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_ELDER_GUARDIAN);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_ENDER_DRAGON);
+        registry.unregister(SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_ENDERMAN);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_ENDERMITE);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_EVOKER);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_GHAST);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_HUSK);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_ILLUSIONER);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_MAGMA_CUBE);
+        registry.unregister(SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_POLAR_BEAR);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_SHULKER);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_SILVERFISH);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_SKELETON);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_SLIME);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_SPIDER);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_STRAY);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_VEX);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_VINDICATOR);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_WITCH);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_WITHER);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_WITHER_SKELETON);
+        registry.unregister(SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_WOLF);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_ZOMBIE);
+        registry.unregister(SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_ZOMBIE_PIGMAN);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_ZOMBIE_VILLAGER);
+        registry.unregister(SoundEvents.ENTITY_PARROT_STEP);
+        registry.unregister(SoundEvents.ENTITY_PLAYER_HURT_DROWN);
+        registry.unregister(SoundEvents.ENTITY_PLAYER_HURT_ON_FIRE);
+        registry.unregister(SoundEvents.UI_TOAST_IN);
+        registry.unregister(SoundEvents.UI_TOAST_OUT);
+        registry.unregister(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE);
     }
 
     @Override
