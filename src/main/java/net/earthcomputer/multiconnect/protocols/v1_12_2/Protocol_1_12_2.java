@@ -550,6 +550,15 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 return null;
         }
 
+        if (type == Stats.KILLED || type == Stats.KILLED_BY) {
+            String renamed = StatsCounterFixAccessor.getRenamedEntities().get(parts[2]);
+            if (renamed == null) {
+                return null;
+            }
+            T entityType = (T) Registry.ENTITY_TYPE.get(new Identifier(renamed));
+            return Pair.of(type, entityType);
+        }
+
         if (parts.length < 4) {
             return null;
         }
