@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.mixin;
 
 import com.google.common.collect.BiMap;
 import net.earthcomputer.multiconnect.impl.IInt2ObjectBiMap;
+import net.earthcomputer.multiconnect.impl.IRegistryUpdateListener;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.Int2ObjectBiMap;
@@ -14,7 +15,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 @Mixin(SimpleRegistry.class)
 public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
@@ -42,8 +42,8 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     @Override
     public abstract BiMap<Identifier, T> getEntries();
 
-    @Unique private List<Consumer<T>> registerListeners = new ArrayList<>(0);
-    @Unique private List<Consumer<T>> unregisterListeners = new ArrayList<>(0);
+    @Unique private List<IRegistryUpdateListener<T>> registerListeners = new ArrayList<>(0);
+    @Unique private List<IRegistryUpdateListener<T>> unregisterListeners = new ArrayList<>(0);
 
     @Override
     public void register(T t, int id, Identifier name, boolean sideEffects) {
@@ -57,7 +57,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         set(id, name, t);
 
         if (sideEffects)
-            registerListeners.forEach(listener -> listener.accept(t));
+            registerListeners.forEach(listener -> listener.onUpdate(t, false));
     }
 
     @Override
@@ -67,7 +67,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         set(id, name, t);
 
         if (sideEffects)
-            registerListeners.forEach(listener -> listener.accept(t));
+            registerListeners.forEach(listener -> listener.onUpdate(t, true));
     }
 
     @Override
@@ -91,7 +91,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         randomEntries = null;
 
         if (sideEffects)
-            unregisterListeners.forEach(listener -> listener.accept(t));
+            unregisterListeners.forEach(listener -> listener.onUpdate(t, false));
     }
 
     @Override
@@ -110,7 +110,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         randomEntries = null;
 
         if (sideEffects)
-            unregisterListeners.forEach(listener -> listener.accept(t));
+            unregisterListeners.forEach(listener -> listener.onUpdate(t, true));
     }
 
     @Override
@@ -119,7 +119,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
             for (int id = getNextId() - 1; id >= 0; id--) {
                 T value = indexedEntries.get(id);
                 if (value != null)
-                    unregisterListeners.forEach(listener -> listener.accept(value));
+                    unregisterListeners.forEach(listener -> listener.onUpdate(value, false));
             }
         }
         entries.clear();
@@ -129,12 +129,12 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     }
 
     @Override
-    public void addRegisterListener(Consumer<T> listener) {
+    public void addRegisterListener(IRegistryUpdateListener<T> listener) {
         registerListeners.add(listener);
     }
 
     @Override
-    public void addUnregisterListener(Consumer<T> listener) {
+    public void addUnregisterListener(IRegistryUpdateListener<T> listener) {
         unregisterListeners.add(listener);
     }
 

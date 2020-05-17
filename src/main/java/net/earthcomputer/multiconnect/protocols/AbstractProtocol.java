@@ -89,9 +89,18 @@ public abstract class AbstractProtocol {
         list.add(list.indexOf(element) + 1, toInsert);
     }
 
-    @SuppressWarnings("unchecked")
     public static <T> void insertAfter(ISimpleRegistry<T> registry, T element, T toInsert, String id) {
-        registry.register(toInsert, ((SimpleRegistry<T>) registry).getRawId(element) + 1, new Identifier(id));
+        insertAfter(registry, element, toInsert, id, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> void insertAfter(ISimpleRegistry<T> registry, T element, T toInsert, String id, boolean inPlace) {
+        int numericalId = ((SimpleRegistry<T>) registry).getRawId(element) + 1;
+        if (inPlace) {
+            registry.registerInPlace(toInsert, numericalId, new Identifier(id));
+        } else {
+            registry.register(toInsert, numericalId, new Identifier(id));
+        }
     }
 
     protected static void remove(List<PacketInfo<?>> list, Class<? extends Packet<?>> element) {
@@ -214,7 +223,7 @@ public abstract class AbstractProtocol {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> void reregister(ISimpleRegistry<T> registry, T value) {
+    public static <T> void reregister(ISimpleRegistry<T> registry, T value, boolean inPlace) {
         if (registry.getEntries().containsValue(value))
             return;
 
@@ -229,7 +238,7 @@ public abstract class AbstractProtocol {
             }
         }
 
-        insertAfter(registry, prevValue, value, defaultRegistry.defaultEntries.inverse().get(value).toString());
+        insertAfter(registry, prevValue, value, defaultRegistry.defaultEntries.inverse().get(value).toString(), inPlace);
     }
 
     protected static void dumpBlockStates() {
@@ -332,35 +341,47 @@ public abstract class AbstractProtocol {
                 DEFAULT_TRACKED_DATA_HANDLERS.put(handler, TrackedDataHandlerRegistryAccessor.getHandlers().getId(handler));
 
             //noinspection unchecked
-            ((ISimpleRegistry<Block>) Registry.BLOCK).addRegisterListener(block -> {
+            ((ISimpleRegistry<Block>) Registry.BLOCK).addRegisterListener((block, inPlace) -> {
                 if (DEFAULT_BLOCK_ITEMS.containsKey(block)) {
                     Item item = DEFAULT_BLOCK_ITEMS.get(block);
                     Item.BLOCK_ITEMS.put(block, item);
                     //noinspection unchecked
-                    reregister((ISimpleRegistry<Item>) Registry.ITEM, item);
+                    reregister((ISimpleRegistry<Item>) Registry.ITEM, item, inPlace);
                 }
             });
             //noinspection unchecked
-            ((ISimpleRegistry<Block>) Registry.BLOCK).addUnregisterListener(block -> {
+            ((ISimpleRegistry<Block>) Registry.BLOCK).addUnregisterListener((block, inPlace) -> {
                 if (Item.BLOCK_ITEMS.containsKey(block)) {
                     //noinspection unchecked
-                    ((ISimpleRegistry<Item>) Registry.ITEM).unregister(Item.BLOCK_ITEMS.remove(block));
+                    ISimpleRegistry<Item> itemRegistry = (ISimpleRegistry<Item>) Registry.ITEM;
+                    Item item = Item.BLOCK_ITEMS.remove(block);
+                    if (inPlace) {
+                        itemRegistry.purge(item);
+                    } else {
+                        itemRegistry.unregister(item);
+                    }
                 }
             });
             //noinspection unchecked
-            ((ISimpleRegistry<EntityType<?>>) Registry.ENTITY_TYPE).addRegisterListener(entityType -> {
+            ((ISimpleRegistry<EntityType<?>>) Registry.ENTITY_TYPE).addRegisterListener((entityType, inPlace) -> {
                 if (DEFAULT_SPAWN_EGG_ITEMS.containsKey(entityType)) {
                     SpawnEggItem item = DEFAULT_SPAWN_EGG_ITEMS.get(entityType);
                     SpawnEggItemAccessor.getSpawnEggs().put(entityType, item);
                     //noinspection unchecked
-                    reregister((ISimpleRegistry<Item>) Registry.ITEM, item);
+                    reregister((ISimpleRegistry<Item>) Registry.ITEM, item, inPlace);
                 }
             });
             //noinspection unchecked
-            ((ISimpleRegistry<EntityType<?>>) Registry.ENTITY_TYPE).addUnregisterListener(entityType -> {
+            ((ISimpleRegistry<EntityType<?>>) Registry.ENTITY_TYPE).addUnregisterListener((entityType, inPlace) -> {
                 if (SpawnEggItemAccessor.getSpawnEggs().containsKey(entityType)) {
                     //noinspection unchecked
-                    ((ISimpleRegistry<Item>) Registry.ITEM).unregister(SpawnEggItemAccessor.getSpawnEggs().remove(entityType));
+                    ISimpleRegistry<Item> itemRegistry = (ISimpleRegistry<Item>) Registry.ITEM;
+                    SpawnEggItem spawnEgg = SpawnEggItemAccessor.getSpawnEggs().remove(entityType);
+                    if (inPlace) {
+                        itemRegistry.purge(spawnEgg);
+                    } else {
+                        itemRegistry.unregister(spawnEgg);
+                    }
                 }
             });
         }

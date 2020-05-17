@@ -5,8 +5,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.Int2ObjectBiMap;
 import net.minecraft.util.registry.SimpleRegistry;
 
-import java.util.function.Consumer;
-
 public interface ISimpleRegistry<T> {
 
     int getNextId();
@@ -43,9 +41,9 @@ public interface ISimpleRegistry<T> {
 
     void clear(boolean sideEffects);
 
-    void addRegisterListener(Consumer<T> listener);
+    void addRegisterListener(IRegistryUpdateListener<T> listener);
 
-    void addUnregisterListener(Consumer<T> listener);
+    void addUnregisterListener(IRegistryUpdateListener<T> listener);
 
     SimpleRegistry<T> copy();
 
