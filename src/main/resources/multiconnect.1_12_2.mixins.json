@@ -36,6 +36,7 @@
     "EntityAccessor",
     "FlowerPotBlockAccessor",
     "RegistryTagManagerAccessor",
+    "StatsCounterFixAccessor",
     "SuspendParticleAccessor",
     "TagContainerAccessor",
     "UpgradeDataAccessor",
