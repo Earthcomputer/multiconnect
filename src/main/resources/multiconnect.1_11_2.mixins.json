@@ -3,6 +3,7 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_11_2.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "MixinClientPlayNetworkHandler",
     "MixinMinecraftClient"
   ],
   "client": [

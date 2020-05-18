@@ -4,10 +4,12 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.impl.RegistryMutator;
+import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_12.PlaceRecipeC2SPacket_1_12;
 import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
+import net.minecraft.advancement.Advancement;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -22,10 +24,7 @@ import net.minecraft.network.packet.c2s.play.AdvancementTabC2SPacket;
 import net.minecraft.network.packet.c2s.play.ClientStatusC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.c2s.play.RecipeBookDataC2SPacket;
-import net.minecraft.network.packet.s2c.play.AdvancementUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntityS2CPacket;
-import net.minecraft.network.packet.s2c.play.SelectAdvancementTabS2CPacket;
-import net.minecraft.network.packet.s2c.play.UnlockRecipesS2CPacket;
+import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.registry.Registry;
@@ -35,7 +34,28 @@ import java.util.List;
 public class Protocol_1_11_2 extends Protocol_1_12 {
 
     public static void registerTranslators() {
-
+        ProtocolRegistry.registerInboundTranslator(StatisticsS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            int count = buf.readVarInt();
+            for (int i = 0; i < count; i++) {
+                String stat = buf.readString(32767);
+                int value = buf.readVarInt();
+                if (stat.startsWith("achievement.")) {
+                    String achievementId = stat.substring("achievement.".length());
+                    Advancement achievement = Achievements_1_11_2.ACHIEVEMENTS.get(achievementId);
+                    if (achievement != null) {
+                        if (value == 0) {
+                            PendingAchievements.takeAchievement(achievement);
+                        } else {
+                            PendingAchievements.giveAchievement(achievement);
+                        }
+                    }
+                    // invalid stat will be removed by 1.12.2 <-> 1.13 translator
+                }
+            }
+            buf.disablePassthroughMode();
+            buf.applyPendingReads();
+        });
     }
 
     @Override
@@ -71,6 +91,11 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
             return false;
         }
         if (packet instanceof AdvancementTabC2SPacket) {
+            AdvancementTabC2SPacket advancementTabPacket = (AdvancementTabC2SPacket) packet;
+            if (advancementTabPacket.getAction() == AdvancementTabC2SPacket.Action.OPENED_TAB) {
+                assert MinecraftClient.getInstance().getNetworkHandler() != null;
+                MinecraftClient.getInstance().getNetworkHandler().onSelectAdvancementTab(new SelectAdvancementTabS2CPacket(advancementTabPacket.getTabToOpen()));
+            }
             return false;
         }
         if (packet instanceof ClientStatusC2SPacket) {
