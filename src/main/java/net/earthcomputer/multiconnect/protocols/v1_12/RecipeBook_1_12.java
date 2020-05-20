@@ -2,6 +2,8 @@ package net.earthcomputer.multiconnect.protocols.v1_12;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.recipebook.RecipeBookWidget;
@@ -138,12 +140,13 @@ public class RecipeBook_1_12<C extends Inventory> {
 
             if (!stack.isEmpty()) {
                 while (stack.getCount() > 0) {
-                    int destSlot = playerInv.getOccupiedSlotWithRoomForStack(stack);
+                    int destSlot = getOccupiedSlotWithRoomForStack(playerInv, stack);
 
                     if (destSlot == -1) {
                         destSlot = playerInv.getEmptySlot();
                     }
 
+                    ItemStack originalStack = stack.copy();
                     ItemStack targetStack = stack.copy();
                     targetStack.setCount(1);
 
@@ -155,7 +158,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                     }
 
                     container.getSlot(i).takeStack(1);
-                    transactionsFromMatrix.add(new PlaceRecipeC2SPacket_1_12.Transaction(targetStack.copy(), serverSlot, destSlot));
+                    transactionsFromMatrix.add(new PlaceRecipeC2SPacket_1_12.Transaction(originalStack, targetStack.copy(), serverSlot, destSlot));
                 }
             }
 
@@ -255,6 +258,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                     playerInv.removeStack(fromSlot);
                 }
 
+                ItemStack originalStack = stack.copy();
                 stack.setCount(1);
 
                 if (destSlot.getStack().isEmpty()) {
@@ -263,7 +267,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                     destSlot.getStack().increment(1);
                 }
 
-                return new PlaceRecipeC2SPacket_1_12.Transaction(stack, destSlotIndex, fromSlot);
+                return new PlaceRecipeC2SPacket_1_12.Transaction(originalStack, stack, destSlotIndex, fromSlot);
             }
         }
     }
@@ -279,7 +283,7 @@ public class RecipeBook_1_12<C extends Inventory> {
             ItemStack stack = container.getSlot(i).getStack();
 
             if (!stack.isEmpty()) {
-                int destStack = invPlayer.getOccupiedSlotWithRoomForStack(stack);
+                int destStack = getOccupiedSlotWithRoomForStack(invPlayer, stack);
 
                 if (destStack == -1) {
                     destStack = invPlayer.getEmptySlot();
@@ -292,6 +296,31 @@ public class RecipeBook_1_12<C extends Inventory> {
         }
 
         return true;
+    }
+
+    private int getOccupiedSlotWithRoomForStack(PlayerInventory playerInv, ItemStack stack) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_11_2) {
+            if (canStackAddMore(playerInv.getStack(playerInv.selectedSlot), stack)) {
+                return playerInv.selectedSlot;
+            }
+            for (int j = 0; j < playerInv.main.size(); j++) {
+                if (canStackAddMore(playerInv.main.get(j), stack)) {
+                    return j;
+                }
+            }
+            return -1;
+        } else {
+            return playerInv.getOccupiedSlotWithRoomForStack(stack);
+        }
+    }
+
+    private boolean canStackAddMore(ItemStack existingStack, ItemStack stack) {
+        return !existingStack.isEmpty()
+                && existingStack.getItem() == stack.getItem()
+                && ItemStack.areTagsEqual(existingStack, stack)
+                && existingStack.isStackable()
+                && existingStack.getCount() < existingStack.getMaxCount()
+                && existingStack.getCount() < 64;
     }
 
 }

@@ -4,7 +4,9 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "MixinClientPlayNetworkHandler",
-    "MixinMinecraftClient"
+    "MixinMinecraftClient",
+    "MixinScreenHandler",
+    "SlotAccessor"
   ],
   "client": [
   ],

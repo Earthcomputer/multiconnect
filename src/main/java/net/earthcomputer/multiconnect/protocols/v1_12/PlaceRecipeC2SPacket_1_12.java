@@ -50,12 +50,22 @@ public class PlaceRecipeC2SPacket_1_12 implements Packet<ServerPlayPacketListene
         throw new UnsupportedOperationException();
     }
 
+    public List<Transaction> getTransactionsFromMatrix() {
+        return transactionsFromMatrix;
+    }
+
+    public List<Transaction> getTransactionsToMatrix() {
+        return transactionsToMatrix;
+    }
+
     public static class Transaction {
+        public ItemStack originalStack;
         public ItemStack stack;
         public int craftingSlot;
         public int invSlot;
 
-        public Transaction(ItemStack stack, int craftingSlot, int invSlot) {
+        public Transaction(ItemStack originalStack, ItemStack stack, int craftingSlot, int invSlot) {
+            this.originalStack = originalStack;
             this.stack = stack.copy();
             this.craftingSlot = craftingSlot;
             this.invSlot = invSlot;
