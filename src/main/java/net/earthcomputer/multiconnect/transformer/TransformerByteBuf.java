@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.transformer;
 
+import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
@@ -738,6 +739,23 @@ public final class TransformerByteBuf extends PacketByteBuf {
         return read(Identifier.class, super::readIdentifier);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T method_29171(Codec<T> codec) throws IOException {
+        // TODO: Make the types here Object rather than class, so we can distinguish the types of Codec
+        try {
+            return read((Class<Codecked<T>>) (Class<?>) Codecked.class, () -> {
+                try {
+                    return new Codecked<>(codec, super.method_29171(codec));
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }).getValue();
+        } catch (UncheckedIOException e) {
+            throw e.getCause();
+        }
+    }
+
     @Override
     public short readUnsignedByte() {
         return read(UnsignedByte.class, () -> new UnsignedByte(super.readUnsignedByte())).get();
@@ -879,6 +897,22 @@ public final class TransformerByteBuf extends PacketByteBuf {
     @Override
     public void writeBlockHitResult(BlockHitResult val) {
         write(BlockHitResult.class, val, super::writeBlockHitResult);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> void method_29172(Codec<T> codec, T object) throws IOException {
+        try {
+            write(Codecked.class, new Codecked<>(codec, object), v -> {
+                try {
+                    super.method_29172(v.getCodec(), v.getValue());
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
+        } catch (UncheckedIOException e) {
+            throw e.getCause();
+        }
     }
 
     @Override

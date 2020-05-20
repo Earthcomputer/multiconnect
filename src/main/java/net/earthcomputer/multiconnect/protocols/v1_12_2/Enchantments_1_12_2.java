@@ -3,13 +3,15 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.RegistryKey;
 
 import static net.minecraft.enchantment.Enchantments.*;
 
 public class Enchantments_1_12_2 {
 
     private static void register(ISimpleRegistry<Enchantment> registry, Enchantment enchantment, int id, String name) {
-        registry.register(enchantment, id, new Identifier(name), false);
+        RegistryKey<Enchantment> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(name));
+        registry.register(enchantment, id, key, false);
     }
 
     public static void registerEnchantments(ISimpleRegistry<Enchantment> registry) {

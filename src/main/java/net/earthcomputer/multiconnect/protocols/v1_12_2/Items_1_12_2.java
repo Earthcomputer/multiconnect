@@ -16,6 +16,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import org.apache.commons.lang3.tuple.Pair;
 
 import static net.minecraft.item.Items.*;
@@ -167,11 +168,13 @@ public class Items_1_12_2 {
     }
 
     private static void register(ISimpleRegistry<Item> registry, Item item, int id, String name) {
-        registry.registerInPlace(item, id, new Identifier(name), false);
+        RegistryKey<Item> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(name));
+        registry.registerInPlace(item, id, key, false);
     }
 
     private static void registerBlockItem(ISimpleRegistry<Item> registry, Block block) {
-        registry.registerInPlace(Item.BLOCK_ITEMS.getOrDefault(block, AIR), Registry.BLOCK.getRawId(block), Registry.BLOCK.getId(block), false);
+        RegistryKey<Item> key = RegistryKey.getOrCreate(registry.getRegistryKey(), Registry.BLOCK.getId(block));
+        registry.registerInPlace(Item.BLOCK_ITEMS.getOrDefault(block, AIR), Registry.BLOCK.getRawId(block), key, false);
     }
 
     private static void registerAliases(ISimpleRegistry<Item> registry) {
@@ -186,7 +189,8 @@ public class Items_1_12_2 {
                     if (subItem == null)
                         subItem = Registry.ITEM.get(new Identifier(newName));
                     if (subItem != AIR && Registry.ITEM.getRawId(subItem) == 0) {
-                        registry.registerInPlace(subItem, meta << 16 | itemId, new Identifier(newName), false);
+                        RegistryKey<Item> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(newName));
+                        registry.registerInPlace(subItem, meta << 16 | itemId, key, false);
                         OLD_ITEM_TO_NEW.put(Pair.of(baseItem, meta), subItem);
                     }
                 }
@@ -198,7 +202,7 @@ public class Items_1_12_2 {
         for (EntityType entityType : Registry.ENTITY_TYPE) {
             SpawnEggItem item = SpawnEggItem.forEntity(entityType);
             if (item != null && item != BAT_SPAWN_EGG) {
-                registry.registerInPlace(item, nextHighBits << 16 | spawnEggId, REGISTRY_1_13.getId(item), false);
+                registry.registerInPlace(item, nextHighBits << 16 | spawnEggId, REGISTRY_1_13.getKey(item), false);
                 nextHighBits++;
             }
         }

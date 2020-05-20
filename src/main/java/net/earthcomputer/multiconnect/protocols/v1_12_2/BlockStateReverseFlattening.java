@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
-import com.mojang.datafixers.Dynamic;
+import com.mojang.serialization.Dynamic;
 import net.minecraft.datafixer.fix.BlockStateFlattening;
 import net.minecraft.util.Identifier;
 import org.apache.commons.lang3.tuple.Pair;

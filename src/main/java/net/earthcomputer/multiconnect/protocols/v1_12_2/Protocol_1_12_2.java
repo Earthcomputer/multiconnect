@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.google.common.base.Joiner;
-import com.mojang.datafixers.Dynamic;
+import com.mojang.serialization.Dynamic;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.*;
@@ -132,7 +132,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                     buf.readLongArray(new long[paletteSize * 64]); // chunk data
                     buf.readBytes(new byte[16 * 16 * 16 / 2]); // block light
                     assert MinecraftClient.getInstance().world != null;
-                    if (MinecraftClient.getInstance().world.method_27983().hasSkyLight())
+                    if (MinecraftClient.getInstance().world.getDimension().hasSkyLight())
                         buf.readBytes(new byte[16 * 16 * 16 / 2]); // sky light
                 }
             }
@@ -1112,7 +1112,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         if (block == Blocks.PISTON_HEAD && state.get(PistonHeadBlock.SHORT))
             return false;
-        if (state.getProperties().contains(Properties.WATERLOGGED) && state.get(Properties.WATERLOGGED))
+        if (state.getEntries().containsKey(Properties.WATERLOGGED) && state.get(Properties.WATERLOGGED))
             return false;
         if (block == Blocks.LEVER) {
             WallMountLocation face = state.get(LeverBlock.FACE);

@@ -27,7 +27,6 @@ import net.minecraft.entity.projectile.TridentEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.s2c.play.*;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvent;
@@ -237,7 +236,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
         registry.unregister(BlockEntityType.BEEHIVE);
     }
 
-    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
+    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
         registry.unregister(ParticleTypes.DRIPPING_HONEY);
         registry.unregister(ParticleTypes.FALLING_HONEY);
         registry.unregister(ParticleTypes.LANDING_HONEY);

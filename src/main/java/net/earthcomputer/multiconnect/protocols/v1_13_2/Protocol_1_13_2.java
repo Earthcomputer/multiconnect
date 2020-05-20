@@ -36,7 +36,6 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.network.packet.s2c.play.*;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.recipe.RecipeSerializer;
@@ -54,6 +53,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.registry.SimpleRegistry;
 import net.minecraft.village.VillagerData;
 import net.minecraft.village.VillagerProfession;
@@ -135,7 +135,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                     buf.readBytes(light);
                     lightData.setBlockLight(sectionY, light);
                     assert MinecraftClient.getInstance().world != null;
-                    if (MinecraftClient.getInstance().world.method_27983().hasSkyLight()) {
+                    if (MinecraftClient.getInstance().world.getDimension().hasSkyLight()) {
                         light = new byte[16 * 16 * 16 / 2];
                         buf.readBytes(light);
                         lightData.setSkyLight(sectionY, light);
@@ -712,7 +712,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(EntityType.CAT);
         int ocelotId = Registry.ENTITY_TYPE.getRawId(EntityType.OCELOT);
         registry.unregister(EntityType.OCELOT);
-        registry.register(EntityType.CAT, ocelotId, new Identifier("ocelot"));
+        RegistryKey<EntityType<?>> ocelotKey = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier("ocelot"));
+        registry.register(EntityType.CAT, ocelotId, ocelotKey);
         registry.unregister(EntityType.FOX);
         registry.unregister(EntityType.PANDA);
         registry.unregister(EntityType.PILLAGER);
@@ -734,7 +735,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(StatusEffects.HERO_OF_THE_VILLAGE);
     }
 
-    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
+    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
         registry.unregister(ParticleTypes.FALLING_LAVA);
         registry.unregister(ParticleTypes.LANDING_LAVA);
         registry.unregister(ParticleTypes.FALLING_WATER);
@@ -767,7 +768,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(RecipeSerializer.SMOKING);
         registry.unregister(RecipeSerializer.CAMPFIRE_COOKING);
         registry.unregister(RecipeSerializer.STONECUTTING);
-        registry.register(AddBannerPatternRecipe.SERIALIZER, registry.getNextId(), new Identifier("crafting_special_banneraddpattern"));
+        RegistryKey<RecipeSerializer<?>> bannerAddPatternKey = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier("crafting_special_banneraddpattern"));
+        registry.register(AddBannerPatternRecipe.SERIALIZER, registry.getNextId(), bannerAddPatternKey);
     }
 
     private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
@@ -1429,6 +1431,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
     public static void updateCameraPosition() {
         assert MinecraftClient.getInstance().getNetworkHandler() != null;
+        assert MinecraftClient.getInstance().player != null;
         ChunkSectionPos chunkPos = ChunkSectionPos.from(MinecraftClient.getInstance().player);
         MinecraftClient.getInstance().getNetworkHandler().onChunkRenderDistanceCenter(new ChunkRenderDistanceCenterS2CPacket(chunkPos.getSectionX(), chunkPos.getSectionZ()));
     }
