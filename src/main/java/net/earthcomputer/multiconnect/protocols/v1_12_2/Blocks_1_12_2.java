@@ -8,6 +8,7 @@ import net.minecraft.datafixer.fix.EntityTheRenameningBlock;
 import net.minecraft.item.Item;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.registry.SimpleRegistry;
 
 import static net.minecraft.block.Blocks.*;
@@ -47,7 +48,8 @@ public class Blocks_1_12_2 {
     }
 
     private static void register(ISimpleRegistry<Block> registry, Block block, int id, String name) {
-        registry.registerInPlace(block, id, new Identifier(name), false);
+        RegistryKey<Block> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(name));
+        registry.registerInPlace(block, id, key, false);
     }
 
     private static void registerAliases(ISimpleRegistry<Block> registry) {
@@ -60,89 +62,89 @@ public class Blocks_1_12_2 {
 
         for (int blockId = 1; blockId < 256; blockId++) {
             if (blockId == torchId) {
-                registry.registerInPlace(WALL_TORCH, 1 << 16 | blockId, new Identifier("wall_torch"), false);
+                register(registry, WALL_TORCH, 1 << 16 | blockId, "wall_torch");
             } else if (blockId == flowerPotId) {
-                registry.registerInPlace(POTTED_OAK_SAPLING, 1 << 16 | blockId, new Identifier("potted_oak_sapling"), false);
-                registry.registerInPlace(POTTED_SPRUCE_SAPLING, 2 << 16 | blockId, new Identifier("potted_spruce_sapling"), false);
-                registry.registerInPlace(POTTED_BIRCH_SAPLING, 3 << 16 | blockId, new Identifier("potted_birch_sapling"), false);
-                registry.registerInPlace(POTTED_JUNGLE_SAPLING, 4 << 16 | blockId, new Identifier("potted_jungle_sapling"), false);
-                registry.registerInPlace(POTTED_ACACIA_SAPLING, 5 << 16 | blockId, new Identifier("potted_acacia_sapling"), false);
-                registry.registerInPlace(POTTED_DARK_OAK_SAPLING, 6 << 16 | blockId, new Identifier("potted_dark_oak_sapling"), false);
-                registry.registerInPlace(POTTED_FERN, 7 << 16 | blockId, new Identifier("potted_fern"), false);
-                registry.registerInPlace(POTTED_DANDELION, 8 << 16 | blockId, new Identifier("potted_dandelion"), false);
-                registry.registerInPlace(POTTED_POPPY, 9 << 16 | blockId, new Identifier("potted_poppy"), false);
-                registry.registerInPlace(POTTED_BLUE_ORCHID, 10 << 16 | blockId, new Identifier("potted_blue_orchid"), false);
-                registry.registerInPlace(POTTED_ALLIUM, 11 << 16 | blockId, new Identifier("potted_allium"), false);
-                registry.registerInPlace(POTTED_AZURE_BLUET, 12 << 16 | blockId, new Identifier("potted_azure_bluet"), false);
-                registry.registerInPlace(POTTED_RED_TULIP, 13 << 16 | blockId, new Identifier("potted_red_tulip"), false);
-                registry.registerInPlace(POTTED_ORANGE_TULIP, 14 << 16 | blockId, new Identifier("potted_orange_tulip"), false);
-                registry.registerInPlace(POTTED_WHITE_TULIP, 15 << 16 | blockId, new Identifier("potted_white_tulip"), false);
-                registry.registerInPlace(POTTED_PINK_TULIP, 16 << 16 | flowerPotId, new Identifier("potted_pink_tulip"), false);
-                registry.registerInPlace(POTTED_OXEYE_DAISY, 17 << 16 | flowerPotId, new Identifier("potted_oxeye_daisy"), false);
-                registry.registerInPlace(POTTED_RED_MUSHROOM, 18 << 16 | flowerPotId, new Identifier("potted_red_mushroom"), false);
-                registry.registerInPlace(POTTED_BROWN_MUSHROOM, 19 << 16 | flowerPotId, new Identifier("potted_brown_mushroom"), false);
-                registry.registerInPlace(POTTED_DEAD_BUSH, 20 << 16 | flowerPotId, new Identifier("potted_dead_bush"), false);
-                registry.registerInPlace(POTTED_CACTUS, 21 << 16 | flowerPotId, new Identifier("potted_cactus"), false);
+                register(registry, POTTED_OAK_SAPLING, 1 << 16 | blockId, "potted_oak_sapling");
+                register(registry, POTTED_SPRUCE_SAPLING, 2 << 16 | blockId, "potted_spruce_sapling");
+                register(registry, POTTED_BIRCH_SAPLING, 3 << 16 | blockId, "potted_birch_sapling");
+                register(registry, POTTED_JUNGLE_SAPLING, 4 << 16 | blockId, "potted_jungle_sapling");
+                register(registry, POTTED_ACACIA_SAPLING, 5 << 16 | blockId, "potted_acacia_sapling");
+                register(registry, POTTED_DARK_OAK_SAPLING, 6 << 16 | blockId, "potted_dark_oak_sapling");
+                register(registry, POTTED_FERN, 7 << 16 | blockId, "potted_fern");
+                register(registry, POTTED_DANDELION, 8 << 16 | blockId, "potted_dandelion");
+                register(registry, POTTED_POPPY, 9 << 16 | blockId, "potted_poppy");
+                register(registry, POTTED_BLUE_ORCHID, 10 << 16 | blockId, "potted_blue_orchid");
+                register(registry, POTTED_ALLIUM, 11 << 16 | blockId, "potted_allium");
+                register(registry, POTTED_AZURE_BLUET, 12 << 16 | blockId, "potted_azure_bluet");
+                register(registry, POTTED_RED_TULIP, 13 << 16 | blockId, "potted_red_tulip");
+                register(registry, POTTED_ORANGE_TULIP, 14 << 16 | blockId, "potted_orange_tulip");
+                register(registry, POTTED_WHITE_TULIP, 15 << 16 | blockId, "potted_white_tulip");
+                register(registry, POTTED_PINK_TULIP, 16 << 16 | flowerPotId, "potted_pink_tulip");
+                register(registry, POTTED_OXEYE_DAISY, 17 << 16 | flowerPotId, "potted_oxeye_daisy");
+                register(registry, POTTED_RED_MUSHROOM, 18 << 16 | flowerPotId, "potted_red_mushroom");
+                register(registry, POTTED_BROWN_MUSHROOM, 19 << 16 | flowerPotId, "potted_brown_mushroom");
+                register(registry, POTTED_DEAD_BUSH, 20 << 16 | flowerPotId, "potted_dead_bush");
+                register(registry, POTTED_CACTUS, 21 << 16 | flowerPotId, "potted_cactus");
             } else if (blockId == skullId) {
-                registry.registerInPlace(SKELETON_WALL_SKULL, 1 << 16 | blockId, new Identifier("skeleton_wall_skull"), false);
-                registry.registerInPlace(WITHER_SKELETON_SKULL, 2 << 16 | blockId, new Identifier("wither_skeleton_skull"), false);
-                registry.registerInPlace(WITHER_SKELETON_WALL_SKULL, 3 << 16 | blockId, new Identifier("wither_skeleton_wall_skull"), false);
-                registry.registerInPlace(ZOMBIE_HEAD, 4 << 16 | blockId, new Identifier("zombie_head"), false);
-                registry.registerInPlace(ZOMBIE_WALL_HEAD, 5 << 16 | blockId, new Identifier("zombie_wall_head"), false);
-                registry.registerInPlace(PLAYER_HEAD, 6 << 16 | blockId, new Identifier("player_head"), false);
-                registry.registerInPlace(PLAYER_WALL_HEAD, 7 << 16 | blockId, new Identifier("player_wall_head"), false);
-                registry.registerInPlace(CREEPER_HEAD, 8 << 16 | blockId, new Identifier("creeper_head"), false);
-                registry.registerInPlace(CREEPER_WALL_HEAD, 9 << 16 | blockId, new Identifier("creeper_wall_head"), false);
-                registry.registerInPlace(DRAGON_HEAD, 10 << 16 | blockId, new Identifier("dragon_head"), false);
-                registry.registerInPlace(DRAGON_WALL_HEAD, 11 << 16 | blockId, new Identifier("dragon_wall_head"), false);
+                register(registry, SKELETON_WALL_SKULL, 1 << 16 | blockId, "skeleton_wall_skull");
+                register(registry, WITHER_SKELETON_SKULL, 2 << 16 | blockId, "wither_skeleton_skull");
+                register(registry, WITHER_SKELETON_WALL_SKULL, 3 << 16 | blockId, "wither_skeleton_wall_skull");
+                register(registry, ZOMBIE_HEAD, 4 << 16 | blockId, "zombie_head");
+                register(registry, ZOMBIE_WALL_HEAD, 5 << 16 | blockId, "zombie_wall_head");
+                register(registry, PLAYER_HEAD, 6 << 16 | blockId, "player_head");
+                register(registry, PLAYER_WALL_HEAD, 7 << 16 | blockId, "player_wall_head");
+                register(registry, CREEPER_HEAD, 8 << 16 | blockId, "creeper_head");
+                register(registry, CREEPER_WALL_HEAD, 9 << 16 | blockId, "creeper_wall_head");
+                register(registry, DRAGON_HEAD, 10 << 16 | blockId, "dragon_head");
+                register(registry, DRAGON_WALL_HEAD, 11 << 16 | blockId, "dragon_wall_head");
             } else if (blockId == bedId) {
-                registry.registerInPlace(ORANGE_BED, 1 << 16 | blockId, new Identifier("orange_bed"), false);
-                registry.registerInPlace(MAGENTA_BED, 2 << 16 | blockId, new Identifier("magenta_bed"), false);
-                registry.registerInPlace(LIGHT_BLUE_BED, 3 << 16 | blockId, new Identifier("light_blue_bed"), false);
-                registry.registerInPlace(YELLOW_BED, 4 << 16 | blockId, new Identifier("yellow_bed"), false);
-                registry.registerInPlace(LIME_BED, 5 << 16 | blockId, new Identifier("lime_bed"), false);
-                registry.registerInPlace(PINK_BED, 6 << 16 | blockId, new Identifier("pink_bed"), false);
-                registry.registerInPlace(GRAY_BED, 7 << 16 | blockId, new Identifier("gray_bed"), false);
-                registry.registerInPlace(LIGHT_GRAY_BED, 8 << 16 | blockId, new Identifier("light_gray_bed"), false);
-                registry.registerInPlace(CYAN_BED, 9 << 16 | blockId, new Identifier("cyan_bed"), false);
-                registry.registerInPlace(PURPLE_BED, 10 << 16 | blockId, new Identifier("purple_bed"), false);
-                registry.registerInPlace(BLUE_BED, 11 << 16 | blockId, new Identifier("blue_bed"), false);
-                registry.registerInPlace(BROWN_BED, 12 << 16 | blockId, new Identifier("brown_bed"), false);
-                registry.registerInPlace(GREEN_BED, 13 << 16 | blockId, new Identifier("green_bed"), false);
-                registry.registerInPlace(RED_BED, 14 << 16 | blockId, new Identifier("red_bed"), false);
-                registry.registerInPlace(BLACK_BED, 15 << 16 | blockId, new Identifier("black_bed"), false);
+                register(registry, ORANGE_BED, 1 << 16 | blockId, "orange_bed");
+                register(registry, MAGENTA_BED, 2 << 16 | blockId, "magenta_bed");
+                register(registry, LIGHT_BLUE_BED, 3 << 16 | blockId, "light_blue_bed");
+                register(registry, YELLOW_BED, 4 << 16 | blockId, "yellow_bed");
+                register(registry, LIME_BED, 5 << 16 | blockId, "lime_bed");
+                register(registry, PINK_BED, 6 << 16 | blockId, "pink_bed");
+                register(registry, GRAY_BED, 7 << 16 | blockId, "gray_bed");
+                register(registry, LIGHT_GRAY_BED, 8 << 16 | blockId, "light_gray_bed");
+                register(registry, CYAN_BED, 9 << 16 | blockId, "cyan_bed");
+                register(registry, PURPLE_BED, 10 << 16 | blockId, "purple_bed");
+                register(registry, BLUE_BED, 11 << 16 | blockId, "blue_bed");
+                register(registry, BROWN_BED, 12 << 16 | blockId, "brown_bed");
+                register(registry, GREEN_BED, 13 << 16 | blockId, "green_bed");
+                register(registry, RED_BED, 14 << 16 | blockId, "red_bed");
+                register(registry, BLACK_BED, 15 << 16 | blockId, "black_bed");
             } else if (blockId == bannerId) {
-                registry.registerInPlace(ORANGE_BANNER, 1 << 16 | blockId, new Identifier("orange_banner"), false);
-                registry.registerInPlace(MAGENTA_BANNER, 2 << 16 | blockId, new Identifier("magenta_banner"), false);
-                registry.registerInPlace(LIGHT_BLUE_BANNER, 3 << 16 | blockId, new Identifier("light_blue_banner"), false);
-                registry.registerInPlace(YELLOW_BANNER, 4 << 16 | blockId, new Identifier("yellow_banner"), false);
-                registry.registerInPlace(LIME_BANNER, 5 << 16 | blockId, new Identifier("lime_banner"), false);
-                registry.registerInPlace(PINK_BANNER, 6 << 16 | blockId, new Identifier("pink_banner"), false);
-                registry.registerInPlace(GRAY_BANNER, 7 << 16 | blockId, new Identifier("gray_banner"), false);
-                registry.registerInPlace(LIGHT_GRAY_BANNER, 8 << 16 | blockId, new Identifier("light_gray_banner"), false);
-                registry.registerInPlace(CYAN_BANNER, 9 << 16 | blockId, new Identifier("cyan_banner"), false);
-                registry.registerInPlace(PURPLE_BANNER, 10 << 16 | blockId, new Identifier("purple_banner"), false);
-                registry.registerInPlace(BLUE_BANNER, 11 << 16 | blockId, new Identifier("blue_banner"), false);
-                registry.registerInPlace(BROWN_BANNER, 12 << 16 | blockId, new Identifier("brown_banner"), false);
-                registry.registerInPlace(GREEN_BANNER, 13 << 16 | blockId, new Identifier("green_banner"), false);
-                registry.registerInPlace(RED_BANNER, 14 << 16 | blockId, new Identifier("red_banner"), false);
-                registry.registerInPlace(WHITE_BANNER, 15 << 16 | blockId, new Identifier("black_banner"), false);
+                register(registry, ORANGE_BANNER, 1 << 16 | blockId, "orange_banner");
+                register(registry, MAGENTA_BANNER, 2 << 16 | blockId, "magenta_banner");
+                register(registry, LIGHT_BLUE_BANNER, 3 << 16 | blockId, "light_blue_banner");
+                register(registry, YELLOW_BANNER, 4 << 16 | blockId, "yellow_banner");
+                register(registry, LIME_BANNER, 5 << 16 | blockId, "lime_banner");
+                register(registry, PINK_BANNER, 6 << 16 | blockId, "pink_banner");
+                register(registry, GRAY_BANNER, 7 << 16 | blockId, "gray_banner");
+                register(registry, LIGHT_GRAY_BANNER, 8 << 16 | blockId, "light_gray_banner");
+                register(registry, CYAN_BANNER, 9 << 16 | blockId, "cyan_banner");
+                register(registry, PURPLE_BANNER, 10 << 16 | blockId, "purple_banner");
+                register(registry, BLUE_BANNER, 11 << 16 | blockId, "blue_banner");
+                register(registry, BROWN_BANNER, 12 << 16 | blockId, "brown_banner");
+                register(registry, GREEN_BANNER, 13 << 16 | blockId, "green_banner");
+                register(registry, RED_BANNER, 14 << 16 | blockId, "red_banner");
+                register(registry, WHITE_BANNER, 15 << 16 | blockId, "black_banner");
             } else if (blockId == wallBannerId) {
-                registry.registerInPlace(ORANGE_WALL_BANNER, 1 << 16 | blockId, new Identifier("orange_wall_banner"), false);
-                registry.registerInPlace(MAGENTA_WALL_BANNER, 2 << 16 | blockId, new Identifier("magenta_wall_banner"), false);
-                registry.registerInPlace(LIGHT_BLUE_WALL_BANNER, 3 << 16 | blockId, new Identifier("light_blue_wall_banner"), false);
-                registry.registerInPlace(YELLOW_WALL_BANNER, 4 << 16 | blockId, new Identifier("yellow_wall_banner"), false);
-                registry.registerInPlace(LIME_WALL_BANNER, 5 << 16 | blockId, new Identifier("lime_wall_banner"), false);
-                registry.registerInPlace(PINK_WALL_BANNER, 6 << 16 | blockId, new Identifier("pink_wall_banner"), false);
-                registry.registerInPlace(GRAY_WALL_BANNER, 7 << 16 | blockId, new Identifier("gray_wall_banner"), false);
-                registry.registerInPlace(LIGHT_GRAY_WALL_BANNER, 8 << 16 | blockId, new Identifier("light_gray_wall_banner"), false);
-                registry.registerInPlace(CYAN_WALL_BANNER, 9 << 16 | blockId, new Identifier("cyan_wall_banner"), false);
-                registry.registerInPlace(PURPLE_WALL_BANNER, 10 << 16 | blockId, new Identifier("purple_wall_banner"), false);
-                registry.registerInPlace(BLUE_WALL_BANNER, 11 << 16 | blockId, new Identifier("blue_wall_banner"), false);
-                registry.registerInPlace(BROWN_WALL_BANNER, 12 << 16 | blockId, new Identifier("brown_wall_banner"), false);
-                registry.registerInPlace(GREEN_WALL_BANNER, 13 << 16 | blockId, new Identifier("green_wall_banner"), false);
-                registry.registerInPlace(RED_WALL_BANNER, 14 << 16 | blockId, new Identifier("red_wall_banner"), false);
-                registry.registerInPlace(WHITE_WALL_BANNER, 15 << 16 | blockId, new Identifier("black_wall_banner"), false);
+                register(registry, ORANGE_WALL_BANNER, 1 << 16 | blockId, "orange_wall_banner");
+                register(registry, MAGENTA_WALL_BANNER, 2 << 16 | blockId, "magenta_wall_banner");
+                register(registry, LIGHT_BLUE_WALL_BANNER, 3 << 16 | blockId, "light_blue_wall_banner");
+                register(registry, YELLOW_WALL_BANNER, 4 << 16 | blockId, "yellow_wall_banner");
+                register(registry, LIME_WALL_BANNER, 5 << 16 | blockId, "lime_wall_banner");
+                register(registry, PINK_WALL_BANNER, 6 << 16 | blockId, "pink_wall_banner");
+                register(registry, GRAY_WALL_BANNER, 7 << 16 | blockId, "gray_wall_banner");
+                register(registry, LIGHT_GRAY_WALL_BANNER, 8 << 16 | blockId, "light_gray_wall_banner");
+                register(registry, CYAN_WALL_BANNER, 9 << 16 | blockId, "cyan_wall_banner");
+                register(registry, PURPLE_WALL_BANNER, 10 << 16 | blockId, "purple_wall_banner");
+                register(registry, BLUE_WALL_BANNER, 11 << 16 | blockId, "blue_wall_banner");
+                register(registry, BROWN_WALL_BANNER, 12 << 16 | blockId, "brown_wall_banner");
+                register(registry, GREEN_WALL_BANNER, 13 << 16 | blockId, "green_wall_banner");
+                register(registry, RED_WALL_BANNER, 14 << 16 | blockId, "red_wall_banner");
+                register(registry, WHITE_WALL_BANNER, 15 << 16 | blockId, "black_wall_banner");
             } else {
                 for (int meta = 1; meta < 16; meta++) {
                     String fixedName = BlockStateFlattening.lookupStateBlock(blockId << 4 | meta);
@@ -153,7 +155,8 @@ public class Blocks_1_12_2 {
                     if (subBlock != AIR && Registry.BLOCK.getRawId(subBlock) == 0) {
                         while (Registry.BLOCK.get(subName) != Blocks.AIR)
                             subName = new Identifier(subName.getNamespace(), subName.getPath() + "_");
-                        registry.registerInPlace(subBlock, meta << 16 | blockId, subName, false);
+                        RegistryKey<Block> key = RegistryKey.getOrCreate(registry.getRegistryKey(), subName);
+                        registry.registerInPlace(subBlock, meta << 16 | blockId, key, false);
                     }
                 }
             }

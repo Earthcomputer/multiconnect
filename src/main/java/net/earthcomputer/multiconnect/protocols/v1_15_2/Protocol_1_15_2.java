@@ -6,10 +6,12 @@ import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAttributesFixAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
 import net.earthcomputer.multiconnect.transformer.ChunkData;
+import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
-import net.minecraft.class_5196;
+import net.minecraft.class_5318;
+import net.minecraft.datafixer.fix.BitStorageAlignFix;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -22,7 +24,6 @@ import net.minecraft.network.packet.c2s.play.JigsawGeneratingC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateJigsawC2SPacket;
 import net.minecraft.network.packet.s2c.login.LoginSuccessS2CPacket;
 import net.minecraft.network.packet.s2c.play.*;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvent;
@@ -31,12 +32,14 @@ import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.ItemTags;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.util.dynamic.DynamicSerializableUuid;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.dimension.DimensionType;
 
 import java.util.List;
 import java.util.UUID;
@@ -58,7 +61,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
                     } else {
                         buf.disablePassthroughMode();
                         long[] oldData = buf.readLongArray(new long[paletteSize * 64]);
-                        buf.pendingRead(long[].class, class_5196.method_27288(4096, paletteSize, oldData));
+                        buf.pendingRead(long[].class, BitStorageAlignFix.method_27288(4096, paletteSize, oldData));
                         buf.enablePassthroughMode();
                     }
                 }
@@ -78,7 +81,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
                 for (String key : heightmaps.getKeys()) {
                     Tag tag = heightmaps.get(key);
                     if (tag instanceof LongArrayTag) {
-                        heightmaps.putLongArray(key, class_5196.method_27288(256, 9, ((LongArrayTag) tag).getLongArray()));
+                        heightmaps.putLongArray(key, BitStorageAlignFix.method_27288(256, 9, ((LongArrayTag) tag).getLongArray()));
                     }
                 }
             }
@@ -98,7 +101,13 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.enablePassthroughMode();
             buf.readInt(); // player id
             buf.readUnsignedByte(); // game mode
-            buf.readInt(); // dimension type
+            buf.disablePassthroughMode();
+            int dimensionId = buf.readInt();
+            Identifier dimensionName = dimensionIdToName(dimensionId);
+            class_5318.class_5319 dimensionRegistryThingy = class_5318.method_29117();
+            buf.pendingRead(Codecked.class, new Codecked<>(class_5318.class_5319.field_25119, dimensionRegistryThingy));
+            buf.pendingRead(Identifier.class, dimensionName);
+            buf.enablePassthroughMode();
             buf.readLong(); // sah256 seed
             buf.readUnsignedByte(); // max players
             buf.disablePassthroughMode();
@@ -134,8 +143,10 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
+            int dimensionId = buf.readInt();
+            Identifier dimensionName = dimensionIdToName(dimensionId);
+            buf.pendingRead(Identifier.class, dimensionName);
             buf.enablePassthroughMode();
-            buf.readInt(); // dimension id
             buf.readLong(); // sha256 seed
             buf.readUnsignedByte(); // game mode
             buf.disablePassthroughMode();
@@ -143,6 +154,14 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.pendingRead(Boolean.class, "debug_all_block_states".equalsIgnoreCase(genType)); // debug mode
             buf.pendingRead(Boolean.class, "flat".equalsIgnoreCase(genType)); // flat world
             buf.pendingRead(Boolean.class, Boolean.TRUE); // keep attributes
+            buf.applyPendingReads();
+        });
+        ProtocolRegistry.registerInboundTranslator(GameMessageS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readText(); // message
+            buf.readByte(); // type
+            buf.disablePassthroughMode();
+            buf.pendingRead(UUID.class, Util.field_25140);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerOutboundTranslator(UpdateJigsawC2SPacket.class, buf -> {
@@ -153,6 +172,18 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.passthroughWrite(String.class); // final state
             buf.skipWrite(String.class); // joint type
         });
+    }
+
+    private static Identifier dimensionIdToName(int dimensionId) {
+        switch (dimensionId) {
+            case 1:
+                return DimensionType.THE_NETHER_REGISTRY_KEY.getValueId();
+            case 2:
+                return DimensionType.THE_END_REGISTRY_KEY.getValueId();
+            case 0:
+            default:
+                return DimensionType.OVERWORLD_REGISTRY_KEY.getValueId();
+        }
     }
 
     public static void skipChunkSection(PacketByteBuf buf) {
@@ -351,7 +382,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Biomes.BASALT_DELTAS);
     }
 
-    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<? extends ParticleEffect>> registry) {
+    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
         registry.unregister(ParticleTypes.ASH);
         registry.unregister(ParticleTypes.CRIMSON_SPORE);
         registry.unregister(ParticleTypes.SOUL_FIRE_FLAME);
@@ -632,6 +663,14 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.MUSIC_NETHER_SOUL_SAND_VALLEY);
         registry.unregister(SoundEvents.MUSIC_NETHER_CRIMSON_FOREST);
         registry.unregister(SoundEvents.MUSIC_NETHER_WARPED_FOREST);
+
+        registry.unregister(SoundEvents.ENTITY_DONKEY_EAT);
+        registry.unregister(SoundEvents.ENTITY_FOX_TELEPORT);
+        registry.unregister(SoundEvents.ENTITY_MULE_ANGRY);
+        registry.unregister(SoundEvents.ENTITY_MULE_EAT);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_HOGLIN);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_PIGLIN);
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_ZOGLIN);
 
         insertAfter(registry, SoundEvents.MUSIC_MENU, SoundEvents.MUSIC_NETHER_NETHER_WASTES, "music.nether");
 

@@ -3,11 +3,13 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.minecraft.entity.EntityType;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.RegistryKey;
 
 public class Entities_1_12_2 {
 
     private static void register(ISimpleRegistry<EntityType<?>> registry, EntityType<?> entity, int id, String name, String oldName) {
-        registry.register(entity, id, new Identifier(name), false);
+        RegistryKey<EntityType<?>> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(name));
+        registry.register(entity, id, key, false);
     }
 
     public static void registerEntities(ISimpleRegistry<EntityType<?>> registry) {

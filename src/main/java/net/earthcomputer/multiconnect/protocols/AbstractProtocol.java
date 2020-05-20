@@ -22,13 +22,13 @@ import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
-import net.minecraft.state.property.Property;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.collection.Int2ObjectBiMap;
 import net.minecraft.util.registry.DefaultedRegistry;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.registry.SimpleRegistry;
 
 import java.util.*;
@@ -91,7 +91,8 @@ public abstract class AbstractProtocol {
 
     @SuppressWarnings("unchecked")
     public static <T> void insertAfter(ISimpleRegistry<T> registry, T element, T toInsert, String id) {
-        registry.register(toInsert, ((SimpleRegistry<T>) registry).getRawId(element) + 1, new Identifier(id));
+        RegistryKey<T> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(id));
+        registry.register(toInsert, ((SimpleRegistry<T>) registry).getRawId(element) + 1, key);
     }
 
     protected static void remove(List<PacketInfo<?>> list, Class<? extends Packet<?>> element) {
@@ -136,8 +137,10 @@ public abstract class AbstractProtocol {
         DefaultRegistry<T> defaultRegistry = (DefaultRegistry<T>) DefaultRegistry.DEFAULT_REGISTRIES.get(registry);
         if (defaultRegistry == null) return;
         for (Map.Entry<Identifier, T> entry : defaultRegistry.defaultEntries.entrySet()) {
-            if (registry.getId(entry.getValue()) == null)
-                iregistry.register(entry.getValue(), iregistry.getNextId(), entry.getKey(), false);
+            if (registry.getId(entry.getValue()) == null) {
+                RegistryKey<T> key = RegistryKey.getOrCreate(iregistry.getRegistryKey(), entry.getKey());
+                iregistry.register(entry.getValue(), iregistry.getNextId(), key, false);
+            }
         }
     }
 
@@ -210,12 +213,13 @@ public abstract class AbstractProtocol {
     public static <T> void rename(ISimpleRegistry<T> registry, T value, String newName) {
         int id = ((SimpleRegistry<T>) registry).getRawId(value);
         registry.purge(value);
-        registry.registerInPlace(value, id, new Identifier(newName));
+        RegistryKey<T> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(newName));
+        registry.registerInPlace(value, id, key);
     }
 
     @SuppressWarnings("unchecked")
     public static <T> void reregister(ISimpleRegistry<T> registry, T value) {
-        if (registry.getEntries().containsValue(value))
+        if (registry.getEntriesById().containsValue(value))
             return;
 
         //noinspection SuspiciousMethodCalls
@@ -223,7 +227,7 @@ public abstract class AbstractProtocol {
         T prevValue = null;
         for (int id = defaultRegistry.defaultIndexedEntries.getId(value) - 1; id >= 0; id--) {
             T val = defaultRegistry.defaultIndexedEntries.get(id);
-            if (registry.getEntries().containsValue(val)) {
+            if (registry.getEntriesById().containsValue(val)) {
                 prevValue = val;
                 break;
             }
@@ -237,11 +241,11 @@ public abstract class AbstractProtocol {
             BlockState state = Block.STATE_IDS.get(id);
             assert state != null;
             StringBuilder sb = new StringBuilder().append(id).append(": ").append(Registry.BLOCK.getId(state.getBlock()));
-            if (!state.getProperties().isEmpty()) {
+            if (!state.getEntries().isEmpty()) {
                 sb.append("[")
-                        .append(state.getProperties().stream()
-                                .sorted(Comparator.comparing(Property::getName))
-                                .map(p -> p.getName() + "=" + Util.getValueAsString(p, state.get(p)))
+                        .append(state.getEntries().entrySet().stream()
+                                .sorted(Comparator.comparing(entry -> entry.getKey().getName()))
+                                .map(entry -> entry.getKey().getName() + "=" + Util.getValueAsString(entry.getKey(), entry.getValue()))
                                 .collect(Collectors.joining(",")))
                         .append("]");
             }
@@ -289,8 +293,8 @@ public abstract class AbstractProtocol {
             @SuppressWarnings("unchecked") ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
             iregistry.getIndexedEntries().clear();
             defaultIndexedEntries.iterator().forEachRemaining(t -> iregistry.getIndexedEntries().put(t, defaultIndexedEntries.getId(t)));
-            iregistry.getEntries().clear();
-            iregistry.getEntries().putAll(defaultEntries);
+            iregistry.getEntriesById().clear();
+            iregistry.getEntriesById().putAll(defaultEntries);
             iregistry.setNextId(defaultNextId);
         }
 

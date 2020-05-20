@@ -3,6 +3,8 @@
   "package": "net.earthcomputer.multiconnect.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "DimensionTypeAccessor",
+    "RegistryAccessor",
     "TagContainerAccessor"
   ],
   "client": [

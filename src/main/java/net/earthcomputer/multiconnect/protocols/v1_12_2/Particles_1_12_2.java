@@ -22,6 +22,7 @@ import net.minecraft.particle.ParticleType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.registry.RegistryKey;
 import org.lwjgl.opengl.GL11;
 
 import static net.minecraft.particle.ParticleTypes.*;
@@ -89,7 +90,8 @@ public class Particles_1_12_2 {
     }
 
     private static void register(ISimpleRegistry<ParticleType<?>> registry, ParticleType<?> particle, int id, String name) {
-        registry.register(particle, id, new Identifier(name), false);
+        RegistryKey<ParticleType<?>> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(name));
+        registry.register(particle, id, key, false);
     }
 
     public static void registerParticles(ISimpleRegistry<ParticleType<?>> registry) {

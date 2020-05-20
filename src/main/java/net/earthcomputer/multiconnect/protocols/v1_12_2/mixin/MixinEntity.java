@@ -43,12 +43,12 @@ public abstract class MixinEntity {
             return;
 
         Box box = getBoundingBox().expand(0, -0.4, 0).contract(0.001);
-        int minX = MathHelper.floor(box.x1);
-        int maxX = MathHelper.ceil(box.x2);
-        int minY = MathHelper.floor(box.y1);
-        int maxY = MathHelper.ceil(box.y2);
-        int minZ = MathHelper.floor(box.z1);
-        int maxZ = MathHelper.ceil(box.z2);
+        int minX = MathHelper.floor(box.minX);
+        int maxX = MathHelper.ceil(box.maxX);
+        int minY = MathHelper.floor(box.minY);
+        int maxY = MathHelper.ceil(box.maxY);
+        int minZ = MathHelper.floor(box.minZ);
+        int maxZ = MathHelper.ceil(box.maxZ);
 
         if (!world.isRegionLoaded(minX, minY, minZ, maxX, maxY, maxZ))
             ci.setReturnValue(false);
@@ -66,8 +66,8 @@ public abstract class MixinEntity {
                     FluidState state = world.getFluidState(mutable);
                     if (state.matches(fluidTag)) {
                         double height = y + state.getHeight(world, mutable);
-                        if (height >= box.y1 - 0.4)
-                            waterHeight = Math.max(height - box.y1 + 0.4, waterHeight);
+                        if (height >= box.minY - 0.4)
+                            waterHeight = Math.max(height - box.minY + 0.4, waterHeight);
                         if (y >= minY && maxY >= height) {
                             foundFluid = true;
                             pushVec = pushVec.add(state.getVelocity(world, mutable));

@@ -22,7 +22,7 @@ public abstract class MixinEntity {
     @Inject(method = "getVelocityAffectingPos", at = @At("HEAD"), cancellable = true)
     private void onGetVelocityAffectingPos(CallbackInfoReturnable<BlockPos> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_14_4) {
-            ci.setReturnValue(new BlockPos(pos.x, getBoundingBox().y1 - 1, pos.z));
+            ci.setReturnValue(new BlockPos(pos.x, getBoundingBox().minY - 1, pos.z));
         }
     }
 
