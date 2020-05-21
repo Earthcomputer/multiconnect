@@ -7,17 +7,20 @@ import net.earthcomputer.multiconnect.impl.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_12.PlaceRecipeC2SPacket_1_12;
 import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.RecipeInfo;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.ConcretePowderBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.mob.IllagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.network.Packet;
@@ -215,5 +218,17 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
             return false;
         }
         return super.acceptEntityData(clazz, data);
+    }
+
+    @Override
+    public List<RecipeInfo<?>> getCraftingRecipes() {
+        List<RecipeInfo<?>> recipes = super.getCraftingRecipes();
+        recipes.removeIf(recipe -> {
+            if (recipe.getOutput().getItem() instanceof BlockItem && ((BlockItem) recipe.getOutput().getItem()).getBlock() instanceof ConcretePowderBlock) {
+                return true;
+            }
+            return false;
+        });
+        return recipes;
     }
 }
