@@ -5,6 +5,7 @@ import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
 import net.earthcomputer.multiconnect.impl.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_11_2.mixin.PlayerEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12.PlaceRecipeC2SPacket_1_12;
 import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.RecipeInfo;
@@ -214,6 +215,9 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
 
     @Override
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+        if (clazz == PlayerEntity.class && (data == PlayerEntityAccessor.getLeftShoulderEntity() || data == PlayerEntityAccessor.getRightShoulderEntity())) {
+            return false;
+        }
         if (clazz == IllagerEntity.class && data == Protocol_1_13_2.OLD_ILLAGER_FLAGS) {
             return false;
         }

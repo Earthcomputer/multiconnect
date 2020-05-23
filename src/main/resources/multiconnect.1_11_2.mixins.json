@@ -8,6 +8,7 @@
     "MixinMinecraftClient",
     "MixinPlayerScreenHandler",
     "MixinScreenHandler",
+    "PlayerEntityAccessor",
     "SlotAccessor"
   ],
   "client": [
