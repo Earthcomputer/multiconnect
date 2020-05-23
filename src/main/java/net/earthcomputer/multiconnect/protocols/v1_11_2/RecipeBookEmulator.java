@@ -3,12 +3,16 @@ package net.earthcomputer.multiconnect.protocols.v1_11_2;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.mixin.SlotAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12.PlaceRecipeC2SPacket_1_12;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.ClickWindowC2SPacket;
 import net.minecraft.network.packet.s2c.play.ConfirmGuiActionS2CPacket;
+import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
+import net.minecraft.recipe.RecipeType;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
@@ -26,6 +30,15 @@ public class RecipeBookEmulator {
 
     public RecipeBookEmulator(ScreenHandler screenHandler) {
         this.screenHandler = screenHandler;
+    }
+
+    public static void setCraftingResultSlot(int syncId, CraftingInventory craftingInv) {
+        ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+        assert networkHandler != null;
+        ItemStack result = networkHandler.getRecipeManager().getFirstMatch(RecipeType.CRAFTING, craftingInv, MinecraftClient.getInstance().world)
+                .map(recipe -> recipe.craft(craftingInv))
+                .orElse(ItemStack.EMPTY);
+        networkHandler.onScreenHandlerSlotUpdate(new ScreenHandlerSlotUpdateS2CPacket(syncId, 0, result));
     }
 
     public void emulateRecipePlacement(PlaceRecipeC2SPacket_1_12 packet) {
