@@ -6,7 +6,6 @@
   ],
   "client": [
     "MixinJigsawBlockScreen",
-    "MixinSplitterHandler",
     "RenameItemStackAttributesFixAccessor"
   ],
   "injectors": {
