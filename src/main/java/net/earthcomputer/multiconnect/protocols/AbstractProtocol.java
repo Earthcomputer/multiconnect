@@ -95,7 +95,7 @@ public abstract class AbstractProtocol {
 
     @SuppressWarnings("unchecked")
     public static <T> void insertAfter(ISimpleRegistry<T> registry, T element, T toInsert, String id, boolean inPlace) {
-        RegistryKey<T> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(id));
+        RegistryKey<T> key = RegistryKey.of(registry.getRegistryKey(), new Identifier(id));
         int numericalId = ((SimpleRegistry<T>) registry).getRawId(element) + 1;
         if (inPlace) {
             registry.registerInPlace(toInsert, numericalId, key);
@@ -147,7 +147,7 @@ public abstract class AbstractProtocol {
         if (defaultRegistry == null) return;
         for (Map.Entry<Identifier, T> entry : defaultRegistry.defaultEntries.entrySet()) {
             if (registry.getId(entry.getValue()) == null) {
-                RegistryKey<T> key = RegistryKey.getOrCreate(iregistry.getRegistryKey(), entry.getKey());
+                RegistryKey<T> key = RegistryKey.of(iregistry.getRegistryKey(), entry.getKey());
                 iregistry.register(entry.getValue(), iregistry.getNextId(), key, false);
             }
         }
@@ -222,7 +222,7 @@ public abstract class AbstractProtocol {
     public static <T> void rename(ISimpleRegistry<T> registry, T value, String newName) {
         int id = ((SimpleRegistry<T>) registry).getRawId(value);
         registry.purge(value);
-        RegistryKey<T> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(newName));
+        RegistryKey<T> key = RegistryKey.of(registry.getRegistryKey(), new Identifier(newName));
         registry.registerInPlace(value, id, key);
     }
 

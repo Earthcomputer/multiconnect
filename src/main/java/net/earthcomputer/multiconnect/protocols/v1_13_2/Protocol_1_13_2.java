@@ -712,7 +712,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(EntityType.CAT);
         int ocelotId = Registry.ENTITY_TYPE.getRawId(EntityType.OCELOT);
         registry.unregister(EntityType.OCELOT);
-        RegistryKey<EntityType<?>> ocelotKey = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier("ocelot"));
+        RegistryKey<EntityType<?>> ocelotKey = RegistryKey.of(registry.getRegistryKey(), new Identifier("ocelot"));
         registry.register(EntityType.CAT, ocelotId, ocelotKey);
         registry.unregister(EntityType.FOX);
         registry.unregister(EntityType.PANDA);
@@ -768,7 +768,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(RecipeSerializer.SMOKING);
         registry.unregister(RecipeSerializer.CAMPFIRE_COOKING);
         registry.unregister(RecipeSerializer.STONECUTTING);
-        RegistryKey<RecipeSerializer<?>> bannerAddPatternKey = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier("crafting_special_banneraddpattern"));
+        RegistryKey<RecipeSerializer<?>> bannerAddPatternKey = RegistryKey.of(registry.getRegistryKey(), new Identifier("crafting_special_banneraddpattern"));
         registry.register(AddBannerPatternRecipe.SERIALIZER, registry.getNextId(), bannerAddPatternKey);
     }
 

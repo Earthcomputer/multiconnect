@@ -168,12 +168,12 @@ public class Items_1_12_2 {
     }
 
     private static void register(ISimpleRegistry<Item> registry, Item item, int id, String name) {
-        RegistryKey<Item> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(name));
+        RegistryKey<Item> key = RegistryKey.of(registry.getRegistryKey(), new Identifier(name));
         registry.registerInPlace(item, id, key, false);
     }
 
     private static void registerBlockItem(ISimpleRegistry<Item> registry, Block block) {
-        RegistryKey<Item> key = RegistryKey.getOrCreate(registry.getRegistryKey(), Registry.BLOCK.getId(block));
+        RegistryKey<Item> key = RegistryKey.of(registry.getRegistryKey(), Registry.BLOCK.getId(block));
         registry.registerInPlace(Item.BLOCK_ITEMS.getOrDefault(block, AIR), Registry.BLOCK.getRawId(block), key, false);
     }
 
@@ -189,7 +189,7 @@ public class Items_1_12_2 {
                     if (subItem == null)
                         subItem = Registry.ITEM.get(new Identifier(newName));
                     if (subItem != AIR && Registry.ITEM.getRawId(subItem) == 0) {
-                        RegistryKey<Item> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(newName));
+                        RegistryKey<Item> key = RegistryKey.of(registry.getRegistryKey(), new Identifier(newName));
                         registry.registerInPlace(subItem, meta << 16 | itemId, key, false);
                         OLD_ITEM_TO_NEW.put(Pair.of(baseItem, meta), subItem);
                     }

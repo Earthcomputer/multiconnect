@@ -10,7 +10,7 @@ import static net.minecraft.enchantment.Enchantments.*;
 public class Enchantments_1_12_2 {
 
     private static void register(ISimpleRegistry<Enchantment> registry, Enchantment enchantment, int id, String name) {
-        RegistryKey<Enchantment> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(name));
+        RegistryKey<Enchantment> key = RegistryKey.of(registry.getRegistryKey(), new Identifier(name));
         registry.register(enchantment, id, key, false);
     }
 

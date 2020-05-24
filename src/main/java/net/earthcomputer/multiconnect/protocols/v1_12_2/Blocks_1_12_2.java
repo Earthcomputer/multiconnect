@@ -48,7 +48,7 @@ public class Blocks_1_12_2 {
     }
 
     private static void register(ISimpleRegistry<Block> registry, Block block, int id, String name) {
-        RegistryKey<Block> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(name));
+        RegistryKey<Block> key = RegistryKey.of(registry.getRegistryKey(), new Identifier(name));
         registry.registerInPlace(block, id, key, false);
     }
 
@@ -155,7 +155,7 @@ public class Blocks_1_12_2 {
                     if (subBlock != AIR && Registry.BLOCK.getRawId(subBlock) == 0) {
                         while (Registry.BLOCK.get(subName) != Blocks.AIR)
                             subName = new Identifier(subName.getNamespace(), subName.getPath() + "_");
-                        RegistryKey<Block> key = RegistryKey.getOrCreate(registry.getRegistryKey(), subName);
+                        RegistryKey<Block> key = RegistryKey.of(registry.getRegistryKey(), subName);
                         registry.registerInPlace(subBlock, meta << 16 | blockId, key, false);
                     }
                 }

@@ -10,7 +10,6 @@ import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
-import net.minecraft.class_5318;
 import net.minecraft.datafixer.fix.BitStorageAlignFix;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
@@ -39,6 +38,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.dimension.DimensionTracker;
 import net.minecraft.world.dimension.DimensionType;
 
 import java.util.List;
@@ -104,8 +104,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.disablePassthroughMode();
             int dimensionId = buf.readInt();
             Identifier dimensionName = dimensionIdToName(dimensionId);
-            class_5318.class_5319 dimensionRegistryThingy = class_5318.method_29117();
-            buf.pendingRead(Codecked.class, new Codecked<>(class_5318.class_5319.field_25119, dimensionRegistryThingy));
+            DimensionTracker.Modifiable tracker = DimensionTracker.create();
+            buf.pendingRead(Codecked.class, new Codecked<>(DimensionTracker.Modifiable.CODEC, tracker));
             buf.pendingRead(Identifier.class, dimensionName);
             buf.enablePassthroughMode();
             buf.readLong(); // sah256 seed
@@ -177,12 +177,12 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     private static Identifier dimensionIdToName(int dimensionId) {
         switch (dimensionId) {
             case 1:
-                return DimensionType.THE_NETHER_REGISTRY_KEY.getValueId();
+                return DimensionType.THE_NETHER_REGISTRY_KEY.getValue();
             case 2:
-                return DimensionType.THE_END_REGISTRY_KEY.getValueId();
+                return DimensionType.THE_END_REGISTRY_KEY.getValue();
             case 0:
             default:
-                return DimensionType.OVERWORLD_REGISTRY_KEY.getValueId();
+                return DimensionType.OVERWORLD_REGISTRY_KEY.getValue();
         }
     }
 

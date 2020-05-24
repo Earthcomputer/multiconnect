@@ -90,7 +90,7 @@ public class Particles_1_12_2 {
     }
 
     private static void register(ISimpleRegistry<ParticleType<?>> registry, ParticleType<?> particle, int id, String name) {
-        RegistryKey<ParticleType<?>> key = RegistryKey.getOrCreate(registry.getRegistryKey(), new Identifier(name));
+        RegistryKey<ParticleType<?>> key = RegistryKey.of(registry.getRegistryKey(), new Identifier(name));
         registry.register(particle, id, key, false);
     }
 

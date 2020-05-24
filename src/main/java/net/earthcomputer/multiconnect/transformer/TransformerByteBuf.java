@@ -741,12 +741,12 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T method_29171(Codec<T> codec) throws IOException {
+    public <T> T decode(Codec<T> codec) throws IOException {
         // TODO: Make the types here Object rather than class, so we can distinguish the types of Codec
         try {
             return read((Class<Codecked<T>>) (Class<?>) Codecked.class, () -> {
                 try {
-                    return new Codecked<>(codec, super.method_29171(codec));
+                    return new Codecked<>(codec, super.decode(codec));
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
@@ -901,11 +901,11 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> void method_29172(Codec<T> codec, T object) throws IOException {
+    public <T> void encode(Codec<T> codec, T object) throws IOException {
         try {
             write(Codecked.class, new Codecked<>(codec, object), v -> {
                 try {
-                    super.method_29172(v.getCodec(), v.getValue());
+                    super.encode(v.getCodec(), v.getValue());
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
