@@ -176,9 +176,9 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
     private static Identifier dimensionIdToName(int dimensionId) {
         switch (dimensionId) {
-            case 1:
+            case -1:
                 return DimensionType.THE_NETHER_REGISTRY_KEY.getValue();
-            case 2:
+            case 1:
                 return DimensionType.THE_END_REGISTRY_KEY.getValue();
             case 0:
             default:

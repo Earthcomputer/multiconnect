@@ -62,7 +62,7 @@ public class MixinClientChunkManager {
         this.chunk.set(null);
     }
 
-    @Inject(method = "method_28102", at = @At("HEAD"))
+    @Inject(method = "tick", at = @At("HEAD"))
     private void onTick(BooleanSupplier fallingBehind, CallbackInfo ci) {
         if (MinecraftClient.getInstance().getCameraEntity() != null
                 && MinecraftClient.getInstance().getCameraEntity() != MinecraftClient.getInstance().player
