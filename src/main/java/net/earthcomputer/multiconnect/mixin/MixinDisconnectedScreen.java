@@ -2,11 +2,11 @@ package net.earthcomputer.multiconnect.mixin;
 
 import com.google.common.collect.ImmutableSet;
 import net.earthcomputer.multiconnect.impl.ConnectionMode;
+import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.impl.ServersExt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
@@ -26,7 +26,7 @@ public abstract class MixinDisconnectedScreen extends Screen {
     @Unique private static final Set<String> TRIGGER_WORDS = ImmutableSet.of("outdated", "version");
     @Unique private ServerInfo server;
     @Unique private boolean isProtocolReason;
-    @Unique private ButtonWidget protocolSelector;
+    @Unique private DropDownWidget<ConnectionMode> protocolSelector;
     @Unique private Text forceProtocolLabel;
 
     protected MixinDisconnectedScreen(Text title) {
@@ -59,19 +59,18 @@ public abstract class MixinDisconnectedScreen extends Screen {
     @Inject(method = "init", at = @At("RETURN"))
     private void addButtons(CallbackInfo ci) {
         if (isProtocolReason) {
-            protocolSelector = new ButtonWidget(width - 80, 5, 70, 20, new LiteralText(getForcedVersion().getName()), (buttonWidget_1) ->
-                    ServersExt.getInstance().getOrCreateServer(server.address).forcedProtocol = getForcedVersion().next().getValue()
-            );
-
-            addButton(protocolSelector);
+            protocolSelector = new DropDownWidget<>(width - 80, 5, 70, 20, getForcedVersion(), mode -> new LiteralText(mode.getName()));
+            protocolSelector.setValueListener(mode -> ServersExt.getInstance().getOrCreateServer(server.address).forcedProtocol = mode.getValue());
+            ConnectionMode.populateDropDownWidget(protocolSelector);
+            children.add(0, protocolSelector);
         }
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"))
+    @Inject(method = "render", at = @At("RETURN"))
     private void onRender(MatrixStack matrixStack, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (isProtocolReason) {
             textRenderer.drawWithShadow(matrixStack, forceProtocolLabel, width - 85 - textRenderer.getWidth(forceProtocolLabel), 11, 0xFFFFFF);
-            protocolSelector.setMessage(new LiteralText(getForcedVersion().getName()));
+            protocolSelector.render(matrixStack, mouseX, mouseY, delta);
         }
     }
 

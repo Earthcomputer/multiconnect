@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.api;
 
+import java.util.List;
+
 /**
  * Contains information about a supported protocol version
  */
@@ -14,5 +16,23 @@ public interface IProtocol {
      * Returns the name of the Minecraft version that this protocol represents.
      */
     String getName();
+
+    /**
+     * Returns whether this version is considered a major release, i.e. a parent of other protocols,
+     * where those protocols are subcategories. Note: the concept of a "major release" is not necessarily the
+     * same as semver. It is used to categorize versions (e.g. the 1.15 versions).
+     */
+    boolean isMajorRelease();
+
+    /**
+     * Returns the major release of this protocol. Either this protocol or its parent release.
+     */
+    IProtocol getMajorRelease();
+
+    /**
+     * If this protocol is a major release, returns a list of all minor releases (children) of this protocol,
+     * including this protocol. Throws an exception if this protocol is not a major release.
+     */
+    List<IProtocol> getMinorReleases();
 
 }

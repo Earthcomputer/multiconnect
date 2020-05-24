@@ -53,6 +53,21 @@ public class MultiConnectAPI {
         public String getName() {
             return SharedConstants.getGameVersion().getName();
         }
+
+        @Override
+        public boolean isMajorRelease() {
+            return true;
+        }
+
+        @Override
+        public IProtocol getMajorRelease() {
+            return this;
+        }
+
+        @Override
+        public List<IProtocol> getMinorReleases() {
+            return Collections.singletonList(this);
+        }
     }
 
 }

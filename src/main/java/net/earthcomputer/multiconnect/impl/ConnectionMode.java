@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.impl;
 
+import com.google.common.collect.Lists;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.api.Protocols;
 
@@ -11,35 +12,46 @@ import java.util.*;
 public enum ConnectionMode implements IProtocol {
 
     // Protocols should go in reverse chronological order
-    AUTO("Auto", -1),
-    V1_16("20w21a", Protocols.V1_16),
+    AUTO("Auto", -1, true),
+    V1_16("20w21a", Protocols.V1_16, true),
     V1_15_2("1.15.2", Protocols.V1_15_2),
     V1_15_1("1.15.1", Protocols.V1_15_1),
-    V1_15("1.15", Protocols.V1_15),
+    V1_15("1.15", Protocols.V1_15, true),
     V1_14_4("1.14.4", Protocols.V1_14_4),
     V1_14_3("1.14.3", Protocols.V1_14_3),
     V1_14_2("1.14.2", Protocols.V1_14_2),
     V1_14_1("1.14.1", Protocols.V1_14_1),
-    V1_14("1.14", Protocols.V1_14),
+    V1_14("1.14", Protocols.V1_14, true),
     V1_13_2("1.13.2", Protocols.V1_13_2),
     V1_13_1("1.13.1", Protocols.V1_13_1),
-    V1_13("1.13", Protocols.V1_13),
+    V1_13("1.13", Protocols.V1_13, true),
     V1_12_2("1.12.2", Protocols.V1_12_2),
     V1_12_1("1.12.1", Protocols.V1_12_1),
-    V1_12("1.12", Protocols.V1_12),
-    V1_11_2("1.11.2", Protocols.V1_11_2)
+    V1_12("1.12", Protocols.V1_12, true),
+    V1_11_2("1.11.2", Protocols.V1_11_2, true),
+    // the last value MUST be considered a "major release"
     ;
 
     private final int value;
+    private final boolean majorRelease;
     private final String name;
     private final String assetId;
 
-    ConnectionMode(final String name, final int value) {
+    ConnectionMode(String name, int value) {
         this(name, name, value);
     }
 
-    ConnectionMode(final String name, final String assetId, final int value) {
+    ConnectionMode(String name, String assetId, int value) {
+        this(name, assetId, value, false);
+    }
+
+    ConnectionMode(String name, int value, boolean majorRelease) {
+        this(name, name, value, majorRelease);
+    }
+
+    ConnectionMode(String name, String assetId, int value, boolean majorRelease) {
         this.value = value;
+        this.majorRelease = majorRelease;
         this.name = name;
         this.assetId = assetId;
     }
@@ -47,6 +59,33 @@ public enum ConnectionMode implements IProtocol {
     @Override
     public int getValue() {
         return value;
+    }
+
+    @Override
+    public boolean isMajorRelease() {
+        return majorRelease;
+    }
+
+    @Override
+    public IProtocol getMajorRelease() {
+        int i;
+        //noinspection StatementWithEmptyBody
+        for (i = ordinal(); !VALUES[i].majorRelease; i++)
+            ;
+        return VALUES[i];
+    }
+
+    @Override
+    public List<IProtocol> getMinorReleases() {
+        if (!majorRelease) {
+            throw new UnsupportedOperationException("Cannot call IProtocol.getMinorReleases() on a non-major release");
+        }
+        int endIndex = ordinal();
+        int startIndex;
+        //noinspection StatementWithEmptyBody
+        for (startIndex = endIndex - 1; startIndex >= 0 && !VALUES[startIndex].majorRelease; startIndex--)
+            ;
+        return Lists.reverse(Arrays.<IProtocol>asList(VALUES).subList(startIndex + 1, endIndex + 1));
     }
 
     @Override
@@ -75,12 +114,22 @@ public enum ConnectionMode implements IProtocol {
         return byValue(protocol) != AUTO;
     }
 
-    public ConnectionMode next() {
-        return VALUES[(ordinal() + 1) % VALUES.length];
-    }
-
     public static boolean isSupportedAssetId(String assetId) {
         return VALID_ASSET_IDS.contains(assetId);
+    }
+
+    public static void populateDropDownWidget(DropDownWidget<ConnectionMode> dropDown) {
+        for (ConnectionMode mode : VALUES) {
+            if (mode.majorRelease) {
+                DropDownWidget<ConnectionMode>.Category category = dropDown.add(mode);
+                List<IProtocol> children = mode.getMinorReleases();
+                if (children.size() > 1) {
+                    for (IProtocol child : children) {
+                        category.add((ConnectionMode) child);
+                    }
+                }
+            }
+        }
     }
 
     static {
