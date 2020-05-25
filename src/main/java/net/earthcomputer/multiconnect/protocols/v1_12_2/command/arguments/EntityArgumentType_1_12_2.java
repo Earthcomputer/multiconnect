@@ -9,6 +9,8 @@ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.TabCompletionManager;
 import net.minecraft.command.arguments.EntitySummonArgumentType;
 import net.minecraft.entity.EntityType;
@@ -133,7 +135,8 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
                 builder.suggest("@r");
                 if (!playersOnly)
                     builder.suggest("@e");
-                builder.suggest("@s");
+                if (ConnectionInfo.protocolVersion > Protocols.V1_11_2)
+                    builder.suggest("@s");
                 return builder.buildFuture();
             };
             reader.expect('@');
@@ -161,6 +164,10 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
                 case 'e':
                     break;
                 case 's':
+                    if (ConnectionInfo.protocolVersion <= Protocols.V1_11_2) {
+                        reader.setCursor(start);
+                        throw EXPECTED_SELECTOR_TYPE_EXCEPTION.createWithContext(reader);
+                    }
                     typeKnown = true;
                     singleTarget = true;
                     break;

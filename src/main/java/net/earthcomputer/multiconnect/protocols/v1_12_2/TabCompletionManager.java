@@ -53,7 +53,7 @@ public class TabCompletionManager {
     public static boolean handleCustomCompletions(CommandSuggestionsS2CPacket packet) {
         if (packet.getCompletionId() == -1) {
             CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
-            Commands_1_12_2.register(dispatcher, packet.getSuggestions().getList().stream()
+            Commands_1_12_2.registerAll(dispatcher, packet.getSuggestions().getList().stream()
                     .map(Suggestion::getText)
                     .filter(str -> !str.isEmpty())
                     .map(str -> str.substring(1))

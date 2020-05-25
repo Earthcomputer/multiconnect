@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_11_2;
 
+import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.PacketInfo;
@@ -9,6 +10,8 @@ import net.earthcomputer.multiconnect.protocols.v1_11_2.mixin.PlayerEntityAccess
 import net.earthcomputer.multiconnect.protocols.v1_12.PlaceRecipeC2SPacket_1_12;
 import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.RecipeInfo;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
 import net.minecraft.advancement.Advancement;
@@ -30,11 +33,13 @@ import net.minecraft.network.packet.c2s.play.ClientStatusC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.c2s.play.RecipeBookDataC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
+import net.minecraft.server.command.CommandSource;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.registry.Registry;
 
 import java.util.List;
+import java.util.Set;
 
 public class Protocol_1_11_2 extends Protocol_1_12 {
 
@@ -234,5 +239,17 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
             return false;
         });
         return recipes;
+    }
+
+    @Override
+    public void registerCommands(CommandDispatcher<CommandSource> dispatcher, Set<String> serverCommands) {
+        super.registerCommands(dispatcher, serverCommands);
+
+        BrigadierRemover.of(dispatcher).get("advancement").remove();
+        BrigadierRemover.of(dispatcher).get("function").remove();
+        BrigadierRemover.of(dispatcher).get("recipe").remove();
+        BrigadierRemover.of(dispatcher).get("reload").remove();
+
+        Commands_1_12_2.registerVanilla(dispatcher, serverCommands, "achievement", AchievementCommand::register);
     }
 }

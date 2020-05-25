@@ -5,6 +5,8 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.Protocol_1_12_2;
 import net.minecraft.command.suggestion.SuggestionProviders;
 import net.minecraft.server.command.CommandSource;
 
@@ -13,7 +15,7 @@ import java.util.function.Consumer;
 
 public class Commands_1_12_2 {
 
-    private static void registerVanilla(CommandDispatcher<CommandSource> dispatcher,
+    public static void registerVanilla(CommandDispatcher<CommandSource> dispatcher,
                                         Set<String> serverCommands,
                                         String name,
                                         Consumer<CommandDispatcher<CommandSource>> registerer) {
@@ -90,6 +92,10 @@ public class Commands_1_12_2 {
         registerVanilla(dispatcher, serverCommands, "list", ListCommand::register);
         registerVanilla(dispatcher, serverCommands, "whitelist", WhitelistCommand::register);
         registerVanilla(dispatcher, serverCommands, "setidletimeout", SetIdleTimeoutCommand::register);
+    }
+
+    public static void registerAll(CommandDispatcher<CommandSource> dispatcher, Set<String> serverCommands) {
+        ((Protocol_1_12_2) ConnectionInfo.protocol).registerCommands(dispatcher, serverCommands);
 
         if (serverCommands != null) {
             for (String command : serverCommands) {
@@ -97,8 +103,8 @@ public class Commands_1_12_2 {
                     dispatcher.register(literal(command)
                             .executes(ctx -> 0)
                             .then(argument("args", StringArgumentType.greedyString())
-                                .suggests(SuggestionProviders.ASK_SERVER)
-                                .executes(ctx -> 0)));
+                                    .suggests(SuggestionProviders.ASK_SERVER)
+                                    .executes(ctx -> 0)));
                 }
             }
         }

@@ -1,11 +1,13 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.google.common.base.Joiner;
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.serialization.Dynamic;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
@@ -44,6 +46,7 @@ import net.minecraft.particle.*;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
 import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.server.command.CommandSource;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.StatType;
@@ -1463,6 +1466,10 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     public List<RecipeInfo<?>> getCraftingRecipes() {
         return Recipes_1_12_2.getRecipes();
+    }
+
+    public void registerCommands(CommandDispatcher<CommandSource> dispatcher, Set<String> serverCommands) {
+        Commands_1_12_2.register(dispatcher, serverCommands);
     }
 
     @Override
