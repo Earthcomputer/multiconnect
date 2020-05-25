@@ -271,7 +271,7 @@ public class Recipes_1_12_2 {
         recipes.add(RecipeInfo.shaped(Items.IRON_PICKAXE, "XXX", " # ", " # ", '#', Items.STICK, 'X', Items.IRON_INGOT));
         recipes.add(RecipeInfo.shaped(9, Items.IRON_NUGGET, "#", '#', Items.IRON_INGOT));
         recipes.add(RecipeInfo.shaped(Items.IRON_LEGGINGS, "XXX", "X X", "X X", 'X', Items.IRON_INGOT));
-        recipes.add(RecipeInfo.shaped("iron_ingot", Items.IRON_INGOT, "###", "###", "###", '#', Items.IRON_NUGGET));
+        recipes.add(RecipeInfo.shaped("iron_ingot", Items.IRON_INGOT, "###", "###", "###", '#', Items.IRON_NUGGET).distinguisher("iron_nugget_to_ingot"));
         recipes.add(RecipeInfo.shaped("iron_ingot", 9, Items.IRON_INGOT, "#", '#', Blocks.IRON_BLOCK));
         recipes.add(RecipeInfo.shaped(Items.IRON_HOE, "XX", " #", " #", '#', Items.STICK, 'X', Items.IRON_INGOT));
         recipes.add(RecipeInfo.shaped(Items.IRON_HELMET, "XXX", "X X", 'X', Items.IRON_INGOT));

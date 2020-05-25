@@ -17,6 +17,7 @@ public final class RecipeInfo<T extends Recipe<?>> {
     private final Function<Identifier, Recipe<?>> creator;
     private final RecipeSerializer<T> recipeType;
     private final ItemStack output;
+    private String distinguisher = "";
 
     private RecipeInfo(Function<Identifier, Recipe<?>> creator, RecipeSerializer<T> recipeType, ItemStack output) {
         this.creator = creator;
@@ -156,6 +157,11 @@ public final class RecipeInfo<T extends Recipe<?>> {
         return shapeless("", count, output, inputs);
     }
 
+    public RecipeInfo<T> distinguisher(String distinguisher) {
+        this.distinguisher = distinguisher;
+        return this;
+    }
+
 
     public Recipe<?> create(Identifier id) {
         return creator.apply(id);
@@ -167,5 +173,9 @@ public final class RecipeInfo<T extends Recipe<?>> {
 
     public ItemStack getOutput() {
         return output;
+    }
+
+    public String getDistinguisher() {
+        return distinguisher;
     }
 }

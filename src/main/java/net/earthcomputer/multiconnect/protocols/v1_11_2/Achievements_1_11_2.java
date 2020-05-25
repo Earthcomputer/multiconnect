@@ -53,7 +53,7 @@ public class Achievements_1_11_2 {
     public static final Advancement KILL_WITHER = create("killWither", 7, 10, Items.NETHER_STAR, SPAWN_WITHER);
     public static final Advancement FULL_BEACON = create("fullBeacon", 7, 8, Blocks.BEACON, KILL_WITHER, true);
     public static final Advancement EXPLORE_ALL_BIOMES = create("exploreAllBiomes", 4, 8, Items.DIAMOND_BOOTS, THE_END, true);
-    public static final Advancement OVERPOWERED = create("buildBetterPickaxe", 6, 4, Items.ENCHANTED_GOLDEN_APPLE, BUILD_BETTER_PICKAXE, true);
+    public static final Advancement OVERPOWERED = create("overpowered", 6, 4, Items.ENCHANTED_GOLDEN_APPLE, BUILD_BETTER_PICKAXE, true);
     static {
         for (Advancement advancement : ACHIEVEMENTS.values()) {
             assert advancement.getDisplay() != null;

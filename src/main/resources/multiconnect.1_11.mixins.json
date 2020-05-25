@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_11.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "MixinFireworkItem",
+    "PigEntityAccessor"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
