@@ -107,7 +107,6 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         OLD_MOTIVE_NAMES.put("DonkeyKong", PaintingMotive.DONKEY_KONG);
     }
 
-    private static final Pattern NON_IDENTIFIER_CHARS = Pattern.compile("[^a-z0-9/._\\-]");
     private static final Joiner DOT_JOINER = Joiner.on('.');
 
     private static final TrackedData<Integer> OLD_AREA_EFFECT_CLOUD_PARTICLE_ID = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
@@ -155,7 +154,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             } else if ("MC|BOpen".equals(channel)) {
                 newChannel = Protocol_1_13_2.CUSTOM_PAYLOAD_OPEN_BOOK;
             } else {
-                newChannel = new Identifier(NON_IDENTIFIER_CHARS.matcher(channel.toLowerCase(Locale.ENGLISH)).replaceAll("_"));
+                newChannel = CustomPayloadHandler.getIdentifierForStringCustomPayload(channel);
             }
             buf.pendingRead(Identifier.class, newChannel);
             buf.applyPendingReads();

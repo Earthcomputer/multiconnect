@@ -4,10 +4,16 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.CurrentChunkDataPacket;
+import net.earthcomputer.multiconnect.impl.CustomPayloadHandler;
 import net.earthcomputer.multiconnect.impl.TagRegistry;
+import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
 import net.minecraft.tag.Tag;
 import net.minecraft.tag.TagContainer;
@@ -21,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.HashSet;
 import java.util.function.Consumer;
 
-@Mixin(ClientPlayNetworkHandler.class)
+@Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
 public class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
@@ -53,6 +59,18 @@ public class MixinClientPlayNetworkHandler {
         tags.forEach((id, set) -> tagBiMap.put(id, Tag.of(set)));
         accessor.multiconnect_setEntries(tagBiMap);
         return tags;
+    }
+
+    @Inject(method = "onCustomPayload", at = @At("HEAD"), cancellable = true)
+    private void onOnCustomPayload(CustomPayloadS2CPacket packet, CallbackInfo ci) {
+        NetworkThreadUtils.forceMainThread(packet, (ClientPlayNetworkHandler) (Object) this, MinecraftClient.getInstance());
+        if (packet.getChannel().equals(CustomPayloadHandler.DROP_ID)) {
+            ci.cancel();
+        } else if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()
+                && !CustomPayloadHandler.VANILLA_CHANNELS.contains(packet.getChannel())) {
+            CustomPayloadHandler.handleCustomPayload(packet);
+            ci.cancel();
+        }
     }
 
 }

@@ -10,7 +10,18 @@ import java.util.List;
  */
 public class MultiConnectAPI {
 
-    static MultiConnectAPI INSTANCE = new MultiConnectAPI();
+    private static final MultiConnectAPI INSTANCE;
+    static {
+        MultiConnectAPI api;
+        try {
+            api = (MultiConnectAPI) Class.forName("net.earthcomputer.multiconnect.impl.APIImpl").getConstructor().newInstance();
+        } catch (ClassNotFoundException e) {
+            api = new MultiConnectAPI();
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError(e);
+        }
+        INSTANCE = api;
+    }
 
     /**
      * Returns the singleton instance of this API
@@ -39,6 +50,49 @@ public class MultiConnectAPI {
      */
     public List<IProtocol> getSupportedProtocols() {
         return Collections.singletonList(CurrentVersionProtocol.INSTANCE);
+    }
+
+    /**
+     * Adds an {@link IIdentifierCustomPayloadListener}. Adding one of these listeners allows for mods to listen to
+     * non-vanilla {@link net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket CustomPayloadS2CPacket}s sent
+     * by servers on older versions. Such packets are blocked by multiconnect from normal handling.
+     *
+     * <p>This listener is not called for custom payloads from servers on the current version, as multiconnect does not
+     * block those. This listener is only called for servers on 1.13 and above; use
+     * {@link #addStringCustomPayloadListener(IStringCustomPayloadListener)} if you want to listen to custom payloads
+     * from older servers.</p>
+     */
+    public void addIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+        // overridden by protocol impl
+    }
+
+    /**
+     * Removes an {@link IIdentifierCustomPayloadListener}.
+     * @see #addIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener)
+     */
+    public void removeIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+        // overridden by protocol impl
+    }
+
+    /**
+     * Adds an {@link IStringCustomPayloadListener}. Adding one of these listeners allows for mods to listen to
+     * non-vanilla {@link net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket CustomPayloadS2CPacket}s sent
+     * by servers on 1.12.2 or below. Such packets are blocked by multiconnect from normal handling.
+     *
+     * <p>This listener is not called for custom payloads from servers on 1.13 or above. To listen for these custom
+     * payloads, use {@link #addIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener)}, or if the server is
+     * on the current Minecraft version, simply do it the normal way.</p>
+     */
+    public void addStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+        // overridden by protocol impl
+    }
+
+    /**
+     * Removes an {@link IStringCustomPayloadListener}.
+     * @see #addStringCustomPayloadListener(IStringCustomPayloadListener)
+     */
+    public void removeStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+        // overridden by protocol impl
     }
 
     private static class CurrentVersionProtocol implements IProtocol {

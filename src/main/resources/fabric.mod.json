@@ -34,12 +34,6 @@
   ],
   "accessWidener": "multiconnect.accesswidener",
 
-  "entrypoints": {
-    "main": [
-      "net.earthcomputer.multiconnect.api.Initializer"
-    ]
-  },
-
   "depends": {
     "fabricloader": ">=0.8.4"
   },
