@@ -52,6 +52,10 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     @Override
     public abstract BiMap<Identifier, T> getEntriesById();
 
+    @Accessor
+    @Override
+    public abstract BiMap<RegistryKey, T> getEntriesByKey();
+
     @Unique private List<IRegistryUpdateListener<T>> registerListeners = new ArrayList<>(0);
     @Unique private List<IRegistryUpdateListener<T>> unregisterListeners = new ArrayList<>(0);
 
@@ -139,6 +143,20 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         indexedEntries.clear();
         randomEntries = null;
         setNextId(0);
+    }
+
+    @Override
+    public void onRestore(Iterable<T> added, Iterable<T> removed) {
+        registerListeners.forEach(listener -> {
+            if (listener.callOnRestore()) {
+                added.forEach(thing -> listener.onUpdate(thing, false));
+            }
+        });
+        unregisterListeners.forEach(listener -> {
+            if (listener.callOnRestore()) {
+                removed.forEach(thing -> listener.onUpdate(thing, false));
+            }
+        });
     }
 
     @Override

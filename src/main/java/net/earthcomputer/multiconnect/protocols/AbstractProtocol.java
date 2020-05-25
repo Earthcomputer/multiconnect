@@ -145,7 +145,7 @@ public abstract class AbstractProtocol {
         ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
         DefaultRegistry<T> defaultRegistry = (DefaultRegistry<T>) DefaultRegistry.DEFAULT_REGISTRIES.get(registry);
         if (defaultRegistry == null) return;
-        for (Map.Entry<Identifier, T> entry : defaultRegistry.defaultEntries.entrySet()) {
+        for (Map.Entry<Identifier, T> entry : defaultRegistry.defaultEntriesById.entrySet()) {
             if (registry.getId(entry.getValue()) == null) {
                 RegistryKey<T> key = RegistryKey.of(iregistry.getRegistryKey(), entry.getKey());
                 iregistry.register(entry.getValue(), iregistry.getNextId(), key, false);
@@ -215,7 +215,7 @@ public abstract class AbstractProtocol {
     public static <T> Identifier getUnmodifiedName(Registry<T> registry, T value) {
         DefaultRegistry<T> defaultRegistry = (DefaultRegistry<T>) DefaultRegistry.DEFAULT_REGISTRIES.get(registry);
         if (defaultRegistry == null) return registry.getId(value);
-        return defaultRegistry.defaultEntries.inverse().get(value);
+        return defaultRegistry.defaultEntriesById.inverse().get(value);
     }
 
     @SuppressWarnings("unchecked")
@@ -242,7 +242,7 @@ public abstract class AbstractProtocol {
             }
         }
 
-        insertAfter(registry, prevValue, value, defaultRegistry.defaultEntries.inverse().get(value).toString(), inPlace);
+        insertAfter(registry, prevValue, value, defaultRegistry.defaultEntriesById.inverse().get(value).toString(), inPlace);
     }
 
     protected static void dumpBlockStates() {
@@ -287,24 +287,42 @@ public abstract class AbstractProtocol {
         private static Int2ObjectBiMap<TrackedDataHandler<?>> DEFAULT_TRACKED_DATA_HANDLERS = new Int2ObjectBiMap<>(16);
 
         private Int2ObjectBiMap<T> defaultIndexedEntries = new Int2ObjectBiMap<>(256);
-        private BiMap<Identifier, T> defaultEntries = HashBiMap.create();
+        private BiMap<Identifier, T> defaultEntriesById = HashBiMap.create();
+        private BiMap<RegistryKey, T> defaultEntriesByKey = HashBiMap.create();
         private int defaultNextId;
 
         private DefaultRegistry(Registry<T> registry) {
             for (T t : registry) {
                 defaultIndexedEntries.put(t, registry.getRawId(t));
-                defaultEntries.put(registry.getId(t), t);
+                defaultEntriesById.put(registry.getId(t), t);
+                defaultEntriesByKey.put(registry.getKey(t), t);
             }
             defaultNextId = ((ISimpleRegistry) registry).getNextId();
         }
 
         public void restore(SimpleRegistry<T> registry) {
+            List<T> added = new ArrayList<>();
+            for (T thing : defaultIndexedEntries) {
+                if (!registry.containsId(defaultIndexedEntries.getId(thing))) {
+                    added.add(thing);
+                }
+            }
+            List<T> removed = new ArrayList<>();
+            for (T thing : registry) {
+                if (!defaultEntriesById.containsValue(thing)) {
+                    removed.add(thing);
+                }
+            }
+
             @SuppressWarnings("unchecked") ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
             iregistry.getIndexedEntries().clear();
             defaultIndexedEntries.iterator().forEachRemaining(t -> iregistry.getIndexedEntries().put(t, defaultIndexedEntries.getId(t)));
             iregistry.getEntriesById().clear();
-            iregistry.getEntriesById().putAll(defaultEntries);
+            iregistry.getEntriesById().putAll(defaultEntriesById);
+            iregistry.getEntriesByKey().clear();
+            iregistry.getEntriesByKey().putAll(defaultEntriesByKey);
             iregistry.setNextId(defaultNextId);
+            iregistry.onRestore(added, removed);
         }
 
         public static Map<Registry<?>, DefaultRegistry<?>> DEFAULT_REGISTRIES = new LinkedHashMap<>();
@@ -338,6 +356,7 @@ public abstract class AbstractProtocol {
             DEFAULT_REGISTRIES.put(Registry.STATUS_EFFECT, new DefaultRegistry<>(Registry.STATUS_EFFECT));
             DEFAULT_REGISTRIES.put(Registry.RECIPE_SERIALIZER, new DefaultRegistry<>(Registry.RECIPE_SERIALIZER));
             DEFAULT_REGISTRIES.put(Registry.SOUND_EVENT, new DefaultRegistry<>(Registry.SOUND_EVENT));
+            DEFAULT_REGISTRIES.put(Registry.CUSTOM_STAT, new DefaultRegistry<>(Registry.CUSTOM_STAT));
 
             DEFAULT_BLOCK_ITEMS.putAll(Item.BLOCK_ITEMS);
             DEFAULT_SPAWN_EGG_ITEMS.putAll(SpawnEggItemAccessor.getSpawnEggs());

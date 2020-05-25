@@ -19,6 +19,8 @@ public interface ISimpleRegistry<T> {
 
     BiMap<Identifier, T> getEntriesById();
 
+    BiMap<RegistryKey, T> getEntriesByKey();
+
     default void register(T t, int id, RegistryKey<T> key) {
         register(t, id, key, true);
     }
@@ -44,6 +46,8 @@ public interface ISimpleRegistry<T> {
     void purge(T t, boolean sideEffects);
 
     void clear(boolean sideEffects);
+
+    void onRestore(Iterable<T> added, Iterable<T> removed);
 
     void addRegisterListener(IRegistryUpdateListener<T> listener);
 

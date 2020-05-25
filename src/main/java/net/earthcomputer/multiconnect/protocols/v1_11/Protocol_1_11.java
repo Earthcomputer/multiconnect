@@ -15,16 +15,25 @@ import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.stat.StatFormatter;
+import net.minecraft.stat.Stats;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 
 import java.util.List;
 
 public class Protocol_1_11 extends Protocol_1_11_2 {
+
+    public static final Identifier JUNK_FISHED = new Identifier("junk_fished");
+    public static final Identifier TREASURE_FISHED = new Identifier("treasure_fished");
+
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
         mutator.mutate(Protocols.V1_11, Registry.ITEM, this::mutateItemRegistry);
         mutator.mutate(Protocols.V1_11, Registry.ENCHANTMENT, this::mutateEnchantmentRegistry);
+        mutator.mutate(Protocols.V1_11, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
     }
 
     private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
@@ -34,6 +43,13 @@ public class Protocol_1_11 extends Protocol_1_11_2 {
 
     private void mutateEnchantmentRegistry(ISimpleRegistry<Enchantment> registry) {
         registry.purge(Enchantments.SWEEPING);
+    }
+
+    private void mutateCustomStatRegistry(ISimpleRegistry<Identifier> registry) {
+        registry.register(JUNK_FISHED, registry.getNextId(), RegistryKey.of(registry.getRegistryKey(), JUNK_FISHED));
+        registry.register(TREASURE_FISHED, registry.getNextId(), RegistryKey.of(registry.getRegistryKey(), TREASURE_FISHED));
+        Stats.CUSTOM.getOrCreateStat(JUNK_FISHED, StatFormatter.DEFAULT);
+        Stats.CUSTOM.getOrCreateStat(TREASURE_FISHED, StatFormatter.DEFAULT);
     }
 
     // TODO: fishing stats

@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "DimensionTypeAccessor",
+    "MixinStatType",
     "RegistryAccessor",
     "TagContainerAccessor"
   ],

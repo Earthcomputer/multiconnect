@@ -7,6 +7,7 @@ import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
@@ -74,7 +75,6 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 
 public class Protocol_1_12_2 extends Protocol_1_13 {
 
@@ -623,6 +623,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             case "trappedChestTriggered": return Stats.TRIGGER_TRAPPED_CHEST;
             case "brewingstandInteraction": return Stats.INTERACT_WITH_BREWINGSTAND;
             case "craftingTableInteraction": return Stats.INTERACT_WITH_CRAFTING_TABLE;
+            case "junkFished": return Protocol_1_11.JUNK_FISHED;
+            case "treasureFished": return Protocol_1_11.TREASURE_FISHED;
             default: return null;
         }
     }
