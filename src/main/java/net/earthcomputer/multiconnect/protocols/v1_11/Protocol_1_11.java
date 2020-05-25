@@ -52,8 +52,6 @@ public class Protocol_1_11 extends Protocol_1_11_2 {
         Stats.CUSTOM.getOrCreateStat(TREASURE_FISHED, StatFormatter.DEFAULT);
     }
 
-    // TODO: fishing stats
-
     @Override
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == FireworkRocketEntity.class && data == Protocol_1_13_2.OLD_FIREWORK_SHOOTER) {
