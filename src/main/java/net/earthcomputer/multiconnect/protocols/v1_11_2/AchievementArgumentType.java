@@ -19,7 +19,7 @@ public class AchievementArgumentType implements ArgumentType<Advancement> {
 
     private static final Collection<String> EXAMPLES = Arrays.asList("achievement.openInventory", "achievement.mineWood");
 
-    private static final DynamicCommandExceptionType NO_SUCH_ADVANCEMENT_EXCEPTION = new DynamicCommandExceptionType(arg -> new TranslatableText("commands.achievement.unknownAchievement", arg));
+    private static final DynamicCommandExceptionType NO_SUCH_ACHEIVEMENT_EXCEPTION = new DynamicCommandExceptionType(arg -> new TranslatableText("commands.achievement.unknownAchievement", arg));
 
     private AchievementArgumentType() {
     }
@@ -35,13 +35,13 @@ public class AchievementArgumentType implements ArgumentType<Advancement> {
         String achievementName = reader.readUnquotedString();
         if (!achievementName.startsWith("achievement.")) {
             reader.setCursor(start);
-            throw NO_SUCH_ADVANCEMENT_EXCEPTION.createWithContext(reader, achievementName);
+            throw NO_SUCH_ACHEIVEMENT_EXCEPTION.createWithContext(reader, achievementName);
         }
 
         Advancement achievement = Achievements_1_11_2.ACHIEVEMENTS.get(achievementName.substring("achievement.".length()));
         if (achievement == null) {
             reader.setCursor(start);
-            throw NO_SUCH_ADVANCEMENT_EXCEPTION.createWithContext(reader, achievementName);
+            throw NO_SUCH_ACHEIVEMENT_EXCEPTION.createWithContext(reader, achievementName);
         }
 
         return achievement;
