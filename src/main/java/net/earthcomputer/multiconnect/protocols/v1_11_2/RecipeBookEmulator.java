@@ -150,7 +150,9 @@ public class RecipeBookEmulator {
             player.networkHandler.sendPacket(new ClickWindowC2SPacket(screenHandler.syncId, toSlot, 0, SlotActionType.PICKUP, ItemStack.EMPTY, screenHandler.getNextActionId(player.inventory)));
         } else {
             for (int i = 0; i < count; i++) {
-                player.networkHandler.sendPacket(new ClickWindowC2SPacket(screenHandler.syncId, toSlot, 1, SlotActionType.PICKUP, ItemStack.EMPTY, screenHandler.getNextActionId(player.inventory)));
+                ItemStack existingStack = clickedStack.copy();
+                existingStack.setCount(i);
+                player.networkHandler.sendPacket(new ClickWindowC2SPacket(screenHandler.syncId, toSlot, 1, SlotActionType.PICKUP, existingStack, screenHandler.getNextActionId(player.inventory)));
             }
         }
 

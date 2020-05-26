@@ -70,6 +70,11 @@ public class PlaceRecipeC2SPacket_1_12 implements Packet<ServerPlayPacketListene
             this.craftingSlot = craftingSlot;
             this.invSlot = invSlot;
         }
+
+        @Override
+        public String toString() {
+            return stack + " / " + originalStack + ": " + craftingSlot + " <-> " + invSlot;
+        }
     }
 
 }
