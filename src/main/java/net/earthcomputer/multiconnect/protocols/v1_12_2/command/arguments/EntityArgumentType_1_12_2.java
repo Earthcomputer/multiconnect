@@ -386,14 +386,21 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
                     if (parser.playersOnly) {
                         CommandSource.suggestIdentifiers(Collections.singleton(new Identifier("player")), builder);
                     } else {
-                        CommandSource.suggestIdentifiers(Registry.ENTITY_TYPE.getIds(), builder);
-                        CommandSource.suggestIdentifiers(Registry.ENTITY_TYPE.getIds(), builder, "!");
+                        CommandSource.suggestIdentifiers(Registry.ENTITY_TYPE.stream()
+                                .filter(EntityArgumentType_1_12_2::canSelectEntityType)
+                                .map(EntityType::getId),
+                            builder);
+                        CommandSource.suggestIdentifiers(Registry.ENTITY_TYPE.stream()
+                                .filter(EntityArgumentType_1_12_2::canSelectEntityType)
+                                .map(EntityType::getId)::iterator,
+                            builder,
+                            "!");
                     }
                     return builder.buildFuture();
                 };
                 boolean inverted = parser.parseIsInverted();
                 Identifier entityId = Identifier.fromCommandInput(parser.reader);
-                if (!Registry.ENTITY_TYPE.containsId(entityId)) {
+                if (!Registry.ENTITY_TYPE.containsId(entityId) || !canSelectEntityType(Registry.ENTITY_TYPE.get(entityId))) {
                     parser.reader.setCursor(start);
                     throw EntitySummonArgumentType.NOT_FOUND_EXCEPTION.createWithContext(parser.reader, entityId);
                 }
@@ -405,7 +412,7 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
                         parser.cannotSelectPlayers = true;
                     }
                 }
-                if (!parser.typeKnown || parser.cannotSelectPlayers) {
+                if (parser.playersOnly && (!parser.typeKnown || parser.cannotSelectPlayers)) {
                     parser.reader.setCursor(start);
                     throw PLAYERS_ONLY_EXCEPTION.createWithContext(parser.reader);
                 }
@@ -420,6 +427,11 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
             parser.parseIsInverted();
             parser.reader.readUnquotedString();
         });
+    }
+
+    // because :thonkjang:
+    private static boolean canSelectEntityType(EntityType<?> type) {
+        return type != EntityType.FISHING_BOBBER;
     }
 
     @FunctionalInterface
