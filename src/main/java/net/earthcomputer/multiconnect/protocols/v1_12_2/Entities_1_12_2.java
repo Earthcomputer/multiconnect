@@ -98,6 +98,10 @@ public class Entities_1_12_2 {
         register(registry, EntityType.PARROT, 105, "parrot", "Parrot");
         register(registry, EntityType.VILLAGER, 120, "villager", "Villager");
         register(registry, EntityType.END_CRYSTAL, 200, "ender_crystal", "EnderCrystal");
+        // these entities were never registered in 1.12
+        register(registry, EntityType.FISHING_BOBBER, 201, "fishing_bobber", "FishingBobber");
+        register(registry, EntityType.LIGHTNING_BOLT, 202, "lightning_bolt", "LightningBolt");
+        register(registry, EntityType.PLAYER, 203, "player", "Player");
     }
 
 }
