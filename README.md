@@ -31,25 +31,21 @@ This section is for when you are developing your own mod and want to use the mul
    ```groovy
    dependencies {
       // ...
-      modCompile('net.earthcomputer.multiconnect:<version>:api') {
-         transitive = false
-      }
-      include('net.earthcomputer:multiconnect:<version>:api') {
-         transitive = false
-      }
+      modImplementation 'net.earthcomputer.multiconnect:<version>:api'
+      include 'net.earthcomputer:multiconnect:<version>:api'
    }
    ```
    - Note: replace `<version>` with the version of multiconnect you want to depend on.
-   - Note: SKIP this step if your mod is NOT using the API in any way.
+   - Note: SKIP the `include` part if your mod is NOT using the API in any way.
 1. If you want to run multiconnect in the IDE alongside your mod, add the following to your `dependencies {}` block:
    ```groovy
    dependencies {
       // ...
-      modCompile('net.earthcomputer:multiconnect:<version>') {
-         transitive = false
-      }
+      modRuntime 'net.earthcomputer:multiconnect:<version>'
    }
    ```
+   - Note: the previous step should also be done alongside this step.
+   - Note: this step is only necessary if you want to run the full mod in the IDE. Otherwise you can skip this step.
 
 ## Contributing
 1. Clone the repository
