@@ -65,6 +65,12 @@ task remapApiJar(type: RemapJarTask, dependsOn: project.apiJar) {
 	addNestedDependencies = false
 }
 
+task remapSlimJar(type: RemapJarTask, dependsOn: jar) {
+	input = jar.archiveFile
+	classifier = 'slim'
+	addNestedDependencies = false
+}
+
 remapJar.dependsOn remapApiJar
 
 jar {
@@ -85,10 +91,14 @@ dependencies {
 	//to change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modCompile "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
+	modCompileOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
+	modRuntime "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 
-	modCompile("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
+	modCompileOnly("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
+		transitive = false // to stop it using its own fabric-loader
+	}
+	modRuntime("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
 		transitive = false // to stop it using its own fabric-loader
 	}
 	include "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
@@ -131,6 +141,9 @@ publishing {
 			}
 			artifact(remapApiJar) {
 				builtBy remapApiJar
+			}
+			artifact(remapSlimJar) {
+				builtBy remapSlimJar
 			}
 		}
 	}
