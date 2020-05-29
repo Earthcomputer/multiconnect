@@ -6,10 +6,7 @@ import net.earthcomputer.multiconnect.impl.RegistryMutator;
 import net.earthcomputer.multiconnect.impl.TagRegistry;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_1.Protocol_1_13_1;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.TntBlock;
+import net.minecraft.block.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.BookUpdateC2SPacket;
 import net.minecraft.tag.BlockTags;
@@ -44,6 +41,15 @@ public class Protocol_1_13 extends Protocol_1_13_1 {
     public boolean acceptBlockState(BlockState state) {
         if (state.getBlock() == Blocks.TNT && state.get(TntBlock.UNSTABLE))
             return false;
+        if (state.getBlock() == Blocks.TUBE_CORAL
+                || state.getBlock() == Blocks.BRAIN_CORAL
+                || state.getBlock() == Blocks.BUBBLE_CORAL
+                || state.getBlock() == Blocks.FIRE_CORAL
+                || state.getBlock() == Blocks.HORN_CORAL) {
+            if (!state.get(CoralBlock.WATERLOGGED)) {
+                return false;
+            }
+        }
         return super.acceptBlockState(state);
     }
 
