@@ -1426,6 +1426,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     @Override
     public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
         tags.add(EntityTypeTags.SKELETONS, EntityType.SKELETON, EntityType.STRAY, EntityType.WITHER_SKELETON);
+        tags.add(EntityTypeTags.RAIDERS, EntityType.EVOKER, EntityType.VINDICATOR, EntityType.ILLUSIONER, EntityType.WITCH);
         super.addExtraEntityTags(tags);
     }
 

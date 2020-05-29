@@ -52,6 +52,7 @@ public class Protocol_1_13 extends Protocol_1_13_1 {
         tags.add(BlockTags.UNDERWATER_BONEMEALS, Blocks.SEAGRASS);
         tags.addTag(BlockTags.UNDERWATER_BONEMEALS, BlockTags.CORALS);
         tags.addTag(BlockTags.UNDERWATER_BONEMEALS, BlockTags.WALL_CORALS);
+        tags.add(BlockTags.CORAL_PLANTS, Blocks.TUBE_CORAL, Blocks.BRAIN_CORAL, Blocks.BUBBLE_CORAL, Blocks.FIRE_CORAL, Blocks.HORN_CORAL);
         super.addExtraBlockTags(tags);
     }
 }

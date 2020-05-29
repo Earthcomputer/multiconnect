@@ -1393,6 +1393,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         tags.add(BlockTags.WOODEN_TRAPDOORS, Blocks.OAK_TRAPDOOR);
         tags.addTag(BlockTags.TRAPDOORS, BlockTags.WOODEN_TRAPDOORS);
         tags.add(BlockTags.TRAPDOORS, Blocks.IRON_TRAPDOOR);
+        tags.add(BlockTags.CORAL_BLOCKS);
+        tags.add(BlockTags.CORALS);
+        tags.add(BlockTags.WALL_CORALS);
         super.addExtraBlockTags(tags);
     }
 
