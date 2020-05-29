@@ -21,6 +21,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings({"VariableUseSideOnly", "MethodCallSideOnly"})
 public class TransformerByteBufTest {
 
     @BeforeEach

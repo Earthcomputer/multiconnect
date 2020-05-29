@@ -19,6 +19,8 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Optional;
+
 import static net.minecraft.item.Items.*;
 
 public class Items_1_12_2 {
@@ -202,8 +204,11 @@ public class Items_1_12_2 {
         for (EntityType entityType : Registry.ENTITY_TYPE) {
             SpawnEggItem item = SpawnEggItem.forEntity(entityType);
             if (item != null && item != BAT_SPAWN_EGG) {
-                registry.registerInPlace(item, nextHighBits << 16 | spawnEggId, REGISTRY_1_13.getKey(item), false);
-                nextHighBits++;
+                Optional<RegistryKey<Item>> key = REGISTRY_1_13.getKey(item);
+                if (key.isPresent()) {
+                    registry.registerInPlace(item, nextHighBits << 16 | spawnEggId, key.get(), false);
+                    nextHighBits++;
+                }
             }
         }
     }

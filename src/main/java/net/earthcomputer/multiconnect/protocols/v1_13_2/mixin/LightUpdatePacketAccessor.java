@@ -16,10 +16,10 @@ public interface LightUpdatePacketAccessor {
     void setChunkZ(int chunkZ);
 
     @Accessor
-    void setSkylightMask(int skylightMask);
+    void setSkyLightMask(int skylightMask);
 
     @Accessor
-    void setBlocklightMask(int blocklightMask);
+    void setBlockLightMask(int blocklightMask);
 
     @Accessor
     void setBlockLightUpdates(List<byte[]> blockLightUpdates);

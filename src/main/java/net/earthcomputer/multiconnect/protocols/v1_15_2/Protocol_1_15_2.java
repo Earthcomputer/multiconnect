@@ -7,6 +7,7 @@ import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAtt
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
 import net.earthcomputer.multiconnect.transformer.ChunkData;
 import net.earthcomputer.multiconnect.transformer.Codecked;
+import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
@@ -36,6 +37,7 @@ import net.minecraft.util.dynamic.DynamicSerializableUuid;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
 import net.minecraft.world.dimension.DimensionTracker;
@@ -102,11 +104,17 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.readInt(); // player id
             buf.readUnsignedByte(); // game mode
             buf.disablePassthroughMode();
+            buf.pendingRead(VarInt.class, new VarInt(3)); // dimension count
+            // dimension ids
+            buf.pendingRead(Identifier.class, World.field_25179.getValue());
+            buf.pendingRead(Identifier.class, World.field_25180.getValue());
+            buf.pendingRead(Identifier.class, World.field_25181.getValue());
             int dimensionId = buf.readInt();
             Identifier dimensionName = dimensionIdToName(dimensionId);
             DimensionTracker.Modifiable tracker = DimensionTracker.create();
             buf.pendingRead(Codecked.class, new Codecked<>(DimensionTracker.Modifiable.CODEC, tracker));
-            buf.pendingRead(Identifier.class, dimensionName);
+            buf.pendingRead(Identifier.class, dimensionName); // dimension type
+            buf.pendingRead(Identifier.class, dimensionName); // dimension
             buf.enablePassthroughMode();
             buf.readLong(); // sah256 seed
             buf.readUnsignedByte(); // max players
@@ -145,7 +153,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
             int dimensionId = buf.readInt();
             Identifier dimensionName = dimensionIdToName(dimensionId);
-            buf.pendingRead(Identifier.class, dimensionName);
+            buf.pendingRead(Identifier.class, dimensionName); // dimension type
+            buf.pendingRead(Identifier.class, dimensionName); // dimension
             buf.enablePassthroughMode();
             buf.readLong(); // sha256 seed
             buf.readUnsignedByte(); // game mode
@@ -736,6 +745,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         tags.add(BlockTags.CAMPFIRES, Blocks.CAMPFIRE);
         tags.add(BlockTags.GUARDED_BY_PIGLINS);
         tags.addTag(BlockTags.PREVENT_MOB_SPAWNING_INSIDE, BlockTags.RAILS);
+        tags.add(BlockTags.FENCE_GATES, Blocks.ACACIA_FENCE_GATE, Blocks.BIRCH_FENCE_GATE, Blocks.DARK_OAK_FENCE_GATE, Blocks.JUNGLE_FENCE_GATE, Blocks.OAK_FENCE, Blocks.SPRUCE_FENCE_GATE);
+        tags.addTag(BlockTags.UNSTABLE_BOTTOM_CENTER, BlockTags.FENCE_GATES);
         super.addExtraBlockTags(tags);
     }
 

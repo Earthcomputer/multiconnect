@@ -2,11 +2,12 @@ package net.earthcomputer.multiconnect.mixin;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.CurrentChunkDataPacket;
 import net.earthcomputer.multiconnect.impl.CustomPayloadHandler;
 import net.earthcomputer.multiconnect.impl.TagRegistry;
-import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
@@ -15,8 +16,7 @@ import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
-import net.minecraft.tag.Tag;
-import net.minecraft.tag.TagContainer;
+import net.minecraft.tag.*;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -26,6 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashSet;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
 public class MixinClientPlayNetworkHandler {
@@ -46,6 +47,7 @@ public class MixinClientPlayNetworkHandler {
         setExtraTags(packet.getTagManager().items(), itemTags -> ConnectionInfo.protocol.addExtraItemTags(itemTags, blockTags));
         setExtraTags(packet.getTagManager().fluids(), ConnectionInfo.protocol::addExtraFluidTags);
         setExtraTags(packet.getTagManager().entityTypes(), ConnectionInfo.protocol::addExtraEntityTags);
+        checkRequiredTags(packet.getTagManager());
     }
 
     @SuppressWarnings("unchecked")
@@ -59,6 +61,21 @@ public class MixinClientPlayNetworkHandler {
         tags.forEach((id, set) -> tagBiMap.put(id, Tag.of(set)));
         accessor.multiconnect_setEntries(tagBiMap);
         return tags;
+    }
+
+    @Unique
+    private static void checkRequiredTags(RegistryTagManager tagManager) {
+        Multimap<String, Identifier> missingTags = HashMultimap.create();
+        missingTags.putAll("blocks", BlockTags.method_29214(tagManager.blocks()));
+        missingTags.putAll("items", ItemTags.method_29217(tagManager.items()));
+        missingTags.putAll("fluids", FluidTags.method_29216(tagManager.fluids()));
+        missingTags.putAll("entity_types", EntityTypeTags.method_29215(tagManager.entityTypes()));
+        if (!missingTags.isEmpty()) {
+            throw new IllegalStateException("Missing required tags: " + missingTags.entries().stream()
+                    .map(entry -> entry.getKey() + ":" + entry.getValue())
+                    .sorted()
+                    .collect(Collectors.joining(",")));
+        }
     }
 
     @Inject(method = "onCustomPayload", at = @At("HEAD"), cancellable = true)

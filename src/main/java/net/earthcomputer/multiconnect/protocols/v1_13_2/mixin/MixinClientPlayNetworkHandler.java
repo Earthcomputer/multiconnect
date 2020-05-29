@@ -55,8 +55,8 @@ public abstract class MixinClientPlayNetworkHandler {
 
                 int blockLightMask = packet.getVerticalStripBitmask() << 1;
                 int skyLightMask = world.getDimension().hasSkyLight() ? blockLightMask : 0;
-                lightPacketAccessor.setBlocklightMask(blockLightMask);
-                lightPacketAccessor.setSkylightMask(skyLightMask);
+                lightPacketAccessor.setBlockLightMask(blockLightMask);
+                lightPacketAccessor.setSkyLightMask(skyLightMask);
                 lightPacketAccessor.setBlockLightUpdates(new ArrayList<>());
                 lightPacketAccessor.setSkyLightUpdates(new ArrayList<>());
 

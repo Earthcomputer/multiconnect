@@ -295,7 +295,8 @@ public abstract class AbstractProtocol {
             for (T t : registry) {
                 defaultIndexedEntries.put(t, registry.getRawId(t));
                 defaultEntriesById.put(registry.getId(t), t);
-                defaultEntriesByKey.put(registry.getKey(t), t);
+                assert registry.getKey(t).isPresent();
+                defaultEntriesByKey.put(registry.getKey(t).get(), t);
             }
             defaultNextId = ((ISimpleRegistry) registry).getNextId();
         }
