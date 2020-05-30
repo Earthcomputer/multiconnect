@@ -30,9 +30,9 @@ public class MixinJigsawBlockScreen extends Screen {
             nameField.active = false;
             jointRotationButton.active = false;
             int index = buttons.indexOf(jointRotationButton);
-            for (int i = index - 2; i < index; i++) {
-                buttons.get(i).active = false;
-            }
+            buttons.get(index + 1).active = false; // levels slider
+            buttons.get(index + 2).active = false; // keep jigsaws toggle
+            buttons.get(index + 3).active = false; // generate button
         }
     }
 
