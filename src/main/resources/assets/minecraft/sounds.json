@@ -53,5 +53,12 @@
       }
     ],
     "subtitle": "subtitles.entity.parrot.imitate.zombie_pigman"
+  },
+
+  "entity.experience_orb.touch": {
+    "sounds": [
+      "random/orb"
+    ],
+    "subtitle": "subtitles.entity.experience_orb.pickup"
   }
 }

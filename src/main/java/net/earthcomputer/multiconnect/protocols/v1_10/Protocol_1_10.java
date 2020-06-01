@@ -5,15 +5,18 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.earthcomputer.multiconnect.impl.RegistryMutator;
+import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_10.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.RecipeInfo;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
+import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
@@ -27,15 +30,26 @@ import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.network.packet.s2c.play.ItemPickupAnimationS2CPacket;
+import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
+import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.command.CommandSource;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class Protocol_1_10 extends Protocol_1_11 {
 
@@ -49,7 +63,51 @@ public class Protocol_1_10 extends Protocol_1_11 {
     private static final TrackedData<Integer> OLD_SKELETON_TYPE = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
 
     public static void registerTranslators() {
+        ProtocolRegistry.registerInboundTranslator(ItemPickupAnimationS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // collected entity id
+            buf.readVarInt(); // collector entity id
+            buf.disablePassthroughMode();
+            buf.pendingRead(VarInt.class, new VarInt(64)); // stack size
+            buf.applyPendingReads();
+        });
+        ProtocolRegistry.registerInboundTranslator(MobSpawnS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // entity id
+            buf.readUuid(); // entity uuid
+            buf.disablePassthroughMode();
+            int entityType = buf.readByte() & 255;
+            buf.pendingRead(VarInt.class, new VarInt(entityType));
+            buf.applyPendingReads();
+        });
+        ProtocolRegistry.registerInboundTranslator(TitleS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.pendingRead(TitleS2CPacket.Action.class, buf.readEnumConstant(TitleType_1_10.class).getNewType());
+            buf.disablePassthroughMode();
+            buf.applyPendingReads();
+        });
 
+        ProtocolRegistry.registerOutboundTranslator(ChatMessageC2SPacket.class, buf -> {
+            Supplier<String> message = buf.skipWrite(String.class);
+            buf.pendingWrite(String.class, () -> {
+                if (message.get().length() > 100) {
+                    return message.get().substring(0, 100);
+                } else {
+                    return message.get();
+                }
+            }, buf::writeString);
+        });
+        ProtocolRegistry.registerOutboundTranslator(PlayerInteractBlockC2SPacket.class, buf -> {
+            buf.passthroughWrite(BlockPos.class); // pos
+            buf.passthroughWrite(Direction.class); // hit side
+            buf.passthroughWrite(Hand.class); // hand
+            Supplier<Float> fractionalX = buf.skipWrite(Float.class);
+            Supplier<Float> fractionalY = buf.skipWrite(Float.class);
+            Supplier<Float> fractionalZ = buf.skipWrite(Float.class);
+            buf.pendingWrite(Byte.class, () -> (byte) (fractionalX.get() * 16), (Consumer<Byte>) buf::writeByte);
+            buf.pendingWrite(Byte.class, () -> (byte) (fractionalY.get() * 16), (Consumer<Byte>) buf::writeByte);
+            buf.pendingWrite(Byte.class, () -> (byte) (fractionalZ.get() * 16), (Consumer<Byte>) buf::writeByte);
+        });
     }
 
     @Override
@@ -143,6 +201,8 @@ public class Protocol_1_10 extends Protocol_1_11 {
         registry.unregister(SoundEvents.ITEM_ARMOR_EQUIP_ELYTRA);
         registry.unregister(SoundEvents.ITEM_BOTTLE_EMPTY);
         registry.unregister(SoundEvents.ITEM_TOTEM_USE);
+
+        insertAfter(registry, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundEvents_1_10.ENTITY_EXPERIENCE_ORB_TOUCH, "entity.experience_orb.touch");
     }
 
     private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
@@ -210,7 +270,9 @@ public class Protocol_1_10 extends Protocol_1_11 {
                 if (newType != entity.getType()) {
                     entity = (ZombieEntity) changeEntityType(entity, newType);
                 }
-                entity.getDataTracker().set(Protocol_1_13_2.OLD_ZOMBIE_VILLAGER_PROFESSION, val - 1);
+                if (newType == EntityType.ZOMBIE_VILLAGER) {
+                    entity.getDataTracker().set(Protocol_1_13_2.OLD_ZOMBIE_VILLAGER_PROFESSION, val - 1);
+                }
             });
             DataTrackerManager.registerOldTrackedData(ZombieEntity.class, OLD_ZOMBIE_CONVERTING, false, (entity, val) -> {
                 if (entity instanceof ZombieVillagerEntity) {
@@ -298,7 +360,18 @@ public class Protocol_1_10 extends Protocol_1_11 {
     }
 
     private static Entity changeEntityType(Entity entity, EntityType<?> newType) {
-        // TODO
-        return entity;
+        ClientWorld world = (ClientWorld) entity.world;
+        Entity destEntity = newType.create(world);
+        if (destEntity == null) {
+            return entity;
+        }
+        destEntity.fromTag(entity.toTag(new CompoundTag()));
+        int entityId = entity.getEntityId();
+        // TODO: this doesn't remove the entity immediately causing destEntity to be removed!
+        world.removeEntity(entityId);
+        destEntity.setEntityId(entityId);
+        world.addEntity(entityId, destEntity);
+        DataTrackerManager.transferDataTracker(entity, destEntity);
+        return destEntity;
     }
 }

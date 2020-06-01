@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.impl;
 
+import net.earthcomputer.multiconnect.mixin.EntityAccessor;
 import net.earthcomputer.multiconnect.mixin.TrackedDataAccessor;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.DataTracker;
@@ -156,6 +157,11 @@ public class DataTrackerManager {
     @SuppressWarnings("unchecked")
     private static <T, U> void doHandleTrackedData(BiConsumer<U, T> handler, Entity entity, Object val) {
         handler.accept((U) entity, (T) val);
+    }
+
+    public static void transferDataTracker(Entity oldEntity, Entity newEntity) {
+        ((IDataTracker) oldEntity.getDataTracker()).multiconnect_setEntityTo(newEntity);
+        ((EntityAccessor) newEntity).setDataTracker(oldEntity.getDataTracker());
     }
 
 }
