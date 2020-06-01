@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_10.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "AbstractDonkeyEntityAccessor",
+    "GuardianEntityAccessor",
+    "HorseBaseEntityAccessor",
+    "HorseEntityAccessor",
+    "ShulkerEntityAccessor",
+    "ZombieEntityAccessor",
+    "ZombieVillagerEntityAccessor"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

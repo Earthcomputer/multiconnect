@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.block.entity.BannerBlockEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.BannerItem;
@@ -54,7 +56,7 @@ public class AddBannerPatternRecipe extends SpecialCraftingRecipe {
 
         BannerPattern_1_13_2 pattern = getBannerPattern(inv);
         if (pattern != null) {
-            DyeColor color = DyeColor.WHITE;
+            DyeColor color = ConnectionInfo.protocolVersion <= Protocols.V1_12_2 ? DyeColor.BLACK : DyeColor.WHITE;
             for (int i = 0; i < inv.size(); i++) {
                 Item item = inv.getStack(i).getItem();
                 if (item instanceof DyeItem) {
@@ -116,7 +118,7 @@ public class AddBannerPatternRecipe extends SpecialCraftingRecipe {
                         }
                     }
                 }
-                if (!foundBaseItem || !foundDye)
+                if (!foundBaseItem || (!foundDye && ConnectionInfo.protocolVersion > Protocols.V1_10))
                     matches = false;
             } else if (inv.size() == pattern.getRecipePattern().length * pattern.getRecipePattern()[0].length()) {
                 DyeColor patternColor = null;
