@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_15_2;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ProjectileEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAttributesFixAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
 import net.earthcomputer.multiconnect.transformer.ChunkData;
@@ -12,7 +13,11 @@ import net.minecraft.block.*;
 import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
 import net.minecraft.datafixer.fix.BitStorageAlignFix;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundTag;
@@ -44,9 +49,12 @@ import net.minecraft.world.dimension.DimensionTracker;
 import net.minecraft.world.dimension.DimensionType;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class Protocol_1_15_2 extends Protocol_1_16 {
+
+    private static final TrackedData<Optional<UUID>> OLD_PROJECTILE_OWNER = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.OPTIONAL_UUID);
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
@@ -779,5 +787,13 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
                 EntityType.DRAGON_FIREBALL,
                 EntityType.WITHER_SKULL);
         super.addExtraEntityTags(tags);
+    }
+
+    @Override
+    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+        if (clazz == PersistentProjectileEntity.class && data == ProjectileEntityAccessor.getPierceLevel()) {
+            DataTrackerManager.registerOldTrackedData(PersistentProjectileEntity.class, OLD_PROJECTILE_OWNER, Optional.empty(), (entity, val) -> {});
+        }
+        return super.acceptEntityData(clazz, data);
     }
 }
