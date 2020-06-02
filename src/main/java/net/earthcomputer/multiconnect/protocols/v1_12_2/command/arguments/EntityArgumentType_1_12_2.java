@@ -11,6 +11,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.TabCompletionManager;
 import net.minecraft.command.arguments.EntitySummonArgumentType;
 import net.minecraft.entity.EntityType;
@@ -22,6 +23,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
 
@@ -391,29 +393,53 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
                 parser.suggestor = builder -> {
                     builder = builder.createOffset(start);
                     if (parser.playersOnly) {
-                        CommandSource.suggestIdentifiers(Collections.singleton(new Identifier("player")), builder);
+                        if (ConnectionInfo.protocolVersion <= Protocols.V1_10) {
+                            CommandSource.suggestMatching(new String[] {"Player"}, builder);
+                        } else {
+                            CommandSource.suggestIdentifiers(Collections.singleton(new Identifier("player")), builder);
+                        }
                     } else {
-                        CommandSource.suggestIdentifiers(Registry.ENTITY_TYPE.stream()
-                                .filter(EntityArgumentType_1_12_2::canSelectEntityType)
-                                .map(EntityType::getId),
-                            builder);
-                        CommandSource.suggestIdentifiers(Registry.ENTITY_TYPE.stream()
-                                .filter(EntityArgumentType_1_12_2::canSelectEntityType)
-                                .map(EntityType::getId)::iterator,
-                            builder,
-                            "!");
+                        if (ConnectionInfo.protocolVersion <= Protocols.V1_10) {
+                            CommandSource.suggestMatching(Registry.ENTITY_TYPE.stream()
+                                    .filter(EntityArgumentType_1_12_2::canSelectEntityType)
+                                    .map(Protocol_1_10::getEntityId)
+                                    .filter(Objects::nonNull)
+                                    .flatMap(it -> Stream.of(it, "!" + it)),
+                                builder);
+                        } else {
+                            CommandSource.suggestIdentifiers(Registry.ENTITY_TYPE.stream()
+                                    .filter(EntityArgumentType_1_12_2::canSelectEntityType)
+                                    .map(EntityType::getId),
+                                builder);
+                            CommandSource.suggestIdentifiers(Registry.ENTITY_TYPE.stream()
+                                    .filter(EntityArgumentType_1_12_2::canSelectEntityType)
+                                    .map(EntityType::getId)::iterator,
+                                builder,
+                                "!");
+                        }
                     }
                     return builder.buildFuture();
                 };
                 boolean inverted = parser.parseIsInverted();
-                Identifier entityId = Identifier.fromCommandInput(parser.reader);
-                if (!Registry.ENTITY_TYPE.containsId(entityId) || !canSelectEntityType(Registry.ENTITY_TYPE.get(entityId))) {
-                    parser.reader.setCursor(start);
-                    throw EntitySummonArgumentType.NOT_FOUND_EXCEPTION.createWithContext(parser.reader, entityId);
+                EntityType<?> entityType;
+                if (ConnectionInfo.protocolVersion <= Protocols.V1_10) {
+                    String entityId = parser.reader.readUnquotedString();
+                    entityType = Protocol_1_10.getEntityById(entityId);
+                    if (entityType == null || !canSelectEntityType(entityType)) {
+                        parser.reader.setCursor(start);
+                        throw EntitySummonArgumentType.NOT_FOUND_EXCEPTION.createWithContext(parser.reader, entityId);
+                    }
+                } else {
+                    Identifier entityId = Identifier.fromCommandInput(parser.reader);
+                    entityType = Registry.ENTITY_TYPE.get(entityId);
+                    if (!Registry.ENTITY_TYPE.containsId(entityId) || !canSelectEntityType(entityType)) {
+                        parser.reader.setCursor(start);
+                        throw EntitySummonArgumentType.NOT_FOUND_EXCEPTION.createWithContext(parser.reader, entityId);
+                    }
                 }
                 if (!inverted) {
                     parser.typeKnown = true;
-                    if (Registry.ENTITY_TYPE.get(entityId) == EntityType.PLAYER) {
+                    if (entityType == EntityType.PLAYER) {
                         parser.playersOnly = true;
                     } else {
                         parser.cannotSelectPlayers = true;

@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_10;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.DataTrackerManager;
@@ -61,6 +63,79 @@ public class Protocol_1_10 extends Protocol_1_11 {
     private static final TrackedData<Integer> OLD_HORSE_VARIANT = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> OLD_HORSE_ARMOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> OLD_SKELETON_TYPE = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+
+    private static final BiMap<EntityType<?>, String> ENTITY_IDS = ImmutableBiMap.<EntityType<?>, String>builder()
+            .put(EntityType.AREA_EFFECT_CLOUD, "AreaEffectCloud")
+            .put(EntityType.ARMOR_STAND, "ArmorStand")
+            .put(EntityType.ARROW, "Arrow")
+            .put(EntityType.BAT, "Bat")
+            .put(EntityType.BLAZE, "Blaze")
+            .put(EntityType.BOAT, "Boat")
+            .put(EntityType.CAVE_SPIDER, "CaveSpider")
+            .put(EntityType.CHICKEN, "Chicken")
+            .put(EntityType.COW, "Cow")
+            .put(EntityType.CREEPER, "Creeper")
+            .put(EntityType.DONKEY, "Donkey")
+            .put(EntityType.DRAGON_FIREBALL, "DragonFireball")
+            .put(EntityType.ELDER_GUARDIAN, "ElderGuardian")
+            .put(EntityType.END_CRYSTAL, "EnderCrystal")
+            .put(EntityType.ENDER_DRAGON, "EnderDragon")
+            .put(EntityType.ENDERMAN, "Enderman")
+            .put(EntityType.ENDERMITE, "Endermite")
+            .put(EntityType.EYE_OF_ENDER, "EyeOfEnderSignal")
+            .put(EntityType.FALLING_BLOCK, "FallingSand")
+            .put(EntityType.FIREBALL, "Fireball")
+            .put(EntityType.FIREWORK_ROCKET, "FireworksRocketEntity")
+            .put(EntityType.GHAST, "Ghast")
+            .put(EntityType.GIANT, "Giant")
+            .put(EntityType.GUARDIAN, "Guardian")
+            .put(EntityType.HORSE, "EntityHorse")
+            .put(EntityType.ITEM, "Item")
+            .put(EntityType.ITEM_FRAME, "ItemFrame")
+            .put(EntityType.MAGMA_CUBE, "LavaSlime")
+            .put(EntityType.LEASH_KNOT, "LeashKnot")
+            .put(EntityType.CHEST_MINECART, "MinecartChest")
+            .put(EntityType.COMMAND_BLOCK_MINECART, "MinecartCommandBlock")
+            .put(EntityType.FURNACE_MINECART, "MinecartFurnace")
+            .put(EntityType.HOPPER_MINECART, "MinecartHopper")
+            .put(EntityType.MINECART, "MinecartRideable")
+            .put(EntityType.SPAWNER_MINECART, "MinecartSpawner")
+            .put(EntityType.TNT_MINECART, "MinecartTNT")
+            .put(EntityType.MOOSHROOM, "MushroomCow")
+            .put(EntityType.OCELOT, "Ozelot")
+            .put(EntityType.PAINTING, "Painting")
+            .put(EntityType.PIG, "Pig")
+            .put(EntityType.ZOMBIFIED_PIGLIN, "PigZombie")
+            .put(EntityType.POLAR_BEAR, "PolarBear")
+            .put(EntityType.TNT, "PrimedTnt")
+            .put(EntityType.RABBIT, "Rabbit")
+            .put(EntityType.SHEEP, "Sheep")
+            .put(EntityType.SHULKER, "Shulker")
+            .put(EntityType.SHULKER_BULLET, "ShulkerBullet")
+            .put(EntityType.SILVERFISH, "Silverfish")
+            .put(EntityType.SKELETON, "Skeleton")
+            .put(EntityType.SLIME, "Slime")
+            .put(EntityType.SMALL_FIREBALL, "SmallFireball")
+            .put(EntityType.SNOW_GOLEM, "SnowMan")
+            .put(EntityType.SNOWBALL, "Snowball")
+            .put(EntityType.SPECTRAL_ARROW, "SpectralArrow")
+            .put(EntityType.SPIDER, "Spider")
+            .put(EntityType.SQUID, "Squid")
+            .put(EntityType.EGG, "ThrownEgg")
+            .put(EntityType.ENDER_PEARL, "ThrownEnderpearl")
+            .put(EntityType.EXPERIENCE_BOTTLE, "ThrownExpBottle")
+            .put(EntityType.POTION, "ThrownPotion")
+            .put(EntityType.VILLAGER, "Villager")
+            .put(EntityType.IRON_GOLEM, "VillagerGolem")
+            .put(EntityType.WITCH, "Witch")
+            .put(EntityType.WITHER, "WitherBoss")
+            .put(EntityType.WITHER_SKULL, "WitherSkull")
+            .put(EntityType.WOLF, "Wolf")
+            .put(EntityType.EXPERIENCE_ORB, "XPOrb")
+            .put(EntityType.ZOMBIE, "Zombie")
+            .put(EntityType.PLAYER, "Player")
+            .put(EntityType.LIGHTNING_BOLT, "LightningBolt")
+            .build();
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ItemPickupAnimationS2CPacket.class, buf -> {
@@ -373,5 +448,13 @@ public class Protocol_1_10 extends Protocol_1_11 {
         world.addEntity(entityId, destEntity);
         DataTrackerManager.transferDataTracker(entity, destEntity);
         return destEntity;
+    }
+
+    public static String getEntityId(EntityType<?> entityType) {
+        return ENTITY_IDS.get(entityType);
+    }
+
+    public static EntityType<?> getEntityById(String id) {
+        return ENTITY_IDS.inverse().get(id);
     }
 }

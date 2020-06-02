@@ -5,15 +5,36 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Protocol_1_12_2;
 import net.minecraft.command.suggestion.SuggestionProviders;
+import net.minecraft.entity.EntityType;
 import net.minecraft.server.command.CommandSource;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.util.registry.Registry;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
 public class Commands_1_12_2 {
+
+    @SuppressWarnings("unchecked")
+    public static final SuggestionProvider<CommandSource> SUMMONABLE_ENTITIES = (ctx, builder) -> {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_10) {
+            return CommandSource.suggestMatching(Registry.ENTITY_TYPE.stream()
+                    .filter(EntityType::isSummonable)
+                    .map(Protocol_1_10::getEntityId)
+                    .filter(Objects::nonNull),
+                builder);
+        } else {
+            return SuggestionProviders.SUMMONABLE_ENTITIES.getSuggestions((CommandContext<ServerCommandSource>) (CommandContext<?>) ctx, builder);
+        }
+    };
 
     public static void registerVanilla(CommandDispatcher<CommandSource> dispatcher,
                                         Set<String> serverCommands,
