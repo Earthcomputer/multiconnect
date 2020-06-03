@@ -60,7 +60,6 @@ import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
-import net.minecraft.world.chunk.PalettedContainer;
 
 import java.util.List;
 import java.util.OptionalInt;
