@@ -199,7 +199,11 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         ProtocolRegistry.registerInboundTranslator(ParticleS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             ParticleType<?> particleType = Registry.PARTICLE_TYPE.get(buf.readInt());
-            if (particleType != ParticleTypes.ITEM && particleType != ParticleTypes.DUST) {
+            if (particleType != ParticleTypes.ITEM
+                    && particleType != ParticleTypes.DUST
+                    && particleType != ParticleTypes.BLOCK
+                    && particleType != ParticleTypes.FALLING_DUST
+                    && particleType != Particles_1_12_2.BLOCK_DUST) {
                 buf.disablePassthroughMode();
                 buf.applyPendingReads();
                 return;
@@ -231,12 +235,28 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 int meta = buf.readVarInt();
                 ItemStack stack = Items_1_12_2.oldItemStackToNew(new ItemStack(item), meta);
                 buf.pendingRead(ItemStack.class, stack);
-            } else {
+            } else if (particleType == ParticleTypes.DUST) {
                 buf.pendingRead(Float.class, red);
                 buf.pendingRead(Float.class, green);
                 buf.pendingRead(Float.class, blue);
                 buf.pendingRead(Float.class, 1f); // scale
+            } else {
+                buf.pendingRead(VarInt.class, new VarInt(Blocks_1_12_2.convertToStateRegistryId(buf.readVarInt())));
             }
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerInboundTranslator(WorldEventS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            int eventId = buf.readInt();
+            if (eventId != 2001) { // block broken
+                buf.disablePassthroughMode();
+                buf.applyPendingReads();
+                return;
+            }
+            buf.readBlockPos(); // pos
+            buf.disablePassthroughMode();
+            buf.pendingRead(Integer.class, Blocks_1_12_2.convertToStateRegistryId(buf.readInt())); // block state id
             buf.applyPendingReads();
         });
 

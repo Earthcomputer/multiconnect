@@ -16,11 +16,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings({"VariableUseSideOnly", "MethodCallSideOnly"})
 public class TransformerByteBufTest {
 
     @BeforeEach
@@ -119,6 +121,23 @@ public class TransformerByteBufTest {
         assertEquals(0xc0 & 0x7f, buf.readVarInt());
         assertEquals(0x84 & 0x7f, buf.readVarInt());
         assertEquals(0x3d, buf.readVarInt());
+    }
+
+    @Test
+    public void testNestedRead2() {
+        TransformerByteBuf buf = inboundBuf(new TranslatorRegistry()
+                    .registerInboundTranslator(0, LoginHelloS2CPacket.class, buf1 -> {
+                        buf1.enablePassthroughMode();
+                        buf1.readUuid();
+                        buf1.disablePassthroughMode();
+                        buf1.applyPendingReads();
+                    })
+                    .registerInboundTranslator(1, UUID.class, buf1 -> {
+                        buf1.pendingRead(Long.class, buf1.readLong());
+                        buf1.applyPendingReads();
+                    }),
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        assertEquals(new UUID(0, 0), buf.readUuid());
     }
 
     @Test

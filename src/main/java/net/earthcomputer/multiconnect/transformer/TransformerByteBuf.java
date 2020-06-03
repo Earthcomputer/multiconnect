@@ -157,10 +157,6 @@ public final class TransformerByteBuf extends PacketByteBuf {
             PendingValue<STORED> pendingValue = pendingReads.poll();
             value = pendingValue.value;
             translators = translatorRegistry.getInboundTranslators(type, pendingValue.version, SharedConstants.getGameVersion().getProtocolVersion());
-            for (Pair<Integer, InboundTranslator<STORED>> translator : translators) {
-                getStackFrame().version = translator.getLeft();
-                translator.getRight().onRead(this);
-            }
         } else {
             translators = translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
             for (Pair<Integer, InboundTranslator<STORED>> translator : translators) {
