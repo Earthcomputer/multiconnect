@@ -120,6 +120,7 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
         private boolean cannotSelectPlayers = false;
         private boolean typeKnown = false;
         private Set<String> seenOptions = new HashSet<>();
+        private boolean hadExplicitOption = false;
 
         public EntitySelectorParser(StringReader reader, boolean singleTarget, boolean playersOnly) {
             this.reader = reader;
@@ -215,6 +216,39 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
             String optionName = reader.readUnquotedString();
             if (!optionName.startsWith("score_") && !SELECTOR_OPTIONS.containsKey(optionName)) {
                 reader.setCursor(start);
+
+                if (ConnectionInfo.protocolVersion <= Protocols.V1_10 && !hadExplicitOption && seenOptions.size() < 4) {
+                    boolean validInteger;
+                    try {
+                        Integer.parseInt(optionName);
+                        validInteger = true;
+                    } catch (NumberFormatException e) {
+                        validInteger = false;
+                    }
+                    if (validInteger) {
+                        reader.readUnquotedString();
+                        if (reader.canRead() && (reader.peek() == ',' || reader.peek() == ']')) {
+                            switch (seenOptions.size()) {
+                                case 0:
+                                    seenOptions.add("x");
+                                    break;
+                                case 1:
+                                    seenOptions.add("y");
+                                    break;
+                                case 2:
+                                    seenOptions.add("z");
+                                    break;
+                                case 3:
+                                    seenOptions.add("r");
+                                    break;
+                            }
+                            return;
+                        } else {
+                            reader.setCursor(start);
+                        }
+                    }
+                }
+
                 throw UNKNOWN_OPTION_EXCEPTION.createWithContext(reader, optionName);
             }
             if (seenOptions.contains(optionName)) {
@@ -226,6 +260,7 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
                 throw DISALLOWED_OPTION_EXCEPTION.createWithContext(reader, optionName);
             }
             seenOptions.add(optionName);
+            hadExplicitOption = true;
 
             reader.expect('=');
 
