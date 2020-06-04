@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 @Mixin(MinecraftServer.class)
 public class MixinMinecraftServer {
 
-    @Inject(method = "method_29439", at = @At("RETURN"))
+    @Inject(method = "reloadResources", at = @At("RETURN"))
     private void onReloadDataPacks(CallbackInfoReturnable<CompletableFuture<Void>> ci) {
         ConnectionInfo.stopReloadingResources();
     }

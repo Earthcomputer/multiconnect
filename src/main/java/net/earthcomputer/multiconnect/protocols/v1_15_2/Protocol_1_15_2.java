@@ -5,6 +5,8 @@ import net.earthcomputer.multiconnect.impl.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ProjectileEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAttributesFixAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.WolfEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
 import net.earthcomputer.multiconnect.transformer.ChunkData;
 import net.earthcomputer.multiconnect.transformer.Codecked;
@@ -17,6 +19,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.passive.TameableEntity;
+import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -55,6 +59,7 @@ import java.util.UUID;
 public class Protocol_1_15_2 extends Protocol_1_16 {
 
     private static final TrackedData<Optional<UUID>> OLD_PROJECTILE_OWNER = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.OPTIONAL_UUID);
+    private static final TrackedData<Byte> OLD_TAMEABLE_FLAGS = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BYTE);
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
@@ -114,9 +119,9 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.disablePassthroughMode();
             buf.pendingRead(VarInt.class, new VarInt(3)); // dimension count
             // dimension ids
-            buf.pendingRead(Identifier.class, World.field_25179.getValue());
-            buf.pendingRead(Identifier.class, World.field_25180.getValue());
-            buf.pendingRead(Identifier.class, World.field_25181.getValue());
+            buf.pendingRead(Identifier.class, World.OVERWORLD.getValue());
+            buf.pendingRead(Identifier.class, World.NETHER.getValue());
+            buf.pendingRead(Identifier.class, World.END.getValue());
             int dimensionId = buf.readInt();
             Identifier dimensionName = dimensionIdToName(dimensionId);
             DimensionTracker.Modifiable tracker = DimensionTracker.create();
@@ -178,7 +183,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.readText(); // message
             buf.readByte(); // type
             buf.disablePassthroughMode();
-            buf.pendingRead(UUID.class, Util.field_25140);
+            buf.pendingRead(UUID.class, Util.NIL_UUID);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerOutboundTranslator(UpdateJigsawC2SPacket.class, buf -> {
@@ -229,6 +234,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
         remove(packets, PlayerSpawnPositionS2CPacket.class);
         insertAfter(packets, ScoreboardPlayerUpdateS2CPacket.class, PacketInfo.of(PlayerSpawnPositionS2CPacket.class, PlayerSpawnPositionS2CPacket::new));
+        insertAfter(packets, ExperienceOrbSpawnS2CPacket.class, PacketInfo.of(EntitySpawnGlobalS2CPacket_1_15_2.class, EntitySpawnGlobalS2CPacket_1_15_2::new));
         return packets;
     }
 
@@ -384,6 +390,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         insertAfter(registry, EntityType.TROPICAL_FISH, EntityType.TURTLE, "turtle");
         registry.unregister(EntityType.ZOMBIFIED_PIGLIN);
         insertAfter(registry, EntityType.PUFFERFISH, EntityType.ZOMBIFIED_PIGLIN, "zombie_pigman");
+        registry.unregister(EntityType.LIGHTNING_BOLT);
+        insertAfter(registry, EntityType.FISHING_BOBBER, EntityType.LIGHTNING_BOLT, "lightning_bolt");
 
         registry.unregister(EntityType.HOGLIN);
         registry.unregister(EntityType.PIGLIN);
@@ -793,6 +801,20 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == PersistentProjectileEntity.class && data == ProjectileEntityAccessor.getPierceLevel()) {
             DataTrackerManager.registerOldTrackedData(PersistentProjectileEntity.class, OLD_PROJECTILE_OWNER, Optional.empty(), (entity, val) -> {});
+        }
+        if (clazz == TameableEntity.class && data == TameableEntityAccessor.getTameableFlags()) {
+            DataTrackerManager.registerOldTrackedData(TameableEntity.class, OLD_TAMEABLE_FLAGS, (byte)0, (entity, val) -> {
+                byte newVal = val;
+                if (entity instanceof WolfEntity) {
+                    ((WolfEntity) entity).method_29514((newVal & 2) != 0 ? 400 : 0);
+                    newVal = (byte) (newVal & ~2);
+                }
+                entity.getDataTracker().set(TameableEntityAccessor.getTameableFlags(), newVal);
+            });
+            return false;
+        }
+        if (clazz == WolfEntity.class && data == WolfEntityAccessor.getRemainingAngerTicks()) {
+            return false;
         }
         return super.acceptEntityData(clazz, data);
     }
