@@ -440,12 +440,20 @@ public class Protocol_1_10 extends Protocol_1_11 {
         if (destEntity == null) {
             return entity;
         }
+
+        // copy the entity
         destEntity.fromTag(entity.toTag(new CompoundTag()));
+        destEntity.trackedX = entity.trackedX;
+        destEntity.trackedY = entity.trackedY;
+        destEntity.trackedZ = entity.trackedZ;
+
+        // replace entity in world and exchange entity id
         int entityId = entity.getEntityId();
-        // TODO: this doesn't remove the entity immediately causing destEntity to be removed!
         world.removeEntity(entityId);
         destEntity.setEntityId(entityId);
         world.addEntity(entityId, destEntity);
+
+        // exchange data tracker (this may be part of a series of data tracker updates, need the same data tracker instance)
         DataTrackerManager.transferDataTracker(entity, destEntity);
         return destEntity;
     }
