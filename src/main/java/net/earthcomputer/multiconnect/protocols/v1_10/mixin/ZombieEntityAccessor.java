@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ZombieEntity.class)
 public interface ZombieEntityAccessor {
-    @Accessor("field_7427")
+    @Accessor("ZOMBIE_TYPE")
     static TrackedData<Integer> getZombieType() {
         return MixinHelper.fakeInstance();
     }
