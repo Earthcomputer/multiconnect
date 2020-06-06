@@ -497,9 +497,8 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
         });
     }
 
-    // because :thonkjang:
     private static boolean canSelectEntityType(EntityType<?> type) {
-        return type != EntityType.FISHING_BOBBER;
+        return type != EntityType.FISHING_BOBBER && type != EntityType.LIGHTNING_BOLT;
     }
 
     @FunctionalInterface
