@@ -339,6 +339,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                         CompoundTag display = stack.getTag().getCompound("display");
                         if (display.contains("multiconnect:1.13.2/oldLore", 9) || display.contains("Lore", 9)) {
                             stack = stack.copy();
+                            assert stack.getTag() != null;
+                            display = stack.getTag().getCompound("display");
                             ListTag lore = display.contains("multiconnect:1.13.2/oldLore", 9) ? display.getList("multiconnect:1.13.2/oldLore", 8) : display.getList("Lore", 8);
                             ListTag newLore = new ListTag();
                             for (int i = 0; i < lore.size(); i++) {
