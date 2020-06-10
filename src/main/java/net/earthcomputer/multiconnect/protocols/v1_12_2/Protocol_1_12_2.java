@@ -405,7 +405,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.readVarInt(); // entity id
             buf.readUuid(); // uuid
             int type = buf.readByte();
-            if (type != 70) { // falling block
+            if (type != 70 && type != 71) { // falling block and item frame
                 buf.disablePassthroughMode();
                 buf.applyPendingReads();
                 return;
@@ -416,7 +416,11 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.readByte(); // pitch
             buf.readByte(); // yaw
             buf.disablePassthroughMode();
-            buf.pendingRead(Integer.class, Blocks_1_12_2.convertToStateRegistryId(buf.readInt()));
+            if (type == 70) { // falling block
+                buf.pendingRead(Integer.class, Blocks_1_12_2.convertToStateRegistryId(buf.readInt()));
+            } else { // item frame
+                buf.pendingRead(Integer.class, Direction.fromHorizontal(buf.readInt()).getId());
+            }
             buf.applyPendingReads();
         });
 
