@@ -30,6 +30,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.JigsawGeneratingC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateJigsawC2SPacket;
 import net.minecraft.network.packet.s2c.login.LoginSuccessS2CPacket;
 import net.minecraft.network.packet.s2c.play.*;
@@ -40,21 +41,23 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.ItemTags;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.dynamic.DynamicSerializableUuid;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryTracker;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
-import net.minecraft.world.dimension.DimensionTracker;
 import net.minecraft.world.dimension.DimensionType;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public class Protocol_1_15_2 extends Protocol_1_16 {
 
@@ -124,8 +127,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.pendingRead(Identifier.class, World.END.getValue());
             int dimensionId = buf.readInt();
             Identifier dimensionName = dimensionIdToName(dimensionId);
-            DimensionTracker.Modifiable tracker = DimensionTracker.create();
-            buf.pendingRead(Codecked.class, new Codecked<>(DimensionTracker.Modifiable.CODEC, tracker));
+            RegistryTracker.Modifiable tracker = RegistryTracker.create();
+            buf.pendingRead(Codecked.class, new Codecked<>(RegistryTracker.Modifiable.CODEC, tracker));
             buf.pendingRead(Identifier.class, dimensionName); // dimension type
             buf.pendingRead(Identifier.class, dimensionName); // dimension
             buf.enablePassthroughMode();
@@ -185,6 +188,30 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.disablePassthroughMode();
             buf.pendingRead(UUID.class, Util.NIL_UUID);
             buf.applyPendingReads();
+        });
+        ProtocolRegistry.registerInboundTranslator(LightUpdateS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // chunk x
+            buf.readVarInt(); // chunk z
+            buf.disablePassthroughMode();
+            buf.pendingRead(Boolean.class, true); // trust edges
+            buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerOutboundTranslator(PlayerInteractEntityC2SPacket.class, buf -> {
+            buf.passthroughWrite(VarInt.class); // entity id
+            Supplier<PlayerInteractEntityC2SPacket.InteractionType> type = buf.passthroughWrite(PlayerInteractEntityC2SPacket.InteractionType.class);
+            buf.whenWrite(() -> {
+                if (type.get() == PlayerInteractEntityC2SPacket.InteractionType.INTERACT_AT) {
+                    buf.passthroughWrite(Float.class); // hit x
+                    buf.passthroughWrite(Float.class); // hit y
+                    buf.passthroughWrite(Float.class); // hit z
+                }
+                if (type.get() == PlayerInteractEntityC2SPacket.InteractionType.INTERACT || type.get() == PlayerInteractEntityC2SPacket.InteractionType.INTERACT_AT) {
+                    buf.passthroughWrite(Hand.class); // hand
+                    buf.skipWrite(Boolean.class); // sneaking
+                }
+            });
         });
         ProtocolRegistry.registerOutboundTranslator(UpdateJigsawC2SPacket.class, buf -> {
             buf.passthroughWrite(BlockPos.class); // pos
@@ -763,6 +790,10 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         tags.addTag(BlockTags.PREVENT_MOB_SPAWNING_INSIDE, BlockTags.RAILS);
         tags.add(BlockTags.FENCE_GATES, Blocks.ACACIA_FENCE_GATE, Blocks.BIRCH_FENCE_GATE, Blocks.DARK_OAK_FENCE_GATE, Blocks.JUNGLE_FENCE_GATE, Blocks.OAK_FENCE, Blocks.SPRUCE_FENCE_GATE);
         tags.addTag(BlockTags.UNSTABLE_BOTTOM_CENTER, BlockTags.FENCE_GATES);
+        tags.add(BlockTags.INFINIBURN_OVERWORLD, Blocks.NETHERRACK, Blocks.MAGMA_BLOCK);
+        tags.addTag(BlockTags.INFINIBURN_NETHER, BlockTags.INFINIBURN_OVERWORLD);
+        tags.addTag(BlockTags.INFINIBURN_END, BlockTags.INFINIBURN_OVERWORLD);
+        tags.add(BlockTags.INFINIBURN_END, Blocks.BEDROCK);
         super.addExtraBlockTags(tags);
     }
 
@@ -806,7 +837,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             DataTrackerManager.registerOldTrackedData(TameableEntity.class, OLD_TAMEABLE_FLAGS, (byte)0, (entity, val) -> {
                 byte newVal = val;
                 if (entity instanceof WolfEntity) {
-                    ((WolfEntity) entity).method_29514((newVal & 2) != 0 ? 400 : 0);
+                    ((WolfEntity) entity).setAngerTime((newVal & 2) != 0 ? 400 : 0);
                     newVal = (byte) (newVal & ~2);
                 }
                 entity.getDataTracker().set(TameableEntityAccessor.getTameableFlags(), newVal);
