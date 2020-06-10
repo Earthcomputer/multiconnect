@@ -5,6 +5,7 @@ import com.google.common.collect.HashBiMap;
 import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.ShulkerBoxBlock;
 import net.minecraft.datafixer.fix.EntityTheRenameningBlock;
 import net.minecraft.datafixer.fix.ItemInstanceTheFlatteningFix;
 import net.minecraft.enchantment.Enchantment;
@@ -61,6 +62,27 @@ public class Items_1_12_2 {
                     ItemStack newStack = new ItemStack(newItem, stack.getCount());
                     newStack.setTag(stack.getTag());
                     stack = newStack;
+                }
+            }
+        }
+        else if (stack.getItem() instanceof BlockItem && ((BlockItem) stack.getItem()).getBlock() instanceof ShulkerBoxBlock) {
+            if (stack.getTag() != null && stack.getTag().contains("BlockEntityTag", 10)) {
+                stack = stack.copy();
+                copiedTag = true;
+                assert stack.getTag() != null;
+                CompoundTag blockEntityTag = stack.getTag().getCompound("BlockEntityTag");
+                if (blockEntityTag.contains("Items", 9)) {
+                    ListTag items = blockEntityTag.getList("Items", 10);
+                    for (int i = 0; i < items.size(); i++) {
+                        CompoundTag item = items.getCompound(i);
+                        int itemMeta = item.getShort("Damage");
+                        int slot = item.getByte("Slot");
+                        ItemStack itemStack = ItemStack.fromTag(item);
+                        itemStack = oldItemStackToNew(itemStack, itemMeta);
+                        CompoundTag newItemTag = itemStack.toTag(new CompoundTag());
+                        newItemTag.putByte("Slot", (byte)slot);
+                        items.set(i, newItemTag);
+                    }
                 }
             }
         }
@@ -155,6 +177,28 @@ public class Items_1_12_2 {
             if (!entityTag.contains("id", 8))
                 entityTag.putString("id", Registry.ENTITY_TYPE.getId(((SpawnEggItem) stack.getItem()).getEntityType(oldStack.getTag())).toString());
             stack = oldStack;
+        }
+        else if (stack.getItem() instanceof BlockItem && ((BlockItem) stack.getItem()).getBlock() instanceof ShulkerBoxBlock) {
+            if (stack.getTag() != null && stack.getTag().contains("BlockEntityTag", 10)) {
+                stack = stack.copy();
+                copiedTag = true;
+                assert stack.getTag() != null;
+                CompoundTag blockEntityTag = stack.getTag().getCompound("BlockEntityTag");
+                if (blockEntityTag.contains("Items", 9)) {
+                    ListTag items = blockEntityTag.getList("Items", 10);
+                    for (int i = 0; i < items.size(); i++) {
+                        CompoundTag item = items.getCompound(i);
+                        int slot = item.getByte("Slot");
+                        ItemStack itemStack = ItemStack.fromTag(item);
+                        Pair<ItemStack, Integer> itemStackAndMeta = newItemStackToOld(itemStack);
+                        itemStack = itemStackAndMeta.getLeft();
+                        CompoundTag newItemTag = itemStack.toTag(new CompoundTag());
+                        newItemTag.putShort("Damage", itemStackAndMeta.getRight().shortValue());
+                        newItemTag.putByte("Slot", (byte)slot);
+                        items.set(i, newItemTag);
+                    }
+                }
+            }
         }
         if (stack.getItem() instanceof BannerItem || stack.getItem() == SHIELD) {
             stack = invertBannerColors(stack);
