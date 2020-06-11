@@ -14,6 +14,7 @@ import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.datafixer.fix.BitStorageAlignFix;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -21,6 +22,7 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.WolfEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -32,6 +34,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.JigsawGeneratingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateJigsawC2SPacket;
+import net.minecraft.network.packet.c2s.play.UpdatePlayerAbilitiesC2SPacket;
 import net.minecraft.network.packet.s2c.login.LoginSuccessS2CPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleType;
@@ -57,6 +60,7 @@ import net.minecraft.world.dimension.DimensionType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class Protocol_1_15_2 extends Protocol_1_16 {
@@ -212,6 +216,27 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
                     buf.skipWrite(Boolean.class); // sneaking
                 }
             });
+        });
+        ProtocolRegistry.registerOutboundTranslator(UpdatePlayerAbilitiesC2SPacket.class, buf -> {
+            PlayerEntity player = MinecraftClient.getInstance().player;
+            if (player != null) {
+                Supplier<Byte> flags = buf.skipWrite(Byte.class);
+                buf.pendingWrite(Byte.class, () -> {
+                    byte newFlags = flags.get();
+                    if (player.abilities.invulnerable) {
+                        newFlags |= 1;
+                    }
+                    if (player.abilities.allowFlying) {
+                        newFlags |= 4;
+                    }
+                    if (player.abilities.creativeMode) {
+                        newFlags |= 8;
+                    }
+                    return newFlags;
+                }, (Consumer<Byte>) buf::writeByte);
+                buf.pendingWrite(Float.class, player.abilities::getFlySpeed, buf::writeFloat);
+                buf.pendingWrite(Float.class, player.abilities::getWalkSpeed, buf::writeFloat);
+            }
         });
         ProtocolRegistry.registerOutboundTranslator(UpdateJigsawC2SPacket.class, buf -> {
             buf.passthroughWrite(BlockPos.class); // pos
