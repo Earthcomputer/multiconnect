@@ -416,7 +416,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.WARPED_FUNGUS_ON_A_STICK);
         registry.unregister(Items.MUSIC_DISC_PIGSTEP);
         registry.unregister(Items.PIGLIN_BANNER_PATTERN);
-        rename(registry, Items.ZOMBIFIED_PIGLIN_SPAWN_EGG, "zombie_pigman_spawn_egg");
+        registry.unregister(Items.ZOMBIFIED_PIGLIN_SPAWN_EGG);
+        insertAfter(registry, Items.ZOMBIE_HORSE_SPAWN_EGG, Items.ZOMBIFIED_PIGLIN_SPAWN_EGG, "zombie_pigman_spawn_egg");
     }
 
     private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
