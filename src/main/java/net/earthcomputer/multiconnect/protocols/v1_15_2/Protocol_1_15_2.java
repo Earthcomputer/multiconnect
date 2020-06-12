@@ -213,8 +213,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
                 }
                 if (type.get() == PlayerInteractEntityC2SPacket.InteractionType.INTERACT || type.get() == PlayerInteractEntityC2SPacket.InteractionType.INTERACT_AT) {
                     buf.passthroughWrite(Hand.class); // hand
-                    buf.skipWrite(Boolean.class); // sneaking
                 }
+                buf.skipWrite(Boolean.class); // sneaking
             });
         });
         ProtocolRegistry.registerOutboundTranslator(UpdatePlayerAbilitiesC2SPacket.class, buf -> {
