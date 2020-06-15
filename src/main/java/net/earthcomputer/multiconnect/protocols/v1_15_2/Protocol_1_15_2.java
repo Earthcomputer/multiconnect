@@ -10,11 +10,13 @@ import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.WolfEntityAccessor
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
 import net.earthcomputer.multiconnect.transformer.ChunkData;
 import net.earthcomputer.multiconnect.transformer.Codecked;
+import net.earthcomputer.multiconnect.transformer.UnsignedByte;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.datafixer.fix.BitStorageAlignFix;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -112,7 +114,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         });
         ProtocolRegistry.registerInboundTranslator(LoginSuccessS2CPacket.class, buf -> {
             UUID uuid = UUID.fromString(buf.readString(36));
-            int[] uuidArray = DynamicSerializableUuid.method_26275(uuid);
+            int[] uuidArray = DynamicSerializableUuid.toIntArray(uuid);
             buf.pendingRead(Integer.class, uuidArray[0]);
             buf.pendingRead(Integer.class, uuidArray[1]);
             buf.pendingRead(Integer.class, uuidArray[2]);
@@ -122,8 +124,9 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readInt(); // player id
-            buf.readUnsignedByte(); // game mode
+            int gameMode = buf.readUnsignedByte();
             buf.disablePassthroughMode();
+            buf.pendingRead(UnsignedByte.class, new UnsignedByte(gameMode == 1 ? (byte)0 : (byte)1)); // if creative, survival else creative - previous game mode
             buf.pendingRead(VarInt.class, new VarInt(3)); // dimension count
             // dimension ids
             buf.pendingRead(Identifier.class, World.OVERWORLD.getValue());
@@ -179,6 +182,14 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.readLong(); // sha256 seed
             buf.readUnsignedByte(); // game mode
             buf.disablePassthroughMode();
+            ClientPlayerInteractionManager interactionManager = MinecraftClient.getInstance().interactionManager;
+            byte previousGameMode;
+            if (interactionManager != null) {
+                previousGameMode = (byte) interactionManager.getPreviousGameMode().getId();
+            } else {
+                previousGameMode = (byte)0; // survival
+            }
+            buf.pendingRead(UnsignedByte.class, new UnsignedByte(previousGameMode));
             String genType = buf.readString(16);
             buf.pendingRead(Boolean.class, "debug_all_block_states".equalsIgnoreCase(genType)); // debug mode
             buf.pendingRead(Boolean.class, "flat".equalsIgnoreCase(genType)); // flat world
