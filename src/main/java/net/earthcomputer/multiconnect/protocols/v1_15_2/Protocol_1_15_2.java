@@ -20,6 +20,7 @@ import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.datafixer.fix.BitStorageAlignFix;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.passive.TameableEntity;
@@ -98,6 +99,9 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.readInt(); // x
             buf.readInt(); // z
             buf.readBoolean(); // full chunk
+            buf.disablePassthroughMode();
+            buf.pendingRead(Boolean.class, true); // forget old data
+            buf.enablePassthroughMode();
             buf.readVarInt(); // vertical strip bitmask
             buf.disablePassthroughMode();
             CompoundTag heightmaps = buf.readCompoundTag();
@@ -210,6 +214,13 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.readVarInt(); // chunk z
             buf.disablePassthroughMode();
             buf.pendingRead(Boolean.class, true); // trust edges
+            buf.applyPendingReads();
+        });
+        ProtocolRegistry.registerInboundTranslator(EntityEquipmentUpdateS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // entity
+            buf.disablePassthroughMode();
+            buf.pendingRead(Byte.class, (byte)buf.readEnumConstant(EquipmentSlot.class).ordinal()); // slot
             buf.applyPendingReads();
         });
 

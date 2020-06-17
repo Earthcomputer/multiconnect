@@ -735,7 +735,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             RenameItemC2SPacket renameItem = (RenameItemC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
-            buf.writeString(renameItem.getItemName(), 32767);
+            buf.writeString(renameItem.getName(), 32767);
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|ItemName", buf));
             return false;
         }
@@ -744,7 +744,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             SelectVillagerTradeC2SPacket selectTrade = (SelectVillagerTradeC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
-            buf.writeInt(selectTrade.method_12431());
+            buf.writeInt(selectTrade.getTradeId());
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|TrSel", buf));
             return false;
         }
