@@ -64,7 +64,7 @@ public abstract class MixinEntity {
                 for (int z = minZ; z < maxZ; z++) {
                     mutable.set(x, y, z);
                     FluidState state = world.getFluidState(mutable);
-                    if (state.matches(fluidTag)) {
+                    if (state.isIn(fluidTag)) {
                         double height = y + state.getHeight(world, mutable);
                         if (height >= box.minY - 0.4)
                             waterHeight = Math.max(height - box.minY + 0.4, waterHeight);

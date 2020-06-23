@@ -892,7 +892,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             });
             return false;
         }
-        if (clazz == WolfEntity.class && data == WolfEntityAccessor.getRemainingAngerTicks()) {
+        if (clazz == WolfEntity.class && data == WolfEntityAccessor.getAngerTime()) {
             return false;
         }
         return super.acceptEntityData(clazz, data);

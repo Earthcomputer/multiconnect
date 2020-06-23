@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(WolfEntity.class)
 public interface WolfEntityAccessor {
-    @Accessor("field_25373")
-    static TrackedData<Integer> getRemainingAngerTicks() {
+    @Accessor("ANGER_TIME")
+    static TrackedData<Integer> getAngerTime() {
         return MixinHelper.fakeInstance();
     }
 }

@@ -145,7 +145,7 @@ public abstract class MixinClientPlayNetworkHandler {
                     || packet.getEntityTypeId() == EntityType.SPECTRAL_ARROW
                     || packet.getEntityTypeId() == EntityType.TRIDENT) {
                 onVelocityUpdate(new EntityVelocityUpdateS2CPacket(packet.getId(),
-                        new Vec3d(packet.getVelocityX(), packet.getVelocityY(), packet.getVelocityz())));
+                        new Vec3d(packet.getVelocityX(), packet.getVelocityY(), packet.getVelocityZ())));
             }
         }
     }
