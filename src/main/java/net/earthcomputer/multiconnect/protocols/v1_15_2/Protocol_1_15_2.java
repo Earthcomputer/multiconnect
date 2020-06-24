@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_15_2;
 
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.impl.*;
+import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ProjectileEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAttributesFixAccessor;

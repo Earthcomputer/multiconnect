@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_12;
 
-import net.earthcomputer.multiconnect.impl.PacketInfo;
+import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.v1_12_1.Protocol_1_12_1;
 import net.minecraft.network.packet.c2s.play.CraftRequestC2SPacket;
 import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;

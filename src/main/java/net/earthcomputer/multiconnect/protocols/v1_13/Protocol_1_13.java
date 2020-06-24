@@ -1,9 +1,9 @@
 package net.earthcomputer.multiconnect.protocols.v1_13;
 
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
-import net.earthcomputer.multiconnect.impl.RegistryMutator;
-import net.earthcomputer.multiconnect.impl.TagRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
+import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_1.Protocol_1_13_1;
 import net.minecraft.block.*;

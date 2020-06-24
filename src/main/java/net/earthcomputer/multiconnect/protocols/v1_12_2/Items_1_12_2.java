@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShulkerBoxBlock;

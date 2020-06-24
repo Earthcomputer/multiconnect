@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_14_4;
 
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.impl.*;
+import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.EndermanEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.LivingEntityAccessor;

@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.protocols;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.Protocol_1_11_2;

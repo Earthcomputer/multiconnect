@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 
-import net.earthcomputer.multiconnect.impl.IParticleManager;
+import net.earthcomputer.multiconnect.protocols.generic.IParticleManager;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Particles_1_12_2;
 import net.minecraft.client.particle.ParticleManager;
 import org.spongepowered.asm.mixin.Mixin;

@@ -2,9 +2,9 @@ package net.earthcomputer.multiconnect.protocols.v1_11_2;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
-import net.earthcomputer.multiconnect.impl.PacketInfo;
-import net.earthcomputer.multiconnect.impl.RegistryMutator;
+import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.mixin.PlayerEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12.PlaceRecipeC2SPacket_1_12;

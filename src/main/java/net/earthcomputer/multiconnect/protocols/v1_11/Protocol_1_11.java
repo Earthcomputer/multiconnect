@@ -1,8 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_11;
 
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
-import net.earthcomputer.multiconnect.impl.RegistryMutator;
+import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.v1_11.mixin.PigEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.Protocol_1_11_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.RecipeInfo;

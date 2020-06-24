@@ -5,7 +5,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.serialization.Dynamic;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.impl.*;
+import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;

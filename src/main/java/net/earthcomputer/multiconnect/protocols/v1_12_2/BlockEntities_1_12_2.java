@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
-import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
-import net.earthcomputer.multiconnect.protocols.AbstractProtocol;
+import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
 

@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
-import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.RegistryKey;

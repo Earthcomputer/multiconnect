@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
-import net.earthcomputer.multiconnect.impl.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.SlabType;
 import net.minecraft.datafixer.fix.BlockStateFlattening;

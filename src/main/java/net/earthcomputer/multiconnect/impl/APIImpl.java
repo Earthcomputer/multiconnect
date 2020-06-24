@@ -4,6 +4,8 @@ import net.earthcomputer.multiconnect.api.IIdentifierCustomPayloadListener;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.api.IStringCustomPayloadListener;
 import net.earthcomputer.multiconnect.api.MultiConnectAPI;
+import net.earthcomputer.multiconnect.connect.ConnectionMode;
+import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
 
 import java.util.Arrays;
 import java.util.List;
