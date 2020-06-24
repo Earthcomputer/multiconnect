@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.impl;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.ServerAddress;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -50,25 +49,20 @@ public final class ServersExt {
     private Map<String, ServerExt> servers = new HashMap<>();
 
     public int getForcedProtocol(String address) {
-        ServerExt server = servers.get(normalizeAddress(address));
+        ServerExt server = servers.get(ConnectionHandler.normalizeAddress(address));
         return server == null ? ConnectionMode.AUTO.getValue() : server.forcedProtocol;
     }
 
     public boolean hasServer(String address) {
-        return servers.containsKey(normalizeAddress(address));
+        return servers.containsKey(ConnectionHandler.normalizeAddress(address));
     }
 
     public ServerExt getServer(String address) {
-        return servers.get(normalizeAddress(address));
+        return servers.get(ConnectionHandler.normalizeAddress(address));
     }
 
     public ServerExt getOrCreateServer(String address) {
-        return servers.computeIfAbsent(normalizeAddress(address), k -> new ServerExt());
-    }
-
-    private static String normalizeAddress(String address) {
-        ServerAddress addr = ServerAddress.parse(address);
-        return addr.getAddress() + ":" + addr.getPort();
+        return servers.computeIfAbsent(ConnectionHandler.normalizeAddress(address), k -> new ServerExt());
     }
 
     public static class ServerExt {
