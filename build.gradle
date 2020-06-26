@@ -96,13 +96,22 @@ dependencies {
 	testCompile "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 
-	modCompileOnly("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
-		transitive = false // to stop it using its own fabric-loader
+	if (true) {
+		modCompileOnly("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
+			transitive = false // to stop it using its own fabric-loader
+		}
+		modRuntime("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
+			transitive = false // to stop it using its own fabric-loader
+		}
+		include "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
+	} else {
+		modCompileOnly("net.fabricmc.fabric-api:fabric-api:0.14.0+build.371-1.16") {
+			exclude group: 'net.fabricmc', module: 'fabric-loader'
+		}
+		modRuntime("net.fabricmc.fabric-api:fabric-api:0.14.0+build.371-1.16") {
+			exclude group: 'net.fabricmc', module: 'fabric-loader'
+		}
 	}
-	modRuntime("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
-		transitive = false // to stop it using its own fabric-loader
-	}
-	include "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
 
 	compile sourceSets.api.output
 	include files(remapApiJar.archivePath)
