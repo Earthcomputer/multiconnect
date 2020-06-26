@@ -1,6 +1,5 @@
 package net.earthcomputer.multiconnect.connect;
 
-import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.listener.ClientQueryPacketListener;
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket;
@@ -12,6 +11,7 @@ import net.minecraft.text.TranslatableText;
 public class GetProtocolPacketListener implements ClientQueryPacketListener {
 
     private ClientConnection connection;
+    private int protocol;
     private volatile boolean completed = false;
     private boolean failed = false;
 
@@ -21,7 +21,7 @@ public class GetProtocolPacketListener implements ClientQueryPacketListener {
 
     @Override
     public void onResponse(QueryResponseS2CPacket packet) {
-        ConnectionInfo.protocolVersion = packet.getServerMetadata().getVersion().getProtocolVersion();
+        protocol = packet.getServerMetadata().getVersion().getProtocolVersion();
         connection.send(new QueryPingC2SPacket());
     }
 
@@ -42,6 +42,10 @@ public class GetProtocolPacketListener implements ClientQueryPacketListener {
     @Override
     public ClientConnection getConnection() {
         return connection;
+    }
+
+    public int getProtocol() {
+        return protocol;
     }
 
     public boolean hasCompleted() {

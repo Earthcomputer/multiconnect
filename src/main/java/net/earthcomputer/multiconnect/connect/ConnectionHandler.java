@@ -103,10 +103,12 @@ public class ConnectionHandler {
             return false;
         }
 
-        if (ConnectionMode.isSupportedProtocol(ConnectionInfo.protocolVersion)) {
-            LOGGER.info("Discovered server protocol: " + ConnectionInfo.protocolVersion + " (" + ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName() + ")");
+        int protocol = listener.getProtocol();
+        if (ConnectionMode.isSupportedProtocol(protocol)) {
+            LOGGER.info("Discovered server protocol: " + protocol + " (" + ConnectionMode.byValue(protocol).getName() + ")");
+            ConnectionInfo.protocolVersion = protocol;
         } else {
-            LOGGER.info("Discovered server protocol: " + ConnectionInfo.protocolVersion + " (unsupported), " +
+            LOGGER.info("Discovered server protocol: " + protocol + " (unsupported), " +
                     "falling back to " + SharedConstants.getGameVersion().getProtocolVersion() + " (" + SharedConstants.getGameVersion().getName() + ")");
             ConnectionInfo.protocolVersion = SharedConstants.getGameVersion().getProtocolVersion();
         }
