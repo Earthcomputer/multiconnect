@@ -18,6 +18,7 @@ import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
 import net.minecraft.tag.*;
 import net.minecraft.util.Identifier;
+import org.apache.logging.log4j.LogManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -71,7 +72,7 @@ public class MixinClientPlayNetworkHandler {
         missingTags.putAll("fluids", FluidTags.method_29216(tagManager.fluids()));
         missingTags.putAll("entity_types", EntityTypeTags.method_29215(tagManager.entityTypes()));
         if (!missingTags.isEmpty()) {
-            throw new IllegalStateException("Missing required tags: " + missingTags.entries().stream()
+            LogManager.getLogger("multiconnect").error("Missing required tags: " + missingTags.entries().stream()
                     .map(entry -> entry.getKey() + ":" + entry.getValue())
                     .sorted()
                     .collect(Collectors.joining(",")));
