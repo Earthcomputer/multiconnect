@@ -128,9 +128,11 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readInt(); // player id
-            int gameMode = buf.readUnsignedByte();
+            buf.readUnsignedByte(); // game mode
             buf.disablePassthroughMode();
-            buf.pendingRead(UnsignedByte.class, new UnsignedByte(gameMode == 1 ? (byte)0 : (byte)1)); // if creative, survival else creative - previous game mode
+            // not_set game mode, unsigned -1 gets cast back to signed in 1.16.1 when
+            // https://bugs.mojang.com/browse/MC-189885 was fixed
+            buf.pendingRead(UnsignedByte.class, new UnsignedByte((short)-1));
             buf.pendingRead(VarInt.class, new VarInt(3)); // dimension count
             // dimension ids
             buf.pendingRead(Identifier.class, World.OVERWORLD.getValue());

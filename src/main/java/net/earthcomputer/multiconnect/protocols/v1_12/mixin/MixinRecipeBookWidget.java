@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(RecipeBookWidget.class)
 public abstract class MixinRecipeBookWidget implements IRecipeBookWidget {
 
-    @Shadow @Final protected RecipeBookResults recipesArea;
+    @Shadow @Final private RecipeBookResults recipesArea;
 
     @Shadow protected abstract boolean isWide();
 

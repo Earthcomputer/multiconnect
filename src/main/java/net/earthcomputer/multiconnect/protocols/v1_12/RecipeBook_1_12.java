@@ -60,7 +60,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                 short transactionId = mc.player.currentScreenHandler.getNextActionId(mc.player.inventory);
                 mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionFromMatrix, new ArrayList<>()));
 
-                if (iRecipeBookWidget.getRecipeBook().isFilteringCraftable()) {
+                if (iRecipeBookWidget.getRecipeBook().isFilteringCraftable(container)) {
                     mc.player.inventory.markDirty();
                 }
             }

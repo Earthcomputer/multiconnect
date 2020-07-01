@@ -6,6 +6,7 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.AchievementManager;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.IScreenHandler;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.PendingAchievements;
+import net.minecraft.class_5411;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.packet.s2c.play.ConfirmGuiActionS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeRecipesS2CPacket;
@@ -53,10 +54,7 @@ public abstract class MixinClientPlayNetworkHandler {
                     UnlockRecipesS2CPacket.Action.INIT,
                     Collections2.transform(packet.getRecipes(), Recipe::getId),
                     Collections2.transform(packet.getRecipes(), Recipe::getId),
-                    false,
-                    false,
-                    false,
-                    false
+                    new class_5411()
             ));
         }
     }

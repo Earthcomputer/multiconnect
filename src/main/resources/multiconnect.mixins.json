@@ -27,7 +27,7 @@
     "bridge.MixinWorldChunk",
     "bridge.RegistryAccessor",
     "bridge.SpawnEggItemAccessor",
-    "bridge.TagContainerAccessor",
+    "bridge.SynchronizeTagsS2CAccessor",
     "bridge.TrackedDataAccessor",
     "bridge.TrackedDataHandlerRegistryAccessor",
     "connect.HandshakePacketAccessor",

@@ -21,6 +21,7 @@ import net.earthcomputer.multiconnect.protocols.v1_15_1.Protocol_1_15_1;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.Protocol_1_15_2;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.Protocol_1_16_1;
+import net.earthcomputer.multiconnect.protocols.v1_16_2.Protocol_1_16_2;
 import net.earthcomputer.multiconnect.transformer.InboundTranslator;
 import net.earthcomputer.multiconnect.transformer.OutboundTranslator;
 import net.earthcomputer.multiconnect.transformer.TranslatorRegistry;
@@ -72,7 +73,8 @@ public class ProtocolRegistry {
     }
 
     static {
-        register(V1_16_1, new Protocol_1_16_1());
+        register(V1_16_2, new Protocol_1_16_2());
+        register(V1_16_1, new Protocol_1_16_1(), Protocol_1_16_1::registerTranslators);
         register(V1_16, new Protocol_1_16());
         register(V1_15_2, new Protocol_1_15_2(), Protocol_1_15_2::registerTranslators);
         register(V1_15_1, new Protocol_1_15_1());

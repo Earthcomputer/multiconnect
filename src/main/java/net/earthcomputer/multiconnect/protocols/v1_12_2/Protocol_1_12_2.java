@@ -13,6 +13,7 @@ import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ZombieEntityAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_1_16_1;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.WallMountLocation;
@@ -463,10 +464,10 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             }, val -> buf.writeVarInt(val.get()));
         });
 
-        ProtocolRegistry.registerOutboundTranslator(RecipeBookDataC2SPacket.class, buf -> {
-            Supplier<RecipeBookDataC2SPacket.Mode> mode = buf.passthroughWrite(RecipeBookDataC2SPacket.Mode.class);
+        ProtocolRegistry.registerOutboundTranslator(RecipeBookDataC2SPacket_1_16_1.class, buf -> {
+            Supplier<RecipeBookDataC2SPacket_1_16_1.Mode> mode = buf.passthroughWrite(RecipeBookDataC2SPacket_1_16_1.Mode.class);
             buf.whenWrite(() -> {
-                if (mode.get() == RecipeBookDataC2SPacket.Mode.SHOWN) {
+                if (mode.get() == RecipeBookDataC2SPacket_1_16_1.Mode.SHOWN) {
                     Supplier<Identifier> recipeId = buf.skipWrite(Identifier.class);
                     buf.pendingWrite(Integer.class, () -> {
                         try {
@@ -475,7 +476,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                             return 0;
                         }
                     }, buf::writeInt);
-                } else if (mode.get() == RecipeBookDataC2SPacket.Mode.SETTINGS) {
+                } else if (mode.get() == RecipeBookDataC2SPacket_1_16_1.Mode.SETTINGS) {
                     buf.passthroughWrite(Boolean.class); // is gui open
                     buf.passthroughWrite(Boolean.class); // filtering craftable
                     buf.skipWrite(Boolean.class); // furnace gui open

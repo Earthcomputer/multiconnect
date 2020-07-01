@@ -14,6 +14,7 @@ import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_1_16_1;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -31,7 +32,6 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.AdvancementTabC2SPacket;
 import net.minecraft.network.packet.c2s.play.ClientStatusC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.c2s.play.RecipeBookDataC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.server.command.CommandSource;
 import net.minecraft.sound.SoundEvent;
@@ -85,7 +85,7 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
         remove(packets, PlaceRecipeC2SPacket_1_12.class);
         remove(packets, PlayerMoveC2SPacket.class);
         insertAfter(packets, PlayerMoveC2SPacket.LookOnly.class, PacketInfo.of(PlayerMoveC2SPacket.class, PlayerMoveC2SPacket::new));
-        remove(packets, RecipeBookDataC2SPacket.class);
+        remove(packets, RecipeBookDataC2SPacket_1_16_1.class);
         remove(packets, AdvancementTabC2SPacket.class);
         insertAfter(packets, ClientStatusC2SPacket.class, PacketInfo.of(ClientStatusC2SPacket_1_11_2.class, ClientStatusC2SPacket_1_11_2::new));
         remove(packets, ClientStatusC2SPacket.class);
@@ -101,7 +101,7 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
             recipeBookEmulator.emulateRecipePlacement((PlaceRecipeC2SPacket_1_12) packet);
             return false;
         }
-        if (packet instanceof RecipeBookDataC2SPacket) {
+        if (packet instanceof RecipeBookDataC2SPacket_1_16_1) {
             return false;
         }
         if (packet instanceof AdvancementTabC2SPacket) {

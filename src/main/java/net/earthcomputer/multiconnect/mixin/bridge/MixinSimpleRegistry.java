@@ -24,7 +24,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
 
     @Shadow @Final protected Int2ObjectBiMap<T> indexedEntries;
     @Shadow @Final protected BiMap<Identifier, T> entriesById;
-    @Shadow @Final protected BiMap<RegistryKey<T>, T> entriesByKey;
+    @Shadow @Final private BiMap<RegistryKey<T>, T> entriesByKey;
     @Shadow protected Object[] randomEntries;
     @Shadow private int nextId;
 

@@ -3,8 +3,13 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_13_2.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-  ],
-  "client": [
+    "CatEntityAccessor",
+    "ChunkSectionAccessor",
+    "EnderEyeEntityAccessor",
+    "EntityAccessor",
+    "FireworkEntityAccessor",
+    "LightUpdatePacketAccessor",
+    "LivingEntityAccessor",
     "MixinArgumentTypes",
     "MixinClientChunkManager",
     "MixinClientPlayNetworkHandler",
@@ -14,20 +19,13 @@
     "MixinOtherClientPlayerEntity",
     "MixinPlayerEntity",
     "MixinPlayerEntityRenderer",
-    "MixinRegistryTagManager",
-
-    "CatEntityAccessor",
-    "ChunkSectionAccessor",
-    "EnderEyeEntityAccessor",
-    "EntityAccessor",
-    "FireworkEntityAccessor",
-    "LightUpdatePacketAccessor",
-    "LivingEntityAccessor",
     "MooshroomEntityAccessor",
     "ProjectileEntityAccessor",
     "VillagerEntityAccessor",
     "ZombieEntityAccessor",
     "ZombieVillagerEntityAccessor"
+  ],
+  "client": [
   ],
   "injectors": {
     "defaultRequire": 1

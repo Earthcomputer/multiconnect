@@ -2,23 +2,25 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.CurrentChunkDataPacket;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
 import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
+import net.minecraft.class_5414;
+import net.minecraft.class_5415;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.entity.EntityType;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.item.Item;
 import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
 import net.minecraft.tag.*;
 import net.minecraft.util.Identifier;
-import org.apache.logging.log4j.LogManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,7 +29,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashSet;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
 public class MixinClientPlayNetworkHandler {
@@ -44,39 +45,21 @@ public class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onSynchronizeTags", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
     private void onOnSynchronizeTags(SynchronizeTagsS2CPacket packet, CallbackInfo ci) {
-        TagRegistry<Block> blockTags = setExtraTags(packet.getTagManager().blocks(), ConnectionInfo.protocol::addExtraBlockTags);
-        setExtraTags(packet.getTagManager().items(), itemTags -> ConnectionInfo.protocol.addExtraItemTags(itemTags, blockTags));
-        setExtraTags(packet.getTagManager().fluids(), ConnectionInfo.protocol::addExtraFluidTags);
-        setExtraTags(packet.getTagManager().entityTypes(), ConnectionInfo.protocol::addExtraEntityTags);
-        checkRequiredTags(packet.getTagManager());
-    }
-
-    @SuppressWarnings("unchecked")
-    @Unique
-    private static <T> TagRegistry<T> setExtraTags(TagContainer<T> container, Consumer<TagRegistry<T>> tagsAdder) {
-        TagContainerAccessor<T> accessor = (TagContainerAccessor<T>) container;
-        TagRegistry<T> tags = new TagRegistry<>();
-        container.getEntries().forEach((id, tag) -> tags.put(id, new HashSet<>(tag.values())));
-        tagsAdder.accept(tags);
-        BiMap<Identifier, Tag<T>> tagBiMap = HashBiMap.create(tags.size());
-        tags.forEach((id, set) -> tagBiMap.put(id, Tag.of(set)));
-        accessor.multiconnect_setEntries(tagBiMap);
-        return tags;
+        TagRegistry<Block> blockTagRegistry = new TagRegistry<>();
+        class_5414<Block> blockTags = setExtraTags(packet.getTagManager().method_30215(), blockTagRegistry, ConnectionInfo.protocol::addExtraBlockTags);
+        class_5414<Item> itemTags = setExtraTags(packet.getTagManager().method_30218(), new TagRegistry<>(), itemTagRegistry -> ConnectionInfo.protocol.addExtraItemTags(itemTagRegistry, blockTagRegistry));
+        class_5414<Fluid> fluidTags = setExtraTags(packet.getTagManager().method_30220(), new TagRegistry<>(), ConnectionInfo.protocol::addExtraFluidTags);
+        class_5414<EntityType<?>> entityTypeTags = setExtraTags(packet.getTagManager().method_30221(), new TagRegistry<>(), ConnectionInfo.protocol::addExtraEntityTags);
+        ((SynchronizeTagsS2CAccessor) packet).setTagManager(class_5415.method_30216(blockTags, itemTags, fluidTags, entityTypeTags));
     }
 
     @Unique
-    private static void checkRequiredTags(RegistryTagManager tagManager) {
-        Multimap<String, Identifier> missingTags = HashMultimap.create();
-        missingTags.putAll("blocks", BlockTags.method_29214(tagManager.blocks()));
-        missingTags.putAll("items", ItemTags.method_29217(tagManager.items()));
-        missingTags.putAll("fluids", FluidTags.method_29216(tagManager.fluids()));
-        missingTags.putAll("entity_types", EntityTypeTags.method_29215(tagManager.entityTypes()));
-        if (!missingTags.isEmpty()) {
-            LogManager.getLogger("multiconnect").error("Missing required tags: " + missingTags.entries().stream()
-                    .map(entry -> entry.getKey() + ":" + entry.getValue())
-                    .sorted()
-                    .collect(Collectors.joining(",")));
-        }
+    private static <T> class_5414<T> setExtraTags(class_5414<T> container, TagRegistry<T> tagRegistry, Consumer<TagRegistry<T>> tagsAdder) {
+        container.method_30204().forEach((id, tag) -> tagRegistry.put(id, new HashSet<>(tag.values())));
+        tagsAdder.accept(tagRegistry);
+        BiMap<Identifier, Tag<T>> tagBiMap = HashBiMap.create(tagRegistry.size());
+        tagRegistry.forEach((id, set) -> tagBiMap.put(id, Tag.of(set)));
+        return class_5414.method_30207(tagBiMap);
     }
 
     @Inject(method = "onCustomPayload", at = @At("HEAD"), cancellable = true)

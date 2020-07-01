@@ -7,11 +7,13 @@ import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.Protocol_1_15_2;
+import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_1_16_1;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.enums.Instrument;
+import net.minecraft.class_5414;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
@@ -233,6 +235,16 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.applyPendingReads();
         });
 
+        ProtocolRegistry.registerInboundTranslator(SynchronizeTagsS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            class_5414.method_30209(buf, Registry.BLOCK);
+            class_5414.method_30209(buf, Registry.ITEM);
+            class_5414.method_30209(buf, Registry.FLUID);
+            buf.disablePassthroughMode();
+            buf.pendingRead(VarInt.class, new VarInt(0)); // entity type count
+            buf.applyPendingReads();
+        });
+
         ProtocolRegistry.registerInboundTranslator(SynchronizeRecipesS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             int recipeCount = buf.readVarInt();
@@ -300,10 +312,10 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.pendingWrite(Float.class, () -> (float) (hitResult.get().getPos().z - hitResult.get().getBlockPos().getZ()), buf::writeFloat);
         });
 
-        ProtocolRegistry.registerOutboundTranslator(RecipeBookDataC2SPacket.class, buf -> {
-            Supplier<RecipeBookDataC2SPacket.Mode> mode = buf.passthroughWrite(RecipeBookDataC2SPacket.Mode.class);
+        ProtocolRegistry.registerOutboundTranslator(RecipeBookDataC2SPacket_1_16_1.class, buf -> {
+            Supplier<RecipeBookDataC2SPacket_1_16_1.Mode> mode = buf.passthroughWrite(RecipeBookDataC2SPacket_1_16_1.Mode.class);
             buf.whenWrite(() -> {
-                if (mode.get() == RecipeBookDataC2SPacket.Mode.SETTINGS) {
+                if (mode.get() == RecipeBookDataC2SPacket_1_16_1.Mode.SETTINGS) {
                     buf.passthroughWrite(Boolean.class); // gui open
                     buf.passthroughWrite(Boolean.class); // filtering craftable
                     buf.passthroughWrite(Boolean.class); // furnace gui open
