@@ -2,21 +2,25 @@ package net.earthcomputer.multiconnect.protocols.v1_16_1;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
-import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
-import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
-import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.*;
+import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.AbstractPiglinEntityAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.PiglinEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_2.Protocol_1_16_2;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.class_5411;
+import net.minecraft.class_5418;
 import net.minecraft.class_5421;
 import net.minecraft.class_5427;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.mob.PiglinEntity;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.RecipeBookDataC2SPacket;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
@@ -30,6 +34,8 @@ import java.io.UncheckedIOException;
 import java.util.List;
 
 public class Protocol_1_16_1 extends Protocol_1_16_2 {
+    private static final TrackedData<Boolean> OLD_IMMUNE_TO_ZOMBIFICATION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BOOLEAN);
+
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
@@ -124,5 +130,20 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
     public void addExtraBlockTags(TagRegistry<Block> tags) {
         tags.add(BlockTags.MUSHROOM_GROW_BLOCK, Blocks.MYCELIUM, Blocks.PODZOL, Blocks.CRIMSON_NYLIUM, Blocks.WARPED_NYLIUM);
         super.addExtraBlockTags(tags);
+    }
+
+    @Override
+    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+        if (clazz == PiglinEntity.class && data == PiglinEntityAccessor.getOldImmuneToZombification()) {
+            DataTrackerManager.registerOldTrackedData(PiglinEntity.class, OLD_IMMUNE_TO_ZOMBIFICATION, false, (entity, val) -> {
+                entity.method_30240(val);
+                entity.getDataTracker().set(PiglinEntityAccessor.getOldImmuneToZombification(), val);
+            });
+            return false;
+        }
+        if (clazz == class_5418.class && data == AbstractPiglinEntityAccessor.getImmuneToZombification()) {
+            return false;
+        }
+        return super.acceptEntityData(clazz, data);
     }
 }

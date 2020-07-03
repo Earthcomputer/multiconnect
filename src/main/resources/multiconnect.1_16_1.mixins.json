@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_16_1.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "AbstractPiglinEntityAccessor",
+    "PiglinEntityAccessor"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
