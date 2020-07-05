@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
-import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.minecraft.client.render.item.ItemModels;
 import net.minecraft.item.Item;
 import net.minecraft.util.registry.Registry;
@@ -14,7 +14,7 @@ public class MixinItemModels {
 
     @Inject(method = "getModelId", at = @At("HEAD"), cancellable = true)
     private static void getRawModelId(Item item, CallbackInfoReturnable<Integer> ci) {
-        ci.setReturnValue(AbstractProtocol.getUnmodifiedId(Registry.ITEM, item));
+        ci.setReturnValue(Utils.getUnmodifiedId(Registry.ITEM, item));
     }
 
 }

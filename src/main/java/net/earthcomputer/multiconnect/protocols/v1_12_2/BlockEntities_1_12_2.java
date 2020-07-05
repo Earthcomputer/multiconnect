@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
-import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
 
@@ -35,8 +35,8 @@ public class BlockEntities_1_12_2 {
 
     public static void registerBlockEntities(ISimpleRegistry<BlockEntityType<?>> registry) {
         registry.unregister(BlockEntityType.CONDUIT);
-        AbstractProtocol.insertAfter(registry, BlockEntityType.MOB_SPAWNER, NOTE_BLOCK, "noteblock");
-        AbstractProtocol.insertAfter(registry, BlockEntityType.COMPARATOR, FLOWER_POT, "flower_pot");
+        Utils.insertAfter(registry, BlockEntityType.MOB_SPAWNER, NOTE_BLOCK, "noteblock");
+        Utils.insertAfter(registry, BlockEntityType.COMPARATOR, FLOWER_POT, "flower_pot");
     }
 
 }
