@@ -42,6 +42,7 @@ import net.minecraft.network.packet.s2c.login.LoginSuccessS2CPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
@@ -301,6 +302,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         mutator.mutate(Protocols.V1_15_2, Registry.BIOME, this::mutateBiomeRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.SCREEN_HANDLER, this::mutateScreenHandlerRegistry);
     }
 
     @Override
@@ -780,6 +782,10 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         rename(registry, SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_ANGRY, "entity.zombie_pigman.angry");
         rename(registry, SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_DEATH, "entity.zombie_pigman.death");
         rename(registry, SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_HURT, "entity.zombie_pigman.hurt");
+    }
+
+    private void mutateScreenHandlerRegistry(ISimpleRegistry<ScreenHandlerType<?>> registry) {
+        registry.unregister(ScreenHandlerType.SMITHING);
     }
 
     @Override
