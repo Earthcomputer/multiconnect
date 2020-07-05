@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.IParticleManager;
-import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleFactory;
 import net.minecraft.client.particle.ParticleManager;
@@ -59,12 +59,12 @@ public class MixinParticleManager implements IParticleManager {
 
     @Redirect(method = "createParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/Registry;getRawId(Ljava/lang/Object;)I"))
     private int redirectRawId(Registry<ParticleType<?>> registry, Object type) {
-        return AbstractProtocol.getUnmodifiedId(registry, (ParticleType<?>) type);
+        return Utils.getUnmodifiedId(registry, (ParticleType<?>) type);
     }
 
     @ModifyVariable(method = "loadTextureList", ordinal = 0, at = @At("HEAD"))
     private Identifier modifyIdentifier(Identifier id) {
-        Identifier unmodifiedName = AbstractProtocol.getUnmodifiedName(Registry.PARTICLE_TYPE, Registry.PARTICLE_TYPE.get(id));
+        Identifier unmodifiedName = Utils.getUnmodifiedName(Registry.PARTICLE_TYPE, Registry.PARTICLE_TYPE.get(id));
         return unmodifiedName == null ? id : unmodifiedName;
     }
 

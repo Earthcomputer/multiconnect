@@ -50,6 +50,9 @@ public class Protocol_1_13 extends Protocol_1_13_1 {
                 return false;
             }
         }
+        if (state.getBlock() == Blocks.CONDUIT && state.get(ConduitBlock.WATERLOGGED)) {
+            return false;
+        }
         return super.acceptBlockState(state);
     }
 
