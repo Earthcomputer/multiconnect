@@ -42,6 +42,7 @@ import net.minecraft.network.packet.s2c.login.LoginSuccessS2CPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
@@ -52,6 +53,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.dynamic.DynamicSerializableUuid;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryTracker;
@@ -60,9 +62,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
 import net.minecraft.world.dimension.DimensionType;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -303,6 +303,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         mutator.mutate(Protocols.V1_15_2, Registry.BIOME, this::mutateBiomeRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.SCREEN_HANDLER, this::mutateScreenHandlerRegistry);
     }
 
     @Override
@@ -784,22 +785,35 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         rename(registry, SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_HURT, "entity.zombie_pigman.hurt");
     }
 
+    private void mutateScreenHandlerRegistry(ISimpleRegistry<ScreenHandlerType<?>> registry) {
+        registry.unregister(ScreenHandlerType.SMITHING);
+    }
+
     @Override
-    protected void recomputeStatesForBlock(Block block) {
+    protected Comparator<BlockState> getBlockStateOrder(Block block) {
         if (block == Blocks.JIGSAW) {
-            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.NORTH_UP));
-            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.EAST_UP));
-            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.SOUTH_UP));
-            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.WEST_UP));
-            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.UP_EAST));
-            Block.STATE_IDS.add(Blocks.JIGSAW.getDefaultState().with(JigsawBlock.ORIENTATION, JigsawOrientation.DOWN_EAST));
+            return orderBy(state -> state.get(JigsawBlock.ORIENTATION).getFacing(),
+                    Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST, Direction.UP, Direction.DOWN);
+        } else if (block instanceof WallBlock) {
+            return this.<BlockState, WallShape>orderBy(state -> state.get(WallBlock.EAST_SHAPE), WallShape.LOW, WallShape.NONE)
+                    .thenComparing(orderBy(state -> state.get(WallBlock.NORTH_SHAPE), WallShape.LOW, WallShape.NONE))
+                    .thenComparing(orderBy(state -> state.get(WallBlock.SOUTH_SHAPE), WallShape.LOW, WallShape.NONE))
+                    .thenComparing(orderBy(state -> state.get(WallBlock.UP), true, false))
+                    .thenComparing(orderBy(state -> state.get(WallBlock.WATERLOGGED), true, false))
+                    .thenComparing(orderBy(state -> state.get(WallBlock.WEST_SHAPE), WallShape.LOW, WallShape.NONE));
         } else {
-            super.recomputeStatesForBlock(block);
+            return super.getBlockStateOrder(block);
         }
     }
 
     @Override
     public boolean acceptBlockState(BlockState state) {
+        if (state.getBlock() == Blocks.JIGSAW) {
+            JigsawOrientation orientation = state.get(JigsawBlock.ORIENTATION);
+            if (orientation.getFacing().getAxis() == Direction.Axis.Y && orientation.getRotation() != Direction.EAST) {
+                return false;
+            }
+        }
         if (state.getBlock() instanceof WallBlock
                 && (state.get(WallBlock.EAST_SHAPE) == WallShape.TALL
                 || state.get(WallBlock.NORTH_SHAPE) == WallShape.TALL

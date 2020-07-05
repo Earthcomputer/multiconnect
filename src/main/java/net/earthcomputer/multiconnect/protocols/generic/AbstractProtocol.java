@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.protocols.generic;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.HashBiMap;
+import net.earthcomputer.multiconnect.impl.IUtils;
 import net.earthcomputer.multiconnect.mixin.bridge.MinecraftClientAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.SpawnEggItemAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAccessor;
@@ -34,8 +35,9 @@ import net.minecraft.util.registry.SimpleRegistry;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public abstract class AbstractProtocol {
+public abstract class AbstractProtocol implements IUtils {
 
     public void setup(boolean resourceReload) {
         if (!resourceReload) {
@@ -111,16 +113,17 @@ public abstract class AbstractProtocol {
     protected void recomputeBlockStates() {
         ((IIdList) Block.STATE_IDS).multiconnect_clear();
         for (Block block : Registry.BLOCK) {
-            recomputeStatesForBlock(block);
+            Stream<BlockState> states = block.getStateManager().getStates().stream().filter(this::acceptBlockState);
+            Comparator<BlockState> order = getBlockStateOrder(block);
+            if (order != null) {
+                states = states.sorted(order);
+            }
+            states.forEach(Block.STATE_IDS::add);
         }
     }
 
-    protected void recomputeStatesForBlock(Block block) {
-        for (BlockState state : block.getStateManager().getStates()) {
-            if (acceptBlockState(state)) {
-                Block.STATE_IDS.add(state);
-            }
-        }
+    protected Comparator<BlockState> getBlockStateOrder(Block block) {
+        return null;
     }
 
     public List<PacketInfo<?>> getClientboundPackets() {
