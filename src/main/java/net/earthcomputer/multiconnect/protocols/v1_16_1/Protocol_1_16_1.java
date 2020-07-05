@@ -25,6 +25,8 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.RecipeBookDataC2SPacket;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnlockRecipesS2CPacket;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryTracker;
@@ -120,10 +122,21 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
         mutator.mutate(Protocols.V1_16_1, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_16_1, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
     }
 
     private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
         registry.unregister(EntityType.PIGLIN_BRUTE);
+    }
+
+    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+        registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_PIGLIN_BRUTE);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_BRUTE_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_BRUTE_ANGRY);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_BRUTE_CONVERTED_TO_ZOMBIFIED);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_BRUTE_DEATH);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_BRUTE_HURT);
+        registry.unregister(SoundEvents.ENTITY_PIGLIN_BRUTE_STEP);
     }
 
     @Override
