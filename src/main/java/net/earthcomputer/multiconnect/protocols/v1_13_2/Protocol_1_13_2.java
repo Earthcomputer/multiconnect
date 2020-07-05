@@ -39,8 +39,10 @@ import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.recipe.RecipeSerializer;
+import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.stat.Stats;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.ItemTags;
@@ -554,8 +556,10 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         mutator.mutate(Protocols.V1_13_2, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
         mutator.mutate(Protocols.V1_13_2, Registry.ENCHANTMENT, this::mutateEnchantmentRegistry);
         mutator.mutate(Protocols.V1_13_2, Registry.BLOCK_ENTITY_TYPE, this::mutateBlockEntityRegistry);
+        mutator.mutate(Protocols.V1_13_2, Registry.SCREEN_HANDLER, this::mutateScreenHandlerRegistry);
         mutator.mutate(Protocols.V1_13_2, Registry.RECIPE_SERIALIZER, this::mutateRecipeSerializerRegistry);
         mutator.mutate(Protocols.V1_13_2, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_13_2, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
     }
 
     private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
@@ -762,6 +766,12 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(BlockEntityType.BELL);
         registry.unregister(BlockEntityType.JIGSAW);
         registry.unregister(BlockEntityType.CAMPFIRE);
+    }
+
+    private void mutateScreenHandlerRegistry(ISimpleRegistry<ScreenHandlerType<?>> registry) {
+        registry.unregister(ScreenHandlerType.SMOKER);
+        registry.unregister(ScreenHandlerType.CARTOGRAPHY_TABLE);
+        registry.unregister(ScreenHandlerType.STONECUTTER);
     }
 
     private void mutateRecipeSerializerRegistry(ISimpleRegistry<RecipeSerializer<?>> registry) {
@@ -1359,6 +1369,22 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         insertAfter(registry, SoundEvents.UI_TOAST_IN, SoundEvents.UI_TOAST_OUT, "ui.toast.out");
         insertAfter(registry, SoundEvents.UI_TOAST_OUT, SoundEvents.WEATHER_RAIN, "weather.rain");
         insertAfter(registry, SoundEvents.WEATHER_RAIN, SoundEvents.WEATHER_RAIN_ABOVE, "weather.rain.above");
+    }
+
+    private void mutateCustomStatRegistry(ISimpleRegistry<Identifier> registry) {
+        registry.unregister(Stats.OPEN_BARREL);
+        registry.unregister(Stats.INTERACT_WITH_BLAST_FURNACE);
+        registry.unregister(Stats.INTERACT_WITH_SMOKER);
+        registry.unregister(Stats.INTERACT_WITH_LECTERN);
+        registry.unregister(Stats.INTERACT_WITH_CAMPFIRE);
+        registry.unregister(Stats.INTERACT_WITH_CARTOGRAPHY_TABLE);
+        registry.unregister(Stats.INTERACT_WITH_LOOM);
+        registry.unregister(Stats.INTERACT_WITH_STONECUTTER);
+        registry.unregister(Stats.BELL_RING);
+        registry.unregister(Stats.RAID_TRIGGER);
+        registry.unregister(Stats.RAID_WIN);
+        registry.unregister(Stats.INTERACT_WITH_ANVIL);
+        registry.unregister(Stats.INTERACT_WITH_GRINDSTONE);
     }
 
     @Override

@@ -18,6 +18,8 @@ import net.minecraft.block.enums.WallShape;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.datafixer.fix.BitStorageAlignFix;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
@@ -42,9 +44,11 @@ import net.minecraft.network.packet.s2c.login.LoginSuccessS2CPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.recipe.RecipeSerializer;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.stat.Stats;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.ItemTags;
@@ -298,10 +302,13 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         mutator.mutate(Protocols.V1_15_2, Registry.BLOCK, this::mutateBlockRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.ITEM, this::mutateItemRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.ENCHANTMENT, this::mutateEnchantmentRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.BIOME, this::mutateBiomeRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.SCREEN_HANDLER, this::mutateScreenHandlerRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.RECIPE_SERIALIZER, this::mutateRecipeSerializerRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
     }
 
     @Override
@@ -467,12 +474,16 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(EntityType.ZOMBIFIED_PIGLIN);
         insertAfter(registry, EntityType.PUFFERFISH, EntityType.ZOMBIFIED_PIGLIN, "zombie_pigman");
         registry.unregister(EntityType.LIGHTNING_BOLT);
-        insertAfter(registry, EntityType.FISHING_BOBBER, EntityType.LIGHTNING_BOLT, "lightning_bolt");
+        insertAfter(registry, EntityType.PHANTOM, EntityType.LIGHTNING_BOLT, "lightning_bolt");
 
         registry.unregister(EntityType.HOGLIN);
         registry.unregister(EntityType.PIGLIN);
         registry.unregister(EntityType.STRIDER);
         registry.unregister(EntityType.ZOGLIN);
+    }
+
+    private void mutateEnchantmentRegistry(ISimpleRegistry<Enchantment> registry) {
+        registry.unregister(Enchantments.SOUL_SPEED);
     }
 
     private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
@@ -785,6 +796,15 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
     private void mutateScreenHandlerRegistry(ISimpleRegistry<ScreenHandlerType<?>> registry) {
         registry.unregister(ScreenHandlerType.SMITHING);
+    }
+
+    private void mutateRecipeSerializerRegistry(ISimpleRegistry<RecipeSerializer<?>> registry) {
+        registry.unregister(RecipeSerializer.SMITHING);
+    }
+
+    private void mutateCustomStatRegistry(ISimpleRegistry<Identifier> registry) {
+        registry.unregister(Stats.TARGET_HIT);
+        registry.unregister(Stats.INTERACT_WITH_SMITHING_TABLE);
     }
 
     @Override

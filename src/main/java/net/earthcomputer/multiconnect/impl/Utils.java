@@ -126,7 +126,7 @@ public class Utils {
         insertAfter(registry, prevValue, value, defaultRegistries.defaultEntriesById.inverse().get(value).toString(), inPlace);
     }
 
-    protected static void dumpBlockStates() {
+    public static void dumpBlockStates() {
         for (int id : ((IIdList) Block.STATE_IDS).multiconnect_ids()) {
             BlockState state = Block.STATE_IDS.get(id);
             assert state != null;

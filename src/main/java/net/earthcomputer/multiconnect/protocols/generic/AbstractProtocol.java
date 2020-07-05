@@ -33,18 +33,22 @@ public abstract class AbstractProtocol implements IUtils {
             modifyPacketLists();
             DataTrackerManager.onConnectToServer();
         }
-        DefaultRegistries.restoreAll();
-        RegistryMutator mutator = new RegistryMutator();
-        mutateRegistries(mutator);
-        mutator.runMutations(DefaultRegistries.DEFAULT_REGISTRIES.keySet());
-        DefaultRegistries.DEFAULT_REGISTRIES.keySet().forEach((this::postMutateRegistry));
-        recomputeBlockStates();
+        doRegistryMutation(true);
         if (!resourceReload) {
             removeTrackedDataHandlers();
             OldLanguageManager.reloadLanguages();
         }
         ((MinecraftClientAccessor) MinecraftClient.getInstance()).callInitializeSearchableContainers();
         ((MinecraftClientAccessor) MinecraftClient.getInstance()).getSearchManager().apply(MinecraftClient.getInstance().getResourceManager());
+    }
+
+    public void doRegistryMutation(boolean reAddMissingValues) {
+        DefaultRegistries.restoreAll();
+        RegistryMutator mutator = new RegistryMutator();
+        mutateRegistries(mutator);
+        mutator.runMutations(DefaultRegistries.DEFAULT_REGISTRIES.keySet());
+        DefaultRegistries.DEFAULT_REGISTRIES.keySet().forEach((registry -> postMutateRegistry(registry, reAddMissingValues)));
+        recomputeBlockStates();
     }
 
     protected void modifyPacketLists() {
@@ -98,7 +102,10 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void postMutateRegistry(Registry<T> registry) {
+    private <T> void postMutateRegistry(Registry<T> registry, boolean reAddMissingValues) {
+        if (!reAddMissingValues) {
+            return;
+        }
         if (!(registry instanceof SimpleRegistry)) return;
         if (registry instanceof DefaultedRegistry) return;
         ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;

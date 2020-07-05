@@ -19,6 +19,8 @@ import net.minecraft.util.registry.SimpleRegistry;
 import java.util.*;
 
 public class DefaultRegistries<T> {
+    private static boolean initialized = false;
+
     private static Map<Block, Item> DEFAULT_BLOCK_ITEMS = new HashMap<>();
     private static Map<EntityType<?>, SpawnEggItem> DEFAULT_SPAWN_EGG_ITEMS = new IdentityHashMap<>();
     private static Int2ObjectBiMap<TrackedDataHandler<?>> DEFAULT_TRACKED_DATA_HANDLERS = new Int2ObjectBiMap<>(16);
@@ -82,6 +84,11 @@ public class DefaultRegistries<T> {
     }
 
     public static void initialize() {
+        if (initialized) {
+            return;
+        }
+        initialized = true;
+
         DEFAULT_REGISTRIES.put(Registry.BLOCK, new DefaultRegistries<>(Registry.BLOCK));
         DEFAULT_REGISTRIES.put(Registry.ENTITY_TYPE, new DefaultRegistries<>(Registry.ENTITY_TYPE));
         DEFAULT_REGISTRIES.put(Registry.ITEM, new DefaultRegistries<>(Registry.ITEM));
