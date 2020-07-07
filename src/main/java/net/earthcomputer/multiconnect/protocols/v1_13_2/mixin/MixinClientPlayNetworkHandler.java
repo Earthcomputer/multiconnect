@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_13_2.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.*;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityType;
@@ -17,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -39,6 +41,9 @@ public abstract class MixinClientPlayNetworkHandler {
     @Shadow public abstract void onSetTradeOffers(SetTradeOffersS2CPacket packet);
 
     @Shadow public abstract void onVelocityUpdate(EntityVelocityUpdateS2CPacket entityVelocityUpdateS2CPacket_1);
+
+    @Unique private int lastCenterX;
+    @Unique private int lastCenterZ;
 
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ChunkDataS2CPacket;getReadBuffer()Lnet/minecraft/network/PacketByteBuf;", shift = At.Shift.AFTER))
     private void onChunkDataPost(ChunkDataS2CPacket packet, CallbackInfo ci) {
@@ -83,6 +88,18 @@ public abstract class MixinClientPlayNetworkHandler {
     private void onChunkDataSuccess(ChunkDataS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             PendingChunkDataPackets.pop();
+        }
+    }
+
+    @Inject(method = "onChunkRenderDistanceCenter", at = @At("RETURN"))
+    private void onOnChunkRenderDistanceCenter(ChunkRenderDistanceCenterS2CPacket packet, CallbackInfo ci) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
+            if (packet.getChunkX() != lastCenterX || packet.getChunkZ() != lastCenterZ) {
+                lastCenterX = packet.getChunkX();
+                lastCenterZ = packet.getChunkZ();
+                assert MinecraftClient.getInstance().getNetworkHandler() != null;
+                PendingChunkDataPackets.processPackets(MinecraftClient.getInstance().getNetworkHandler()::onChunkData);
+            }
         }
     }
 

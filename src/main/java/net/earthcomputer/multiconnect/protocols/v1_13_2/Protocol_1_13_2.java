@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
 import com.google.gson.JsonParseException;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.*;
@@ -60,17 +61,22 @@ import net.minecraft.util.registry.SimpleRegistry;
 import net.minecraft.village.VillagerData;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class Protocol_1_13_2 extends Protocol_1_14 {
 
     public static final Identifier CUSTOM_PAYLOAD_TRADE_LIST = new Identifier("trader_list");
     public static final Identifier CUSTOM_PAYLOAD_OPEN_BOOK = new Identifier("open_book");
+    public static final Set<Heightmap.Type> CLIENT_HEIGHTMAPS = Arrays.stream(Heightmap.Type.values()).filter(Heightmap.Type::shouldSendToClient).collect(Collectors.toSet());
 
     public static final TrackedData<Integer> OLD_FIREWORK_SHOOTER = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> OLD_VILLAGER_PROFESSION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
@@ -1459,9 +1465,11 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     public static void updateCameraPosition() {
-        assert MinecraftClient.getInstance().getNetworkHandler() != null;
-        assert MinecraftClient.getInstance().player != null;
-        ChunkSectionPos chunkPos = ChunkSectionPos.from(MinecraftClient.getInstance().player);
-        MinecraftClient.getInstance().getNetworkHandler().onChunkRenderDistanceCenter(new ChunkRenderDistanceCenterS2CPacket(chunkPos.getSectionX(), chunkPos.getSectionZ()));
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
+            assert MinecraftClient.getInstance().getNetworkHandler() != null;
+            assert MinecraftClient.getInstance().player != null;
+            ChunkSectionPos chunkPos = ChunkSectionPos.from(MinecraftClient.getInstance().player);
+            MinecraftClient.getInstance().getNetworkHandler().onChunkRenderDistanceCenter(new ChunkRenderDistanceCenterS2CPacket(chunkPos.getSectionX(), chunkPos.getSectionZ()));
+        }
     }
 }
