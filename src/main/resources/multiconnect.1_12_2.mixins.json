@@ -20,7 +20,6 @@
     "MixinBlock",
     "MixinBlockItem",
     "MixinBlockStateFlattening",
-    "MixinClientChunkManager",
     "MixinClientPlayerEntity",
     "MixinClientPlayNetworkHandler",
     "MixinClientWorld",
