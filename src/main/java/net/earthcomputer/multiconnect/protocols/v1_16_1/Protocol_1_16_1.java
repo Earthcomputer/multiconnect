@@ -9,10 +9,6 @@ import net.earthcomputer.multiconnect.protocols.v1_16_2.Protocol_1_16_2;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_5411;
-import net.minecraft.class_5418;
-import net.minecraft.class_5421;
-import net.minecraft.class_5427;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -20,11 +16,15 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.mob.AbstractPiglinEntity;
 import net.minecraft.entity.mob.PiglinEntity;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.RecipeBookDataC2SPacket;
+import net.minecraft.network.packet.c2s.play.RecipeCategoryOptionsC2SPacket;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnlockRecipesS2CPacket;
+import net.minecraft.recipe.book.RecipeBookCategory;
+import net.minecraft.recipe.book.RecipeBookOptions;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
@@ -76,11 +76,11 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
             boolean blastFurnaceGuiOpen, blastFurnaceFilteringCraftable, smokerGuiOpen, smokerFilteringCraftable;
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
-                class_5411 bookSettings = player.getRecipeBook().method_30173();
-                blastFurnaceGuiOpen = bookSettings.method_30180(class_5421.field_25765);
-                blastFurnaceFilteringCraftable = bookSettings.method_30187(class_5421.field_25765);
-                smokerGuiOpen = bookSettings.method_30180(class_5421.field_25766);
-                smokerFilteringCraftable = bookSettings.method_30187(class_5421.field_25766);
+                RecipeBookOptions bookOptions = player.getRecipeBook().getOptions();
+                blastFurnaceGuiOpen = bookOptions.isGuiOpen(RecipeBookCategory.BLAST_FURNACE);
+                blastFurnaceFilteringCraftable = bookOptions.isFilteringCraftable(RecipeBookCategory.BLAST_FURNACE);
+                smokerGuiOpen = bookOptions.isGuiOpen(RecipeBookCategory.SMOKER);
+                smokerFilteringCraftable = bookOptions.isFilteringCraftable(RecipeBookCategory.SMOKER);
             } else {
                 blastFurnaceGuiOpen = blastFurnaceFilteringCraftable = smokerGuiOpen = smokerFilteringCraftable = false;
             }
@@ -97,7 +97,7 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
         List<PacketInfo<?>> packets = super.getServerboundPackets();
         insertAfter(packets, RecipeBookDataC2SPacket.class, PacketInfo.of(RecipeBookDataC2SPacket_1_16_1.class, RecipeBookDataC2SPacket_1_16_1::new));
         remove(packets, RecipeBookDataC2SPacket.class);
-        remove(packets, class_5427.class);
+        remove(packets, RecipeCategoryOptionsC2SPacket.class);
         return packets;
     }
 
@@ -109,10 +109,10 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
             networkHandler.sendPacket(new RecipeBookDataC2SPacket_1_16_1((RecipeBookDataC2SPacket) packet));
             return false;
         }
-        if (packet.getClass() == class_5427.class) {
+        if (packet.getClass() == RecipeCategoryOptionsC2SPacket.class) {
             ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
             assert networkHandler != null;
-            networkHandler.sendPacket(new RecipeBookDataC2SPacket_1_16_1((class_5427) packet));
+            networkHandler.sendPacket(new RecipeBookDataC2SPacket_1_16_1((RecipeCategoryOptionsC2SPacket) packet));
             return false;
         }
         return super.onSendPacket(packet);
@@ -149,12 +149,12 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == PiglinEntity.class && data == PiglinEntityAccessor.getOldImmuneToZombification()) {
             DataTrackerManager.registerOldTrackedData(PiglinEntity.class, OLD_IMMUNE_TO_ZOMBIFICATION, false, (entity, val) -> {
-                entity.method_30240(val);
+                entity.setImmuneToZombification(val);
                 entity.getDataTracker().set(PiglinEntityAccessor.getOldImmuneToZombification(), val);
             });
             return false;
         }
-        if (clazz == class_5418.class && data == AbstractPiglinEntityAccessor.getImmuneToZombification()) {
+        if (clazz == AbstractPiglinEntity.class && data == AbstractPiglinEntityAccessor.getImmuneToZombification()) {
             return false;
         }
         return super.acceptEntityData(clazz, data);

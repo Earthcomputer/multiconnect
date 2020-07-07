@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(PiglinEntity.class)
 public interface PiglinEntityAccessor {
-    @Accessor("IMMUNE_TO_ZOMBIFICATION")
+    @Accessor("OLD_IMMUNE_TO_ZOMBIFICATION")
     static TrackedData<Boolean> getOldImmuneToZombification() {
         return MixinHelper.fakeInstance();
     }

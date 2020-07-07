@@ -6,13 +6,13 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.*;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.class_5415;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.server.command.CommandSource;
+import net.minecraft.tag.TagManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.UpgradeData;
@@ -43,7 +43,7 @@ public abstract class MixinClientPlayNetworkHandler {
     private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             // multiconnect will automatically populate the tag manager with required tags
-            onSynchronizeTags(new SynchronizeTagsS2CPacket(class_5415.field_25744));
+            onSynchronizeTags(new SynchronizeTagsS2CPacket(TagManager.EMPTY));
 
             Protocol_1_12_2 protocol = (Protocol_1_12_2) ConnectionInfo.protocol;
             List<Recipe<?>> recipes = new ArrayList<>();

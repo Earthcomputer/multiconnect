@@ -1,14 +1,14 @@
 package net.earthcomputer.multiconnect.protocols.v1_16_1;
 
-import net.minecraft.class_5411;
-import net.minecraft.class_5421;
-import net.minecraft.class_5427;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.packet.c2s.play.RecipeBookDataC2SPacket;
+import net.minecraft.network.packet.c2s.play.RecipeCategoryOptionsC2SPacket;
+import net.minecraft.recipe.book.RecipeBookCategory;
+import net.minecraft.recipe.book.RecipeBookOptions;
 import net.minecraft.util.Identifier;
 
 public class RecipeBookDataC2SPacket_1_16_1 implements Packet<ServerPlayPacketListener> {
@@ -31,35 +31,35 @@ public class RecipeBookDataC2SPacket_1_16_1 implements Packet<ServerPlayPacketLi
         this.recipeId = packet.getRecipeId();
     }
 
-    public RecipeBookDataC2SPacket_1_16_1(class_5427 packet) {
+    public RecipeBookDataC2SPacket_1_16_1(RecipeCategoryOptionsC2SPacket packet) {
         this.mode = Mode.SETTINGS;
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player != null) {
-            class_5411 bookSettings = player.getRecipeBook().method_30173();
-            guiOpen = isGuiOpen(packet, bookSettings, class_5421.field_25763);
-            filteringCraftable = isFilteringCraftable(packet, bookSettings, class_5421.field_25763);
-            furnaceGuiOpen = isGuiOpen(packet, bookSettings, class_5421.field_25764);
-            furnaceFilteringCraftable = isFilteringCraftable(packet, bookSettings, class_5421.field_25764);
-            blastFurnaceGuiOpen = isGuiOpen(packet, bookSettings, class_5421.field_25765);
-            blastFurnaceFilteringCraftable = isFilteringCraftable(packet, bookSettings, class_5421.field_25765);
-            smokerGuiOpen = isGuiOpen(packet, bookSettings, class_5421.field_25766);
-            smokerGuiFilteringCraftable = isFilteringCraftable(packet, bookSettings, class_5421.field_25766);
+            RecipeBookOptions bookOptions = player.getRecipeBook().getOptions();
+            guiOpen = isGuiOpen(packet, bookOptions, RecipeBookCategory.CRAFTING);
+            filteringCraftable = isFilteringCraftable(packet, bookOptions, RecipeBookCategory.CRAFTING);
+            furnaceGuiOpen = isGuiOpen(packet, bookOptions, RecipeBookCategory.FURNACE);
+            furnaceFilteringCraftable = isFilteringCraftable(packet, bookOptions, RecipeBookCategory.FURNACE);
+            blastFurnaceGuiOpen = isGuiOpen(packet, bookOptions, RecipeBookCategory.BLAST_FURNACE);
+            blastFurnaceFilteringCraftable = isFilteringCraftable(packet, bookOptions, RecipeBookCategory.BLAST_FURNACE);
+            smokerGuiOpen = isGuiOpen(packet, bookOptions, RecipeBookCategory.SMOKER);
+            smokerGuiFilteringCraftable = isFilteringCraftable(packet, bookOptions, RecipeBookCategory.SMOKER);
         }
     }
 
-    private static boolean isGuiOpen(class_5427 packet, class_5411 bookSettings, class_5421 category) {
-        if (packet.method_30305() == category) {
-            return packet.method_30306();
+    private static boolean isGuiOpen(RecipeCategoryOptionsC2SPacket packet, RecipeBookOptions bookOptions, RecipeBookCategory category) {
+        if (packet.getCategory() == category) {
+            return packet.isGuiOpen();
         } else {
-            return bookSettings.method_30180(category);
+            return bookOptions.isGuiOpen(category);
         }
     }
 
-    private static boolean isFilteringCraftable(class_5427 packet, class_5411 bookSettings, class_5421 category) {
-        if (packet.method_30305() == category) {
-            return packet.method_30307();
+    private static boolean isFilteringCraftable(RecipeCategoryOptionsC2SPacket packet, RecipeBookOptions bookOptions, RecipeBookCategory category) {
+        if (packet.getCategory() == category) {
+            return packet.isFilteringCraftable();
         } else {
-            return bookSettings.method_30187(category);
+            return bookOptions.isFilteringCraftable(category);
         }
     }
 

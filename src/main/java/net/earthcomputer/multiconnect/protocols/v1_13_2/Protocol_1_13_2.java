@@ -14,7 +14,6 @@ import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.enums.Instrument;
-import net.minecraft.class_5414;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
@@ -46,9 +45,7 @@ import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.Stats;
-import net.minecraft.tag.BlockTags;
-import net.minecraft.tag.EntityTypeTags;
-import net.minecraft.tag.ItemTags;
+import net.minecraft.tag.*;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
@@ -245,9 +242,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
         ProtocolRegistry.registerInboundTranslator(SynchronizeTagsS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            class_5414.method_30209(buf, Registry.BLOCK);
-            class_5414.method_30209(buf, Registry.ITEM);
-            class_5414.method_30209(buf, Registry.FLUID);
+            TagGroup.fromPacket(buf, Registry.BLOCK);
+            TagGroup.fromPacket(buf, Registry.ITEM);
+            TagGroup.fromPacket(buf, Registry.FLUID);
             buf.disablePassthroughMode();
             buf.pendingRead(VarInt.class, new VarInt(0)); // entity type count
             buf.applyPendingReads();

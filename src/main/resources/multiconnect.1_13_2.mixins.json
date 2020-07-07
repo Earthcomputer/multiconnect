@@ -19,7 +19,6 @@
     "MixinOtherClientPlayerEntity",
     "MixinPlayerEntity",
     "MixinPlayerEntityRenderer",
-    "MixinRegistryTagManager",
     "MixinWorldChunk",
     "MooshroomEntityAccessor",
     "ProjectileEntityAccessor",
