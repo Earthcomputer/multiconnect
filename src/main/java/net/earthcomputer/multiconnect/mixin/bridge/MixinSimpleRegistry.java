@@ -89,7 +89,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         if (!entriesById.containsValue(t))
             return;
 
-        int id = indexedEntries.getId(t);
+        int id = indexedEntries.getRawId(t);
         //noinspection unchecked
         ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(t);
         entriesById.inverse().remove(t);
@@ -114,7 +114,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
         if (!entriesById.containsValue(t))
             return;
 
-        int id = indexedEntries.getId(t);
+        int id = indexedEntries.getRawId(t);
         //noinspection unchecked
         ((IInt2ObjectBiMap<T>) indexedEntries).multiconnect_remove(t);
         entriesById.inverse().remove(t);
@@ -174,7 +174,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     public SimpleRegistry<T> copy() {
         SimpleRegistry<T> newRegistry = new SimpleRegistry<>(getRegistryKey(), ((RegistryAccessor<T>) this).getLifecycle());
         for (Map.Entry<RegistryKey<T>, T> entry : entriesByKey.entrySet()) {
-            newRegistry.set(indexedEntries.getId(entry.getValue()), entry.getKey(), entry.getValue());
+            newRegistry.set(indexedEntries.getRawId(entry.getValue()), entry.getKey(), entry.getValue());
         }
         return newRegistry;
     }

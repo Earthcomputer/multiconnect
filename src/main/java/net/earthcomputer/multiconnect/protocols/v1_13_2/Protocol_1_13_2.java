@@ -14,6 +14,7 @@ import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.enums.Instrument;
+import net.minecraft.class_5455;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
@@ -566,7 +567,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         mutator.mutate(Protocols.V1_13_2, Registry.BLOCK, this::mutateBlockRegistry);
         mutator.mutate(Protocols.V1_13_2, Registry.ITEM, this::mutateItemRegistry);
         mutator.mutate(Protocols.V1_13_2, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
-        mutator.mutate(Protocols.V1_13_2, Registry.BIOME, this::mutateBiomeRegistry);
         mutator.mutate(Protocols.V1_13_2, Registry.STATUS_EFFECT, this::mutateStatusEffectRegistry);
         mutator.mutate(Protocols.V1_13_2, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
         mutator.mutate(Protocols.V1_13_2, Registry.ENCHANTMENT, this::mutateEnchantmentRegistry);
@@ -575,6 +575,12 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         mutator.mutate(Protocols.V1_13_2, Registry.RECIPE_SERIALIZER, this::mutateRecipeSerializerRegistry);
         mutator.mutate(Protocols.V1_13_2, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
         mutator.mutate(Protocols.V1_13_2, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
+    }
+
+    @Override
+    public void mutateDynamicRegistries(RegistryMutator mutator, class_5455.class_5457 registries) {
+        super.mutateDynamicRegistries(mutator, registries);
+        mutator.mutate(Protocols.V1_13_2, registries.method_30530(Registry.BIOME_KEY), this::mutateBiomeRegistry);
     }
 
     private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {

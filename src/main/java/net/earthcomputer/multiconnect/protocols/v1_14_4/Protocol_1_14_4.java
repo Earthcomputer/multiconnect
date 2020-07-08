@@ -15,6 +15,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.class_5458;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -60,7 +61,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             Biome[] biomeData = new Biome[256];
             for (int i = 0; i < 256; i++) {
                 int biomeId = buf.readInt();
-                biomeData[i] = Registry.BIOME.get(biomeId);
+                biomeData[i] = class_5458.field_25933.get(biomeId); // TODO: Use the dynamic biome registry? Not necessarily safe to access off-thread here, so using builtin for now.
                 if (biomeData[i] == null)
                     throw new RuntimeException("Received invalid biome id: " + biomeId);
             }

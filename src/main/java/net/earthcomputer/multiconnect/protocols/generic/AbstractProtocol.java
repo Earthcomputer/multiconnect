@@ -4,6 +4,7 @@ import net.earthcomputer.multiconnect.impl.IUtils;
 import net.earthcomputer.multiconnect.mixin.bridge.MinecraftClientAccessor;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.class_5455;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -99,6 +100,9 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     public void mutateRegistries(RegistryMutator mutator) {
+    }
+
+    public void mutateDynamicRegistries(RegistryMutator mutator, class_5455.class_5457 registries) {
     }
 
     @SuppressWarnings("unchecked")

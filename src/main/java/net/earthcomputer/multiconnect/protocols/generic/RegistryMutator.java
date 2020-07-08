@@ -19,7 +19,7 @@ public class RegistryMutator {
         mutators.computeIfAbsent(registry, k -> new Int2ObjectOpenHashMap<>()).put(protocol, (Consumer<ISimpleRegistry<?>>) (Consumer<?>) mutator);
     }
 
-    public void runMutations(Iterable<Registry<?>> registries) {
+    public <T extends Registry<?>> void runMutations(Iterable<T> registries) {
         // validate
         int containingCount = 0;
         for (Registry<?> registry : registries) {

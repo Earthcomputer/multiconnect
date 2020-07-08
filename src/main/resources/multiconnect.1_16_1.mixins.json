@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "AbstractPiglinEntityAccessor",
+    "ChunkDeltaUpdateS2CAccessor",
     "PiglinEntityAccessor"
   ],
   "client": [

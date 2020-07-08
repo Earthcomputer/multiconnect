@@ -17,6 +17,7 @@ import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_
 import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.WallMountLocation;
+import net.minecraft.class_5455;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.datafixer.fix.BlockStateFlattening;
@@ -1535,11 +1536,16 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         mutator.mutate(Protocols.V1_12_2, Registry.ENTITY_TYPE, Entities_1_12_2::registerEntities);
         mutator.mutate(Protocols.V1_12_2, Registry.ENCHANTMENT, Enchantments_1_12_2::registerEnchantments);
         mutator.mutate(Protocols.V1_12_2, Registry.POTION, this::mutatePotionRegistry);
-        mutator.mutate(Protocols.V1_12_2, Registry.BIOME, this::mutateBiomeRegistry);
         mutator.mutate(Protocols.V1_12_2, Registry.PARTICLE_TYPE, Particles_1_12_2::registerParticles);
         mutator.mutate(Protocols.V1_12_2, Registry.BLOCK_ENTITY_TYPE, BlockEntities_1_12_2::registerBlockEntities);
         mutator.mutate(Protocols.V1_12_2, Registry.STATUS_EFFECT, this::mutateStatusEffectRegistry);
         mutator.mutate(Protocols.V1_12_2, Registry.SOUND_EVENT, this::mutateSoundRegistry);
+    }
+
+    @Override
+    public void mutateDynamicRegistries(RegistryMutator mutator, class_5455.class_5457 registries) {
+        super.mutateDynamicRegistries(mutator, registries);
+        mutator.mutate(Protocols.V1_12_2, registries.method_30530(Registry.BIOME_KEY), this::mutateBiomeRegistry);
     }
 
     private void mutatePotionRegistry(ISimpleRegistry<Potion> registry) {

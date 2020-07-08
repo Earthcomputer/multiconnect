@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_15_2;
 
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ProjectileEntityAccessor;
@@ -15,6 +16,7 @@ import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
+import net.minecraft.class_5455;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.datafixer.fix.BitStorageAlignFix;
@@ -59,8 +61,9 @@ import net.minecraft.util.dynamic.DynamicSerializableUuid;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.registry.MutableRegistry;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryTracker;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
@@ -69,6 +72,7 @@ import net.minecraft.world.dimension.DimensionType;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class Protocol_1_15_2 extends Protocol_1_16 {
 
@@ -144,8 +148,13 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.pendingRead(Identifier.class, World.END.getValue());
             int dimensionId = buf.readInt();
             Identifier dimensionName = dimensionIdToName(dimensionId);
-            RegistryTracker.Modifiable tracker = RegistryTracker.create();
-            buf.pendingRead(Codecked.class, new Codecked<>(RegistryTracker.Modifiable.CODEC, tracker));
+
+            class_5455.class_5457 registries = class_5455.method_30528();
+            RegistryMutator mutator = new RegistryMutator();
+            ConnectionInfo.protocol.mutateDynamicRegistries(mutator, registries);
+            mutator.runMutations(class_5455.field_25919.keySet().stream().map(key -> getRegistry(registries, key)).collect(Collectors.toList()));
+
+            buf.pendingRead(Codecked.class, new Codecked<>(class_5455.class_5457.field_25923, registries));
             buf.pendingRead(Identifier.class, dimensionName); // dimension type
             buf.pendingRead(Identifier.class, dimensionName); // dimension
             buf.enablePassthroughMode();
@@ -276,6 +285,11 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         });
     }
 
+    @SuppressWarnings("unchecked")
+    public static <E> MutableRegistry<?> getRegistry(class_5455.class_5457 registries, RegistryKey<? extends Registry<?>> key) {
+        return registries.method_30530((RegistryKey<? extends Registry<E>>) key);
+    }
+
     private static Identifier dimensionIdToName(int dimensionId) {
         switch (dimensionId) {
             case -1:
@@ -305,12 +319,17 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         mutator.mutate(Protocols.V1_15_2, Registry.ITEM, this::mutateItemRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.ENCHANTMENT, this::mutateEnchantmentRegistry);
-        mutator.mutate(Protocols.V1_15_2, Registry.BIOME, this::mutateBiomeRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.SCREEN_HANDLER, this::mutateScreenHandlerRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.RECIPE_SERIALIZER, this::mutateRecipeSerializerRegistry);
         mutator.mutate(Protocols.V1_15_2, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
+    }
+
+    @Override
+    public void mutateDynamicRegistries(RegistryMutator mutator, class_5455.class_5457 registries) {
+        super.mutateDynamicRegistries(mutator, registries);
+        mutator.mutate(Protocols.V1_15_2, registries.method_30530(Registry.BIOME_KEY), this::mutateBiomeRegistry);
     }
 
     @Override
@@ -894,7 +913,6 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         tags.add(ItemTags.PIGLIN_LOVED);
         tags.add(ItemTags.NON_FLAMMABLE_WOOD);
         tags.add(ItemTags.STONE_TOOL_MATERIALS, Items.COBBLESTONE);
-        tags.add(ItemTags.FURNACE_MATERIALS, Items.COBBLESTONE);
         super.addExtraItemTags(tags, blockTags);
     }
 
