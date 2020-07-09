@@ -42,6 +42,9 @@
   },
 
   "custom": {
-    "modmenu:clientsideOnly": true
+    "modmenu:clientsideOnly": true,
+    "lithium:options": {
+      "mixin.entity.data_tracker.use_arrays": false
+    }
   }
 }
