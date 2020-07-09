@@ -102,9 +102,6 @@ public abstract class AbstractProtocol implements IUtils {
     public void mutateRegistries(RegistryMutator mutator) {
     }
 
-    public void mutateDynamicRegistries(RegistryMutator mutator, class_5455.class_5457 registries) {
-    }
-
     @SuppressWarnings("unchecked")
     private <T> void postMutateRegistry(Registry<T> registry, boolean reAddMissingValues) {
         if (!reAddMissingValues) {

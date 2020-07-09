@@ -151,7 +151,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
             class_5455.class_5457 registries = class_5455.method_30528();
             RegistryMutator mutator = new RegistryMutator();
-            ConnectionInfo.protocol.mutateDynamicRegistries(mutator, registries);
+            ((Protocol_1_15_2) ConnectionInfo.protocol).mutateDynamicRegistries(mutator, registries);
             mutator.runMutations(class_5455.field_25919.keySet().stream().map(key -> getRegistry(registries, key)).collect(Collectors.toList()));
 
             buf.pendingRead(Codecked.class, new Codecked<>(class_5455.class_5457.field_25923, registries));
@@ -326,9 +326,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         mutator.mutate(Protocols.V1_15_2, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
     }
 
-    @Override
     public void mutateDynamicRegistries(RegistryMutator mutator, class_5455.class_5457 registries) {
-        super.mutateDynamicRegistries(mutator, registries);
         mutator.mutate(Protocols.V1_15_2, registries.method_30530(Registry.BIOME_KEY), this::mutateBiomeRegistry);
     }
 
