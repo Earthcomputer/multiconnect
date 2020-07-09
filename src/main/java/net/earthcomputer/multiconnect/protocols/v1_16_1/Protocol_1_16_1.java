@@ -151,6 +151,11 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
     }
 
     @Override
+    public ChunkData createChunkData() {
+        return new ChunkData_1_16_1();
+    }
+
+    @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
         mutator.mutate(Protocols.V1_16_1, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
