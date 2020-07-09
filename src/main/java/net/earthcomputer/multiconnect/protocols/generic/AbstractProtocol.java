@@ -120,6 +120,10 @@ public abstract class AbstractProtocol implements IUtils {
         }
     }
 
+    public ChunkData createChunkData() {
+        return null;
+    }
+
     public boolean acceptBlockState(BlockState state) {
         return true;
     }

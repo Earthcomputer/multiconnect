@@ -9,7 +9,7 @@ import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.TridentEntityAcces
 import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.WolfEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.Protocol_1_15_2;
-import net.earthcomputer.multiconnect.transformer.ChunkData;
+import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.minecraft.block.BellBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

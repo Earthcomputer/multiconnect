@@ -9,7 +9,7 @@ import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAtt
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.WolfEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
-import net.earthcomputer.multiconnect.transformer.ChunkData;
+import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.UnsignedByte;
 import net.earthcomputer.multiconnect.transformer.VarInt;
