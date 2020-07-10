@@ -3,23 +3,25 @@ package net.earthcomputer.multiconnect.impl;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
-import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.Lifecycle;
-import com.mojang.serialization.codecs.PrimitiveCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.earthcomputer.multiconnect.mixin.bridge.MutableDynamicRegistriesAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.*;
+import net.earthcomputer.multiconnect.transformer.Codecked;
+import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.class_5455;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.item.Item;
 import net.minecraft.network.Packet;
 import net.minecraft.tag.Tag;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
 import net.minecraft.util.collection.Int2ObjectBiMap;
 import net.minecraft.util.registry.BuiltinRegistries;
@@ -28,30 +30,17 @@ import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.registry.SimpleRegistry;
 import net.minecraft.world.dimension.DimensionType;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Utils {
-
-    public static final Codec<Unit> ALWAYS_SUCCESS_CODEC = new PrimitiveCodec<Unit>() {
-        @Override
-        public <T> DataResult<Unit> read(DynamicOps<T> ops, T input) {
-            return DataResult.success(Unit.INSTANCE);
-        }
-
-        @Override
-        public <T> T write(DynamicOps<T> ops, Unit value) {
-            return ops.createBoolean(false);
-        }
-
-        @Override
-        public String toString() {
-            return "AlwaysSuccess";
-        }
-    };
 
     @SafeVarargs
     public static <T, U> Comparator<T> orderBy(Function<T, U> mapper, U... order) {
@@ -175,6 +164,45 @@ public class Utils {
                 registry.add(entry.getKey(), entry.getValue());
             }
         }
+    }
+
+    public static <T> void translateDynamicRegistries(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate) {
+        // TODO: support actual translation when this format stops being experimental
+        boolean[] hasDecoded = {false};
+        T oldRegistries;
+        try {
+            oldRegistries = buf.decode(oldCodec.xmap(val -> {
+                hasDecoded[0] = true;
+                return val;
+            }, Function.identity()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        if (!hasDecoded[0]) {
+            // already valid
+            buf.pendingRead(Codecked.class, new Codecked<>(class_5455.class_5457.field_25923, (class_5455.class_5457) oldRegistries));
+            return;
+        }
+        if (!allowablePredicate.test(oldRegistries)) {
+            ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+            if (networkHandler != null) {
+                networkHandler.getConnection().disconnect(new TranslatableText("multiconnect.unsupportedExperimentalCodec"));
+            }
+            return;
+        }
+        class_5455.class_5457 registries = new class_5455.class_5457();
+        //noinspection ConstantConditions
+        ((MutableDynamicRegistriesAccessor) (Object) registries).setRegistries(ImmutableMap.of()); // dynamic registry mutator will fix this
+        buf.pendingRead(Codecked.class, new Codecked<>(class_5455.class_5457.field_25923, registries));
+    }
+
+    /**
+     * Creates a codec which recognizes an object {"key": value} from a codec which recognizes value.
+     * This returned codec extracts value from this object, ignoring all other information
+     */
+    public static <T> Codec<T> singletonKeyCodec(String key, Codec<T> codec) {
+        return RecordCodecBuilder.<Optional<T>>create(inst -> inst.group(codec.fieldOf(key).forGetter(Optional::get)).apply(inst, Optional::of))
+                .xmap(Optional::get, Optional::of);
     }
 
     public static void dumpBlockStates() {

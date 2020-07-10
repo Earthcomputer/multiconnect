@@ -1,15 +1,15 @@
 package net.earthcomputer.multiconnect.protocols.v1_16_1;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.mojang.serialization.Codec;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.Utils;
-import net.earthcomputer.multiconnect.mixin.bridge.MutableDynamicRegistriesAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.AbstractPiglinEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.PiglinEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_2.Protocol_1_16_2;
-import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -35,12 +35,11 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.ItemTags;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.source.BiomeArray;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.List;
+import java.util.*;
 
 public class Protocol_1_16_1 extends Protocol_1_16_2 {
     private static final TrackedData<Boolean> OLD_IMMUNE_TO_ZOMBIFICATION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BOOLEAN);
@@ -61,15 +60,13 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
                 buf.readIdentifier(); // dimension id
             }
             buf.disablePassthroughMode();
-            // the format changed
-            try {
-                buf.decode(Utils.ALWAYS_SUCCESS_CODEC); // FIXME: support custom dimensions
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-            class_5455.class_5457 registries = new class_5455.class_5457();
-            ((MutableDynamicRegistriesAccessor) (Object) registries).setRegistries(ImmutableMap.of());
-            buf.pendingRead(Codecked.class, new Codecked<>(class_5455.class_5457.field_25923, registries)); // dynamic registry mutator will fix this
+            Codec<Set<Identifier>> dimensionSetCodec = Codec.list(Utils.singletonKeyCodec("name", Identifier.CODEC))
+                    .xmap(ImmutableSet::copyOf, ImmutableList::copyOf);
+            Utils.translateDynamicRegistries(
+                    buf,
+                    Utils.singletonKeyCodec("dimension", dimensionSetCodec),
+                    ImmutableSet.of(new Identifier("overworld"), new Identifier("the_nether"), new Identifier("the_end"), new Identifier("overworld_caves"))::equals
+            );
             buf.enablePassthroughMode();
             buf.readIdentifier(); // dimension type
             buf.readIdentifier(); // dimension

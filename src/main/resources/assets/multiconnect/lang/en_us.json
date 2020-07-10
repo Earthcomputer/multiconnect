@@ -1,3 +1,4 @@
 {
-  "multiconnect.changeForcedProtocol": "Version"
+  "multiconnect.changeForcedProtocol": "Version",
+  "multiconnect.unsupportedExperimentalCodec": "This server is using experimental features, or features which were experimental on the server version. Multiconnect cannot translate experimental data, and cannot connect to this server."
 }
