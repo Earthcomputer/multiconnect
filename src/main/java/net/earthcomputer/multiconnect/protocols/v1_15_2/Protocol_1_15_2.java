@@ -1,7 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_15_2;
 
+import com.google.common.collect.ImmutableMap;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.mixin.bridge.MutableDynamicRegistriesAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ProjectileEntityAccessor;
@@ -61,9 +62,7 @@ import net.minecraft.util.dynamic.DynamicSerializableUuid;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.registry.MutableRegistry;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
@@ -72,7 +71,6 @@ import net.minecraft.world.dimension.DimensionType;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class Protocol_1_15_2 extends Protocol_1_16 {
 
@@ -149,12 +147,9 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             int dimensionId = buf.readInt();
             Identifier dimensionName = dimensionIdToName(dimensionId);
 
-            class_5455.class_5457 registries = class_5455.method_30528();
-            RegistryMutator mutator = new RegistryMutator();
-            ((Protocol_1_15_2) ConnectionInfo.protocol).mutateDynamicRegistries(mutator, registries);
-            mutator.runMutations(class_5455.field_25919.keySet().stream().map(key -> getRegistry(registries, key)).collect(Collectors.toList()));
-
-            buf.pendingRead(Codecked.class, new Codecked<>(class_5455.class_5457.field_25923, registries));
+            class_5455.class_5457 registries = new class_5455.class_5457();
+            ((MutableDynamicRegistriesAccessor) (Object) registries).setRegistries(ImmutableMap.of());
+            buf.pendingRead(Codecked.class, new Codecked<>(class_5455.class_5457.field_25923, registries)); // dynamic registry mutator will fix this
             buf.pendingRead(Identifier.class, dimensionName); // dimension type
             buf.pendingRead(Identifier.class, dimensionName); // dimension
             buf.enablePassthroughMode();
@@ -285,11 +280,6 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         });
     }
 
-    @SuppressWarnings("unchecked")
-    public static <E> MutableRegistry<?> getRegistry(class_5455.class_5457 registries, RegistryKey<? extends Registry<?>> key) {
-        return registries.method_30530((RegistryKey<? extends Registry<E>>) key);
-    }
-
     private static Identifier dimensionIdToName(int dimensionId) {
         switch (dimensionId) {
             case -1:
@@ -326,7 +316,10 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         mutator.mutate(Protocols.V1_15_2, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
     }
 
+    @Override
     public void mutateDynamicRegistries(RegistryMutator mutator, class_5455.class_5457 registries) {
+        super.mutateDynamicRegistries(mutator, registries);
+        addRegistry(registries, Registry.DIMENSION_TYPE_KEY);
         mutator.mutate(Protocols.V1_15_2, registries.method_30530(Registry.BIOME_KEY), this::mutateBiomeRegistry);
     }
 

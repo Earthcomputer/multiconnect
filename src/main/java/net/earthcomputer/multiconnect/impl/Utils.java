@@ -2,28 +2,57 @@ package net.earthcomputer.multiconnect.impl;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.Lifecycle;
+import com.mojang.serialization.codecs.PrimitiveCodec;
+import net.earthcomputer.multiconnect.mixin.bridge.MutableDynamicRegistriesAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.class_5455;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.item.Item;
 import net.minecraft.network.Packet;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
 import net.minecraft.util.collection.Int2ObjectBiMap;
+import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.registry.SimpleRegistry;
+import net.minecraft.world.dimension.DimensionType;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Utils {
+
+    public static final Codec<Unit> ALWAYS_SUCCESS_CODEC = new PrimitiveCodec<Unit>() {
+        @Override
+        public <T> DataResult<Unit> read(DynamicOps<T> ops, T input) {
+            return DataResult.success(Unit.INSTANCE);
+        }
+
+        @Override
+        public <T> T write(DynamicOps<T> ops, Unit value) {
+            return ops.createBoolean(false);
+        }
+
+        @Override
+        public String toString() {
+            return "AlwaysSuccess";
+        }
+    };
+
     @SafeVarargs
     public static <T, U> Comparator<T> orderBy(Function<T, U> mapper, U... order) {
         ImmutableMap.Builder<U, Integer> indexBuilder = ImmutableMap.builder();
@@ -124,6 +153,28 @@ public class Utils {
         }
 
         insertAfter(registry, prevValue, value, defaultRegistries.defaultEntriesById.inverse().get(value).toString(), inPlace);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T, R extends Registry<T>> void addRegistry(class_5455.class_5457 registries, RegistryKey<R> registryKey) {
+        //noinspection ConstantConditions
+        Map<RegistryKey<? extends Registry<?>>, SimpleRegistry<?>> registryMap =
+                (Map<RegistryKey<? extends Registry<?>>, SimpleRegistry<?>>) ((MutableDynamicRegistriesAccessor) (Object) registries).getRegistries();
+
+        if (registryMap.containsKey(registryKey)) {
+            return;
+        }
+        SimpleRegistry<T> registry = new SimpleRegistry<>(registryKey, Lifecycle.stable());
+        registryMap.putIfAbsent(registryKey, registry);
+        if (registryKey == Registry.DIMENSION_TYPE_KEY) {
+            DimensionType.addRegistryDefaults(registries);
+        } else {
+            Registry<T> builtinRegistry = ((Registry<R>) BuiltinRegistries.REGISTRIES).get(registryKey);
+            assert builtinRegistry != null;
+            for (Map.Entry<RegistryKey<T>, T> entry : builtinRegistry.getEntries()) {
+                registry.add(entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     public static void dumpBlockStates() {

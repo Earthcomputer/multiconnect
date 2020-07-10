@@ -1,11 +1,15 @@
 package net.earthcomputer.multiconnect.protocols.v1_16_1;
 
+import com.google.common.collect.ImmutableMap;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.Utils;
+import net.earthcomputer.multiconnect.mixin.bridge.MutableDynamicRegistriesAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.AbstractPiglinEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.PiglinEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_2.Protocol_1_16_2;
+import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -56,11 +60,17 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
             for (int i = 0; i < dimensionCount; i++) {
                 buf.readIdentifier(); // dimension id
             }
+            buf.disablePassthroughMode();
+            // the format changed
             try {
-                buf.decode(class_5455.class_5457.field_25923);
+                buf.decode(Utils.ALWAYS_SUCCESS_CODEC); // FIXME: support custom dimensions
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
+            class_5455.class_5457 registries = new class_5455.class_5457();
+            ((MutableDynamicRegistriesAccessor) (Object) registries).setRegistries(ImmutableMap.of());
+            buf.pendingRead(Codecked.class, new Codecked<>(class_5455.class_5457.field_25923, registries)); // dynamic registry mutator will fix this
+            buf.enablePassthroughMode();
             buf.readIdentifier(); // dimension type
             buf.readIdentifier(); // dimension
             buf.readLong(); // seed
@@ -160,6 +170,13 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
         super.mutateRegistries(mutator);
         mutator.mutate(Protocols.V1_16_1, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
         mutator.mutate(Protocols.V1_16_1, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+    }
+
+    @Override
+    public void mutateDynamicRegistries(RegistryMutator mutator, class_5455.class_5457 registries) {
+        super.mutateDynamicRegistries(mutator, registries);
+        addRegistry(registries, Registry.DIMENSION_TYPE_KEY); // FIXME: support custom dimensions
+        addRegistry(registries, Registry.BIOME_KEY);
     }
 
     private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {

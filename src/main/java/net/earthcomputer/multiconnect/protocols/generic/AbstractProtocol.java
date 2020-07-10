@@ -120,6 +120,9 @@ public abstract class AbstractProtocol implements IUtils {
         }
     }
 
+    public void mutateDynamicRegistries(RegistryMutator mutator, class_5455.class_5457 registries) {
+    }
+
     public ChunkData createChunkData() {
         return null;
     }
