@@ -1,11 +1,13 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
 import com.google.common.collect.BiMap;
+import com.mojang.serialization.Lifecycle;
 import net.earthcomputer.multiconnect.protocols.generic.IInt2ObjectBiMap;
 import net.earthcomputer.multiconnect.protocols.generic.IRegistryUpdateListener;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.Int2ObjectBiMap;
+import net.minecraft.util.registry.MutableRegistry;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.registry.SimpleRegistry;
@@ -20,13 +22,17 @@ import java.util.List;
 import java.util.Map;
 
 @Mixin(SimpleRegistry.class)
-public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
+public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implements ISimpleRegistry<T> {
 
     @Shadow @Final protected Int2ObjectBiMap<T> indexedEntries;
     @Shadow @Final protected BiMap<Identifier, T> entriesById;
     @Shadow @Final private BiMap<RegistryKey<T>, T> entriesByKey;
     @Shadow protected Object[] randomEntries;
     @Shadow private int nextId;
+
+    public MixinSimpleRegistry(RegistryKey<? extends Registry<T>> registryKey, Lifecycle lifecycle) {
+        super(registryKey, lifecycle);
+    }
 
     @Shadow public abstract <V extends T> V set(int rawId, RegistryKey<T> id, V value);
 
@@ -41,7 +47,7 @@ public abstract class MixinSimpleRegistry<T> implements ISimpleRegistry<T> {
     @SuppressWarnings("unchecked")
     @Override
     public RegistryKey<Registry<T>> getRegistryKey() {
-        return ((RegistryAccessor<T>) this).multiconnect_getRegistryKey();
+        return (RegistryKey<Registry<T>>) getKey();
     }
 
     @Accessor

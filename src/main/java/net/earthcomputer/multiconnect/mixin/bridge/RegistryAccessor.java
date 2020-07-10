@@ -8,9 +8,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(Registry.class)
 public interface RegistryAccessor<T> {
-    @Accessor("registryKey")
-    RegistryKey<Registry<T>> multiconnect_getRegistryKey();
-
     @Accessor
     Lifecycle getLifecycle();
 }

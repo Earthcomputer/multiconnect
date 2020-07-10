@@ -25,6 +25,7 @@
     "bridge.MixinStatType",
     "bridge.MixinTranslationStorage",
     "bridge.MixinWorldChunk",
+    "bridge.MutableDynamicRegistriesAccessor",
     "bridge.RegistryAccessor",
     "bridge.SpawnEggItemAccessor",
     "bridge.SynchronizeTagsS2CAccessor",
