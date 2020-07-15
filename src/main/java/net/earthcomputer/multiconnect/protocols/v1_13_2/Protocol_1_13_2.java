@@ -14,7 +14,6 @@ import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.enums.Instrument;
-import net.minecraft.class_5455;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
@@ -55,6 +54,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.registry.SimpleRegistry;
@@ -575,9 +575,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     @Override
-    public void mutateDynamicRegistries(RegistryMutator mutator, class_5455.class_5457 registries) {
+    public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
         super.mutateDynamicRegistries(mutator, registries);
-        mutator.mutate(Protocols.V1_13_2, registries.method_30530(Registry.BIOME_KEY), this::mutateBiomeRegistry);
+        mutator.mutate(Protocols.V1_13_2, registries.get(Registry.BIOME_KEY), this::mutateBiomeRegistry);
     }
 
     private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {

@@ -4,7 +4,6 @@ import net.earthcomputer.multiconnect.impl.IUtils;
 import net.earthcomputer.multiconnect.mixin.bridge.MinecraftClientAccessor;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.class_5455;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -18,10 +17,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.DefaultedRegistry;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
-import net.minecraft.util.registry.SimpleRegistry;
+import net.minecraft.util.registry.*;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -120,7 +116,7 @@ public abstract class AbstractProtocol implements IUtils {
         }
     }
 
-    public void mutateDynamicRegistries(RegistryMutator mutator, class_5455.class_5457 registries) {
+    public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
     }
 
     public boolean acceptBlockState(BlockState state) {

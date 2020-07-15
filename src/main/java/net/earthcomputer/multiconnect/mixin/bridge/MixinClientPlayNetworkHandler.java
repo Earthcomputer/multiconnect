@@ -7,7 +7,6 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
-import net.minecraft.class_5455;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.EntityType;
@@ -21,6 +20,7 @@ import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
 import net.minecraft.tag.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.BuiltinRegistries;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import org.spongepowered.asm.mixin.Mixin;
@@ -49,14 +49,14 @@ public class MixinClientPlayNetworkHandler {
     @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
     private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
         RegistryMutator mutator = new RegistryMutator();
-        class_5455.class_5457 registries = (class_5455.class_5457) packet.getDimension();
+        DynamicRegistryManager.Impl registries = (DynamicRegistryManager.Impl) packet.getRegistryManager();
         //noinspection ConstantConditions
-        MutableDynamicRegistriesAccessor registriesAccessor = (MutableDynamicRegistriesAccessor) (Object) registries;
+        DynamicRegistryManagerImplAccessor registriesAccessor = (DynamicRegistryManagerImplAccessor) (Object) registries;
         registriesAccessor.setRegistries(new HashMap<>(registriesAccessor.getRegistries())); // make registries mutable
         ConnectionInfo.protocol.mutateDynamicRegistries(mutator, registries);
 
-        for (RegistryKey<? extends Registry<?>> registryKey : class_5455.field_25919.keySet()) {
-            if (registryKey != Registry.DIMENSION_TYPE_KEY && class_5455.field_25919.get(registryKey).method_30537()) {
+        for (RegistryKey<? extends Registry<?>> registryKey : DynamicRegistryManager.INFOS.keySet()) {
+            if (registryKey != Registry.DIMENSION_TYPE_KEY && DynamicRegistryManager.INFOS.get(registryKey).isSynced()) {
                 addMissingValues(getBuiltinRegistry(registryKey), registries);
             }
         }
@@ -72,8 +72,8 @@ public class MixinClientPlayNetworkHandler {
 
     @SuppressWarnings("unchecked")
     @Unique
-    private static <T> void addMissingValues(Registry<T> builtinRegistry, class_5455.class_5457 registries) {
-        Registry<T> dynamicRegistry =  registries.method_30530(builtinRegistry.getKey());
+    private static <T> void addMissingValues(Registry<T> builtinRegistry, DynamicRegistryManager.Impl registries) {
+        Registry<T> dynamicRegistry =  registries.get(builtinRegistry.getKey());
         ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) dynamicRegistry;
         for (T val : builtinRegistry) {
             if (dynamicRegistry.getId(val) == null) {

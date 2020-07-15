@@ -13,7 +13,6 @@ import net.earthcomputer.multiconnect.protocols.v1_16_2.Protocol_1_16_2;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_5455;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -36,6 +35,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.ItemTags;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.source.BiomeArray;
 
@@ -165,7 +165,7 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
     }
 
     @Override
-    public void mutateDynamicRegistries(RegistryMutator mutator, class_5455.class_5457 registries) {
+    public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
         super.mutateDynamicRegistries(mutator, registries);
         addRegistry(registries, Registry.DIMENSION_TYPE_KEY); // FIXME: support custom dimensions
         addRegistry(registries, Registry.BIOME_KEY);

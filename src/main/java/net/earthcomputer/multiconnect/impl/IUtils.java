@@ -4,12 +4,12 @@ import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.minecraft.block.Block;
-import net.minecraft.class_5455;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.item.Item;
 import net.minecraft.network.Packet;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 
@@ -67,7 +67,7 @@ public interface IUtils {
         Utils.reregister(registry, value, inPlace);
     }
 
-    default <T, R extends Registry<T>> void addRegistry(class_5455.class_5457 registries, RegistryKey<R> registryKey) {
+    default <T, R extends Registry<T>> void addRegistry(DynamicRegistryManager.Impl registries, RegistryKey<R> registryKey) {
         Utils.addRegistry(registries, registryKey);
     }
 

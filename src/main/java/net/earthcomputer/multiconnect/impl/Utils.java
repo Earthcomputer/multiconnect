@@ -5,14 +5,13 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.earthcomputer.multiconnect.mixin.bridge.MutableDynamicRegistriesAccessor;
+import net.earthcomputer.multiconnect.mixin.bridge.DynamicRegistryManagerImplAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.class_5455;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.data.TrackedDataHandler;
@@ -24,10 +23,7 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.collection.Int2ObjectBiMap;
-import net.minecraft.util.registry.BuiltinRegistries;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
-import net.minecraft.util.registry.SimpleRegistry;
+import net.minecraft.util.registry.*;
 import net.minecraft.world.dimension.DimensionType;
 
 import java.io.IOException;
@@ -145,10 +141,10 @@ public class Utils {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T, R extends Registry<T>> void addRegistry(class_5455.class_5457 registries, RegistryKey<R> registryKey) {
+    public static <T, R extends Registry<T>> void addRegistry(DynamicRegistryManager.Impl registries, RegistryKey<R> registryKey) {
         //noinspection ConstantConditions
         Map<RegistryKey<? extends Registry<?>>, SimpleRegistry<?>> registryMap =
-                (Map<RegistryKey<? extends Registry<?>>, SimpleRegistry<?>>) ((MutableDynamicRegistriesAccessor) (Object) registries).getRegistries();
+                (Map<RegistryKey<? extends Registry<?>>, SimpleRegistry<?>>) ((DynamicRegistryManagerImplAccessor) (Object) registries).getRegistries();
 
         if (registryMap.containsKey(registryKey)) {
             return;
@@ -180,7 +176,7 @@ public class Utils {
         }
         if (!hasDecoded[0]) {
             // already valid
-            buf.pendingRead(Codecked.class, new Codecked<>(class_5455.class_5457.field_25923, (class_5455.class_5457) oldRegistries));
+            buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, (DynamicRegistryManager.Impl) oldRegistries));
             return;
         }
         if (!allowablePredicate.test(oldRegistries)) {
@@ -190,10 +186,10 @@ public class Utils {
             }
             return;
         }
-        class_5455.class_5457 registries = new class_5455.class_5457();
+        DynamicRegistryManager.Impl registries = new DynamicRegistryManager.Impl();
         //noinspection ConstantConditions
-        ((MutableDynamicRegistriesAccessor) (Object) registries).setRegistries(ImmutableMap.of()); // dynamic registry mutator will fix this
-        buf.pendingRead(Codecked.class, new Codecked<>(class_5455.class_5457.field_25923, registries));
+        ((DynamicRegistryManagerImplAccessor) (Object) registries).setRegistries(ImmutableMap.of()); // dynamic registry mutator will fix this
+        buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, registries));
     }
 
     /**
