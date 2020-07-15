@@ -36,7 +36,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.ItemTags;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.world.biome.source.BiomeArray;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -76,27 +75,6 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
             buf.readLong(); // seed
             buf.disablePassthroughMode();
             buf.pendingRead(VarInt.class, new VarInt(buf.readUnsignedByte())); // max players
-            buf.applyPendingReads();
-        });
-        ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
-            buf.enablePassthroughMode();
-            buf.readInt(); // chunk x
-            buf.readInt(); // chunk z
-            boolean fullChunk = buf.readBoolean();
-            if (!fullChunk) {
-                buf.disablePassthroughMode();
-                buf.applyPendingReads();
-                return;
-            }
-            buf.readBoolean(); // forget old data
-            buf.readVarInt(); // vertical strip bitmask
-            buf.readCompoundTag(); // heightmaps
-            buf.disablePassthroughMode();
-            int[] biomes = new int[BiomeArray.DEFAULT_LENGTH];
-            for (int i = 0; i < biomes.length; i++) {
-                biomes[i] = buf.readInt();
-            }
-            buf.pendingRead(int[].class, biomes);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(UnlockRecipesS2CPacket.class, buf -> {
