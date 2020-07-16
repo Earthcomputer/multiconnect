@@ -34,6 +34,7 @@
     "connect.MixinAddServerScreen",
     "connect.MixinConnectScreen",
     "connect.MixinConnectScreen1",
+    "connect.MixinDebugHud",
     "connect.MixinDirectConnectScreen",
     "connect.MixinDisconnectedScreen",
     "connect.MixinMinecraftClient",
