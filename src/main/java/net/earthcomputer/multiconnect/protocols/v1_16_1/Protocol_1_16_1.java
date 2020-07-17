@@ -160,6 +160,7 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
+        mutator.mutate(Protocols.V1_16_1, Registry.ITEM, this::mutateItemRegistry);
         mutator.mutate(Protocols.V1_16_1, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
         mutator.mutate(Protocols.V1_16_1, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
     }
@@ -169,6 +170,43 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
         super.mutateDynamicRegistries(mutator, registries);
         addRegistry(registries, Registry.DIMENSION_TYPE_KEY); // FIXME: support custom dimensions
         addRegistry(registries, Registry.BIOME_KEY);
+    }
+
+    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
+        registry.unregister(Items.IRON_SHOVEL);
+        registry.unregister(Items.IRON_PICKAXE);
+        registry.unregister(Items.IRON_AXE);
+        insertAfter(registry, Items.SCUTE, Items.IRON_SHOVEL, "iron_shovel");
+        insertAfter(registry, Items.IRON_SHOVEL, Items.IRON_PICKAXE, "iron_pickaxe");
+        insertAfter(registry, Items.IRON_PICKAXE, Items.IRON_AXE, "iron_axe");
+        registry.unregister(Items.IRON_SWORD);
+        insertAfter(registry, Items.NETHERITE_SCRAP, Items.IRON_SWORD, "iron_sword");
+        registry.unregister(Items.DIAMOND_SWORD);
+        registry.unregister(Items.DIAMOND_SHOVEL);
+        registry.unregister(Items.DIAMOND_PICKAXE);
+        registry.unregister(Items.DIAMOND_AXE);
+        registry.unregister(Items.STICK);
+        registry.unregister(Items.BOWL);
+        registry.unregister(Items.MUSHROOM_STEW);
+        insertAfter(registry, Items.STONE_AXE, Items.DIAMOND_SWORD, "diamond_sword");
+        insertAfter(registry, Items.DIAMOND_SWORD, Items.DIAMOND_SHOVEL, "diamond_shovel");
+        insertAfter(registry, Items.DIAMOND_SHOVEL, Items.DIAMOND_PICKAXE, "diamond_pickaxe");
+        insertAfter(registry, Items.DIAMOND_PICKAXE, Items.DIAMOND_AXE, "diamond_axe");
+        insertAfter(registry, Items.DIAMOND_AXE, Items.STICK, "stick");
+        insertAfter(registry, Items.STICK, Items.BOWL, "bowl");
+        insertAfter(registry, Items.BOWL, Items.MUSHROOM_STEW, "mushroom_stew");
+        registry.unregister(Items.WOODEN_HOE);
+        registry.unregister(Items.STONE_HOE);
+        registry.unregister(Items.IRON_HOE);
+        registry.unregister(Items.DIAMOND_HOE);
+        registry.unregister(Items.GOLDEN_HOE);
+        registry.unregister(Items.NETHERITE_HOE);
+        insertAfter(registry, Items.GUNPOWDER, Items.WOODEN_HOE, "wooden_hoe");
+        insertAfter(registry, Items.WOODEN_HOE, Items.STONE_HOE, "stone_hoe");
+        insertAfter(registry, Items.STONE_HOE, Items.IRON_HOE, "iron_hoe");
+        insertAfter(registry, Items.IRON_HOE, Items.DIAMOND_HOE, "diamond_hoe");
+        insertAfter(registry, Items.DIAMOND_HOE, Items.GOLDEN_HOE, "golden_hoe");
+        insertAfter(registry, Items.GOLDEN_HOE, Items.NETHERITE_HOE, "netherite_hoe");
     }
 
     private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
