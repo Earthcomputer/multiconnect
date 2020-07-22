@@ -5,8 +5,8 @@ import net.minecraft.server.command.CommandSource;
 
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EntityArgumentType_1_12_2.*;
-import static net.minecraft.command.arguments.BlockPosArgumentType.*;
-import static net.minecraft.command.arguments.RotationArgumentType.*;
+import static net.minecraft.command.argument.BlockPosArgumentType.*;
+import static net.minecraft.command.argument.RotationArgumentType.*;
 
 public class TeleportCommand {
 

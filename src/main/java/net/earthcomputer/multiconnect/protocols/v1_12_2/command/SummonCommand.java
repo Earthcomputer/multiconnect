@@ -5,8 +5,8 @@ import net.minecraft.server.command.CommandSource;
 
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EntityTypeArgumentType_1_12.*;
-import static net.minecraft.command.arguments.NbtCompoundTagArgumentType.*;
-import static net.minecraft.command.arguments.Vec3ArgumentType.*;
+import static net.minecraft.command.argument.NbtCompoundTagArgumentType.*;
+import static net.minecraft.command.argument.Vec3ArgumentType.*;
 
 public class SummonCommand {
 

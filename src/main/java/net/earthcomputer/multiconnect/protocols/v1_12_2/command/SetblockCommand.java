@@ -6,8 +6,8 @@ import net.minecraft.server.command.CommandSource;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.BlockStateArgumentType_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EnumArgumentType.*;
-import static net.minecraft.command.arguments.BlockPosArgumentType.*;
-import static net.minecraft.command.arguments.NbtCompoundTagArgumentType.*;
+import static net.minecraft.command.argument.BlockPosArgumentType.*;
+import static net.minecraft.command.argument.NbtCompoundTagArgumentType.*;
 
 public class SetblockCommand {
 

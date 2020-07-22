@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.mixin.connect;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.connect.ServersExt;
+import net.minecraft.class_5481;
 import net.minecraft.client.gui.screen.AddServerScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ServerInfo;
@@ -24,7 +25,7 @@ public abstract class MixinAddServerScreen extends Screen {
     @Shadow @Final private ServerInfo server;
 
     @Unique private DropDownWidget<ConnectionMode> protocolSelector;
-    @Unique private Text forceProtocolLabel;
+    @Unique private class_5481 forceProtocolLabel;
 
     protected MixinAddServerScreen(Text title) {
         super(title);
@@ -32,7 +33,7 @@ public abstract class MixinAddServerScreen extends Screen {
 
     @Inject(method = "init", at = @At("RETURN"))
     private void createButtons(CallbackInfo ci) {
-        forceProtocolLabel = new TranslatableText("multiconnect.changeForcedProtocol").append(" ->");
+        forceProtocolLabel = new TranslatableText("multiconnect.changeForcedProtocol").append(" ->").method_30937();
         protocolSelector = new DropDownWidget<>(width - 80, 5, 70, 20, ConnectionMode.byValue(ServersExt.getInstance().getForcedProtocol(server.address)), mode -> new LiteralText(mode.getName()));
         ConnectionMode.populateDropDownWidget(protocolSelector);
         children.add(0, protocolSelector);
@@ -40,7 +41,7 @@ public abstract class MixinAddServerScreen extends Screen {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void drawScreen(MatrixStack matrixStack, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        textRenderer.drawWithShadow(matrixStack, forceProtocolLabel, width - 85 - textRenderer.getWidth(forceProtocolLabel), 11, 0xFFFFFF);
+        textRenderer.drawWithShadow(matrixStack, forceProtocolLabel, width - 85 - textRenderer.method_30880(forceProtocolLabel), 11, 0xFFFFFF);
         protocolSelector.render(matrixStack, mouseX, mouseY, delta);
     }
 

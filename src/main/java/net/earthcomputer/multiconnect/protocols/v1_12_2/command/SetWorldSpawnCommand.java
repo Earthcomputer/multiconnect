@@ -4,7 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.server.command.CommandSource;
 
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
-import static net.minecraft.command.arguments.BlockPosArgumentType.*;
+import static net.minecraft.command.argument.BlockPosArgumentType.*;
 
 public class SetWorldSpawnCommand {
 

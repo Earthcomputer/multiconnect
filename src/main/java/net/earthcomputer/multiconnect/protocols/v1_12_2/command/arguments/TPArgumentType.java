@@ -7,8 +7,8 @@ import com.mojang.brigadier.context.ParsedArgument;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.command.arguments.BlockPosArgumentType;
-import net.minecraft.command.arguments.RotationArgumentType;
+import net.minecraft.command.argument.BlockPosArgumentType;
+import net.minecraft.command.argument.RotationArgumentType;
 import net.minecraft.server.command.CommandSource;
 
 import java.util.ArrayList;

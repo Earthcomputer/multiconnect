@@ -8,7 +8,7 @@ import static com.mojang.brigadier.arguments.BoolArgumentType.*;
 import static com.mojang.brigadier.arguments.DoubleArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EntityArgumentType_1_12_2.*;
-import static net.minecraft.command.arguments.Vec2ArgumentType.*;
+import static net.minecraft.command.argument.Vec2ArgumentType.*;
 
 public class SpreadPlayersCommand {
 

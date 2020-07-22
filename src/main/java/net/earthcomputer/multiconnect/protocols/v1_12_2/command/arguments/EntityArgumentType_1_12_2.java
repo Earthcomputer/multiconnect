@@ -13,7 +13,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.TabCompletionManager;
-import net.minecraft.command.arguments.EntitySummonArgumentType;
+import net.minecraft.command.argument.EntitySummonArgumentType;
 import net.minecraft.entity.EntityType;
 import net.minecraft.server.command.CommandSource;
 import net.minecraft.util.Identifier;

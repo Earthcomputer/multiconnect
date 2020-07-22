@@ -9,7 +9,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.BlockStateReverseFlattening;
 import net.minecraft.block.Block;
-import net.minecraft.command.arguments.BlockArgumentParser;
+import net.minecraft.command.argument.BlockArgumentParser;
 import net.minecraft.server.command.CommandSource;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;

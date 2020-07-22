@@ -7,8 +7,8 @@ import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.BlockStateArgumentType_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.CommandArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EntityArgumentType_1_12_2.*;
-import static net.minecraft.command.arguments.BlockPosArgumentType.*;
-import static net.minecraft.command.arguments.Vec3ArgumentType.*;
+import static net.minecraft.command.argument.BlockPosArgumentType.*;
+import static net.minecraft.command.argument.Vec3ArgumentType.*;
 
 public class ExecuteCommand {
 

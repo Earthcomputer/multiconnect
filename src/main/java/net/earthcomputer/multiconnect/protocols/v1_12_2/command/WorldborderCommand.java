@@ -7,7 +7,7 @@ import static com.mojang.brigadier.arguments.DoubleArgumentType.*;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.*;
 import static com.mojang.brigadier.arguments.LongArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
-import static net.minecraft.command.arguments.Vec2ArgumentType.*;
+import static net.minecraft.command.argument.Vec2ArgumentType.*;
 
 public class WorldborderCommand {
 

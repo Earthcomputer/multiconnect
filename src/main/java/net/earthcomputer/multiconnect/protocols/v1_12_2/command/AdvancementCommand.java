@@ -13,7 +13,7 @@ import java.util.Collection;
 import static com.mojang.brigadier.arguments.StringArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EntityArgumentType_1_12_2.*;
-import static net.minecraft.command.arguments.IdentifierArgumentType.*;
+import static net.minecraft.command.argument.IdentifierArgumentType.*;
 
 public class AdvancementCommand {
 
