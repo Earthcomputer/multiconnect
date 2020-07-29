@@ -157,7 +157,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             } else if ("MC|BOpen".equals(channel)) {
                 newChannel = Protocol_1_13_2.CUSTOM_PAYLOAD_OPEN_BOOK;
             } else {
-                newChannel = CustomPayloadHandler.getIdentifierForStringCustomPayload(channel);
+                newChannel = CustomPayloadHandler.getClientboundIdentifierForStringCustomPayload(channel);
             }
             buf.pendingRead(Identifier.class, newChannel);
             buf.applyPendingReads();
@@ -703,7 +703,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         ClientPlayNetworkHandler connection = MinecraftClient.getInstance().getNetworkHandler();
         if (packet.getClass() == CustomPayloadC2SPacket.class) {
             assert connection != null;
-            CustomPayloadC2SAccessor customPayload = (CustomPayloadC2SAccessor) packet;
+            //noinspection ConstantConditions
+            ICustomPayloadC2SPacket customPayload = (ICustomPayloadC2SPacket) packet;
             String channel;
             if (customPayload.multiconnect_getChannel().equals(CustomPayloadC2SPacket.BRAND))
                 channel = "MC|Brand";

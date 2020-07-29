@@ -85,8 +85,8 @@ public class MixinClientPlayNetworkHandler {
         if (packet.getChannel().equals(CustomPayloadHandler.DROP_ID)) {
             ci.cancel();
         } else if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()
-                && !CustomPayloadHandler.VANILLA_CHANNELS.contains(packet.getChannel())) {
-            CustomPayloadHandler.handleCustomPayload(packet);
+                && !CustomPayloadHandler.VANILLA_CLIENTBOUND_CHANNELS.contains(packet.getChannel())) {
+            CustomPayloadHandler.handleClientboundCustomPayload(packet);
             ci.cancel();
         }
     }
