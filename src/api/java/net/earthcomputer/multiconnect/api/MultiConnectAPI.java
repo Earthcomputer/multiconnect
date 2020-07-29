@@ -1,6 +1,11 @@
 package net.earthcomputer.multiconnect.api;
 
 import net.minecraft.SharedConstants;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
+import net.minecraft.util.Identifier;
 
 import java.util.Collections;
 import java.util.List;
@@ -53,7 +58,7 @@ public class MultiConnectAPI {
     }
 
     /**
-     * Adds an {@link IIdentifierCustomPayloadListener}. Adding one of these listeners allows for mods to listen to
+     * Adds a clientbound {@link IIdentifierCustomPayloadListener}. Adding one of these listeners allows for mods to listen to
      * non-vanilla {@link net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket CustomPayloadS2CPacket}s sent
      * by servers on older versions. Such packets are blocked by multiconnect from normal handling.
      *
@@ -67,7 +72,7 @@ public class MultiConnectAPI {
     }
 
     /**
-     * Removes an {@link IIdentifierCustomPayloadListener}.
+     * Removes a clientbound {@link IIdentifierCustomPayloadListener}.
      * @see #addIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener)
      */
     public void removeIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
@@ -75,7 +80,7 @@ public class MultiConnectAPI {
     }
 
     /**
-     * Adds an {@link IStringCustomPayloadListener}. Adding one of these listeners allows for mods to listen to
+     * Adds a clientbound {@link IStringCustomPayloadListener}. Adding one of these listeners allows for mods to listen to
      * non-vanilla {@link net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket CustomPayloadS2CPacket}s sent
      * by servers on 1.12.2 or below. Such packets are blocked by multiconnect from normal handling.
      *
@@ -88,10 +93,81 @@ public class MultiConnectAPI {
     }
 
     /**
-     * Removes an {@link IStringCustomPayloadListener}.
+     * Removes a clientbound {@link IStringCustomPayloadListener}.
      * @see #addStringCustomPayloadListener(IStringCustomPayloadListener)
      */
     public void removeStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+        // overridden by protocol impl
+    }
+
+    /**
+     * By default, multiconnect blocks non-vanilla client-to-server custom payload packets.
+     * Use this method to send one anyway.
+     *
+     * @param channel The channel to send data on
+     * @param data The data to send
+     */
+    public void forceSendCustomPayload(Identifier channel, PacketByteBuf data) {
+        ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+        if (networkHandler == null) {
+            throw new IllegalStateException("Trying to send custom payload when not in-game");
+        }
+        networkHandler.sendPacket(new CustomPayloadC2SPacket(channel, data));
+    }
+
+    /**
+     * By default, multiconnect blocks non-vanilla client-to-server custom payload packets.
+     * Use this method to send one anyway to a 1.12.2 or below server.
+     *
+     * @param channel The channel to send data on
+     * @param data The data to send
+     */
+    public void forceSendStringCustomPayload(String channel, PacketByteBuf data) {
+        throw new IllegalStateException("Trying to send custom payload to " + SharedConstants.getGameVersion().getName() + " server");
+    }
+
+    /**
+     * Adds a serverbound {@link IIdentifierCustomPayloadListener}. Adding one of these listeners allows for mods to listen to
+     * non-vanilla {@link net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket CustomPayloadS2CPacket}s sent
+     * by clientside mods to servers on older versions. Such packets are blocked by multiconnect from being sent.
+     *
+     * <p>This listener is not called for custom payloads to servers on the current version, as multiconnect does not
+     * block those. This listener is only called for servers on 1.13 and above; use
+     * {@link #addServerboundStringCustomPayloadListener(IStringCustomPayloadListener)} if you want to listen to custom payloads
+     * to older servers. This listener is also not called for custom payloads on vanilla channels, as these are also
+     * not blocked by multiconnect.</p>
+     */
+    public void addServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+        // overridden by protocol impl
+    }
+
+    /**
+     * Removes a serverbound {@link IIdentifierCustomPayloadListener}.
+     * @see #addServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener)
+     */
+    public void removeServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+        // overridden by protocol impl
+    }
+
+    /**
+     * Adds a serverbound {@link IStringCustomPayloadListener}. Adding one of these listeners allows for mods to listen to
+     * non-vanilla {@link net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket CustomPayloadS2CPacket}s sent
+     * by clientside mods to servers on 1.12.2 or below. Such packets are blocked by multiconnect from being sent.
+     *
+     * <p>This listener is not called for custom payloads to servers on 1.13 or above. To listen for these custom
+     * payloads, use {@link #addServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener)}, or if the server is
+     * on the current Minecraft version, simply let the packet be sent the normal way. This listener is also not called
+     * for custom payloads on vanilla channels, as these are also not blocked by multiconnect.</p>
+     */
+    public void addServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+        // overridden by protocol impl
+    }
+
+    /**
+     * Removes a serverbound {@link IStringCustomPayloadListener}.
+     * @see #addServerboundStringCustomPayloadListener(IStringCustomPayloadListener)
+     */
+    public void removeServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
         // overridden by protocol impl
     }
 

@@ -37,6 +37,7 @@ import net.minecraft.tag.ItemTags;
 import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.Biomes;
 
 import java.io.IOException;
 import java.util.List;
@@ -63,7 +64,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
                 int biomeId = buf.readInt();
                 biomeData[i] = BuiltinRegistries.BIOME.get(biomeId); // TODO: Use the dynamic biome registry? Not necessarily safe to access off-thread here, so using builtin for now.
                 if (biomeData[i] == null)
-                    throw new RuntimeException("Received invalid biome id: " + biomeId);
+                    biomeData[i] = Biomes.PLAINS; // Some servers send invalid biome IDs... for whatever reason
             }
 
             PendingBiomeData.setPendingBiomeData(CurrentChunkDataPacket.get().getX(), CurrentChunkDataPacket.get().getZ(), biomeData);

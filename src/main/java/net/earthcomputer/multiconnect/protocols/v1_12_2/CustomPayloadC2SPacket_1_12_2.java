@@ -8,12 +8,14 @@ public class CustomPayloadC2SPacket_1_12_2 implements Packet<ServerPlayPacketLis
 
     private String channel;
     private PacketByteBuf data;
+    private boolean blocked;
 
     public CustomPayloadC2SPacket_1_12_2() {}
 
     public CustomPayloadC2SPacket_1_12_2(String channel, PacketByteBuf data) {
         this.channel = channel;
         this.data = data;
+        this.blocked = !channel.startsWith("MC|");
     }
 
     @Override
@@ -30,5 +32,21 @@ public class CustomPayloadC2SPacket_1_12_2 implements Packet<ServerPlayPacketLis
     @Override
     public void apply(ServerPlayPacketListener listener) {
         throw new UnsupportedOperationException();
+    }
+
+    public String getChannel() {
+        return channel;
+    }
+
+    public PacketByteBuf getData() {
+        return data;
+    }
+
+    public boolean isBlocked() {
+        return blocked;
+    }
+
+    public void unblock() {
+        this.blocked = false;
     }
 }
