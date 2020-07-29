@@ -11,8 +11,7 @@ import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.AbstractPiglinEnti
 import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.PiglinEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_2.Protocol_1_16_2;
 import net.earthcomputer.multiconnect.transformer.VarInt;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
+import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -35,6 +34,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.ItemTags;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.source.BiomeArray;
@@ -235,6 +235,17 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
     public void addExtraItemTags(TagRegistry<Item> tags, TagRegistry<Block> blockTags) {
         tags.add(ItemTags.STONE_CRAFTING_MATERIALS, Items.COBBLESTONE, Items.BLACKSTONE);
         super.addExtraItemTags(tags, blockTags);
+    }
+
+    @Override
+    public boolean acceptBlockState(BlockState state) {
+        if (state.getBlock() instanceof LanternBlock && state.get(LanternBlock.field_26441)) {
+            return false;
+        }
+        if (state.getBlock() == Blocks.CHAIN && state.get(ChainBlock.AXIS) != Direction.Axis.Y) {
+            return false;
+        }
+        return super.acceptBlockState(state);
     }
 
     @Override

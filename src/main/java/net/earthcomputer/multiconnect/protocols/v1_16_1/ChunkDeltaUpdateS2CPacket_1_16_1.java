@@ -54,7 +54,7 @@ public class ChunkDeltaUpdateS2CPacket_1_16_1 implements Packet<ClientPlayPacket
                 ChunkDeltaUpdateS2CPacket packet = new ChunkDeltaUpdateS2CPacket();
                 //noinspection ConstantConditions
                 ChunkDeltaUpdateS2CAccessor accessor = (ChunkDeltaUpdateS2CAccessor) packet;
-                accessor.setPos(ChunkSectionPos.from(pos, sectionY));
+                accessor.setSectionPos(ChunkSectionPos.from(pos, sectionY));
                 ShortList filteredIndices = new ShortArrayList();
                 List<BlockState> filteredBlockStates = new ArrayList<>();
                 for (int i = 0; i < indices.length; i++) {
@@ -63,12 +63,12 @@ public class ChunkDeltaUpdateS2CPacket_1_16_1 implements Packet<ClientPlayPacket
                     if (y >> 4 == sectionY) {
                         int x = (index >> 12) & 15;
                         int z = (index >> 8) & 15;
-                        filteredIndices.add(ChunkSectionPos.getPackedLocalPos(blockPos.set(x, y & 15, z)));
+                        filteredIndices.add(ChunkSectionPos.packLocal(blockPos.set(x, y & 15, z)));
                         filteredBlockStates.add(states[i]);
                     }
                 }
-                accessor.setIndices(filteredIndices.toShortArray());
-                accessor.setStates(filteredBlockStates.toArray(new BlockState[0]));
+                accessor.setPackedLocalPos(filteredIndices.toShortArray());
+                accessor.setBlockState(filteredBlockStates.toArray(new BlockState[0]));
                 try {
                     listener.onChunkDeltaUpdate(packet);
                 } catch (OffThreadException e) {

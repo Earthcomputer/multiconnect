@@ -8,12 +8,12 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ChunkDeltaUpdateS2CPacket.class)
 public interface ChunkDeltaUpdateS2CAccessor {
-    @Accessor("field_26345")
-    void setPos(ChunkSectionPos pos);
+    @Accessor
+    void setSectionPos(ChunkSectionPos sectionPos);
 
-    @Accessor("field_26346")
-    void setIndices(short[] indices);
+    @Accessor
+    void setPackedLocalPos(short[] packedLocalPos);
 
-    @Accessor("field_26347")
-    void setStates(BlockState[] states);
+    @Accessor
+    void setBlockState(BlockState[] states);
 }

@@ -103,7 +103,7 @@ public class Utils {
     public static <T> int getUnmodifiedId(Registry<T> registry, T value) {
         DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
         if (defaultRegistries == null) return registry.getRawId(value);
-        return defaultRegistries.defaultIndexedEntries.getRawId(value);
+        return defaultRegistries.defaultEntryIds.getInt(value);
     }
 
     @SuppressWarnings("unchecked")
@@ -129,8 +129,8 @@ public class Utils {
         //noinspection SuspiciousMethodCalls
         DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
         T prevValue = null;
-        for (int id = defaultRegistries.defaultIndexedEntries.getRawId(value) - 1; id >= 0; id--) {
-            T val = defaultRegistries.defaultIndexedEntries.get(id);
+        for (int id = defaultRegistries.defaultEntryIds.getInt(value) - 1; id >= 0; id--) {
+            T val = defaultRegistries.defaultAllEntries.get(id);
             if (registry.getEntriesById().containsValue(val)) {
                 prevValue = val;
                 break;

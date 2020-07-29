@@ -1,8 +1,9 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
 import com.google.common.collect.BiMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.collection.Int2ObjectBiMap;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.registry.SimpleRegistry;
@@ -15,11 +16,13 @@ public interface ISimpleRegistry<T> {
 
     RegistryKey<Registry<T>> getRegistryKey();
 
-    Int2ObjectBiMap<T> getIndexedEntries();
+    ObjectList<T> getAllEntries();
+
+    Object2IntMap<T> getEntryIds();
 
     BiMap<Identifier, T> getEntriesById();
 
-    BiMap<RegistryKey, T> getEntriesByKey();
+    BiMap<RegistryKey<T>, T> getEntriesByKey();
 
     default void register(T t, int id, RegistryKey<T> key) {
         register(t, id, key, true);

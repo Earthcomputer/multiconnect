@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.generic;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import it.unimi.dsi.fastutil.objects.*;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.mixin.bridge.SpawnEggItemAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAccessor;
@@ -11,6 +12,7 @@ import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.item.Item;
 import net.minecraft.item.SpawnEggItem;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.util.collection.Int2ObjectBiMap;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
@@ -21,29 +23,35 @@ import java.util.*;
 public class DefaultRegistries<T> {
     private static boolean initialized = false;
 
-    private static Map<Block, Item> DEFAULT_BLOCK_ITEMS = new HashMap<>();
-    private static Map<EntityType<?>, SpawnEggItem> DEFAULT_SPAWN_EGG_ITEMS = new IdentityHashMap<>();
-    private static Int2ObjectBiMap<TrackedDataHandler<?>> DEFAULT_TRACKED_DATA_HANDLERS = new Int2ObjectBiMap<>(16);
+    private static final Map<Block, Item> DEFAULT_BLOCK_ITEMS = new HashMap<>();
+    private static final Map<EntityType<?>, SpawnEggItem> DEFAULT_SPAWN_EGG_ITEMS = new IdentityHashMap<>();
+    private static final Int2ObjectBiMap<TrackedDataHandler<?>> DEFAULT_TRACKED_DATA_HANDLERS = new Int2ObjectBiMap<>(16);
 
-    public Int2ObjectBiMap<T> defaultIndexedEntries = new Int2ObjectBiMap<>(256);
-    public BiMap<Identifier, T> defaultEntriesById = HashBiMap.create();
-    private BiMap<RegistryKey, T> defaultEntriesByKey = HashBiMap.create();
-    private int defaultNextId;
+    public final ObjectList<T> defaultAllEntries = new ObjectArrayList<>(256);
+    public final Object2IntMap<T> defaultEntryIds = new Object2IntOpenCustomHashMap<>(Util.identityHashStrategy());
+    public final BiMap<Identifier, T> defaultEntriesById = HashBiMap.create();
+    private final BiMap<RegistryKey<T>, T> defaultEntriesByKey = HashBiMap.create();
+    private final int defaultNextId;
 
     private DefaultRegistries(Registry<T> registry) {
         for (T t : registry) {
-            defaultIndexedEntries.put(t, registry.getRawId(t));
+            int rawId = registry.getRawId(t);
+            while (rawId >= defaultAllEntries.size()) {
+                defaultAllEntries.add(null);
+            }
+            defaultAllEntries.set(rawId, t);
+            defaultEntryIds.put(t, rawId);
             defaultEntriesById.put(registry.getId(t), t);
             assert registry.getKey(t).isPresent();
             defaultEntriesByKey.put(registry.getKey(t).get(), t);
         }
-        defaultNextId = ((ISimpleRegistry) registry).getNextId();
+        defaultNextId = ((ISimpleRegistry<?>) registry).getNextId();
     }
 
     public void restore(SimpleRegistry<T> registry) {
         List<T> added = new ArrayList<>();
-        for (T thing : defaultIndexedEntries) {
-            if (!registry.containsId(defaultIndexedEntries.getRawId(thing))) {
+        for (T thing : defaultAllEntries) {
+            if (!registry.containsId(defaultEntryIds.getInt(thing))) {
                 added.add(thing);
             }
         }
@@ -55,8 +63,9 @@ public class DefaultRegistries<T> {
         }
 
         @SuppressWarnings("unchecked") ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
-        iregistry.getIndexedEntries().clear();
-        defaultIndexedEntries.iterator().forEachRemaining(t -> iregistry.getIndexedEntries().put(t, defaultIndexedEntries.getRawId(t)));
+        iregistry.getAllEntries().clear();
+        iregistry.getAllEntries().addAll(defaultAllEntries);
+        iregistry.getEntryIds().putAll(defaultEntryIds);
         iregistry.getEntriesById().clear();
         iregistry.getEntriesById().putAll(defaultEntriesById);
         iregistry.getEntriesByKey().clear();
