@@ -10,7 +10,7 @@ import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAtt
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.WolfEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
-import net.earthcomputer.multiconnect.transformer.ChunkData;
+import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.UnsignedByte;
 import net.earthcomputer.multiconnect.transformer.VarInt;
@@ -79,7 +79,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            int verticalStripBitmask = CurrentChunkDataPacket.get().getVerticalStripBitmask();
+            int verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {

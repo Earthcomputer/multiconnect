@@ -1,22 +1,27 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
-import net.earthcomputer.multiconnect.transformer.ChunkData;
-import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
-import net.minecraft.network.PacketByteBuf;
+import net.earthcomputer.multiconnect.protocols.generic.IChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ChunkDataS2CPacket.class)
-public class MixinChunkDataS2C {
+public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
+    @Unique
+    private boolean dataTranslated = false;
 
-    @Inject(method = "getReadBuffer", at = @At("RETURN"), cancellable = true)
-    private void onGetReadBuffer(CallbackInfoReturnable<PacketByteBuf> ci) {
-        TransformerByteBuf transformerByteBuf = new TransformerByteBuf(ci.getReturnValue(), null);
-        transformerByteBuf.readTopLevelType(ChunkData.class);
-        ci.setReturnValue(transformerByteBuf);
+    @Override
+    public boolean multiconnect_isDataTranslated() {
+        return dataTranslated;
     }
 
+    @Override
+    public void multiconnect_setDataTranslated(boolean dataTranslated) {
+        this.dataTranslated = dataTranslated;
+    }
+
+    @Override
+    @Accessor
+    public abstract void setData(byte[] data);
 }

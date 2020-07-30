@@ -9,7 +9,7 @@ import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.TridentEntityAcces
 import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.WolfEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.Protocol_1_15_2;
-import net.earthcomputer.multiconnect.transformer.ChunkData;
+import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.minecraft.block.BellBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -48,9 +48,10 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            if (!CurrentChunkDataPacket.get().isFullChunk())
+            ChunkDataS2CPacket packet = ChunkDataTranslator.current().getPacket();
+            if (!packet.isFullChunk())
                 return;
-            int verticalStripBitmask = CurrentChunkDataPacket.get().getVerticalStripBitmask();
+            int verticalStripBitmask = packet.getVerticalStripBitmask();
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
@@ -59,15 +60,16 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             }
             buf.disablePassthroughMode();
 
+            Registry<Biome> biomeRegistry = ChunkDataTranslator.current().getRegistryManager().get(Registry.BIOME_KEY);
             Biome[] biomeData = new Biome[256];
             for (int i = 0; i < 256; i++) {
                 int biomeId = buf.readInt();
-                biomeData[i] = BuiltinRegistries.BIOME.get(biomeId); // TODO: Use the dynamic biome registry? Not necessarily safe to access off-thread here, so using builtin for now.
+                biomeData[i] = biomeRegistry.get(biomeId);
                 if (biomeData[i] == null)
                     biomeData[i] = Biomes.PLAINS; // Some servers send invalid biome IDs... for whatever reason
             }
 
-            PendingBiomeData.setPendingBiomeData(CurrentChunkDataPacket.get().getX(), CurrentChunkDataPacket.get().getZ(), biomeData);
+            ChunkDataTranslator.current().setUserData("biomeData", biomeData);
 
             buf.applyPendingReads();
         });
@@ -168,6 +170,21 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             }
             buf.applyPendingReads();
         });
+    }
+
+    @Override
+    public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
+        super.postTranslateChunk(translator, data);
+
+        if (translator.getPacket().isFullChunk()) {
+            Registry<Biome> biomeRegistry = translator.getRegistryManager().get(Registry.BIOME_KEY);
+            Biome[] biomeData = (Biome[]) translator.getUserData("biomeData");
+            int[] biomeArray = translator.getPacket().getBiomeArray();
+            assert biomeArray != null;
+            for (int i = 0; i < biomeArray.length; i++) {
+                biomeArray[i] = biomeRegistry.getRawId(biomeData[i]);
+            }
+        }
     }
 
     @Override

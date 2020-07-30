@@ -3,9 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_13_2.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.*;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
@@ -25,12 +23,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow @Final private static Logger LOGGER;
-    @Shadow private ClientWorld world;
 
     @Shadow public abstract void onLightUpdate(LightUpdateS2CPacket packet);
 
@@ -42,65 +41,84 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow public abstract void onVelocityUpdate(EntityVelocityUpdateS2CPacket entityVelocityUpdateS2CPacket_1);
 
-    @Unique private int lastCenterX;
-    @Unique private int lastCenterZ;
+    @Shadow public abstract void onChunkLoadDistance(ChunkLoadDistanceS2CPacket packet);
 
-    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ChunkDataS2CPacket;getReadBuffer()Lnet/minecraft/network/PacketByteBuf;", shift = At.Shift.AFTER))
-    private void onChunkDataPost(ChunkDataS2CPacket packet, CallbackInfo ci) {
+    @Shadow public abstract void onChunkData(ChunkDataS2CPacket packet);
+
+    // Handle reordering of the (synthetic) render distance center packet, to allow the chunk data to arrive beforehand and queue it
+    @Unique private int centerChunkX;
+    @Unique private int centerChunkZ;
+    @Unique private int viewDistance = 12;
+    @Unique private final List<ChunkDataS2CPacket> chunkDataPacketQueue = new ArrayList<>();
+    @Unique private final List<LightUpdateS2CPacket> lightUpdatePacketQueue = new ArrayList<>();
+
+    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
+    private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            if (!PendingChunkDataPackets.isProcessingQueuedPackets()) {
-                LightUpdateS2CPacket lightPacket = new LightUpdateS2CPacket();
-                //noinspection ConstantConditions
-                LightUpdatePacketAccessor lightPacketAccessor = (LightUpdatePacketAccessor) lightPacket;
-
-                PendingLightData lightData = PendingLightData.getInstance(packet.getX(), packet.getZ());
-
-                lightPacketAccessor.setChunkX(packet.getX());
-                lightPacketAccessor.setChunkZ(packet.getZ());
-
-                int blockLightMask = packet.getVerticalStripBitmask() << 1;
-                int skyLightMask = world.getDimension().hasSkyLight() ? blockLightMask : 0;
-                lightPacketAccessor.setBlockLightMask(blockLightMask);
-                lightPacketAccessor.setSkyLightMask(skyLightMask);
-                lightPacketAccessor.setBlockLightUpdates(new ArrayList<>());
-                lightPacketAccessor.setSkyLightUpdates(new ArrayList<>());
-
-                for (int i = 0; i < 16; i++) {
-                    byte[] blockData = lightData.getBlockLight(i);
-                    if (blockData != null)
-                        lightPacket.getBlockLightUpdates().add(blockData);
-                    byte[] skyData = lightData.getSkyLight(i);
-                    if (skyData != null)
-                        lightPacket.getSkyLightUpdates().add(skyData);
-                }
-
-                PendingLightData.setInstance(packet.getX(), packet.getZ(), null);
-
-                onLightUpdate(lightPacket);
+            if (!isInRange(packet.getX(), packet.getZ())) {
+                chunkDataPacketQueue.add(packet);
+                ci.cancel();
             }
-
-            if (packet.isFullChunk())
-                PendingChunkDataPackets.push(packet);
         }
     }
 
-    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;addEntitiesToChunk(Lnet/minecraft/world/chunk/WorldChunk;)V"))
-    private void onChunkDataSuccess(ChunkDataS2CPacket packet, CallbackInfo ci) {
+    @Inject(method = "onLightUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
+    private void onOnLightUpdate(LightUpdateS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            PendingChunkDataPackets.pop();
+            if (!isInRange(packet.getChunkX(), packet.getChunkZ())) {
+                lightUpdatePacketQueue.add(packet);
+                ci.cancel();
+            }
+        }
+    }
+
+    @Inject(method = "onChunkLoadDistance", at = @At("RETURN"))
+    private void onOnChunkLoadDistance(ChunkLoadDistanceS2CPacket packet, CallbackInfo ci) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
+            viewDistance = packet.getDistance();
         }
     }
 
     @Inject(method = "onChunkRenderDistanceCenter", at = @At("RETURN"))
-    private void onOnChunkRenderDistanceCenter(ChunkRenderDistanceCenterS2CPacket packet, CallbackInfo ci) {
+    private void onOnRenderDistanceCenter(ChunkRenderDistanceCenterS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            if (packet.getChunkX() != lastCenterX || packet.getChunkZ() != lastCenterZ) {
-                lastCenterX = packet.getChunkX();
-                lastCenterZ = packet.getChunkZ();
-                assert MinecraftClient.getInstance().getNetworkHandler() != null;
-                PendingChunkDataPackets.processPackets(MinecraftClient.getInstance().getNetworkHandler()::onChunkData);
+            centerChunkX = packet.getChunkX();
+            centerChunkZ = packet.getChunkZ();
+
+            // Increase radius if necessary, up to a limit of 32
+            int newViewDistance = IntStream.concat(
+                    chunkDataPacketQueue.stream().mapToInt(chunkData -> getRequiredRange(chunkData.getX(), chunkData.getZ())),
+                    lightUpdatePacketQueue.stream().mapToInt(lightUpdate -> getRequiredRange(lightUpdate.getChunkX(), lightUpdate.getChunkZ()))
+            ).filter(distance -> distance <= 32).max().orElse(0);
+            if (newViewDistance > viewDistance) {
+                onChunkLoadDistance(new ChunkLoadDistanceS2CPacket(newViewDistance));
             }
+
+            // Process queued packets
+            for (ChunkDataS2CPacket chunkData : chunkDataPacketQueue) {
+                if (isInRange(chunkData.getX(), chunkData.getZ())) {
+                    onChunkData(chunkData);
+                }
+            }
+            chunkDataPacketQueue.clear();
+
+            for (LightUpdateS2CPacket lightUpdate : lightUpdatePacketQueue) {
+                if (isInRange(lightUpdate.getChunkX(), lightUpdate.getChunkZ())) {
+                    onLightUpdate(lightUpdate);
+                }
+            }
+            lightUpdatePacketQueue.clear();
         }
+    }
+
+    @Unique
+    private boolean isInRange(int chunkX, int chunkZ) {
+        return getRequiredRange(chunkX, chunkZ) <= viewDistance;
+    }
+
+    @Unique
+    private int getRequiredRange(int chunkX, int chunkZ) {
+        return Math.max(Math.abs(chunkX - centerChunkX), Math.abs(chunkZ - centerChunkZ));
     }
 
     @Inject(method = "onCustomPayload", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)

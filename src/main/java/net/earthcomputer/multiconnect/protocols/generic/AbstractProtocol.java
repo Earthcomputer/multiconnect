@@ -153,6 +153,12 @@ public abstract class AbstractProtocol implements IUtils {
         return oldBlock != newBlock;
     }
 
+    /**
+     * <strong>Called off thread!</strong>
+     */
+    public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
+    }
+
     static {
         DefaultPackets.initialize();
         DefaultRegistries.initialize();

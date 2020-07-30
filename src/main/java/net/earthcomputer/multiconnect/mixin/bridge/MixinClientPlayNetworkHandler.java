@@ -36,14 +36,12 @@ import java.util.function.Consumer;
 @Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
 public class MixinClientPlayNetworkHandler {
 
-    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
-    private void preChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
-        CurrentChunkDataPacket.push(packet);
-    }
-
-    @Inject(method = "onChunkData", at = @At("RETURN"))
-    private void postChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
-        CurrentChunkDataPacket.pop();
+    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
+    private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
+        if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion() && !((IChunkDataS2CPacket) packet).multiconnect_isDataTranslated()) {
+            ChunkDataTranslator.submit(packet);
+            ci.cancel();
+        }
     }
 
     @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))

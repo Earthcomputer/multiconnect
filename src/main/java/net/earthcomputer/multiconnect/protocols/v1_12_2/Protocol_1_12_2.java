@@ -123,7 +123,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            int verticalStripBitmask = CurrentChunkDataPacket.get().getVerticalStripBitmask();
+            int verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
@@ -141,7 +141,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 }
             }
             buf.disablePassthroughMode();
-            if (CurrentChunkDataPacket.get().isFullChunk()) {
+            if (ChunkDataTranslator.current().getPacket().isFullChunk()) {
                 for (int i = 0; i < 256; i++) {
                     buf.pendingRead(Integer.class, buf.readByte() & 0xff);
                 }

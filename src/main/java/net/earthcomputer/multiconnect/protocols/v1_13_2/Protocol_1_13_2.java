@@ -64,16 +64,16 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.chunk.ChunkSection;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class Protocol_1_13_2 extends Protocol_1_14 {
 
     public static final Identifier CUSTOM_PAYLOAD_TRADE_LIST = new Identifier("trader_list");
     public static final Identifier CUSTOM_PAYLOAD_OPEN_BOOK = new Identifier("open_book");
-    public static final Set<Heightmap.Type> CLIENT_HEIGHTMAPS = Arrays.stream(Heightmap.Type.values()).filter(Heightmap.Type::shouldSendToClient).collect(Collectors.toSet());
 
     public static final TrackedData<Integer> OLD_FIREWORK_SHOOTER = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> OLD_VILLAGER_PROFESSION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
@@ -84,13 +84,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     public static final TrackedData<Integer> OLD_HORSE_ARMOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
 
     private static SimpleRegistry<EntityType<?>> ENTITY_REGISTRY_1_13;
-
-    @Override
-    public void setup(boolean resourceReload) {
-        if (!resourceReload)
-            PendingChunkDataPackets.processPackets(packet -> {});
-        super.setup(resourceReload);
-    }
 
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
@@ -127,9 +120,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            PendingLightData lightData = new PendingLightData();
-            PendingLightData.setInstance(CurrentChunkDataPacket.get().getX(), CurrentChunkDataPacket.get().getZ(), lightData);
-            int verticalStripBitmask = CurrentChunkDataPacket.get().getVerticalStripBitmask();
+            byte[][] blockLight = new byte[16][];
+            byte[][] skyLight = new byte[16][];
+            int verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if ((verticalStripBitmask & (1 << sectionY)) != 0) {
                     buf.pendingRead(Short.class, (short)0);
@@ -138,14 +131,17 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                     buf.disablePassthroughMode();
                     byte[] light = new byte[16 * 16 * 16 / 2];
                     buf.readBytes(light);
-                    lightData.setBlockLight(sectionY, light);
-                    assert MinecraftClient.getInstance().world != null;
-                    if (MinecraftClient.getInstance().world.getDimension().hasSkyLight()) {
+                    blockLight[sectionY] = light;
+                    if (ChunkDataTranslator.current().getDimension().hasSkyLight()) {
                         light = new byte[16 * 16 * 16 / 2];
                         buf.readBytes(light);
-                        lightData.setSkyLight(sectionY, light);
+                        skyLight[sectionY] = light;
                     }
                 }
+            }
+            ChunkDataTranslator.current().setUserData("blockLight", blockLight);
+            if (ChunkDataTranslator.current().getDimension().hasSkyLight()) {
+                ChunkDataTranslator.current().setUserData("skyLight", skyLight);
             }
             buf.applyPendingReads();
         });
@@ -375,6 +371,92 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 return stack;
             }
         });
+    }
+
+    @Override
+    public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
+        super.postTranslateChunk(translator, data);
+
+
+        // Split off into separate light packet
+        ChunkDataS2CPacket packet = translator.getPacket();
+
+        byte[][] blockLight = (byte[][]) translator.getUserData("blockLight");
+        byte[][] skyLight = (byte[][]) translator.getUserData("skyLight");
+
+        LightUpdateS2CPacket lightPacket = new LightUpdateS2CPacket();
+        //noinspection ConstantConditions
+        LightUpdatePacketAccessor lightPacketAccessor = (LightUpdatePacketAccessor) lightPacket;
+
+        lightPacketAccessor.setChunkX(packet.getX());
+        lightPacketAccessor.setChunkZ(packet.getZ());
+
+        int blockLightMask = packet.getVerticalStripBitmask() << 1;
+        int skyLightMask = translator.getDimension().hasSkyLight() ? blockLightMask : 0;
+        lightPacketAccessor.setBlockLightMask(blockLightMask);
+        lightPacketAccessor.setSkyLightMask(skyLightMask);
+        lightPacketAccessor.setBlockLightUpdates(new ArrayList<>());
+        lightPacketAccessor.setSkyLightUpdates(new ArrayList<>());
+
+        for (int i = 0; i < 16; i++) {
+            byte[] blockData = blockLight[i];
+            if (blockData != null) {
+                lightPacket.getBlockLightUpdates().add(blockData);
+            }
+            if (skyLight != null) {
+                byte[] skyData = skyLight[i];
+                if (skyData != null) {
+                    lightPacket.getSkyLightUpdates().add(skyData);
+                }
+            }
+        }
+
+        translator.getPostPackets().add(lightPacket);
+
+        // Heightmaps and counts
+        for (ChunkSection section : data.getSections()) {
+            if (section != null) {
+                section.calculateCounts();
+            }
+        }
+
+        Predicate<BlockState> worldSurfacePredicate = Heightmap.Type.WORLD_SURFACE.getBlockPredicate();
+        Predicate<BlockState> motionBlockingPredicate = Heightmap.Type.MOTION_BLOCKING.getBlockPredicate();
+        long[] worldSurface = new long[37];
+        long[] motionBlocking = new long[37];
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                int index = x + z * 16;
+
+                int sectionY;
+                for (sectionY = 15; sectionY >= 0; sectionY--) {
+                    if (data.getSections()[sectionY] != null) {
+                        break;
+                    }
+                }
+                int y = (sectionY + 1) * 16 - 1;
+
+                boolean findingWorldSurface = true;
+                boolean findingMotionBlocking = true;
+                for (; y >= 0; y--) {
+                    BlockState state = data.getBlockState(x, y, z);
+                    if (findingWorldSurface && worldSurfacePredicate.test(state)) {
+                        worldSurface[index / 7] |= ((y + 1) & 511) << (9 * (index % 7));
+                        findingWorldSurface = false;
+                    }
+                    if (findingMotionBlocking && motionBlockingPredicate.test(state)) {
+                        motionBlocking[index / 7] |= ((y + 1) & 511) << (9 * (index % 7));
+                        findingMotionBlocking = false;
+                    }
+
+                    if (!findingWorldSurface && !findingMotionBlocking) {
+                        break;
+                    }
+                }
+            }
+        }
+        packet.getHeightmaps().putLongArray("WORLD_SURFACE", worldSurface);
+        packet.getHeightmaps().putLongArray("MOTION_BLOCKING", motionBlocking);
     }
 
     @Override
