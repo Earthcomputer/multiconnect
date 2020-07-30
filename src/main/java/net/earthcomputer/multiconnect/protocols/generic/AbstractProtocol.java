@@ -154,7 +154,8 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     /**
-     * <strong>Called off thread!</strong>
+     * <strong>Called off thread!</strong> Individual pieces of translation (e.g. heightmap translation for 1.13.2 <->
+     * 1.14) should be directly translated to the current version.
      */
     public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
     }

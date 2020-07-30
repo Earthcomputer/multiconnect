@@ -50,6 +50,7 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.collection.PackedIntegerArray;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
@@ -419,12 +420,10 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
         Predicate<BlockState> worldSurfacePredicate = Heightmap.Type.WORLD_SURFACE.getBlockPredicate();
         Predicate<BlockState> motionBlockingPredicate = Heightmap.Type.MOTION_BLOCKING.getBlockPredicate();
-        long[] worldSurface = new long[37];
-        long[] motionBlocking = new long[37];
+        PackedIntegerArray worldSurface = new PackedIntegerArray(9, 256);
+        PackedIntegerArray motionBlocking = new PackedIntegerArray(9, 256);
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
-                int index = x + z * 16;
-
                 int sectionY;
                 for (sectionY = 15; sectionY >= 0; sectionY--) {
                     if (data.getSections()[sectionY] != null) {
@@ -438,11 +437,11 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 for (; y >= 0; y--) {
                     BlockState state = data.getBlockState(x, y, z);
                     if (findingWorldSurface && worldSurfacePredicate.test(state)) {
-                        worldSurface[index / 7] |= ((y + 1) & 511) << (9 * (index % 7));
+                        worldSurface.set(x + z * 16, y + 1);
                         findingWorldSurface = false;
                     }
                     if (findingMotionBlocking && motionBlockingPredicate.test(state)) {
-                        motionBlocking[index / 7] |= ((y + 1) & 511) << (9 * (index % 7));
+                        motionBlocking.set(x + z * 16, y + 1);
                         findingMotionBlocking = false;
                     }
 
@@ -452,8 +451,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 }
             }
         }
-        packet.getHeightmaps().putLongArray("WORLD_SURFACE", worldSurface);
-        packet.getHeightmaps().putLongArray("MOTION_BLOCKING", motionBlocking);
+        packet.getHeightmaps().putLongArray("WORLD_SURFACE", worldSurface.getStorage());
+        packet.getHeightmaps().putLongArray("MOTION_BLOCKING", motionBlocking.getStorage());
 
         super.postTranslateChunk(translator, data);
     }
