@@ -28,7 +28,6 @@
     "MixinItemEntity",
     "MixinLivingEntity",
     "MixinNoteBlock",
-    "MixinParticleManager",
     "MixinSkullBlockEntity",
     "MixinUpgradeData",
     "MixinWorldChunk",
