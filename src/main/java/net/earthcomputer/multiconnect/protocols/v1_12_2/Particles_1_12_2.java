@@ -29,7 +29,7 @@ import static net.minecraft.particle.ParticleTypes.*;
 
 public class Particles_1_12_2 {
 
-    private static BiMap<ParticleType<?>, String> OLD_NAMES = HashBiMap.create();
+    private static final BiMap<ParticleType<?>, String> OLD_NAMES = HashBiMap.create();
 
     public static final DefaultParticleType DEPTH_SUSPEND = new MyParticleType(false);
     public static final DefaultParticleType FOOTSTEP = new MyParticleType(false);
@@ -145,6 +145,8 @@ public class Particles_1_12_2 {
         register(registry, FALLING_DUST, 46, "falling_dust");
         register(registry, TOTEM_OF_UNDYING, 47, "totem_of_undying");
         register(registry, SPIT, 48, "spit");
+
+        registerParticleFactories((IParticleManager) MinecraftClient.getInstance().particleManager);
     }
 
     public static void registerParticleFactories(IParticleManager particleManager) {
@@ -155,7 +157,7 @@ public class Particles_1_12_2 {
     }
 
     private static class DepthSuspendFactory implements ParticleFactory<DefaultParticleType> {
-        private SpriteProvider sprite;
+        private final SpriteProvider sprite;
         public DepthSuspendFactory(SpriteProvider sprite) {
             this.sprite = sprite;
         }
@@ -254,7 +256,7 @@ public class Particles_1_12_2 {
 
             @Override
             public Particle createParticle(BlockStateParticleEffect type, ClientWorld world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
-                return new OldBlockDustParticle(world, x, y, z, xSpeed, ySpeed, zSpeed, type.getBlockState());
+                return new OldBlockDustParticle(world, x, y, z, xSpeed, ySpeed, zSpeed, type.getBlockState()).setBlockPosFromPosition();
             }
         }
     }

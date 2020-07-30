@@ -11,7 +11,6 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
-import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,27 +21,12 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.lang.reflect.Constructor;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
 @Mixin(ParticleManager.class)
 public class MixinParticleManager implements IParticleManager {
-
-    @Unique private static final Constructor<?> SSP_CTOR;
-    static {
-        try {
-            Class<?> ssp = Arrays.stream(ParticleManager.class.getDeclaredClasses())
-                    .filter(cls -> ArrayUtils.contains(cls.getInterfaces(), SpriteProvider.class))
-                    .findFirst().orElseThrow(ClassNotFoundException::new);
-            SSP_CTOR = ssp.getDeclaredConstructor(ParticleManager.class);
-            SSP_CTOR.setAccessible(true);
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
-        }
-    }
 
     @Shadow @Final private Map<Identifier, Object> spriteAwareFactories;
     @Shadow protected ClientWorld world;
@@ -76,13 +60,7 @@ public class MixinParticleManager implements IParticleManager {
     @Override
     public <T extends ParticleEffect> void multiconnect_registerSpriteAwareFactory(ParticleType<T> type,
                                                                                    Function<SpriteProvider, ParticleFactory<T>> spriteAwareFactory) {
-        // https://stackoverflow.com/questions/26775676/explicit-use-of-lambdametafactory
-        SpriteProvider spriteProvider;
-        try {
-            spriteProvider = (SpriteProvider) SSP_CTOR.newInstance((ParticleManager) (Object) this);
-        } catch (Throwable e) {
-            throw new AssertionError(e);
-        }
+        SpriteProvider spriteProvider = ((ParticleManager)(Object)this).new SimpleSpriteProvider();
 
         Identifier id = Registry.PARTICLE_TYPE.getId(type);
         spriteAwareFactories.put(id, spriteProvider);
