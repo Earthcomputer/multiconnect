@@ -375,9 +375,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
     @Override
     public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
-        super.postTranslateChunk(translator, data);
-
-
         // Split off into separate light packet
         ChunkDataS2CPacket packet = translator.getPacket();
 
@@ -457,6 +454,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         }
         packet.getHeightmaps().putLongArray("WORLD_SURFACE", worldSurface);
         packet.getHeightmaps().putLongArray("MOTION_BLOCKING", motionBlocking);
+
+        super.postTranslateChunk(translator, data);
     }
 
     @Override

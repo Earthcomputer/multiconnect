@@ -3,15 +3,15 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_14_4.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "MixinChunkDataS2C"
   ],
   "client": [
+    "EndermanEntityAccessor",
+    "LivingEntityAccessor",
     "MixinClientPlayNetworkHandler",
     "MixinEntity",
     "MixinWorld",
     "MixinWorldChunk",
-
-    "EndermanEntityAccessor",
-    "LivingEntityAccessor",
     "TrackerUpdatePacketAccessor",
     "TridentEntityAccessor",
     "WolfEntityAccessor"

@@ -34,7 +34,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.ItemTags;
-import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
@@ -174,17 +173,12 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
 
     @Override
     public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
-        super.postTranslateChunk(translator, data);
-
         if (translator.getPacket().isFullChunk()) {
-            Registry<Biome> biomeRegistry = translator.getRegistryManager().get(Registry.BIOME_KEY);
             Biome[] biomeData = (Biome[]) translator.getUserData("biomeData");
-            int[] biomeArray = translator.getPacket().getBiomeArray();
-            assert biomeArray != null;
-            for (int i = 0; i < biomeArray.length; i++) {
-                biomeArray[i] = biomeRegistry.getRawId(biomeData[i]);
-            }
+            ((IChunkDataS2CPacket) translator.getPacket()).set_1_14_4_biomeData(biomeData);
         }
+
+        super.postTranslateChunk(translator, data);
     }
 
     @Override
