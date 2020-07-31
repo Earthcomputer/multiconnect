@@ -9,6 +9,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityType;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
@@ -24,6 +25,7 @@ import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -36,12 +38,17 @@ import java.util.function.Consumer;
 @Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
 public class MixinClientPlayNetworkHandler {
 
+    @Shadow private ClientWorld world;
+
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
     private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion() && !((IChunkDataS2CPacket) packet).multiconnect_isDataTranslated()) {
-            ChunkDataTranslator.submit(packet);
-            ci.cancel();
-        }
+        if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion())
+            if (!((IChunkDataS2CPacket) packet).multiconnect_isDataTranslated()) {
+                ChunkDataTranslator.submit(packet);
+                ci.cancel();
+            } else if (((IChunkDataS2CPacket) packet).multiconnect_getDimension() != world.getDimension()) {
+                ci.cancel();
+            }
     }
 
     @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))

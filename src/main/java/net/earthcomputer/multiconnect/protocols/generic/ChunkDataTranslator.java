@@ -46,7 +46,9 @@ public class ChunkDataTranslator {
         assert mc.world != null;
         ClientPlayNetworkHandler networkHandler = mc.getNetworkHandler();
         assert networkHandler != null;
-        ChunkDataTranslator translator = new ChunkDataTranslator(packet, mc.world.getDimension(), networkHandler.getRegistryManager());
+        DimensionType dimension = mc.world.getDimension();
+        ((IChunkDataS2CPacket) packet).multiconnect_setDimension(dimension);
+        ChunkDataTranslator translator = new ChunkDataTranslator(packet, dimension, networkHandler.getRegistryManager());
         EXECUTOR.submit(() -> {
             CURRENT_TRANSLATOR.set(translator);
 
