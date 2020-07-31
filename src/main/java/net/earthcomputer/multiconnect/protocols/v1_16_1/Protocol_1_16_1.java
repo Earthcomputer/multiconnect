@@ -168,7 +168,7 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
     @Override
     public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
         super.mutateDynamicRegistries(mutator, registries);
-        addRegistry(registries, Registry.DIMENSION_TYPE_KEY); // FIXME: support custom dimensions
+        addRegistry(registries, Registry.DIMENSION_TYPE_KEY);
         addRegistry(registries, Registry.BIOME_KEY);
     }
 
