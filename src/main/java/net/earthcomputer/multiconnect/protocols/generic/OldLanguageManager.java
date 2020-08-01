@@ -64,8 +64,8 @@ public class OldLanguageManager {
         if (ConnectionInfo.protocol == ProtocolRegistry.latest())
             return;
 
-        String currentVersion = ConnectionMode.byValue(ConnectionInfo.protocolVersion).getAssetId();
-        String latestVersion = ConnectionMode.byValue(SharedConstants.getGameVersion().getProtocolVersion()).getAssetId();
+        String currentVersion = ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName();
+        String latestVersion = ConnectionMode.byValue(SharedConstants.getGameVersion().getProtocolVersion()).getName();
 
         Map<String, String> currentNative = getTranslations(currentVersion, nativeLang);
         Map<String, String> currentFallback = getTranslations(currentVersion, "en_us");
@@ -113,7 +113,7 @@ public class OldLanguageManager {
 
         versionUrls = new HashMap<>();
         for (VersionManifest.Version version : manifest.versions) {
-            if (ConnectionMode.isSupportedAssetId(version.id)) {
+            if (ConnectionMode.isSupportedVersionName(version.id)) {
                 versionUrls.put(version.id, version.url);
             }
         }

@@ -185,6 +185,11 @@ public class MultiConnectAPI {
         }
 
         @Override
+        public int getDataVersion() {
+            return SharedConstants.getGameVersion().getWorldVersion();
+        }
+
+        @Override
         public boolean isMajorRelease() {
             return true;
         }
