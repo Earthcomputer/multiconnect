@@ -7,11 +7,8 @@ import net.minecraft.block.entity.BannerBlockEntity;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.util.DyeColor;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,8 +19,6 @@ import java.util.Map;
 
 @Mixin(BannerBlockEntity.class)
 public class MixinBannerBlockEntity extends BlockEntity {
-
-    @Shadow private ListTag patternListTag;
 
     @Unique private static final Map<DyeColor, Block> WALL_BANNERS_BY_COLOR = new EnumMap<>(DyeColor.class);
     static {
@@ -53,18 +48,6 @@ public class MixinBannerBlockEntity extends BlockEntity {
     private void readBase(BlockState blockState, CompoundTag tag, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             setBaseColor(DyeColor.byId(15 - tag.getInt("Base")));
-        }
-    }
-
-    @Inject(method = "fromTag", at = @At("RETURN"))
-    private void onFromTag(BlockState blockState, CompoundTag tag, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            for (Tag t : patternListTag) {
-                if (t instanceof CompoundTag) {
-                    CompoundTag pattern = (CompoundTag) t;
-                    pattern.putInt("Color", 15 - pattern.getInt("Color"));
-                }
-            }
         }
     }
 

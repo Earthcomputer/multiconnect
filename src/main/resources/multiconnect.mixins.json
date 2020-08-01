@@ -6,6 +6,7 @@
     "bridge.EntityAccessor",
     "bridge.MinecraftClientAccessor",
     "bridge.MixinBlockColors",
+    "bridge.MixinBlockEntityUpdateS2C",
     "bridge.MixinChunkDataS2C",
     "bridge.MixinClientConnection",
     "bridge.MixinClientPlayNetworkHandler",
