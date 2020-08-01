@@ -4,7 +4,6 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
-import com.mojang.datafixers.TypeRewriteRule;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.DynamicOps;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
@@ -28,7 +27,6 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.registry.SimpleRegistry;
 
-import java.lang.reflect.Field;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -48,17 +46,6 @@ public class Utils {
         DataFixer fixer = MinecraftClient.getInstance().getDataFixer();
         Dynamic<T> translated = fixer.update(type, new Dynamic<>(ops, old), oldVersion, currentVersion);
         return translated.getValue();
-    }
-
-    @SuppressWarnings("unchecked")
-    public static List<TypeRewriteRule> getRules(TypeRewriteRule.Seq seq) {
-        try {
-            Field field = TypeRewriteRule.Seq.class.getDeclaredField("rules");
-            field.setAccessible(true);
-            return (List<TypeRewriteRule>) field.get(seq);
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
-        }
     }
 
     @SafeVarargs
