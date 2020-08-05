@@ -207,6 +207,32 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
         insertAfter(registry, Items.IRON_HOE, Items.DIAMOND_HOE, "diamond_hoe");
         insertAfter(registry, Items.DIAMOND_HOE, Items.GOLDEN_HOE, "golden_hoe");
         insertAfter(registry, Items.GOLDEN_HOE, Items.NETHERITE_HOE, "netherite_hoe");
+        registry.unregister(Items.RED_DYE);
+        registry.unregister(Items.GREEN_DYE);
+        insertAfter(registry, Items.INK_SAC, Items.RED_DYE, "red_dye");
+        insertAfter(registry, Items.RED_DYE, Items.GREEN_DYE, "green_dye");
+        registry.unregister(Items.PURPLE_DYE);
+        registry.unregister(Items.CYAN_DYE);
+        registry.unregister(Items.LIGHT_GRAY_DYE);
+        registry.unregister(Items.GRAY_DYE);
+        registry.unregister(Items.PINK_DYE);
+        registry.unregister(Items.LIME_DYE);
+        registry.unregister(Items.YELLOW_DYE);
+        registry.unregister(Items.LIGHT_BLUE_DYE);
+        registry.unregister(Items.MAGENTA_DYE);
+        insertAfter(registry, Items.LAPIS_LAZULI, Items.PURPLE_DYE, "purple_dye");
+        insertAfter(registry, Items.PURPLE_DYE, Items.CYAN_DYE, "cyan_dye");
+        insertAfter(registry, Items.CYAN_DYE, Items.LIGHT_GRAY_DYE, "light_gray_dye");
+        insertAfter(registry, Items.LIGHT_GRAY_DYE, Items.GRAY_DYE, "gray_dye");
+        insertAfter(registry, Items.GRAY_DYE, Items.PINK_DYE, "pink_dye");
+        insertAfter(registry, Items.PINK_DYE, Items.LIME_DYE, "lime_dye");
+        insertAfter(registry, Items.LIME_DYE, Items.YELLOW_DYE, "yellow_dye");
+        insertAfter(registry, Items.YELLOW_DYE, Items.LIGHT_BLUE_DYE, "light_blue_dye");
+        insertAfter(registry, Items.LIGHT_BLUE_DYE, Items.MAGENTA_DYE, "magenta_dye");
+        registry.unregister(Items.BONE_MEAL);
+        insertAfter(registry, Items.ORANGE_DYE, Items.BONE_MEAL, "bone_meal");
+        registry.unregister(Items.WHITE_DYE);
+        insertAfter(registry, Items.BLACK_DYE, Items.WHITE_DYE, "white_dye");
     }
 
     private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
