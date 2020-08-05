@@ -5,6 +5,12 @@ pluginManagement {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
         }
+        // Added:
+        maven {
+            name = 'Earthcomputer Tools'
+            url = 'https://dl.bintray.com/earthcomputer/util'
+        }
+        // End added
         gradlePluginPortal()
     }
 }

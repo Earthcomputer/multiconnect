@@ -1,0 +1,1 @@
+net/minecraft/client/network/ClientPlayNetworkHandler.onBlockEntityUpdate (Lnet/minecraft/network/packet/s2c/play/BlockEntityUpdateS2CPacket;)V

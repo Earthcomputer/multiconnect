@@ -3,6 +3,7 @@ import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
 	id 'fabric-loom' version '0.4-SNAPSHOT'
+	id 'musical-code' version '1.0'
 	id 'maven-publish'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
 	id 'com.github.breadmoirai.github-release' version '2.2.10'
@@ -30,6 +31,10 @@ processResources {
 	from(sourceSets.main.resources.srcDirs) {
 		exclude "fabric.mod.json"
 	}
+}
+
+musicalCode {
+	config 'musical-config.txt'
 }
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
