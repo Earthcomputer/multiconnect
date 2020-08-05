@@ -42,11 +42,29 @@ public interface ISimpleRegistry<T> {
 
     void unregister(T t, boolean sideEffects);
 
+    default void unregister(RegistryKey<T> key) {
+        unregister(key, true);
+    }
+
+    @SuppressWarnings("unchecked")
+    default void unregister(RegistryKey<T> key, boolean sideEffects) {
+        unregister(((SimpleRegistry<T>) this).get(key), sideEffects);
+    }
+
     default void purge(T t) {
         purge(t, true);
     }
 
     void purge(T t, boolean sideEffects);
+
+    default void purge(RegistryKey<T> key) {
+        purge(key, true);
+    }
+
+    @SuppressWarnings("unchecked")
+    default void purge(RegistryKey<T> key, boolean sideEffects) {
+        purge(((SimpleRegistry<T>) this).get(key), sideEffects);
+    }
 
     void clear(boolean sideEffects);
 

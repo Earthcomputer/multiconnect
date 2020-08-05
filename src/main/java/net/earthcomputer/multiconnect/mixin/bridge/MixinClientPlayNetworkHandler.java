@@ -60,8 +60,8 @@ public class MixinClientPlayNetworkHandler {
         registriesAccessor.setRegistries(new HashMap<>(registriesAccessor.getRegistries())); // make registries mutable
         ConnectionInfo.protocol.mutateDynamicRegistries(mutator, registries);
 
-        for (RegistryKey<? extends Registry<?>> registryKey : DynamicRegistryManager.INFOS.keySet()) {
-            if (registryKey != Registry.DIMENSION_TYPE_KEY && DynamicRegistryManager.INFOS.get(registryKey).isSynced()) {
+        for (RegistryKey<? extends Registry<?>> registryKey : DynamicRegistryManagerAccessor.getInfos().keySet()) {
+            if (registryKey != Registry.DIMENSION_TYPE_KEY && DynamicRegistryManagerAccessor.getInfos().get(registryKey).isSynced()) {
                 addMissingValues(getBuiltinRegistry(registryKey), registries);
             }
         }

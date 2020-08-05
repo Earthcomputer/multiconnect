@@ -3,6 +3,8 @@
   "package": "net.earthcomputer.multiconnect.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "bridge.DynamicRegistryManagerAccessor",
+    "bridge.DynamicRegistryManagerImplAccessor",
     "bridge.EntityAccessor",
     "bridge.MinecraftClientAccessor",
     "bridge.MixinBlockColors",
@@ -26,7 +28,6 @@
     "bridge.MixinStatType",
     "bridge.MixinTranslationStorage",
     "bridge.MixinWorldChunk",
-    "bridge.DynamicRegistryManagerImplAccessor",
     "bridge.RegistryAccessor",
     "bridge.SpawnEggItemAccessor",
     "bridge.SynchronizeTagsS2CAccessor",

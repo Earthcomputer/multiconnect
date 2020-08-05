@@ -63,6 +63,10 @@ public interface IUtils {
         Utils.rename(registry, value, newName);
     }
 
+    default <T> void rename(ISimpleRegistry<T> registry, RegistryKey<T> from, String newName) {
+        Utils.rename(registry, from, newName);
+    }
+
     default <T> void reregister(ISimpleRegistry<T> registry, T value, boolean inPlace) {
         Utils.reregister(registry, value, inPlace);
     }

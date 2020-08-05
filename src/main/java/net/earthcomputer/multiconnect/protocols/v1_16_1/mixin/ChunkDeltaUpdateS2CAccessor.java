@@ -12,8 +12,8 @@ public interface ChunkDeltaUpdateS2CAccessor {
     void setSectionPos(ChunkSectionPos sectionPos);
 
     @Accessor
-    void setPackedLocalPos(short[] packedLocalPos);
+    void setPositions(short[] packedLocalPos);
 
     @Accessor
-    void setBlockState(BlockState[] states);
+    void setBlockStates(BlockState[] states);
 }

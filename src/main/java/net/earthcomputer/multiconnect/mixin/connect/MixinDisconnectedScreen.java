@@ -4,13 +4,13 @@ import com.google.common.collect.ImmutableSet;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.connect.ServersExt;
-import net.minecraft.class_5481;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,7 +28,7 @@ public abstract class MixinDisconnectedScreen extends Screen {
     @Unique private ServerInfo server;
     @Unique private boolean isProtocolReason;
     @Unique private DropDownWidget<ConnectionMode> protocolSelector;
-    @Unique private class_5481 forceProtocolLabel;
+    @Unique private OrderedText forceProtocolLabel;
 
     protected MixinDisconnectedScreen(Text title) {
         super(title);
@@ -36,7 +36,7 @@ public abstract class MixinDisconnectedScreen extends Screen {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(Screen parent, Text title, Text reason, CallbackInfo ci) {
-        forceProtocolLabel = new TranslatableText("multiconnect.changeForcedProtocol").append(" ->").method_30937();
+        forceProtocolLabel = new TranslatableText("multiconnect.changeForcedProtocol").append(" ->").asOrderedText();
 
         isProtocolReason = false;
         server = MinecraftClient.getInstance().getCurrentServerEntry();
@@ -70,7 +70,7 @@ public abstract class MixinDisconnectedScreen extends Screen {
     @Inject(method = "render", at = @At("RETURN"))
     private void onRender(MatrixStack matrixStack, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (isProtocolReason) {
-            textRenderer.drawWithShadow(matrixStack, forceProtocolLabel, width - 85 - textRenderer.method_30880(forceProtocolLabel), 11, 0xFFFFFF);
+            textRenderer.drawWithShadow(matrixStack, forceProtocolLabel, width - 85 - textRenderer.getWidth(forceProtocolLabel), 11, 0xFFFFFF);
             protocolSelector.render(matrixStack, mouseX, mouseY, delta);
         }
     }

@@ -49,9 +49,11 @@ public class DefaultRegistries<T> {
     }
 
     public void restore(SimpleRegistry<T> registry) {
+        @SuppressWarnings("unchecked") ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
+
         List<T> added = new ArrayList<>();
         for (T thing : defaultAllEntries) {
-            if (!registry.containsId(defaultEntryIds.getInt(thing))) {
+            if (!iregistry.getEntriesById().containsValue(thing)) {
                 added.add(thing);
             }
         }
@@ -62,7 +64,6 @@ public class DefaultRegistries<T> {
             }
         }
 
-        @SuppressWarnings("unchecked") ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
         iregistry.getAllEntries().clear();
         iregistry.getAllEntries().addAll(defaultAllEntries);
         iregistry.getEntryIds().putAll(defaultEntryIds);

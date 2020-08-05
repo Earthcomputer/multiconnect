@@ -67,8 +67,8 @@ public class ChunkDeltaUpdateS2CPacket_1_16_1 implements Packet<ClientPlayPacket
                         filteredBlockStates.add(states[i]);
                     }
                 }
-                accessor.setPackedLocalPos(filteredIndices.toShortArray());
-                accessor.setBlockState(filteredBlockStates.toArray(new BlockState[0]));
+                accessor.setPositions(filteredIndices.toShortArray());
+                accessor.setBlockStates(filteredBlockStates.toArray(new BlockState[0]));
                 try {
                     listener.onChunkDeltaUpdate(packet);
                 } catch (OffThreadException e) {

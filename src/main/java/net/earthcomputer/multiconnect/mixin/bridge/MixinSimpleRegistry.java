@@ -28,6 +28,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     @Shadow @Final private Object2IntMap<T> field_26683;
     @Shadow @Final private BiMap<Identifier, T> entriesById;
     @Shadow @Final private BiMap<RegistryKey<T>, T> entriesByKey;
+    @Shadow @Final private Map<T, Lifecycle> field_26731;
     @Shadow protected Object[] randomEntries;
     @Shadow private int nextId;
 
@@ -35,7 +36,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
         super(registryKey, lifecycle);
     }
 
-    @Shadow public abstract <V extends T> V set(int rawId, RegistryKey<T> id, V value);
+    @Shadow public abstract <V extends T> V set(int rawId, RegistryKey<T> id, V value, Lifecycle lifecycle);
 
     @Accessor
     @Override
@@ -88,7 +89,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
         setNextId(getNextId() + 1);
 
         // now we've made room, replace the value at this id
-        set(id, key, t);
+        set(id, key, t, Lifecycle.stable());
 
         if (sideEffects)
             registerListeners.forEach(listener -> listener.onUpdate(t, false));
@@ -98,7 +99,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     public void registerInPlace(T t, int id, RegistryKey<T> key, boolean sideEffects) {
         if (id == getNextId())
             setNextId(id + 1);
-        set(id, key, t);
+        set(id, key, t, Lifecycle.stable());
 
         if (sideEffects)
             registerListeners.forEach(listener -> listener.onUpdate(t, true));
@@ -112,6 +113,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
         int id = field_26683.removeInt(t);
         entriesById.inverse().remove(t);
         entriesByKey.inverse().remove(t);
+        field_26731.remove(t);
 
         // id shift
         for (int remapId = id; remapId < getNextId() - 1; remapId++) {
@@ -138,6 +140,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
         field_26682.set(id, null);
         entriesById.inverse().remove(t);
         entriesByKey.inverse().remove(t);
+        field_26731.remove(t);
 
         if (id == getNextId() - 1)
             setNextId(id);
@@ -161,6 +164,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
         field_26683.clear();
         entriesById.clear();
         entriesByKey.clear();
+        field_26731.clear();
         randomEntries = null;
         setNextId(0);
     }
@@ -194,7 +198,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     public SimpleRegistry<T> copy() {
         SimpleRegistry<T> newRegistry = new SimpleRegistry<>(getRegistryKey(), ((RegistryAccessor<T>) this).getLifecycle());
         for (Map.Entry<RegistryKey<T>, T> entry : entriesByKey.entrySet()) {
-            newRegistry.set(field_26683.getInt(entry.getValue()), entry.getKey(), entry.getValue());
+            newRegistry.set(field_26683.getInt(entry.getValue()), entry.getKey(), entry.getValue(), field_26731.get(entry.getValue()));
         }
         return newRegistry;
     }

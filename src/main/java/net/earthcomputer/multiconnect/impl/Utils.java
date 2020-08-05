@@ -122,6 +122,11 @@ public class Utils {
     }
 
     @SuppressWarnings("unchecked")
+    public static <T> void rename(ISimpleRegistry<T> registry, RegistryKey<T> from, String newName) {
+        rename(registry, ((SimpleRegistry<T>) registry).get(from), newName);
+    }
+
+    @SuppressWarnings("unchecked")
     public static <T> void reregister(ISimpleRegistry<T> registry, T value, boolean inPlace) {
         if (registry.getEntriesById().containsValue(value))
             return;
@@ -154,10 +159,10 @@ public class Utils {
         if (registryKey == Registry.DIMENSION_TYPE_KEY) {
             DimensionType.addRegistryDefaults(registries);
         } else {
-            Registry<T> builtinRegistry = ((Registry<R>) BuiltinRegistries.REGISTRIES).get(registryKey);
+            SimpleRegistry<T> builtinRegistry = (SimpleRegistry<T>) ((Registry<R>) BuiltinRegistries.REGISTRIES).get(registryKey);
             assert builtinRegistry != null;
             for (Map.Entry<RegistryKey<T>, T> entry : builtinRegistry.getEntries()) {
-                registry.set(builtinRegistry.getRawId(entry.getValue()), entry.getKey(), entry.getValue());
+                registry.set(builtinRegistry.getRawId(entry.getValue()), entry.getKey(), entry.getValue(), builtinRegistry.method_31139(entry.getValue()));
             }
         }
     }
