@@ -85,7 +85,9 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
                 buf.applyPendingReads();
                 return;
             }
+            buf.disablePassthroughMode();
             buf.readBoolean(); // forget old data
+            buf.enablePassthroughMode();
             buf.readVarInt(); // vertical strip bitmask
             buf.readCompoundTag(); // heightmaps
             buf.disablePassthroughMode();
