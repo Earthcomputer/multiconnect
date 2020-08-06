@@ -213,7 +213,7 @@ public class Utils {
             }
             return;
         }
-        DynamicRegistryManager.Impl registries = new DynamicRegistryManager.Impl();
+        DynamicRegistryManager.Impl registries = DynamicRegistryManager.create();
         //noinspection ConstantConditions
         ((DynamicRegistryManagerImplAccessor) (Object) registries).setRegistries(ImmutableMap.of()); // dynamic registry mutator will fix this
         buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, registries));

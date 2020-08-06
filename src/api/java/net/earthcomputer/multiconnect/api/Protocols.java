@@ -5,7 +5,7 @@ package net.earthcomputer.multiconnect.api;
  */
 public class Protocols {
 
-    public static final int V1_16_2 = 746;
+    public static final int V1_16_2 = 748;
     public static final int V1_16_1 = 736;
     public static final int V1_16 = 735;
     public static final int V1_15_2 = 578;

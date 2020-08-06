@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.net.UnknownHostException;
 
+@SuppressWarnings("UnresolvedMixinReference")
 @Mixin(targets = "net.minecraft.client.gui.screen.ConnectScreen$1")
 public class MixinConnectScreen1 {
 

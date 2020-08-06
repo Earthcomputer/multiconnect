@@ -148,7 +148,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             int dimensionId = buf.readInt();
             Identifier dimensionName = dimensionIdToName(dimensionId);
 
-            DynamicRegistryManager.Impl registries = new DynamicRegistryManager.Impl();
+            DynamicRegistryManager.Impl registries = DynamicRegistryManager.create();
             //noinspection ConstantConditions
             ((DynamicRegistryManagerImplAccessor) (Object) registries).setRegistries(ImmutableMap.of());
             buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, registries)); // dynamic registry mutator will fix this

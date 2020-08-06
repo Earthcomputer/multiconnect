@@ -10,6 +10,7 @@ import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.AbstractPiglinEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.PiglinEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_2.Protocol_1_16_2;
+import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
@@ -38,6 +39,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.source.BiomeArray;
+import net.minecraft.world.dimension.DimensionType;
 
 import java.util.*;
 
@@ -67,12 +69,26 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
                     Utils.singletonKeyCodec("dimension", dimensionSetCodec),
                     ImmutableSet.of(new Identifier("overworld"), new Identifier("the_nether"), new Identifier("the_end"), new Identifier("overworld_caves"))::equals
             );
+            Identifier dimTypeId = buf.readIdentifier();
+            DynamicRegistryManager defaultRegistryManager = DynamicRegistryManager.create();
+            DimensionType dimType = defaultRegistryManager.getDimensionTypes().get(dimTypeId);
+            if (dimType == null) dimType = defaultRegistryManager.getDimensionTypes().get(DimensionType.OVERWORLD_REGISTRY_KEY);
+            DimensionType dimType_f = dimType;
+            buf.pendingRead(Codecked.class, new Codecked<>(DimensionType.REGISTRY_CODEC, () -> dimType_f));
             buf.enablePassthroughMode();
-            buf.readIdentifier(); // dimension type
             buf.readIdentifier(); // dimension
             buf.readLong(); // seed
             buf.disablePassthroughMode();
             buf.pendingRead(VarInt.class, new VarInt(buf.readUnsignedByte())); // max players
+            buf.applyPendingReads();
+        });
+        ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
+            DynamicRegistryManager defaultRegistryManager = DynamicRegistryManager.create();
+            Identifier dimTypeId = buf.readIdentifier();
+            DimensionType dimType = defaultRegistryManager.getDimensionTypes().get(dimTypeId);
+            if (dimType == null) dimType = defaultRegistryManager.getDimensionTypes().get(DimensionType.OVERWORLD_REGISTRY_KEY);
+            DimensionType dimType_f = dimType;
+            buf.pendingRead(Codecked.class, new Codecked<>(DimensionType.REGISTRY_CODEC, () -> dimType_f));
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
