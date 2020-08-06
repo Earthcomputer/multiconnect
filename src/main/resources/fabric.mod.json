@@ -38,7 +38,7 @@
   "accessWidener": "multiconnect.accesswidener",
 
   "depends": {
-    "fabricloader": ">=0.8.8"
+    "fabricloader": ">=0.9.1"
   },
 
   "custom": {
