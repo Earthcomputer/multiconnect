@@ -18,6 +18,11 @@ public interface IProtocol {
     String getName();
 
     /**
+     * Returns the datafix version of this protocol
+     */
+    int getDataVersion();
+
+    /**
      * Returns whether this version is considered a major release, i.e. a parent of other protocols,
      * where those protocols are subcategories. Note: the concept of a "major release" is not necessarily the
      * same as semver. It is used to categorize versions (e.g. the 1.15 versions).

@@ -10,10 +10,7 @@ import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAtt
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.WolfEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
-import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
-import net.earthcomputer.multiconnect.transformer.Codecked;
-import net.earthcomputer.multiconnect.transformer.UnsignedByte;
-import net.earthcomputer.multiconnect.transformer.VarInt;
+import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
@@ -32,6 +29,7 @@ import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.LongArrayTag;
@@ -234,6 +232,33 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.pendingRead(Byte.class, (byte)buf.readEnumConstant(EquipmentSlot.class).ordinal()); // slot
             buf.applyPendingReads();
         });
+        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<ItemStack>() {
+            @Override
+            public void onRead(TransformerByteBuf buf) {
+            }
+
+            @Override
+            public ItemStack translate(ItemStack from) {
+                if (from.getItem() == Items.PLAYER_HEAD && from.hasTag()) {
+                    CompoundTag tag = from.getTag();
+                    assert tag != null;
+                    if (tag.contains("SkullOwner", 10)) {
+                        CompoundTag skullOwner = tag.getCompound("SkullOwner");
+                        if (skullOwner.contains("Id", 8)) {
+                            try {
+                                UUID uuid = UUID.fromString(skullOwner.getString("Id"));
+                                from = from.copy();
+                                assert from.getTag() != null;
+                                from.getTag().getCompound("SkullOwner").putUuid("Id", uuid);
+                            } catch (IllegalArgumentException e) {
+                                // uuid failed to parse
+                            }
+                        }
+                    }
+                }
+                return from;
+            }
+        });
 
         ProtocolRegistry.registerOutboundTranslator(PlayerInteractEntityC2SPacket.class, buf -> {
             buf.passthroughWrite(VarInt.class); // entity id
@@ -278,6 +303,29 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.passthroughWrite(Identifier.class); // pool
             buf.passthroughWrite(String.class); // final state
             buf.skipWrite(String.class); // joint type
+        });
+        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<ItemStack>() {
+            @Override
+            public void onWrite(TransformerByteBuf buf) {
+            }
+
+            @Override
+            public ItemStack translate(ItemStack from) {
+                if (from.getItem() == Items.PLAYER_HEAD && from.hasTag()) {
+                    CompoundTag tag = from.getTag();
+                    assert tag != null;
+                    if (tag.contains("SkullOwner", 10)) {
+                        CompoundTag skullOwner = tag.getCompound("SkullOwner");
+                        if (skullOwner.containsUuid("Id")) {
+                            UUID uuid = skullOwner.getUuid("Id");
+                            from = from.copy();
+                            assert from.getTag() != null;
+                            from.getTag().getCompound("SkullOwner").putString("Id", uuid.toString());
+                        }
+                    }
+                }
+                return from;
+            }
         });
     }
 

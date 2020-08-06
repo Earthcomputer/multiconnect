@@ -1,11 +1,14 @@
 package net.earthcomputer.multiconnect.impl;
 
+import com.mojang.datafixers.DSL;
+import com.mojang.serialization.DynamicOps;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.item.Item;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Packet;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
@@ -18,6 +21,15 @@ import java.util.List;
 import java.util.function.Function;
 
 public interface IUtils {
+
+    default CompoundTag datafix(DSL.TypeReference type, CompoundTag old) {
+        return Utils.datafix(type, old);
+    }
+
+    default <T> T datafix(DSL.TypeReference type, DynamicOps<T> ops, T old) {
+        return Utils.datafix(type, ops, old);
+    }
+
     @SuppressWarnings("unchecked")
     default <T, U> Comparator<T> orderBy(Function<T, U> mapper, U... order) {
         return Utils.orderBy(mapper, order);
