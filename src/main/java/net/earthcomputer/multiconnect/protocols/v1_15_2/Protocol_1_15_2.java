@@ -3,14 +3,14 @@ package net.earthcomputer.multiconnect.protocols.v1_15_2;
 import com.google.common.collect.ImmutableMap;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.mixin.bridge.DynamicRegistryManagerImplAccessor;
-import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ProjectileEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAttributesFixAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.WolfEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
-import net.earthcomputer.multiconnect.protocols.generic.*;
+import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
@@ -66,7 +66,10 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
 import net.minecraft.world.dimension.DimensionType;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
