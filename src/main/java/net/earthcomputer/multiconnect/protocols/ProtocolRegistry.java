@@ -80,7 +80,7 @@ public class ProtocolRegistry {
         register(V1_15_1, new Protocol_1_15_1());
         register(V1_15, new Protocol_1_15());
         register(V1_14_4, new Protocol_1_14_4(), Protocol_1_14_4::registerTranslators);
-        register(V1_14_3, new Protocol_1_14_3());
+        register(V1_14_3, new Protocol_1_14_3(), Protocol_1_14_3::registerTranslators);
         register(V1_14_2, new Protocol_1_14_2(), Protocol_1_14_2::registerTranslators);
         register(V1_14_1, new Protocol_1_14_1());
         register(V1_14, new Protocol_1_14());
