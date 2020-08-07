@@ -5,6 +5,7 @@ import net.earthcomputer.multiconnect.api.IIdentifierCustomPayloadListener;
 import net.earthcomputer.multiconnect.api.IStringCustomPayloadListener;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1_12_2;
+import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.util.Identifier;
@@ -99,6 +100,8 @@ public class CustomPayloadHandler {
 
     static {
         ImmutableSet.Builder<Identifier> vanillaChannels = ImmutableSet.builder();
+
+        // existing vanilla ones
         for (Field field : CustomPayloadS2CPacket.class.getDeclaredFields()) {
             if ((field.getModifiers() & (Modifier.STATIC | Modifier.FINAL)) == (Modifier.STATIC | Modifier.FINAL)) {
                 if (field.getType() == Identifier.class) {
@@ -111,6 +114,11 @@ public class CustomPayloadHandler {
                 }
             }
         }
+
+        // removed vanilla ones, from when they actually used to custom payload for stuff
+        vanillaChannels.add(Protocol_1_13_2.CUSTOM_PAYLOAD_OPEN_BOOK);
+        vanillaChannels.add(Protocol_1_13_2.CUSTOM_PAYLOAD_TRADE_LIST);
+
         VANILLA_CLIENTBOUND_CHANNELS = vanillaChannels.build();
     }
 }
