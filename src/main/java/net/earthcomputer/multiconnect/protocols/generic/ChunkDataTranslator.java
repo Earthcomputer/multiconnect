@@ -5,6 +5,7 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.network.OffThreadException;
 import net.minecraft.network.Packet;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
@@ -61,10 +62,16 @@ public class ChunkDataTranslator {
             CURRENT_TRANSLATOR.set(null);
 
             ((IChunkDataS2CPacket) packet).multiconnect_setDataTranslated(true);
-            networkHandler.onChunkData(packet);
+            try {
+                networkHandler.onChunkData(packet);
+            } catch (OffThreadException ignore) {
+            }
 
             for (Packet<ClientPlayPacketListener> postPacket : translator.postPackets) {
-                postPacket.apply(networkHandler);
+                try {
+                    postPacket.apply(networkHandler);
+                } catch (OffThreadException ignore) {
+                }
             }
         });
     }

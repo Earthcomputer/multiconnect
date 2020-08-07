@@ -395,6 +395,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         lightPacketAccessor.setSkyLightMask(skyLightMask);
         lightPacketAccessor.setBlockLightUpdates(new ArrayList<>());
         lightPacketAccessor.setSkyLightUpdates(new ArrayList<>());
+        lightPacketAccessor.setTrustEdges(true);
 
         for (int i = 0; i < 16; i++) {
             byte[] blockData = blockLight[i];

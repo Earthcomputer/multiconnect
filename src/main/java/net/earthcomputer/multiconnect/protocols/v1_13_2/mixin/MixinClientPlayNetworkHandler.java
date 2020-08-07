@@ -12,6 +12,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.TraderOfferList;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,8 +30,6 @@ import java.util.stream.IntStream;
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class MixinClientPlayNetworkHandler {
 
-    @Shadow @Final private static Logger LOGGER;
-
     @Shadow public abstract void onLightUpdate(LightUpdateS2CPacket packet);
 
     @Shadow public abstract void onOpenWrittenBook(OpenWrittenBookS2CPacket packet);
@@ -45,6 +44,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow public abstract void onChunkData(ChunkDataS2CPacket packet);
 
+    @Unique private static final Logger MULTICONNECT_LOGGER = LogManager.getLogger("multiconnect");
     // Handle reordering of the (synthetic) render distance center packet, to allow the chunk data to arrive beforehand and queue it
     @Unique private int centerChunkX;
     @Unique private int centerChunkZ;
@@ -98,6 +98,8 @@ public abstract class MixinClientPlayNetworkHandler {
             for (ChunkDataS2CPacket chunkData : chunkDataPacketQueue) {
                 if (isInRange(chunkData.getX(), chunkData.getZ())) {
                     onChunkData(chunkData);
+                } else {
+                    MULTICONNECT_LOGGER.warn("Dropping chunk packet at {}, {} because it was too far away from the render distance center {}, {}", chunkData.getX(), chunkData.getZ(), centerChunkX, centerChunkZ);
                 }
             }
             chunkDataPacketQueue.clear();
@@ -105,6 +107,8 @@ public abstract class MixinClientPlayNetworkHandler {
             for (LightUpdateS2CPacket lightUpdate : lightUpdatePacketQueue) {
                 if (isInRange(lightUpdate.getChunkX(), lightUpdate.getChunkZ())) {
                     onLightUpdate(lightUpdate);
+                } else {
+                    MULTICONNECT_LOGGER.warn("Dropping light update packet at {}, {} because it was too far away from the render distance center {}, {}", lightUpdate.getChunkX(), lightUpdate.getChunkZ(), centerChunkX, centerChunkZ);
                 }
             }
             lightUpdatePacketQueue.clear();
@@ -150,7 +154,7 @@ public abstract class MixinClientPlayNetworkHandler {
                 try {
                     openBookPacket.read(packet.getData());
                 } catch (IOException e) {
-                    LOGGER.error("Failed to read open book packet", e);
+                    MULTICONNECT_LOGGER.error("Failed to read open book packet", e);
                 }
                 onOpenWrittenBook(openBookPacket);
                 ci.cancel();

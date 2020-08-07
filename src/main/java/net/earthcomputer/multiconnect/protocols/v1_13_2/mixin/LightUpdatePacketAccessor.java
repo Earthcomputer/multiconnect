@@ -26,4 +26,7 @@ public interface LightUpdatePacketAccessor {
 
     @Accessor
     void setSkyLightUpdates(List<byte[]> skyLightUpdates);
+
+    @Accessor("field_25659")
+    void setTrustEdges(boolean trustEdges);
 }
