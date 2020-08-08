@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_14_4.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocols.v1_14_4.BiomeAccess_1_14_4;
+import net.earthcomputer.multiconnect.protocols.v1_14_4.BiomeAccessType_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.IBiomeStorage_1_14_4;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -22,7 +22,7 @@ public abstract class MixinWorld implements IBiomeStorage_1_14_4 {
     @ModifyArg(method = "<init>", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/biome/source/BiomeAccess;<init>(Lnet/minecraft/world/biome/source/BiomeAccess$Storage;JLnet/minecraft/world/biome/source/BiomeAccessType;)V"))
     private BiomeAccessType modifyBiomeAccessType(BiomeAccessType _default) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_14_4)
-            return BiomeAccess_1_14_4.INSTANCE;
+            return BiomeAccessType_1_14_4.INSTANCE;
         else
             return _default;
     }

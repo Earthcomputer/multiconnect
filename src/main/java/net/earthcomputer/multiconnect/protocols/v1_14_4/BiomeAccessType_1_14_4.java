@@ -5,11 +5,11 @@ import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.BiomeAccessType;
 import net.minecraft.world.biome.source.HorizontalVoronoiBiomeAccessType;
 
-public final class BiomeAccess_1_14_4 implements BiomeAccessType {
+public final class BiomeAccessType_1_14_4 implements BiomeAccessType {
 
-    public static final BiomeAccess_1_14_4 INSTANCE = new BiomeAccess_1_14_4();
+    public static final BiomeAccessType_1_14_4 INSTANCE = new BiomeAccessType_1_14_4();
 
-    private BiomeAccess_1_14_4() {}
+    private BiomeAccessType_1_14_4() {}
 
     @Override
     public Biome getBiome(long seed, int x, int y, int z, BiomeAccess.Storage storage) {

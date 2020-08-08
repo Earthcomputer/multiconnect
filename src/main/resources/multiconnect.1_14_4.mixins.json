@@ -3,7 +3,8 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_14_4.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "MixinChunkDataS2C"
+    "MixinChunkDataS2C",
+    "MixinWorldView"
   ],
   "client": [
     "EndermanEntityAccessor",

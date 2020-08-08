@@ -1,1 +1,7 @@
+# Last checked: 1.16.2-rc1
+
+# For the duplicated list of block entity network IDs in net.earthcomputer.multiconnect.mixin.bridge.MixinBlockEntityUpdateS2C
 net/minecraft/client/network/ClientPlayNetworkHandler.onBlockEntityUpdate (Lnet/minecraft/network/packet/s2c/play/BlockEntityUpdateS2CPacket;)V
+
+# For the @Overwrite in MixinWorldView
+net/minecraft/world/WorldView.getBiomeForNoiseGen (III)Lnet/minecraft/world/biome/Biome;
