@@ -63,7 +63,7 @@ import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.biome.BuiltInBiomes;
 import net.minecraft.world.dimension.DimensionType;
 
 import java.util.Comparator;
@@ -551,11 +551,11 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
-        rename(registry, Biomes.NETHER_WASTES, "nether");
-        registry.unregister(Biomes.SOUL_SAND_VALLEY);
-        registry.unregister(Biomes.CRIMSON_FOREST);
-        registry.unregister(Biomes.WARPED_FOREST);
-        registry.unregister(Biomes.BASALT_DELTAS);
+        rename(registry, BuiltInBiomes.NETHER_WASTES, "nether");
+        registry.unregister(BuiltInBiomes.SOUL_SAND_VALLEY);
+        registry.unregister(BuiltInBiomes.CRIMSON_FOREST);
+        registry.unregister(BuiltInBiomes.WARPED_FOREST);
+        registry.unregister(BuiltInBiomes.BASALT_DELTAS);
     }
 
     private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
