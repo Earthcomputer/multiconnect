@@ -40,4 +40,10 @@ public interface IProtocol {
      */
     List<IProtocol> getMinorReleases();
 
+    /**
+     * Returns whether this protocol is only in beta support by multiconnect, and may have stability issues when
+     * connected.
+     */
+    boolean isMulticonnectBeta();
+
 }

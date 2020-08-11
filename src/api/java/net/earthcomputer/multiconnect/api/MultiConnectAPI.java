@@ -219,6 +219,11 @@ public class MultiConnectAPI {
         public List<IProtocol> getMinorReleases() {
             return Collections.singletonList(this);
         }
+
+        @Override
+        public boolean isMulticonnectBeta() {
+            return false;
+        }
     }
 
 }
