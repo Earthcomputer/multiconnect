@@ -8,6 +8,8 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.registry.SimpleRegistry;
 
+import java.util.Set;
+
 public interface ISimpleRegistry<T> {
 
     int getNextId();
@@ -23,6 +25,10 @@ public interface ISimpleRegistry<T> {
     BiMap<Identifier, T> getEntriesById();
 
     BiMap<RegistryKey<T>, T> getEntriesByKey();
+
+    Set<RegistryKey<T>> getRealEntries();
+
+    void lockRealEntries();
 
     default void register(T t, int id, RegistryKey<T> key) {
         register(t, id, key, true);

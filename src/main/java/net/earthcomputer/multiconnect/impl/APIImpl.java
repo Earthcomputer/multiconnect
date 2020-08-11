@@ -3,13 +3,17 @@ package net.earthcomputer.multiconnect.impl;
 import net.earthcomputer.multiconnect.api.*;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
+import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.ICustomPayloadC2SPacket;
+import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1_12_2;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 
 import java.util.Arrays;
 import java.util.List;
@@ -95,5 +99,19 @@ public class APIImpl extends MultiConnectAPI {
     @Override
     public void removeServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
         CustomPayloadHandler.removeServerboundStringCustomPayloadListener(listener);
+    }
+
+    @Override
+    public <T> boolean doesServerKnow(Registry<T> registry, T value) {
+        return registry.getKey(value).map(key -> doesServerKnow(registry, key)).orElse(false);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
+        if (!DefaultRegistries.DEFAULT_REGISTRIES.containsKey(registry)) {
+            return super.doesServerKnow(registry, key);
+        }
+        return ((ISimpleRegistry<T>) registry).getRealEntries().contains(key);
     }
 }

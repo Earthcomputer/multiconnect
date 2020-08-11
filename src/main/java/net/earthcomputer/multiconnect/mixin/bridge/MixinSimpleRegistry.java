@@ -4,9 +4,11 @@ import com.google.common.collect.BiMap;
 import com.mojang.serialization.Lifecycle;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.ObjectList;
+import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
 import net.earthcomputer.multiconnect.protocols.generic.IRegistryUpdateListener;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.util.registry.MutableRegistry;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
@@ -20,6 +22,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Mixin(SimpleRegistry.class)
 public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implements ISimpleRegistry<T> {
@@ -31,6 +34,8 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     @Shadow @Final private Map<T, Lifecycle> field_26731;
     @Shadow protected Object[] randomEntries;
     @Shadow private int nextId;
+
+    @Unique private Set<RegistryKey<T>> realEntries = new ObjectOpenCustomHashSet<>(Util.identityHashStrategy());
 
     public MixinSimpleRegistry(RegistryKey<? extends Registry<T>> registryKey, Lifecycle lifecycle) {
         super(registryKey, lifecycle);
@@ -67,6 +72,17 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     @Accessor
     @Override
     public abstract BiMap<RegistryKey<T>, T> getEntriesByKey();
+
+    @Override
+    public Set<RegistryKey<T>> getRealEntries() {
+        return realEntries;
+    }
+
+    @Override
+    public void lockRealEntries() {
+        realEntries.clear();
+        realEntries.addAll(entriesByKey.keySet());
+    }
 
     @Unique private final List<IRegistryUpdateListener<T>> registerListeners = new ArrayList<>(0);
     @Unique private final List<IRegistryUpdateListener<T>> unregisterListeners = new ArrayList<>(0);

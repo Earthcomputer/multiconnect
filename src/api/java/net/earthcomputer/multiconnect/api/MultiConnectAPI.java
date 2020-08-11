@@ -6,6 +6,8 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 
 import java.util.Collections;
 import java.util.List;
@@ -169,6 +171,20 @@ public class MultiConnectAPI {
      */
     public void removeServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
         // overridden by protocol impl
+    }
+
+    /**
+     * Returns whether the given registry contains the given value on the server.
+     */
+    public <T> boolean doesServerKnow(Registry<T> registry, T value) {
+        return registry.getKey(value).isPresent();
+    }
+
+    /**
+     * Returns whether the given registry contains the given value on the server.
+     */
+    public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
+        return key.method_31163(registry.getKey()) && registry.getOrEmpty(key.getValue()).isPresent();
     }
 
     private static class CurrentVersionProtocol implements IProtocol {

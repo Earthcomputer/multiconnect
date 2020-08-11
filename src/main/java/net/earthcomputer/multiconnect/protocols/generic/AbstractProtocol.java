@@ -100,12 +100,13 @@ public abstract class AbstractProtocol implements IUtils {
 
     @SuppressWarnings("unchecked")
     private <T> void postMutateRegistry(Registry<T> registry, boolean reAddMissingValues) {
+        if (!(registry instanceof SimpleRegistry)) return;
+        ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
+        iregistry.lockRealEntries();
         if (!reAddMissingValues) {
             return;
         }
-        if (!(registry instanceof SimpleRegistry)) return;
         if (registry instanceof DefaultedRegistry) return;
-        ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
         DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
         if (defaultRegistries == null) return;
         for (Map.Entry<Identifier, T> entry : defaultRegistries.defaultEntriesById.entrySet()) {
