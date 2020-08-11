@@ -1,9 +1,9 @@
 package net.earthcomputer.multiconnect.protocols.v1_14_4;
 
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.Biomes;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.BiomeAccessType;
-import net.minecraft.world.biome.source.HorizontalVoronoiBiomeAccessType;
 
 public final class BiomeAccessType_1_14_4 implements BiomeAccessType {
 
@@ -18,7 +18,7 @@ public final class BiomeAccessType_1_14_4 implements BiomeAccessType {
             biome = ((IBiomeStorage_1_14_4) storage).multiconnect_getBiome_1_14_4(x, z);
         }
         if (biome == null) {
-            return HorizontalVoronoiBiomeAccessType.INSTANCE.getBiome(seed, x, y, z, storage);
+            return Biomes.PLAINS;
         }
         return biome;
     }
