@@ -9,12 +9,14 @@ import org.apache.logging.log4j.Logger;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public final class ServersExt {
 
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final File configFile = new File(FabricLoader.getInstance().getConfigDirectory(), "multiconnect/servers_ext.json");
+    private static final File configFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), "multiconnect/servers_ext.json");
     private static ServersExt instance;
 
     public static ServersExt getInstance() {
@@ -22,6 +24,7 @@ public final class ServersExt {
             if (configFile.exists()) {
                 try (FileReader reader = new FileReader(configFile)) {
                     instance = GSON.fromJson(reader, ServersExt.class);
+                    instance.normalize();
                 } catch (IOException e) {
                     LOGGER.error("Failed to load extra server data", e);
                 }
@@ -47,6 +50,10 @@ public final class ServersExt {
     private ServersExt() {}
 
     private Map<String, ServerExt> servers = new HashMap<>();
+
+    private void normalize() {
+        servers = servers.entrySet().stream().collect(Collectors.toMap(entry -> ConnectionHandler.normalizeAddress(entry.getKey()), Map.Entry::getValue, (a, b) -> a, HashMap::new));
+    }
 
     public int getForcedProtocol(String address) {
         ServerExt server = servers.get(ConnectionHandler.normalizeAddress(address));

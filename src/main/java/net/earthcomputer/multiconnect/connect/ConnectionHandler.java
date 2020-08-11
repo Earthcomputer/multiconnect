@@ -13,7 +13,6 @@ import net.minecraft.client.network.ServerInfo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
-import net.minecraft.network.ServerAddress;
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket;
 import net.minecraft.text.LiteralText;
@@ -125,8 +124,35 @@ public class ConnectionHandler {
         }
     }
 
-    public static String normalizeAddress(String address) {
-        ServerAddress addr = ServerAddress.parse(address);
-        return addr.getAddress() + ":" + addr.getPort();
+    public static String normalizeAddress(String addressStr) {
+        String[] addressAndPort = addressStr.split(":");
+
+        if (addressStr.startsWith("[")) {
+            int closeIndex = addressStr.indexOf(']');
+            if (closeIndex >= 0) {
+                String addressPart = addressStr.substring(1, closeIndex);
+                String portPart = addressStr.substring(closeIndex + 1);
+                if (portPart.startsWith(":")) {
+                    addressAndPort = new String[] { addressPart, portPart.substring(1) };
+                } else {
+                    addressAndPort = new String[] { addressPart };
+                }
+            }
+        }
+
+        String address = addressAndPort[0];
+        int port = 25565;
+        if (addressAndPort.length == 2) {
+            try {
+                port = Integer.parseInt(addressAndPort[1]);
+            } catch (NumberFormatException ignore) {
+            }
+        }
+
+        if (address.contains(":")) {
+            return "[" + address + "]:" + port;
+        } else {
+            return address + ":" + port;
+        }
     }
 }
