@@ -18,8 +18,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.concurrent.CompletableFuture;
-
 @Mixin(DirectConnectScreen.class)
 public class MixinDirectConnectScreen extends Screen {
 
@@ -28,7 +26,6 @@ public class MixinDirectConnectScreen extends Screen {
     @Unique private String lastAddress;
     @Unique private DropDownWidget<ConnectionMode> protocolSelector;
     @Unique private OrderedText forceProtocolLabel;
-    @Unique private CompletableFuture<Integer> forcedProtocolJob;
 
     protected MixinDirectConnectScreen(Text title) {
         super(title);
@@ -46,30 +43,10 @@ public class MixinDirectConnectScreen extends Screen {
     private void onTick(CallbackInfo ci) {
         if (!addressField.getText().equals(lastAddress)) {
             lastAddress = addressField.getText();
-            if (forcedProtocolJob != null) {
-                forcedProtocolJob.cancel(true);
-            }
-            forcedProtocolJob = CompletableFuture.supplyAsync(() -> {
-                if (ServersExt.getInstance().hasServer(addressField.getText())) {
-                    if (Thread.interrupted()) {
-                        return null;
-                    }
-                    return ServersExt.getInstance().getForcedProtocol(addressField.getText());
-                } else {
-                    return null;
-                }
-            });
             if (ServersExt.getInstance().hasServer(addressField.getText())) {
                 int protocolVersion = ServersExt.getInstance().getForcedProtocol(addressField.getText());
                 protocolSelector.setValue(ConnectionMode.byValue(protocolVersion));
             }
-        }
-        if (forcedProtocolJob != null && forcedProtocolJob.isDone()) {
-            Integer result = forcedProtocolJob.getNow(null);
-            if (result != null) {
-                protocolSelector.setValue(ConnectionMode.byValue(result));
-            }
-            forcedProtocolJob = null;
         }
     }
 
