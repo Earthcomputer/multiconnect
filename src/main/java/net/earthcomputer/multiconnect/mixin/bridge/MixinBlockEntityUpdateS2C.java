@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
+import net.earthcomputer.multiconnect.api.MultiConnectAPI;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.datafixer.TypeReferences;
@@ -38,6 +39,8 @@ public class MixinBlockEntityUpdateS2C {
             case 14: type = BlockEntityType.BEEHIVE; break;
             default: return;
         }
+        if (!MultiConnectAPI.instance().doesServerKnow(Registry.BLOCK_ENTITY_TYPE, type)) return;
+
         tag.putString("id", String.valueOf(Registry.BLOCK_ENTITY_TYPE.getId(type)));
         tag = Utils.datafix(TypeReferences.BLOCK_ENTITY, tag);
     }
