@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.minecraft.SharedConstants;
@@ -24,6 +25,8 @@ import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -31,14 +34,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.function.Consumer;
 
 @Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
 public class MixinClientPlayNetworkHandler {
 
     @Shadow private ClientWorld world;
+
+    @Unique private static final Logger MULTICONNECT_LOGGER = LogManager.getLogger("multiconnect");
 
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
     private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
@@ -80,6 +87,7 @@ public class MixinClientPlayNetworkHandler {
     private static <T> void addMissingValues(Registry<T> builtinRegistry, DynamicRegistryManager.Impl registries) {
         Registry<T> dynamicRegistry =  registries.get(builtinRegistry.getKey());
         ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) dynamicRegistry;
+        iregistry.lockRealEntries();
         for (T val : builtinRegistry) {
             if (dynamicRegistry.getId(val) == null) {
                 builtinRegistry.getKey(val).ifPresent(key -> iregistry.register(val, iregistry.getNextId(), key, false));
@@ -90,19 +98,32 @@ public class MixinClientPlayNetworkHandler {
     @Inject(method = "onSynchronizeTags", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
     private void onOnSynchronizeTags(SynchronizeTagsS2CPacket packet, CallbackInfo ci) {
         TagRegistry<Block> blockTagRegistry = new TagRegistry<>();
-        TagGroup<Block> blockTags = setExtraTags(packet.getTagManager().getBlocks(), blockTagRegistry, ConnectionInfo.protocol::addExtraBlockTags);
-        TagGroup<Item> itemTags = setExtraTags(packet.getTagManager().getItems(), new TagRegistry<>(), itemTagRegistry -> ConnectionInfo.protocol.addExtraItemTags(itemTagRegistry, blockTagRegistry));
-        TagGroup<Fluid> fluidTags = setExtraTags(packet.getTagManager().getFluids(), new TagRegistry<>(), ConnectionInfo.protocol::addExtraFluidTags);
-        TagGroup<EntityType<?>> entityTypeTags = setExtraTags(packet.getTagManager().getEntityTypes(), new TagRegistry<>(), ConnectionInfo.protocol::addExtraEntityTags);
+        TagGroup<Block> blockTags = setExtraTags("block", packet.getTagManager().getBlocks(), blockTagRegistry, BlockTags.method_31072(), ConnectionInfo.protocol::addExtraBlockTags);
+        TagGroup<Item> itemTags = setExtraTags("item", packet.getTagManager().getItems(), new TagRegistry<>(), ItemTags.method_31074(), itemTagRegistry -> ConnectionInfo.protocol.addExtraItemTags(itemTagRegistry, blockTagRegistry));
+        TagGroup<Fluid> fluidTags = setExtraTags("fluid", packet.getTagManager().getFluids(), new TagRegistry<>(), FluidTags.all(), ConnectionInfo.protocol::addExtraFluidTags);
+        TagGroup<EntityType<?>> entityTypeTags = setExtraTags("entity type", packet.getTagManager().getEntityTypes(), new TagRegistry<>(), EntityTypeTags.method_31073(), ConnectionInfo.protocol::addExtraEntityTags);
         ((SynchronizeTagsS2CAccessor) packet).setTagManager(TagManager.create(blockTags, itemTags, fluidTags, entityTypeTags));
     }
 
     @Unique
-    private static <T> TagGroup<T> setExtraTags(TagGroup<T> group, TagRegistry<T> tagRegistry, Consumer<TagRegistry<T>> tagsAdder) {
+    private static <T> TagGroup<T> setExtraTags(String type, TagGroup<T> group, TagRegistry<T> tagRegistry, List<? extends Tag.Identified<T>> requiredTags, Consumer<TagRegistry<T>> tagsAdder) {
         group.getTags().forEach((id, tag) -> tagRegistry.put(id, new HashSet<>(tag.values())));
         tagsAdder.accept(tagRegistry);
         BiMap<Identifier, Tag<T>> tagBiMap = HashBiMap.create(tagRegistry.size());
         tagRegistry.forEach((id, set) -> tagBiMap.put(id, Tag.of(set)));
+
+        // ViaVersion doesn't send all required tags to older clients because they didn't check them. We have to add empty ones to substitute.
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_16_1) {
+            List<Tag.Identified<T>> missingTags = new ArrayList<>(requiredTags);
+            missingTags.removeIf(tag -> tagBiMap.containsKey(tag.getId()));
+            if (!missingTags.isEmpty()) {
+                MULTICONNECT_LOGGER.warn("Server didn't send required {} tags, adding empty substitutes for {}", type, missingTags);
+                for (Tag.Identified<T> missingTag : missingTags) {
+                    tagBiMap.put(missingTag.getId(), SetTag.empty());
+                }
+            }
+        }
+
         return TagGroup.create(tagBiMap);
     }
 
