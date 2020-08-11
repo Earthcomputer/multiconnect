@@ -59,6 +59,7 @@ public class MixinDirectConnectScreen extends Screen {
     @Inject(method = "saveAndClose", at = @At("HEAD"))
     private void onSaveAndClose(CallbackInfo ci) {
         ServersExt.getInstance().getOrCreateServer(addressField.getText()).forcedProtocol = protocolSelector.getValue().getValue();
+        ServersExt.save();
     }
 
 }
