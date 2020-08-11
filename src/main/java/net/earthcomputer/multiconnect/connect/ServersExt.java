@@ -24,7 +24,6 @@ public final class ServersExt {
             if (configFile.exists()) {
                 try (FileReader reader = new FileReader(configFile)) {
                     instance = GSON.fromJson(reader, ServersExt.class);
-                    instance.normalize();
                 } catch (IOException e) {
                     LOGGER.error("Failed to load extra server data", e);
                 }
@@ -32,6 +31,7 @@ public final class ServersExt {
             if (instance == null) {
                 instance = new ServersExt();
             }
+            instance.normalize();
         }
         return instance;
     }
