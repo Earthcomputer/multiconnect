@@ -89,9 +89,11 @@ public class MixinClientPlayNetworkHandler {
         ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) dynamicRegistry;
         iregistry.lockRealEntries();
         for (T val : builtinRegistry) {
-            if (dynamicRegistry.getId(val) == null) {
-                builtinRegistry.getKey(val).ifPresent(key -> iregistry.register(val, iregistry.getNextId(), key, false));
-            }
+            builtinRegistry.getKey(val).ifPresent(key -> {
+                if (!dynamicRegistry.method_31189(key).isPresent()) {
+                    iregistry.register(val, iregistry.getNextId(), key, false);
+                }
+            });
         }
     }
 
