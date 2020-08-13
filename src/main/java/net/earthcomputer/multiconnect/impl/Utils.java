@@ -125,14 +125,14 @@ public class Utils {
     public static <T> int getUnmodifiedId(Registry<T> registry, T value) {
         DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
         if (defaultRegistries == null) return registry.getRawId(value);
-        return defaultRegistries.defaultEntryIds.getInt(value);
+        return defaultRegistries.defaultEntryToRawId.getInt(value);
     }
 
     @SuppressWarnings("unchecked")
     public static <T> Identifier getUnmodifiedName(Registry<T> registry, T value) {
         DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
         if (defaultRegistries == null) return registry.getId(value);
-        return defaultRegistries.defaultEntriesById.inverse().get(value);
+        return defaultRegistries.defaultIdToEntry.inverse().get(value);
     }
 
     @SuppressWarnings("unchecked")
@@ -150,21 +150,21 @@ public class Utils {
 
     @SuppressWarnings("unchecked")
     public static <T> void reregister(ISimpleRegistry<T> registry, T value, boolean inPlace) {
-        if (registry.getEntriesById().containsValue(value))
+        if (registry.getIdToEntry().containsValue(value))
             return;
 
         //noinspection SuspiciousMethodCalls
         DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
         T prevValue = null;
-        for (int id = defaultRegistries.defaultEntryIds.getInt(value) - 1; id >= 0; id--) {
-            T val = defaultRegistries.defaultAllEntries.get(id);
-            if (registry.getEntriesById().containsValue(val)) {
+        for (int id = defaultRegistries.defaultEntryToRawId.getInt(value) - 1; id >= 0; id--) {
+            T val = defaultRegistries.defaultRawIdToEntry.get(id);
+            if (registry.getIdToEntry().containsValue(val)) {
                 prevValue = val;
                 break;
             }
         }
 
-        insertAfter(registry, prevValue, value, defaultRegistries.defaultEntriesById.inverse().get(value).toString(), inPlace);
+        insertAfter(registry, prevValue, value, defaultRegistries.defaultIdToEntry.inverse().get(value).toString(), inPlace);
     }
 
     @SuppressWarnings("unchecked")

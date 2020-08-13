@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.generic;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.mojang.serialization.Lifecycle;
 import it.unimi.dsi.fastutil.objects.*;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.mixin.bridge.SpawnEggItemAccessor;
@@ -27,23 +28,25 @@ public class DefaultRegistries<T> {
     private static final Map<EntityType<?>, SpawnEggItem> DEFAULT_SPAWN_EGG_ITEMS = new IdentityHashMap<>();
     private static final Int2ObjectBiMap<TrackedDataHandler<?>> DEFAULT_TRACKED_DATA_HANDLERS = new Int2ObjectBiMap<>(16);
 
-    public final ObjectList<T> defaultAllEntries = new ObjectArrayList<>(256);
-    public final Object2IntMap<T> defaultEntryIds = new Object2IntOpenCustomHashMap<>(Util.identityHashStrategy());
-    public final BiMap<Identifier, T> defaultEntriesById = HashBiMap.create();
-    private final BiMap<RegistryKey<T>, T> defaultEntriesByKey = HashBiMap.create();
+    public final ObjectList<T> defaultRawIdToEntry = new ObjectArrayList<>(256);
+    public final Object2IntMap<T> defaultEntryToRawId = new Object2IntOpenCustomHashMap<>(Util.identityHashStrategy());
+    public final BiMap<Identifier, T> defaultIdToEntry = HashBiMap.create();
+    private final BiMap<RegistryKey<T>, T> defaultKeyToEntry = HashBiMap.create();
+    private final Map<T, Lifecycle> defaultEntryToLifecycle = new IdentityHashMap<>();
     private final int defaultNextId;
 
     private DefaultRegistries(Registry<T> registry) {
         for (T t : registry) {
             int rawId = registry.getRawId(t);
-            while (rawId >= defaultAllEntries.size()) {
-                defaultAllEntries.add(null);
+            while (rawId >= defaultRawIdToEntry.size()) {
+                defaultRawIdToEntry.add(null);
             }
-            defaultAllEntries.set(rawId, t);
-            defaultEntryIds.put(t, rawId);
-            defaultEntriesById.put(registry.getId(t), t);
+            defaultRawIdToEntry.set(rawId, t);
+            defaultEntryToRawId.put(t, rawId);
+            defaultIdToEntry.put(registry.getId(t), t);
             assert registry.getKey(t).isPresent();
-            defaultEntriesByKey.put(registry.getKey(t).get(), t);
+            defaultKeyToEntry.put(registry.getKey(t).get(), t);
+            defaultEntryToLifecycle.put(t, ((ISimpleRegistry<?>) registry).getEntryToLifecycle().get(t));
         }
         defaultNextId = ((ISimpleRegistry<?>) registry).getNextId();
     }
@@ -52,25 +55,29 @@ public class DefaultRegistries<T> {
         @SuppressWarnings("unchecked") ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
 
         List<T> added = new ArrayList<>();
-        for (T thing : defaultAllEntries) {
-            if (!iregistry.getEntriesById().containsValue(thing)) {
+        for (T thing : defaultRawIdToEntry) {
+            if (!iregistry.getIdToEntry().containsValue(thing)) {
                 added.add(thing);
             }
         }
         List<T> removed = new ArrayList<>();
         for (T thing : registry) {
-            if (!defaultEntriesById.containsValue(thing)) {
+            if (!defaultIdToEntry.containsValue(thing)) {
                 removed.add(thing);
             }
         }
 
-        iregistry.getAllEntries().clear();
-        iregistry.getAllEntries().addAll(defaultAllEntries);
-        iregistry.getEntryIds().putAll(defaultEntryIds);
-        iregistry.getEntriesById().clear();
-        iregistry.getEntriesById().putAll(defaultEntriesById);
-        iregistry.getEntriesByKey().clear();
-        iregistry.getEntriesByKey().putAll(defaultEntriesByKey);
+        iregistry.getRawIdToEntry().clear();
+        iregistry.getRawIdToEntry().addAll(defaultRawIdToEntry);
+        iregistry.getEntryToRawId().clear();
+        iregistry.getEntryToRawId().putAll(defaultEntryToRawId);
+        iregistry.getIdToEntry().clear();
+        iregistry.getIdToEntry().putAll(defaultIdToEntry);
+        iregistry.getKeyToEntry().clear();
+        iregistry.getKeyToEntry().putAll(defaultKeyToEntry);
+        iregistry.getEntryToLifecycle().clear();
+        iregistry.getEntryToLifecycle().putAll(defaultEntryToLifecycle);
+        iregistry.setRandomEntries(null);
         iregistry.setNextId(defaultNextId);
         iregistry.onRestore(added, removed);
     }

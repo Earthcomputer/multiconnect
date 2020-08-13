@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.IChunkDataS2CPacket;
-import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.datafixer.TypeReferences;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
@@ -53,7 +52,7 @@ public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
             if (blockEntityId != null) {
                 final int i_f = i;
                 Registry.BLOCK_ENTITY_TYPE.getOrEmpty(blockEntityId).ifPresent(type -> {
-                    if (defaultBlockEntities.defaultEntryIds.containsKey(type)) {
+                    if (defaultBlockEntities.defaultEntryToRawId.containsKey(type)) {
                         CompoundTag fixed = Utils.datafix(TypeReferences.BLOCK_ENTITY, blockEntity);
                         fixed.putString("id", blockEntityId.toString());
                         blockEntities.set(i_f, fixed);

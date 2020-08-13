@@ -49,6 +49,7 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     protected void modifyPacketLists() {
+        //noinspection ConstantConditions
         INetworkState networkState = (INetworkState) (Object) NetworkState.PLAY;
         networkState.getPacketHandlers().values().forEach(IPacketHandler::multiconnect_clear);
 
@@ -109,7 +110,7 @@ public abstract class AbstractProtocol implements IUtils {
         if (registry instanceof DefaultedRegistry) return;
         DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
         if (defaultRegistries == null) return;
-        for (Map.Entry<Identifier, T> entry : defaultRegistries.defaultEntriesById.entrySet()) {
+        for (Map.Entry<Identifier, T> entry : defaultRegistries.defaultIdToEntry.entrySet()) {
             if (registry.getId(entry.getValue()) == null) {
                 RegistryKey<T> key = RegistryKey.of(iregistry.getRegistryKey(), entry.getKey());
                 iregistry.register(entry.getValue(), iregistry.getNextId(), key, false);
@@ -167,10 +168,11 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     private static class DefaultPackets {
-        private static List<PacketInfo<?>> CLIENTBOUND = new ArrayList<>();
-        private static List<PacketInfo<?>> SERVERBOUND = new ArrayList<>();
+        private static final List<PacketInfo<?>> CLIENTBOUND = new ArrayList<>();
+        private static final List<PacketInfo<?>> SERVERBOUND = new ArrayList<>();
 
         private static void initialize() {
+            //noinspection ConstantConditions
             Map<NetworkSide, ? extends IPacketHandler<?>> packetHandlerMap = ((INetworkState) (Object) NetworkState.PLAY).getPacketHandlers();
             IPacketHandler<?> clientPacketMap = packetHandlerMap.get(NetworkSide.CLIENTBOUND);
             CLIENTBOUND.addAll(clientPacketMap.multiconnect_values());

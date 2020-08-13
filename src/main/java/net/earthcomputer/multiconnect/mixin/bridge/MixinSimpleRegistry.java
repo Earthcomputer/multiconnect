@@ -35,7 +35,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     @Shadow protected Object[] randomEntries;
     @Shadow private int nextId;
 
-    @Unique private Set<RegistryKey<T>> realEntries = new ObjectOpenCustomHashSet<>(Util.identityHashStrategy());
+    @Unique private final Set<RegistryKey<T>> realEntries = new ObjectOpenCustomHashSet<>(Util.identityHashStrategy());
 
     public MixinSimpleRegistry(RegistryKey<? extends Registry<T>> registryKey, Lifecycle lifecycle) {
         super(registryKey, lifecycle);
@@ -59,19 +59,27 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
 
     @Accessor("field_26682")
     @Override
-    public abstract ObjectList<T> getAllEntries();
+    public abstract ObjectList<T> getRawIdToEntry();
 
     @Accessor("field_26683")
     @Override
-    public abstract Object2IntMap<T> getEntryIds();
+    public abstract Object2IntMap<T> getEntryToRawId();
+
+    @Accessor("entriesById")
+    @Override
+    public abstract BiMap<Identifier, T> getIdToEntry();
+
+    @Accessor("entriesByKey")
+    @Override
+    public abstract BiMap<RegistryKey<T>, T> getKeyToEntry();
+
+    @Accessor("field_26731")
+    @Override
+    public abstract Map<T, Lifecycle> getEntryToLifecycle();
 
     @Accessor
     @Override
-    public abstract BiMap<Identifier, T> getEntriesById();
-
-    @Accessor
-    @Override
-    public abstract BiMap<RegistryKey<T>, T> getEntriesByKey();
+    public abstract void setRandomEntries(Object[] randomEntries);
 
     @Override
     public Set<RegistryKey<T>> getRealEntries() {

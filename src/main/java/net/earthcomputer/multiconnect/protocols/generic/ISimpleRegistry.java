@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
 import com.google.common.collect.BiMap;
+import com.mojang.serialization.Lifecycle;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.minecraft.util.Identifier;
@@ -8,6 +9,7 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.registry.SimpleRegistry;
 
+import java.util.Map;
 import java.util.Set;
 
 public interface ISimpleRegistry<T> {
@@ -18,13 +20,17 @@ public interface ISimpleRegistry<T> {
 
     RegistryKey<Registry<T>> getRegistryKey();
 
-    ObjectList<T> getAllEntries();
+    ObjectList<T> getRawIdToEntry();
 
-    Object2IntMap<T> getEntryIds();
+    Object2IntMap<T> getEntryToRawId();
 
-    BiMap<Identifier, T> getEntriesById();
+    BiMap<Identifier, T> getIdToEntry();
 
-    BiMap<RegistryKey<T>, T> getEntriesByKey();
+    BiMap<RegistryKey<T>, T> getKeyToEntry();
+
+    Map<T, Lifecycle> getEntryToLifecycle();
+
+    void setRandomEntries(Object[] randomEntries);
 
     Set<RegistryKey<T>> getRealEntries();
 
