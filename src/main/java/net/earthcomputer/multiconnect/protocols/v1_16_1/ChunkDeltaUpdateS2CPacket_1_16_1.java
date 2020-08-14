@@ -33,7 +33,8 @@ public class ChunkDeltaUpdateS2CPacket_1_16_1 implements Packet<ClientPlayPacket
         updatedSectionBitmask = 0;
         for (int i = 0; i < numUpdates; i++) {
             short index = buf.readShort();
-            updatedSectionBitmask |= (index & 255) >> 4;
+            int sectionY = (index & 255) >> 4;
+            this.updatedSectionBitmask |= 1 << sectionY;
             indices[i] = index;
             states[i] = Block.STATE_IDS.get(buf.readVarInt());
         }
