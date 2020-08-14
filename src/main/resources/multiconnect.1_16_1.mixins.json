@@ -5,6 +5,7 @@
   "mixins": [
     "AbstractPiglinEntityAccessor",
     "ChunkDeltaUpdateS2CAccessor",
+    "MixinClientPlayNetworkHandler",
     "PiglinEntityAccessor"
   ],
   "client": [

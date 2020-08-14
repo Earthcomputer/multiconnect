@@ -28,6 +28,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.RecipeBookDataC2SPacket;
 import net.minecraft.network.packet.c2s.play.RecipeCategoryOptionsC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
+import net.minecraft.recipe.book.RecipeBook;
 import net.minecraft.recipe.book.RecipeBookCategory;
 import net.minecraft.recipe.book.RecipeBookOptions;
 import net.minecraft.sound.SoundEvent;
@@ -121,21 +122,11 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
             buf.readBoolean(); // furnace gui open
             buf.readBoolean(); // furnace filtering craftable
             buf.disablePassthroughMode();
-            boolean blastFurnaceGuiOpen, blastFurnaceFilteringCraftable, smokerGuiOpen, smokerFilteringCraftable;
-            ClientPlayerEntity player = MinecraftClient.getInstance().player;
-            if (player != null) {
-                RecipeBookOptions bookOptions = player.getRecipeBook().getOptions();
-                blastFurnaceGuiOpen = bookOptions.isGuiOpen(RecipeBookCategory.BLAST_FURNACE);
-                blastFurnaceFilteringCraftable = bookOptions.isFilteringCraftable(RecipeBookCategory.BLAST_FURNACE);
-                smokerGuiOpen = bookOptions.isGuiOpen(RecipeBookCategory.SMOKER);
-                smokerFilteringCraftable = bookOptions.isFilteringCraftable(RecipeBookCategory.SMOKER);
-            } else {
-                blastFurnaceGuiOpen = blastFurnaceFilteringCraftable = smokerGuiOpen = smokerFilteringCraftable = false;
-            }
-            buf.pendingRead(Boolean.class, blastFurnaceGuiOpen);
-            buf.pendingRead(Boolean.class, blastFurnaceFilteringCraftable);
-            buf.pendingRead(Boolean.class, smokerGuiOpen);
-            buf.pendingRead(Boolean.class, smokerFilteringCraftable);
+            // These will be fixed by an on-thread mixin, to ensure a race condition doesn't happen with recipe book access
+            buf.pendingRead(Boolean.class, false); // blast furnace gui open
+            buf.pendingRead(Boolean.class, false); // blast furnace filtering craftable
+            buf.pendingRead(Boolean.class, false); // smoker gui open
+            buf.pendingRead(Boolean.class, false); // smoker filtering craftable
             buf.applyPendingReads();
         });
     }
