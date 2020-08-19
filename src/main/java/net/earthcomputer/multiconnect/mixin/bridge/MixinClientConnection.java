@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.DecoderException;
 import io.netty.handler.timeout.TimeoutException;
 import io.netty.util.concurrent.GenericFutureListener;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
@@ -28,9 +27,6 @@ public class MixinClientConnection {
 
     @Inject(method = "exceptionCaught", at = @At("HEAD"))
     public void onExceptionCaught(ChannelHandlerContext context, Throwable t, CallbackInfo ci) {
-        if (t instanceof DecoderException) {
-            ConnectionInfo.resourceReloadLock.readLock().unlock();
-        }
         if (!(t instanceof PacketEncoderException) && !(t instanceof TimeoutException) && channel.isOpen()) {
             LogManager.getLogger("multiconnect").error("Unexpectedly disconnected from server!", t);
         }

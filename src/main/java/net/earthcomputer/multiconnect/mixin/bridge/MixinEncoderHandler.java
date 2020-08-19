@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.Packet;
@@ -43,17 +42,11 @@ public class MixinEncoderHandler {
 
     @Inject(method = "encode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Packet;write(Lnet/minecraft/network/PacketByteBuf;)V", shift = At.Shift.AFTER))
     private void postWrite(ChannelHandlerContext context, Packet<?> packet, ByteBuf buf, CallbackInfo ci) {
-        if (!((TransformerByteBuf) this.buf.get()).canEncodeAsync(packet.getClass())) {
-            ConnectionInfo.resourceReloadLock.readLock().unlock();
-        }
         this.buf.set(null);
     }
 
     @Inject(method = "encode", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Packet;isWritingErrorSkippable()Z"))
     private void postWriteError(ChannelHandlerContext context, Packet<?> packet, ByteBuf buf, CallbackInfo ci) {
-        if (!((TransformerByteBuf) this.buf.get()).canEncodeAsync(packet.getClass())) {
-            ConnectionInfo.resourceReloadLock.readLock().unlock();
-        }
         this.buf.set(null);
     }
 

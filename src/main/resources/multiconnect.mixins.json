@@ -43,11 +43,8 @@
     "connect.MixinDirectConnectScreen",
     "connect.MixinDisconnectedScreen",
     "connect.MixinMinecraftClient",
-    "connect.MixinMinecraftServer",
-    "connect.MixinReloadableResourceManagerImpl",
     "connect.MixinServerList",
-    "connect.MixinServerListIcon",
-    "connect.MixinSplashScreen"
+    "connect.MixinServerListIcon"
   ],
   "client": [
   ],
