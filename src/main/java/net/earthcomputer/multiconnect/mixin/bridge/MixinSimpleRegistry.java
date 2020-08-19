@@ -27,11 +27,11 @@ import java.util.Set;
 @Mixin(SimpleRegistry.class)
 public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implements ISimpleRegistry<T> {
 
-    @Shadow @Final private ObjectList<T> field_26682;
-    @Shadow @Final private Object2IntMap<T> field_26683;
-    @Shadow @Final private BiMap<Identifier, T> entriesById;
-    @Shadow @Final private BiMap<RegistryKey<T>, T> entriesByKey;
-    @Shadow @Final private Map<T, Lifecycle> field_26731;
+    @Shadow @Final private ObjectList<T> rawIdToEntry;
+    @Shadow @Final private Object2IntMap<T> entryToRawId;
+    @Shadow @Final private BiMap<Identifier, T> idToEntry;
+    @Shadow @Final private BiMap<RegistryKey<T>, T> keyToEntry;
+    @Shadow @Final private Map<T, Lifecycle> entryToLifecycle;
     @Shadow protected Object[] randomEntries;
     @Shadow private int nextId;
 
@@ -57,23 +57,23 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
         return (RegistryKey<Registry<T>>) getKey();
     }
 
-    @Accessor("field_26682")
+    @Accessor
     @Override
     public abstract ObjectList<T> getRawIdToEntry();
 
-    @Accessor("field_26683")
+    @Accessor
     @Override
     public abstract Object2IntMap<T> getEntryToRawId();
 
-    @Accessor("entriesById")
+    @Accessor
     @Override
     public abstract BiMap<Identifier, T> getIdToEntry();
 
-    @Accessor("entriesByKey")
+    @Accessor
     @Override
     public abstract BiMap<RegistryKey<T>, T> getKeyToEntry();
 
-    @Accessor("field_26731")
+    @Accessor
     @Override
     public abstract Map<T, Lifecycle> getEntryToLifecycle();
 
@@ -89,7 +89,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     @Override
     public void lockRealEntries() {
         realEntries.clear();
-        realEntries.addAll(entriesByKey.keySet());
+        realEntries.addAll(keyToEntry.keySet());
     }
 
     @Unique private final List<IRegistryUpdateListener<T>> registerListeners = new ArrayList<>(0);
@@ -98,18 +98,18 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     @Override
     public void register(T t, int id, RegistryKey<T> key, boolean sideEffects) {
         // add null values if we're higher than the entry list size
-        while (id > field_26682.size()) {
-            field_26682.add(null);
+        while (id > rawIdToEntry.size()) {
+            rawIdToEntry.add(null);
         }
 
         // id shift
         for (int remapId = getNextId(); remapId > id; remapId--) {
-            T toRemap = field_26682.get(remapId - 1);
+            T toRemap = rawIdToEntry.get(remapId - 1);
             if (toRemap != null) {
-                field_26683.put(toRemap, remapId);
+                entryToRawId.put(toRemap, remapId);
             }
         }
-        field_26682.add(id, null);
+        rawIdToEntry.add(id, null);
         setNextId(getNextId() + 1);
 
         // now we've made room, replace the value at this id
@@ -131,22 +131,22 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
 
     @Override
     public void unregister(T t, boolean sideEffects) {
-        if (!entriesById.containsValue(t))
+        if (!idToEntry.containsValue(t))
             return;
 
-        int id = field_26683.removeInt(t);
-        entriesById.inverse().remove(t);
-        entriesByKey.inverse().remove(t);
-        field_26731.remove(t);
+        int id = entryToRawId.removeInt(t);
+        idToEntry.inverse().remove(t);
+        keyToEntry.inverse().remove(t);
+        entryToLifecycle.remove(t);
 
         // id shift
         for (int remapId = id; remapId < getNextId() - 1; remapId++) {
-            T toRemap = field_26682.get(remapId + 1);
+            T toRemap = rawIdToEntry.get(remapId + 1);
             if (toRemap != null) {
-                field_26683.put(toRemap, remapId);
+                entryToRawId.put(toRemap, remapId);
             }
         }
-        field_26682.remove(id);
+        rawIdToEntry.remove(id);
         setNextId(getNextId() - 1);
 
         randomEntries = null;
@@ -157,14 +157,14 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
 
     @Override
     public void purge(T t, boolean sideEffects) {
-        if (!entriesById.containsValue(t))
+        if (!idToEntry.containsValue(t))
             return;
 
-        int id = field_26683.removeInt(t);
-        field_26682.set(id, null);
-        entriesById.inverse().remove(t);
-        entriesByKey.inverse().remove(t);
-        field_26731.remove(t);
+        int id = entryToRawId.removeInt(t);
+        rawIdToEntry.set(id, null);
+        idToEntry.inverse().remove(t);
+        keyToEntry.inverse().remove(t);
+        entryToLifecycle.remove(t);
 
         if (id == getNextId() - 1)
             setNextId(id);
@@ -179,16 +179,16 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     public void clear(boolean sideEffects) {
         if (sideEffects) {
             for (int id = getNextId() - 1; id >= 0; id--) {
-                T value = field_26682.get(id);
+                T value = rawIdToEntry.get(id);
                 if (value != null)
                     unregisterListeners.forEach(listener -> listener.onUpdate(value, false));
             }
         }
-        field_26682.clear();
-        field_26683.clear();
-        entriesById.clear();
-        entriesByKey.clear();
-        field_26731.clear();
+        rawIdToEntry.clear();
+        entryToRawId.clear();
+        idToEntry.clear();
+        keyToEntry.clear();
+        entryToLifecycle.clear();
         randomEntries = null;
         setNextId(0);
     }
@@ -221,8 +221,8 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     @Override
     public SimpleRegistry<T> copy() {
         SimpleRegistry<T> newRegistry = new SimpleRegistry<>(getRegistryKey(), ((RegistryAccessor<T>) this).getLifecycle());
-        for (Map.Entry<RegistryKey<T>, T> entry : entriesByKey.entrySet()) {
-            newRegistry.set(field_26683.getInt(entry.getValue()), entry.getKey(), entry.getValue(), field_26731.get(entry.getValue()));
+        for (Map.Entry<RegistryKey<T>, T> entry : keyToEntry.entrySet()) {
+            newRegistry.set(entryToRawId.getInt(entry.getValue()), entry.getKey(), entry.getValue(), entryToLifecycle.get(entry.getValue()));
         }
         return newRegistry;
     }
@@ -231,9 +231,9 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     public void dump() {
         for (int id = 0; id < nextId; id++) {
             try {
-                T val = field_26682.get(id);
+                T val = rawIdToEntry.get(id);
                 if (val != null)
-                    System.out.println(id + ": " + entriesById.inverse().get(val));
+                    System.out.println(id + ": " + idToEntry.inverse().get(val));
             } catch (Throwable t) {
                 System.out.println(id + ": ERROR: " + t);
             }

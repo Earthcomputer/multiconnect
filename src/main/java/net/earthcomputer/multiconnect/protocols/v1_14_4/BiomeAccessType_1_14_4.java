@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_14_4;
 
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.biome.BuiltinBiomes;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.BiomeAccessType;
 
@@ -18,7 +18,7 @@ public final class BiomeAccessType_1_14_4 implements BiomeAccessType {
             biome = ((IBiomeStorage_1_14_4) storage).multiconnect_getBiome_1_14_4(x, z);
         }
         if (biome == null) {
-            return Biomes.PLAINS;
+            return BuiltinBiomes.PLAINS;
         }
         return biome;
     }

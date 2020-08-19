@@ -64,7 +64,7 @@ import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BuiltInBiomes;
+import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.ChunkSection;
 
 import java.util.*;
@@ -831,8 +831,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
-        registry.unregister(BuiltInBiomes.BAMBOO_JUNGLE);
-        registry.unregister(BuiltInBiomes.BAMBOO_JUNGLE_HILLS);
+        registry.unregister(BiomeKeys.BAMBOO_JUNGLE);
+        registry.unregister(BiomeKeys.BAMBOO_JUNGLE_HILLS);
     }
 
     private void mutateStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {

@@ -184,7 +184,7 @@ public class MultiConnectAPI {
      * Returns whether the given registry contains the given value on the server.
      */
     public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
-        return key.method_31163(registry.getKey()) && registry.getOrEmpty(key.getValue()).isPresent();
+        return key.isOf(registry.getKey()) && registry.getOrEmpty(key.getValue()).isPresent();
     }
 
     private static class CurrentVersionProtocol implements IProtocol {

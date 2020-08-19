@@ -443,7 +443,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
 
         // copy the entity
         destEntity.fromTag(entity.toTag(new CompoundTag()));
-        destEntity.method_30228(entity.method_30227());
+        destEntity.updateTrackedPosition(entity.getTrackedPosition());
 
         // replace entity in world and exchange entity id
         int entityId = entity.getEntityId();

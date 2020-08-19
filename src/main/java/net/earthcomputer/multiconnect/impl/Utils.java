@@ -184,7 +184,7 @@ public class Utils {
             SimpleRegistry<T> builtinRegistry = (SimpleRegistry<T>) ((Registry<R>) BuiltinRegistries.REGISTRIES).get(registryKey);
             assert builtinRegistry != null;
             for (Map.Entry<RegistryKey<T>, T> entry : builtinRegistry.getEntries()) {
-                registry.set(builtinRegistry.getRawId(entry.getValue()), entry.getKey(), entry.getValue(), builtinRegistry.method_31139(entry.getValue()));
+                registry.set(builtinRegistry.getRawId(entry.getValue()), entry.getKey(), entry.getValue(), builtinRegistry.getEntryLifecycle(entry.getValue()));
             }
         }
     }

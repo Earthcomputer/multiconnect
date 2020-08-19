@@ -90,7 +90,7 @@ public class MixinClientPlayNetworkHandler {
         iregistry.lockRealEntries();
         for (T val : builtinRegistry) {
             builtinRegistry.getKey(val).ifPresent(key -> {
-                if (!dynamicRegistry.method_31189(key).isPresent()) {
+                if (!dynamicRegistry.getOrEmpty(key).isPresent()) {
                     iregistry.register(val, iregistry.getNextId(), key, false);
                 }
             });
@@ -100,10 +100,10 @@ public class MixinClientPlayNetworkHandler {
     @Inject(method = "onSynchronizeTags", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
     private void onOnSynchronizeTags(SynchronizeTagsS2CPacket packet, CallbackInfo ci) {
         TagRegistry<Block> blockTagRegistry = new TagRegistry<>();
-        TagGroup<Block> blockTags = setExtraTags("block", packet.getTagManager().getBlocks(), blockTagRegistry, BlockTags.method_31072(), ConnectionInfo.protocol::addExtraBlockTags);
-        TagGroup<Item> itemTags = setExtraTags("item", packet.getTagManager().getItems(), new TagRegistry<>(), ItemTags.method_31074(), itemTagRegistry -> ConnectionInfo.protocol.addExtraItemTags(itemTagRegistry, blockTagRegistry));
-        TagGroup<Fluid> fluidTags = setExtraTags("fluid", packet.getTagManager().getFluids(), new TagRegistry<>(), FluidTags.all(), ConnectionInfo.protocol::addExtraFluidTags);
-        TagGroup<EntityType<?>> entityTypeTags = setExtraTags("entity type", packet.getTagManager().getEntityTypes(), new TagRegistry<>(), EntityTypeTags.method_31073(), ConnectionInfo.protocol::addExtraEntityTags);
+        TagGroup<Block> blockTags = setExtraTags("block", packet.getTagManager().getBlocks(), blockTagRegistry, BlockTags.getRequiredTags(), ConnectionInfo.protocol::addExtraBlockTags);
+        TagGroup<Item> itemTags = setExtraTags("item", packet.getTagManager().getItems(), new TagRegistry<>(), ItemTags.getRequiredTags(), itemTagRegistry -> ConnectionInfo.protocol.addExtraItemTags(itemTagRegistry, blockTagRegistry));
+        TagGroup<Fluid> fluidTags = setExtraTags("fluid", packet.getTagManager().getFluids(), new TagRegistry<>(), FluidTags.getRequiredTags(), ConnectionInfo.protocol::addExtraFluidTags);
+        TagGroup<EntityType<?>> entityTypeTags = setExtraTags("entity type", packet.getTagManager().getEntityTypes(), new TagRegistry<>(), EntityTypeTags.getRequiredTags(), ConnectionInfo.protocol::addExtraEntityTags);
         ((SynchronizeTagsS2CAccessor) packet).setTagManager(TagManager.create(blockTags, itemTags, fluidTags, entityTypeTags));
     }
 
