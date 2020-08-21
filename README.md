@@ -31,7 +31,7 @@ This section is for when you are developing your own mod and want to use the mul
    ```groovy
    dependencies {
       // ...
-      modImplementation 'net.earthcomputer.multiconnect:<version>:api'
+      modImplementation 'net.earthcomputer:multiconnect:<version>:api'
       include 'net.earthcomputer:multiconnect:<version>:api'
    }
    ```
