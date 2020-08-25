@@ -27,12 +27,12 @@ public class ConnectionHandler {
 
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
-    public static boolean preConnect(String ip, int port) throws UnknownHostException {
+    public static boolean preConnect(InetAddress addr, int port) throws UnknownHostException {
         String address;
         if (port == 25565) {
-            address = ip;
+            address = addr.getHostName();
         } else {
-            address = ip + ":" + port;
+            address = addr.getHostName() + ":" + port;
         }
 
         // Hypixel has their own closed-source connection proxy and closed-source anti-cheat.
@@ -66,12 +66,12 @@ public class ConnectionHandler {
             return true;
         IConnectScreen connectScreen = (IConnectScreen) screen;
 
-        ClientConnection connection = ClientConnection.connect(InetAddress.getByName(ip), port, false);
+        ClientConnection connection = ClientConnection.connect(addr, port, false);
         connectScreen.multiconnect_setVersionRequestConnection(connection);
         GetProtocolPacketListener listener = new GetProtocolPacketListener(connection);
         connection.setPacketListener(listener);
 
-        HandshakeC2SPacket handshake  = new HandshakeC2SPacket(ip, port, NetworkState.STATUS);
+        HandshakeC2SPacket handshake  = new HandshakeC2SPacket(addr.getHostName(), port, NetworkState.STATUS);
         //noinspection ConstantConditions
         ((HandshakePacketAccessor) handshake).setProtocolVersion(-1);
         connection.send(handshake);
