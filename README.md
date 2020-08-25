@@ -11,7 +11,7 @@ Connect to many different server versions from your Fabric client!
 Multiconnect distinguishes itself from similar projects such as ViaVersion and ProtocolSupport in that it is
 very much client-side. Crucially, this means it can (and does) fix many version differences on the client;
 such issues are unfixable on the server. As of the time of writing, multiconnect is the only mod which fixes
-1.12 swimming mechanics, parkour differences, and re-adds removed features such as particles on the client.
+1.12 swimming mechanics, parkour differences, and re-adds removed features such as command syntax on the client.
 
 On the other hand, multiconnect supports only the latest Minecraft client version, and only on Fabric. It also
 does not have as much version coverage as ViaVersion and ProtocolSupport (yet).
