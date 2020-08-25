@@ -4,20 +4,26 @@ import net.earthcomputer.multiconnect.connect.ConnectionHandler;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-@SuppressWarnings("UnresolvedMixinReference")
 @Mixin(targets = "net.minecraft.client.gui.screen.ConnectScreen$1")
 public class MixinConnectScreen1 {
 
-    @Inject(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;connect(Ljava/net/InetAddress;IZ)Lnet/minecraft/network/ClientConnection;"), cancellable = true)
-    public void beforeConnect(CallbackInfo ci) throws UnknownHostException {
-        if (!ConnectionHandler.preConnect()) {
+    @SuppressWarnings("ShadowTarget")
+    @Shadow
+    private int field_2415; // port
+
+    @Inject(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;connect(Ljava/net/InetAddress;IZ)Lnet/minecraft/network/ClientConnection;"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
+    public void beforeConnect(CallbackInfo ci, InetAddress address) throws UnknownHostException {
+        if (!ConnectionHandler.preConnect(address.getHostName(), field_2415)) {
             ci.cancel();
         }
     }

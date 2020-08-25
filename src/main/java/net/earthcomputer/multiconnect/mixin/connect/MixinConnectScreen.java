@@ -1,6 +1,5 @@
 package net.earthcomputer.multiconnect.mixin.connect;
 
-import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.connect.IConnectScreen;
 import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -17,13 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Mixin(ConnectScreen.class)
 public abstract class MixinConnectScreen implements IConnectScreen {
 
-    @Unique private AtomicReference<ClientConnection> versionRequestConnection = new AtomicReference<>();
-
-    @Inject(method = "connect", at = @At("HEAD"))
-    public void onConnect(String ip, int port, CallbackInfo ci) {
-        ConnectionInfo.ip = ip;
-        ConnectionInfo.port = port;
-    }
+    @Unique private final AtomicReference<ClientConnection> versionRequestConnection = new AtomicReference<>();
 
     @Accessor
     @Override

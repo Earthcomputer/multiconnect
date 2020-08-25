@@ -9,7 +9,6 @@ import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
-import net.minecraft.client.network.ServerInfo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
@@ -28,26 +27,23 @@ public class ConnectionHandler {
 
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
-    public static boolean preConnect() throws UnknownHostException {
+    public static boolean preConnect(String ip, int port) throws UnknownHostException {
         String address;
-        ServerInfo serverInfo = MinecraftClient.getInstance().getCurrentServerEntry();
-        if (serverInfo != null) {
-            address = serverInfo.address;
-        } else if (ConnectionInfo.port == 25565) {
-            address = ConnectionInfo.ip;
+        if (port == 25565) {
+            address = ip;
         } else {
-            address = ConnectionInfo.ip + ":" + ConnectionInfo.port;
+            address = ip + ":" + port;
         }
 
         // Hypixel has their own closed-source connection proxy and closed-source anti-cheat.
         // Users were getting banned for odd reasons. Their maps are designed to have fair play between clients on any
         // version, so we force the current protocol version here to disable any kind of bridge, in the hope that users
         // don't get banned because they are using multiconnect.
-        String ip = normalizeAddress(address).split(":")[0].toLowerCase(Locale.ROOT);
-        if (ip.endsWith(".")) {
-            ip = ip.substring(0, ip.length() - 1);
+        String testIp = normalizeAddress(address).split(":")[0].toLowerCase(Locale.ROOT);
+        if (testIp.endsWith(".")) {
+            testIp = testIp.substring(0, testIp.length() - 1);
         }
-        if (ip.equals("hypixel.net") || ip.endsWith(".hypixel.net")) {
+        if (testIp.equals("hypixel.net") || testIp.endsWith(".hypixel.net")) {
             if (SharedConstants.getGameVersion().isStable()) {
                 ConnectionInfo.protocolVersion = SharedConstants.getGameVersion().getProtocolVersion();
             } else {
@@ -70,12 +66,12 @@ public class ConnectionHandler {
             return true;
         IConnectScreen connectScreen = (IConnectScreen) screen;
 
-        ClientConnection connection = ClientConnection.connect(InetAddress.getByName(ConnectionInfo.ip), ConnectionInfo.port, false);
+        ClientConnection connection = ClientConnection.connect(InetAddress.getByName(ip), port, false);
         connectScreen.multiconnect_setVersionRequestConnection(connection);
         GetProtocolPacketListener listener = new GetProtocolPacketListener(connection);
         connection.setPacketListener(listener);
 
-        HandshakeC2SPacket handshake  = new HandshakeC2SPacket(ConnectionInfo.ip, ConnectionInfo.port, NetworkState.STATUS);
+        HandshakeC2SPacket handshake  = new HandshakeC2SPacket(ip, port, NetworkState.STATUS);
         //noinspection ConstantConditions
         ((HandshakePacketAccessor) handshake).setProtocolVersion(-1);
         connection.send(handshake);
