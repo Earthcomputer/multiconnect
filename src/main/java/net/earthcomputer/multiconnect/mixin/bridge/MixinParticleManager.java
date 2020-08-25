@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
 import net.earthcomputer.multiconnect.impl.Utils;
+import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.IParticleManager;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleFactory;
@@ -17,12 +18,12 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 @Mixin(ParticleManager.class)
@@ -31,7 +32,7 @@ public class MixinParticleManager implements IParticleManager {
     @Shadow @Final private Map<Identifier, Object> spriteAwareFactories;
     @Shadow protected ClientWorld world;
 
-    @Unique private Map<Identifier, ParticleFactory<?>> customFactories = new HashMap<>();
+    @Unique private final Map<Identifier, ParticleFactory<?>> customFactories = new HashMap<>();
 
     @SuppressWarnings("unchecked")
     @Inject(method = "createParticle", at = @At("HEAD"), cancellable = true)
@@ -46,10 +47,9 @@ public class MixinParticleManager implements IParticleManager {
         return Utils.getUnmodifiedId(registry, (ParticleType<?>) type);
     }
 
-    @ModifyVariable(method = "loadTextureList", ordinal = 0, at = @At("HEAD"))
-    private Identifier modifyIdentifier(Identifier id) {
-        Identifier unmodifiedName = Utils.getUnmodifiedName(Registry.PARTICLE_TYPE, Registry.PARTICLE_TYPE.get(id));
-        return unmodifiedName == null ? id : unmodifiedName;
+    @Redirect(method = "reload", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/Registry;getIds()Ljava/util/Set;"))
+    private Set<Identifier> redirectGetIds(Registry<ParticleType<?>> registry) {
+        return DefaultRegistries.DEFAULT_REGISTRIES.get(registry).defaultIdToEntry.keySet();
     }
 
     @Override

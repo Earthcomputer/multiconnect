@@ -83,6 +83,9 @@ public class DefaultRegistries<T> {
     }
 
     public static Map<Registry<?>, DefaultRegistries<?>> DEFAULT_REGISTRIES = new LinkedHashMap<>();
+    static {
+        initialize();
+    }
 
     @SuppressWarnings("unchecked")
     public static <T> void restore(Registry<?> registry, DefaultRegistries<?> defaultRegistries) {

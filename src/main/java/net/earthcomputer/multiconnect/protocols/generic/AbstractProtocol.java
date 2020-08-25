@@ -164,7 +164,6 @@ public abstract class AbstractProtocol implements IUtils {
 
     static {
         DefaultPackets.initialize();
-        DefaultRegistries.initialize();
     }
 
     private static class DefaultPackets {
