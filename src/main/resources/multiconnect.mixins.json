@@ -23,6 +23,7 @@
     "bridge.MixinInt2ObjectBiMap",
     "bridge.MixinItemColors",
     "bridge.MixinItemModels",
+    "bridge.MixinItemRenderer",
     "bridge.MixinModelLoader",
     "bridge.MixinNetworkState",
     "bridge.MixinPacketHandler",

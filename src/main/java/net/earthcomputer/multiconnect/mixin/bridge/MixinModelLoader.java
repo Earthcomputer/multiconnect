@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
 import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
+import net.minecraft.block.Block;
 import net.minecraft.client.render.model.ModelLoader;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.DefaultedRegistry;
@@ -8,6 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import java.util.Iterator;
 import java.util.Set;
 
 @Mixin(ModelLoader.class)
@@ -17,6 +19,12 @@ public class MixinModelLoader {
     private Set<Identifier> redirectGetIds(DefaultedRegistry<?> registry) {
         DefaultRegistries<?> defaultRegistry = DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
         return defaultRegistry != null ? defaultRegistry.defaultIdToEntry.keySet() : registry.getIds();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/DefaultedRegistry;iterator()Ljava/util/Iterator;"))
+    private Iterator<Block> redirectBlockRegistryIterator(DefaultedRegistry<Block> registry) {
+        return (Iterator<Block>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry).defaultEntryToRawId.keySet().iterator();
     }
 
     @SuppressWarnings({"unchecked", "UnresolvedMixinReference"})
