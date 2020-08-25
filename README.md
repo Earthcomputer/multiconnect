@@ -5,7 +5,28 @@
 ![GitHub issues](https://img.shields.io/github/issues/Earthcomputer/multiconnect.svg)
 ![GitHub tag](https://img.shields.io/github/tag/Earthcomputer/multiconnect.svg)
 
-A mod to enable a Minecraft client to connect to multiple server versions.
+Connect to many different server versions from your Fabric client!
+
+## Why another protocol translator?
+Multiconnect distinguishes itself from similar projects such as ViaVersion and ProtocolSupport in that it is
+very much client-side. Crucially, this means it can (and does) fix many version differences on the client;
+such issues are unfixable on the server. As of the time of writing, multiconnect is the only mod which fixes
+1.12 swimming mechanics, parkour differences, and re-adds removed features such as particles on the client.
+
+On the other hand, multiconnect supports only the latest Minecraft client version, and only on Fabric. It also
+does not have as much version coverage as ViaVersion and ProtocolSupport (yet).
+
+### Usage with ViaFabric
+If you want to connect to servers older than what multiconnect can currently support, you can install
+[ViaFabric](https://github.com/ViaVersion/ViaFabric) alongside multiconnect, the two are compatible -
+multiconnect will translate as much as it can, ViaFabric will take you the rest of the way. Follow the
+instructions in the ViaFabric readme for details on how to do this.
+
+### Other alternatives
+- [ClientViaVersion](https://github.com/Gerrygames/ClientViaVersion): a discontinued plugin for The 5zig Mod
+which supported client versions 1.7.10, 1.8, 1.8.9, 1.12 and 1.12.2.
+- [ViaVersion](https://viaversion.com/), [ProtocolSupport](https://protocol.support/): server-side protocol
+bridges.
 
 ## Installation for Players
 1. Download and run the [Fabric installer](https://fabricmc.net/use).
