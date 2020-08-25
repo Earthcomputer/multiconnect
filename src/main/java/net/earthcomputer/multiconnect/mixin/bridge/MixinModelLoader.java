@@ -28,7 +28,7 @@ public class MixinModelLoader {
     }
 
     @SuppressWarnings({"unchecked", "UnresolvedMixinReference"})
-    @Redirect(method = "method_4736", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/DefaultedRegistry;get(Lnet/minecraft/util/Identifier;)Ljava/lang/Object;"))
+    @Redirect(method = "method_4736(Lnet/minecraft/util/Identifier;)Lnet/minecraft/state/StateManager;", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/DefaultedRegistry;get(Lnet/minecraft/util/Identifier;)Ljava/lang/Object;"))
     private static <T> T redirectGet(DefaultedRegistry<T> registry, Identifier id) {
         DefaultRegistries<T> defaultRegistry = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
         return defaultRegistry != null ? defaultRegistry.defaultIdToEntry.get(id) : registry.get(id);
