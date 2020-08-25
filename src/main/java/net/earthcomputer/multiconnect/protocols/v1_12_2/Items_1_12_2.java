@@ -27,7 +27,7 @@ import static net.minecraft.item.Items.*;
 public class Items_1_12_2 {
 
     private static Registry<Item> REGISTRY_1_13;
-    private static BiMap<Pair<Item, Integer>, Item> OLD_ITEM_TO_NEW = HashBiMap.create();
+    private static final BiMap<Pair<Item, Integer>, Item> OLD_ITEM_TO_NEW = HashBiMap.create();
 
     public static ItemStack oldItemStackToNew(ItemStack stack, int meta) {
         boolean copiedTag = false;

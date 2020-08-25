@@ -13,6 +13,9 @@ import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.RecipeInfo;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
+import net.earthcomputer.multiconnect.transformer.InboundTranslator;
+import net.earthcomputer.multiconnect.transformer.OutboundTranslator;
+import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -31,6 +34,7 @@ import net.minecraft.entity.passive.HorseBaseEntity;
 import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
@@ -44,6 +48,7 @@ import net.minecraft.server.command.CommandSource;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
@@ -161,6 +166,29 @@ public class Protocol_1_10 extends Protocol_1_11 {
             buf.disablePassthroughMode();
             buf.applyPendingReads();
         });
+        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<ItemStack>() {
+            @Override
+            public void onRead(TransformerByteBuf buf) {
+            }
+
+            @Override
+            public ItemStack translate(ItemStack from) {
+                if (from.getItem() == Items.BAT_SPAWN_EGG) {
+                    CompoundTag entityTag = from.getSubTag("EntityTag");
+                    if (entityTag != null) {
+                        String entityId = entityTag.getString("id");
+                        EntityType<?> entityType = ENTITY_IDS.inverse().get(entityId);
+                        if (entityType != null) {
+                            from = from.copy();
+                            entityTag = from.getSubTag("EntityTag");
+                            assert entityTag != null;
+                            entityTag.putString("id", Registry.ENTITY_TYPE.getId(entityType).toString());
+                        }
+                    }
+                }
+                return from;
+            }
+        });
 
         ProtocolRegistry.registerOutboundTranslator(ChatMessageC2SPacket.class, buf -> {
             Supplier<String> message = buf.skipWrite(String.class);
@@ -182,6 +210,31 @@ public class Protocol_1_10 extends Protocol_1_11 {
             buf.pendingWrite(Byte.class, () -> (byte) (fractionalX.get() * 16), (Consumer<Byte>) buf::writeByte);
             buf.pendingWrite(Byte.class, () -> (byte) (fractionalY.get() * 16), (Consumer<Byte>) buf::writeByte);
             buf.pendingWrite(Byte.class, () -> (byte) (fractionalZ.get() * 16), (Consumer<Byte>) buf::writeByte);
+        });
+        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<ItemStack>() {
+            @Override
+            public void onWrite(TransformerByteBuf buf) {
+            }
+
+            @Override
+            public ItemStack translate(ItemStack from) {
+                if (from.getItem() == Items.BAT_SPAWN_EGG) {
+                    CompoundTag entityTag = from.getSubTag("EntityTag");
+                    if (entityTag != null) {
+                        Identifier entityId = Identifier.tryParse(entityTag.getString("id"));
+                        if (entityId != null) {
+                            EntityType<?> entityType = Registry.ENTITY_TYPE.getOrEmpty(entityId).orElse(null);
+                            if (entityType != null) {
+                                from = from.copy();
+                                entityTag = from.getSubTag("EntityTag");
+                                assert entityTag != null;
+                                entityTag.putString("id", ENTITY_IDS.get(entityType));
+                            }
+                        }
+                    }
+                }
+                return from;
+            }
         });
     }
 
