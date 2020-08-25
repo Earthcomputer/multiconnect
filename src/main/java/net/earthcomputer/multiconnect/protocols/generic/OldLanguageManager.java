@@ -32,14 +32,14 @@ public class OldLanguageManager {
 
     private static final Pattern ARG_PATTERN = Pattern.compile("%(\\d+\\$)?[\\d.]*[dfs]");
     private static final Pattern LANG_ASSET_PATTERN = Pattern.compile("minecraft/lang/([a-zA-Z_]+)\\.(json|lang)");
-    private static final File CACHE_DIR = new File(FabricLoader.getInstance().getConfigDirectory(), "multiconnect/caches");
+    private static final File CACHE_DIR = new File(FabricLoader.getInstance().getConfigDir().toFile(), "multiconnect/caches");
     private static final URL VERSION_MANIFEST = createURL("https://launchermeta.mojang.com/mc/game/version_manifest.json");
     private static final String ASSET_URL_FORMAT = "https://resources.download.minecraft.net/%s/%s";
 
     private static Map<String, String> versionUrls;
-    private static Map<String, String> versionAssetUrls = new HashMap<>();
-    private static Map<String, Map<String, String>> langFileUrls = new HashMap<>();
-    private static Map<String, Map<String, File>> langFiles = new HashMap<>();
+    private static final Map<String, String> versionAssetUrls = new HashMap<>();
+    private static final Map<String, Map<String, String>> langFileUrls = new HashMap<>();
+    private static final Map<String, Map<String, File>> langFiles = new HashMap<>();
 
     public static void reloadLanguages() {
         MinecraftClient.getInstance().getLanguageManager().apply(MinecraftClient.getInstance().getResourceManager());
@@ -98,16 +98,8 @@ public class OldLanguageManager {
         if (versionUrls != null)
             return versionUrls;
 
-        File versionsFile = download(VERSION_MANIFEST, "version_manifest.json");
-        if (versionsFile == null) {
-            return versionUrls = Collections.emptyMap();
-        }
-
-        VersionManifest manifest;
-        try {
-            manifest = GSON.fromJson(new FileReader(versionsFile), VersionManifest.class);
-        } catch (IOException e) {
-            LOGGER.error("Failed to read manifest file", e);
+        VersionManifest manifest = downloadJson(VERSION_MANIFEST, "version_manifest.json", VersionManifest.class);
+        if (manifest == null) {
             return versionUrls = Collections.emptyMap();
         }
 
@@ -138,22 +130,14 @@ public class OldLanguageManager {
             return null;
         }
 
-        File versionFile = download(versionUrl, version + "/" + version + ".json");
+        VersionFile versionFile = downloadJson(versionUrl, version + "/" + version + ".json", VersionFile.class);
         if (versionFile == null) {
             versionAssetUrls.put(version, null);
             return null;
         }
 
-        VersionFile file;
-        try {
-            file = GSON.fromJson(new FileReader(versionFile), VersionFile.class);
-        } catch (IOException e) {
-            LOGGER.error("Failed to read version file for version " + version, e);
-            versionAssetUrls.put(version, null);
-            return null;
-        }
-        versionAssetUrls.put(version, file.assetIndex.url);
-        return file.assetIndex.url;
+        versionAssetUrls.put(version, versionFile.assetIndex.url);
+        return versionFile.assetIndex.url;
     }
 
     private static Map<String, String> getLangFileUrls(String version) {
@@ -175,17 +159,8 @@ public class OldLanguageManager {
             return Collections.emptyMap();
         }
 
-        File assetFile = download(assetUrl, version + "/indexes.json");
-        if (assetFile == null) {
-            langFileUrls.put(version, Collections.emptyMap());
-            return Collections.emptyMap();
-        }
-
-        AssetFile assets;
-        try {
-            assets = GSON.fromJson(new FileReader(assetFile), AssetFile.class);
-        } catch (IOException e) {
-            LOGGER.error("Failed to read asset file for version " + version, e);
+        AssetFile assets = downloadJson(assetUrl, version + "/indexes.json", AssetFile.class);
+        if (assets == null) {
             langFileUrls.put(version, Collections.emptyMap());
             return Collections.emptyMap();
         }
@@ -263,8 +238,44 @@ public class OldLanguageManager {
         return translations;
     }
 
+    // Downloads a json file if un-downloaded, or if it has a json syntax error (corrupted)
     @SuppressWarnings("ResultOfMethodCallIgnored")
+    private static <T> T downloadJson(URL url, String dest, Class<T> type) {
+        File downloadedFile = download(url, dest);
+        if (downloadedFile == null) {
+            return null;
+        }
+        try (FileReader reader = new FileReader(downloadedFile)) {
+            T ret = GSON.fromJson(reader, type);
+            if (ret == null) {
+                throw new JsonSyntaxException("Read null");
+            }
+            return ret;
+        } catch (JsonSyntaxException e) {
+            downloadedFile.delete();
+            // corrupted json, try re-downloading
+            downloadedFile = download(url, dest, true);
+            if (downloadedFile == null) {
+                return null;
+            }
+            try (FileReader reader = new FileReader(downloadedFile)) {
+                return GSON.fromJson(reader, type);
+            } catch (IOException e1) {
+                LOGGER.info("Failed to read file " + dest + " downloaded from " + url);
+                return null;
+            }
+        } catch (IOException e) {
+            LOGGER.info("Failed to read file " + dest + " downloaded from " + url);
+            return null;
+        }
+    }
+
     private static File download(URL url, String dest) {
+        return download(url, dest, false);
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private static File download(URL url, String dest, boolean force) {
         File destFile = new File(CACHE_DIR, dest);
         File etagFile = new File(CACHE_DIR, dest + ".etag");
 
@@ -285,7 +296,7 @@ public class OldLanguageManager {
             }
 
             long lastModified = connection.getHeaderFieldDate("Last-Modified", -1);
-            if (destFile.exists() && (responseCode == HttpURLConnection.HTTP_NOT_MODIFIED || lastModified > 0 && destFile.lastModified() >= lastModified))
+            if (!force && destFile.exists() && (responseCode == HttpURLConnection.HTTP_NOT_MODIFIED || lastModified > 0 && destFile.lastModified() >= lastModified))
                 return destFile;
 
             destFile.getParentFile().mkdirs();
