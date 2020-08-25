@@ -47,7 +47,7 @@ public class MixinBannerBlockEntity extends BlockEntity {
     @Inject(method = "fromTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/BlockEntity;fromTag(Lnet/minecraft/block/BlockState;Lnet/minecraft/nbt/CompoundTag;)V", shift = At.Shift.AFTER))
     private void readBase(BlockState blockState, CompoundTag tag, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            setBaseColor(DyeColor.byId(15 - tag.getInt("Base")));
+            setBaseColor(DyeColor.byId(tag.getInt("Base")));
         }
     }
 
