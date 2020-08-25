@@ -281,7 +281,7 @@ public class OldLanguageManager {
 
         try {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            if (destFile.exists() && etagFile.exists()) {
+            if (!force && destFile.exists() && etagFile.exists()) {
                 String etag = FileUtils.readFileToString(etagFile, StandardCharsets.UTF_8);
                 connection.setRequestProperty("If-None-Match", etag);
             }
