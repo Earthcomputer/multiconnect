@@ -17,7 +17,6 @@ pig_one_cm
 horse_one_cm
 aviate_one_cm
 swim_one_cm
-strider_one_cm
 jump
 drop
 damage_dealt

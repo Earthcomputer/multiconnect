@@ -538,7 +538,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(EntityType.ZOMBIFIED_PIGLIN);
         insertAfter(registry, EntityType.PUFFERFISH, EntityType.ZOMBIFIED_PIGLIN, "zombie_pigman");
         registry.unregister(EntityType.LIGHTNING_BOLT);
-        insertAfter(registry, EntityType.PHANTOM, EntityType.LIGHTNING_BOLT, "lightning_bolt");
+        insertAfter(registry, EntityType.RAVAGER, EntityType.LIGHTNING_BOLT, "lightning_bolt");
 
         registry.unregister(EntityType.HOGLIN);
         registry.unregister(EntityType.PIGLIN);
@@ -869,6 +869,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     private void mutateCustomStatRegistry(ISimpleRegistry<Identifier> registry) {
         registry.unregister(Stats.TARGET_HIT);
         registry.unregister(Stats.INTERACT_WITH_SMITHING_TABLE);
+        registry.unregister(Stats.STRIDER_ONE_CM);
     }
 
     @Override
