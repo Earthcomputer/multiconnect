@@ -11,7 +11,7 @@ public class MyBlockStateParticleType extends ParticleType<BlockStateParticleEff
     }
 
     @Override
-    public Codec<BlockStateParticleEffect> method_29138() {
+    public Codec<BlockStateParticleEffect> getCodec() {
         return BlockStateParticleEffect.method_29128(this);
     }
 }

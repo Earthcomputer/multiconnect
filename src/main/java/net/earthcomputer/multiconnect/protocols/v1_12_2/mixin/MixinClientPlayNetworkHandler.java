@@ -19,6 +19,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.UpgradeData;
 import net.minecraft.world.chunk.WorldChunk;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -110,8 +111,8 @@ public abstract class MixinClientPlayNetworkHandler {
         return chunk;
     }
 
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "method_31176(ILnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)V", at = @At("RETURN"))
+    @Dynamic
+    @Inject(method = "method_31176", remap = false, at = @At("RETURN"))
     private void fixDeltaChunk(int flags, BlockPos pos, BlockState state, CallbackInfo ci) {
         ChunkUpgrader.fix(world, pos, flags);
     }

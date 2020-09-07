@@ -90,7 +90,7 @@ public class ConnectionHandler {
         }
 
         if (listener.hasFailed()) {
-            MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().openScreen(new DisconnectedScreen(connectScreen.getParent(), ScreenTexts.field_26625, new LiteralText("Failed to request server protocol version"))));
+            MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().openScreen(new DisconnectedScreen(connectScreen.getParent(), ScreenTexts.FAILED, new LiteralText("Failed to request server protocol version"))));
         }
 
         connectScreen.multiconnect_setVersionRequestConnection(null);

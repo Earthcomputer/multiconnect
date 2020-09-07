@@ -5,6 +5,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.render.model.ModelLoader;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.DefaultedRegistry;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -27,8 +28,9 @@ public class MixinModelLoader {
         return (Iterator<Block>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry).defaultEntryToRawId.keySet().iterator();
     }
 
-    @SuppressWarnings({"unchecked", "UnresolvedMixinReference"})
-    @Redirect(method = "method_4736(Lnet/minecraft/util/Identifier;)Lnet/minecraft/state/StateManager;", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/DefaultedRegistry;get(Lnet/minecraft/util/Identifier;)Ljava/lang/Object;"))
+    @SuppressWarnings({"unchecked", "DefaultAnnotationParam"})
+    @Dynamic
+    @Redirect(method = "method_4736", remap = false, at = @At(value = "INVOKE", remap = true, target = "Lnet/minecraft/util/registry/DefaultedRegistry;get(Lnet/minecraft/util/Identifier;)Ljava/lang/Object;"))
     private static <T> T redirectGet(DefaultedRegistry<T> registry, Identifier id) {
         DefaultRegistries<T> defaultRegistry = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
         return defaultRegistry != null ? defaultRegistry.defaultIdToEntry.get(id) : registry.get(id);
