@@ -14,7 +14,7 @@ public enum ConnectionMode implements IProtocol {
 
     // Protocols should go in reverse chronological order
     AUTO("Auto", -1, -1, InitFlags.MAJOR_RELEASE),
-    V1_16_3("1.16.3-rc1", Protocols.V1_16_3, 2579),
+    V1_16_3("1.16.3", Protocols.V1_16_3, 2580),
     V1_16_2("1.16.2", Protocols.V1_16_2, 2578),
     V1_16_1("1.16.1", Protocols.V1_16_1, 2567),
     V1_16("1.16", Protocols.V1_16, 2566, InitFlags.MAJOR_RELEASE),

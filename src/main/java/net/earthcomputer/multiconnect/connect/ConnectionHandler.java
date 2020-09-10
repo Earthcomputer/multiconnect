@@ -20,14 +20,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Locale;
 
 public class ConnectionHandler {
 
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
-    public static boolean preConnect(InetAddress addr, int port) throws UnknownHostException {
+    public static boolean preConnect(InetAddress addr, int port) {
         String address;
         if (port == 25565) {
             address = addr.getHostName();
@@ -90,7 +89,7 @@ public class ConnectionHandler {
         }
 
         if (listener.hasFailed()) {
-            MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().openScreen(new DisconnectedScreen(connectScreen.getParent(), ScreenTexts.FAILED, new LiteralText("Failed to request server protocol version"))));
+            MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().openScreen(new DisconnectedScreen(connectScreen.getParent(), ScreenTexts.CONNECT_FAILED, new LiteralText("Failed to request server protocol version"))));
         }
 
         connectScreen.multiconnect_setVersionRequestConnection(null);
