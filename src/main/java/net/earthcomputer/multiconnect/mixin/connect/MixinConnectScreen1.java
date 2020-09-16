@@ -19,11 +19,15 @@ public class MixinConnectScreen1 {
 
     @SuppressWarnings("ShadowTarget")
     @Shadow
+    private String field_2414; // address
+
+    @SuppressWarnings("ShadowTarget")
+    @Shadow
     private int field_2415; // port
 
     @Inject(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;connect(Ljava/net/InetAddress;IZ)Lnet/minecraft/network/ClientConnection;"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-    public void beforeConnect(CallbackInfo ci, InetAddress address) throws UnknownHostException {
-        if (!ConnectionHandler.preConnect(address, field_2415)) {
+    public void beforeConnect(CallbackInfo ci, InetAddress address) {
+        if (!ConnectionHandler.preConnect(address, field_2414, field_2415)) {
             ci.cancel();
         }
     }

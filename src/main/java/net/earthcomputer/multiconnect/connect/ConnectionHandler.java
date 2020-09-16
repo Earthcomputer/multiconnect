@@ -26,19 +26,12 @@ public class ConnectionHandler {
 
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
-    public static boolean preConnect(InetAddress addr, int port) {
-        String address;
-        if (port == 25565) {
-            address = addr.getHostName();
-        } else {
-            address = addr.getHostName() + ":" + port;
-        }
-
+    public static boolean preConnect(InetAddress addr, String addrStr, int port) {
         // Hypixel has their own closed-source connection proxy and closed-source anti-cheat.
         // Users were getting banned for odd reasons. Their maps are designed to have fair play between clients on any
         // version, so we force the current protocol version here to disable any kind of bridge, in the hope that users
         // don't get banned because they are using multiconnect.
-        String testIp = normalizeAddress(address).split(":")[0].toLowerCase(Locale.ROOT);
+        String testIp = normalizeAddress(addr.getHostName()).split(":")[0].toLowerCase(Locale.ROOT);
         if (testIp.endsWith(".")) {
             testIp = testIp.substring(0, testIp.length() - 1);
         }
@@ -52,7 +45,12 @@ public class ConnectionHandler {
             return true;
         }
 
-
+        String address;
+        if (port == 25565) {
+            address = addrStr;
+        } else {
+            address = addrStr + ":" + port;
+        }
         int forcedVersion = ServersExt.getInstance().getForcedProtocol(address);
         if (forcedVersion != ConnectionMode.AUTO.getValue()) {
             ConnectionInfo.protocolVersion = forcedVersion;
