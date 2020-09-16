@@ -110,10 +110,10 @@ dependencies {
 		}
 		include "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
 	} else {
-		modCompileOnly("net.fabricmc.fabric-api:fabric-api:0.17.2+build.396-1.16") {
+		modCompileOnly("net.fabricmc.fabric-api:fabric-api:0.20.2+build.402-1.16") {
 			exclude group: 'net.fabricmc', module: 'fabric-loader'
 		}
-		modRuntime("net.fabricmc.fabric-api:fabric-api:0.17.2+build.396-1.16") {
+		modRuntime("net.fabricmc.fabric-api:fabric-api:0.20.2+build.402-1.16") {
 			exclude group: 'net.fabricmc', module: 'fabric-loader'
 		}
 	}
