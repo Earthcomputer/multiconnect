@@ -26,7 +26,7 @@ public class ConnectionHandler {
 
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
-    public static boolean preConnect(InetAddress addr, String addrStr, int port) {
+    public static boolean preConnect(InetAddress addr, int port, String addressField) {
         // Hypixel has their own closed-source connection proxy and closed-source anti-cheat.
         // Users were getting banned for odd reasons. Their maps are designed to have fair play between clients on any
         // version, so we force the current protocol version here to disable any kind of bridge, in the hope that users
@@ -45,17 +45,13 @@ public class ConnectionHandler {
             return true;
         }
 
-        String address;
-        if (port == 25565) {
-            address = addrStr;
-        } else {
-            address = addrStr + ":" + port;
-        }
-        int forcedVersion = ServersExt.getInstance().getForcedProtocol(address);
-        if (forcedVersion != ConnectionMode.AUTO.getValue()) {
-            ConnectionInfo.protocolVersion = forcedVersion;
-            LOGGER.info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ConnectionMode.byValue(forcedVersion).getName() + ")");
-            return true;
+        if (addressField != null) {
+            int forcedVersion = ServersExt.getInstance().getForcedProtocol(addressField);
+            if (forcedVersion != ConnectionMode.AUTO.getValue()) {
+                ConnectionInfo.protocolVersion = forcedVersion;
+                LOGGER.info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ConnectionMode.byValue(forcedVersion).getName() + ")");
+                return true;
+            }
         }
 
         Screen screen = MinecraftClient.getInstance().currentScreen;

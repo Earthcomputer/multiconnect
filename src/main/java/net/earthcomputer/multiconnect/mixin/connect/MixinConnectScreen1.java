@@ -1,6 +1,8 @@
 package net.earthcomputer.multiconnect.mixin.connect;
 
 import net.earthcomputer.multiconnect.connect.ConnectionHandler;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ServerInfo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,14 +14,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 @Mixin(targets = "net.minecraft.client.gui.screen.ConnectScreen$1")
 public class MixinConnectScreen1 {
-
-    @SuppressWarnings("ShadowTarget")
-    @Shadow
-    private String field_2414; // address
 
     @SuppressWarnings("ShadowTarget")
     @Shadow
@@ -27,7 +24,8 @@ public class MixinConnectScreen1 {
 
     @Inject(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;connect(Ljava/net/InetAddress;IZ)Lnet/minecraft/network/ClientConnection;"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
     public void beforeConnect(CallbackInfo ci, InetAddress address) {
-        if (!ConnectionHandler.preConnect(address, field_2414, field_2415)) {
+        ServerInfo serverEntry = MinecraftClient.getInstance().getCurrentServerEntry();
+        if (!ConnectionHandler.preConnect(address, field_2415, serverEntry == null ? null : serverEntry.address)) {
             ci.cancel();
         }
     }
