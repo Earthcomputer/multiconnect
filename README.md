@@ -7,6 +7,9 @@
 
 Connect to many different server versions from your Fabric client!
 
+## Discord
+https://discord.gg/Jg7Bun7
+
 ## Why another protocol translator?
 Multiconnect distinguishes itself from similar projects such as ViaVersion and ProtocolSupport in that it is
 very much client-side. Crucially, this means it can (and does) fix many version differences on the client;
@@ -79,12 +82,10 @@ This section is for when you are developing your own mod and want to use the mul
    ./gradlew genSources
    ```
    - Note: on Windows, use `gradlew` rather than `./gradlew`.
-1. Generate the IDE project depending on which IDE you prefer
-   ```
-   ./gradlew idea      # For IntelliJ IDEA
-   ./gradlew eclipse   # For Eclipse
-   ```
-1. Import the project in your IDE and edit the code
+1. Import the project into your preferred IDE.
+   1. If you use IntelliJ (the preferred option), you can simply import the project as a Gradle project.
+   1. If you use Eclipse, you need to `./gradlew eclipse` before importing the project as an Eclipse project.
+1. Edit the code.
 1. After testing in the IDE, build a JAR to test whether it works outside the IDE too
    ```
    ./gradlew build
