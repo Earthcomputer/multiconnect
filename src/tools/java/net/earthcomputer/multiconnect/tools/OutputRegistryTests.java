@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.bridge;
+package net.earthcomputer.multiconnect.tools;
 
 import net.minecraft.Bootstrap;
 import net.minecraft.block.Block;

@@ -321,4 +321,23 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
         tags.add(EntityTypeTags.ARROWS, EntityType.ARROW, EntityType.SPECTRAL_ARROW);
         super.addExtraEntityTags(tags);
     }
+
+    @Override
+    public float getBlockHardness(BlockState state, float hardness) {
+        hardness = super.getBlockHardness(state, hardness);
+        Block block = state.getBlock();
+        if (block == Blocks.END_STONE_BRICKS || block == Blocks.END_STONE_BRICK_SLAB || block == Blocks.END_STONE_BRICK_STAIRS || block == Blocks.END_STONE_BRICK_WALL) {
+            hardness = 0.8f;
+        }
+        return hardness;
+    }
+
+    @Override
+    public float getBlockResistance(Block block, float resistance) {
+        resistance = super.getBlockResistance(block, resistance);
+        if (block == Blocks.END_STONE_BRICKS || block == Blocks.END_STONE_BRICK_SLAB || block == Blocks.END_STONE_BRICK_STAIRS || block == Blocks.END_STONE_BRICK_WALL) {
+            resistance = 0.8f;
+        }
+        return resistance;
+    }
 }

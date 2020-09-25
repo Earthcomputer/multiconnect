@@ -18,6 +18,7 @@ group = project.maven_group
 
 sourceSets {
 	api
+	tools
 }
 
 processResources {
@@ -125,6 +126,9 @@ dependencies {
 	testCompile 'org.junit.jupiter:junit-jupiter-api:5.5.2'
 	testRuntimeOnly 'com.github.Earthcomputer.junit5:junit-jupiter-engine:8785ac4d'
 	testCompile 'org.mockito:mockito-all:1.10.19'
+
+	sourceSets.tools.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
+	sourceSets.tools.runtimeClasspath += files({sourceSets.main.runtimeClasspath.toList()})
 }
 
 test {

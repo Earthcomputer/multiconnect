@@ -11,6 +11,7 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
@@ -153,6 +154,18 @@ public abstract class AbstractProtocol implements IUtils {
 
     public boolean shouldBlockChangeReplaceBlockEntity(Block oldBlock, Block newBlock) {
         return oldBlock != newBlock;
+    }
+
+    public float modifyMiningSpeed(ItemStack tool, BlockState mined, float miningSpeed) {
+        return miningSpeed;
+    }
+
+    public float getBlockHardness(BlockState state, float hardness) {
+        return hardness;
+    }
+
+    public float getBlockResistance(Block block, float resistance) {
+        return resistance;
     }
 
     /**

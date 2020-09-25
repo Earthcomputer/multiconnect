@@ -28,9 +28,7 @@ import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.item.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.LongArrayTag;
 import net.minecraft.nbt.Tag;
@@ -994,5 +992,36 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             return false;
         }
         return super.acceptEntityData(clazz, data);
+    }
+
+    @Override
+    public float modifyMiningSpeed(ItemStack tool, BlockState mined, float miningSpeed) {
+        miningSpeed = super.modifyMiningSpeed(tool, mined, miningSpeed);
+        Item toolItem = tool.getItem();
+        Block minedBlock = mined.getBlock();
+        if (toolItem instanceof HoeItem) {
+            miningSpeed = 1;
+        } else if (toolItem instanceof PickaxeItem && (minedBlock == Blocks.PISTON || minedBlock == Blocks.STICKY_PISTON || minedBlock == Blocks.PISTON_HEAD)) {
+            miningSpeed = 1;
+        }
+        return miningSpeed;
+    }
+
+    @Override
+    public float getBlockHardness(BlockState state, float hardness) {
+        hardness = super.getBlockHardness(state, hardness);
+        if (state.getBlock() == Blocks.PISTON || state.getBlock() == Blocks.STICKY_PISTON || state.getBlock() == Blocks.PISTON_HEAD) {
+            hardness = 0.5f;
+        }
+        return hardness;
+    }
+
+    @Override
+    public float getBlockResistance(Block block, float resistance) {
+        resistance = super.getBlockResistance(block, resistance);
+        if (block == Blocks.PISTON || block == Blocks.STICKY_PISTON || block == Blocks.PISTON_HEAD) {
+            resistance = 0.5f;
+        }
+        return resistance;
     }
 }
