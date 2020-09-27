@@ -34,7 +34,7 @@ public class GuiOpenS2CPacket_1_13_2 implements Packet<ClientPlayNetworkHandler>
     @Override
     public void apply(ClientPlayNetworkHandler handler) {
         if ("minecraft:container".equals(type)) {
-            handler.onOpenScreen(new OpenScreenS2CPacket(syncId, slotCount <= 27 ? ScreenHandlerType.GENERIC_9X3 : ScreenHandlerType.GENERIC_9X6, title));
+            handler.onOpenScreen(new OpenScreenS2CPacket(syncId, getBestContainerType(slotCount), title));
         } else if ("minecraft:villager".equals(type)) {
             handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.MERCHANT, title));
         } else if ("EntityHorse".equals(type)) {
@@ -49,7 +49,7 @@ public class GuiOpenS2CPacket_1_13_2 implements Packet<ClientPlayNetworkHandler>
             }
         } else {
             if ("minecraft:chest".equals(type)) {
-                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, slotCount <= 27 ? ScreenHandlerType.GENERIC_9X3 : ScreenHandlerType.GENERIC_9X6, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, getBestContainerType(slotCount), title));
             } else if ("minecraft:hopper".equals(type)) {
                 handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.HOPPER, title));
             } else if ("minecraft:furnace".equals(type)) {
@@ -63,8 +63,24 @@ public class GuiOpenS2CPacket_1_13_2 implements Packet<ClientPlayNetworkHandler>
             } else if ("minecraft:shulker_box".equals(type)) {
                 handler.onOpenScreen(new OpenScreenS2CPacket(syncId, ScreenHandlerType.SHULKER_BOX, title));
             } else {
-                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, slotCount <= 27 ? ScreenHandlerType.GENERIC_9X3 : ScreenHandlerType.GENERIC_9X6, title));
+                handler.onOpenScreen(new OpenScreenS2CPacket(syncId, getBestContainerType(slotCount), title));
             }
+        }
+    }
+
+    private ScreenHandlerType<?> getBestContainerType(int slotCount) {
+        if (slotCount <= 9) {
+            return ScreenHandlerType.GENERIC_9X1;
+        } else if (slotCount <= 18) {
+            return ScreenHandlerType.GENERIC_9X2;
+        } else if (slotCount <= 27) {
+            return ScreenHandlerType.GENERIC_9X3;
+        } else if (slotCount <= 36) {
+            return ScreenHandlerType.GENERIC_9X4;
+        } else if (slotCount <= 45) {
+            return ScreenHandlerType.GENERIC_9X5;
+        } else {
+            return ScreenHandlerType.GENERIC_9X6;
         }
     }
 }
