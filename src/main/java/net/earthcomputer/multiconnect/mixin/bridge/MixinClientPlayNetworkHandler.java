@@ -3,9 +3,12 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.*;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.ChunkConnector;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectableChunk;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
@@ -20,11 +23,16 @@ import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
 import net.minecraft.tag.*;
+import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.WorldChunk;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,12 +40,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
@@ -49,13 +55,32 @@ public class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
     private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion())
+        if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()) {
             if (!((IChunkDataS2CPacket) packet).multiconnect_isDataTranslated()) {
                 ChunkDataTranslator.submit(packet);
                 ci.cancel();
             } else if (((IChunkDataS2CPacket) packet).multiconnect_getDimension() != world.getDimension()) {
                 ci.cancel();
             }
+        }
+    }
+
+    @ModifyVariable(method = "onChunkData", ordinal = 0, at = @At(value = "STORE", ordinal = 0))
+    private WorldChunk fixChunk(WorldChunk chunk, ChunkDataS2CPacket packet) {
+        if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()) {
+            if (chunk != null) {
+                EnumMap<EightWayDirection, ShortSet> blocksNeedingUpdate = ((IChunkDataS2CPacket) packet).multiconnect_getBlocksNeedingUpdate();
+                ChunkConnector chunkConnector = new ChunkConnector(chunk, ConnectionInfo.protocol.getBlockConnector(), blocksNeedingUpdate);
+                ((IBlockConnectableChunk) chunk).multiconnect_setChunkConnector(chunkConnector);
+                for (Direction side : Direction.Type.HORIZONTAL) {
+                    Chunk neighborChunk = world.getChunk(packet.getX() - side.getOffsetX(), packet.getZ() - side.getOffsetZ(), ChunkStatus.FULL, false);
+                    if (neighborChunk != null) {
+                        ((IBlockConnectableChunk) neighborChunk).multiconnect_getChunkConnector().onNeighborChunkLoaded(side);
+                    }
+                }
+            }
+        }
+        return chunk;
     }
 
     @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))

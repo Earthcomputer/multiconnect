@@ -9,7 +9,6 @@
     "AbstractMinecartEntityAccessor",
     "AreaEffectCloudEntityAccessor",
     "BoatEntityAccessor",
-    "ChunkPalettedStorageFixAccessor",
     "CommandBlockMinecartC2SAccessor",
     "CrackParticleAccessor",
     "EntityAccessor",
@@ -17,7 +16,6 @@
     "MixinAreaEffectCloudEntity",
     "MixinBannerBlockEntity",
     "MixinBedBlockEntity",
-    "MixinBlock",
     "MixinBlockItem",
     "MixinBlockStateFlattening",
     "MixinClientPlayerEntity",
@@ -30,11 +28,8 @@
     "MixinLivingEntity",
     "MixinNoteBlock",
     "MixinSkullBlockEntity",
-    "MixinUpgradeData",
-    "MixinWorldChunk",
     "StatsCounterFixAccessor",
     "SuspendParticleAccessor",
-    "UpgradeDataAccessor",
     "WolfEntityAccessor"
   ],
   "injectors": {

@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.generic;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectionsBlockView;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.network.PacketByteBuf;
@@ -9,7 +10,7 @@ import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.ChunkSection;
 
-public final class ChunkData {
+public final class ChunkData implements IBlockConnectionsBlockView {
     private final ChunkSection[] sections = new ChunkSection[16];
 
     public static ChunkData read(PacketByteBuf buf) {
@@ -49,6 +50,7 @@ public final class ChunkData {
         return buffer;
     }
 
+    @Override
     public BlockState getBlockState(BlockPos pos) {
         return getBlockState(pos.getX(), pos.getY(), pos.getZ());
     }
@@ -65,6 +67,21 @@ public final class ChunkData {
         }
         y &= 15;
         return section.getBlockState(x, y, z);
+    }
+
+    @Override
+    public void setBlockState(BlockPos pos, BlockState state) {
+        if (pos.getY() < 0 || pos.getY() > 255) {
+            return;
+        }
+        int x = pos.getX() & 15;
+        int z = pos.getY() & 15;
+        ChunkSection section = sections[pos.getY() >> 4];
+        if (section == null) {
+            return;
+        }
+        int y = pos.getY() & 15;
+        section.setBlockState(x, y, z, state);
     }
 
     public ChunkSection[] getSections() {
