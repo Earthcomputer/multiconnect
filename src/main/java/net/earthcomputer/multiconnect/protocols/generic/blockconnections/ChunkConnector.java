@@ -89,8 +89,8 @@ public class ChunkConnector {
         }
     }
 
-    public void onBlockChange(BlockPos pos, Block newBlock) {
-        if (updateBlock(pos, newBlock, true)) {
+    public void onBlockChange(BlockPos pos, Block newBlock, boolean updateNeighbors) {
+        if (updateBlock(pos, newBlock, true) || updateNeighbors) {
             for (Direction dir : Direction.values()) {
                 BlockPos offsetPos = new BlockPos(
                         chunk.getPos().getStartX() + (pos.getX() & 15) + dir.getOffsetX(),
@@ -99,7 +99,7 @@ public class ChunkConnector {
                 ChunkPos offsetChunkPos = new ChunkPos(offsetPos);
                 Chunk offsetChunk = dir.getAxis() == Direction.Axis.Y ? chunk : chunk.getWorld().getChunk(offsetChunkPos.x, offsetChunkPos.z, ChunkStatus.FULL, false);
                 if (offsetChunk != null) {
-                    ((IBlockConnectableChunk) offsetChunk).multiconnect_getChunkConnector().onBlockChange(offsetPos, offsetChunk.getBlockState(offsetPos).getBlock());
+                    ((IBlockConnectableChunk) offsetChunk).multiconnect_getChunkConnector().onBlockChange(offsetPos, offsetChunk.getBlockState(offsetPos).getBlock(), false);
                 }
             }
         }

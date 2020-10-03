@@ -20,7 +20,6 @@
     "MixinBlockStateFlattening",
     "MixinClientPlayerEntity",
     "MixinClientPlayNetworkHandler",
-    "MixinClientWorld",
     "MixinCommandSuggestor",
     "MixinEntity",
     "MixinFlowerPotBlock",

@@ -1,6 +1,7 @@
-package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
+package net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors;
 
 import com.google.common.collect.ImmutableList;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectionsBlockView;
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
 

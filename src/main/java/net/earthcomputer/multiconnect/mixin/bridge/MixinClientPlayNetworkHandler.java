@@ -11,6 +11,7 @@ import net.earthcomputer.multiconnect.protocols.generic.blockconnections.ChunkCo
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectableChunk;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.world.ClientWorld;
@@ -25,6 +26,7 @@ import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
 import net.minecraft.tag.*;
 import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.DynamicRegistryManager;
@@ -35,6 +37,7 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -81,6 +84,18 @@ public class MixinClientPlayNetworkHandler {
             }
         }
         return chunk;
+    }
+
+    @Dynamic
+    @Inject(method = "method_31176", remap = false, at = @At("RETURN"))
+    private void fixDeltaChunk(int flags, BlockPos pos, BlockState state, CallbackInfo ci) {
+        Chunk chunk = world.getChunk(pos.getX() >> 4, pos.getZ() >> 4, ChunkStatus.FULL, false);
+        if (chunk != null) {
+            ChunkConnector connector = ((IBlockConnectableChunk) chunk).multiconnect_getChunkConnector();
+            if (connector != null) {
+                connector.onBlockChange(pos, state.getBlock(), true);
+            }
+        }
     }
 
     @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))

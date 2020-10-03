@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
 
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.CompoundConnector;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.IBlockConnector;
 import net.minecraft.block.Block;
 
 import java.util.*;

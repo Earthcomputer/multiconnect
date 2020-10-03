@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
+package net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors;
 
 import net.minecraft.block.Block;
 
