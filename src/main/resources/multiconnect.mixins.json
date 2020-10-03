@@ -42,6 +42,7 @@
     "bridge.SynchronizeTagsS2CAccessor",
     "bridge.TrackedDataAccessor",
     "bridge.TrackedDataHandlerRegistryAccessor",
+    "compat.MixinRegistrySyncManager",
     "connect.HandshakePacketAccessor",
     "connect.MixinAddServerScreen",
     "connect.MixinConnectScreen",

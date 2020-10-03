@@ -131,11 +131,11 @@ public class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onCustomPayload", at = @At("HEAD"), cancellable = true)
     private void onOnCustomPayload(CustomPayloadS2CPacket packet, CallbackInfo ci) {
-        NetworkThreadUtils.forceMainThread(packet, (ClientPlayNetworkHandler) (Object) this, MinecraftClient.getInstance());
         if (packet.getChannel().equals(CustomPayloadHandler.DROP_ID)) {
             ci.cancel();
         } else if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()
                 && !CustomPayloadHandler.VANILLA_CLIENTBOUND_CHANNELS.contains(packet.getChannel())) {
+            NetworkThreadUtils.forceMainThread(packet, (ClientPlayNetworkHandler) (Object) this, MinecraftClient.getInstance());
             CustomPayloadHandler.handleClientboundCustomPayload(packet);
             ci.cancel();
         }
