@@ -91,7 +91,7 @@ public class ChunkConnector {
                     while (itr.hasNext()) {
                         short packed = itr.nextShort();
                         pos.set(chunk.getPos().getStartX() + unpackLocalX(packed), unpackLocalY(packed), chunk.getPos().getStartZ() + unpackLocalZ(packed));
-                        updateBlock(pos, worldView.getBlockState(pos).getBlock(), false);
+                        connector.fix(worldView, pos, worldView.getBlockState(pos).getBlock());
                     }
                     blocksNeedingUpdate.remove(dir);
                 }
@@ -100,7 +100,7 @@ public class ChunkConnector {
     }
 
     public void onBlockChange(BlockPos pos, Block newBlock, boolean updateNeighbors) {
-        if (updateBlock(pos, newBlock, true) || updateNeighbors) {
+        if (updateBlock(pos, newBlock) || updateNeighbors) {
             for (Direction dir : Direction.values()) {
                 BlockPos offsetPos = new BlockPos(
                         chunk.getPos().getStartX() + (pos.getX() & 15) + dir.getOffsetX(),
@@ -115,12 +115,8 @@ public class ChunkConnector {
         }
     }
 
-    public boolean updateBlock(BlockPos pos, Block newBlock, boolean checkForUpdateRemoval) {
+    public boolean updateBlock(BlockPos pos, Block newBlock) {
         if (pos.getY() < 0 || pos.getY() > 255) {
-            return false;
-        }
-
-        if (!checkForUpdateRemoval && !connector.shouldProcess(newBlock)) {
             return false;
         }
 
