@@ -184,7 +184,7 @@ public class BlockConnectors_1_12_2 {
                     state = state.with(property, WireConnection.SIDE);
                 } else {
                     BlockState above = world.getBlockState(pos.up());
-                    if (IBlockConnectionsBlockView.withNullWorld(above.getBlock(), false, () -> offsetState.isSolidBlock(null, null))) {
+                    if (IBlockConnectionsBlockView.withNullWorld(above.getBlock(), false, () -> above.isSolidBlock(null, null))) {
                         state = state.with(property, WireConnection.NONE);
                     } else {
                         boolean canRunOnTop = offsetState.getBlock() == Blocks.GLOWSTONE

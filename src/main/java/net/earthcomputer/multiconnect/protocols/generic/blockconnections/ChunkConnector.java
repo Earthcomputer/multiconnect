@@ -78,13 +78,23 @@ public class ChunkConnector {
         for (EightWayDirection dir : EightWayDirection.values()) {
             ShortSet set = blocksNeedingUpdate.get(dir);
             if (set != null && dir.getDirections().contains(side)) {
-                ShortIterator itr = set.iterator();
-                while (itr.hasNext()) {
-                    short packed = itr.nextShort();
-                    pos.set(chunk.getPos().getStartX() + unpackLocalX(packed), unpackLocalY(packed), chunk.getPos().getStartZ() + unpackLocalZ(packed));
-                    updateBlock(pos, worldView.getBlockState(pos).getBlock(), false);
+                boolean allNeighborsLoaded = true;
+                for (Direction requiredDir : dir.getDirections()) {
+                    if (requiredDir != side && chunk.getWorld().getChunk(chunk.getPos().x + requiredDir.getOffsetX(), chunk.getPos().z + requiredDir.getOffsetZ(), ChunkStatus.FULL, false) == null) {
+                        allNeighborsLoaded = false;
+                        break;
+                    }
                 }
-                blocksNeedingUpdate.remove(dir);
+
+                if (allNeighborsLoaded) {
+                    ShortIterator itr = set.iterator();
+                    while (itr.hasNext()) {
+                        short packed = itr.nextShort();
+                        pos.set(chunk.getPos().getStartX() + unpackLocalX(packed), unpackLocalY(packed), chunk.getPos().getStartZ() + unpackLocalZ(packed));
+                        updateBlock(pos, worldView.getBlockState(pos).getBlock(), false);
+                    }
+                    blocksNeedingUpdate.remove(dir);
+                }
             }
         }
     }
