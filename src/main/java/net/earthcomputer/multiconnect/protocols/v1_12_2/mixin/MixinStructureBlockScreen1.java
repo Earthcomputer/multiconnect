@@ -16,7 +16,7 @@ public class MixinStructureBlockScreen1 extends TextFieldWidget {
         super(textRenderer, x, y, width, height, copyFrom, text);
     }
 
-    @Inject(method = "charTyped", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "charTyped(CI)Z", at = @At("HEAD"), cancellable = true)
     private void onCharTyped(char chr, int keyCode, CallbackInfoReturnable<Boolean> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             ci.setReturnValue(super.charTyped(chr, keyCode));
