@@ -35,6 +35,11 @@ public class BlockConnector {
     }
 
     public void fixChunkData(ChunkData chunkData, EnumMap<EightWayDirection, ShortSet> blocksNeedingUpdateOut) {
+        // early exit if no fixing ever needs to be done
+        if (connectors.isEmpty()) {
+            return;
+        }
+
         int chunkX = ChunkDataTranslator.current().getPacket().getX();
         int chunkZ = ChunkDataTranslator.current().getPacket().getZ();
         ChunkSection[] sections = chunkData.getSections();
