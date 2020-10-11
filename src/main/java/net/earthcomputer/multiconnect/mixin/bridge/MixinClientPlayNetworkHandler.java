@@ -76,9 +76,10 @@ public class MixinClientPlayNetworkHandler {
                 ChunkConnector chunkConnector = new ChunkConnector(chunk, ConnectionInfo.protocol.getBlockConnector(), blocksNeedingUpdate);
                 ((IBlockConnectableChunk) chunk).multiconnect_setChunkConnector(chunkConnector);
                 for (Direction side : Direction.Type.HORIZONTAL) {
-                    Chunk neighborChunk = world.getChunk(packet.getX() - side.getOffsetX(), packet.getZ() - side.getOffsetZ(), ChunkStatus.FULL, false);
+                    Chunk neighborChunk = world.getChunk(packet.getX() + side.getOffsetX(), packet.getZ() + side.getOffsetZ(), ChunkStatus.FULL, false);
                     if (neighborChunk != null) {
-                        ((IBlockConnectableChunk) neighborChunk).multiconnect_getChunkConnector().onNeighborChunkLoaded(side);
+                        chunkConnector.onNeighborChunkLoaded(side);
+                        ((IBlockConnectableChunk) neighborChunk).multiconnect_getChunkConnector().onNeighborChunkLoaded(side.getOpposite());
                     }
                 }
             }

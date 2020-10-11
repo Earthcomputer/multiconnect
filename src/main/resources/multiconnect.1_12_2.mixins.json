@@ -3,7 +3,10 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_12_2.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "MixinStructureBlockBlockEntity"
+    "FireBlockAccessor",
+    "MixinStructureBlockBlockEntity",
+    "RedstoneWireBlockAccessor",
+    "WallBlockAccessor"
   ],
   "client": [
     "AbstractMinecartEntityAccessor",

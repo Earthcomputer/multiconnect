@@ -17,7 +17,7 @@ public class BlockConnectionsWorldView implements IBlockConnectionsBlockView {
     }
 
     @Override
-    public void setBlockState(BlockPos pos, BlockState state) {
-        world.setBlockState(pos, state, 18);
+    public boolean setBlockState(BlockPos pos, BlockState state) {
+        return world.setBlockState(pos, state, 19);
     }
 }

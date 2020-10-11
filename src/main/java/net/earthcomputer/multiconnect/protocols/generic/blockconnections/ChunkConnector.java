@@ -81,11 +81,11 @@ public class ChunkConnector {
                 ShortIterator itr = set.iterator();
                 while (itr.hasNext()) {
                     short packed = itr.nextShort();
-                    pos.set(unpackLocalX(packed), unpackLocalY(packed), unpackLocalZ(packed));
+                    pos.set(chunk.getPos().getStartX() + unpackLocalX(packed), unpackLocalY(packed), chunk.getPos().getStartZ() + unpackLocalZ(packed));
                     updateBlock(pos, worldView.getBlockState(pos).getBlock(), false);
                 }
+                blocksNeedingUpdate.remove(dir);
             }
-            blocksNeedingUpdate.remove(dir);
         }
     }
 
@@ -97,7 +97,7 @@ public class ChunkConnector {
                         pos.getY() + dir.getOffsetY(),
                         chunk.getPos().getStartZ() + (pos.getZ() & 15) + dir.getOffsetZ());
                 ChunkPos offsetChunkPos = new ChunkPos(offsetPos);
-                Chunk offsetChunk = dir.getAxis() == Direction.Axis.Y ? chunk : chunk.getWorld().getChunk(offsetChunkPos.x, offsetChunkPos.z, ChunkStatus.FULL, false);
+                Chunk offsetChunk = offsetChunkPos.equals(chunk.getPos()) ? chunk : chunk.getWorld().getChunk(offsetChunkPos.x, offsetChunkPos.z, ChunkStatus.FULL, false);
                 if (offsetChunk != null) {
                     ((IBlockConnectableChunk) offsetChunk).multiconnect_getChunkConnector().onBlockChange(offsetPos, offsetChunk.getBlockState(offsetPos).getBlock(), false);
                 }
