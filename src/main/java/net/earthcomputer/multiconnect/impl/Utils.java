@@ -19,12 +19,12 @@ import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
 import net.minecraft.tag.Tag;
 import net.minecraft.text.TranslatableText;
@@ -207,9 +207,9 @@ public class Utils {
             return;
         }
         if (!allowablePredicate.test(oldRegistries)) {
-            ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
-            if (networkHandler != null) {
-                networkHandler.getConnection().disconnect(new TranslatableText("multiconnect.unsupportedExperimentalCodec"));
+            ClientConnection connection = buf.getConnection();
+            if (connection != null) {
+                connection.disconnect(new TranslatableText("multiconnect.unsupportedExperimentalCodec"));
             }
             return;
         }

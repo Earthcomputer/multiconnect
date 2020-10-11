@@ -37,7 +37,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
     private final TranslatorRegistry translatorRegistry;
 
     private boolean transformationEnabled = false;
-    private Deque<StackFrame> stack = new ArrayDeque<>();
+    private final Deque<StackFrame> stack = new ArrayDeque<>();
     private boolean forceSuper = false;
 
     public TransformerByteBuf(ByteBuf delegate, ChannelHandlerContext context) {
@@ -48,6 +48,10 @@ public final class TransformerByteBuf extends PacketByteBuf {
         super(delegate);
         this.context = context;
         this.translatorRegistry = translatorRegistry;
+    }
+
+    public ClientConnection getConnection() {
+        return context.channel().pipeline().get(ClientConnection.class);
     }
 
     @SuppressWarnings("unchecked")
