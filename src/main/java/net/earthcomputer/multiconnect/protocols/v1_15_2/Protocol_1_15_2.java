@@ -5,6 +5,8 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.mixin.bridge.DynamicRegistryManagerImplAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.SimpleInPlaceConnector;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ProjectileEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAttributesFixAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAccessor;
@@ -14,6 +16,7 @@ import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
+import net.minecraft.block.enums.WireConnection;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.datafixer.fix.BitStorageAlignFix;
@@ -47,6 +50,7 @@ import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.Stats;
+import net.minecraft.state.property.Properties;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.ItemTags;
@@ -328,6 +332,19 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
                 return from;
             }
         });
+
+        BlockConnections.registerConnector(Protocols.V1_15_2, new SimpleInPlaceConnector(Blocks.REDSTONE_WIRE, (world, pos) -> {
+            BlockState state = world.getBlockState(pos);
+            boolean north = state.get(Properties.NORTH_WIRE_CONNECTION) != WireConnection.NONE;
+            boolean south = state.get(Properties.SOUTH_WIRE_CONNECTION) != WireConnection.NONE;
+            boolean west = state.get(Properties.WEST_WIRE_CONNECTION) != WireConnection.NONE;
+            boolean east = state.get(Properties.EAST_WIRE_CONNECTION) != WireConnection.NONE;
+            if (north && !south && !west && !east) state = state.with(Properties.SOUTH_WIRE_CONNECTION, WireConnection.SIDE);
+            if (!north && south && !west && !east) state = state.with(Properties.NORTH_WIRE_CONNECTION, WireConnection.SIDE);
+            if (!north && !south && west && !east) state = state.with(Properties.EAST_WIRE_CONNECTION, WireConnection.SIDE);
+            if (!north && !south && !west && east) state = state.with(Properties.WEST_WIRE_CONNECTION, WireConnection.SIDE);
+            return world.setBlockState(pos, state);
+        }));
     }
 
     private static Identifier dimensionIdToName(int dimensionId) {
