@@ -3,7 +3,6 @@
     <option name="myName" value="Project Default" />
     <inspection_tool class="BooleanMethodIsAlwaysInverted" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="GroovyAssignabilityCheck" enabled="false" level="WARNING" enabled_by_default="false" />
-    <inspection_tool class="PublicStaticMixinMember" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="SSBasedInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <replaceConfiguration name="transformPacket not immediately calling super" text="class $Class$ extends $Superclass$ {&#10;    $ReturnType$ $Method$($ParamTypes$ $Params$) {&#10;        $NonSuperStatement$;&#10;        $OtherStatements$;&#10;    }&#10;}" recursive="false" caseInsensitive="true" type="JAVA" pattern_context="default" reformatAccordingToStyle="true" shortenFQN="false" replacement="    $ReturnType$ $Method$($ParamTypes$ $Params$) {&#10;        super.$Method$($Params$);&#10;        $NonSuperStatement$;&#10;        $OtherStatements$;&#10;    }">
         <constraint name="__context__" within="" contains="" />
@@ -18,10 +17,5 @@
       </replaceConfiguration>
     </inspection_tool>
     <inspection_tool class="TrivialIf" enabled="false" level="WARNING" enabled_by_default="false" />
-    <inspection_tool class="WeakerAccess" enabled="false" level="WARNING" enabled_by_default="false">
-      <option name="SUGGEST_PACKAGE_LOCAL_FOR_MEMBERS" value="true" />
-      <option name="SUGGEST_PACKAGE_LOCAL_FOR_TOP_CLASSES" value="true" />
-      <option name="SUGGEST_PRIVATE_FOR_INNERS" value="false" />
-    </inspection_tool>
   </profile>
 </component>

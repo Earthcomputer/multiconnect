@@ -32,9 +32,9 @@ import static net.earthcomputer.multiconnect.api.Protocols.*;
 
 public class ProtocolRegistry {
 
-    private static Int2ObjectOpenHashMap<AbstractProtocol> protocols = new Int2ObjectOpenHashMap<>();
+    private static final Int2ObjectOpenHashMap<AbstractProtocol> protocols = new Int2ObjectOpenHashMap<>();
 
-    private static TranslatorRegistry translatorRegistry = new TranslatorRegistry();
+    private static final TranslatorRegistry translatorRegistry = new TranslatorRegistry();
 
     public static AbstractProtocol get(int version) {
         return protocols.get(version);
@@ -69,6 +69,7 @@ public class ProtocolRegistry {
 
     private static void register(int version, AbstractProtocol protocol, Runnable registerTranslators) {
         registeringProtocol = version;
+        protocol.setProtocolVersion(version);
         protocols.put(version, protocol);
         registerTranslators.run();
     }

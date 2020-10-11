@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.client.MinecraftClient;
@@ -9,13 +10,11 @@ import net.minecraft.network.OffThreadException;
 import net.minecraft.network.Packet;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.world.dimension.DimensionType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -56,6 +55,11 @@ public class ChunkDataTranslator {
             TransformerByteBuf buf = new TransformerByteBuf(packet.getReadBuffer(), null);
             buf.readTopLevelType(ChunkData.class);
             ChunkData chunkData = ChunkData.read(buf);
+
+            EnumMap<EightWayDirection, ShortSet> blocksNeedingConnectionUpdate = new EnumMap<>(EightWayDirection.class);
+            ConnectionInfo.protocol.getBlockConnector().fixChunkData(chunkData, blocksNeedingConnectionUpdate);
+            ((IChunkDataS2CPacket) packet).multiconnect_setBlocksNeedingUpdate(blocksNeedingConnectionUpdate);
+
             ConnectionInfo.protocol.postTranslateChunk(translator, chunkData);
             ((IChunkDataS2CPacket) packet).setData(chunkData.toByteArray());
 

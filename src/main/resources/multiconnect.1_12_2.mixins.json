@@ -3,14 +3,16 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_12_2.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "FireBlockAccessor",
     "MixinStructureBlockBlockEntity",
-    "MixinStructureBlockScreen1"
+    "MixinStructureBlockScreen1",
+    "RedstoneWireBlockAccessor",
+    "WallBlockAccessor"
   ],
   "client": [
     "AbstractMinecartEntityAccessor",
     "AreaEffectCloudEntityAccessor",
     "BoatEntityAccessor",
-    "ChunkPalettedStorageFixAccessor",
     "CommandBlockMinecartC2SAccessor",
     "CrackParticleAccessor",
     "EntityAccessor",
@@ -18,12 +20,10 @@
     "MixinAreaEffectCloudEntity",
     "MixinBannerBlockEntity",
     "MixinBedBlockEntity",
-    "MixinBlock",
     "MixinBlockItem",
     "MixinBlockStateFlattening",
     "MixinClientPlayerEntity",
     "MixinClientPlayNetworkHandler",
-    "MixinClientWorld",
     "MixinCommandSuggestor",
     "MixinEntity",
     "MixinFlowerPotBlock",
@@ -31,11 +31,8 @@
     "MixinLivingEntity",
     "MixinNoteBlock",
     "MixinSkullBlockEntity",
-    "MixinUpgradeData",
-    "MixinWorldChunk",
     "StatsCounterFixAccessor",
     "SuspendParticleAccessor",
-    "UpgradeDataAccessor",
     "WolfEntityAccessor"
   ],
   "injectors": {

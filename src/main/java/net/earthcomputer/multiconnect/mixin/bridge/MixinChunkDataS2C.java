@@ -1,11 +1,13 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.IChunkDataS2CPacket;
 import net.minecraft.datafixer.TypeReferences;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.dimension.DimensionType;
@@ -17,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.EnumMap;
 import java.util.List;
 
 @Mixin(ChunkDataS2CPacket.class)
@@ -27,6 +30,8 @@ public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
     private boolean dataTranslated = false;
     @Unique
     private DimensionType dimension;
+    @Unique
+    private EnumMap<EightWayDirection, ShortSet> blocksNeedingUpdate;
 
     @Override
     public boolean multiconnect_isDataTranslated() {
@@ -65,6 +70,16 @@ public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
     @Override
     public void multiconnect_setDimension(DimensionType dimension) {
         this.dimension = dimension;
+    }
+
+    @Override
+    public void multiconnect_setBlocksNeedingUpdate(EnumMap<EightWayDirection, ShortSet> blocksNeedingUpdate) {
+        this.blocksNeedingUpdate = blocksNeedingUpdate;
+    }
+
+    @Override
+    public EnumMap<EightWayDirection, ShortSet> multiconnect_getBlocksNeedingUpdate() {
+        return blocksNeedingUpdate;
     }
 
     @Override

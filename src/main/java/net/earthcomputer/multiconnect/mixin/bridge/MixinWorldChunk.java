@@ -1,6 +1,8 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.ChunkConnector;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectableChunk;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -12,8 +14,9 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(WorldChunk.class)
-public class MixinWorldChunk {
+public abstract class MixinWorldChunk implements IBlockConnectableChunk {
 
+    @Unique private ChunkConnector chunkConnector;
     @Unique private boolean shouldReplaceBlockEntity;
 
     @ModifyVariable(method = "setBlockState", ordinal = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;getBlock()Lnet/minecraft/block/Block;", ordinal = 0))
@@ -26,6 +29,16 @@ public class MixinWorldChunk {
     private void redirectRemoveBlockEntity(World world, BlockPos pos) {
         if (shouldReplaceBlockEntity)
             world.removeBlockEntity(pos);
+    }
+
+    @Override
+    public ChunkConnector multiconnect_getChunkConnector() {
+        return chunkConnector;
+    }
+
+    @Override
+    public void multiconnect_setChunkConnector(ChunkConnector chunkConnector) {
+        this.chunkConnector = chunkConnector;
     }
 
 }

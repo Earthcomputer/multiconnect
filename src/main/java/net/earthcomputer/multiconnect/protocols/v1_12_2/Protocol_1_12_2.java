@@ -531,6 +531,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 return to;
             }
         });
+
+        BlockConnectors_1_12_2.register();
     }
 
     @SuppressWarnings("unchecked")

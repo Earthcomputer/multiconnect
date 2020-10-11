@@ -2,6 +2,8 @@ package net.earthcomputer.multiconnect.protocols.generic;
 
 import net.earthcomputer.multiconnect.impl.IUtils;
 import net.earthcomputer.multiconnect.mixin.bridge.MinecraftClientAccessor;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnector;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -25,6 +27,13 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public abstract class AbstractProtocol implements IUtils {
+    private int protocolVersion;
+    private BlockConnector blockConnector;
+
+    // To be called by ProtocolRegistry only!
+    public void setProtocolVersion(int protocolVersion) {
+        this.protocolVersion = protocolVersion;
+    }
 
     public void setup(boolean resourceReload) {
         if (!resourceReload) {
@@ -150,6 +159,13 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
+    }
+
+    public BlockConnector getBlockConnector() {
+        if (blockConnector == null) {
+            blockConnector = BlockConnections.buildConnector(protocolVersion);
+        }
+        return blockConnector;
     }
 
     public boolean shouldBlockChangeReplaceBlockEntity(Block oldBlock, Block newBlock) {
