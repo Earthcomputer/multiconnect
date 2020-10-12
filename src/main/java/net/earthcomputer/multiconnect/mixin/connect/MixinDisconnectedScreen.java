@@ -60,7 +60,7 @@ public abstract class MixinDisconnectedScreen extends Screen {
     @Inject(method = "init", at = @At("RETURN"))
     private void addButtons(CallbackInfo ci) {
         if (isProtocolReason) {
-            protocolSelector = new DropDownWidget<>(width - 80, 5, 70, 20, getForcedVersion(), mode -> new LiteralText(mode.getName()));
+            protocolSelector = new DropDownWidget<>(width - 80, 5, 75, 20, getForcedVersion(), mode -> new LiteralText(mode.getName()));
             protocolSelector.setValueListener(mode -> ServersExt.getInstance().getOrCreateServer(server.address).forcedProtocol = mode.getValue());
             ConnectionMode.populateDropDownWidget(protocolSelector);
             children.add(0, protocolSelector);
