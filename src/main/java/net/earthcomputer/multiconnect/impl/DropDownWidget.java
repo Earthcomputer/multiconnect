@@ -118,7 +118,7 @@ public class DropDownWidget<T> extends AbstractPressableButtonWidget {
                 int textY = categoryY + (height - 8) / 2;
                 drawCenteredText(matrices, textRenderer, labelExtractor.apply(category.value), x + width / 2, textY, 0xffffff);
                 if (category.hasChildren()) {
-                    drawTextWithShadow(matrices, textRenderer, EXPAND_RIGHT_TEXT, x + width - 2 - textRenderer.getWidth(EXPAND_RIGHT_TEXT), textY, 0xc0c0c0);
+                    drawTextWithShadow(matrices, textRenderer, EXPAND_RIGHT_TEXT, x + width - 5 - textRenderer.getWidth(EXPAND_RIGHT_TEXT), textY, 0xc0c0c0);
                 }
             }
 
@@ -155,7 +155,7 @@ public class DropDownWidget<T> extends AbstractPressableButtonWidget {
     public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.renderButton(matrices, mouseX, mouseY, delta);
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        drawTextWithShadow(matrices, textRenderer, EXPAND_DOWN_TEXT, x + width - 2 - textRenderer.getWidth(EXPAND_DOWN_TEXT), y + (height - 8) / 2, 0xc0c0c0);
+        drawTextWithShadow(matrices, textRenderer, EXPAND_DOWN_TEXT, x + width - 5 - textRenderer.getWidth(EXPAND_DOWN_TEXT), y + (height - 8) / 2, 0xc0c0c0);
     }
 
     private void updateHover(int mouseX, int mouseY) {
