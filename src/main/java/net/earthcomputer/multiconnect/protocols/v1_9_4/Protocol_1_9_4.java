@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_9_4;
 
+import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
@@ -8,6 +9,7 @@ import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Protocol_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.RecipeInfo;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
 import net.earthcomputer.multiconnect.protocols.v1_9_4.mixin.EntityAccessor;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -20,12 +22,14 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.ResourcePackStatusC2SPacket;
 import net.minecraft.network.packet.s2c.play.PlaySoundIdS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
+import net.minecraft.server.command.CommandSource;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.registry.Registry;
 
 import java.util.List;
+import java.util.Set;
 
 public class Protocol_1_9_4 extends Protocol_1_10 {
 
@@ -119,6 +123,12 @@ public class Protocol_1_9_4 extends Protocol_1_10 {
         List<RecipeInfo<?>> recipes = super.getCraftingRecipes();
         recipes.removeIf(recipe -> recipe.getOutput().getItem() == Items.BONE_BLOCK);
         return recipes;
+    }
+
+    @Override
+    public void registerCommands(CommandDispatcher<CommandSource> dispatcher, Set<String> serverCommands) {
+        super.registerCommands(dispatcher, serverCommands);
+        BrigadierRemover.of(dispatcher).get("teleport").remove();
     }
 
     @Override
