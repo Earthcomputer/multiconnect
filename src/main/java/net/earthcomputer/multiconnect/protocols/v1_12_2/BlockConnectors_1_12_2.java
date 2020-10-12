@@ -48,7 +48,7 @@ public class BlockConnectors_1_12_2 {
         }, Blocks.OAK_DOOR, Blocks.SPRUCE_DOOR, Blocks.BIRCH_DOOR, Blocks.JUNGLE_DOOR, Blocks.ACACIA_DOOR, Blocks.DARK_OAK_DOOR, Blocks.IRON_DOOR));
 
         // copy double plant type from lower
-        BlockConnections.registerConnector(Protocols.V1_12_2, new SimpleInPlaceConnector(Blocks.SUNFLOWER, (world, pos) -> {
+        BlockConnections.registerConnector(Protocols.V1_12_2, new SimpleInPlaceConnector((world, pos) -> {
             if (world.getBlockState(pos).get(Properties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.LOWER) {
                 return false;
             }
@@ -58,7 +58,7 @@ public class BlockConnectors_1_12_2 {
             } else {
                 return false;
             }
-        }));
+        }, Blocks.SUNFLOWER, Blocks.LILAC, Blocks.TALL_GRASS, Blocks.LARGE_FERN, Blocks.ROSE_BUSH, Blocks.PEONY));
 
         // chest connections
         BlockConnections.registerConnector(Protocols.V1_12_2, new SimpleNeighborConnector((world, pos) -> {
