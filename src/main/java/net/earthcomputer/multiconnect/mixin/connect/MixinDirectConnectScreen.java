@@ -3,11 +3,11 @@ package net.earthcomputer.multiconnect.mixin.connect;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.connect.ServersExt;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.minecraft.client.gui.screen.DirectConnectScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
@@ -34,8 +34,7 @@ public class MixinDirectConnectScreen extends Screen {
     @Inject(method = "init", at = @At("RETURN"))
     private void createButtons(CallbackInfo ci) {
         forceProtocolLabel = new TranslatableText("multiconnect.changeForcedProtocol").append(" ->").asOrderedText();
-        protocolSelector = new DropDownWidget<>(width - 80, 5, 75, 20, ConnectionMode.AUTO, mode -> new LiteralText(mode.getName()));
-        ConnectionMode.populateDropDownWidget(protocolSelector);
+        protocolSelector = Utils.createVersionDropdown(this, ConnectionMode.AUTO);
         children.add(0, protocolSelector);
     }
 

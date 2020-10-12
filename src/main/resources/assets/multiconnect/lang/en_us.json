@@ -1,4 +1,6 @@
 {
+  "multiconnect.betaWarning.line1": "%s is currently in beta support by multiconnect.",
+  "multiconnect.betaWarning.line2": "Expect bugs, but report any you find to the issue tracker!",
   "multiconnect.changeForcedProtocol": "Version",
   "multiconnect.unsupportedExperimentalCodec": "This server is using experimental features, or features which were experimental on the server version. Multiconnect cannot translate experimental data, and cannot connect to this server."
 }

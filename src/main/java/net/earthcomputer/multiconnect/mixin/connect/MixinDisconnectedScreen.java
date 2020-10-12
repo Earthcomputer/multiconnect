@@ -4,12 +4,12 @@ import com.google.common.collect.ImmutableSet;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.connect.ServersExt;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
@@ -60,9 +60,8 @@ public abstract class MixinDisconnectedScreen extends Screen {
     @Inject(method = "init", at = @At("RETURN"))
     private void addButtons(CallbackInfo ci) {
         if (isProtocolReason) {
-            protocolSelector = new DropDownWidget<>(width - 80, 5, 75, 20, getForcedVersion(), mode -> new LiteralText(mode.getName()));
+            protocolSelector = Utils.createVersionDropdown(this, getForcedVersion());
             protocolSelector.setValueListener(mode -> ServersExt.getInstance().getOrCreateServer(server.address).forcedProtocol = mode.getValue());
-            ConnectionMode.populateDropDownWidget(protocolSelector);
             children.add(0, protocolSelector);
         }
     }

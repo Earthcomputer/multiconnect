@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.connect;
 import com.google.common.collect.Lists;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.impl.DropDownWidget;
 
 import java.util.*;
 
@@ -127,20 +126,6 @@ public enum ConnectionMode implements IProtocol {
 
     public static boolean isSupportedVersionName(String name) {
         return VALID_NAMES.contains(name);
-    }
-
-    public static void populateDropDownWidget(DropDownWidget<ConnectionMode> dropDown) {
-        for (ConnectionMode mode : VALUES) {
-            if (mode.majorRelease) {
-                DropDownWidget<ConnectionMode>.Category category = dropDown.add(mode);
-                List<IProtocol> children = mode.getMinorReleases();
-                if (children.size() > 1) {
-                    for (IProtocol child : children) {
-                        category.add((ConnectionMode) child);
-                    }
-                }
-            }
-        }
     }
 
     static {

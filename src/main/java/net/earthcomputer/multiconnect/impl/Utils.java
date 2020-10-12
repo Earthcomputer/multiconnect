@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.impl;
 
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
@@ -9,6 +10,7 @@ import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.bridge.DynamicRegistryManagerImplAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAccessor;
@@ -19,6 +21,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.item.Item;
@@ -27,7 +30,9 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
 import net.minecraft.tag.Tag;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.collection.Int2ObjectBiMap;
@@ -243,5 +248,37 @@ public class Utils {
             }
             System.out.println(sb);
         }
+    }
+
+    public static DropDownWidget<ConnectionMode> createVersionDropdown(Screen screen, ConnectionMode initialMode) {
+        DropDownWidget<ConnectionMode> versionDropDown = new DropDownWidget<>(screen.width - 80, 5, 75, 20, initialMode, mode -> {
+            LiteralText text = new LiteralText(mode.getName());
+            if (mode.isMulticonnectBeta()) {
+                text.append(new LiteralText(" !").formatted(Formatting.RED));
+            }
+            return text;
+        }).setTooltipRenderer((matrices, mode, x, y) -> {
+            if (mode.isMulticonnectBeta()) {
+                screen.renderTooltip(matrices, ImmutableList.of(
+                        new TranslatableText("multiconnect.betaWarning.line1", mode.getName()),
+                        new TranslatableText("multiconnect.betaWarning.line2", mode.getName())
+                ), x, y);
+            }
+        });
+
+        // populate the versions
+        for (ConnectionMode mode : ConnectionMode.values()) {
+            if (mode.isMajorRelease()) {
+                DropDownWidget<ConnectionMode>.Category category = versionDropDown.add(mode);
+                List<IProtocol> children = mode.getMinorReleases();
+                if (children.size() > 1) {
+                    for (IProtocol child : children) {
+                        category.add((ConnectionMode) child);
+                    }
+                }
+            }
+        }
+
+        return versionDropDown;
     }
 }

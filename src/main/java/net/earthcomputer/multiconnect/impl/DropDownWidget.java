@@ -20,6 +20,7 @@ public class DropDownWidget<T> extends AbstractPressableButtonWidget {
     private static final Text EXPAND_RIGHT_TEXT = new LiteralText(">");
 
     private final Function<T, Text> labelExtractor;
+    private TooltipRenderer<T> tooltipRenderer = (stack, element, x, y) -> {};
     private final List<Category> categories = new ArrayList<>();
     private T value;
     private Consumer<T> valueListener = val -> {};
@@ -32,6 +33,11 @@ public class DropDownWidget<T> extends AbstractPressableButtonWidget {
         super(x, y, width, height, labelExtractor.apply(initialValue));
         this.labelExtractor = labelExtractor;
         this.value = initialValue;
+    }
+
+    public DropDownWidget<T> setTooltipRenderer(TooltipRenderer<T> tooltipRenderer) {
+        this.tooltipRenderer = tooltipRenderer;
+        return this;
     }
 
     public Category add(T value) {
@@ -140,6 +146,12 @@ public class DropDownWidget<T> extends AbstractPressableButtonWidget {
                         drawCenteredText(matrices, textRenderer, labelExtractor.apply(category.children.get(subcategoryIndex)), subcategoriesX + width / 2, subcategoryY + (height - 8) / 2, 0xffffff);
                     }
                 }
+
+                if (hoveredSubcategory < 0 || hoveredSubcategory >= category.children.size()) {
+                    tooltipRenderer.render(matrices, category.value, mouseX, mouseY);
+                } else {
+                    tooltipRenderer.render(matrices, category.children.get(hoveredSubcategory), mouseX, mouseY);
+                }
             }
         }
     }
@@ -156,6 +168,10 @@ public class DropDownWidget<T> extends AbstractPressableButtonWidget {
         super.renderButton(matrices, mouseX, mouseY, delta);
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         drawTextWithShadow(matrices, textRenderer, EXPAND_DOWN_TEXT, x + width - 5 - textRenderer.getWidth(EXPAND_DOWN_TEXT), y + (height - 8) / 2, 0xc0c0c0);
+        if (isHovered())
+            if (hoveredCategory == -1 || !expanded) {
+                tooltipRenderer.render(matrices, value, mouseX, mouseY);
+            }
     }
 
     private void updateHover(int mouseX, int mouseY) {
@@ -210,7 +226,7 @@ public class DropDownWidget<T> extends AbstractPressableButtonWidget {
 
     public class Category {
         private T value;
-        private List<T> children = new ArrayList<>();
+        private final List<T> children = new ArrayList<>();
 
         private Category(T value) {
             this.value = value;
@@ -235,5 +251,10 @@ public class DropDownWidget<T> extends AbstractPressableButtonWidget {
         public boolean hasChildren() {
             return !children.isEmpty();
         }
+    }
+
+    @FunctionalInterface
+    public interface TooltipRenderer<T> {
+        void render(MatrixStack matrices, T element, int x, int y);
     }
 }
