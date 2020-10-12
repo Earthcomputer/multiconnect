@@ -26,7 +26,7 @@ public abstract class MixinClientWorld extends World {
         super(properties, registryRef, dimensionType, profiler, isClient, debugWorld, seed);
     }
 
-    @Inject(method = "setBlockStateWithoutNeighborUpdates", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "setBlockStateWithoutNeighborUpdates", at = @At("RETURN"), cancellable = true)
     private void onSetBlockWithoutNeighborUpdates(BlockPos pos, BlockState state, CallbackInfo ci) {
         Chunk chunk = getChunk(pos.getX() >> 4, pos.getZ() >> 4, ChunkStatus.FULL, false);
         if (chunk != null) {
