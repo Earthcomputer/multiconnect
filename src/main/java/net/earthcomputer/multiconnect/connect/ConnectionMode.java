@@ -34,6 +34,7 @@ public enum ConnectionMode implements IProtocol {
     V1_11_2("1.11.2", Protocols.V1_11_2, 922),
     V1_11("1.11", Protocols.V1_11, 921, InitFlags.MAJOR_RELEASE),
     V1_10("1.10", Protocols.V1_10, 512, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
+    V1_9_4("1.9.4", Protocols.V1_9_4, 184, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
     // the last value MUST be considered a "major release"
     ;
 

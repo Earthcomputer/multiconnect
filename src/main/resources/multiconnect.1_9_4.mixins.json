@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_9_4.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "EntityAccessor",
+    "MixinClientPlayNetworkHandler"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
