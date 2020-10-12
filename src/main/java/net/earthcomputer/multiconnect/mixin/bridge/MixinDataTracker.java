@@ -8,6 +8,7 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.util.registry.Registry;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -68,8 +69,11 @@ public abstract class MixinDataTracker implements IDataTracker {
 
     @Inject(method = "getEntry", at = @At("RETURN"))
     private void assertCorrectType(TrackedData<?> requested, CallbackInfoReturnable<DataTracker.Entry<?>> ci) {
+        if (ci.getReturnValue() == null) {
+            throw new AssertionError("getEntry returned null for ID " + requested.getId() + " for entity " + Registry.ENTITY_TYPE.getId(trackedEntity.getType()) + "!");
+        }
         if (ci.getReturnValue().getData().getType() != requested.getType()) {
-            throw new AssertionError("getEntry returned wrong type!");
+            throw new AssertionError("getEntry returned wrong type for ID " + requested.getId() + " for entity " + Registry.ENTITY_TYPE.getId(trackedEntity.getType()) + "!");
         }
     }
 
@@ -79,7 +83,7 @@ public abstract class MixinDataTracker implements IDataTracker {
             return;
         List<DataTracker.Entry<?>> entryList = new ArrayList<>(entries.values());
         entries.clear();
-        for (DataTracker.Entry entry : entryList) {
+        for (DataTracker.Entry<?> entry : entryList) {
             entries.put(entry.getData().getId(), entry);
         }
     }

@@ -28,13 +28,13 @@ public class DataTrackerManager {
      * Reregisters also happen when connecting to a new server.
      */
 
-    private static Map<Class<? extends Entity>, List<TrackedData<?>>> DEFAULT_DATA = new HashMap<>();
-    private static Map<Class<? extends Entity>, Integer> NEXT_IDS = new HashMap<>();
-    private static Map<Class<? extends Entity>, List<Pair<TrackedData<?>, ?>>> oldTrackedData = new HashMap<>();
-    private static Map<TrackedData<?>, BiConsumer<?, ?>> oldTrackedDataHandlers = new IdentityHashMap<>();
+    private static final Map<Class<? extends Entity>, List<TrackedData<?>>> DEFAULT_DATA = new HashMap<>();
+    private static final Map<Class<? extends Entity>, Integer> NEXT_IDS = new HashMap<>();
+    private static final Map<Class<? extends Entity>, List<Pair<TrackedData<?>, ?>>> oldTrackedData = new HashMap<>();
+    private static final Map<TrackedData<?>, BiConsumer<?, ?>> oldTrackedDataHandlers = new IdentityHashMap<>();
     private static volatile boolean dirty = false;
     private static int nextAbsentId = -1;
-    private static Set<DataTracker> trackerInstances = Collections.newSetFromMap(new WeakHashMap<>());
+    private static final Set<DataTracker> trackerInstances = Collections.newSetFromMap(new WeakHashMap<>());
 
     public static synchronized void addTrackerInstance(DataTracker instance) {
         trackerInstances.add(instance);
@@ -54,11 +54,11 @@ public class DataTrackerManager {
             int id = getNextId(clazz);
             NEXT_IDS.put(clazz, id + 1);
             ((TrackedDataAccessor) data).setId(id);
-            oldTrackedData.computeIfAbsent(clazz, k -> new ArrayList<>()).add(Pair.of(data, _default));
-            oldTrackedDataHandlers.put(data, handler);
         } else {
             ((TrackedDataAccessor) data).setId(nextAbsentId--);
         }
+        oldTrackedData.computeIfAbsent(clazz, k -> new ArrayList<>()).add(Pair.of(data, _default));
+        oldTrackedDataHandlers.put(data, handler);
     }
 
     @SuppressWarnings("unchecked")

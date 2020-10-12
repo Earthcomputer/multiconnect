@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(HorseBaseEntity.class)
 public interface HorseBaseEntityAccessor {
     @Accessor("HORSE_FLAGS")
-    static TrackedData<Integer> getHorseFlags() {
+    static TrackedData<Byte> getHorseFlags() {
         return MixinHelper.fakeInstance();
     }
 }
