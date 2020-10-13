@@ -10,6 +10,7 @@ import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_10.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.BlockEntities_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.RecipeInfo;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
@@ -141,6 +142,40 @@ public class Protocol_1_10 extends Protocol_1_11 {
             .put(EntityType.PLAYER, "Player")
             .put(EntityType.LIGHTNING_BOLT, "LightningBolt")
             .build();
+
+    private static final BiMap<BlockEntityType<?>, String> BLOCK_ENTITY_IDS = ImmutableBiMap.<BlockEntityType<?>, String>builder()
+            .put(BlockEntityType.END_PORTAL, "Airportal")
+            .put(BlockEntityType.BANNER, "Banner")
+            .put(BlockEntityType.BEACON, "Beacon")
+            .put(BlockEntityType.BREWING_STAND, "Cauldron")
+            .put(BlockEntityType.CHEST, "Chest")
+            .put(BlockEntityType.COMPARATOR, "Comparator")
+            .put(BlockEntityType.COMMAND_BLOCK, "Control")
+            .put(BlockEntityType.DAYLIGHT_DETECTOR, "DLDetector")
+            .put(BlockEntityType.DROPPER, "Dropper")
+            .put(BlockEntityType.ENCHANTING_TABLE, "EnchantTable")
+            .put(BlockEntityType.ENDER_CHEST, "EnderChest")
+            .put(BlockEntityType.END_GATEWAY, "EndGateway")
+            .put(BlockEntities_1_12_2.FLOWER_POT, "FlowerPot")
+            .put(BlockEntityType.FURNACE, "Furnace")
+            .put(BlockEntityType.HOPPER, "Hopper")
+            .put(BlockEntityType.MOB_SPAWNER, "MobSpawner")
+            .put(BlockEntities_1_12_2.NOTE_BLOCK, "Music")
+            .put(BlockEntityType.PISTON, "Piston")
+            .put(BlockEntityType.JUKEBOX, "RecordPlayer")
+            .put(BlockEntityType.SIGN, "Sign")
+            .put(BlockEntityType.SKULL, "Skull")
+            .put(BlockEntityType.STRUCTURE_BLOCK, "Structure")
+            .put(BlockEntityType.TRAPPED_CHEST, "Trap")
+            .build();
+
+    public static String getBlockEntityId(BlockEntityType<?> blockEntityType) {
+        return BLOCK_ENTITY_IDS.get(blockEntityType);
+    }
+
+    public static BlockEntityType<?> getBlockEntityById(String id) {
+        return BLOCK_ENTITY_IDS.inverse().get(id);
+    }
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ItemPickupAnimationS2CPacket.class, buf -> {

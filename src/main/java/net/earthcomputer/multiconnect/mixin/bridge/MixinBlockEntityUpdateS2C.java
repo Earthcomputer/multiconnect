@@ -1,7 +1,10 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
 import net.earthcomputer.multiconnect.api.MultiConnectAPI;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Utils;
+import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.datafixer.TypeReferences;
 import net.minecraft.nbt.CompoundTag;
@@ -41,7 +44,7 @@ public class MixinBlockEntityUpdateS2C {
         }
         if (!MultiConnectAPI.instance().doesServerKnow(Registry.BLOCK_ENTITY_TYPE, type)) return;
 
-        tag.putString("id", String.valueOf(Registry.BLOCK_ENTITY_TYPE.getId(type)));
+        tag.putString("id", ConnectionInfo.protocolVersion <= Protocols.V1_10 ? Protocol_1_10.getBlockEntityId(type) : String.valueOf(Registry.BLOCK_ENTITY_TYPE.getId(type)));
         tag = Utils.datafix(TypeReferences.BLOCK_ENTITY, tag);
     }
 

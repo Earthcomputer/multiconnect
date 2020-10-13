@@ -1,9 +1,13 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
 import it.unimi.dsi.fastutil.shorts.ShortSet;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.IChunkDataS2CPacket;
+import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.datafixer.TypeReferences;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
@@ -53,16 +57,19 @@ public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
         DefaultRegistries<?> defaultBlockEntities = DefaultRegistries.DEFAULT_REGISTRIES.get(Registry.BLOCK_ENTITY_TYPE);
         for (int i = 0; i < blockEntities.size(); i++) {
             CompoundTag blockEntity = blockEntities.get(i);
-            Identifier blockEntityId = Identifier.tryParse(blockEntity.getString("id"));
-            if (blockEntityId != null) {
-                final int i_f = i;
-                Registry.BLOCK_ENTITY_TYPE.getOrEmpty(blockEntityId).ifPresent(type -> {
-                    if (defaultBlockEntities.defaultEntryToRawId.containsKey(type)) {
-                        CompoundTag fixed = Utils.datafix(TypeReferences.BLOCK_ENTITY, blockEntity);
-                        fixed.putString("id", blockEntityId.toString());
-                        blockEntities.set(i_f, fixed);
-                    }
-                });
+            BlockEntityType<?> blockEntityType;
+            if (ConnectionInfo.protocolVersion <= Protocols.V1_10) {
+                blockEntityType = Protocol_1_10.getBlockEntityById(blockEntity.getString("id"));
+            } else {
+                Identifier blockEntityId = Identifier.tryParse(blockEntity.getString("id"));
+                blockEntityType = blockEntityId == null ? null : Registry.BLOCK_ENTITY_TYPE.getOrEmpty(blockEntityId).orElse(null);
+            }
+            if (blockEntityType != null) {
+                if (defaultBlockEntities.defaultEntryToRawId.containsKey(blockEntityType)) {
+                    CompoundTag fixed = Utils.datafix(TypeReferences.BLOCK_ENTITY, blockEntity);
+                    fixed.putString("id", String.valueOf(Registry.BLOCK_ENTITY_TYPE.getId(blockEntityType)));
+                    blockEntities.set(i, fixed);
+                }
             }
         }
     }
