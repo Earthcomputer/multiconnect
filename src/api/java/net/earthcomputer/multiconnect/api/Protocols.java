@@ -27,5 +27,6 @@ public class Protocols {
     public static final int V1_11 = 315;
     public static final int V1_10 = 210;
     public static final int V1_9_4 = 110;
+    public static final int V1_9_2 = 109;
 
 }
