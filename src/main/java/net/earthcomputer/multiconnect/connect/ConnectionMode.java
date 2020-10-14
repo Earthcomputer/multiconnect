@@ -35,7 +35,7 @@ public enum ConnectionMode implements IProtocol {
     V1_11("1.11", Protocols.V1_11, 921, InitFlags.MAJOR_RELEASE),
     V1_10("1.10", Protocols.V1_10, 512, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
     V1_9_4("1.9.4", Protocols.V1_9_4, 184, InitFlags.MULTICONNECT_BETA),
-    V1_9_2("1.9.2", Protocols.V1_9_2, 176, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
+    V1_9_2("1.9.2", Protocols.V1_9_2, 176, "1.9", InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
     // the last value MUST be considered a "major release"
     ;
 
@@ -47,6 +47,7 @@ public enum ConnectionMode implements IProtocol {
     private final int value;
     private final boolean majorRelease;
     private final String name;
+    private final String majorReleaseName;
     private final int dataVersion;
     private final boolean multiconnectBeta;
 
@@ -55,10 +56,15 @@ public enum ConnectionMode implements IProtocol {
     }
 
     ConnectionMode(String name, int value, int dataVersion, int initializationFlags) {
+        this(name, value, dataVersion, name, initializationFlags);
+    }
+
+    ConnectionMode(String name, int value, int dataVersion, String majorReleaseName, int initializationFlags) {
         this.value = value;
         this.majorRelease = (initializationFlags & InitFlags.MAJOR_RELEASE) != 0;
         this.name = name;
         this.dataVersion = dataVersion;
+        this.majorReleaseName = majorReleaseName;
         this.multiconnectBeta = (initializationFlags & InitFlags.MULTICONNECT_BETA) != 0;
     }
 
@@ -73,12 +79,17 @@ public enum ConnectionMode implements IProtocol {
     }
 
     @Override
-    public IProtocol getMajorRelease() {
+    public ConnectionMode getMajorRelease() {
         int i;
         //noinspection StatementWithEmptyBody
         for (i = ordinal(); !VALUES[i].majorRelease; i++)
             ;
         return VALUES[i];
+    }
+
+    @Override
+    public String getMajorReleaseName() {
+        return getMajorRelease().majorReleaseName;
     }
 
     @Override

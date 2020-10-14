@@ -35,6 +35,13 @@ public interface IProtocol {
     IProtocol getMajorRelease();
 
     /**
+     * Gets the name of the major release of this protocol. May not, although usually will, be the same as the name of
+     * the {@code IProtocol} representing the major release. For example, the name of an {@code IProtocol} representing
+     * a major release may be "1.7.2", but the name of the major release is "1.7".
+     */
+    String getMajorReleaseName();
+
+    /**
      * If this protocol is a major release, returns a list of all minor releases (children) of this protocol,
      * including this protocol. Throws an exception if this protocol is not a major release.
      */

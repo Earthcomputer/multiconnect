@@ -11,6 +11,8 @@ import net.minecraft.util.registry.RegistryKey;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The MultiConnect API
@@ -190,6 +192,8 @@ public class MultiConnectAPI {
     private static class CurrentVersionProtocol implements IProtocol {
         public static CurrentVersionProtocol INSTANCE = new CurrentVersionProtocol();
 
+        private String majorReleaseName;
+
         @Override
         public int getValue() {
             return SharedConstants.getGameVersion().getProtocolVersion();
@@ -213,6 +217,18 @@ public class MultiConnectAPI {
         @Override
         public IProtocol getMajorRelease() {
             return this;
+        }
+
+        @Override
+        public String getMajorReleaseName() {
+            if (majorReleaseName == null) {
+                // take everything before the second dot, if there is one
+                Matcher matcher = Pattern.compile("([^.]*(\\.[^.]*)?).*").matcher(getName());
+                boolean matches = matcher.matches();
+                assert matches;
+                majorReleaseName = matcher.group(1);
+            }
+            return majorReleaseName;
         }
 
         @Override

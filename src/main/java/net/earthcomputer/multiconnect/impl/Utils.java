@@ -257,11 +257,20 @@ public class Utils {
                 text.append(new LiteralText(" !").formatted(Formatting.RED));
             }
             return text;
-        }).setTooltipRenderer((matrices, mode, x, y) -> {
+        })
+        .setCategoryLabelExtractor(mode -> {
+            LiteralText text = new LiteralText(mode.getMajorReleaseName());
             if (mode.isMulticonnectBeta()) {
+                text.append(new LiteralText(" !").formatted(Formatting.RED));
+            }
+            return text;
+        })
+        .setTooltipRenderer((matrices, mode, x, y, isCategory) -> {
+            if (mode.isMulticonnectBeta()) {
+                String modeName = isCategory ? mode.getMajorReleaseName() : mode.getName();
                 screen.renderTooltip(matrices, ImmutableList.of(
-                        new TranslatableText("multiconnect.betaWarning.line1", mode.getName()),
-                        new TranslatableText("multiconnect.betaWarning.line2", mode.getName())
+                        new TranslatableText("multiconnect.betaWarning.line1", modeName),
+                        new TranslatableText("multiconnect.betaWarning.line2", modeName)
                 ), x, y);
             }
         });
