@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_9_4;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
@@ -55,7 +56,7 @@ public class Protocol_1_9_4 extends Protocol_1_10 {
             buf.readInt(); // z
             buf.readFloat(); // volume
             buf.disablePassthroughMode();
-            buf.pendingRead(Float.class, buf.readUnsignedByte() / 63f); // pitch
+            buf.pendingRead(Float.class, buf.readUnsignedByte() / (ConnectionInfo.protocolVersion <= Protocols.V1_9_2 ? 63.5f : 63f)); // pitch
             buf.applyPendingReads();
         });
     }
