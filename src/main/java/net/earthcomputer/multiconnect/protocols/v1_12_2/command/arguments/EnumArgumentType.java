@@ -7,7 +7,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.Dynamic2CommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.server.command.CommandSource;
+import net.minecraft.command.CommandSource;
 import net.minecraft.text.LiteralText;
 
 import java.util.Arrays;

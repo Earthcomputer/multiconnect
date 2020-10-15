@@ -6,9 +6,9 @@ import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
 import net.earthcomputer.multiconnect.protocols.v1_9_4.Protocol_1_9_4;
 import net.earthcomputer.multiconnect.transformer.VarInt;
+import net.minecraft.command.CommandSource;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
-import net.minecraft.server.command.CommandSource;
 
 import java.util.List;
 import java.util.Set;
