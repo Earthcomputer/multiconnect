@@ -2,13 +2,21 @@ package net.earthcomputer.multiconnect.protocols.v1_9_2;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
+import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
+import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
 import net.earthcomputer.multiconnect.protocols.v1_9_4.Protocol_1_9_4;
 import net.earthcomputer.multiconnect.transformer.VarInt;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
 import net.minecraft.server.command.CommandSource;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
 
 import java.util.List;
 import java.util.Set;
@@ -31,6 +39,39 @@ public class Protocol_1_9_2 extends Protocol_1_9_4 {
             buf.pendingRead(VarInt.class, new VarInt(0)); // block entity count
             buf.applyPendingReads();
         });
+    }
+
+    @Override
+    public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
+        // add block entities to blocks that have them
+        int minX = translator.getPacket().getX() * 16;
+        int minZ = translator.getPacket().getZ() * 16;
+        for (int sectionY = 0; sectionY < 16; sectionY++) {
+            if (data.getSections()[sectionY] != null) {
+                for (BlockPos pos : BlockPos.iterate(minX, 16 * sectionY, minZ, minX + 15, 16 * sectionY + 15, minZ + 15)) {
+                    BlockState state = data.getBlockState(pos);
+                    if (state.getBlock().hasBlockEntity()) {
+                        BlockEntityType<?> blockEntityType = null;
+                        for (BlockEntityType<?> type : Registry.BLOCK_ENTITY_TYPE) {
+                            if (type.supports(state.getBlock())) {
+                                blockEntityType = type;
+                                break;
+                            }
+                        }
+                        if (blockEntityType != null) {
+                            CompoundTag nbt = new CompoundTag();
+                            nbt.putString("id", Protocol_1_10.getBlockEntityId(blockEntityType));
+                            nbt.putInt("x", pos.getX());
+                            nbt.putInt("y", pos.getY());
+                            nbt.putInt("z", pos.getZ());
+                            translator.getPacket().getBlockEntityTagList().add(nbt);
+                        }
+                    }
+                }
+            }
+        }
+
+        super.postTranslateChunk(translator, data);
     }
 
     @Override
