@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_9.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "MixinDataTracker"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
