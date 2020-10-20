@@ -1,0 +1,6 @@
+{
+  "multiconnect.betaWarning.line1": "%s on hetkel multiconnectis beetatoega.",
+  "multiconnect.betaWarning.line2": "Eelda vigu, aga teata nende leidmisel meie veahaldurisse!",
+  "multiconnect.changeForcedProtocol": "Versioon",
+  "multiconnect.unsupportedExperimentalCodec": "See server kasutab katsetusjärgus funktsioone või funktsioone, mis olid serveri versioonis katsetusjärgus. Multiconnect ei saa katsetusjärgus andmeid tõlkida ning seega ei saa selle serveriga liituda."
+}
