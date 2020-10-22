@@ -227,7 +227,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             if (particleType == ParticleTypes.ITEM) {
                 Item item = Registry.ITEM.get(buf.readVarInt());
                 int meta = buf.readVarInt();
-                ItemStack stack = Items_1_12_2.oldItemStackToNew(new ItemStack(item), meta);
+                ItemStack stack = new ItemStack(item);
+                stack.setDamage(meta);
                 buf.pendingRead(ItemStack.class, stack);
             } else if (particleType == ParticleTypes.DUST) {
                 buf.pendingRead(Float.class, red);
