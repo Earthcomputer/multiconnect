@@ -944,7 +944,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
                     if (id == 12) {
                         entity.getDataTracker().set(ZombieEntityAccessor.getBaby(), data == 1);
                     } else if (id == 13) {
-                        entity.getDataTracker().set(Protocol_1_13_2.OLD_ZOMBIE_VILLAGER_PROFESSION, (int) data);
+                        entity.getDataTracker().set(Protocol_1_10.OLD_ZOMBIE_TYPE, (int) data);
                     } else if (id == 14) {
                         entity.getDataTracker().set(Protocol_1_10.OLD_ZOMBIE_CONVERTING, data == 1);
                     }
