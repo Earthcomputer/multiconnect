@@ -3,6 +3,7 @@
   "package": "net.earthcomputer.multiconnect.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "bridge.DataTrackerAccessor",
     "bridge.DynamicRegistryManagerAccessor",
     "bridge.DynamicRegistryManagerImplAccessor",
     "bridge.EntityAccessor",
@@ -22,6 +23,7 @@
     "bridge.MixinDecoderHandler",
     "bridge.MixinEncoderHandler",
     "bridge.MixinEntity",
+    "bridge.MixinEntityTrackerUpdateS2C",
     "bridge.MixinIdList",
     "bridge.MixinInt2ObjectBiMap",
     "bridge.MixinItemColors",

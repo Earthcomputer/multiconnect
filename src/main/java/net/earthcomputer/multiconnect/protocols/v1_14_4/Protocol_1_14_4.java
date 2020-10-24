@@ -18,7 +18,6 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.EndermanEntity;
@@ -37,12 +36,11 @@ import net.minecraft.tag.ItemTags;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 
-import java.io.IOException;
 import java.util.List;
 
 public class Protocol_1_14_4 extends Protocol_1_15 {
 
-    private static final TrackedData<Float> OLD_WOLF_HEALTH = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.FLOAT);
+    public static final TrackedData<Float> OLD_WOLF_HEALTH = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.FLOAT);
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
@@ -119,12 +117,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.readShort();
             buf.readShort();
             buf.disablePassthroughMode();
-            try {
-                PendingDataTrackerEntries.setEntries(entityId, DataTracker.deserializePacket(buf));
-            } catch (IOException e) {
-                // I don't even know why it's declared to throw an IOException
-                throw new AssertionError(e);
-            }
+            PendingDataTrackerEntries.setEntries(entityId, DataTrackerManager.deserializePacket(buf));
             buf.applyPendingReads();
         });
 
@@ -160,12 +153,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.readByte();
             buf.readByte();
             buf.disablePassthroughMode();
-            try {
-                PendingDataTrackerEntries.setEntries(entityId, DataTracker.deserializePacket(buf));
-            } catch (IOException e) {
-                // I don't even know why it's declared to throw an IOException
-                throw new AssertionError(e);
-            }
+            PendingDataTrackerEntries.setEntries(entityId, DataTrackerManager.deserializePacket(buf));
             buf.applyPendingReads();
         });
     }

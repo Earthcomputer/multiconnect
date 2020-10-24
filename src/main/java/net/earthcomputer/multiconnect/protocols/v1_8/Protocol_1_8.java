@@ -6,14 +6,20 @@ import it.unimi.dsi.fastutil.chars.Char2CharOpenHashMap;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
+import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.ClientStatusC2SPacket_1_11_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Blocks_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Particles_1_12_2;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.Protocol_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
+import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.UseBedS2CPacket;
+import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.EntitySpawnGlobalS2CPacket_1_15_2;
+import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.ChunkDeltaUpdateS2CPacket_1_16_1;
+import net.earthcomputer.multiconnect.protocols.v1_8.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
@@ -23,13 +29,26 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.options.ChatVisibility;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.*;
+import net.minecraft.entity.boss.WitherEntity;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.decoration.ArmorStandEntity;
+import net.minecraft.entity.decoration.EndCrystalEntity;
+import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.mob.*;
+import net.minecraft.entity.passive.*;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.FireworkRocketEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
+import net.minecraft.entity.projectile.WitherSkullEntity;
+import net.minecraft.entity.vehicle.*;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.Packet;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleType;
@@ -45,10 +64,12 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.EulerAngle;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -182,7 +203,6 @@ public class Protocol_1_8 extends Protocol_1_9 {
             buf.readString(256); // sound id
             buf.disablePassthroughMode();
             buf.pendingRead(SoundCategory.class, SoundCategory.MASTER);
-            // TODO: disable other volume sliders
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(EntityStatusEffectS2CPacket.class, buf -> {
@@ -782,6 +802,372 @@ public class Protocol_1_8 extends Protocol_1_9 {
         super.registerCommands(dispatcher, serverCommands);
         BrigadierRemover.of(dispatcher).get("time").get("query").get("day").remove();
         BrigadierRemover.of(dispatcher).get("scoreboard").get("players").get("tag").remove();
-        BrigadierRemover.of(dispatcher).get("scoreboard").get("teams").get("option").get("collisionRule").remove();
+        BrigadierRemover.of(dispatcher).get("scoreboard").get("teams").get("option").get("team").get("collisionRule").remove();
+    }
+
+    public static List<DataTracker.Entry<?>> deserializeDataTrackerEntries(PacketByteBuf buf) {
+        ArrayList<DataTracker.Entry<?>> entries = null;
+
+        int n;
+        while ((n = buf.readByte()) != 127) {
+            if (entries == null) {
+                entries = new ArrayList<>();
+            }
+
+            int serializerId = (n & 0b11100000) >> 5;
+            int id = n & 0b00011111;
+            Object value;
+            switch (serializerId) {
+                case 0:
+                    value = buf.readByte();
+                    break;
+                case 1:
+                    value = buf.readShort();
+                    break;
+                case 2:
+                    value = buf.readInt();
+                    break;
+                case 3:
+                    value = buf.readFloat();
+                    break;
+                case 4:
+                    value = buf.readString(32767);
+                    break;
+                case 5:
+                    value = buf.readItemStack();
+                    break;
+                case 6:
+                    value = new BlockPos(buf.readInt(), buf.readInt(), buf.readInt());
+                    break;
+                case 7:
+                    value = new EulerAngle(buf.readFloat(), buf.readFloat(), buf.readFloat());
+                    break;
+                default:
+                    // serializer id ranges from 0-7
+                    throw new AssertionError();
+            }
+
+            entries.add(new DataTrackerEntry_1_8(serializerId, id, value));
+        }
+
+        return entries;
+    }
+
+    public static void handleByteTrackedData(Entity entity, int id, byte data) {
+        if (id == 0) {
+            entity.getDataTracker().set(EntityAccessor.getFlags(), data);
+        } else if (id == 3) {
+            entity.setCustomNameVisible(data == 1);
+        } else if (id == 4) {
+            entity.setSilent(data == 1);
+        } else if (entity instanceof LivingEntity) {
+            if (id == 8) {
+                entity.getDataTracker().set(LivingEntityAccessor.getPotionSwirlsAmbient(), data > 0);
+            } else if (id == 9) {
+                ((LivingEntity) entity).setStuckArrowCount(data);
+            } else if (entity instanceof MobEntity) {
+                if (id == 15) {
+                    entity.getDataTracker().set(MobEntityAccessor.getMobFlags(), data);
+                } else if (entity instanceof PassiveEntity) {
+                    if (id == 12) {
+                        entity.getDataTracker().set(PassiveEntityAccessor.getChild(), data < 0);
+                    } else if (entity instanceof HorseBaseEntity) {
+                        if (id == 19) {
+                            entity.getDataTracker().set(Protocol_1_10.OLD_HORSE_TYPE, (int) data);
+                        }
+                    } else if (entity instanceof PigEntity) {
+                        if (id == 16) {
+                            entity.getDataTracker().set(PigEntityAccessor.getSaddled(), data != 0);
+                        }
+                    } else if (entity instanceof RabbitEntity) {
+                        if (id == 18) {
+                            entity.getDataTracker().set(RabbitEntityAccessor.getRabbitType(), (int) data);
+                        }
+                    } else if (entity instanceof SheepEntity) {
+                        if (id == 16) {
+                            entity.getDataTracker().set(SheepEntityAccessor.getColor(), data);
+                        }
+                    } else if (entity instanceof TameableEntity) {
+                        if (id == 16) {
+                            entity.getDataTracker().set(TameableEntityAccessor.getTameableFlags(), data);
+                        } else if (entity instanceof WolfEntity) {
+                            if (id == 19) {
+                                ((WolfEntity) entity).setBegging(data == 1);
+                            } else if (id == 20) {
+                                entity.getDataTracker().set(Protocol_1_12_2.OLD_WOLF_COLLAR_COLOR, (int) data);
+                            }
+                        }
+                    }
+                } else if (entity instanceof BatEntity) {
+                    if (id == 16) {
+                        entity.getDataTracker().set(BatEntityAccessor.getBatFlags(), data);
+                    }
+                } else if (entity instanceof BlazeEntity) {
+                    if (id == 16) {
+                        entity.getDataTracker().set(BlazeEntityAccessor.getBlazeFlags(), data);
+                    }
+                } else if (entity instanceof CreeperEntity) {
+                    if (id == 17) {
+                        entity.getDataTracker().set(CreeperEntityAccessor.getCharged(), data == 1);
+                    } else if (id == 18) {
+                        entity.getDataTracker().set(CreeperEntityAccessor.getIgnited(), data == 1);
+                    }
+                } else if (entity instanceof EndermanEntity) {
+                    if (id == 18) {
+                        entity.getDataTracker().set(EndermanEntityAccessor.getAngry(), data > 0);
+                    }
+                } else if (entity instanceof GhastEntity) {
+                    if (id == 16) {
+                        ((GhastEntity) entity).setShooting(data != 0);
+                    }
+                } else if (entity instanceof IronGolemEntity) {
+                    if (id == 16) {
+                        entity.getDataTracker().set(IronGolemEntityAccessor.getIronGolemFlags(), data);
+                    }
+                } else if (entity instanceof AbstractSkeletonEntity) {
+                    if (id == 13) {
+                        entity.getDataTracker().set(Protocol_1_10.OLD_SKELETON_TYPE, (int) data);
+                    }
+                } else if (entity instanceof SlimeEntity) {
+                    if (id == 16) {
+                        entity.getDataTracker().set(SlimeEntityAccessor.getSlimeSize(), (int) data);
+                    }
+                } else if (entity instanceof SpiderEntity) {
+                    if (id == 16) {
+                        entity.getDataTracker().set(SpiderEntityAccessor.getSpiderFlags(), data);
+                    }
+                } else if (entity instanceof WitchEntity) {
+                    if (id == 21) {
+                        ((WitchEntity) entity).setDrinking(data == 1);
+                    }
+                } else if (entity instanceof ZombieEntity) {
+                    if (id == 12) {
+                        entity.getDataTracker().set(ZombieEntityAccessor.getBaby(), data == 1);
+                    } else if (id == 13) {
+                        entity.getDataTracker().set(Protocol_1_13_2.OLD_ZOMBIE_VILLAGER_PROFESSION, (int) data);
+                    } else if (id == 14) {
+                        entity.getDataTracker().set(Protocol_1_10.OLD_ZOMBIE_CONVERTING, data == 1);
+                    }
+                }
+            } else if (entity instanceof ArmorStandEntity) {
+                if (id == 10) {
+                    entity.getDataTracker().set(ArmorStandEntity.ARMOR_STAND_FLAGS, data);
+                }
+            } else if (entity instanceof PlayerEntity) {
+                if (id == 10) {
+                    entity.getDataTracker().set(PlayerEntityAccessor.getPlayerModelParts(), data);
+                }
+            }
+        } else if (entity instanceof ProjectileEntity) {
+            if (id == 16) {
+                entity.getDataTracker().set(PersistentProjectileEntityAccessor.getProjectileFlags(), data);
+            } else if (entity instanceof WitherSkullEntity) {
+                if (id == 10) {
+                    ((WitherSkullEntity) entity).setCharged(data == 1);
+                }
+            }
+        } else if (entity instanceof ItemFrameEntity) {
+            if (id == 9) {
+                entity.getDataTracker().set(ItemFrameEntityAccessor.getRotation(), (int)data);
+            }
+        } else if (entity instanceof AbstractMinecartEntity) {
+            if (id == 22) {
+                ((AbstractMinecartEntity) entity).setCustomBlockPresent(data == 1);
+            } else if (entity instanceof FurnaceMinecartEntity) {
+                if (id == 16) {
+                    entity.getDataTracker().set(FurnaceMinecartEntityAccessor.getLit(), data != 0);
+                }
+            }
+        }
+    }
+
+    public static void handleShortTrackedData(Entity entity, int id, short data) {
+        if (id == 1) {
+            entity.setAir(data);
+        } else if (entity instanceof EndermanEntity) {
+            EndermanEntity enderman = (EndermanEntity) entity;
+            if (id == 16) {
+                BlockState heldState = Block.STATE_IDS.get(Blocks_1_12_2.convertToStateRegistryId(data));
+                if (heldState == null || heldState.isAir()) {
+                    enderman.setCarriedBlock(null);
+                } else {
+                    enderman.setCarriedBlock(heldState);
+                }
+            }
+        }
+    }
+
+    public static void handleIntTrackedData(Entity entity, int id, int data) {
+        if (entity instanceof LivingEntity) {
+            if (id == 7) {
+                entity.getDataTracker().set(LivingEntityAccessor.getPotionSwirlsColor(), data);
+            } else if (entity instanceof CreeperEntity) {
+                if (id == 16) {
+                    ((CreeperEntity) entity).setFuseSpeed(data);
+                }
+            } else if (entity instanceof GuardianEntity) {
+                if (id == 16) {
+                    entity.getDataTracker().set(Protocol_1_10.OLD_GUARDIAN_FLAGS, (byte) data);
+                } else if (id == 17) {
+                    entity.getDataTracker().set(GuardianEntityAccessor.getBeamTargetId(), data);
+                }
+            } else if (entity instanceof HorseBaseEntity) {
+                if (id == 16) {
+                    entity.getDataTracker().set(Protocol_1_10.OLD_HORSE_FLAGS, (byte) data);
+                } else if (id == 20) {
+                    entity.getDataTracker().set(Protocol_1_10.OLD_HORSE_VARIANT, data);
+                } else if (id == 22) {
+                    entity.getDataTracker().set(Protocol_1_10.OLD_HORSE_ARMOR, data);
+                }
+            } else if (entity instanceof CatEntity) {
+                if (id == 18) {
+                    entity.getDataTracker().set(CatEntityAccessor.getCatType(), data);
+                }
+            } else if (entity instanceof PlayerEntity) {
+                if (id == 18) {
+                    ((PlayerEntity) entity).setScore(data);
+                }
+            } else if (entity instanceof VillagerEntity) {
+                if (id == 16) {
+                    entity.getDataTracker().set(Protocol_1_13_2.OLD_VILLAGER_PROFESSION, data);
+                }
+            } else if (entity instanceof WitherEntity) {
+                WitherEntity wither = (WitherEntity) entity;
+                if (id >= 17 && id <= 19) {
+                    wither.setTrackedEntityId(id - 17, data);
+                } else if (id == 20) {
+                    wither.setInvulTimer(data);
+                }
+            }
+        } else if (entity instanceof BoatEntity) {
+            BoatEntity boat = (BoatEntity) entity;
+            if (id == 17) {
+                boat.setDamageWobbleTicks(data);
+            } else if (id == 18) {
+                boat.setDamageWobbleSide(data);
+            }
+        } else if (entity instanceof EndCrystalEntity) {
+            if (id == 8) {
+                // TODO: health??
+            }
+        } else if (entity instanceof AbstractMinecartEntity) {
+            AbstractMinecartEntity minecart = (AbstractMinecartEntity) entity;
+            if (id == 17) {
+                minecart.setDamageWobbleTicks(data);
+            } else if (id == 18) {
+                minecart.setDamageWobbleSide(data);
+            } else if (id == 20) {
+                entity.getDataTracker().set(Protocol_1_12_2.OLD_MINECART_DISPLAY_TILE, data);
+            } else if (id == 21) {
+                minecart.setCustomBlockOffset(data);
+            }
+        }
+    }
+
+    public static void handleFloatTrackedData(Entity entity, int id, float data) {
+        if (entity instanceof LivingEntity) {
+            if (id == 6) {
+                entity.getDataTracker().set(LivingEntityAccessor.getHealth(), data);
+            } else if (entity instanceof PlayerEntity) {
+                if (id == 17) {
+                    entity.getDataTracker().set(PlayerEntityAccessor.getAbsorptionAmount(), data);
+                }
+            } else if (entity instanceof WolfEntity) {
+                if (id == 18) {
+                    entity.getDataTracker().set(Protocol_1_14_4.OLD_WOLF_HEALTH, data);
+                }
+            }
+        } else if (entity instanceof BoatEntity) {
+            if (id == 19) {
+                ((BoatEntity) entity).setDamageWobbleStrength(data);
+            }
+        } else if (entity instanceof MinecartEntity) {
+            if (id == 19) {
+                ((MinecartEntity) entity).setDamageWobbleStrength(data);
+            }
+        }
+    }
+
+    public static void handleStringTrackedData(Entity entity, int id, String data) {
+        if (id == 2) {
+            entity.getDataTracker().set(Protocol_1_12_2.OLD_CUSTOM_NAME, data);
+        } else if (entity instanceof HorseBaseEntity) {
+            HorseBaseEntity horse = (HorseBaseEntity) entity;
+            if (id == 21) {
+                if (data.isEmpty()) {
+                    horse.setOwnerUuid(null);
+                } else {
+                    try {
+                        horse.setOwnerUuid(UUID.fromString(data));
+                    } catch (IllegalArgumentException e) {
+                        horse.setOwnerUuid(null);
+                    }
+                }
+            }
+        } else if (entity instanceof CommandBlockMinecartEntity) {
+            if (id == 23) {
+                entity.getDataTracker().set(CommandBlockMinecartEntityAccessor.getCommand(), data);
+            } else if (id == 24) {
+                entity.getDataTracker().set(CommandBlockMinecartEntityAccessor.getLastOutput(), new LiteralText(data));
+            }
+        } else if (entity instanceof TameableEntity) {
+            TameableEntity tameable = (TameableEntity) entity;
+            if (id == 17) {
+                if (data.isEmpty()) {
+                    tameable.setOwnerUuid(null);
+                } else {
+                    try {
+                        tameable.setOwnerUuid(UUID.fromString(data));
+                    } catch (IllegalArgumentException e) {
+                        tameable.setOwnerUuid(null);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void handleItemStackTrackedData(Entity entity, int id, ItemStack data) {
+        if (entity instanceof FireworkRocketEntity) {
+            if (id == 8) {
+                entity.getDataTracker().set(FireworkRocketEntityAccessor.getItem(), data);
+            }
+        } else if (entity instanceof ItemFrameEntity) {
+            if (id == 8) {
+                entity.getDataTracker().set(ItemFrameEntityAccessor.getItemStack(), data);
+            }
+        } else if (entity instanceof ItemEntity) {
+            if (id == 10) {
+                ((ItemEntity) entity).setStack(data);
+            }
+        }
+    }
+
+    public static void handleBlockPosTrackedData(Entity entity, int id, BlockPos data) {
+
+    }
+
+    public static void handleEulerAngleTrackedData(Entity entity, int id, EulerAngle data) {
+        if (entity instanceof ArmorStandEntity) {
+            switch (id) {
+                case 11:
+                    entity.getDataTracker().set(ArmorStandEntity.TRACKER_HEAD_ROTATION, data);
+                    break;
+                case 12:
+                    entity.getDataTracker().set(ArmorStandEntity.TRACKER_BODY_ROTATION, data);
+                    break;
+                case 13:
+                    entity.getDataTracker().set(ArmorStandEntity.TRACKER_LEFT_ARM_ROTATION, data);
+                    break;
+                case 14:
+                    entity.getDataTracker().set(ArmorStandEntity.TRACKER_RIGHT_ARM_ROTATION, data);
+                    break;
+                case 15:
+                    entity.getDataTracker().set(ArmorStandEntity.TRACKER_LEFT_LEG_ROTATION, data);
+                    break;
+                case 16:
+                    entity.getDataTracker().set(ArmorStandEntity.TRACKER_RIGHT_LEG_ROTATION, data);
+                    break;
+            }
+        }
     }
 }

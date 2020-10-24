@@ -61,14 +61,14 @@ import java.util.function.Supplier;
 
 public class Protocol_1_10 extends Protocol_1_11 {
 
-    private static final TrackedData<Byte> OLD_GUARDIAN_FLAGS = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BYTE);
+    public static final TrackedData<Byte> OLD_GUARDIAN_FLAGS = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BYTE);
     private static final TrackedData<Integer> OLD_ZOMBIE_TYPE = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Boolean> OLD_ZOMBIE_CONVERTING = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Byte> OLD_HORSE_FLAGS = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BYTE);
-    private static final TrackedData<Integer> OLD_HORSE_TYPE = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> OLD_HORSE_VARIANT = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> OLD_HORSE_ARMOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> OLD_SKELETON_TYPE = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    public static final TrackedData<Boolean> OLD_ZOMBIE_CONVERTING = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BOOLEAN);
+    public static final TrackedData<Byte> OLD_HORSE_FLAGS = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BYTE);
+    public static final TrackedData<Integer> OLD_HORSE_TYPE = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    public static final TrackedData<Integer> OLD_HORSE_VARIANT = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    public static final TrackedData<Integer> OLD_HORSE_ARMOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    public static final TrackedData<Integer> OLD_SKELETON_TYPE = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
 
     private static final BiMap<EntityType<?>, String> ENTITY_IDS = ImmutableBiMap.<EntityType<?>, String>builder()
             .put(EntityType.AREA_EFFECT_CLOUD, "AreaEffectCloud")

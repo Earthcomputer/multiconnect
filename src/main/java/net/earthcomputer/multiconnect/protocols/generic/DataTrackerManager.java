@@ -1,14 +1,21 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
+import io.netty.handler.codec.DecoderException;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.mixin.bridge.DataTrackerAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.EntityAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_8.Protocol_1_8;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.network.PacketByteBuf;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
@@ -163,6 +170,38 @@ public class DataTrackerManager {
     public static void transferDataTracker(Entity oldEntity, Entity newEntity) {
         ((IDataTracker) oldEntity.getDataTracker()).multiconnect_setEntityTo(newEntity);
         ((EntityAccessor) newEntity).setDataTracker(oldEntity.getDataTracker());
+    }
+
+    public static List<DataTracker.Entry<?>> deserializePacket(PacketByteBuf buf) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
+            return Protocol_1_8.deserializeDataTrackerEntries(buf);
+        } else if (ConnectionInfo.protocolVersion <= Protocols.V1_9) {
+            ArrayList<DataTracker.Entry<?>> entries = null;
+
+            short id;
+            while ((id = buf.readUnsignedByte()) != 255) {
+                if (entries == null) {
+                    entries = new ArrayList<>();
+                }
+
+                int serializerId = buf.readUnsignedByte();
+                TrackedDataHandler<?> serializer = TrackedDataHandlerRegistry.get(serializerId);
+                if (serializer == null) {
+                    throw new DecoderException("Unknown serializer type " + serializerId);
+                }
+
+                entries.add(DataTrackerAccessor.callEntryFromPacket(buf, id, serializer));
+            }
+
+            return entries;
+        } else {
+            try {
+                return DataTracker.deserializePacket(buf);
+            } catch (IOException e) {
+                // I don't even know why it's declared to throw an IOException
+                throw new AssertionError(e);
+            }
+        }
     }
 
 }
