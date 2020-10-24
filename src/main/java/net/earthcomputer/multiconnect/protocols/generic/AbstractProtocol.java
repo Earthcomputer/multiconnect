@@ -23,6 +23,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.*;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -81,13 +82,17 @@ public abstract class AbstractProtocol implements IUtils {
     protected void recomputeBlockStates() {
         ((IIdList) Block.STATE_IDS).multiconnect_clear();
         for (Block block : Registry.BLOCK) {
-            Stream<BlockState> states = block.getStateManager().getStates().stream().filter(this::acceptBlockState);
-            Comparator<BlockState> order = getBlockStateOrder(block);
-            if (order != null) {
-                states = states.sorted(order);
-            }
-            states.forEach(Block.STATE_IDS::add);
+            addStates(block, Block.STATE_IDS::add);
         }
+    }
+
+    protected void addStates(Block block, Consumer<BlockState> stateAdder) {
+        Stream<BlockState> states = block.getStateManager().getStates().stream().filter(this::acceptBlockState);
+        Comparator<BlockState> order = getBlockStateOrder(block);
+        if (order != null) {
+            states = states.sorted(order);
+        }
+        states.forEach(stateAdder);
     }
 
     protected Comparator<BlockState> getBlockStateOrder(Block block) {

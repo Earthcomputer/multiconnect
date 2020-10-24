@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_8.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "ChunkDataS2CAccessor",
+    "EntityAttachS2CAccessor",
+    "EntityPassengersSetS2CAccessor"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

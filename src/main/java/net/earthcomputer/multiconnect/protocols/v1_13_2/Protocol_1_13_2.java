@@ -130,12 +130,10 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                     buf.enablePassthroughMode();
                     Protocol_1_15_2.skipPalettedContainer(buf);
                     buf.disablePassthroughMode();
-                    byte[] light = new byte[16 * 16 * 16 / 2];
-                    buf.readBytes(light);
+                    byte[] light = buf.readBytesSingleAlloc(16 * 16 * 16 / 2).get();
                     blockLight[sectionY] = light;
                     if (ChunkDataTranslator.current().getDimension().hasSkyLight()) {
-                        light = new byte[16 * 16 * 16 / 2];
-                        buf.readBytes(light);
+                        light = buf.readBytesSingleAlloc(16 * 16 * 16 / 2).get();
                         skyLight[sectionY] = light;
                     }
                 }

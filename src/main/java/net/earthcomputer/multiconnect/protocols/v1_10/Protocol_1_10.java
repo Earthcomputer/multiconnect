@@ -329,7 +329,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
     }
 
     private void mutateBlockEntityTypeRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
-        registry.purge(BlockEntityType.SHULKER_BOX);
+        registry.unregister(BlockEntityType.SHULKER_BOX);
     }
 
     private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {

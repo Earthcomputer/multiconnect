@@ -35,6 +35,7 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
     private static final DynamicCommandExceptionType DISALLOWED_OPTION_EXCEPTION = new DynamicCommandExceptionType(arg -> new LiteralMessage("Option \"" + arg + "\" is disallowed at this location"));
     private static final SimpleCommandExceptionType NO_MULTIPLE_EXCEPTION = new SimpleCommandExceptionType(new LiteralMessage("Cannot match multiple entities here"));
     private static final SimpleCommandExceptionType PLAYERS_ONLY_EXCEPTION = new SimpleCommandExceptionType(new LiteralMessage("This selector cannot match players, but only players are allowed"));
+    private static final DynamicCommandExceptionType EXPECTED_GAMEMODE_EXCEPTION = new DynamicCommandExceptionType(arg -> new LiteralMessage("Expected gamemode, got \"" + arg + "\""));
 
     private static final Map<String, Option> SELECTOR_OPTIONS = new HashMap<>();
 
@@ -119,7 +120,7 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
 
         private boolean cannotSelectPlayers = false;
         private boolean typeKnown = false;
-        private Set<String> seenOptions = new HashSet<>();
+        private final Set<String> seenOptions = new HashSet<>();
         private boolean hadExplicitOption = false;
 
         public EntitySelectorParser(StringReader reader, boolean singleTarget, boolean playersOnly) {
@@ -388,15 +389,54 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
                 int start = parser.reader.getCursor();
                 parser.playersOnly = true;
                 parser.typeKnown = true;
-                parser.suggestor = builder -> {
-                    builder = builder.createOffset(start);
-                    builder.suggest(0);
-                    builder.suggest(1);
-                    builder.suggest(2);
-                    builder.suggest(3);
-                    return builder.buildFuture();
-                };
-                parser.parseInt(0, 3);
+                if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
+                    parser.suggestor = builder -> {
+                        builder = builder.createOffset(start);
+                        builder.suggest(0);
+                        builder.suggest(1);
+                        builder.suggest(2);
+                        builder.suggest(3);
+                        return builder.buildFuture();
+                    };
+                    parser.parseInt(0, 3);
+                } else {
+                    parser.suggestor = builder -> {
+                        builder = builder.createOffset(start);
+                        builder.suggest("creative");
+                        builder.suggest("!creative");
+                        builder.suggest("survival");
+                        builder.suggest("!survival");
+                        builder.suggest("adventure");
+                        builder.suggest("!adventure");
+                        builder.suggest("spectator");
+                        builder.suggest("!spectator");
+                        return builder.buildFuture();
+                    };
+                    parser.parseIsInverted();
+                    int gamemodeStart = parser.reader.getCursor();
+                    String gamemode = parser.reader.readUnquotedString();
+                    switch (gamemode) {
+                        case "c":
+                        case "s":
+                        case "a":
+                        case "sp":
+                        case "creative":
+                        case "survival":
+                        case "adventure":
+                        case "spectator":
+                            break;
+                        default:
+                            try {
+                                int intMode = Integer.parseInt(gamemode);
+                                if (intMode >= 0 && intMode <= 3) {
+                                    break;
+                                }
+                            } catch (NumberFormatException ignore) {
+                            }
+                            parser.reader.setCursor(gamemodeStart);
+                            throw EXPECTED_GAMEMODE_EXCEPTION.createWithContext(parser.reader, gamemode);
+                    }
+                }
             }
 
             @Override

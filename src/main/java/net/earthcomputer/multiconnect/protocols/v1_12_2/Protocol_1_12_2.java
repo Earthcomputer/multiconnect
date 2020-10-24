@@ -134,10 +134,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                         buf.enablePassthroughMode();
                     }
                     buf.readLongArray(new long[paletteSize * 64]); // chunk data
-                    buf.readBytes(new byte[16 * 16 * 16 / 2]); // block light
-                    assert MinecraftClient.getInstance().world != null;
-                    if (MinecraftClient.getInstance().world.getDimension().hasSkyLight())
-                        buf.readBytes(new byte[16 * 16 * 16 / 2]); // sky light
+                    buf.readBytesSingleAlloc(16 * 16 * 16 / 2); // block light
+                    if (ChunkDataTranslator.current().getDimension().hasSkyLight())
+                        buf.readBytesSingleAlloc(16 * 16 * 16 / 2); // sky light
                 }
             }
             buf.disablePassthroughMode();
@@ -166,7 +165,11 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         });
 
         ProtocolRegistry.registerInboundTranslator(PlaySoundIdS2CPacket.class, buf -> {
-            buf.pendingRead(Identifier.class, new Identifier(buf.readString(256)));
+            Identifier id = Identifier.tryParse(buf.readString(256));
+            if (id == null) {
+                id = new Identifier("ambient.cave");
+            }
+            buf.pendingRead(Identifier.class, id);
             buf.applyPendingReads();
         });
 

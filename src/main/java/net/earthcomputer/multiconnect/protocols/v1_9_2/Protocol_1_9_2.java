@@ -34,7 +34,7 @@ public class Protocol_1_9_2 extends Protocol_1_9_4 {
             if (dataSize > 2097152) {
                 throw new RuntimeException("Chunk Packet trying to allocate too much memory on read.");
             }
-            buf.readBytes(new byte[dataSize]); // data
+            buf.readBytesSingleAlloc(dataSize); // data
             buf.disablePassthroughMode();
             buf.pendingRead(VarInt.class, new VarInt(0)); // block entity count
             buf.applyPendingReads();

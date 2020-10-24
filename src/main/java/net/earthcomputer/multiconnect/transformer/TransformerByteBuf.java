@@ -559,6 +559,27 @@ public final class TransformerByteBuf extends PacketByteBuf {
                 value -> System.arraycopy(value, 0, out, 0, out.length));
     }
 
+    /**
+     * Same as readBytes(new byte[len]) but without requiring the caller to allocate the array.
+     * Saves on reallocation if multiple protocols read the same array.
+     * Only clones the array when getting from the supplier.
+     */
+    public Supplier<byte[]> readBytesSingleAlloc(int len) {
+        return read(byte[].class,
+                () -> {
+                    byte[] out = new byte[len];
+                    super.readBytes(out);
+                    return () -> out;
+                },
+                () -> {
+                    byte[] out = new byte[len];
+                    super.readBytes(out);
+                    return out;
+                },
+                value -> {},
+                value -> value::clone);
+    }
+
     @Override
     public ByteBuf readBytes(byte[] out, int index, int len) {
         return read(byte[].class,
