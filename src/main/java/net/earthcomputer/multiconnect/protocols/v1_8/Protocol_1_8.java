@@ -99,13 +99,13 @@ public class Protocol_1_8 extends Protocol_1_9 {
                 for (int i = 0; i < 4096; i++) {
                     char stateId = (char) (buf.readUnsignedByte() | (buf.readUnsignedByte() << 8));
                     paletteMap.putIfAbsent(stateId, (char)paletteMap.size());
-                    oldData[sec] = stateId;
+                    oldData[i] = stateId;
                 }
 
                 int paletteCount = paletteMap.size();
                 char[] secPalette;
                 char[] secData = newData[sec];
-                bitsPerBlock[sec] = (byte)MathHelper.log2DeBruijn(paletteCount);
+                bitsPerBlock[sec] = (byte) Math.max(4, MathHelper.log2DeBruijn(paletteCount));
 
                 if (paletteCount <= 256) {
                     secPalette = new char[paletteCount];
@@ -161,7 +161,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
                     val |= (long)data[i] << offset;
                     if (offset + secBitsPerBlock >= 64 || i == 4095) {
                         packedData[packedDataIndex++] = val;
-                        val = data[i] >> (secBitsPerBlock - (64 - offset));
+                        val = data[i] >> (64 - offset);
                     }
                 }
                 buf.pendingRead(long[].class, packedData);

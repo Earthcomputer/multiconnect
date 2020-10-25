@@ -13,12 +13,16 @@ import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.world.dimension.DimensionType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ChunkDataTranslator {
+    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
+
     private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(
             Math.max(1, Runtime.getRuntime().availableProcessors() - 1),
             new ThreadFactoryBuilder().setNameFormat("multiconnect chunk translator #%d").build()
@@ -50,32 +54,36 @@ public class ChunkDataTranslator {
         ((IChunkDataS2CPacket) packet).multiconnect_setDimension(dimension);
         ChunkDataTranslator translator = new ChunkDataTranslator(packet, dimension, networkHandler.getRegistryManager());
         EXECUTOR.submit(() -> {
-            CURRENT_TRANSLATOR.set(translator);
-
-            TransformerByteBuf buf = new TransformerByteBuf(packet.getReadBuffer(), null);
-            buf.readTopLevelType(ChunkData.class);
-            ChunkData chunkData = ChunkData.read(buf);
-
-            EnumMap<EightWayDirection, ShortSet> blocksNeedingConnectionUpdate = new EnumMap<>(EightWayDirection.class);
-            ConnectionInfo.protocol.getBlockConnector().fixChunkData(chunkData, blocksNeedingConnectionUpdate);
-            ((IChunkDataS2CPacket) packet).multiconnect_setBlocksNeedingUpdate(blocksNeedingConnectionUpdate);
-
-            ConnectionInfo.protocol.postTranslateChunk(translator, chunkData);
-            ((IChunkDataS2CPacket) packet).setData(chunkData.toByteArray());
-
-            CURRENT_TRANSLATOR.set(null);
-
-            ((IChunkDataS2CPacket) packet).multiconnect_setDataTranslated(true);
             try {
-                networkHandler.onChunkData(packet);
-            } catch (OffThreadException ignore) {
-            }
+                CURRENT_TRANSLATOR.set(translator);
 
-            for (Packet<ClientPlayPacketListener> postPacket : translator.postPackets) {
+                TransformerByteBuf buf = new TransformerByteBuf(packet.getReadBuffer(), null);
+                buf.readTopLevelType(ChunkData.class);
+                ChunkData chunkData = ChunkData.read(buf);
+
+                EnumMap<EightWayDirection, ShortSet> blocksNeedingConnectionUpdate = new EnumMap<>(EightWayDirection.class);
+                ConnectionInfo.protocol.getBlockConnector().fixChunkData(chunkData, blocksNeedingConnectionUpdate);
+                ((IChunkDataS2CPacket) packet).multiconnect_setBlocksNeedingUpdate(blocksNeedingConnectionUpdate);
+
+                ConnectionInfo.protocol.postTranslateChunk(translator, chunkData);
+                ((IChunkDataS2CPacket) packet).setData(chunkData.toByteArray());
+
+                CURRENT_TRANSLATOR.set(null);
+
+                ((IChunkDataS2CPacket) packet).multiconnect_setDataTranslated(true);
                 try {
-                    postPacket.apply(networkHandler);
+                    networkHandler.onChunkData(packet);
                 } catch (OffThreadException ignore) {
                 }
+
+                for (Packet<ClientPlayPacketListener> postPacket : translator.postPackets) {
+                    try {
+                        postPacket.apply(networkHandler);
+                    } catch (OffThreadException ignore) {
+                    }
+                }
+            } catch (Throwable e) {
+                LOGGER.error("Failed to translate chunk " + packet.getX() + ", " + packet.getZ(), e);
             }
         });
     }
