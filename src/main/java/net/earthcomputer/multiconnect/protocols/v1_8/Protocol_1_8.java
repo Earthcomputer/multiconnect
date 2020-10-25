@@ -23,6 +23,7 @@ import net.earthcomputer.multiconnect.protocols.v1_16_1.ChunkDeltaUpdateS2CPacke
 import net.earthcomputer.multiconnect.protocols.v1_8.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
 import net.earthcomputer.multiconnect.protocols.v1_9_2.UpdateSignS2CPacket;
+import net.earthcomputer.multiconnect.protocols.v1_9_4.ResourcePackStatusC2SPacket_1_9_4;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
@@ -593,7 +594,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, ConfirmGuiActionC2SPacket.class);
         remove(packets, ButtonClickC2SPacket.class);
         remove(packets, ClickWindowC2SPacket.class);
-        remove(packets, CloseScreenS2CPacket.class);
+        remove(packets, GuiCloseC2SPacket.class);
         remove(packets, CustomPayloadC2SPacket_1_12_2.class);
         remove(packets, KeepAliveC2SPacket.class);
         remove(packets, PlayerMoveC2SPacket.LookOnly.class);
@@ -601,7 +602,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, VehicleMoveC2SPacket.class);
         remove(packets, BoatPaddleStateC2SPacket.class);
         remove(packets, UpdatePlayerAbilitiesC2SPacket.class);
-        remove(packets, ResourcePackStatusC2SPacket.class);
+        remove(packets, ResourcePackStatusC2SPacket_1_9_4.class);
         remove(packets, UpdateSelectedSlotC2SPacket.class);
         remove(packets, HandSwingC2SPacket.class);
         remove(packets, PlayerInteractBlockC2SPacket.class);
@@ -612,8 +613,8 @@ public class Protocol_1_8 extends Protocol_1_9 {
         insertAfter(packets, PlayerActionC2SPacket.class, PacketInfo.of(PlayerUseItemC2SPacket_1_8.class, PlayerUseItemC2SPacket_1_8::new));
         insertAfter(packets, PlayerUseItemC2SPacket_1_8.class, PacketInfo.of(UpdateSelectedSlotC2SPacket.class, UpdateSelectedSlotC2SPacket::new));
         insertAfter(packets, UpdateSelectedSlotC2SPacket.class, PacketInfo.of(HandSwingC2SPacket.class, HandSwingC2SPacket::new));
-        insertAfter(packets, PlayerInputC2SPacket.class, PacketInfo.of(CloseScreenS2CPacket.class, CloseScreenS2CPacket::new));
-        insertAfter(packets, CloseScreenS2CPacket.class, PacketInfo.of(ClickWindowC2SPacket.class, ClickWindowC2SPacket::new));
+        insertAfter(packets, PlayerInputC2SPacket.class, PacketInfo.of(GuiCloseC2SPacket.class, GuiCloseC2SPacket::new));
+        insertAfter(packets, GuiCloseC2SPacket.class, PacketInfo.of(ClickWindowC2SPacket.class, ClickWindowC2SPacket::new));
         insertAfter(packets, ClickWindowC2SPacket.class, PacketInfo.of(ConfirmGuiActionC2SPacket.class, ConfirmGuiActionC2SPacket::new));
         insertAfter(packets, CreativeInventoryActionC2SPacket.class, PacketInfo.of(ButtonClickC2SPacket.class, ButtonClickC2SPacket::new));
         insertAfter(packets, UpdateSignC2SPacket.class, PacketInfo.of(UpdatePlayerAbilitiesC2SPacket.class, UpdatePlayerAbilitiesC2SPacket::new));
@@ -621,7 +622,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         insertAfter(packets, RequestCommandCompletionsC2SPacket.class, PacketInfo.of(ClientSettingsC2SPacket.class, ClientSettingsC2SPacket::new));
         insertAfter(packets, ClientSettingsC2SPacket.class, PacketInfo.of(ClientStatusC2SPacket_1_11_2.class, ClientStatusC2SPacket_1_11_2::new));
         insertAfter(packets, ClientStatusC2SPacket_1_11_2.class, PacketInfo.of(CustomPayloadC2SPacket_1_12_2.class, CustomPayloadC2SPacket_1_12_2::new));
-        insertAfter(packets, SpectatorTeleportC2SPacket.class, PacketInfo.of(ResourcePackStatusC2SPacket.class, ResourcePackStatusC2SPacket::new));
+        insertAfter(packets, SpectatorTeleportC2SPacket.class, PacketInfo.of(ResourcePackStatusC2SPacket_1_9_4.class, ResourcePackStatusC2SPacket_1_9_4::new));
         return packets;
     }
 
