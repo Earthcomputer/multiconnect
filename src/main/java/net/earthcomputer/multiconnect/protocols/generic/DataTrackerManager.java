@@ -87,7 +87,9 @@ public class DataTrackerManager {
     public static synchronized void postRegisterData(Class<? extends Entity> clazz) {
         if (!DEFAULT_DATA.containsKey(clazz)) {
             DEFAULT_DATA.put(clazz, Collections.emptyList());
-            dirty = true;
+            // must reregister now in case entity needs tracked data from postEntityDataRegister when that entity otherwise doesn't have any data
+            // otherwise we could just set dirty = true
+            reregisterAll();
         }
     }
 

@@ -13,6 +13,7 @@ import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Particles_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Protocol_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
+import net.earthcomputer.multiconnect.protocols.v1_13_2.GuiOpenS2CPacket_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.UseBedS2CPacket;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
@@ -21,6 +22,7 @@ import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAcce
 import net.earthcomputer.multiconnect.protocols.v1_16_1.ChunkDeltaUpdateS2CPacket_1_16_1;
 import net.earthcomputer.multiconnect.protocols.v1_8.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
+import net.earthcomputer.multiconnect.protocols.v1_9_2.UpdateSignS2CPacket;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
@@ -245,12 +247,18 @@ public class Protocol_1_8 extends Protocol_1_9 {
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(EntityS2CPacket.MoveRelative.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // entity id
+            buf.disablePassthroughMode();
             buf.pendingRead(Short.class, (short)((short)buf.readByte() * 128)); // x
             buf.pendingRead(Short.class, (short)((short)buf.readByte() * 128)); // y
             buf.pendingRead(Short.class, (short)((short)buf.readByte() * 128)); // z
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(EntityS2CPacket.RotateAndMoveRelative.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // entity id
+            buf.disablePassthroughMode();
             buf.pendingRead(Short.class, (short)((short)buf.readByte() * 128)); // x
             buf.pendingRead(Short.class, (short)((short)buf.readByte() * 128)); // y
             buf.pendingRead(Short.class, (short)((short)buf.readByte() * 128)); // z
@@ -462,7 +470,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, GameMessageS2CPacket.class);
         remove(packets, ChunkDeltaUpdateS2CPacket_1_16_1.class);
         remove(packets, ConfirmGuiActionS2CPacket.class);
-        remove(packets, OpenScreenS2CPacket.class);
+        remove(packets, GuiOpenS2CPacket_1_13_2.class);
         remove(packets, ScreenHandlerSlotUpdateS2CPacket.class);
         remove(packets, CooldownUpdateS2CPacket.class);
         remove(packets, CustomPayloadS2CPacket.class);
@@ -505,7 +513,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, ScoreboardPlayerUpdateS2CPacket.class);
         remove(packets, PlayerSpawnPositionS2CPacket.class);
         remove(packets, WorldTimeUpdateS2CPacket.class);
-        remove(packets, UpdateSignC2SPacket.class);
+        remove(packets, UpdateSignS2CPacket.class);
         remove(packets, PlaySoundFromEntityS2CPacket.class);
         remove(packets, PlaySoundS2CPacket.class);
         remove(packets, ItemPickupAnimationS2CPacket.class);
@@ -546,14 +554,14 @@ public class Protocol_1_8 extends Protocol_1_9 {
         insertAfter(packets, ChunkDataS2CPacket.class, PacketInfo.of(ChunkDeltaUpdateS2CPacket_1_16_1.class, ChunkDeltaUpdateS2CPacket_1_16_1::new));
         insertAfter(packets, ChunkDeltaUpdateS2CPacket_1_16_1.class, PacketInfo.of(BlockUpdateS2CPacket.class, BlockUpdateS2CPacket::new));
         insertAfter(packets, BlockUpdateS2CPacket.class, PacketInfo.of(BlockEventS2CPacket.class, BlockEventS2CPacket::new));
-        insertAfter(packets, BlockEventS2CPacket.class, PacketInfo.of(BulkChunkDataS2CPacket_1_8.class, BulkChunkDataS2CPacket_1_8::new));
+        insertAfter(packets, BlockBreakingProgressS2CPacket.class, PacketInfo.of(BulkChunkDataS2CPacket_1_8.class, BulkChunkDataS2CPacket_1_8::new));
         insertAfter(packets, BulkChunkDataS2CPacket_1_8.class, PacketInfo.of(ExplosionS2CPacket.class, ExplosionS2CPacket::new));
         insertAfter(packets, ExplosionS2CPacket.class, PacketInfo.of(WorldEventS2CPacket.class, WorldEventS2CPacket::new));
         insertAfter(packets, WorldEventS2CPacket.class, PacketInfo.of(PlaySoundIdS2CPacket.class, PlaySoundIdS2CPacket::new));
         insertAfter(packets, PlaySoundIdS2CPacket.class, PacketInfo.of(ParticleS2CPacket.class, ParticleS2CPacket::new));
         insertAfter(packets, ParticleS2CPacket.class, PacketInfo.of(GameStateChangeS2CPacket.class, GameStateChangeS2CPacket::new));
         insertAfter(packets, GameStateChangeS2CPacket.class, PacketInfo.of(EntitySpawnGlobalS2CPacket_1_15_2.class, EntitySpawnGlobalS2CPacket_1_15_2::new));
-        insertAfter(packets, EntitySpawnGlobalS2CPacket_1_15_2.class, PacketInfo.of(OpenScreenS2CPacket.class, OpenScreenS2CPacket::new));
+        insertAfter(packets, EntitySpawnGlobalS2CPacket_1_15_2.class, PacketInfo.of(GuiOpenS2CPacket_1_13_2.class, GuiOpenS2CPacket_1_13_2::new));
         insertAfter(packets, CloseScreenS2CPacket.class, PacketInfo.of(ScreenHandlerSlotUpdateS2CPacket.class, ScreenHandlerSlotUpdateS2CPacket::new));
         insertAfter(packets, ScreenHandlerPropertyUpdateS2CPacket.class, PacketInfo.of(ConfirmGuiActionS2CPacket.class, ConfirmGuiActionS2CPacket::new));
         insertAfter(packets, ConfirmGuiActionS2CPacket.class, PacketInfo.of(UpdateSignC2SPacket.class, UpdateSignC2SPacket::new));
