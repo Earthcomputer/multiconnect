@@ -98,7 +98,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
             for (int sec = 0; sec < sectionCount; sec++) {
                 for (int i = 0; i < 4096; i++) {
                     char stateId = (char) (buf.readUnsignedByte() | (buf.readUnsignedByte() << 8));
-                    paletteMap.put(stateId, (char)paletteMap.size());
+                    paletteMap.putIfAbsent(stateId, (char)paletteMap.size());
                     oldData[sec] = stateId;
                 }
 
@@ -152,16 +152,19 @@ public class Protocol_1_8 extends Protocol_1_9 {
                 }
                 // data
                 char[] data = newData[sec];
+                long[] packedData = new long[(4096 * secBitsPerBlock + 63) / 64];
+                int packedDataIndex = 0;
                 long val = 0;
                 for (int i = 0; i < 4096; i++) {
                     int bit = i * secBitsPerBlock;
                     int offset = bit & 63;
                     val |= (long)data[i] << offset;
                     if (offset + secBitsPerBlock >= 64 || i == 4095) {
-                        buf.pendingRead(Long.class, val);
+                        packedData[packedDataIndex++] = val;
                         val = data[i] >> (secBitsPerBlock - (64 - offset));
                     }
                 }
+                buf.pendingRead(long[].class, packedData);
 
                 // light
                 buf.pendingRead(byte[].class, blockLight[sec]);
