@@ -17,11 +17,15 @@ import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
 import net.minecraft.server.command.CommandSource;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Set;
 
 public class Protocol_1_9_2 extends Protocol_1_9_4 {
+
+    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
@@ -60,7 +64,17 @@ public class Protocol_1_9_2 extends Protocol_1_9_4 {
                         }
                         if (blockEntityType != null) {
                             CompoundTag nbt = new CompoundTag();
-                            nbt.putString("id", Protocol_1_10.getBlockEntityId(blockEntityType));
+                            String blockEntityId;
+                            if (blockEntityType == BlockEntityType.BED) {
+                                blockEntityId = "minecraft:bed"; // block entity that was added in 1.12
+                            } else {
+                                blockEntityId = Protocol_1_10.getBlockEntityId(blockEntityType);
+                                if (blockEntityId == null) {
+                                    LOGGER.warn("Block entity " + Registry.BLOCK_ENTITY_TYPE.getId(blockEntityType) + " has no 1.10 ID but tried to be created in chunk data");
+                                    continue;
+                                }
+                            }
+                            nbt.putString("id", blockEntityId);
                             nbt.putInt("x", pos.getX());
                             nbt.putInt("y", pos.getY());
                             nbt.putInt("z", pos.getZ());
