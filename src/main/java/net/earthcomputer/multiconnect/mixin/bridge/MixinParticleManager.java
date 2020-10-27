@@ -29,15 +29,15 @@ import java.util.function.Function;
 @Mixin(ParticleManager.class)
 public class MixinParticleManager implements IParticleManager {
 
-    @Shadow @Final private Map<Identifier, Object> spriteAwareFactories;
+    @Shadow @Final private Map<ParticleType<?>, Object> spriteAwareFactories;
     @Shadow protected ClientWorld world;
 
-    @Unique private final Map<Identifier, ParticleFactory<?>> customFactories = new HashMap<>();
+    @Unique private final Map<ParticleType<?>, ParticleFactory<?>> customFactories = new HashMap<>();
 
     @SuppressWarnings("unchecked")
     @Inject(method = "createParticle", at = @At("HEAD"), cancellable = true)
     private <T extends ParticleEffect> void onCreateParticle(T effect, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, CallbackInfoReturnable<Particle> ci) {
-        ParticleFactory<T> customFactory = (ParticleFactory<T>) customFactories.get(Registry.PARTICLE_TYPE.getId(effect.getType()));
+        ParticleFactory<T> customFactory = (ParticleFactory<T>) customFactories.get(effect.getType());
         if (customFactory != null)
             ci.setReturnValue(customFactory.createParticle(effect, world, x, y, z, xSpeed, ySpeed, zSpeed));
     }
@@ -54,7 +54,7 @@ public class MixinParticleManager implements IParticleManager {
 
     @Override
     public <T extends ParticleEffect> void multiconnect_registerFactory(ParticleType<T> type, ParticleFactory<T> factory) {
-        customFactories.put(Registry.PARTICLE_TYPE.getId(type), factory);
+        customFactories.put(type, factory);
     }
 
     @Override
@@ -62,8 +62,7 @@ public class MixinParticleManager implements IParticleManager {
                                                                                    Function<SpriteProvider, ParticleFactory<T>> spriteAwareFactory) {
         SpriteProvider spriteProvider = ((ParticleManager)(Object)this).new SimpleSpriteProvider();
 
-        Identifier id = Registry.PARTICLE_TYPE.getId(type);
-        spriteAwareFactories.put(id, spriteProvider);
-        customFactories.put(id, spriteAwareFactory.apply(spriteProvider));
+        spriteAwareFactories.put(type, spriteProvider);
+        customFactories.put(type, spriteAwareFactory.apply(spriteProvider));
     }
 }
