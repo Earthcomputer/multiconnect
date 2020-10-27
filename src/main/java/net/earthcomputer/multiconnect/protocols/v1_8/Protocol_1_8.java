@@ -568,7 +568,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         insertAfter(packets, EntitySpawnGlobalS2CPacket_1_15_2.class, PacketInfo.of(GuiOpenS2CPacket_1_13_2.class, GuiOpenS2CPacket_1_13_2::new));
         insertAfter(packets, CloseScreenS2CPacket.class, PacketInfo.of(ScreenHandlerSlotUpdateS2CPacket.class, ScreenHandlerSlotUpdateS2CPacket::new));
         insertAfter(packets, ScreenHandlerPropertyUpdateS2CPacket.class, PacketInfo.of(ConfirmGuiActionS2CPacket.class, ConfirmGuiActionS2CPacket::new));
-        insertAfter(packets, ConfirmGuiActionS2CPacket.class, PacketInfo.of(UpdateSignC2SPacket.class, UpdateSignC2SPacket::new));
+        insertAfter(packets, ConfirmGuiActionS2CPacket.class, PacketInfo.of(UpdateSignS2CPacket.class, UpdateSignS2CPacket::new));
         insertAfter(packets, MapUpdateS2CPacket.class, PacketInfo.of(BlockEntityUpdateS2CPacket.class, BlockEntityUpdateS2CPacket::new));
         insertAfter(packets, SignEditorOpenS2CPacket.class, PacketInfo.of(StatisticsS2CPacket.class, StatisticsS2CPacket::new));
         insertAfter(packets, StatisticsS2CPacket.class, PacketInfo.of(PlayerListS2CPacket.class, PlayerListS2CPacket::new));
