@@ -70,18 +70,18 @@ public final class ChunkData implements IBlockConnectionsBlockView {
     }
 
     @Override
-    public boolean setBlockState(BlockPos pos, BlockState state) {
+    public void setBlockState(BlockPos pos, BlockState state) {
         if (pos.getY() < 0 || pos.getY() > 255) {
-            return false;
+            return;
         }
         int x = pos.getX() & 15;
         int z = pos.getZ() & 15;
         ChunkSection section = sections[pos.getY() >> 4];
         if (section == null) {
-            return false;
+            return;
         }
         int y = pos.getY() & 15;
-        return section.setBlockState(x, y, z, state, false) != state;
+        section.setBlockState(x, y, z, state, false);
     }
 
     public ChunkSection[] getSections() {

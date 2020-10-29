@@ -25,7 +25,7 @@ public class BlockConnectors_1_12_2 {
         BlockConnections.registerConnector(Protocols.V1_12_2, new SimpleInPlaceConnector((world, pos) -> {
             Block blockAbove = world.getBlockState(pos.up()).getBlock();
             boolean snowy = blockAbove == Blocks.SNOW_BLOCK || blockAbove == Blocks.SNOW;
-            return world.setBlockState(pos, world.getBlockState(pos).with(Properties.SNOWY, snowy));
+            world.setBlockState(pos, world.getBlockState(pos).with(Properties.SNOWY, snowy));
         }, Blocks.GRASS_BLOCK, Blocks.PODZOL, Blocks.MYCELIUM));
 
         // door divided state
@@ -44,19 +44,17 @@ public class BlockConnectors_1_12_2 {
                     state = state.with(Properties.HORIZONTAL_FACING, lower.get(Properties.HORIZONTAL_FACING)).with(Properties.OPEN, lower.get(Properties.OPEN));
                 }
             }
-            return world.setBlockState(pos, state);
+            world.setBlockState(pos, state);
         }, Blocks.OAK_DOOR, Blocks.SPRUCE_DOOR, Blocks.BIRCH_DOOR, Blocks.JUNGLE_DOOR, Blocks.ACACIA_DOOR, Blocks.DARK_OAK_DOOR, Blocks.IRON_DOOR));
 
         // copy double plant type from lower
         BlockConnections.registerConnector(Protocols.V1_12_2, new SimpleInPlaceConnector((world, pos) -> {
             if (world.getBlockState(pos).get(Properties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.LOWER) {
-                return false;
+                return;
             }
             Block lower = world.getBlockState(pos.down()).getBlock();
             if (lower instanceof TallPlantBlock) {
-                return world.setBlockState(pos, lower.getDefaultState().with(Properties.DOUBLE_BLOCK_HALF, DoubleBlockHalf.UPPER));
-            } else {
-                return false;
+                world.setBlockState(pos, lower.getDefaultState().with(Properties.DOUBLE_BLOCK_HALF, DoubleBlockHalf.UPPER));
             }
         }, Blocks.SUNFLOWER, Blocks.LILAC, Blocks.TALL_GRASS, Blocks.LARGE_FERN, Blocks.ROSE_BUSH, Blocks.PEONY));
 
@@ -83,14 +81,16 @@ public class BlockConnectors_1_12_2 {
                     }
                 }
             }
-            return changed && world.setBlockState(pos, state);
+            if (changed) {
+                world.setBlockState(pos, state);
+            }
         }, Blocks.CHEST, Blocks.TRAPPED_CHEST));
 
         // note block instruments
         BlockConnections.registerConnector(Protocols.V1_12_2, new SimpleInPlaceConnector(Blocks.NOTE_BLOCK, (world, pos) -> {
             BlockState below = world.getBlockState(pos.down());
             Instrument instrument = Instrument.fromBlockState(below);
-            return world.setBlockState(pos, Blocks.NOTE_BLOCK.getDefaultState().with(Properties.INSTRUMENT, instrument));
+            world.setBlockState(pos, Blocks.NOTE_BLOCK.getDefaultState().with(Properties.INSTRUMENT, instrument));
         }));
 
         // bed occupied
@@ -102,9 +102,8 @@ public class BlockConnectors_1_12_2 {
             BlockPos otherPos = pos.offset(dir);
             BlockState otherState = world.getBlockState(otherPos);
             if (otherState.getBlock() instanceof BedBlock && otherState.get(Properties.BED_PART) != part) {
-                return world.setBlockState(pos, state.with(Properties.OCCUPIED, otherState.get(Properties.OCCUPIED)));
+                world.setBlockState(pos, state.with(Properties.OCCUPIED, otherState.get(Properties.OCCUPIED)));
             }
-            return false;
         }));
 
         // fire connections
@@ -112,10 +111,10 @@ public class BlockConnectors_1_12_2 {
             FireBlockAccessor fireBlock = (FireBlockAccessor) Blocks.FIRE;
             BlockState below = world.getBlockState(pos.down());
             if (fireBlock.callIsFlammable(below)) {
-                return false;
+                return;
             }
             if (IBlockConnectionsBlockView.withNullWorld(below.getBlock(), false, () -> below.isSideSolidFullSquare(null, null, Direction.UP))) {
-                return false;
+                return;
             }
 
             BlockState state = Blocks.FIRE.getDefaultState();
@@ -124,7 +123,7 @@ public class BlockConnectors_1_12_2 {
             state = state.with(Properties.SOUTH, fireBlock.callIsFlammable(world.getBlockState(pos.south())));
             state = state.with(Properties.WEST, fireBlock.callIsFlammable(world.getBlockState(pos.west())));
             state = state.with(Properties.EAST, fireBlock.callIsFlammable(world.getBlockState(pos.east())));
-            return world.setBlockState(pos, state);
+            world.setBlockState(pos, state);
         }));
 
         // stair shape
@@ -140,10 +139,11 @@ public class BlockConnectors_1_12_2 {
                     BlockState side = world.getBlockState(pos.offset(backFacing, -1));
                     if (!StairsBlock.isStairs(side) || side.get(Properties.HORIZONTAL_FACING) != state.get(Properties.HORIZONTAL_FACING) || side.get(Properties.BLOCK_HALF) != state.get(Properties.BLOCK_HALF)) {
                         if (backFacing == facing.rotateYCounterclockwise()) {
-                            return world.setBlockState(pos, state.with(Properties.STAIR_SHAPE, StairShape.OUTER_LEFT));
+                            world.setBlockState(pos, state.with(Properties.STAIR_SHAPE, StairShape.OUTER_LEFT));
                         } else {
-                            return world.setBlockState(pos, state.with(Properties.STAIR_SHAPE, StairShape.OUTER_RIGHT));
+                            world.setBlockState(pos, state.with(Properties.STAIR_SHAPE, StairShape.OUTER_RIGHT));
                         }
+                        return;
                     }
                 }
             }
@@ -156,15 +156,16 @@ public class BlockConnectors_1_12_2 {
                     BlockState side = world.getBlockState(pos.offset(frontFacing));
                     if (!StairsBlock.isStairs(side) || side.get(Properties.HORIZONTAL_FACING) != state.get(Properties.HORIZONTAL_FACING) || side.get(Properties.BLOCK_HALF) != state.get(Properties.BLOCK_HALF)) {
                         if (frontFacing == facing.rotateYCounterclockwise()) {
-                            return world.setBlockState(pos, state.with(Properties.STAIR_SHAPE, StairShape.INNER_LEFT));
+                            world.setBlockState(pos, state.with(Properties.STAIR_SHAPE, StairShape.INNER_LEFT));
                         } else {
-                            return world.setBlockState(pos, state.with(Properties.STAIR_SHAPE, StairShape.INNER_RIGHT));
+                            world.setBlockState(pos, state.with(Properties.STAIR_SHAPE, StairShape.INNER_RIGHT));
                         }
+                        return;
                     }
                 }
             }
 
-            return world.setBlockState(pos, state.with(Properties.STAIR_SHAPE, StairShape.STRAIGHT));
+            world.setBlockState(pos, state.with(Properties.STAIR_SHAPE, StairShape.STRAIGHT));
         }, Blocks.OAK_STAIRS, Blocks.COBBLESTONE_STAIRS, Blocks.BRICK_STAIRS, Blocks.STONE_BRICK_STAIRS,
                 Blocks.NETHER_BRICK_STAIRS, Blocks.SANDSTONE_STAIRS, Blocks.SPRUCE_STAIRS, Blocks.BIRCH_STAIRS,
                 Blocks.JUNGLE_STAIRS, Blocks.QUARTZ_STAIRS, Blocks.ACACIA_STAIRS, Blocks.DARK_OAK_STAIRS,
@@ -203,7 +204,7 @@ public class BlockConnectors_1_12_2 {
                 }
             }
 
-            return world.setBlockState(pos, state);
+            world.setBlockState(pos, state);
         }));
 
         // fence connections
@@ -228,7 +229,7 @@ public class BlockConnectors_1_12_2 {
                 locked = true;
             }
 
-            return world.setBlockState(pos, state.with(Properties.LOCKED, locked));
+            world.setBlockState(pos, state.with(Properties.LOCKED, locked));
         }));
 
         // glass pane and iron bars connections
@@ -244,7 +245,7 @@ public class BlockConnectors_1_12_2 {
         BlockConnections.registerConnector(Protocols.V1_12_2, new SimpleInPlaceConnector(Blocks.VINE, (world, pos) -> {
             BlockState above = world.getBlockState(pos.up());
             boolean up = Block.isFaceFullSquare(IBlockConnectionsBlockView.withNullWorld(above.getBlock(), VoxelShapes.fullCube(), () -> above.getCollisionShape(null, null)), Direction.UP);
-            return world.setBlockState(pos, world.getBlockState(pos).with(Properties.UP, up));
+            world.setBlockState(pos, world.getBlockState(pos).with(Properties.UP, up));
         }));
 
         // fence gate wall connection
@@ -252,7 +253,7 @@ public class BlockConnectors_1_12_2 {
             BlockState state = world.getBlockState(pos);
             Direction sideDir = state.get(Properties.HORIZONTAL_FACING).rotateYClockwise();
             boolean inWall = world.getBlockState(pos.offset(sideDir)).isIn(BlockTags.WALLS) || world.getBlockState(pos.offset(sideDir, -1)).isIn(BlockTags.WALLS);
-            return world.setBlockState(pos, state.with(Properties.IN_WALL, inWall));
+            world.setBlockState(pos, state.with(Properties.IN_WALL, inWall));
         }, Blocks.OAK_FENCE_GATE, Blocks.SPRUCE_FENCE_GATE, Blocks.BIRCH_FENCE_GATE, Blocks.JUNGLE_FENCE_GATE, Blocks.DARK_OAK_FENCE_GATE, Blocks.ACACIA_FENCE_GATE));
 
         // tripwire connection
@@ -280,7 +281,7 @@ public class BlockConnectors_1_12_2 {
             boolean straightWall = (connectNorth && connectSouth && !connectEast && !connectWest) || (connectEast && connectWest && !connectNorth && !connectSouth);
             boolean connectUp = !straightWall || !world.getBlockState(pos.up()).isAir();
             state = state.with(Properties.UP, connectUp);
-            return world.setBlockState(pos, state);
+            world.setBlockState(pos, state);
         }, Blocks.COBBLESTONE_WALL, Blocks.MOSSY_COBBLESTONE_WALL));
 
         // chorus plant connection
@@ -291,7 +292,7 @@ public class BlockConnectors_1_12_2 {
                 boolean canConnect = offsetState.getBlock() == Blocks.CHORUS_PLANT || offsetState.getBlock() == Blocks.CHORUS_FLOWER || (dir == Direction.DOWN && offsetState.getBlock() == Blocks.END_STONE);
                 state = state.with(ConnectingBlock.FACING_PROPERTIES.get(dir), canConnect);
             }
-            return world.setBlockState(pos, state);
+            world.setBlockState(pos, state);
         }));
     }
 }

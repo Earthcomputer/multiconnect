@@ -6,6 +6,7 @@ import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.IBlockConnector;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.ChunkSection;
@@ -31,7 +32,13 @@ public class BlockConnector {
 
     public boolean fix(IBlockConnectionsBlockView world, BlockPos pos, Block block) {
         IBlockConnector connector = connectors.get(block);
-        return connector != null && connector.fix(world, pos);
+        if (connector == null) {
+            return false;
+        } else {
+            BlockState prevState = world.getBlockState(pos);
+            connector.fix(world, pos);
+            return world.getBlockState(pos) != prevState;
+        }
     }
 
     public void fixChunkData(ChunkData chunkData, EnumMap<EightWayDirection, ShortSet> blocksNeedingUpdateOut) {

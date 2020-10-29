@@ -343,7 +343,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             if (!north && south && !west && !east) state = state.with(Properties.NORTH_WIRE_CONNECTION, WireConnection.SIDE);
             if (!north && !south && west && !east) state = state.with(Properties.EAST_WIRE_CONNECTION, WireConnection.SIDE);
             if (!north && !south && !west && east) state = state.with(Properties.WEST_WIRE_CONNECTION, WireConnection.SIDE);
-            return world.setBlockState(pos, state);
+            world.setBlockState(pos, state);
         }));
     }
 

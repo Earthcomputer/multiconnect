@@ -24,7 +24,7 @@ public class HorizontalNeighborConnector extends SimpleNeighborConnector {
             newState = newState.with(Properties.WEST, predicate.canConnect(state, world.getBlockState(pos.west()), Direction.WEST));
             newState = newState.with(Properties.EAST, predicate.canConnect(state, world.getBlockState(pos.east()), Direction.EAST));
 
-            return world.setBlockState(pos, newState);
+            world.setBlockState(pos, newState);
         };
     }
 

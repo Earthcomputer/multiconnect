@@ -16,7 +16,7 @@ public interface IBlockConnectionsBlockView {
     Set<Block> WARNED_NPE_BLOCKS = new HashSet<>();
 
     BlockState getBlockState(BlockPos pos);
-    boolean setBlockState(BlockPos pos, BlockState state);
+    void setBlockState(BlockPos pos, BlockState state);
 
     static <T> T withNullWorld(Block block, T def, Supplier<T> supplier) {
         try {

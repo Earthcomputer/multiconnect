@@ -9,11 +9,9 @@ public class CompoundConnector extends SimpleConnector {
 
     public CompoundConnector(List<IBlockConnector> connectors) {
         super((world, pos) -> {
-            boolean result = false;
             for (IBlockConnector connector : connectors) {
-                result |= connector.fix(world, pos);
+                connector.fix(world, pos);
             }
-            return result;
         }, connectors.stream().flatMap(connector -> connector.getAppliedBlocks().stream()).distinct().toArray(Block[]::new));
         this.needsNeighbors = connectors.stream().anyMatch(IBlockConnector::needsNeighbors);
     }
