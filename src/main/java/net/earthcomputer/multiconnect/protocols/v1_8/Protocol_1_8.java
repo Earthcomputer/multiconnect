@@ -59,6 +59,8 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.server.command.CommandSource;
 import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.Stats;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -205,10 +207,18 @@ public class Protocol_1_8 extends Protocol_1_9 {
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(PlaySoundIdS2CPacket.class, buf -> {
-            buf.enablePassthroughMode();
-            buf.readString(256); // sound id
-            buf.disablePassthroughMode();
-            buf.pendingRead(SoundCategory.class, SoundCategory.MASTER);
+            String soundId = buf.readString(256);
+
+            SoundEvent soundEvent = SoundData_1_8.getInstance().getSoundEvent(soundId);
+            if (soundEvent == null) soundEvent = SoundEvents.AMBIENT_CAVE;
+            Identifier eventId = Registry.SOUND_EVENT.getId(soundEvent);
+            assert eventId != null;
+            buf.pendingRead(String.class, eventId.getPath());
+
+            SoundCategory category = SoundData_1_8.getInstance().getCategory(soundId);
+            if (category == null) category = SoundCategory.MASTER;
+            buf.pendingRead(SoundCategory.class, category);
+
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(EntityStatusEffectS2CPacket.class, buf -> {

@@ -1,0 +1,988 @@
+{
+  "sounds": {
+    "ambient.cave.cave": {
+      "category": "ambient",
+      "map": "ambient.cave"
+    },
+    "ambient.weather.rain": {
+      "category": "weather",
+      "map": "weather.rain"
+    },
+    "ambient.weather.thunder": {
+      "category": "weather",
+      "map": "entity.lightning.thunder"
+    },
+    "game.player.hurt.fall.big": {
+      "category": "player",
+      "map": "entity.player.big_fall"
+    },
+    "game.player.hurt.fall.small": {
+      "category": "player",
+      "map": "entity.player.small_fall"
+    },
+    "game.neutral.hurt.fall.big": {
+      "category": "neutral",
+      "map": "entity.generic.big_fall"
+    },
+    "game.neutral.hurt.fall.small": {
+      "category": "neutral",
+      "map": "entity.generic.small_fall"
+    },
+    "game.hostile.hurt.fall.big": {
+      "category": "hostile",
+      "map": "entity.hostile.big_fall"
+    },
+    "game.hostile.hurt.fall.small": {
+      "category": "hostile",
+      "map": "entity.hostile.small_fall"
+    },
+    "game.player.hurt": {
+      "category": "player",
+      "map": "entity.player.hurt"
+    },
+    "game.neutral.hurt": {
+      "category": "neutral",
+      "map": "entity.generic.hurt"
+    },
+    "game.hostile.hurt": {
+      "category": "hostile",
+      "map": "entity.hostile.hurt"
+    },
+    "game.player.die": {
+      "category": "player",
+      "map": "entity.player.death"
+    },
+    "game.neutral.die": {
+      "category": "neutral",
+      "map": "entity.generic.death"
+    },
+    "game.hostile.die": {
+      "category": "hostile",
+      "map": "entity.hostile.death"
+    },
+    "dig.cloth": {
+      "category": "block",
+      "map": "block.cloth.break"
+    },
+    "dig.grass": {
+      "category": "block",
+      "map": "block.grass.break"
+    },
+    "dig.gravel": {
+      "category": "block",
+      "map": "block.gravel.break"
+    },
+    "dig.sand": {
+      "category": "block",
+      "map": "block.sand.break"
+    },
+    "dig.snow": {
+      "category": "block",
+      "map": "block.snow.break"
+    },
+    "dig.stone": {
+      "category": "block",
+      "map": "block.stone.break"
+    },
+    "dig.wood": {
+      "category": "block",
+      "map": "block.wood.break"
+    },
+    "fire.fire": {
+      "category": "block",
+      "map": "block.fire.ambient"
+    },
+    "fire.ignite": {
+      "category": "block",
+      "map": "item.flintandsteel.use"
+    },
+    "item.fireCharge.use": {
+      "category": "block",
+      "map": "item.firecharge.use"
+    },
+    "fireworks.blast": {
+      "category": "ambient",
+      "map": "entity.firework.blast"
+    },
+    "fireworks.blast_far": {
+      "category": "ambient",
+      "map": "entity.firework.blast_far"
+    },
+    "fireworks.largeBlast": {
+      "category": "ambient",
+      "map": "entity.firework.large_blast"
+    },
+    "fireworks.largeBlast_far": {
+      "category": "ambient",
+      "map": "entity.firework.large_blast_far"
+    },
+    "fireworks.launch": {
+      "category": "ambient",
+      "map": "entity.firework.launch"
+    },
+    "fireworks.twinkle": {
+      "category": "ambient",
+      "map": "entity.firework.twinkle"
+    },
+    "fireworks.twinkle_far": {
+      "category": "ambient",
+      "map": "entity.firework.twinkle_far"
+    },
+    "liquid.lava": {
+      "category": "block",
+      "map": "block.lava.ambient"
+    },
+    "liquid.lavapop": {
+      "category": "block",
+      "map": "block.lava.pop"
+    },
+    "game.neutral.swim.splash": {
+      "category": "neutral",
+      "map": "entity.generic.splash"
+    },
+    "game.player.swim.splash": {
+      "category": "block",
+      "map": "entity.player.splash"
+    },
+    "game.hostile.swim.splash": {
+      "category": "hostile",
+      "map": "entity.hostile.splash"
+    },
+    "game.player.swim": {
+      "category": "player",
+      "map": "entity.player.swim"
+    },
+    "game.neutral.swim": {
+      "category": "neutral",
+      "map": "entity.generic.swim"
+    },
+    "game.hostile.swim": {
+      "category": "hostile",
+      "map": "entity.hostile.swim"
+    },
+    "liquid.water": {
+      "category": "block",
+      "map": "block.water.ambient"
+    },
+    "minecart.base": {
+      "category": "neutral",
+      "map": "entity.minecart.riding"
+    },
+    "minecart.inside": {
+      "category": "player",
+      "map": "entity.minecart.inside"
+    },
+    "mob.bat.death": {
+      "category": "neutral",
+      "map": "entity.bat.death"
+    },
+    "mob.bat.hurt": {
+      "category": "neutral",
+      "map": "entity.bat.hurt"
+    },
+    "mob.bat.idle": {
+      "category": "neutral",
+      "map": "entity.bat.ambient"
+    },
+    "mob.bat.loop": {
+      "category": "neutral",
+      "map": "entity.bat.loop"
+    },
+    "mob.bat.takeoff": {
+      "category": "neutral",
+      "map": "entity.bat.takeoff"
+    },
+    "mob.blaze.breathe": {
+      "category": "hostile",
+      "map": "entity.blaze.ambient"
+    },
+    "mob.blaze.death": {
+      "category": "hostile",
+      "map": "entity.blaze.death"
+    },
+    "mob.blaze.hit": {
+      "category": "hostile",
+      "map": "entity.blaze.hurt"
+    },
+    "mob.guardian.hit": {
+      "category": "hostile",
+      "map": "entity.guardian.hurt"
+    },
+    "mob.guardian.idle": {
+      "category": "hostile",
+      "map": "entity.guardian.ambient"
+    },
+    "mob.guardian.death": {
+      "category": "hostile",
+      "map": "entity.guardian.death"
+    },
+    "mob.guardian.elder.hit": {
+      "category": "hostile",
+      "map": "entity.elder_guardian.hurt"
+    },
+    "mob.guardian.elder.idle": {
+      "category": "hostile",
+      "map": "entity.elder_guardian.ambient"
+    },
+    "mob.guardian.elder.death": {
+      "category": "hostile",
+      "map": "entity.elder_guardian.death"
+    },
+    "mob.guardian.land.hit": {
+      "category": "hostile",
+      "map": "entity.guardian.hurt_land"
+    },
+    "mob.guardian.land.idle": {
+      "category": "hostile",
+      "map": "entity.guardian.ambient_land"
+    },
+    "mob.guardian.land.death": {
+      "category": "hostile",
+      "map": "entity.guardian.death_land"
+    },
+    "mob.guardian.curse": {
+      "category": "hostile",
+      "map": "entity.elder_guardian.curse"
+    },
+    "mob.guardian.attack": {
+      "category": "hostile",
+      "map": "entity.guardian.attack"
+    },
+    "mob.guardian.flop": {
+      "category": "hostile",
+      "map": "entity.guardian.flop"
+    },
+    "mob.cat.hiss": {
+      "category": "neutral",
+      "map": "entity.cat.hiss"
+    },
+    "mob.cat.hitt": {
+      "category": "neutral",
+      "map": "entity.cat.hurt"
+    },
+    "mob.cat.meow": {
+      "category": "neutral",
+      "map": "entity.cat.ambient"
+    },
+    "mob.cat.purr": {
+      "category": "neutral",
+      "map": "entity.cat.purr"
+    },
+    "mob.cat.purreow": {
+      "category": "neutral",
+      "map": "entity.cat.purreow"
+    },
+    "mob.chicken.hurt": {
+      "category": "neutral",
+      "map": "entity.chicken.hurt"
+    },
+    "mob.chicken.plop": {
+      "category": "neutral",
+      "map": "entity.chicken.egg"
+    },
+    "mob.chicken.say": {
+      "category": "neutral",
+      "map": "entity.chicken.ambient"
+    },
+    "mob.chicken.step": {
+      "category": "neutral",
+      "map": "entity.chicken.step"
+    },
+    "mob.cow.hurt": {
+      "category": "neutral",
+      "map": "entity.cow.hurt"
+    },
+    "mob.cow.say": {
+      "category": "neutral",
+      "map": "entity.cow.ambient"
+    },
+    "mob.cow.step": {
+      "category": "neutral",
+      "map": "entity.cow.step"
+    },
+    "mob.creeper.death": {
+      "category": "hostile",
+      "map": "entity.creeper.death"
+    },
+    "mob.creeper.say": {
+      "category": "hostile",
+      "map": "entity.creeper.hurt"
+    },
+    "mob.enderdragon.end": {
+      "category": "hostile",
+      "map": "entity.enderdragon.death"
+    },
+    "mob.enderdragon.growl": {
+      "category": "hostile",
+      "map": "entity.enderdragon.growl"
+    },
+    "mob.enderdragon.hit": {
+      "category": "hostile",
+      "map": "entity.enderdragon.hurt"
+    },
+    "mob.enderdragon.wings": {
+      "category": "hostile",
+      "map": "entity.enderdragon.flap"
+    },
+    "mob.endermen.death": {
+      "category": "hostile",
+      "map": "entity.endermen.death"
+    },
+    "mob.endermen.hit": {
+      "category": "hostile",
+      "map": "entity.endermen.hurt"
+    },
+    "mob.endermen.idle": {
+      "category": "hostile",
+      "map": "entity.endermen.ambient"
+    },
+    "mob.endermen.portal": {
+      "category": "hostile",
+      "map": "entity.endermen.teleport"
+    },
+    "mob.endermen.scream": {
+      "category": "hostile",
+      "map": "entity.endermen.scream"
+    },
+    "mob.endermen.stare": {
+      "category": "hostile",
+      "map": "entity.endermen.stare"
+    },
+    "mob.ghast.affectionate_scream": {
+      "category": "hostile",
+      "map": "entity.ghast.scream"
+    },
+    "mob.ghast.charge": {
+      "category": "hostile",
+      "map": "entity.ghast.warn"
+    },
+    "mob.ghast.death": {
+      "category": "hostile",
+      "map": "entity.ghast.death"
+    },
+    "mob.ghast.fireball": {
+      "category": "hostile",
+      "map": "entity.ghast.shoot"
+    },
+    "mob.ghast.moan": {
+      "category": "hostile",
+      "map": "entity.ghast.ambient"
+    },
+    "mob.ghast.scream": {
+      "category": "hostile",
+      "map": "entity.ghast.hurt"
+    },
+    "mob.horse.angry": {
+      "category": "neutral",
+      "map": "entity.horse.angry"
+    },
+    "mob.horse.armor": {
+      "category": "neutral",
+      "map": "entity.horse.armor"
+    },
+    "mob.horse.breathe": {
+      "category": "neutral",
+      "map": "entity.horse.breathe"
+    },
+    "mob.horse.death": {
+      "category": "neutral",
+      "map": "entity.horse.death"
+    },
+    "mob.horse.donkey.angry": {
+      "category": "neutral",
+      "map": "entity.donkey.angry"
+    },
+    "mob.horse.donkey.death": {
+      "category": "neutral",
+      "map": "entity.donkey.death"
+    },
+    "mob.horse.donkey.hit": {
+      "category": "neutral",
+      "map": "entity.donkey.hurt"
+    },
+    "mob.horse.donkey.idle": {
+      "category": "neutral",
+      "map": "entity.donkey.ambient"
+    },
+    "mob.horse.gallop": {
+      "category": "neutral",
+      "map": "entity.horse.gallop"
+    },
+    "mob.horse.hit": {
+      "category": "neutral",
+      "map": "entity.horse.hurt"
+    },
+    "mob.horse.idle": {
+      "category": "neutral",
+      "map": "entity.horse.ambient"
+    },
+    "mob.horse.jump": {
+      "category": "neutral",
+      "map": "entity.horse.jump"
+    },
+    "mob.horse.land": {
+      "category": "neutral",
+      "map": "entity.horse.land"
+    },
+    "mob.horse.leather": {
+      "category": "neutral",
+      "map": "entity.horse.saddle"
+    },
+    "mob.horse.skeleton.death": {
+      "category": "neutral",
+      "map": "entity.skeleton_horse.death"
+    },
+    "mob.horse.skeleton.hit": {
+      "category": "neutral",
+      "map": "entity.skeleton_horse.hurt"
+    },
+    "mob.horse.skeleton.idle": {
+      "category": "neutral",
+      "map": "entity.skeleton_horse.ambient"
+    },
+    "mob.horse.soft": {
+      "category": "neutral",
+      "map": "entity.horse.step"
+    },
+    "mob.horse.wood": {
+      "category": "neutral",
+      "map": "entity.horse.step_wood"
+    },
+    "mob.horse.zombie.death": {
+      "category": "neutral",
+      "map": "entity.zombie_horse.death"
+    },
+    "mob.horse.zombie.hit": {
+      "category": "neutral",
+      "map": "entity.zombie_horse.hurt"
+    },
+    "mob.horse.zombie.idle": {
+      "category": "neutral",
+      "map": "entity.zombie_horse.ambient"
+    },
+    "mob.irongolem.death": {
+      "category": "neutral",
+      "map": "entity.irongolem.death"
+    },
+    "mob.irongolem.hit": {
+      "category": "neutral",
+      "map": "entity.irongolem.hurt"
+    },
+    "mob.irongolem.throw": {
+      "category": "neutral",
+      "map": "entity.irongolem.attack"
+    },
+    "mob.irongolem.walk": {
+      "category": "neutral",
+      "map": "entity.irongolem.step"
+    },
+    "mob.magmacube.big": {
+      "category": "hostile",
+      "map": "entity.magmacube.squish"
+    },
+    "mob.magmacube.jump": {
+      "category": "hostile",
+      "map": "entity.magmacube.jump"
+    },
+    "mob.magmacube.small": {
+      "category": "hostile",
+      "map": "entity.small_magmacube.squish"
+    },
+    "mob.pig.death": {
+      "category": "neutral",
+      "map": "entity.pig.death"
+    },
+    "mob.pig.say": {
+      "category": "neutral",
+      "map": "entity.pig.ambient"
+    },
+    "mob.pig.step": {
+      "category": "neutral",
+      "map": "entity.pig.step"
+    },
+    "mob.rabbit.hurt": {
+      "category": "neutral",
+      "map": "entity.rabbit.hurt"
+    },
+    "mob.rabbit.idle": {
+      "category": "neutral",
+      "map": "entity.rabbit.ambient"
+    },
+    "mob.rabbit.hop": {
+      "category": "neutral",
+      "map": "entity.rabbit.jump"
+    },
+    "mob.rabbit.death": {
+      "category": "neutral",
+      "map": "entity.rabbit.death"
+    },
+    "mob.sheep.say": {
+      "category": "neutral",
+      "map": "entity.sheep.ambient"
+    },
+    "mob.sheep.shear": {
+      "category": "neutral",
+      "map": "entity.sheep.shear"
+    },
+    "mob.sheep.step": {
+      "category": "neutral",
+      "map": "entity.sheep.step"
+    },
+    "mob.silverfish.hit": {
+      "category": "hostile",
+      "map": "entity.silverfish.hurt"
+    },
+    "mob.silverfish.kill": {
+      "category": "hostile",
+      "map": "entity.silverfish.death"
+    },
+    "mob.silverfish.say": {
+      "category": "hostile",
+      "map": "entity.silverfish.ambient"
+    },
+    "mob.silverfish.step": {
+      "category": "hostile",
+      "map": "entity.silverfish.step"
+    },
+    "mob.skeleton.death": {
+      "category": "hostile",
+      "map": "entity.skeleton.death"
+    },
+    "mob.skeleton.hurt": {
+      "category": "hostile",
+      "map": "entity.skeleton.hurt"
+    },
+    "mob.skeleton.say": {
+      "category": "hostile",
+      "map": "entity.skeleton.ambient"
+    },
+    "mob.skeleton.step": {
+      "category": "hostile",
+      "map": "entity.skeleton.step"
+    },
+    "mob.slime.attack": {
+      "category": "hostile",
+      "map": "entity.slime.attack"
+    },
+    "mob.slime.big": {
+      "category": "hostile",
+      "map": "entity.slime.squish"
+    },
+    "mob.slime.small": {
+      "category": "hostile",
+      "map": "entity.small_slime.hurt"
+    },
+    "mob.spider.death": {
+      "category": "hostile",
+      "map": "entity.spider.death"
+    },
+    "mob.spider.say": {
+      "category": "hostile",
+      "map": "entity.spider.ambient"
+    },
+    "mob.spider.step": {
+      "category": "hostile",
+      "map": "entity.spider.step"
+    },
+    "mob.villager.death": {
+      "category": "neutral",
+      "map": "entity.villager.death"
+    },
+    "mob.villager.haggle": {
+      "category": "neutral",
+      "map": "entity.villager.trading"
+    },
+    "mob.villager.hit": {
+      "category": "neutral",
+      "map": "entity.villager.hurt"
+    },
+    "mob.villager.idle": {
+      "category": "neutral",
+      "map": "entity.villager.ambient"
+    },
+    "mob.villager.no": {
+      "category": "neutral",
+      "map": "entity.villager.no"
+    },
+    "mob.villager.yes": {
+      "category": "neutral",
+      "map": "entity.villager.yes"
+    },
+    "mob.wither.death": {
+      "category": "hostile",
+      "map": "entity.wither.death"
+    },
+    "mob.wither.hurt": {
+      "category": "hostile",
+      "map": "entity.wither.hurt"
+    },
+    "mob.wither.idle": {
+      "category": "hostile",
+      "map": "entity.wither.ambient"
+    },
+    "mob.wither.shoot": {
+      "category": "hostile",
+      "map": "entity.wither.shoot"
+    },
+    "mob.wither.spawn": {
+      "category": "hostile",
+      "map": "entity.wither.spawn"
+    },
+    "mob.wolf.bark": {
+      "category": "neutral",
+      "map": "entity.wolf.ambient"
+    },
+    "mob.wolf.death": {
+      "category": "neutral",
+      "map": "entity.wolf.death"
+    },
+    "mob.wolf.growl": {
+      "category": "neutral",
+      "map": "entity.wolf.growl"
+    },
+    "mob.wolf.howl": {
+      "category": "neutral",
+      "map": "entity.wolf.howl"
+    },
+    "mob.wolf.hurt": {
+      "category": "neutral",
+      "map": "entity.wolf.hurt"
+    },
+    "mob.wolf.panting": {
+      "category": "neutral",
+      "map": "entity.wolf.pant"
+    },
+    "mob.wolf.shake": {
+      "category": "neutral",
+      "map": "entity.wolf.shake"
+    },
+    "mob.wolf.step": {
+      "category": "neutral",
+      "map": "entity.wolf.step"
+    },
+    "mob.wolf.whine": {
+      "category": "neutral",
+      "map": "entity.wolf.whine"
+    },
+    "mob.zombie.death": {
+      "category": "hostile",
+      "map": "entity.zombie.death"
+    },
+    "mob.zombie.hurt": {
+      "category": "hostile",
+      "map": "entity.zombie.hurt"
+    },
+    "mob.zombie.infect": {
+      "category": "hostile",
+      "map": "entity.zombie.infect"
+    },
+    "mob.zombie.metal": {
+      "category": "hostile",
+      "map": "entity.zombie.attack_iron_door"
+    },
+    "mob.zombie.remedy": {
+      "category": "hostile",
+      "map": "entity.zombie_villager.cure"
+    },
+    "mob.zombie.say": {
+      "category": "hostile",
+      "map": "entity.zombie.ambient"
+    },
+    "mob.zombie.step": {
+      "category": "hostile",
+      "map": "entity.zombie.step"
+    },
+    "mob.zombie.unfect": {
+      "category": "hostile",
+      "map": "entity.zombie_villager.converted"
+    },
+    "mob.zombie.wood": {
+      "category": "hostile",
+      "map": "entity.zombie.attack_door_wood"
+    },
+    "mob.zombie.woodbreak": {
+      "category": "hostile",
+      "map": "entity.zombie.break_door_wood"
+    },
+    "mob.zombiepig.zpig": {
+      "category": "hostile",
+      "map": "entity.zombie_pig.ambient"
+    },
+    "mob.zombiepig.zpigangry": {
+      "category": "hostile",
+      "map": "entity.zombie_pig.angry"
+    },
+    "mob.zombiepig.zpigdeath": {
+      "category": "hostile",
+      "map": "entity.zombie_pig.death"
+    },
+    "mob.zombiepig.zpighurt": {
+      "category": "hostile",
+      "map": "entity.zombie_pig.hurt"
+    },
+    "note.bass": {
+      "category": "record",
+      "map": "block.note.bass"
+    },
+    "note.bassattack": {
+      "category": "record",
+      "map": "block.note.bass"
+    },
+    "note.bd": {
+      "category": "record",
+      "map": "block.note.basedrum"
+    },
+    "note.harp": {
+      "category": "record",
+      "map": "block.note.harp"
+    },
+    "note.hat": {
+      "category": "record",
+      "map": "block.note.hat"
+    },
+    "note.pling": {
+      "category": "record",
+      "map": "block.note.pling"
+    },
+    "note.snare": {
+      "category": "record",
+      "map": "block.note.snare"
+    },
+    "portal.portal": {
+      "category": "block",
+      "map": "block.portal.ambient"
+    },
+    "portal.travel": {
+      "category": "player",
+      "map": "block.portal.travel"
+    },
+    "portal.trigger": {
+      "category": "block",
+      "map": "block.portal.trigger"
+    },
+    "random.anvil_break": {
+      "category": "block",
+      "map": "block.anvil.destroy"
+    },
+    "random.anvil_land": {
+      "category": "block",
+      "map": "block.anvil.land"
+    },
+    "random.anvil_use": {
+      "category": "block",
+      "map": "block.anvil.use"
+    },
+    "random.bow": {
+      "category": "neutral",
+      "map": "entity.arrow.shoot"
+    },
+    "random.bowhit": {
+      "category": "neutral",
+      "map": "entity.arrow.hit"
+    },
+    "random.break": {
+      "category": "player",
+      "map": "entity.item.break"
+    },
+    "random.burp": {
+      "category": "player",
+      "map": "entity.player.burp"
+    },
+    "random.chestclosed": {
+      "category": "block",
+      "map": "block.chest.close"
+    },
+    "random.chestopen": {
+      "category": "block",
+      "map": "block.chest.open"
+    },
+    "gui.button.press": {
+      "category": "master",
+      "map": "ui.button.click"
+    },
+    "random.click": {
+      "category": "block",
+      "map": "block.stone_button.click_on"
+    },
+    "random.door_close": {
+      "category": "block",
+      "map": "block.wooden_door.close"
+    },
+    "random.door_open": {
+      "category": "block",
+      "map": "block.wooden_door.open"
+    },
+    "random.drink": {
+      "category": "player",
+      "map": "entity.generic.drink"
+    },
+    "random.eat": {
+      "category": "player",
+      "map": "entity.generic.eat"
+    },
+    "random.explode": {
+      "category": "block",
+      "map": "entity.generic.explode"
+    },
+    "random.fizz": {
+      "category": "block",
+      "map": "block.fire.extinguish"
+    },
+    "game.tnt.primed": {
+      "category": "block",
+      "map": "entity.tnt.primed"
+    },
+    "creeper.primed": {
+      "category": "hostile",
+      "map": "entity.creeper.primed"
+    },
+    "dig.glass": {
+      "category": "block",
+      "map": "block.glass.break"
+    },
+    "game.potion.smash": {
+      "category": "neutral",
+      "map": "entity.splash_potion.break"
+    },
+    "random.levelup": {
+      "category": "player",
+      "map": "entity.player.levelup"
+    },
+    "random.orb": {
+      "category": "player",
+      "map": "entity.experience_orb.pickup"
+    },
+    "random.pop": {
+      "category": "player",
+      "map": "entity.item.pickup"
+    },
+    "random.splash": {
+      "category": "player",
+      "map": "entity.bobber.splash"
+    },
+    "random.successful_hit": {
+      "category": "player",
+      "map": "entity.arrow.hit_player"
+    },
+    "random.wood_click": {
+      "category": "block",
+      "map": "block.wood_button.click_on"
+    },
+    "records.11": {
+      "category": "record",
+      "map": "record.11"
+    },
+    "records.13": {
+      "category": "record",
+      "map": "record.13"
+    },
+    "records.blocks": {
+      "category": "record",
+      "map": "record.blocks"
+    },
+    "records.cat": {
+      "category": "record",
+      "map": "record.cat"
+    },
+    "records.chirp": {
+      "category": "record",
+      "map": "record.chirp"
+    },
+    "records.far": {
+      "category": "record",
+      "map": "record.far"
+    },
+    "records.mall": {
+      "category": "record",
+      "map": "record.mall"
+    },
+    "records.mellohi": {
+      "category": "record",
+      "map": "record.mellohi"
+    },
+    "records.stal": {
+      "category": "record",
+      "map": "record.stal"
+    },
+    "records.strad": {
+      "category": "record",
+      "map": "record.strad"
+    },
+    "records.wait": {
+      "category": "record",
+      "map": "record.wait"
+    },
+    "records.ward": {
+      "category": "record",
+      "map": "record.ward"
+    },
+    "step.cloth": {
+      "category": "neutral",
+      "map": "block.cloth.step"
+    },
+    "step.grass": {
+      "category": "neutral",
+      "map": "block.grass.step"
+    },
+    "step.gravel": {
+      "category": "neutral",
+      "map": "block.gravel.step"
+    },
+    "step.ladder": {
+      "category": "neutral",
+      "map": "block.ladder.step"
+    },
+    "step.sand": {
+      "category": "neutral",
+      "map": "block.sand.step"
+    },
+    "step.snow": {
+      "category": "neutral",
+      "map": "block.snow.step"
+    },
+    "step.stone": {
+      "category": "neutral",
+      "map": "block.stone.step"
+    },
+    "step.wood": {
+      "category": "neutral",
+      "map": "block.wood.step"
+    },
+    "tile.piston.in": {
+      "category": "block",
+      "map": "block.piston.contract"
+    },
+    "tile.piston.out": {
+      "category": "block",
+      "map": "block.piston.extend"
+    },
+    "music.game.creative": {
+      "category": "music",
+      "map": "music.creative"
+    },
+    "music.game.end": {
+      "category": "music",
+      "map": "music.end"
+    },
+    "music.game.end.dragon": {
+      "category": "music",
+      "map": "music.dragon"
+    },
+    "music.game.end.credits": {
+      "category": "music",
+      "map": "music.credits"
+    },
+    "music.game.nether": {
+      "category": "music",
+      "map": "music.nether"
+    },
+    "music.menu": {
+      "category": "music",
+      "map": "music.menu"
+    },
+    "music.game": {
+      "category": "music",
+      "map": "music.game"
+    }
+  }
+}
