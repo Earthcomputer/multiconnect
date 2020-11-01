@@ -87,6 +87,7 @@ import java.util.function.Supplier;
 public class Protocol_1_8 extends Protocol_1_9 {
 
     private static final AtomicInteger FAKE_TELEPORT_ID_COUNTER = new AtomicInteger();
+    public static final int WORLD_EVENT_QUIET_GHAST_SHOOT = -1000 + 1;
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
@@ -396,6 +397,28 @@ public class Protocol_1_8 extends Protocol_1_9 {
                 buf.pendingRead(String.class, "never"); // collision rule
             }
             buf.disablePassthroughMode();
+            buf.applyPendingReads();
+        });
+        ProtocolRegistry.registerInboundTranslator(WorldEventS2CPacket.class, buf -> {
+            int eventId = buf.readInt();
+            if (eventId >= 1003 && eventId <= 1022 && eventId != 1019) {
+                if (eventId == 1003) {
+                    eventId += 2;
+                } else if (eventId <= 1006) {
+                    eventId += 5;
+                } else if (eventId <= 1008) {
+                    eventId += 8;
+                } else if (eventId == 1009) {
+                    eventId = WORLD_EVENT_QUIET_GHAST_SHOOT;
+                } else if (eventId <= 1012) {
+                    eventId += 9;
+                } else if (eventId <= 1018) {
+                    eventId += 10;
+                } else {
+                    eventId += 9;
+                }
+            }
+            buf.pendingRead(Integer.class, eventId);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslatorComplexType(new CustomPayload(Protocol_1_13_2.CUSTOM_PAYLOAD_OPEN_BOOK), buf -> {

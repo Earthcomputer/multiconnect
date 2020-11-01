@@ -20,6 +20,7 @@
     "ItemFrameEntityAccessor",
     "LivingEntityAccessor",
     "MixinClientPlayNetworkHandler",
+    "MixinWorldRenderer",
     "MobEntityAccessor",
     "PassiveEntityAccessor",
     "PersistentProjectileEntityAccessor",
