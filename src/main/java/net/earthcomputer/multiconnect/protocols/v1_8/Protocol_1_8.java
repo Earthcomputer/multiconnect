@@ -730,6 +730,13 @@ public class Protocol_1_8 extends Protocol_1_9 {
             }
             return false;
         }
+        if (packet instanceof ClickWindowC2SPacket) {
+            ClickWindowC2SPacket clickWindow = (ClickWindowC2SPacket) packet;
+            if (clickWindow.getActionType() == SlotActionType.SWAP && clickWindow.getClickData() == 40) {
+                // swap with offhand
+                return false;
+            }
+        }
         if (packet instanceof CustomPayloadC2SPacket_1_12_2) {
             CustomPayloadC2SPacket_1_12_2 customPayload = (CustomPayloadC2SPacket_1_12_2) packet;
             if ("MC|Struct".equals(customPayload.getChannel())) {
