@@ -4,12 +4,15 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_8.DataTrackerEntry_1_8;
 import net.earthcomputer.multiconnect.protocols.v1_8.Protocol_1_8;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket;
 import net.minecraft.util.math.BlockPos;
@@ -30,6 +33,17 @@ public abstract class MixinClientPlayNetworkHandler {
     @Shadow private ClientWorld world;
 
     @Shadow public abstract void onUnloadChunk(UnloadChunkS2CPacket packet);
+
+    @Shadow public abstract void onEntityStatus(EntityStatusS2CPacket packet);
+
+    @Inject(method = "onGameJoin", at = @At("TAIL"))
+    private void onOnGameJoin(CallbackInfo ci) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
+            ClientPlayerEntity player = MinecraftClient.getInstance().player;
+            assert player != null;
+            onEntityStatus(new EntityStatusS2CPacket(player, (byte) 28));
+        }
+    }
 
     @Inject(method = "onChunkData", at = @At("HEAD"), cancellable = true)
     private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
