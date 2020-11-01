@@ -7,34 +7,38 @@ import java.util.*;
 
 public class TranslatorRegistry {
 
-    private Map<Class<?>, List<Pair<Integer, InboundTranslator<?>>>> inboundTranslators = new HashMap<>();
-    private Map<Class<?>, List<Pair<Integer, OutboundTranslator<?>>>> outboundTranslators = new HashMap<>();
+    private final Map<Object, List<Pair<Integer, InboundTranslator<?>>>> inboundTranslators = new HashMap<>();
+    private final Map<Object, List<Pair<Integer, OutboundTranslator<?>>>> outboundTranslators = new HashMap<>();
 
     // usually you want type and translator to handle the same type
     public <T> TranslatorRegistry registerInboundTranslator(int version, Class<T> type, InboundTranslator<T> translator) {
-        return registerInboundTranslatorUnchecked(version, type, translator);
+        return registerInboundTranslatorComplexType(version, type, translator);
     }
 
-    public TranslatorRegistry registerInboundTranslatorUnchecked(int version, Class<?> type, InboundTranslator<?> translator) {
+    public TranslatorRegistry registerInboundTranslatorComplexType(int version, Object type, InboundTranslator<?> translator) {
         inboundTranslators.computeIfAbsent(type, k -> new ArrayList<>()).add(Pair.of(version, translator));
         return this;
     }
 
     public <T> TranslatorRegistry registerOutboundTranslator(int version, Class<T> type, OutboundTranslator<T> translator) {
+        return registerOutboundTranslatorComplexType(version, type, translator);
+    }
+
+    public TranslatorRegistry registerOutboundTranslatorComplexType(int version, Object type, OutboundTranslator<?> translator) {
         outboundTranslators.computeIfAbsent(type, k -> new ArrayList<>()).add(Pair.of(version, translator));
         return this;
     }
 
     // min version inclusive, max version exclusive
     @SuppressWarnings("unchecked")
-    public <STORED> List<Pair<Integer, InboundTranslator<STORED>>> getInboundTranslators(Class<?> type, int minVersion, int maxVersion) {
+    public <STORED> List<Pair<Integer, InboundTranslator<STORED>>> getInboundTranslators(Object type, int minVersion, int maxVersion) {
         List<Pair<Integer, InboundTranslator<STORED>>> translators = (List<Pair<Integer, InboundTranslator<STORED>>>) (List<?>) inboundTranslators.get(type);
         return translators == null ? Collections.emptyList() : Lists.reverse(getTranslatorRange(translators, minVersion, maxVersion));
     }
 
     // min version inclusive, max version exclusive
     @SuppressWarnings("unchecked")
-    public <T> List<Pair<Integer, OutboundTranslator<T>>> getOutboundTranslators(Class<T> type, int minVersion, int maxVersion) {
+    public <T> List<Pair<Integer, OutboundTranslator<T>>> getOutboundTranslators(Object type, int minVersion, int maxVersion) {
         List<Pair<Integer, OutboundTranslator<T>>> translators = (List<Pair<Integer, OutboundTranslator<T>>>) (List<?>) outboundTranslators.get(type);
         return translators == null ? Collections.emptyList() : getTranslatorRange(translators, minVersion, maxVersion);
     }

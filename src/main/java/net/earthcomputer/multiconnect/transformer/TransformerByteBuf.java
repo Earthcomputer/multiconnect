@@ -55,7 +55,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @SuppressWarnings("unchecked")
-    public TransformerByteBuf readTopLevelType(Class<?> type) {
+    public TransformerByteBuf readTopLevelType(Object type) {
         transformationEnabled = true;
         stack.push(new StackFrame(type, ConnectionInfo.protocolVersion));
         List<Pair<Integer, InboundTranslator<?>>> translators = (List<Pair<Integer, InboundTranslator<?>>>) (List<?>)
@@ -69,7 +69,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @SuppressWarnings("unchecked")
-    public TransformerByteBuf writeTopLevelType(Class<?> type) {
+    public TransformerByteBuf writeTopLevelType(Object type) {
         transformationEnabled = true;
         stack.push(new StackFrame(type, SharedConstants.getGameVersion().getProtocolVersion()));
         List<Pair<Integer, OutboundTranslator<?>>> translators = (List<Pair<Integer, OutboundTranslator<?>>>) (List<?>)
@@ -131,7 +131,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @SuppressWarnings("unchecked")
-    private <RETURN, STORED> RETURN read(Class<?> type,
+    private <RETURN, STORED> RETURN read(Object type,
                                          Supplier<RETURN> readMethod,
                                          Supplier<STORED> storedValueExtractor,
                                          Consumer<STORED> storedValueApplier,
@@ -178,7 +178,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
         stack.pop();
 
         if (passthroughMode) {
-            pendingReadUnchecked(type, value);
+            pendingReadComplex(type, value);
         } else {
             storedValueApplier.accept(value);
         }
@@ -188,10 +188,10 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     // usually you want type and value to be of the same type
     public <T> void pendingRead(Class<T> type, T value) {
-        pendingReadUnchecked(type, value);
+        pendingReadComplex(type, value);
     }
 
-    public void pendingReadUnchecked(Class<?> type, Object value) {
+    public void pendingReadComplex(Object type, Object value) {
         Queue<PendingValue<?>> queue = getStackFrame().pendingPendingReads.computeIfAbsent(type, k -> new ArrayDeque<>());
         queue.add(new PendingValue<>(value, getStackFrame().version));
     }
@@ -211,7 +211,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
         }
     }
 
-    private <T> PacketByteBuf write(Class<T> type, T value, Consumer<T> writeMethod) {
+    private <T> PacketByteBuf write(Object type, T value, Consumer<T> writeMethod) {
         if (!transformationEnabled || forceSuper) {
             forceSuper = false;
             writeMethod.accept(value);
@@ -239,7 +239,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
             while (!instructions.isEmpty()) {
                 WriteInstruction insn = instructions.poll();
                 if (!insn.matchesType(type)) {
-                    throw new IllegalStateException("Write instruction expected type " + insn.getExpectedType().getName() + ", but got " + type.getName());
+                    throw new IllegalStateException("Write instruction expected type " + insn.getExpectedType() + ", but got " + type);
                 }
                 insn.onWrite(value);
                 if (insn.consumesWrite()) {
@@ -286,6 +286,10 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     public <T> Supplier<T> skipWrite(Class<T> type) {
+        return skipWriteComplex(type);
+    }
+
+    public <T> Supplier<T> skipWriteComplex(Object type) {
         PassthroughWriteInstruction<T> insn = new PassthroughWriteInstruction<>(type, true);
         getStackFrame().writeInstructions.computeIfAbsent(getStackFrame().version, k -> new ArrayDeque<>()).add(insn);
         return () -> insn.value;
@@ -297,12 +301,20 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     public <T> void pendingWrite(Class<T> type, Supplier<T> value, Consumer<T> writeFunction) {
+        pendingWriteComplex(type, value, writeFunction);
+    }
+
+    public <T> void pendingWriteComplex(Object type, Supplier<T> value, Consumer<T> writeFunction) {
         Queue<WriteInstruction> queue = getStackFrame().writeInstructions.computeIfAbsent(getStackFrame().version, k -> new ArrayDeque<>());
         queue.add(new PendingWriteInstruction<>(type, value, writeFunction));
         queue.add(new PassthroughWriteInstruction<>(type, false));
     }
 
     public <T> Supplier<T> passthroughWrite(Class<T> type) {
+        return passthroughWriteComplex(type);
+    }
+
+    public <T> Supplier<T> passthroughWriteComplex(Object type) {
         PassthroughWriteInstruction<T> insn = new PassthroughWriteInstruction<>(type, false);
         getStackFrame().writeInstructions.computeIfAbsent(getStackFrame().version, k -> new ArrayDeque<>()).add(insn);
         return () -> insn.value;
@@ -314,14 +326,14 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     private static final class StackFrame {
-        final Class<?> type;
+        final Object type;
         int version;
-        final Map<Class<?>, Deque<PendingValue<?>>> pendingReads = new HashMap<>();
+        final Map<Object, Deque<PendingValue<?>>> pendingReads = new HashMap<>();
         boolean passthroughMode = false;
-        final Map<Class<?>, Deque<PendingValue<?>>> pendingPendingReads = new HashMap<>();
+        final Map<Object, Deque<PendingValue<?>>> pendingPendingReads = new HashMap<>();
         final TreeMap<Integer, Queue<WriteInstruction>> writeInstructions = new TreeMap<>(Comparator.reverseOrder());
 
-        public StackFrame(Class<?> type, int version) {
+        public StackFrame(Object type, int version) {
             this.type = type;
             this.version = version;
         }
@@ -338,9 +350,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     private interface WriteInstruction {
-        boolean matchesType(Class<?> type);
+        boolean matchesType(Object type);
 
-        default Class<?> getExpectedType() {
+        default Object getExpectedType() {
             return null;
         }
 
@@ -352,22 +364,22 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     private static final class PassthroughWriteInstruction<T> implements WriteInstruction {
-        final Class<T> type;
+        final Object type;
         final boolean skip;
         T value;
 
-        PassthroughWriteInstruction(Class<T> type, boolean skip) {
+        PassthroughWriteInstruction(Object type, boolean skip) {
             this.type = type;
             this.skip = skip;
         }
 
         @Override
-        public boolean matchesType(Class<?> type) {
-            return type == this.type;
+        public boolean matchesType(Object type) {
+            return Objects.equals(type, this.type);
         }
 
         @Override
-        public Class<?> getExpectedType() {
+        public Object getExpectedType() {
             return this.type;
         }
 
@@ -396,7 +408,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
         }
 
         @Override
-        public boolean matchesType(Class<?> type) {
+        public boolean matchesType(Object type) {
             return true;
         }
 
@@ -417,18 +429,18 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     private final class PendingWriteInstruction<T> implements WriteInstruction {
-        final Class<T> type;
+        final Object type;
         final Supplier<T> value;
         final Consumer<T> writeMethod;
 
-        PendingWriteInstruction(Class<T> type, Supplier<T> value, Consumer<T> writeMethod) {
+        PendingWriteInstruction(Object type, Supplier<T> value, Consumer<T> writeMethod) {
             this.type = type;
             this.value = value;
             this.writeMethod = writeMethod;
         }
 
         @Override
-        public boolean matchesType(Class<?> type) {
+        public boolean matchesType(Object type) {
             return true; // may not be the same type
         }
 
@@ -876,7 +888,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
         Class<?> clazz = val.getClass();
         for (Class<?> sup = clazz.getSuperclass(); sup != Enum.class; sup = clazz.getSuperclass())
             clazz = sup;
-        return write((Class<T>)clazz, (T)val, super::writeEnumConstant);
+        return write(clazz, (T)val, super::writeEnumConstant);
     }
 
     @Override
@@ -904,7 +916,6 @@ public final class TransformerByteBuf extends PacketByteBuf {
         write(BlockHitResult.class, val, super::writeBlockHitResult);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T> void encode(Codec<T> codec, T object) throws IOException {
         try {

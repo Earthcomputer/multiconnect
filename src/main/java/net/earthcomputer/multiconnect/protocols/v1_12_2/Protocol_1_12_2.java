@@ -725,16 +725,17 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             assert connection != null;
             BookUpdateC2SPacket bookUpdate = (BookUpdateC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
-            buf.writeTopLevelType(CustomPayload.class);
+            String channel = bookUpdate.wasSigned() ? "MC|BSign" : "MC|BEdit";
+            buf.writeTopLevelType(new StringCustomPayload(channel));
             buf.writeItemStack(bookUpdate.getBook());
-            connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(bookUpdate.wasSigned() ? "MC|BSign" : "MC|BEdit", buf));
+            connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(channel, buf));
             return false;
         }
         if (packet.getClass() == PickFromInventoryC2SPacket.class) {
             assert connection != null;
             PickFromInventoryC2SPacket pickFromInventoryPacket = (PickFromInventoryC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
-            buf.writeTopLevelType(CustomPayload.class);
+            buf.writeTopLevelType(new StringCustomPayload("MC|PickItem"));
             buf.writeVarInt(pickFromInventoryPacket.getSlot());
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|PickItem", buf));
             return false;
@@ -743,7 +744,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             assert connection != null;
             RenameItemC2SPacket renameItem = (RenameItemC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
-            buf.writeTopLevelType(CustomPayload.class);
+            buf.writeTopLevelType(new StringCustomPayload("MC|ItemName"));
             buf.writeString(renameItem.getName(), 32767);
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|ItemName", buf));
             return false;
@@ -752,7 +753,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             assert connection != null;
             SelectVillagerTradeC2SPacket selectTrade = (SelectVillagerTradeC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
-            buf.writeTopLevelType(CustomPayload.class);
+            buf.writeTopLevelType(new StringCustomPayload("MC|TrSel"));
             buf.writeInt(selectTrade.getTradeId());
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|TrSel", buf));
             return false;
@@ -761,7 +762,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             assert connection != null;
             UpdateBeaconC2SPacket updateBeacon = (UpdateBeaconC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
-            buf.writeTopLevelType(CustomPayload.class);
+            buf.writeTopLevelType(new StringCustomPayload("MC|Beacon"));
             buf.writeInt(updateBeacon.getPrimaryEffectId());
             buf.writeInt(updateBeacon.getSecondaryEffectId());
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|Beacon", buf));
@@ -771,7 +772,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             assert connection != null;
             UpdateCommandBlockC2SPacket updateCmdBlock = (UpdateCommandBlockC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
-            buf.writeTopLevelType(CustomPayload.class);
+            buf.writeTopLevelType(new StringCustomPayload("MC|AutoCmd"));
             buf.writeInt(updateCmdBlock.getBlockPos().getX());
             buf.writeInt(updateCmdBlock.getBlockPos().getY());
             buf.writeInt(updateCmdBlock.getBlockPos().getZ());
@@ -800,8 +801,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             assert connection != null;
             UpdateCommandBlockMinecartC2SPacket updateCmdMinecart = (UpdateCommandBlockMinecartC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
-            buf.writeTopLevelType(CustomPayload.class);
+            buf.writeTopLevelType(new StringCustomPayload("MC|AdvCmd"));
             buf.writeByte(1); // command block type (minecart)
+            //noinspection ConstantConditions
             buf.writeInt(((CommandBlockMinecartC2SAccessor) updateCmdMinecart).getEntityId());
             buf.writeString(updateCmdMinecart.getCommand());
             buf.writeBoolean(updateCmdMinecart.shouldTrackOutput());
@@ -812,7 +814,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             assert connection != null;
             UpdateStructureBlockC2SPacket updateStructBlock = (UpdateStructureBlockC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
-            buf.writeTopLevelType(CustomPayload.class);
+            buf.writeTopLevelType(new StringCustomPayload("MC|Struct"));
             buf.writeInt(updateStructBlock.getPos().getX());
             buf.writeInt(updateStructBlock.getPos().getY());
             buf.writeInt(updateStructBlock.getPos().getZ());

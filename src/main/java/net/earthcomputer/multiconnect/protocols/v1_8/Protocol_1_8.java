@@ -24,6 +24,8 @@ import net.earthcomputer.multiconnect.protocols.v1_8.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
 import net.earthcomputer.multiconnect.protocols.v1_9_2.UpdateSignS2CPacket;
 import net.earthcomputer.multiconnect.protocols.v1_9_4.ResourcePackStatusC2SPacket_1_9_4;
+import net.earthcomputer.multiconnect.transformer.CustomPayload;
+import net.earthcomputer.multiconnect.transformer.StringCustomPayload;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
@@ -396,6 +398,10 @@ public class Protocol_1_8 extends Protocol_1_9 {
             buf.disablePassthroughMode();
             buf.applyPendingReads();
         });
+        ProtocolRegistry.registerInboundTranslatorComplexType(new CustomPayload(Protocol_1_13_2.CUSTOM_PAYLOAD_OPEN_BOOK), buf -> {
+            buf.pendingRead(Hand.class, Hand.MAIN_HAND);
+            buf.applyPendingReads();
+        });
 
         ProtocolRegistry.registerOutboundTranslator(HandSwingC2SPacket.class, buf -> {
             buf.skipWrite(Hand.class);
@@ -464,6 +470,33 @@ public class Protocol_1_8 extends Protocol_1_9 {
                     buf.skipWrite(Hand.class); // hand
                 }
             });
+        });
+        ProtocolRegistry.registerOutboundTranslator(CustomPayloadC2SPacket_1_12_2.class, buf -> {
+            Supplier<String> channel = buf.skipWrite(String.class);
+            buf.pendingWrite(String.class, () -> "MC|AdvCmd".equals(channel.get()) || "MC|AutoCmd".equals(channel.get()) ? "MC|AdvCdm" : channel.get(), buf::writeString);
+        });
+        ProtocolRegistry.registerOutboundTranslatorComplexType(new StringCustomPayload("MC|AutoCmd"), buf -> {
+            buf.pendingWrite(Byte.class, () -> (byte) 0, (Consumer<Byte>) buf::writeByte); // block or minecart (block)
+            buf.passthroughWrite(Integer.class); // x
+            buf.passthroughWrite(Integer.class); // y
+            buf.passthroughWrite(Integer.class); // z
+            buf.passthroughWrite(String.class); // command
+            buf.passthroughWrite(Boolean.class); // should track output
+            buf.skipWrite(String.class); // command block type
+            buf.skipWrite(Boolean.class); // conditional
+            buf.skipWrite(Boolean.class); // always active
+        });
+        ProtocolRegistry.registerOutboundTranslatorComplexType(new StringCustomPayload("MC|BSign"), buf -> {
+            Supplier<ItemStack> stack = buf.skipWrite(ItemStack.class);
+            buf.pendingWrite(ItemStack.class, () -> {
+                if (stack.get().getItem() == Items.WRITABLE_BOOK) {
+                    ItemStack newStack = new ItemStack(Items.WRITTEN_BOOK, stack.get().getCount());
+                    newStack.setTag(stack.get().getTag());
+                    return newStack;
+                } else {
+                    return stack.get();
+                }
+            }, buf::writeItemStack);
         });
     }
 
@@ -673,6 +706,16 @@ public class Protocol_1_8 extends Protocol_1_9 {
                 player.networkHandler.sendPacket(new PlayerUseItemC2SPacket_1_8(player.getMainHandStack()));
             }
             return false;
+        }
+        if (packet instanceof CustomPayloadC2SPacket_1_12_2) {
+            CustomPayloadC2SPacket_1_12_2 customPayload = (CustomPayloadC2SPacket_1_12_2) packet;
+            if ("MC|Struct".equals(customPayload.getChannel())) {
+                return false;
+            }
+            if ("MC|PickItem".equals(customPayload.getChannel())) {
+                // TODO: emulate this?
+                return false;
+            }
         }
         return super.onSendPacket(packet);
     }

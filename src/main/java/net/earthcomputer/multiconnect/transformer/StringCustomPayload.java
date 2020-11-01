@@ -1,11 +1,9 @@
 package net.earthcomputer.multiconnect.transformer;
 
-import net.minecraft.util.Identifier;
+public final class StringCustomPayload {
+    private final String value;
 
-public final class CustomPayload {
-    private final Identifier value;
-
-    public CustomPayload(Identifier value) {
+    public StringCustomPayload(String value) {
         this.value = value;
     }
 
@@ -18,13 +16,13 @@ public final class CustomPayload {
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null) return false;
-        if (obj.getClass() != CustomPayload.class) return false;
-        CustomPayload that = (CustomPayload) obj;
+        if (obj.getClass() != StringCustomPayload.class) return false;
+        StringCustomPayload that = (StringCustomPayload) obj;
         return value.equals(that.value);
     }
 
     @Override
     public String toString() {
-        return "CustomPayload{" + value + "}";
+        return "StringCustomPayload{" + value + "}";
     }
 }

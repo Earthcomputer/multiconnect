@@ -58,12 +58,16 @@ public class ProtocolRegistry {
         translatorRegistry.registerInboundTranslator(registeringProtocol, type, translator);
     }
 
-    public static void registerInboundTranslatorUnchecked(Class<?> type, InboundTranslator<?> translator) {
-        translatorRegistry.registerInboundTranslatorUnchecked(registeringProtocol, type, translator);
+    public static void registerInboundTranslatorComplexType(Object type, InboundTranslator<?> translator) {
+        translatorRegistry.registerInboundTranslatorComplexType(registeringProtocol, type, translator);
     }
 
     public static <T> void registerOutboundTranslator(Class<T> type, OutboundTranslator<T> translator) {
         translatorRegistry.registerOutboundTranslator(registeringProtocol, type, translator);
+    }
+
+    public static void registerOutboundTranslatorComplexType(Object type, OutboundTranslator<?> translator) {
+        translatorRegistry.registerOutboundTranslatorComplexType(registeringProtocol, type, translator);
     }
 
 
