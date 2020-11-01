@@ -49,9 +49,7 @@ import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.WitherSkullEntity;
 import net.minecraft.entity.vehicle.*;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.item.*;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.*;
@@ -76,10 +74,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -1264,5 +1259,32 @@ public class Protocol_1_8 extends Protocol_1_9 {
                     break;
             }
         }
+    }
+
+    public static OptionalDouble getDefaultAttackDamage(Item item) {
+        if (item instanceof ToolItem) {
+            ToolMaterial material = ((ToolItem) item).getMaterial();
+            int materialBonus;
+            if (material == ToolMaterials.STONE) {
+                materialBonus = 1;
+            } else if (material == ToolMaterials.IRON) {
+                materialBonus = 2;
+            } else if (material == ToolMaterials.DIAMOND) {
+                materialBonus = 3;
+            } else {
+                materialBonus = 0;
+            }
+            if (item instanceof SwordItem) {
+                return OptionalDouble.of(4 + materialBonus);
+            } else if (item instanceof PickaxeItem) {
+                return OptionalDouble.of(2 + materialBonus);
+            } else if (item instanceof ShovelItem) {
+                return OptionalDouble.of(1 + materialBonus);
+            } else if (item instanceof AxeItem) {
+                return OptionalDouble.of(3 + materialBonus);
+            }
+        }
+
+        return OptionalDouble.empty();
     }
 }
