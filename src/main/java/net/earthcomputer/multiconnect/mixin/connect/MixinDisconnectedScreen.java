@@ -24,7 +24,7 @@ import java.util.Set;
 @Mixin(DisconnectedScreen.class)
 public abstract class MixinDisconnectedScreen extends Screen {
 
-    @Unique private static final Set<String> TRIGGER_WORDS = ImmutableSet.of("outdated", "version");
+    @Unique private static final Set<String> TRIGGER_WORDS = ImmutableSet.of("outdated", "incompatible", "version");
     @Unique private ServerInfo server;
     @Unique private boolean isProtocolReason;
     @Unique private DropDownWidget<ConnectionMode> protocolSelector;

@@ -19,6 +19,7 @@ import net.minecraft.block.*;
 import net.minecraft.block.enums.WallMountLocation;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.command.CommandSource;
 import net.minecraft.datafixer.fix.BlockStateFlattening;
 import net.minecraft.datafixer.fix.EntityTheRenameningBlock;
 import net.minecraft.entity.AreaEffectCloudEntity;
@@ -48,7 +49,6 @@ import net.minecraft.particle.*;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
 import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.server.command.CommandSource;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.StatType;
@@ -688,7 +688,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         remove(packets, QueryEntityNbtC2SPacket.class);
         remove(packets, PickFromInventoryC2SPacket.class);
         remove(packets, RenameItemC2SPacket.class);
-        remove(packets, SelectVillagerTradeC2SPacket.class);
+        remove(packets, SelectMerchantTradeC2SPacket.class);
         remove(packets, UpdateBeaconC2SPacket.class);
         remove(packets, UpdateCommandBlockC2SPacket.class);
         remove(packets, UpdateCommandBlockMinecartC2SPacket.class);
@@ -745,9 +745,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|ItemName", buf));
             return false;
         }
-        if (packet.getClass() == SelectVillagerTradeC2SPacket.class) {
+        if (packet.getClass() == SelectMerchantTradeC2SPacket.class) {
             assert connection != null;
-            SelectVillagerTradeC2SPacket selectTrade = (SelectVillagerTradeC2SPacket) packet;
+            SelectMerchantTradeC2SPacket selectTrade = (SelectMerchantTradeC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
             buf.writeInt(selectTrade.getTradeId());

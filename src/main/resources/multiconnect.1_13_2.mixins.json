@@ -4,7 +4,6 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "CatEntityAccessor",
-    "ChunkSectionAccessor",
     "EnderEyeEntityAccessor",
     "EntityAccessor",
     "FireworkEntityAccessor",

@@ -5,7 +5,7 @@
   "mixins": [
   ],
   "client": [
-    "AbstractTraderEntityAccessor"
+    "MerchantEntityAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

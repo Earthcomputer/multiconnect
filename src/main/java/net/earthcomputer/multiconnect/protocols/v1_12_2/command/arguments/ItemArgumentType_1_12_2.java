@@ -6,9 +6,9 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.ItemStringReader;
 import net.minecraft.item.Item;
-import net.minecraft.server.command.CommandSource;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
