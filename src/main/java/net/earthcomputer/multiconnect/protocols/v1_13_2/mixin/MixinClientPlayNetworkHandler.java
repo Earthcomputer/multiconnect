@@ -11,7 +11,7 @@ import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.TradeOffer;
-import net.minecraft.village.TraderOfferList;
+import net.minecraft.village.TradeOfferList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
@@ -131,7 +131,7 @@ public abstract class MixinClientPlayNetworkHandler {
             if (Protocol_1_13_2.CUSTOM_PAYLOAD_TRADE_LIST.equals(channel)) {
                 PacketByteBuf buf = packet.getData();
                 int syncId = buf.readInt();
-                TraderOfferList trades = new TraderOfferList();
+                TradeOfferList trades = new TradeOfferList();
                 int tradeCount = buf.readUnsignedByte();
                 for (int i = 0; i < tradeCount; i++) {
                     ItemStack buy = buf.readItemStack();

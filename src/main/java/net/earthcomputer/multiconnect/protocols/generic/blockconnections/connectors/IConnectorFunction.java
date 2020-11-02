@@ -5,5 +5,5 @@ import net.minecraft.util.math.BlockPos;
 
 @FunctionalInterface
 public interface IConnectorFunction {
-    boolean fix(IBlockConnectionsBlockView world, BlockPos pos);
+    void fix(IBlockConnectionsBlockView world, BlockPos pos);
 }

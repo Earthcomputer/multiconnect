@@ -29,7 +29,7 @@ public abstract class SimpleConnector implements IBlockConnector {
     }
 
     @Override
-    public boolean fix(IBlockConnectionsBlockView world, BlockPos pos) {
-        return connectorFunction.fix(world, pos);
+    public void fix(IBlockConnectionsBlockView world, BlockPos pos) {
+        connectorFunction.fix(world, pos);
     }
 }

@@ -11,8 +11,8 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.village.TraderInventory;
-import net.minecraft.village.TraderOfferList;
+import net.minecraft.village.MerchantInventory;
+import net.minecraft.village.TradeOfferList;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,9 +22,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(MerchantScreenHandler.class)
 public abstract class MixinMerchantContainer extends ScreenHandler {
 
-    @Shadow @Final private TraderInventory traderInventory;
+    @Shadow @Final private MerchantInventory merchantInventory;
 
-    @Shadow public abstract TraderOfferList getRecipes();
+    @Shadow public abstract TradeOfferList getRecipes();
 
     protected MixinMerchantContainer(ScreenHandlerType<?> type, int syncId) {
         super(type, syncId);
@@ -45,23 +45,23 @@ public abstract class MixinMerchantContainer extends ScreenHandler {
         assert interactionManager != null;
 
         // move 1st input slot to inventory
-        if (!traderInventory.getStack(0).isEmpty()) {
-            int count = traderInventory.getStack(0).getCount();
+        if (!merchantInventory.getStack(0).isEmpty()) {
+            int count = merchantInventory.getStack(0).getCount();
             interactionManager.clickSlot(syncId, 0, 0, SlotActionType.QUICK_MOVE, player);
-            if (count == traderInventory.getStack(0).getCount())
+            if (count == merchantInventory.getStack(0).getCount())
                 return;
         }
 
         // move 2nd input slot to inventory
-        if (!traderInventory.getStack(1).isEmpty()) {
-            int count = traderInventory.getStack(1).getCount();
+        if (!merchantInventory.getStack(1).isEmpty()) {
+            int count = merchantInventory.getStack(1).getCount();
             interactionManager.clickSlot(syncId, 1, 0, SlotActionType.QUICK_MOVE, player);
-            if (count == traderInventory.getStack(1).getCount())
+            if (count == merchantInventory.getStack(1).getCount())
                 return;
         }
 
         // refill the slots
-        if (traderInventory.getStack(0).isEmpty() && traderInventory.getStack(1).isEmpty()) {
+        if (merchantInventory.getStack(0).isEmpty() && merchantInventory.getStack(1).isEmpty()) {
             autofill(interactionManager, player, 0, getRecipes().get(recipeId).getAdjustedFirstBuyItem());
             autofill(interactionManager, player, 1, getRecipes().get(recipeId).getSecondBuyItem());
         }
