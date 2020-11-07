@@ -11,7 +11,6 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.enums.Instrument;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -25,13 +24,8 @@ public class MixinNoteBlock extends Block implements BlockEntityProvider {
     }
 
     @Override
-    public boolean hasBlockEntity() {
-        return ConnectionInfo.protocolVersion <= Protocols.V1_12_2;
-    }
-
-    @Override
-    public BlockEntity createBlockEntity(BlockView view) {
-        return hasBlockEntity() ? new NoteBlockBlockEntity() : null;
+    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+        return ConnectionInfo.protocolVersion <= Protocols.V1_12_2 ? new NoteBlockBlockEntity(pos, state) : null;
     }
 
     @ModifyVariable(method = "onSyncedBlockEvent", ordinal = 0, at = @At("HEAD"))

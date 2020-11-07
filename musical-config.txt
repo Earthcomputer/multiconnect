@@ -5,3 +5,6 @@ net/minecraft/client/network/ClientPlayNetworkHandler.onBlockEntityUpdate (Lnet/
 
 # For the @Overwrite in MixinWorldView
 net/minecraft/world/WorldView.getBiomeForNoiseGen (III)Lnet/minecraft/world/biome/Biome;
+
+# For the @Overwrite in MixinCauldronBehavior
+net/minecraft/block/cauldron/CauldronBehavior.method_32220 (Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/item/ItemStack;)Lnet/minecraft/util/ActionResult;

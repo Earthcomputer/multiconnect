@@ -37,7 +37,6 @@ import net.minecraft.tag.ItemTags;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 
-import java.io.IOException;
 import java.util.List;
 
 public class Protocol_1_14_4 extends Protocol_1_15 {
@@ -47,7 +46,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
             ChunkDataS2CPacket packet = ChunkDataTranslator.current().getPacket();
-            if (!packet.isFullChunk())
+            if (!ChunkDataTranslator.current().isFullChunk())
                 return;
             int verticalStripBitmask = packet.getVerticalStripBitmask();
             buf.enablePassthroughMode();
@@ -119,12 +118,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.readShort();
             buf.readShort();
             buf.disablePassthroughMode();
-            try {
-                PendingDataTrackerEntries.setEntries(entityId, DataTracker.deserializePacket(buf));
-            } catch (IOException e) {
-                // I don't even know why it's declared to throw an IOException
-                throw new AssertionError(e);
-            }
+            PendingDataTrackerEntries.setEntries(entityId, DataTracker.deserializePacket(buf));
             buf.applyPendingReads();
         });
 
@@ -160,19 +154,14 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.readByte();
             buf.readByte();
             buf.disablePassthroughMode();
-            try {
-                PendingDataTrackerEntries.setEntries(entityId, DataTracker.deserializePacket(buf));
-            } catch (IOException e) {
-                // I don't even know why it's declared to throw an IOException
-                throw new AssertionError(e);
-            }
+            PendingDataTrackerEntries.setEntries(entityId, DataTracker.deserializePacket(buf));
             buf.applyPendingReads();
         });
     }
 
     @Override
     public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
-        if (translator.getPacket().isFullChunk()) {
+        if (translator.isFullChunk()) {
             Biome[] biomeData = (Biome[]) translator.getUserData("biomeData");
             ((IChunkDataS2CPacket) translator.getPacket()).set_1_14_4_biomeData(biomeData);
         }

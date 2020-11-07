@@ -286,19 +286,19 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
                 Supplier<Byte> flags = buf.skipWrite(Byte.class);
                 buf.pendingWrite(Byte.class, () -> {
                     byte newFlags = flags.get();
-                    if (player.abilities.invulnerable) {
+                    if (player.getAbilities().invulnerable) {
                         newFlags |= 1;
                     }
-                    if (player.abilities.allowFlying) {
+                    if (player.getAbilities().allowFlying) {
                         newFlags |= 4;
                     }
-                    if (player.abilities.creativeMode) {
+                    if (player.getAbilities().creativeMode) {
                         newFlags |= 8;
                     }
                     return newFlags;
                 }, (Consumer<Byte>) buf::writeByte);
-                buf.pendingWrite(Float.class, player.abilities::getFlySpeed, buf::writeFloat);
-                buf.pendingWrite(Float.class, player.abilities::getWalkSpeed, buf::writeFloat);
+                buf.pendingWrite(Float.class, player.getAbilities()::getFlySpeed, buf::writeFloat);
+                buf.pendingWrite(Float.class, player.getAbilities()::getWalkSpeed, buf::writeFloat);
             }
         });
         ProtocolRegistry.registerOutboundTranslator(UpdateJigsawC2SPacket.class, buf -> {

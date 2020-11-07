@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "FireBlockAccessor",
+    "MixinAbstractBlockState",
     "MixinStructureBlockBlockEntity",
     "MixinStructureBlockScreen1",
     "RedstoneWireBlockAccessor",

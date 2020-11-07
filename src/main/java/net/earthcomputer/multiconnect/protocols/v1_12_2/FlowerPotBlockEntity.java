@@ -10,17 +10,18 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 
 public class FlowerPotBlockEntity extends BlockEntity {
 
-    public FlowerPotBlockEntity() {
-        super(BlockEntities_1_12_2.FLOWER_POT);
+    public FlowerPotBlockEntity(BlockPos pos, BlockState state) {
+        super(BlockEntities_1_12_2.FLOWER_POT, pos, state);
     }
 
     @Override
-    public void fromTag(BlockState blockState, CompoundTag tag) {
-        super.fromTag(blockState, tag);
+    public void fromTag(CompoundTag tag) {
+        super.fromTag(tag);
         Item flowerPotItem;
         if (tag.contains("Item", 8))
             flowerPotItem = Registry.ITEM.get(new Identifier(tag.getString("Item")));

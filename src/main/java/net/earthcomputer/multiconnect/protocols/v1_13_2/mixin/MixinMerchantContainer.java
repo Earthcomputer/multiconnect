@@ -83,7 +83,7 @@ public abstract class MixinMerchantContainer extends ScreenHandler {
         if (slot == 39)
             return;
 
-        boolean wasHoldingItem = !player.inventory.getCursorStack().isEmpty();
+        boolean wasHoldingItem = !player.getInventory().getCursorStack().isEmpty();
         interactionManager.clickSlot(syncId, slot, 0, SlotActionType.PICKUP, player);
         interactionManager.clickSlot(syncId, slot, 0, SlotActionType.PICKUP_ALL, player);
         interactionManager.clickSlot(syncId, inputSlot, 0, SlotActionType.PICKUP, player);

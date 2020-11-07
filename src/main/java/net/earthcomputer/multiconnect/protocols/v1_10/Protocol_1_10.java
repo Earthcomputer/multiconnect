@@ -535,7 +535,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
 
         // replace entity in world and exchange entity id
         int entityId = entity.getEntityId();
-        world.removeEntity(entityId);
+        world.removeEntity(entityId, Entity.RemovalReason.DISCARDED);
         destEntity.setEntityId(entityId);
         world.addEntity(entityId, destEntity);
 

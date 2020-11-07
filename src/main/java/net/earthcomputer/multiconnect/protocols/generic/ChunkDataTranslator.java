@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.protocols.generic;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.PendingFullChunkData;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -11,6 +12,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.util.EightWayDirection;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.world.dimension.DimensionType;
 
@@ -30,13 +32,15 @@ public class ChunkDataTranslator {
     }
 
     private final ChunkDataS2CPacket packet;
+    private final boolean isFullChunk;
     private final DimensionType dimension;
     private final DynamicRegistryManager registryManager;
     private final List<Packet<ClientPlayPacketListener>> postPackets = new ArrayList<>();
     private final Map<String, Object> userData = new HashMap<>();
 
-    public ChunkDataTranslator(ChunkDataS2CPacket packet, DimensionType dimension, DynamicRegistryManager registryManager) {
+    public ChunkDataTranslator(ChunkDataS2CPacket packet, boolean isFullChunk, DimensionType dimension, DynamicRegistryManager registryManager) {
         this.packet = packet;
+        this.isFullChunk = isFullChunk;
         this.dimension = dimension;
         this.registryManager = registryManager;
     }
@@ -46,9 +50,10 @@ public class ChunkDataTranslator {
         assert mc.world != null;
         ClientPlayNetworkHandler networkHandler = mc.getNetworkHandler();
         assert networkHandler != null;
+        boolean isFullChunk = PendingFullChunkData.isFullChunk(new ChunkPos(packet.getX(), packet.getZ()));
         DimensionType dimension = mc.world.getDimension();
         ((IChunkDataS2CPacket) packet).multiconnect_setDimension(dimension);
-        ChunkDataTranslator translator = new ChunkDataTranslator(packet, dimension, networkHandler.getRegistryManager());
+        ChunkDataTranslator translator = new ChunkDataTranslator(packet, isFullChunk, dimension, networkHandler.getRegistryManager());
         EXECUTOR.submit(() -> {
             CURRENT_TRANSLATOR.set(translator);
 
@@ -82,6 +87,10 @@ public class ChunkDataTranslator {
 
     public ChunkDataS2CPacket getPacket() {
         return packet;
+    }
+
+    public boolean isFullChunk() {
+        return isFullChunk;
     }
 
     public DimensionType getDimension() {

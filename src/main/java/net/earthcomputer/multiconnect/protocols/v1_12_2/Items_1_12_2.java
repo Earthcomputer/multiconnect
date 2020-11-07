@@ -290,7 +290,7 @@ public class Items_1_12_2 {
 
         int nextHighBits = 16;
         int spawnEggId = Registry.ITEM.getRawId(BAT_SPAWN_EGG);
-        for (EntityType entityType : Registry.ENTITY_TYPE) {
+        for (EntityType<?> entityType : Registry.ENTITY_TYPE) {
             SpawnEggItem item = SpawnEggItem.forEntity(entityType);
             if (item != null && item != BAT_SPAWN_EGG) {
                 Optional<RegistryKey<Item>> key = REGISTRY_1_13.getKey(item);
@@ -459,7 +459,7 @@ public class Items_1_12_2 {
         registerBlockItem(registry, Blocks.ACACIA_STAIRS);
         registerBlockItem(registry, Blocks.DARK_OAK_STAIRS);
         registerBlockItem(registry, Blocks.SLIME_BLOCK);
-        registerBlockItem(registry, Blocks.GRASS_PATH);
+        registerBlockItem(registry, Blocks.DIRT_PATH);
         registerBlockItem(registry, Blocks.SUNFLOWER);
         registerBlockItem(registry, Blocks.WHITE_STAINED_GLASS);
         registerBlockItem(registry, Blocks.WHITE_STAINED_GLASS_PANE);
