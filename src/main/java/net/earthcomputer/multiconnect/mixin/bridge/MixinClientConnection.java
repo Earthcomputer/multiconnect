@@ -9,9 +9,11 @@ import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
 import net.earthcomputer.multiconnect.protocols.generic.ICustomPayloadC2SPacket;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1_12_2;
 import net.minecraft.SharedConstants;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketEncoderException;
+import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import org.apache.logging.log4j.LogManager;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,9 +23,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientConnection.class)
-public class MixinClientConnection {
+public abstract class MixinClientConnection {
 
     @Shadow private Channel channel;
+    @Shadow private PacketListener packetListener;
 
     @Inject(method = "exceptionCaught", at = @At("HEAD"))
     public void onExceptionCaught(ChannelHandlerContext context, Throwable t, CallbackInfo ci) {
@@ -42,13 +45,17 @@ public class MixinClientConnection {
         } else if (packet instanceof CustomPayloadC2SPacket) {
             ICustomPayloadC2SPacket customPayload = (ICustomPayloadC2SPacket) packet;
             if (customPayload.multiconnect_isBlocked()) {
-                CustomPayloadHandler.handleServerboundCustomPayload(customPayload);
+                if (packetListener instanceof ClientPlayNetworkHandler) {
+                    CustomPayloadHandler.handleServerboundCustomPayload((ClientPlayNetworkHandler) packetListener, customPayload);
+                }
                 ci.cancel();
             }
         } else if (packet instanceof CustomPayloadC2SPacket_1_12_2) {
             CustomPayloadC2SPacket_1_12_2 customPayload = (CustomPayloadC2SPacket_1_12_2) packet;
             if (customPayload.isBlocked()) {
-                CustomPayloadHandler.handleServerboundCustomPayload(customPayload);
+                if (packetListener instanceof ClientPlayNetworkHandler) {
+                    CustomPayloadHandler.handleServerboundCustomPayload((ClientPlayNetworkHandler) packetListener, customPayload);
+                }
                 ci.cancel();
             }
         }

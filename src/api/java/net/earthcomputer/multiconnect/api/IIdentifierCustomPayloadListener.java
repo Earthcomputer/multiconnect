@@ -4,13 +4,10 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 
 /**
- * A listener for custom payloads using {@link Identifier} channels.
- * @see MultiConnectAPI#addIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener)
+ * @deprecated Use {@link ICustomPayloadListener} instead.
  */
+@Deprecated
 @FunctionalInterface
 public interface IIdentifierCustomPayloadListener {
-    /**
-     * Called on a custom payload on a server version between 1.13 (inclusive) and the current version (exclusive)
-     */
     void onCustomPayload(int protocol, Identifier channel, PacketByteBuf data);
 }

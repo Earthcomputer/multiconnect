@@ -1,11 +1,14 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
 import com.google.common.collect.ImmutableSet;
+import net.earthcomputer.multiconnect.api.ICustomPayloadListener;
 import net.earthcomputer.multiconnect.api.IIdentifierCustomPayloadListener;
 import net.earthcomputer.multiconnect.api.IStringCustomPayloadListener;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.CustomPayloadEvent;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.util.Identifier;
@@ -22,72 +25,76 @@ public class CustomPayloadHandler {
     public static final Identifier DROP_ID = new Identifier("multiconnect", "drop");
     public static final Set<Identifier> VANILLA_CLIENTBOUND_CHANNELS;
 
-    private static final List<IIdentifierCustomPayloadListener> clientboundIdentifierCustomPayloadListeners = new CopyOnWriteArrayList<>();
-    private static final List<IStringCustomPayloadListener> clientboundStringCustomPayloadListeners = new CopyOnWriteArrayList<>();
-    private static final List<IIdentifierCustomPayloadListener> serverboundIdentifierCustomPayloadListeners = new CopyOnWriteArrayList<>();
-    private static final List<IStringCustomPayloadListener> serverboundStringCustomPayloadListeners = new CopyOnWriteArrayList<>();
+    private static final List<ICustomPayloadListener<Identifier>> clientboundIdentifierCustomPayloadListeners = new CopyOnWriteArrayList<>();
+    private static final List<ICustomPayloadListener<String>> clientboundStringCustomPayloadListeners = new CopyOnWriteArrayList<>();
+    private static final List<ICustomPayloadListener<Identifier>> serverboundIdentifierCustomPayloadListeners = new CopyOnWriteArrayList<>();
+    private static final List<ICustomPayloadListener<String>> serverboundStringCustomPayloadListeners = new CopyOnWriteArrayList<>();
 
     private static final Map<Identifier, String> clientboundStringCustomPayloadChannels = new WeakHashMap<>();
     private static volatile int clientboundStringCustomPayloadId = 0;
 
-    public static void addClientboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+    public static void addClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
         clientboundIdentifierCustomPayloadListeners.add(listener);
     }
 
-    public static void removeClientboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+    public static void removeClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
         clientboundIdentifierCustomPayloadListeners.remove(listener);
     }
 
-    public static void addClientboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+    public static void addClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
         clientboundStringCustomPayloadListeners.add(listener);
     }
 
-    public static void removeClientboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+    public static void removeClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
         clientboundStringCustomPayloadListeners.remove(listener);
     }
 
-    public static void addServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+    public static void addServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
         serverboundIdentifierCustomPayloadListeners.add(listener);
     }
 
-    public static void removeServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+    public static void removeServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
         serverboundIdentifierCustomPayloadListeners.remove(listener);
     }
 
-    public static void addServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+    public static void addServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
         serverboundStringCustomPayloadListeners.add(listener);
     }
 
-    public static void removeServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+    public static void removeServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
         serverboundStringCustomPayloadListeners.remove(listener);
     }
 
-    public static void handleServerboundCustomPayload(ICustomPayloadC2SPacket packet) {
-        serverboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(ConnectionInfo.protocolVersion, packet.multiconnect_getChannel(), packet.multiconnect_getData()));
+    public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, ICustomPayloadC2SPacket packet) {
+        CustomPayloadEvent<Identifier> event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.multiconnect_getChannel(), packet.multiconnect_getData(), networkHandler);
+        serverboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
-    public static void handleServerboundCustomPayload(CustomPayloadC2SPacket_1_12_2 packet) {
-        serverboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData()));
+    public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket_1_12_2 packet) {
+        CustomPayloadEvent<String> event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
+        serverboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
-    public static void handleClientboundCustomPayload(CustomPayloadS2CPacket packet) {
+    public static void handleClientboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadS2CPacket packet) {
         String str;
         synchronized (clientboundStringCustomPayloadChannels) {
             str = clientboundStringCustomPayloadChannels.remove(packet.getChannel());
         }
         if (str != null) {
-            handleClientboundStringCustomPayload(str, packet.getData());
+            handleClientboundStringCustomPayload(networkHandler, str, packet.getData());
         } else {
-            handleClientboundIdentifierCustomPayload(packet);
+            handleClientboundIdentifierCustomPayload(networkHandler, packet);
         }
     }
 
-    private static void handleClientboundIdentifierCustomPayload(CustomPayloadS2CPacket packet) {
-        clientboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData()));
+    private static void handleClientboundIdentifierCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadS2CPacket packet) {
+        CustomPayloadEvent<Identifier> event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
+        clientboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
-    private static void handleClientboundStringCustomPayload(String channel, PacketByteBuf data) {
-        clientboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(ConnectionInfo.protocolVersion, channel, data));
+    private static void handleClientboundStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
+        CustomPayloadEvent<String> event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, channel, data, networkHandler);
+        clientboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
     public static Identifier getClientboundIdentifierForStringCustomPayload(String channel) {
