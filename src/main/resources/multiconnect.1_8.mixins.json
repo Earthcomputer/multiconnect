@@ -23,11 +23,13 @@
     "MixinClientPlayerEntity",
     "MixinClientPlayerInteractionManager",
     "MixinClientPlayNetworkHandler",
+    "MixinHeldItemRenderer",
     "MixinItemStack",
     "MixinPlayerEntity",
     "MixinPlayerInventory",
     "MixinPlayerScreenHandler",
     "MixinScreenHandler",
+    "MixinSwordItem",
     "MixinWorldRenderer",
     "MobEntityAccessor",
     "PassiveEntityAccessor",
@@ -44,5 +46,8 @@
   ],
   "injectors": {
     "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
   }
 }

@@ -217,10 +217,9 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
         unregisterListeners.add(listener);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public SimpleRegistry<T> copy() {
-        SimpleRegistry<T> newRegistry = new SimpleRegistry<>(getRegistryKey(), ((RegistryAccessor<T>) this).getLifecycle());
+        SimpleRegistry<T> newRegistry = new SimpleRegistry<>(getRegistryKey(), getLifecycle());
         for (Map.Entry<RegistryKey<T>, T> entry : keyToEntry.entrySet()) {
             newRegistry.set(entryToRawId.getInt(entry.getValue()), entry.getKey(), entry.getValue(), entryToLifecycle.get(entry.getValue()));
         }

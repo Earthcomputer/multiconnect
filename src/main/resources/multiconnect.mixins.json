@@ -40,7 +40,6 @@
     "bridge.MixinStatusEffectSpriteManager",
     "bridge.MixinTranslationStorage",
     "bridge.MixinWorldChunk",
-    "bridge.RegistryAccessor",
     "bridge.SpawnEggItemAccessor",
     "bridge.SynchronizeTagsS2CAccessor",
     "bridge.TrackedDataAccessor",
@@ -61,5 +60,8 @@
   ],
   "injectors": {
     "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
   }
 }
