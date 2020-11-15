@@ -48,6 +48,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
 public class MixinClientPlayNetworkHandler {
@@ -160,7 +161,7 @@ public class MixinClientPlayNetworkHandler {
             List<Tag.Identified<T>> missingTags = new ArrayList<>(requiredTags);
             missingTags.removeIf(tag -> tagBiMap.containsKey(tag.getId()));
             if (!missingTags.isEmpty()) {
-                MULTICONNECT_LOGGER.warn("Server didn't send required {} tags, adding empty substitutes for {}", type, missingTags);
+                MULTICONNECT_LOGGER.warn("Server didn't send required {} tags, adding empty substitutes for {}", type, missingTags.stream().map(Tag.Identified::getId).collect(Collectors.toList()));
                 for (Tag.Identified<T> missingTag : missingTags) {
                     tagBiMap.put(missingTag.getId(), SetTag.empty());
                 }

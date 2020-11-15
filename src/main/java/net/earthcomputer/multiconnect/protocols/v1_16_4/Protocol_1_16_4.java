@@ -3,27 +3,34 @@ package net.earthcomputer.multiconnect.protocols.v1_16_4;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.EntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
 import net.earthcomputer.multiconnect.transformer.VarLong;
 import net.minecraft.block.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.data.TrackedData;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.LightUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.MapUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.ResourcePackSendS2CPacket;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
+import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.ItemTags;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.source.BiomeArray;
 
-import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class Protocol_1_16_4 extends Protocol_1_17 {
@@ -70,6 +77,14 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
     }
 
     @Override
+    public List<PacketInfo<?>> getClientboundPackets() {
+        List<PacketInfo<?>> packets = super.getClientboundPackets();
+        insertAfter(packets, MapUpdateS2CPacket.class, PacketInfo.of(MapUpdateS2CPacket_1_16_4.class, MapUpdateS2CPacket_1_16_4::new));
+        remove(packets, MapUpdateS2CPacket.class);
+        return packets;
+    }
+
+    @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
         mutator.mutate(Protocols.V1_16_4, Registry.BLOCK, this::mutateBlockRegistry);
@@ -81,6 +96,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
     private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
         registry.unregister(Blocks.WATER_CAULDRON);
         registry.unregister(Blocks.LAVA_CAULDRON);
+        registry.unregister(Blocks.POWDER_SNOW_CAULDRON);
         rename(registry, Blocks.DIRT_PATH, "grass_path");
         registry.unregister(Blocks.CANDLE);
         registry.unregister(Blocks.WHITE_CANDLE);
@@ -125,6 +141,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Blocks.TUFF);
         registry.unregister(Blocks.CALCITE);
         registry.unregister(Blocks.TINTED_GLASS);
+        registry.unregister(Blocks.POWDER_SNOW);
         registry.unregister(Blocks.WEATHERED_COPPER_BLOCK);
         registry.unregister(Blocks.SEMI_WEATHERED_COPPER_BLOCK);
         registry.unregister(Blocks.LIGHTLY_WEATHERED_COPPER_BLOCK);
@@ -165,10 +182,12 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Items.BUNDLE);
         registry.unregister(Items.AMETHYST_SHARD);
         registry.unregister(Items.SPYGLASS);
+        registry.unregister(Items.POWDER_SNOW_BUCKET);
     }
 
     private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
         registry.unregister(ParticleTypes.SMALL_FLAME);
+        registry.unregister(ParticleTypes.SNOWFLAKE);
     }
 
     private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
@@ -215,6 +234,14 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(SoundEvents.BLOCK_TUFF_HIT);
         registry.unregister(SoundEvents.BLOCK_TUFF_PLACE);
         registry.unregister(SoundEvents.BLOCK_TUFF_STEP);
+        registry.unregister(SoundEvents.ITEM_BUCKET_EMPTY_POWDER_SNOW);
+        registry.unregister(SoundEvents.ITEM_BUCKET_FILL_POWDER_SNOW);
+        registry.unregister(SoundEvents.ENTITY_PLAYER_HURT_FREEZE);
+        registry.unregister(SoundEvents.BLOCK_POWDER_SNOW_BREAK);
+        registry.unregister(SoundEvents.BLOCK_POWDER_SNOW_FALL);
+        registry.unregister(SoundEvents.BLOCK_POWDER_SNOW_HIT);
+        registry.unregister(SoundEvents.BLOCK_POWDER_SNOW_PLACE);
+        registry.unregister(SoundEvents.BLOCK_POWDER_SNOW_STEP);
     }
 
     @Override
@@ -242,6 +269,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         tags.add(BlockTags.CANDLE_CAKES);
         tags.add(BlockTags.CAULDRONS, Blocks.CAULDRON, Blocks.WATER_CAULDRON);
         tags.add(BlockTags.CRYSTAL_SOUND_BLOCKS);
+        tags.add(BlockTags.SNOW_STEP_SOUND_BLOCKS, Blocks.SNOW);
         super.addExtraBlockTags(tags);
     }
 
@@ -251,5 +279,19 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         tags.add(ItemTags.PIGLIN_FOOD, Items.PORKCHOP, Items.COOKED_PORKCHOP);
         tags.add(ItemTags.CANDLES);
         super.addExtraItemTags(tags, blockTags);
+    }
+
+    @Override
+    public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
+        tags.add(EntityTypeTags.POWDER_SNOW_WALKABLE_MOBS, EntityType.RABBIT, EntityType.ENDERMITE, EntityType.SILVERFISH);
+        super.addExtraEntityTags(tags);
+    }
+
+    @Override
+    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+        if (clazz == Entity.class && data == EntityAccessor.getFrozenTicks()) {
+            return false;
+        }
+        return super.acceptEntityData(clazz, data);
     }
 }

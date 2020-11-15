@@ -9,6 +9,7 @@ import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.Protocol_1_15_2;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_1_16_1;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.MapUpdateS2CPacket_1_16_4;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.minecraft.block.*;
@@ -173,7 +174,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(MapUpdateS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(MapUpdateS2CPacket_1_16_4.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt(); // id
             buf.readByte(); // scale

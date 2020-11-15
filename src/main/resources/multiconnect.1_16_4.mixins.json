@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_16_4.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "EntityAccessor",
+    "MapStateAccessor"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
