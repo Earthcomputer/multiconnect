@@ -31,6 +31,7 @@ import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.network.OtherClientPlayerEntity;
 import net.minecraft.client.options.ChatVisibility;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantment;
@@ -945,6 +946,18 @@ public class Protocol_1_8 extends Protocol_1_9 {
 
     public static void handleByteTrackedData(Entity entity, int id, byte data) {
         if (id == 0) {
+            boolean usingItem = (data & 16) != 0;
+            if (usingItem) {
+                data &= ~16;
+            }
+            if (entity instanceof OtherClientPlayerEntity) {
+                OtherClientPlayerEntity player = (OtherClientPlayerEntity) entity;
+                if (usingItem) {
+                    player.setCurrentHand(Hand.MAIN_HAND);
+                } else {
+                    player.clearActiveItem();
+                }
+            }
             entity.getDataTracker().set(EntityAccessor.getFlags(), data);
         } else if (id == 3) {
             entity.setCustomNameVisible(data == 1);
