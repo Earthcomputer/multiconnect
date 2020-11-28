@@ -3,9 +3,9 @@ package net.earthcomputer.multiconnect.protocols.v1_15_2.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.block.entity.JigsawBlockEntity;
-import net.minecraft.class_5676;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.JigsawBlockScreen;
+import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,7 +19,7 @@ public class MixinJigsawBlockScreen extends Screen {
 
     @Shadow private TextFieldWidget nameField;
     @Shadow private TextFieldWidget targetField;
-    @Shadow private class_5676<JigsawBlockEntity.Joint> jointRotationButton;
+    @Shadow private CyclingButtonWidget<JigsawBlockEntity.Joint> jointRotationButton;
 
     protected MixinJigsawBlockScreen(Text title) {
         super(title);

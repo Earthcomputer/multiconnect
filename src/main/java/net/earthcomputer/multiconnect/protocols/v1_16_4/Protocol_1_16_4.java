@@ -172,6 +172,8 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Blocks.WAXED_SEMI_WEATHERED_CUT_COPPER_SLAB);
         registry.unregister(Blocks.WAXED_LIGHTLY_WEATHERED_CUT_COPPER_SLAB);
         registry.unregister(Blocks.LIGHTNING_ROD);
+        registry.unregister(Blocks.POINTED_DRIPSTONE);
+        registry.unregister(Blocks.DRIPSTONE_BLOCK);
     }
 
     private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
@@ -188,6 +190,10 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
     private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
         registry.unregister(ParticleTypes.SMALL_FLAME);
         registry.unregister(ParticleTypes.SNOWFLAKE);
+        registry.unregister(ParticleTypes.DRIPPING_DRIPSTONE_LAVA);
+        registry.unregister(ParticleTypes.FALLING_DRIPSTONE_LAVA);
+        registry.unregister(ParticleTypes.DRIPPING_DRIPSTONE_WATER);
+        registry.unregister(ParticleTypes.FALLING_DRIPSTONE_WATER);
     }
 
     private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
@@ -242,15 +248,30 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(SoundEvents.BLOCK_POWDER_SNOW_HIT);
         registry.unregister(SoundEvents.BLOCK_POWDER_SNOW_PLACE);
         registry.unregister(SoundEvents.BLOCK_POWDER_SNOW_STEP);
+        registry.unregister(SoundEvents.BLOCK_DRIPSTONE_BLOCK_BREAK);
+        registry.unregister(SoundEvents.BLOCK_DRIPSTONE_BLOCK_STEP);
+        registry.unregister(SoundEvents.BLOCK_DRIPSTONE_BLOCK_PLACE);
+        registry.unregister(SoundEvents.BLOCK_DRIPSTONE_BLOCK_HIT);
+        registry.unregister(SoundEvents.BLOCK_DRIPSTONE_BLOCK_FALL);
+        registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_BREAK);
+        registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_STEP);
+        registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_PLACE);
+        registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_HIT);
+        registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_FALL);
+        registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_LAND);
+        registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_DRIP_LAVA);
+        registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_DRIP_WATER);
+        registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_DRIP_LAVA_INTO_CAULDRON);
+        registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_DRIP_WATER_INTO_CAULDRON);
     }
 
     @Override
     protected Stream<BlockState> getStatesForBlock(Block block) {
         if (block == Blocks.CAULDRON) {
             return Stream.of(Blocks.CAULDRON.getDefaultState(),
-                    Blocks.WATER_CAULDRON.getDefaultState().with(WaterCauldronBlock.LEVEL, 1),
-                    Blocks.WATER_CAULDRON.getDefaultState().with(WaterCauldronBlock.LEVEL, 2),
-                    Blocks.WATER_CAULDRON.getDefaultState().with(WaterCauldronBlock.LEVEL, 3));
+                    Blocks.WATER_CAULDRON.getDefaultState().with(LeveledCauldronBlock.LEVEL, 1),
+                    Blocks.WATER_CAULDRON.getDefaultState().with(LeveledCauldronBlock.LEVEL, 2),
+                    Blocks.WATER_CAULDRON.getDefaultState().with(LeveledCauldronBlock.LEVEL, 3));
         }
         return super.getStatesForBlock(block);
     }
@@ -269,7 +290,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         tags.add(BlockTags.CANDLE_CAKES);
         tags.add(BlockTags.CAULDRONS, Blocks.CAULDRON, Blocks.WATER_CAULDRON);
         tags.add(BlockTags.CRYSTAL_SOUND_BLOCKS);
-        tags.add(BlockTags.SNOW_STEP_SOUND_BLOCKS, Blocks.SNOW);
+        tags.add(BlockTags.INSIDE_STEP_SOUND_BLOCKS, Blocks.SNOW);
         super.addExtraBlockTags(tags);
     }
 
@@ -278,6 +299,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         tags.add(ItemTags.IGNORED_BY_PIGLIN_BABIES, Items.LEATHER);
         tags.add(ItemTags.PIGLIN_FOOD, Items.PORKCHOP, Items.COOKED_PORKCHOP);
         tags.add(ItemTags.CANDLES);
+        tags.add(ItemTags.FREEZE_IMMUNE_WEARABLES, Items.LEATHER_BOOTS, Items.LEATHER_LEGGINGS, Items.LEATHER_CHESTPLATE, Items.LEATHER_HELMET);
         super.addExtraItemTags(tags, blockTags);
     }
 

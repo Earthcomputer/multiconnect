@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_10.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.WaterCauldronBlock;
+import net.minecraft.block.LeveledCauldronBlock;
 import net.minecraft.block.cauldron.CauldronBehavior;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -40,7 +40,7 @@ public interface MixinCauldronBehavior {
         if (!world.isClient) {
             player.setStackInHand(hand, ItemUsage.method_30012(stack, player, PotionUtil.setPotion(new ItemStack(Items.POTION), Potions.WATER)));
             player.incrementStat(Stats.USE_CAULDRON);
-            WaterCauldronBlock.subtractWaterLevel(state, world, pos);
+            LeveledCauldronBlock.decrementFluidLevel(state, world, pos);
             world.playSound(null, pos, SoundEvents.ITEM_BOTTLE_FILL, SoundCategory.BLOCKS, 1.0F, 1.0F);
         }
 

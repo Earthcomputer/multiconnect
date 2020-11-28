@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(Entity.class)
 public interface EntityAccessor {
-    @Accessor("field_27858")
+    @Accessor("FROZEN_TICKS")
     static TrackedData<Integer> getFrozenTicks() {
         return MixinHelper.fakeInstance();
     }
