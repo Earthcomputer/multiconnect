@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import it.unimi.dsi.fastutil.shorts.ShortSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_16_4.PendingFullChunkData;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
@@ -59,9 +59,9 @@ public class ChunkDataTranslator {
 
             TransformerByteBuf buf = new TransformerByteBuf(packet.getReadBuffer(), null);
             buf.readTopLevelType(ChunkData.class);
-            ChunkData chunkData = ChunkData.read(buf);
+            ChunkData chunkData = ChunkData.read(dimension.getMinimumY(), dimension.getMinimumY() + dimension.getHeight() - 1, buf);
 
-            EnumMap<EightWayDirection, ShortSet> blocksNeedingConnectionUpdate = new EnumMap<>(EightWayDirection.class);
+            EnumMap<EightWayDirection, IntSet> blocksNeedingConnectionUpdate = new EnumMap<>(EightWayDirection.class);
             ConnectionInfo.protocol.getBlockConnector().fixChunkData(chunkData, blocksNeedingConnectionUpdate);
             ((IChunkDataS2CPacket) packet).multiconnect_setBlocksNeedingUpdate(blocksNeedingConnectionUpdate);
 

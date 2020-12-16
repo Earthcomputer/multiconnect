@@ -21,6 +21,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.*;
+import net.minecraft.world.event.GameEvent;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -163,6 +164,9 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
+    }
+
+    public void addExtraGameEventTags(TagRegistry<GameEvent> tags) {
     }
 
     public BlockConnector getBlockConnector() {

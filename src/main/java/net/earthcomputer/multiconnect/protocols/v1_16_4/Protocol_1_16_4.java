@@ -1,6 +1,10 @@
 package net.earthcomputer.multiconnect.protocols.v1_16_4;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.mojang.serialization.Codec;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
@@ -8,33 +12,56 @@ import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.EntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
-import net.earthcomputer.multiconnect.transformer.VarLong;
+import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.network.packet.s2c.play.LightUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.MapUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ResourcePackSendS2CPacket;
+import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.tag.BlockTags;
-import net.minecraft.tag.EntityTypeTags;
-import net.minecraft.tag.ItemTags;
+import net.minecraft.tag.*;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.source.BiomeArray;
+import net.minecraft.world.event.GameEvent;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class Protocol_1_16_4 extends Protocol_1_17 {
+    private static final int BIOME_ARRAY_LENGTH = 1024;
+
     public static void registerTranslators() {
+        ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readInt(); // entity id
+            buf.readBoolean(); // hardcode
+            buf.readByte(); // game mode
+            buf.readByte(); // previous game mode
+            int numDimensions = buf.readVarInt();
+            for (int i = 0; i < numDimensions; i++) {
+                buf.readIdentifier(); // dimension id
+            }
+            buf.disablePassthroughMode();
+            Codec<Set<Identifier>> dimensionSetCodec = Codec.list(Utils.singletonKeyCodec("name", Identifier.CODEC))
+                    .xmap(ImmutableSet::copyOf, ImmutableList::copyOf);
+            Utils.translateDynamicRegistries(
+                    buf,
+                    Utils.singletonKeyCodec("minecraft:dimension_type", Utils.singletonKeyCodec("value", dimensionSetCodec)),
+                    ImmutableSet.of(new Identifier("overworld"), new Identifier("the_nether"), new Identifier("the_end"), new Identifier("overworld_caves"))::equals
+            );
+            Utils.translateDimensionType(buf);
+            buf.applyPendingReads();
+        });
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             int x = buf.readInt();
@@ -49,7 +76,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
                 buf.readIntArray(BiomeArray.DEFAULT_LENGTH);
             } else {
                 // TODO: get the actual biome array from somewhere
-                buf.pendingRead(int[].class, new int[BiomeArray.DEFAULT_LENGTH]);
+                buf.pendingRead(int[].class, new int[BIOME_ARRAY_LENGTH]);
             }
             buf.disablePassthroughMode();
             buf.applyPendingReads();
@@ -60,10 +87,30 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
             buf.readVarInt(); // z
             buf.readBoolean(); // trust edges
             buf.disablePassthroughMode();
-            buf.pendingRead(VarLong.class, new VarLong(buf.readVarInt())); // sky light mask
-            buf.pendingRead(VarLong.class, new VarLong(buf.readVarInt())); // block light mask
-            buf.pendingRead(VarLong.class, new VarLong(buf.readVarInt())); // filled sky light mask
-            buf.pendingRead(VarLong.class, new VarLong(buf.readVarInt())); // filled block light mask
+            int skyLightMask = buf.readVarInt();
+            buf.pendingRead(long[].class, new long[] {skyLightMask}); // sky light mask
+            int blockLightMask = buf.readVarInt();
+            buf.pendingRead(long[].class, new long[] {blockLightMask}); // block light mask
+            buf.pendingRead(long[].class, new long[] {buf.readVarInt()}); // filled sky light mask
+            buf.pendingRead(long[].class, new long[] {buf.readVarInt()}); // filled block light mask
+            int numSkyUpdates = Integer.bitCount(skyLightMask);
+            buf.pendingRead(VarInt.class, new VarInt(numSkyUpdates));
+            buf.enablePassthroughMode();
+            for (int i = 0; i < numSkyUpdates; i++) {
+                buf.readByteArray(2048); // sky light update
+            }
+            buf.disablePassthroughMode();
+            buf.pendingRead(VarInt.class, new VarInt(Integer.bitCount(blockLightMask))); // num block light updates
+            buf.applyPendingReads();
+        });
+        ProtocolRegistry.registerInboundTranslator(SynchronizeTagsS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            TagGroup.fromPacket(buf, Registry.BLOCK);
+            TagGroup.fromPacket(buf, Registry.ITEM);
+            TagGroup.fromPacket(buf, Registry.FLUID);
+            TagGroup.fromPacket(buf, Registry.ENTITY_TYPE);
+            buf.disablePassthroughMode();
+            buf.pendingRead(VarInt.class, new VarInt(0)); // step count
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(ResourcePackSendS2CPacket.class, buf -> {
@@ -81,6 +128,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
         insertAfter(packets, MapUpdateS2CPacket.class, PacketInfo.of(MapUpdateS2CPacket_1_16_4.class, MapUpdateS2CPacket_1_16_4::new));
         remove(packets, MapUpdateS2CPacket.class);
+        remove(packets, VibrationS2CPacket.class);
         return packets;
     }
 
@@ -89,8 +137,16 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         super.mutateRegistries(mutator);
         mutator.mutate(Protocols.V1_16_4, Registry.BLOCK, this::mutateBlockRegistry);
         mutator.mutate(Protocols.V1_16_4, Registry.ITEM, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_16_4, Registry.BLOCK_ENTITY_TYPE, this::mutateBlockEntityRegistry);
         mutator.mutate(Protocols.V1_16_4, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
         mutator.mutate(Protocols.V1_16_4, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+    }
+
+    @Override
+    public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
+        super.mutateDynamicRegistries(mutator, registries);
+        addRegistry(registries, Registry.DIMENSION_TYPE_KEY);
+        addRegistry(registries, Registry.BIOME_KEY);
     }
 
     private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
@@ -142,6 +198,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Blocks.CALCITE);
         registry.unregister(Blocks.TINTED_GLASS);
         registry.unregister(Blocks.POWDER_SNOW);
+        registry.unregister(Blocks.SCULK_SENSOR);
         registry.unregister(Blocks.WEATHERED_COPPER_BLOCK);
         registry.unregister(Blocks.SEMI_WEATHERED_COPPER_BLOCK);
         registry.unregister(Blocks.LIGHTLY_WEATHERED_COPPER_BLOCK);
@@ -187,6 +244,10 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Items.POWDER_SNOW_BUCKET);
     }
 
+    private void mutateBlockEntityRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
+        registry.unregister(BlockEntityType.SCULK_SENSOR);
+    }
+
     private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
         registry.unregister(ParticleTypes.SMALL_FLAME);
         registry.unregister(ParticleTypes.SNOWFLAKE);
@@ -194,6 +255,8 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(ParticleTypes.FALLING_DRIPSTONE_LAVA);
         registry.unregister(ParticleTypes.DRIPPING_DRIPSTONE_WATER);
         registry.unregister(ParticleTypes.FALLING_DRIPSTONE_WATER);
+        registry.unregister(ParticleTypes.DUST_COLOR_TRANSITION);
+        registry.unregister(ParticleTypes.VIBRATION);
     }
 
     private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
@@ -263,6 +326,13 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_DRIP_WATER);
         registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_DRIP_LAVA_INTO_CAULDRON);
         registry.unregister(SoundEvents.BLOCK_POINTED_DRIPSTONE_DRIP_WATER_INTO_CAULDRON);
+        registry.unregister(SoundEvents.BLOCK_SCULK_SENSOR_CLICKING);
+        registry.unregister(SoundEvents.BLOCK_SCULK_SENSOR_CLICKING_STOP);
+        registry.unregister(SoundEvents.BLOCK_SCULK_SENSOR_BREAK);
+        registry.unregister(SoundEvents.BLOCK_SCULK_SENSOR_FALL);
+        registry.unregister(SoundEvents.BLOCK_SCULK_SENSOR_HIT);
+        registry.unregister(SoundEvents.BLOCK_SCULK_SENSOR_PLACE);
+        registry.unregister(SoundEvents.BLOCK_SCULK_SENSOR_STEP);
     }
 
     @Override
@@ -278,7 +348,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
 
     @Override
     public boolean acceptBlockState(BlockState state) {
-        if (state.getBlock() instanceof AbstractRailBlock && state.get(AbstractRailBlock.field_27096)) {
+        if (state.getBlock() instanceof AbstractRailBlock && state.get(AbstractRailBlock.WATERLOGGED)) {
             return false;
         }
         return super.acceptBlockState(state);
@@ -291,6 +361,9 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         tags.add(BlockTags.CAULDRONS, Blocks.CAULDRON, Blocks.WATER_CAULDRON);
         tags.add(BlockTags.CRYSTAL_SOUND_BLOCKS);
         tags.add(BlockTags.INSIDE_STEP_SOUND_BLOCKS, Blocks.SNOW);
+        tags.addTag(BlockTags.DRIPSTONE_REPLACEABLE_BLOCKS, BlockTags.BASE_STONE_OVERWORLD);
+        tags.add(BlockTags.DRIPSTONE_REPLACEABLE_BLOCKS, Blocks.DIRT);
+        tags.addTag(BlockTags.OCCLUDES_VIBRATION_SIGNALS, BlockTags.WOOL);
         super.addExtraBlockTags(tags);
     }
 
@@ -307,6 +380,13 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
     public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
         tags.add(EntityTypeTags.POWDER_SNOW_WALKABLE_MOBS, EntityType.RABBIT, EntityType.ENDERMITE, EntityType.SILVERFISH);
         super.addExtraEntityTags(tags);
+    }
+
+    @Override
+    public void addExtraGameEventTags(TagRegistry<GameEvent> tags) {
+        tags.add(GameEventTags.VIBRATIONS);
+        tags.add(GameEventTags.IGNORE_VIBRATIONS_STEPPING_CAREFULLY);
+        super.addExtraGameEventTags(tags);
     }
 
     @Override

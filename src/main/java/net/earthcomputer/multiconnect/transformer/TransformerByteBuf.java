@@ -668,6 +668,11 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
+    public long[] method_33134() {
+        return read(long[].class, super::method_33134);
+    }
+
+    @Override
     public long[] readLongArray(long[] out) {
         return read(long[].class,
                 () -> super.readLongArray(out),

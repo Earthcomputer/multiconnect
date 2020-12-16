@@ -449,7 +449,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 int meta = from.getDamage();
                 assert from.getTag() != null;
                 from.getTag().remove("Damage");
-                if (from.getTag().isEmpty())
+                if (from.getTag().getSize() == 0)
                     from.setTag(null);
                 return Items_1_12_2.oldItemStackToNew(from, meta);
             }
@@ -519,7 +519,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                             buf.pendingWrite(Short.class, itemId, (Consumer<Short>) buf::writeShort);
                             buf.pendingWrite(Byte.class, count, (Consumer<Byte>) buf::writeByte);
                             buf.pendingWrite(Short.class, () -> (short) meta, (Consumer<Short>) buf::writeShort);
-                            buf.pendingWrite(CompoundTag.class, () -> oldTag.isEmpty() ? null : oldTag, buf::writeCompoundTag);
+                            buf.pendingWrite(CompoundTag.class, () -> oldTag.getSize() == 0 ? null : oldTag, buf::writeCompoundTag);
                         });
                     }
                 });

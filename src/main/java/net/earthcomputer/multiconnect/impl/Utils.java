@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.impl;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.serialization.Codec;
@@ -15,6 +16,7 @@ import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.bridge.DynamicRegistryManagerImplAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.*;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.DimensionTypeAccessor;
 import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.SharedConstants;
@@ -47,6 +49,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -195,11 +198,37 @@ public class Utils {
     }
 
     public static <T> void translateDynamicRegistries(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate) {
+        translateExperimentalCodec(buf, oldCodec, allowablePredicate, DynamicRegistryManager.Impl.CODEC, thing -> {
+            DynamicRegistryManager.Impl registryManager = DynamicRegistryManager.create();
+            //noinspection ConstantConditions
+            ((DynamicRegistryManagerImplAccessor) (Object) registryManager).setRegistries(ImmutableMap.of()); // dynamic registry mutator will fix this
+            return registryManager;
+        });
+    }
+
+    private static final Map<Identifier, DimensionType> DIMENSION_TYPES_BY_ID = ImmutableMap.of(
+            DimensionType.OVERWORLD_ID, DimensionTypeAccessor.getOverworld(),
+            DimensionType.THE_NETHER_ID, DimensionTypeAccessor.getTheNether(),
+            DimensionType.THE_END_ID, DimensionTypeAccessor.getTheEnd()
+    );
+
+    public static void translateDimensionType(TransformerByteBuf buf) {
+        translateExperimentalCodec(
+                buf,
+                Utils.singletonKeyCodec("effects", Identifier.CODEC),
+                DIMENSION_TYPES_BY_ID::containsKey,
+                DimensionType.REGISTRY_CODEC,
+                id -> () -> DIMENSION_TYPES_BY_ID.get(id)
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T, U> void translateExperimentalCodec(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate, Codec<U> thingCodec, Function<T, U> thingCreator) {
         // TODO: support actual translation when this format stops being experimental
         boolean[] hasDecoded = {false};
-        T oldRegistries;
+        T oldThing;
         try {
-            oldRegistries = buf.decode(oldCodec.xmap(val -> {
+            oldThing = buf.decode(oldCodec.xmap(val -> {
                 hasDecoded[0] = true;
                 return val;
             }, Function.identity()));
@@ -208,20 +237,19 @@ public class Utils {
         }
         if (!hasDecoded[0]) {
             // already valid
-            buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, (DynamicRegistryManager.Impl) oldRegistries));
+            buf.pendingRead(Codecked.class, new Codecked<>(thingCodec, (U) oldThing));
             return;
         }
-        if (!allowablePredicate.test(oldRegistries)) {
+        if (!allowablePredicate.test(oldThing)) {
             ClientConnection connection = buf.getConnection();
             if (connection != null) {
                 connection.disconnect(new TranslatableText("multiconnect.unsupportedExperimentalCodec"));
             }
             return;
         }
-        DynamicRegistryManager.Impl registries = DynamicRegistryManager.create();
-        //noinspection ConstantConditions
-        ((DynamicRegistryManagerImplAccessor) (Object) registries).setRegistries(ImmutableMap.of()); // dynamic registry mutator will fix this
-        buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, registries));
+
+        U thing = thingCreator.apply(oldThing);
+        buf.pendingRead(Codecked.class, new Codecked<>(thingCodec, thing));
     }
 
     /**

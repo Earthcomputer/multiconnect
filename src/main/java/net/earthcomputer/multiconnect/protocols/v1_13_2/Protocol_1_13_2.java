@@ -392,8 +392,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
         int blockLightMask = packet.getVerticalStripBitmask() << 1;
         int skyLightMask = translator.getDimension().hasSkyLight() ? blockLightMask : 0;
-        lightPacketAccessor.setBlockLightMask(blockLightMask);
-        lightPacketAccessor.setSkyLightMask(skyLightMask);
+        lightPacketAccessor.setBlockLightMask(BitSet.valueOf(new long[] {blockLightMask}));
+        lightPacketAccessor.setSkyLightMask(BitSet.valueOf(new long[] {skyLightMask}));
         lightPacketAccessor.setBlockLightUpdates(new ArrayList<>());
         lightPacketAccessor.setSkyLightUpdates(new ArrayList<>());
         lightPacketAccessor.setTrustEdges(true);

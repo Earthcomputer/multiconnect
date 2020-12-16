@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
-import it.unimi.dsi.fastutil.shorts.ShortSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Utils;
@@ -35,7 +35,7 @@ public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
     @Unique
     private DimensionType dimension;
     @Unique
-    private EnumMap<EightWayDirection, ShortSet> blocksNeedingUpdate;
+    private EnumMap<EightWayDirection, IntSet> blocksNeedingUpdate;
 
     @Override
     public boolean multiconnect_isDataTranslated() {
@@ -80,12 +80,12 @@ public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
     }
 
     @Override
-    public void multiconnect_setBlocksNeedingUpdate(EnumMap<EightWayDirection, ShortSet> blocksNeedingUpdate) {
+    public void multiconnect_setBlocksNeedingUpdate(EnumMap<EightWayDirection, IntSet> blocksNeedingUpdate) {
         this.blocksNeedingUpdate = blocksNeedingUpdate;
     }
 
     @Override
-    public EnumMap<EightWayDirection, ShortSet> multiconnect_getBlocksNeedingUpdate() {
+    public EnumMap<EightWayDirection, IntSet> multiconnect_getBlocksNeedingUpdate() {
         return blocksNeedingUpdate;
     }
 

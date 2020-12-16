@@ -11,14 +11,22 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.ChunkSection;
 
 public final class ChunkData implements IBlockConnectionsBlockView {
-    private final ChunkSection[] sections = new ChunkSection[16];
+    private final ChunkSection[] sections;
+    private final int minY;
+    private final int maxY;
 
-    public static ChunkData read(PacketByteBuf buf) {
-        ChunkData data = new ChunkData();
+    private ChunkData(ChunkSection[] sections, int minY, int maxY) {
+        this.sections = sections;
+        this.minY = minY;
+        this.maxY = maxY;
+    }
+
+    public static ChunkData read(int minY, int maxY, PacketByteBuf buf) {
+        ChunkData data = new ChunkData(new ChunkSection[(maxY + 1 - minY + 15) >> 4], minY, maxY);
         ChunkDataS2CPacket packet = ChunkDataTranslator.current().getPacket();
         int verticalStripBitmask = packet.getVerticalStripBitmask();
 
-        for (int sectionY = 0; sectionY < 16; sectionY++) {
+        for (int sectionY = 0; sectionY < data.sections.length; sectionY++) {
             if ((verticalStripBitmask & (1 << sectionY)) != 0) {
                 ChunkSection section = new ChunkSection(sectionY);
                 section.fromPacket(buf);
@@ -56,10 +64,11 @@ public final class ChunkData implements IBlockConnectionsBlockView {
     }
 
     public BlockState getBlockState(int x, int y, int z) {
-        if (y < 0 || y > 255) {
+        if (y < minY || y > maxY) {
             return Blocks.AIR.getDefaultState();
         }
         x &= 15;
+        y += minY;
         z &= 15;
         ChunkSection section = sections[y >> 4];
         if (section == null) {
@@ -71,16 +80,17 @@ public final class ChunkData implements IBlockConnectionsBlockView {
 
     @Override
     public void setBlockState(BlockPos pos, BlockState state) {
-        if (pos.getY() < 0 || pos.getY() > 255) {
+        if (pos.getY() < minY || pos.getY() > maxY) {
             return;
         }
         int x = pos.getX() & 15;
+        int y = pos.getY() + minY;
         int z = pos.getZ() & 15;
-        ChunkSection section = sections[pos.getY() >> 4];
+        ChunkSection section = sections[y >> 4];
         if (section == null) {
             return;
         }
-        int y = pos.getY() & 15;
+        y &= 15;
         section.setBlockState(x, y, z, state, false);
     }
 
@@ -88,6 +98,15 @@ public final class ChunkData implements IBlockConnectionsBlockView {
         return sections;
     }
 
+    @Override
+    public int getMinY() {
+        return minY;
+    }
+
+    @Override
+    public int getMaxY() {
+        return maxY;
+    }
 
     public static int skipPalette(PacketByteBuf buf) {
         int paletteSize = buf.readByte();

@@ -38,7 +38,7 @@ public interface MixinCauldronBehavior {
         }
 
         if (!world.isClient) {
-            player.setStackInHand(hand, ItemUsage.method_30012(stack, player, PotionUtil.setPotion(new ItemStack(Items.POTION), Potions.WATER)));
+            player.setStackInHand(hand, ItemUsage.exchangeStack(stack, player, PotionUtil.setPotion(new ItemStack(Items.POTION), Potions.WATER)));
             player.incrementStat(Stats.USE_CAULDRON);
             LeveledCauldronBlock.decrementFluidLevel(state, world, pos);
             world.playSound(null, pos, SoundEvents.ITEM_BOTTLE_FILL, SoundCategory.BLOCKS, 1.0F, 1.0F);

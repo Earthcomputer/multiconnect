@@ -141,15 +141,18 @@ public class Items_1_12_2 {
             meta = oldItemAndMeta.getRight();
         }
         else if (stack.getItem() == FILLED_MAP) {
-            meta = FilledMapItem.getMapId(stack);
-            if (stack.getTag() != null) {
-                stack = stack.copy();
-                copiedTag = true;
-                CompoundTag tag = stack.getTag();
-                assert tag != null;
-                tag.remove("map");
-                if (tag.isEmpty())
-                    stack.setTag(null);
+            Integer mapId = FilledMapItem.getMapId(stack);
+            if (mapId != null) {
+                meta = mapId;
+                if (stack.getTag() != null) {
+                    stack = stack.copy();
+                    copiedTag = true;
+                    CompoundTag tag = stack.getTag();
+                    assert tag != null;
+                    tag.remove("map");
+                    if (tag.getSize() == 0)
+                        stack.setTag(null);
+                }
             }
         }
         else if (stack.getItem() == ENCHANTED_BOOK) {
@@ -168,7 +171,7 @@ public class Items_1_12_2 {
                 CompoundTag tag = stack.getTag();
                 assert tag != null;
                 tag.remove("Damage");
-                if (tag.isEmpty())
+                if (tag.getSize() == 0)
                     stack.setTag(null);
             }
         }

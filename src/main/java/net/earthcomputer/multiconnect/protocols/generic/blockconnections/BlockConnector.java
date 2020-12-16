@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
 
-import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
-import it.unimi.dsi.fastutil.shorts.ShortSet;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.IBlockConnector;
@@ -41,7 +41,7 @@ public class BlockConnector {
         }
     }
 
-    public void fixChunkData(ChunkData chunkData, EnumMap<EightWayDirection, ShortSet> blocksNeedingUpdateOut) {
+    public void fixChunkData(ChunkData chunkData, EnumMap<EightWayDirection, IntSet> blocksNeedingUpdateOut) {
         // early exit if no fixing ever needs to be done
         if (connectors.isEmpty()) {
             return;
@@ -59,7 +59,7 @@ public class BlockConnector {
                         if (dir == null || !connector.needsNeighbors()) {
                             connector.fix(chunkData, pos);
                         } else {
-                            blocksNeedingUpdateOut.computeIfAbsent(dir, k -> new ShortOpenHashSet()).add(ChunkConnector.packLocalPos(pos));
+                            blocksNeedingUpdateOut.computeIfAbsent(dir, k -> new IntOpenHashSet()).add(ChunkConnector.packLocalPos(chunkData.getMinY(), pos));
                         }
                     }
                 }

@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
-import it.unimi.dsi.fastutil.shorts.ShortSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.*;
@@ -35,6 +35,7 @@ import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.event.GameEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Dynamic;
@@ -73,7 +74,7 @@ public class MixinClientPlayNetworkHandler {
     private WorldChunk fixChunk(WorldChunk chunk, ChunkDataS2CPacket packet) {
         if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()) {
             if (chunk != null) {
-                EnumMap<EightWayDirection, ShortSet> blocksNeedingUpdate = ((IChunkDataS2CPacket) packet).multiconnect_getBlocksNeedingUpdate();
+                EnumMap<EightWayDirection, IntSet> blocksNeedingUpdate = ((IChunkDataS2CPacket) packet).multiconnect_getBlocksNeedingUpdate();
                 ChunkConnector chunkConnector = new ChunkConnector(chunk, ConnectionInfo.protocol.getBlockConnector(), blocksNeedingUpdate);
                 ((IBlockConnectableChunk) chunk).multiconnect_setChunkConnector(chunkConnector);
                 for (Direction side : Direction.Type.HORIZONTAL) {
@@ -146,7 +147,8 @@ public class MixinClientPlayNetworkHandler {
         TagGroup<Item> itemTags = setExtraTags("item", packet.getTagManager().getItems(), new TagRegistry<>(), ItemTags.getRequiredTags(), itemTagRegistry -> ConnectionInfo.protocol.addExtraItemTags(itemTagRegistry, blockTagRegistry));
         TagGroup<Fluid> fluidTags = setExtraTags("fluid", packet.getTagManager().getFluids(), new TagRegistry<>(), FluidTags.getRequiredTags(), ConnectionInfo.protocol::addExtraFluidTags);
         TagGroup<EntityType<?>> entityTypeTags = setExtraTags("entity type", packet.getTagManager().getEntityTypes(), new TagRegistry<>(), EntityTypeTags.getRequiredTags(), ConnectionInfo.protocol::addExtraEntityTags);
-        ((SynchronizeTagsS2CAccessor) packet).setTagManager(TagManager.create(blockTags, itemTags, fluidTags, entityTypeTags));
+        TagGroup<GameEvent> gameEventTags = setExtraTags("game event", packet.getTagManager().getGameEvents(), new TagRegistry<>(), GameEventTags.getRequiredTags(), ConnectionInfo.protocol::addExtraGameEventTags);
+        ((SynchronizeTagsS2CAccessor) packet).setTagManager(TagManager.create(blockTags, itemTags, fluidTags, entityTypeTags, gameEventTags));
     }
 
     @Unique
