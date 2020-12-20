@@ -68,8 +68,8 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
             );
             Identifier dimTypeId = buf.readIdentifier();
             DynamicRegistryManager defaultRegistryManager = DynamicRegistryManager.create();
-            DimensionType dimType = defaultRegistryManager.getDimensionTypes().get(dimTypeId);
-            if (dimType == null) dimType = defaultRegistryManager.getDimensionTypes().get(DimensionType.OVERWORLD_REGISTRY_KEY);
+            DimensionType dimType = defaultRegistryManager.get(Registry.DIMENSION_TYPE_KEY).get(dimTypeId);
+            if (dimType == null) dimType = defaultRegistryManager.get(Registry.DIMENSION_TYPE_KEY).get(DimensionType.OVERWORLD_REGISTRY_KEY);
             DimensionType dimType_f = dimType;
             buf.pendingRead(Codecked.class, new Codecked<>(DimensionType.REGISTRY_CODEC, () -> dimType_f));
             buf.enablePassthroughMode();
@@ -82,8 +82,8 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
         ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
             DynamicRegistryManager defaultRegistryManager = DynamicRegistryManager.create();
             Identifier dimTypeId = buf.readIdentifier();
-            DimensionType dimType = defaultRegistryManager.getDimensionTypes().get(dimTypeId);
-            if (dimType == null) dimType = defaultRegistryManager.getDimensionTypes().get(DimensionType.OVERWORLD_REGISTRY_KEY);
+            DimensionType dimType = defaultRegistryManager.get(Registry.DIMENSION_TYPE_KEY).get(dimTypeId);
+            if (dimType == null) dimType = defaultRegistryManager.get(Registry.DIMENSION_TYPE_KEY).get(DimensionType.OVERWORLD_REGISTRY_KEY);
             DimensionType dimType_f = dimType;
             buf.pendingRead(Codecked.class, new Codecked<>(DimensionType.REGISTRY_CODEC, () -> dimType_f));
             buf.applyPendingReads();

@@ -105,11 +105,17 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         });
         ProtocolRegistry.registerInboundTranslator(SynchronizeTagsS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            TagGroup.fromPacket(buf, Registry.BLOCK);
-            TagGroup.fromPacket(buf, Registry.ITEM);
-            TagGroup.fromPacket(buf, Registry.FLUID);
-            TagGroup.fromPacket(buf, Registry.ENTITY_TYPE);
+            buf.pendingRead(VarInt.class, new VarInt(5)); // number of tags
+            buf.pendingRead(Identifier.class, new Identifier("block"));
+            TagGroup.class_5748.method_33160(buf); // block tags
+            buf.pendingRead(Identifier.class, new Identifier("item"));
+            TagGroup.class_5748.method_33160(buf); // item tags
+            buf.pendingRead(Identifier.class, new Identifier("fluid"));
+            TagGroup.class_5748.method_33160(buf); // fluid tags
+            buf.pendingRead(Identifier.class, new Identifier("entity_type"));
+            TagGroup.class_5748.method_33160(buf); // entity type tags
             buf.disablePassthroughMode();
+            buf.pendingRead(Identifier.class, new Identifier("game_event"));
             buf.pendingRead(VarInt.class, new VarInt(0)); // step count
             buf.applyPendingReads();
         });
@@ -137,6 +143,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         super.mutateRegistries(mutator);
         mutator.mutate(Protocols.V1_16_4, Registry.BLOCK, this::mutateBlockRegistry);
         mutator.mutate(Protocols.V1_16_4, Registry.ITEM, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_16_4, Registry.ENTITY_TYPE, this::mutateEntityRegistry);
         mutator.mutate(Protocols.V1_16_4, Registry.BLOCK_ENTITY_TYPE, this::mutateBlockEntityRegistry);
         mutator.mutate(Protocols.V1_16_4, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
         mutator.mutate(Protocols.V1_16_4, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
@@ -242,6 +249,11 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Items.AMETHYST_SHARD);
         registry.unregister(Items.SPYGLASS);
         registry.unregister(Items.POWDER_SNOW_BUCKET);
+        registry.unregister(Items.AXOLOTL_BUCKET);
+    }
+
+    private void mutateEntityRegistry(ISimpleRegistry<EntityType<?>> registry) {
+        registry.unregister(EntityType.AXOLOTL);
     }
 
     private void mutateBlockEntityRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
@@ -333,6 +345,15 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(SoundEvents.BLOCK_SCULK_SENSOR_HIT);
         registry.unregister(SoundEvents.BLOCK_SCULK_SENSOR_PLACE);
         registry.unregister(SoundEvents.BLOCK_SCULK_SENSOR_STEP);
+        registry.unregister(SoundEvents.ENTITY_AXOLOTL_ATTACK);
+        registry.unregister(SoundEvents.ENTITY_AXOLOTL_DEATH);
+        registry.unregister(SoundEvents.ENTITY_AXOLOTL_HURT);
+        registry.unregister(SoundEvents.ENTITY_AXOLOTL_IDLE_AIR);
+        registry.unregister(SoundEvents.ENTITY_AXOLOTL_IDLE_WATER);
+        registry.unregister(SoundEvents.ENTITY_AXOLOTL_SPLASH);
+        registry.unregister(SoundEvents.ENTITY_AXOLOTL_SWIM);
+        registry.unregister(SoundEvents.ITEM_BUCKET_EMPTY_AXOLOTL);
+        registry.unregister(SoundEvents.ITEM_BUCKET_FILL_AXOLOTL);
     }
 
     @Override
@@ -373,12 +394,16 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         tags.add(ItemTags.PIGLIN_FOOD, Items.PORKCHOP, Items.COOKED_PORKCHOP);
         tags.add(ItemTags.CANDLES);
         tags.add(ItemTags.FREEZE_IMMUNE_WEARABLES, Items.LEATHER_BOOTS, Items.LEATHER_LEGGINGS, Items.LEATHER_CHESTPLATE, Items.LEATHER_HELMET);
+        tags.add(ItemTags.AXOLOTL_TEMPT_ITEMS, Items.TROPICAL_FISH, Items.TROPICAL_FISH_BUCKET);
+        tags.addTag(ItemTags.OCCLUDES_VIBRATION_SIGNALS, ItemTags.WOOL);
         super.addExtraItemTags(tags, blockTags);
     }
 
     @Override
     public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
         tags.add(EntityTypeTags.POWDER_SNOW_WALKABLE_MOBS, EntityType.RABBIT, EntityType.ENDERMITE, EntityType.SILVERFISH);
+        tags.add(EntityTypeTags.AXOLOTL_ALWAYS_HOSTILES, EntityType.TROPICAL_FISH, EntityType.PUFFERFISH, EntityType.SALMON, EntityType.COD, EntityType.SQUID);
+        tags.add(EntityTypeTags.AXOLOTL_TEMPTED_HOSTILES, EntityType.DROWNED, EntityType.GUARDIAN);
         super.addExtraEntityTags(tags);
     }
 

@@ -238,9 +238,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
         ProtocolRegistry.registerInboundTranslator(SynchronizeTagsS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            TagGroup.fromPacket(buf, Registry.BLOCK);
-            TagGroup.fromPacket(buf, Registry.ITEM);
-            TagGroup.fromPacket(buf, Registry.FLUID);
+            TagGroup.class_5748.method_33160(buf); // block tags
+            TagGroup.class_5748.method_33160(buf); // item tags
+            TagGroup.class_5748.method_33160(buf); // fluid tags
             buf.disablePassthroughMode();
             buf.pendingRead(VarInt.class, new VarInt(0)); // entity type count
             buf.applyPendingReads();

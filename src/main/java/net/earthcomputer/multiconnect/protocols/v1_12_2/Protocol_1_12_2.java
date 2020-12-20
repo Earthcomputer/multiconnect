@@ -887,7 +887,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                     return false;
             }
             buf.writeString(updateStructBlock.getMetadata());
-            buf.writeBoolean(updateStructBlock.getIgnoreEntities());
+            buf.writeBoolean(updateStructBlock.shouldIgnoreEntities());
             buf.writeBoolean(updateStructBlock.shouldShowAir());
             buf.writeBoolean(updateStructBlock.shouldShowBoundingBox());
             buf.writeFloat(updateStructBlock.getIntegrity());

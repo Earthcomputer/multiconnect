@@ -11,7 +11,6 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.command.CommandSource;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.recipe.Recipe;
-import net.minecraft.tag.TagManager;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Mixin(ClientPlayNetworkHandler.class)
@@ -38,7 +38,7 @@ public abstract class MixinClientPlayNetworkHandler {
     private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             // multiconnect will automatically populate the tag manager with required tags
-            onSynchronizeTags(new SynchronizeTagsS2CPacket(TagManager.EMPTY));
+            onSynchronizeTags(new SynchronizeTagsS2CPacket(new HashMap<>()));
 
             Protocol_1_12_2 protocol = (Protocol_1_12_2) ConnectionInfo.protocol;
             List<Recipe<?>> recipes = new ArrayList<>();

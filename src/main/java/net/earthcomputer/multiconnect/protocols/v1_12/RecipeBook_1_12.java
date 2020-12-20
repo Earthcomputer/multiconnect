@@ -241,7 +241,7 @@ public class RecipeBook_1_12<C extends Inventory> {
         assert mc.player != null;
 
         PlayerInventory playerInv = mc.player.getInventory();
-        int fromSlot = playerInv.method_7371(stackNeeded);
+        int fromSlot = playerInv.indexOf(stackNeeded);
 
         if (fromSlot == -1) {
             return null;
