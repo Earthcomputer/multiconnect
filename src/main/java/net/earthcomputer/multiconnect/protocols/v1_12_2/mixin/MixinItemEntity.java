@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemEntity.class)
 public class MixinItemEntity {
-    @Inject(method = "applyBuoyancy", at = @At("HEAD"),cancellable = true)
+    @Inject(method = "applyWaterBuoyancy", at = @At("HEAD"),cancellable = true)
     private void applyBuoyancy(CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             ci.cancel();

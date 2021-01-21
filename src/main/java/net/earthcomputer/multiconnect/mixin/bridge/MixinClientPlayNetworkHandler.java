@@ -143,10 +143,10 @@ public class MixinClientPlayNetworkHandler {
     @Inject(method = "onSynchronizeTags", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
     private void onOnSynchronizeTags(SynchronizeTagsS2CPacket packet, CallbackInfo ci) {
         Map<RegistryKey<? extends Registry<?>>, List<Identifier>> requiredTags = new HashMap<>();
-        RequiredTagListRegistry.method_33151(requiredTagList -> {
+        RequiredTagListRegistry.forEach(requiredTagList -> {
             List<? extends RequiredTagList.TagWrapper<?>> tagWrappers = ((RequiredTagListAccessor<?>) requiredTagList).getTags();
             List<Identifier> tagIds = tagWrappers.stream().map(RequiredTagList.TagWrapper::getId).collect(Collectors.toList());
-            requiredTags.put(requiredTagList.method_33148(), tagIds);
+            requiredTags.put(requiredTagList.getRegistryKey(), tagIds);
         });
         TagRegistry<Block> blockTagRegistry = new TagRegistry<>();
         TagGroup<Block> blockTags = setExtraTags("block", packet, Registry.BLOCK, blockTagRegistry, requiredTags.get(Registry.BLOCK_KEY), ConnectionInfo.protocol::addExtraBlockTags);
@@ -163,8 +163,10 @@ public class MixinClientPlayNetworkHandler {
 
     @Unique
     private static <T> TagGroup<T> setExtraTags(String type, SynchronizeTagsS2CPacket packet, Registry<T> registry, TagRegistry<T> tagRegistry, List<Identifier> requiredTags, Consumer<TagRegistry<T>> tagsAdder) {
-        TagGroup<T> group = TagGroup.method_33155(packet.getTagManager().get(registry.getKey()), registry);
-        group.getTags().forEach((id, tag) -> tagRegistry.put(id, new HashSet<>(tag.values())));
+        if (packet.getTagManager().containsKey(registry.getKey())) {
+            TagGroup<T> group = TagGroup.method_33155(packet.getTagManager().get(registry.getKey()), registry);
+            group.getTags().forEach((id, tag) -> tagRegistry.put(id, new HashSet<>(tag.values())));
+        }
         tagsAdder.accept(tagRegistry);
         BiMap<Identifier, Tag<T>> tagBiMap = HashBiMap.create(tagRegistry.size());
         tagRegistry.forEach((id, set) -> tagBiMap.put(id, Tag.of(set)));

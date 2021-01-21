@@ -6,11 +6,9 @@ import com.mojang.serialization.Codec;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
-import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
-import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
-import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.EntityAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.ShulkerEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
@@ -18,6 +16,8 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.mob.ShulkerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.s2c.play.*;
@@ -27,18 +27,23 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.*;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.event.GameEvent;
 
+import java.util.BitSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
 public class Protocol_1_16_4 extends Protocol_1_17 {
     private static final int BIOME_ARRAY_LENGTH = 1024;
+
+    private static final TrackedData<Optional<BlockPos>> OLD_SHULKER_ATTACHED_POSITION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.OPTIONAL_BLOCK_POS);
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
@@ -69,8 +74,8 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
             buf.disablePassthroughMode();
             boolean fullChunk = buf.readBoolean();
             PendingFullChunkData.setPendingFullChunk(new ChunkPos(x, z), fullChunk);
+            buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {buf.readVarInt()})); // vertical strip bitmask
             buf.enablePassthroughMode();
-            buf.readVarInt(); // vertical strip bitmask
             buf.readCompoundTag(); // heightmaps
             if (fullChunk) {
                 buf.readIntArray(BiomeArray.DEFAULT_LENGTH);
@@ -88,11 +93,11 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
             buf.readBoolean(); // trust edges
             buf.disablePassthroughMode();
             int skyLightMask = buf.readVarInt();
-            buf.pendingRead(long[].class, new long[] {skyLightMask}); // sky light mask
+            buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {skyLightMask})); // sky light mask
             int blockLightMask = buf.readVarInt();
-            buf.pendingRead(long[].class, new long[] {blockLightMask}); // block light mask
-            buf.pendingRead(long[].class, new long[] {buf.readVarInt()}); // filled sky light mask
-            buf.pendingRead(long[].class, new long[] {buf.readVarInt()}); // filled block light mask
+            buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {blockLightMask})); // block light mask
+            buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {buf.readVarInt()})); // filled sky light mask
+            buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {buf.readVarInt()})); // filled block light mask
             int numSkyUpdates = Integer.bitCount(skyLightMask);
             buf.pendingRead(VarInt.class, new VarInt(numSkyUpdates));
             buf.enablePassthroughMode();
@@ -238,6 +243,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Blocks.LIGHTNING_ROD);
         registry.unregister(Blocks.POINTED_DRIPSTONE);
         registry.unregister(Blocks.DRIPSTONE_BLOCK);
+        registry.unregister(Blocks.GLOW_LICHEN);
     }
 
     private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
@@ -250,10 +256,14 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Items.SPYGLASS);
         registry.unregister(Items.POWDER_SNOW_BUCKET);
         registry.unregister(Items.AXOLOTL_BUCKET);
+        registry.unregister(Items.GLOW_ITEM_FRAME);
+        registry.unregister(Items.GLOW_INK_SAC);
     }
 
     private void mutateEntityRegistry(ISimpleRegistry<EntityType<?>> registry) {
         registry.unregister(EntityType.AXOLOTL);
+        registry.unregister(EntityType.GLOW_ITEM_FRAME);
+        registry.unregister(EntityType.GLOW_SQUID);
     }
 
     private void mutateBlockEntityRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
@@ -269,6 +279,8 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(ParticleTypes.FALLING_DRIPSTONE_WATER);
         registry.unregister(ParticleTypes.DUST_COLOR_TRANSITION);
         registry.unregister(ParticleTypes.VIBRATION);
+        registry.unregister(ParticleTypes.GLOW_SQUID_INK);
+        registry.unregister(ParticleTypes.GLOW);
     }
 
     private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
@@ -354,6 +366,13 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(SoundEvents.ENTITY_AXOLOTL_SWIM);
         registry.unregister(SoundEvents.ITEM_BUCKET_EMPTY_AXOLOTL);
         registry.unregister(SoundEvents.ITEM_BUCKET_FILL_AXOLOTL);
+        registry.unregister(SoundEvents.ITEM_DYE_USE);
+        registry.unregister(SoundEvents.ITEM_GLOW_INK_SAC_USE);
+        registry.unregister(SoundEvents.ENTITY_GLOW_SQUID_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_GLOW_SQUID_DEATH);
+        registry.unregister(SoundEvents.ENTITY_GLOW_SQUID_HURT);
+        registry.unregister(SoundEvents.ENTITY_GLOW_SQUID_SQUIRT);
+        registry.unregister(SoundEvents.ITEM_INK_SAC_USE);
     }
 
     @Override
@@ -370,6 +389,9 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
     @Override
     public boolean acceptBlockState(BlockState state) {
         if (state.getBlock() instanceof AbstractRailBlock && state.get(AbstractRailBlock.WATERLOGGED)) {
+            return false;
+        }
+        if (state.getBlock() instanceof AbstractSignBlock && state.get(SignBlock.field_28426)) {
             return false;
         }
         return super.acceptBlockState(state);
@@ -402,7 +424,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
     @Override
     public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
         tags.add(EntityTypeTags.POWDER_SNOW_WALKABLE_MOBS, EntityType.RABBIT, EntityType.ENDERMITE, EntityType.SILVERFISH);
-        tags.add(EntityTypeTags.AXOLOTL_ALWAYS_HOSTILES, EntityType.TROPICAL_FISH, EntityType.PUFFERFISH, EntityType.SALMON, EntityType.COD, EntityType.SQUID);
+        tags.add(EntityTypeTags.AXOLOTL_ALWAYS_HOSTILES, EntityType.TROPICAL_FISH, EntityType.PUFFERFISH, EntityType.SALMON, EntityType.COD, EntityType.SQUID, EntityType.GLOW_SQUID);
         tags.add(EntityTypeTags.AXOLOTL_TEMPTED_HOSTILES, EntityType.DROWNED, EntityType.GUARDIAN);
         super.addExtraEntityTags(tags);
     }
@@ -418,6 +440,9 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == Entity.class && data == EntityAccessor.getFrozenTicks()) {
             return false;
+        }
+        if (clazz == ShulkerEntity.class && data == ShulkerEntityAccessor.getPeekAmount()) {
+            DataTrackerManager.registerOldTrackedData(ShulkerEntity.class, OLD_SHULKER_ATTACHED_POSITION, Optional.empty(), (entity, pos) -> {});
         }
         return super.acceptEntityData(clazz, data);
     }

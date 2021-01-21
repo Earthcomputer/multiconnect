@@ -10,6 +10,8 @@ import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.ChunkSection;
 
+import java.util.BitSet;
+
 public final class ChunkData implements IBlockConnectionsBlockView {
     private final ChunkSection[] sections;
     private final int minY;
@@ -24,10 +26,10 @@ public final class ChunkData implements IBlockConnectionsBlockView {
     public static ChunkData read(int minY, int maxY, PacketByteBuf buf) {
         ChunkData data = new ChunkData(new ChunkSection[(maxY + 1 - minY + 15) >> 4], minY, maxY);
         ChunkDataS2CPacket packet = ChunkDataTranslator.current().getPacket();
-        int verticalStripBitmask = packet.getVerticalStripBitmask();
+        BitSet verticalStripBitmask = packet.getVerticalStripBitmask();
 
         for (int sectionY = 0; sectionY < data.sections.length; sectionY++) {
-            if ((verticalStripBitmask & (1 << sectionY)) != 0) {
+            if (verticalStripBitmask.get(sectionY)) {
                 ChunkSection section = new ChunkSection(sectionY);
                 section.fromPacket(buf);
                 data.sections[sectionY] = section;

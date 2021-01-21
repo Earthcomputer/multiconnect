@@ -7,7 +7,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.command.CommandSource;
-import net.minecraft.command.argument.ParticleArgumentType;
+import net.minecraft.command.argument.ParticleEffectArgumentType;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -16,14 +16,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
-public class ParticleArgumentType_1_12_2 implements ArgumentType<ParticleType<?>> {
+public class ParticleEffectArgumentType_1_12_2 implements ArgumentType<ParticleType<?>> {
 
     private static final Collection<String> EXAMPLES = Arrays.asList("foo", "foo:bar");
 
-    private ParticleArgumentType_1_12_2() {}
+    private ParticleEffectArgumentType_1_12_2() {}
 
-    public static ParticleArgumentType_1_12_2 particle() {
-        return new ParticleArgumentType_1_12_2();
+    public static ParticleEffectArgumentType_1_12_2 particle() {
+        return new ParticleEffectArgumentType_1_12_2();
     }
 
     @Override
@@ -32,7 +32,7 @@ public class ParticleArgumentType_1_12_2 implements ArgumentType<ParticleType<?>
         Identifier id = Identifier.fromCommandInput(reader);
         if (!Registry.PARTICLE_TYPE.containsId(id)) {
             reader.setCursor(start);
-            throw ParticleArgumentType.UNKNOWN_PARTICLE_EXCEPTION.createWithContext(reader, id);
+            throw ParticleEffectArgumentType.UNKNOWN_PARTICLE_EXCEPTION.createWithContext(reader, id);
         }
         return Registry.PARTICLE_TYPE.get(id);
     }

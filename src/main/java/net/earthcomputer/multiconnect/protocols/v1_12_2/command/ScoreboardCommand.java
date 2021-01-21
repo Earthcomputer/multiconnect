@@ -19,7 +19,7 @@ import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EnumArgumentType.*;
 import static net.minecraft.command.argument.ColorArgumentType.*;
 import static net.minecraft.command.argument.NbtCompoundTagArgumentType.*;
-import static net.minecraft.command.argument.ObjectiveCriteriaArgumentType.*;
+import static net.minecraft.command.argument.ScoreboardCriterionArgumentType.*;
 
 public class ScoreboardCommand {
 
@@ -30,7 +30,7 @@ public class ScoreboardCommand {
                     .executes(ctx -> 0))
                 .then(literal("add")
                     .then(argument("name", word())
-                        .then(argument("criteria", objectiveCriteria())
+                        .then(argument("criteria", scoreboardCriterion())
                             .executes(ctx -> 0)
                             .then(argument("displayName", greedyString())
                                 .executes(ctx -> 0)))))

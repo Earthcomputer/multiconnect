@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_13_2;
 import com.google.gson.JsonParseException;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.*;
@@ -124,9 +125,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
             byte[][] blockLight = new byte[16][];
             byte[][] skyLight = new byte[16][];
-            int verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
+            BitSet verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
-                if ((verticalStripBitmask & (1 << sectionY)) != 0) {
+                if (verticalStripBitmask.get(sectionY)) {
                     buf.pendingRead(Short.class, (short)0);
                     buf.enablePassthroughMode();
                     Protocol_1_15_2.skipPalettedContainer(buf);
@@ -390,10 +391,12 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         lightPacketAccessor.setChunkX(packet.getX());
         lightPacketAccessor.setChunkZ(packet.getZ());
 
-        int blockLightMask = packet.getVerticalStripBitmask() << 1;
-        int skyLightMask = translator.getDimension().hasSkyLight() ? blockLightMask : 0;
-        lightPacketAccessor.setBlockLightMask(BitSet.valueOf(new long[] {blockLightMask}));
-        lightPacketAccessor.setSkyLightMask(BitSet.valueOf(new long[] {skyLightMask}));
+        BitSet blockLightMask = new BitSet();
+        blockLightMask.or(packet.getVerticalStripBitmask());
+        Utils.leftShift(blockLightMask, 1);
+        BitSet skyLightMask = translator.getDimension().hasSkyLight() ? blockLightMask : new BitSet();
+        lightPacketAccessor.setBlockLightMask(blockLightMask);
+        lightPacketAccessor.setSkyLightMask(skyLightMask);
         lightPacketAccessor.setBlockLightUpdates(new ArrayList<>());
         lightPacketAccessor.setSkyLightUpdates(new ArrayList<>());
         lightPacketAccessor.setTrustEdges(true);

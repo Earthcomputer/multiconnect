@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.impl;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.serialization.Codec;
@@ -43,13 +42,9 @@ import net.minecraft.world.dimension.DimensionType;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -317,5 +312,27 @@ public class Utils {
         }
 
         return versionDropDown;
+    }
+
+    public static void leftShift(BitSet bitSet, int n) {
+        if (n < 0) {
+            rightShift(bitSet, -n);
+        } else if (n > 0) {
+            for (int i = bitSet.length(); (i = bitSet.previousSetBit(i - 1)) != -1;) {
+                bitSet.set(i + n);
+                bitSet.clear(i);
+            }
+        }
+    }
+
+    public static void rightShift(BitSet bitSet, int n) {
+        if (n < 0) {
+            leftShift(bitSet, -n);
+        } else if (n > 0) {
+            for (int i = bitSet.nextSetBit(n); i != -1; i = bitSet.nextSetBit(i + 1)) {
+                bitSet.set(i - n);
+                bitSet.clear(i);
+            }
+        }
     }
 }

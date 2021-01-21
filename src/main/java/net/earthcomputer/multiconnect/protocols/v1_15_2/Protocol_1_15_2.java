@@ -68,10 +68,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.dimension.DimensionType;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -82,10 +79,10 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            int verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
+            BitSet verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
-                if ((verticalStripBitmask & (1 << sectionY)) != 0) {
+                if (verticalStripBitmask.get(sectionY)) {
                     buf.readShort(); // non-empty block count
                     int paletteSize = ChunkData.skipPalette(buf);
                     // translate from packed chunk data to aligned

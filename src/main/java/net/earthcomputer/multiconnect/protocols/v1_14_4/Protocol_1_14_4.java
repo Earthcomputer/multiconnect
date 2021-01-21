@@ -37,6 +37,7 @@ import net.minecraft.tag.ItemTags;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 
+import java.util.BitSet;
 import java.util.List;
 
 public class Protocol_1_14_4 extends Protocol_1_15 {
@@ -48,10 +49,10 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             ChunkDataS2CPacket packet = ChunkDataTranslator.current().getPacket();
             if (!ChunkDataTranslator.current().isFullChunk())
                 return;
-            int verticalStripBitmask = packet.getVerticalStripBitmask();
+            BitSet verticalStripBitmask = packet.getVerticalStripBitmask();
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
-                if ((verticalStripBitmask & (1 << sectionY)) != 0) {
+                if (verticalStripBitmask.get(sectionY)) {
                     Protocol_1_15_2.skipChunkSection(buf);
                 }
             }
@@ -72,15 +73,15 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
         });
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            buf.readInt();
-            buf.readInt();
+            buf.readInt(); // x
+            buf.readInt(); // z
             boolean isFullChunk = buf.readBoolean();
             if (!isFullChunk) {
                 buf.disablePassthroughMode();
                 buf.applyPendingReads();
                 return;
             }
-            buf.readVarInt();
+            buf.readVarInt(); // vertical strip bitmask
             buf.readCompoundTag(); // heightmaps
             buf.disablePassthroughMode();
             for (int i = 0; i < 1024; i++)

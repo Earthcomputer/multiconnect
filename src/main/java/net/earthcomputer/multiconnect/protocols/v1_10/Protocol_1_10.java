@@ -534,7 +534,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
         destEntity.updateTrackedPosition(entity.getTrackedPosition());
 
         // replace entity in world and exchange entity id
-        int entityId = entity.getEntityId();
+        int entityId = entity.getId();
         world.removeEntity(entityId, Entity.RemovalReason.DISCARDED);
         destEntity.setEntityId(entityId);
         world.addEntity(entityId, destEntity);

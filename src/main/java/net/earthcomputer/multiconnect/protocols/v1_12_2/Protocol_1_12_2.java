@@ -124,10 +124,10 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            int verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
+            BitSet verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
-                if ((verticalStripBitmask & (1 << sectionY)) != 0) {
+                if (verticalStripBitmask.get(sectionY)) {
                     int paletteSize = ChunkData.skipPalette(buf);
                     if (paletteSize > 8) {
                         buf.disablePassthroughMode();

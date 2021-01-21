@@ -5,7 +5,8 @@
   "mixins": [
     "DimensionTypeAccessor",
     "EntityAccessor",
-    "MapStateAccessor"
+    "MapStateAccessor",
+    "ShulkerEntityAccessor"
   ],
   "client": [
   ],
