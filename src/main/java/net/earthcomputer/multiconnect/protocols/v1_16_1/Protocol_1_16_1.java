@@ -10,6 +10,7 @@ import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.AbstractPiglinEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.PiglinEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_2.Protocol_1_16_2;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.Protocol_1_16_4;
 import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
@@ -103,7 +104,7 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
             buf.readVarInt(); // vertical strip bitmask
             buf.readCompoundTag(); // heightmaps
             buf.disablePassthroughMode();
-            int[] biomes = new int[BiomeArray.DEFAULT_LENGTH];
+            int[] biomes = new int[Protocol_1_16_4.BIOME_ARRAY_LENGTH];
             for (int i = 0; i < biomes.length; i++) {
                 biomes[i] = buf.readInt();
             }

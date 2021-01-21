@@ -41,7 +41,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 public class Protocol_1_16_4 extends Protocol_1_17 {
-    private static final int BIOME_ARRAY_LENGTH = 1024;
+    public static final int BIOME_ARRAY_LENGTH = 1024;
 
     private static final TrackedData<Optional<BlockPos>> OLD_SHULKER_ATTACHED_POSITION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.OPTIONAL_BLOCK_POS);
 
