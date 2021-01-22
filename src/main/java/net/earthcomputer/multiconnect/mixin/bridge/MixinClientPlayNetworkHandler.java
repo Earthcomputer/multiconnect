@@ -148,12 +148,12 @@ public class MixinClientPlayNetworkHandler {
             List<Identifier> tagIds = tagWrappers.stream().map(RequiredTagList.TagWrapper::getId).collect(Collectors.toList());
             requiredTags.put(requiredTagList.getRegistryKey(), tagIds);
         });
-        TagRegistry<Block> blockTagRegistry = new TagRegistry<>();
-        TagGroup<Block> blockTags = setExtraTags("block", packet, Registry.BLOCK, blockTagRegistry, requiredTags.get(Registry.BLOCK_KEY), ConnectionInfo.protocol::addExtraBlockTags);
-        TagGroup<Item> itemTags = setExtraTags("item", packet, Registry.ITEM, new TagRegistry<>(), requiredTags.get(Registry.ITEM_KEY), itemTagRegistry -> ConnectionInfo.protocol.addExtraItemTags(itemTagRegistry, blockTagRegistry));
-        TagGroup<Fluid> fluidTags = setExtraTags("fluid", packet, Registry.FLUID, new TagRegistry<>(), requiredTags.get(Registry.FLUID_KEY), ConnectionInfo.protocol::addExtraFluidTags);
-        TagGroup<EntityType<?>> entityTypeTags = setExtraTags("entity type", packet, Registry.ENTITY_TYPE, new TagRegistry<>(), requiredTags.get(Registry.ENTITY_TYPE_KEY), ConnectionInfo.protocol::addExtraEntityTags);
-        TagGroup<GameEvent> gameEventTags = setExtraTags("game event", packet, Registry.GAME_EVENT, new TagRegistry<>(), requiredTags.get(Registry.GAME_EVENT_KEY), ConnectionInfo.protocol::addExtraGameEventTags);
+        TagRegistry<Block> blockTagRegistry = new TagRegistry<>(Registry.BLOCK);
+        TagGroup<Block> blockTags = setExtraTags("block", packet, blockTagRegistry, requiredTags.get(Registry.BLOCK_KEY), ConnectionInfo.protocol::addExtraBlockTags);
+        TagGroup<Item> itemTags = setExtraTags("item", packet, new TagRegistry<>(Registry.ITEM), requiredTags.get(Registry.ITEM_KEY), itemTagRegistry -> ConnectionInfo.protocol.addExtraItemTags(itemTagRegistry, blockTagRegistry));
+        TagGroup<Fluid> fluidTags = setExtraTags("fluid", packet, new TagRegistry<>(Registry.FLUID), requiredTags.get(Registry.FLUID_KEY), ConnectionInfo.protocol::addExtraFluidTags);
+        TagGroup<EntityType<?>> entityTypeTags = setExtraTags("entity type", packet, new TagRegistry<>(Registry.ENTITY_TYPE), requiredTags.get(Registry.ENTITY_TYPE_KEY), ConnectionInfo.protocol::addExtraEntityTags);
+        TagGroup<GameEvent> gameEventTags = setExtraTags("game event", packet, new TagRegistry<>(Registry.GAME_EVENT), requiredTags.get(Registry.GAME_EVENT_KEY), ConnectionInfo.protocol::addExtraGameEventTags);
         packet.getTagManager().put(Registry.BLOCK_KEY, blockTags.toPacket(Registry.BLOCK));
         packet.getTagManager().put(Registry.ITEM_KEY, itemTags.toPacket(Registry.ITEM));
         packet.getTagManager().put(Registry.FLUID_KEY, fluidTags.toPacket(Registry.FLUID));
@@ -162,7 +162,8 @@ public class MixinClientPlayNetworkHandler {
     }
 
     @Unique
-    private static <T> TagGroup<T> setExtraTags(String type, SynchronizeTagsS2CPacket packet, Registry<T> registry, TagRegistry<T> tagRegistry, List<Identifier> requiredTags, Consumer<TagRegistry<T>> tagsAdder) {
+    private static <T> TagGroup<T> setExtraTags(String type, SynchronizeTagsS2CPacket packet, TagRegistry<T> tagRegistry, List<Identifier> requiredTags, Consumer<TagRegistry<T>> tagsAdder) {
+        Registry<T> registry = tagRegistry.getRegistry();
         if (packet.getTagManager().containsKey(registry.getKey())) {
             TagGroup<T> group = TagGroup.method_33155(packet.getTagManager().get(registry.getKey()), registry);
             group.getTags().forEach((id, tag) -> tagRegistry.put(id, new HashSet<>(tag.values())));
