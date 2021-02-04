@@ -98,9 +98,9 @@ public class DefaultRegistries<T> {
         Item.BLOCK_ITEMS.putAll(DEFAULT_BLOCK_ITEMS);
         SpawnEggItemAccessor.getSpawnEggs().clear();
         SpawnEggItemAccessor.getSpawnEggs().putAll(DEFAULT_SPAWN_EGG_ITEMS);
-        TrackedDataHandlerRegistryAccessor.getHandlers().clear();
+        TrackedDataHandlerRegistryAccessor.getDataHandlers().clear();
         for (TrackedDataHandler<?> handler : DEFAULT_TRACKED_DATA_HANDLERS)
-            TrackedDataHandlerRegistryAccessor.getHandlers().put(handler, DEFAULT_TRACKED_DATA_HANDLERS.getRawId(handler));
+            TrackedDataHandlerRegistryAccessor.getDataHandlers().put(handler, DEFAULT_TRACKED_DATA_HANDLERS.getRawId(handler));
     }
 
     public static void initialize() {
@@ -124,8 +124,8 @@ public class DefaultRegistries<T> {
 
         DEFAULT_BLOCK_ITEMS.putAll(Item.BLOCK_ITEMS);
         DEFAULT_SPAWN_EGG_ITEMS.putAll(SpawnEggItemAccessor.getSpawnEggs());
-        for (TrackedDataHandler<?> handler : TrackedDataHandlerRegistryAccessor.getHandlers())
-            DEFAULT_TRACKED_DATA_HANDLERS.put(handler, TrackedDataHandlerRegistryAccessor.getHandlers().getRawId(handler));
+        for (TrackedDataHandler<?> handler : TrackedDataHandlerRegistryAccessor.getDataHandlers())
+            DEFAULT_TRACKED_DATA_HANDLERS.put(handler, TrackedDataHandlerRegistryAccessor.getDataHandlers().getRawId(handler));
 
         //noinspection unchecked
         ((ISimpleRegistry<Block>) Registry.BLOCK).addRegisterListener((block, inPlace) -> {

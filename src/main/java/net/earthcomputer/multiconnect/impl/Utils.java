@@ -109,7 +109,7 @@ public class Utils {
     }
 
     public static void removeTrackedDataHandler(TrackedDataHandler<?> handler) {
-        Int2ObjectBiMap<TrackedDataHandler<?>> biMap = TrackedDataHandlerRegistryAccessor.getHandlers();
+        Int2ObjectBiMap<TrackedDataHandler<?>> biMap = TrackedDataHandlerRegistryAccessor.getDataHandlers();
         //noinspection unchecked
         IInt2ObjectBiMap<TrackedDataHandler<?>> iBiMap = (IInt2ObjectBiMap<TrackedDataHandler<?>>) biMap;
         int id = TrackedDataHandlerRegistry.getId(handler);
