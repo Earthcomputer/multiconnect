@@ -19,7 +19,7 @@ public class MapUpdateS2CPacket_1_16_4 implements Packet<ClientPlayPacketListene
     private boolean showIcons;
     private boolean locked;
     private MapIcon[] icons;
-    private MapState.class_5637 data;
+    private MapState.UpdateData data;
 
     @Override
     public void read(PacketByteBuf buf) {
@@ -39,7 +39,7 @@ public class MapUpdateS2CPacket_1_16_4 implements Packet<ClientPlayPacketListene
             int startX = buf.readUnsignedByte();
             int startY = buf.readUnsignedByte();
             byte[] mapColors = buf.readByteArray();
-            data = new MapState.class_5637(startX, startY, width, height, mapColors);
+            data = new MapState.UpdateData(startX, startY, width, height, mapColors);
         }
     }
 

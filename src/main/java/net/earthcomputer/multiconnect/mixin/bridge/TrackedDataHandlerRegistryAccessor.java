@@ -10,8 +10,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(TrackedDataHandlerRegistry.class)
 public interface TrackedDataHandlerRegistryAccessor {
 
-    @Accessor("field_13328")
-    static Int2ObjectBiMap<TrackedDataHandler<?>> getHandlers() {
+    @Accessor("DATA_HANDLERS")
+    static Int2ObjectBiMap<TrackedDataHandler<?>> getDataHandlers() {
         return MixinHelper.fakeInstance();
     }
 

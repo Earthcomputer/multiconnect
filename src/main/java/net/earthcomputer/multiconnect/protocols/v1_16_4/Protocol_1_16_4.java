@@ -124,6 +124,19 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
             buf.pendingRead(VarInt.class, new VarInt(0)); // step count
             buf.applyPendingReads();
         });
+        ProtocolRegistry.registerInboundTranslator(PlayerPositionLookS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readDouble(); // x
+            buf.readDouble(); // y
+            buf.readDouble(); // z
+            buf.readFloat(); // yaw
+            buf.readFloat(); // pitch
+            buf.readUnsignedByte(); // flags
+            buf.readVarInt(); // teleport id
+            buf.disablePassthroughMode();
+            buf.pendingRead(Boolean.class, false);
+            buf.applyPendingReads();
+        });
         ProtocolRegistry.registerInboundTranslator(ResourcePackSendS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readString(32767); // url
@@ -212,38 +225,52 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Blocks.POWDER_SNOW);
         registry.unregister(Blocks.SCULK_SENSOR);
         registry.unregister(Blocks.WEATHERED_COPPER_BLOCK);
-        registry.unregister(Blocks.SEMI_WEATHERED_COPPER_BLOCK);
-        registry.unregister(Blocks.LIGHTLY_WEATHERED_COPPER_BLOCK);
+        registry.unregister(Blocks.OXIDIZED_COPPER_BLOCK);
+        registry.unregister(Blocks.EXPOSED_COPPER_BLOCK);
         registry.unregister(Blocks.COPPER_BLOCK);
         registry.unregister(Blocks.COPPER_ORE);
         registry.unregister(Blocks.WEATHERED_CUT_COPPER);
-        registry.unregister(Blocks.SEMI_WEATHERED_CUT_COPPER);
-        registry.unregister(Blocks.LIGHTLY_WEATHERED_CUT_COPPER);
+        registry.unregister(Blocks.OXIDIZED_CUT_COPPER);
+        registry.unregister(Blocks.EXPOSED_CUT_COPPER);
         registry.unregister(Blocks.CUT_COPPER);
         registry.unregister(Blocks.WEATHERED_CUT_COPPER_STAIRS);
-        registry.unregister(Blocks.SEMI_WEATHERED_CUT_COPPER_STAIRS);
-        registry.unregister(Blocks.LIGHTLY_WEATHERED_CUT_COPPER_STAIRS);
+        registry.unregister(Blocks.OXIDIZED_CUT_COPPER_STAIRS);
+        registry.unregister(Blocks.EXPOSED_CUT_COPPER_STAIRS);
         registry.unregister(Blocks.CUT_COPPER_STAIRS);
         registry.unregister(Blocks.WEATHERED_CUT_COPPER_SLAB);
-        registry.unregister(Blocks.SEMI_WEATHERED_CUT_COPPER_SLAB);
-        registry.unregister(Blocks.LIGHTLY_WEATHERED_CUT_COPPER_SLAB);
+        registry.unregister(Blocks.OXIDIZED_CUT_COPPER_SLAB);
+        registry.unregister(Blocks.EXPOSED_CUT_COPPER_SLAB);
         registry.unregister(Blocks.CUT_COPPER_SLAB);
         registry.unregister(Blocks.WAXED_COPPER);
-        registry.unregister(Blocks.WAXED_SEMI_WEATHERED_COPPER);
-        registry.unregister(Blocks.WAXED_LIGHTLY_WEATHERED_COPPER);
+        registry.unregister(Blocks.WAXED_WEATHERED_COPPER);
+        registry.unregister(Blocks.WAXED_EXPOSED_COPPER);
         registry.unregister(Blocks.WAXED_CUT_COPPER);
-        registry.unregister(Blocks.WAXED_SEMI_WEATHERED_CUT_COPPER);
-        registry.unregister(Blocks.WAXED_LIGHTLY_WEATHERED_CUT_COPPER);
+        registry.unregister(Blocks.WAXED_WEATHERED_CUT_COPPER);
+        registry.unregister(Blocks.WAXED_EXPOSED_CUT_COPPER);
         registry.unregister(Blocks.WAXED_CUT_COPPER_STAIRS);
-        registry.unregister(Blocks.WAXED_SEMI_WEATHERED_CUT_COPPER_STAIRS);
-        registry.unregister(Blocks.WAXED_LIGHTLY_WEATHERED_CUT_COPPER_STAIRS);
+        registry.unregister(Blocks.WAXED_WEATHERED_CUT_COPPER_STAIRS);
+        registry.unregister(Blocks.WAXED_EXPOSED_CUT_COPPER_STAIRS);
         registry.unregister(Blocks.WAXED_CUT_COPPER_SLAB);
-        registry.unregister(Blocks.WAXED_SEMI_WEATHERED_CUT_COPPER_SLAB);
-        registry.unregister(Blocks.WAXED_LIGHTLY_WEATHERED_CUT_COPPER_SLAB);
+        registry.unregister(Blocks.WAXED_WEATHERED_CUT_COPPER_SLAB);
+        registry.unregister(Blocks.WAXED_EXPOSED_CUT_COPPER_SLAB);
         registry.unregister(Blocks.LIGHTNING_ROD);
         registry.unregister(Blocks.POINTED_DRIPSTONE);
         registry.unregister(Blocks.DRIPSTONE_BLOCK);
         registry.unregister(Blocks.GLOW_LICHEN);
+        registry.unregister(Blocks.AZALEA_LEAVES);
+        registry.unregister(Blocks.AZALEA_LEAVES_FLOWERS);
+        registry.unregister(Blocks.CAVE_VINES_HEAD);
+        registry.unregister(Blocks.CAVE_VINES_BODY);
+        registry.unregister(Blocks.SPORE_BLOSSOM);
+        registry.unregister(Blocks.AZALEA);
+        registry.unregister(Blocks.FLOWERING_AZALEA);
+        registry.unregister(Blocks.MOSS_CARPET);
+        registry.unregister(Blocks.MOSS_BLOCK);
+        registry.unregister(Blocks.BIG_DRIPLEAF);
+        registry.unregister(Blocks.BIG_DRIPLEAF_STEM);
+        registry.unregister(Blocks.SMALL_DRIPLEAF);
+        registry.unregister(Blocks.ROOTED_DIRT);
+        registry.unregister(Blocks.HANGING_ROOTS);
     }
 
     private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
@@ -258,6 +285,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Items.AXOLOTL_BUCKET);
         registry.unregister(Items.GLOW_ITEM_FRAME);
         registry.unregister(Items.GLOW_INK_SAC);
+        registry.unregister(Items.GLOW_BERRIES);
     }
 
     private void mutateEntityRegistry(ISimpleRegistry<EntityType<?>> registry) {
@@ -281,6 +309,8 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(ParticleTypes.VIBRATION);
         registry.unregister(ParticleTypes.GLOW_SQUID_INK);
         registry.unregister(ParticleTypes.GLOW);
+        registry.unregister(ParticleTypes.FALLING_SPORE_BLOSSOM);
+        registry.unregister(ParticleTypes.SPORE_BLOSSOM_AIR);
     }
 
     private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
@@ -373,6 +403,69 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(SoundEvents.ENTITY_GLOW_SQUID_HURT);
         registry.unregister(SoundEvents.ENTITY_GLOW_SQUID_SQUIRT);
         registry.unregister(SoundEvents.ITEM_INK_SAC_USE);
+        registry.unregister(SoundEvents.BLOCK_AZALEA_BREAK);
+        registry.unregister(SoundEvents.BLOCK_AZALEA_FALL);
+        registry.unregister(SoundEvents.BLOCK_AZALEA_HIT);
+        registry.unregister(SoundEvents.BLOCK_AZALEA_PLACE);
+        registry.unregister(SoundEvents.BLOCK_AZALEA_STEP);
+        registry.unregister(SoundEvents.BLOCK_AZALEA_LEAVES_BREAK);
+        registry.unregister(SoundEvents.BLOCK_AZALEA_LEAVES_FALL);
+        registry.unregister(SoundEvents.BLOCK_AZALEA_LEAVES_HIT);
+        registry.unregister(SoundEvents.BLOCK_AZALEA_LEAVES_PLACE);
+        registry.unregister(SoundEvents.BLOCK_AZALEA_LEAVES_STEP);
+        registry.unregister(SoundEvents.BLOCK_BIG_DRIPLEAF_BREAK);
+        registry.unregister(SoundEvents.BLOCK_BIG_DRIPLEAF_FALL);
+        registry.unregister(SoundEvents.BLOCK_BIG_DRIPLEAF_HIT);
+        registry.unregister(SoundEvents.BLOCK_BIG_DRIPLEAF_PLACE);
+        registry.unregister(SoundEvents.BLOCK_BIG_DRIPLEAF_STEP);
+        registry.unregister(SoundEvents.BLOCK_CAVE_VINES_BREAK);
+        registry.unregister(SoundEvents.BLOCK_CAVE_VINES_FALL);
+        registry.unregister(SoundEvents.BLOCK_CAVE_VINES_HIT);
+        registry.unregister(SoundEvents.BLOCK_CAVE_VINES_PLACE);
+        registry.unregister(SoundEvents.BLOCK_CAVE_VINES_STEP);
+        registry.unregister(SoundEvents.BLOCK_CAVE_VINES_PICK_BERRIES);
+        registry.unregister(SoundEvents.BLOCK_BIG_DRIPLEAF_TILT_DOWN);
+        registry.unregister(SoundEvents.BLOCK_BIG_DRIPLEAF_TILT_UP);
+        registry.unregister(SoundEvents.BLOCK_FLOWERING_AZALEA_BREAK);
+        registry.unregister(SoundEvents.BLOCK_FLOWERING_AZALEA_FALL);
+        registry.unregister(SoundEvents.BLOCK_FLOWERING_AZALEA_HIT);
+        registry.unregister(SoundEvents.BLOCK_FLOWERING_AZALEA_PLACE);
+        registry.unregister(SoundEvents.BLOCK_FLOWERING_AZALEA_STEP);
+        registry.unregister(SoundEvents.BLOCK_HANGING_ROOTS_BREAK);
+        registry.unregister(SoundEvents.BLOCK_HANGING_ROOTS_FALL);
+        registry.unregister(SoundEvents.BLOCK_HANGING_ROOTS_HIT);
+        registry.unregister(SoundEvents.BLOCK_HANGING_ROOTS_PLACE);
+        registry.unregister(SoundEvents.BLOCK_HANGING_ROOTS_STEP);
+        registry.unregister(SoundEvents.BLOCK_MOSS_CARPET_BREAK);
+        registry.unregister(SoundEvents.BLOCK_MOSS_CARPET_FALL);
+        registry.unregister(SoundEvents.BLOCK_MOSS_CARPET_HIT);
+        registry.unregister(SoundEvents.BLOCK_MOSS_CARPET_PLACE);
+        registry.unregister(SoundEvents.BLOCK_MOSS_CARPET_STEP);
+        registry.unregister(SoundEvents.BLOCK_MOSS_BREAK);
+        registry.unregister(SoundEvents.BLOCK_MOSS_FALL);
+        registry.unregister(SoundEvents.BLOCK_MOSS_HIT);
+        registry.unregister(SoundEvents.BLOCK_MOSS_PLACE);
+        registry.unregister(SoundEvents.BLOCK_MOSS_STEP);
+        registry.unregister(SoundEvents.BLOCK_ROOTED_DIRT_BREAK);
+        registry.unregister(SoundEvents.BLOCK_ROOTED_DIRT_FALL);
+        registry.unregister(SoundEvents.BLOCK_ROOTED_DIRT_HIT);
+        registry.unregister(SoundEvents.BLOCK_ROOTED_DIRT_PLACE);
+        registry.unregister(SoundEvents.BLOCK_ROOTED_DIRT_STEP);
+        registry.unregister(SoundEvents.ENTITY_SKELETON_CONVERTED_TO_STRAY);
+        registry.unregister(SoundEvents.BLOCK_SMALL_DRIPLEAF_BREAK);
+        registry.unregister(SoundEvents.BLOCK_SMALL_DRIPLEAF_FALL);
+        registry.unregister(SoundEvents.BLOCK_SMALL_DRIPLEAF_HIT);
+        registry.unregister(SoundEvents.BLOCK_SMALL_DRIPLEAF_PLACE);
+        registry.unregister(SoundEvents.BLOCK_SMALL_DRIPLEAF_STEP);
+        registry.unregister(SoundEvents.BLOCK_SPORE_BLOSSOM_BREAK);
+        registry.unregister(SoundEvents.BLOCK_SPORE_BLOSSOM_FALL);
+        registry.unregister(SoundEvents.BLOCK_SPORE_BLOSSOM_HIT);
+        registry.unregister(SoundEvents.BLOCK_SPORE_BLOSSOM_PLACE);
+        registry.unregister(SoundEvents.BLOCK_SPORE_BLOSSOM_STEP);
+        registry.unregister(SoundEvents.BLOCK_VINE_BREAK);
+        registry.unregister(SoundEvents.BLOCK_VINE_FALL);
+        registry.unregister(SoundEvents.BLOCK_VINE_HIT);
+        registry.unregister(SoundEvents.BLOCK_VINE_PLACE);
     }
 
     @Override
@@ -391,7 +484,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         if (state.getBlock() instanceof AbstractRailBlock && state.get(AbstractRailBlock.WATERLOGGED)) {
             return false;
         }
-        if (state.getBlock() instanceof AbstractSignBlock && state.get(SignBlock.field_28426)) {
+        if (state.getBlock() instanceof AbstractSignBlock && state.get(SignBlock.LIT)) {
             return false;
         }
         return super.acceptBlockState(state);
@@ -407,6 +500,14 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         tags.addTag(BlockTags.DRIPSTONE_REPLACEABLE_BLOCKS, BlockTags.BASE_STONE_OVERWORLD);
         tags.add(BlockTags.DRIPSTONE_REPLACEABLE_BLOCKS, Blocks.DIRT);
         tags.addTag(BlockTags.OCCLUDES_VIBRATION_SIGNALS, BlockTags.WOOL);
+        tags.add(BlockTags.CAVE_VINES);
+        tags.addTag(BlockTags.LUSH_PLANTS_REPLACEABLE, BlockTags.BASE_STONE_OVERWORLD);
+        tags.addTag(BlockTags.LUSH_PLANTS_REPLACEABLE, BlockTags.CAVE_VINES);
+        tags.addTag(BlockTags.LUSH_PLANTS_REPLACEABLE, BlockTags.FLOWERS);
+        tags.add(BlockTags.LUSH_PLANTS_REPLACEABLE, Blocks.DIRT, Blocks.GRAVEL, Blocks.SAND, Blocks.GRASS, Blocks.TALL_GRASS, Blocks.VINE);
+        tags.addTag(BlockTags.AZALEA_LOG_REPLACEABLE, BlockTags.FLOWERS);
+        tags.addTag(BlockTags.AZALEA_LOG_REPLACEABLE, BlockTags.LEAVES);
+        tags.add(BlockTags.AZALEA_LOG_REPLACEABLE, Blocks.GRASS, Blocks.FERN, Blocks.SWEET_BERRY_BUSH);
         super.addExtraBlockTags(tags);
     }
 
@@ -418,6 +519,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         tags.add(ItemTags.FREEZE_IMMUNE_WEARABLES, Items.LEATHER_BOOTS, Items.LEATHER_LEGGINGS, Items.LEATHER_CHESTPLATE, Items.LEATHER_HELMET);
         tags.add(ItemTags.AXOLOTL_TEMPT_ITEMS, Items.TROPICAL_FISH, Items.TROPICAL_FISH_BUCKET);
         tags.addTag(ItemTags.OCCLUDES_VIBRATION_SIGNALS, ItemTags.WOOL);
+        tags.add(ItemTags.FOX_FOOD, Items.SWEET_BERRIES);
         super.addExtraItemTags(tags, blockTags);
     }
 
@@ -432,7 +534,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
     @Override
     public void addExtraGameEventTags(TagRegistry<GameEvent> tags) {
         tags.add(GameEventTags.VIBRATIONS);
-        tags.add(GameEventTags.IGNORE_VIBRATIONS_STEPPING_CAREFULLY);
+        tags.add(GameEventTags.IGNORE_VIBRATIONS_SNEAKING);
         super.addExtraGameEventTags(tags);
     }
 
