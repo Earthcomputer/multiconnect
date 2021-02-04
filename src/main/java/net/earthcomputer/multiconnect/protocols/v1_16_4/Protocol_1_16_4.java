@@ -224,9 +224,9 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Blocks.TINTED_GLASS);
         registry.unregister(Blocks.POWDER_SNOW);
         registry.unregister(Blocks.SCULK_SENSOR);
-        registry.unregister(Blocks.WEATHERED_COPPER_BLOCK);
-        registry.unregister(Blocks.OXIDIZED_COPPER_BLOCK);
-        registry.unregister(Blocks.EXPOSED_COPPER_BLOCK);
+        registry.unregister(Blocks.WEATHERED_COPPER);
+        registry.unregister(Blocks.OXIDIZED_COPPER);
+        registry.unregister(Blocks.EXPOSED_COPPER);
         registry.unregister(Blocks.COPPER_BLOCK);
         registry.unregister(Blocks.COPPER_ORE);
         registry.unregister(Blocks.WEATHERED_CUT_COPPER);
@@ -241,7 +241,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Blocks.OXIDIZED_CUT_COPPER_SLAB);
         registry.unregister(Blocks.EXPOSED_CUT_COPPER_SLAB);
         registry.unregister(Blocks.CUT_COPPER_SLAB);
-        registry.unregister(Blocks.WAXED_COPPER);
+        registry.unregister(Blocks.WAXED_COPPER_BLOCK);
         registry.unregister(Blocks.WAXED_WEATHERED_COPPER);
         registry.unregister(Blocks.WAXED_EXPOSED_COPPER);
         registry.unregister(Blocks.WAXED_CUT_COPPER);
