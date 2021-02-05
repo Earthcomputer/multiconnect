@@ -31,7 +31,7 @@ public abstract class MixinOtherClientPlayerEntity extends AbstractClientPlayerE
                 pose = EntityPose.SWIMMING;
             } else if (isUsingRiptide()) {
                 pose = EntityPose.SPIN_ATTACK;
-            } else if (isSneaking() && !abilities.flying) {
+            } else if (isSneaking() && !getAbilities().flying) {
                 pose = EntityPose.CROUCHING;
             } else {
                 pose = EntityPose.STANDING;

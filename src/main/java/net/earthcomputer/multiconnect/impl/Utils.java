@@ -15,6 +15,7 @@ import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.bridge.DynamicRegistryManagerImplAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.*;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.DimensionTypeAccessor;
 import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.SharedConstants;
@@ -41,10 +42,7 @@ import net.minecraft.world.dimension.DimensionType;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -195,11 +193,37 @@ public class Utils {
     }
 
     public static <T> void translateDynamicRegistries(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate) {
+        translateExperimentalCodec(buf, oldCodec, allowablePredicate, DynamicRegistryManager.Impl.CODEC, thing -> {
+            DynamicRegistryManager.Impl registryManager = DynamicRegistryManager.create();
+            //noinspection ConstantConditions
+            ((DynamicRegistryManagerImplAccessor) (Object) registryManager).setRegistries(ImmutableMap.of()); // dynamic registry mutator will fix this
+            return registryManager;
+        });
+    }
+
+    private static final Map<Identifier, DimensionType> DIMENSION_TYPES_BY_ID = ImmutableMap.of(
+            DimensionType.OVERWORLD_ID, DimensionTypeAccessor.getOverworld(),
+            DimensionType.THE_NETHER_ID, DimensionTypeAccessor.getTheNether(),
+            DimensionType.THE_END_ID, DimensionTypeAccessor.getTheEnd()
+    );
+
+    public static void translateDimensionType(TransformerByteBuf buf) {
+        translateExperimentalCodec(
+                buf,
+                Utils.singletonKeyCodec("effects", Identifier.CODEC),
+                DIMENSION_TYPES_BY_ID::containsKey,
+                DimensionType.REGISTRY_CODEC,
+                id -> () -> DIMENSION_TYPES_BY_ID.get(id)
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T, U> void translateExperimentalCodec(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate, Codec<U> thingCodec, Function<T, U> thingCreator) {
         // TODO: support actual translation when this format stops being experimental
         boolean[] hasDecoded = {false};
-        T oldRegistries;
+        T oldThing;
         try {
-            oldRegistries = buf.decode(oldCodec.xmap(val -> {
+            oldThing = buf.decode(oldCodec.xmap(val -> {
                 hasDecoded[0] = true;
                 return val;
             }, Function.identity()));
@@ -208,20 +232,19 @@ public class Utils {
         }
         if (!hasDecoded[0]) {
             // already valid
-            buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, (DynamicRegistryManager.Impl) oldRegistries));
+            buf.pendingRead(Codecked.class, new Codecked<>(thingCodec, (U) oldThing));
             return;
         }
-        if (!allowablePredicate.test(oldRegistries)) {
+        if (!allowablePredicate.test(oldThing)) {
             ClientConnection connection = buf.getConnection();
             if (connection != null) {
                 connection.disconnect(new TranslatableText("multiconnect.unsupportedExperimentalCodec"));
             }
             return;
         }
-        DynamicRegistryManager.Impl registries = DynamicRegistryManager.create();
-        //noinspection ConstantConditions
-        ((DynamicRegistryManagerImplAccessor) (Object) registries).setRegistries(ImmutableMap.of()); // dynamic registry mutator will fix this
-        buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, registries));
+
+        U thing = thingCreator.apply(oldThing);
+        buf.pendingRead(Codecked.class, new Codecked<>(thingCodec, thing));
     }
 
     /**
@@ -289,5 +312,27 @@ public class Utils {
         }
 
         return versionDropDown;
+    }
+
+    public static void leftShift(BitSet bitSet, int n) {
+        if (n < 0) {
+            rightShift(bitSet, -n);
+        } else if (n > 0) {
+            for (int i = bitSet.length(); (i = bitSet.previousSetBit(i - 1)) != -1;) {
+                bitSet.set(i + n);
+                bitSet.clear(i);
+            }
+        }
+    }
+
+    public static void rightShift(BitSet bitSet, int n) {
+        if (n < 0) {
+            leftShift(bitSet, -n);
+        } else if (n > 0) {
+            for (int i = bitSet.nextSetBit(n); i != -1; i = bitSet.nextSetBit(i + 1)) {
+                bitSet.set(i - n);
+                bitSet.clear(i);
+            }
+        }
     }
 }

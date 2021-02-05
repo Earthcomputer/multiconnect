@@ -1,11 +1,22 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
+import net.earthcomputer.multiconnect.api.MultiConnectAPI;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 
 import java.util.*;
 
 public class TagRegistry<T> extends HashMap<Identifier, Set<T>> {
+    private final Registry<T> registry;
+
+    public TagRegistry(Registry<T> registry) {
+        this.registry = registry;
+    }
+
+    public Registry<T> getRegistry() {
+        return registry;
+    }
 
     @SafeVarargs
     public final void add(Tag.Identified<T> tag, T... things) {
@@ -13,7 +24,12 @@ public class TagRegistry<T> extends HashMap<Identifier, Set<T>> {
     }
 
     public final void add(Tag.Identified<T> tag, Collection<T> things) {
-        computeIfAbsent(tag.getId(), k -> new HashSet<>()).addAll(things);
+        Set<T> values = computeIfAbsent(tag.getId(), k -> new HashSet<>());
+        for (T thing : things) {
+            if (MultiConnectAPI.instance().doesServerKnow(registry, thing)) {
+                values.add(thing);
+            }
+        }
     }
 
     public final void addTag(Tag.Identified<T> tag, Tag.Identified<T> otherTag) {

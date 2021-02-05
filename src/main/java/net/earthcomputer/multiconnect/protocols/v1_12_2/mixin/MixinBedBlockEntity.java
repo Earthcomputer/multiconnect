@@ -11,6 +11,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.DyeColor;
+import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -20,13 +21,13 @@ public abstract class MixinBedBlockEntity extends BlockEntity {
 
     @Shadow public abstract void setColor(DyeColor color);
 
-    public MixinBedBlockEntity(BlockEntityType<?> type) {
-        super(type);
+    public MixinBedBlockEntity(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState blockState) {
+        super(blockEntityType, blockPos, blockState);
     }
 
     @Override
-    public void fromTag(BlockState blockState, CompoundTag tag) {
-        super.fromTag(blockState, tag);
+    public void fromTag(CompoundTag tag) {
+        super.fromTag(tag);
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             if (tag.contains("color"))
                 setBedColor(tag.getInt("color"));
@@ -38,7 +39,7 @@ public abstract class MixinBedBlockEntity extends BlockEntity {
         setColor(DyeColor.byId(color));
 
         BlockState state = getCachedState();
-        if (!getType().supports(state.getBlock()))
+        if (!getType().supports(state))
             return;
 
         if (color < 0 || color > 15)

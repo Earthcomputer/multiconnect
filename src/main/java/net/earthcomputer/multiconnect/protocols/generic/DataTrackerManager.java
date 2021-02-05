@@ -15,7 +15,6 @@ import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.network.PacketByteBuf;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
@@ -197,12 +196,7 @@ public class DataTrackerManager {
 
             return entries;
         } else {
-            try {
-                return DataTracker.deserializePacket(buf);
-            } catch (IOException e) {
-                // I don't even know why it's declared to throw an IOException
-                throw new AssertionError(e);
-            }
+            return DataTracker.deserializePacket(buf);
         }
     }
 

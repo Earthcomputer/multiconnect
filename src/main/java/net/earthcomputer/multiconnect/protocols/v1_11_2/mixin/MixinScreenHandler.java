@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.util.collection.DefaultedList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -17,8 +18,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.List;
-
 @Mixin(ScreenHandler.class)
 public abstract class MixinScreenHandler implements IScreenHandler {
 
@@ -26,9 +25,9 @@ public abstract class MixinScreenHandler implements IScreenHandler {
 
     @Shadow public abstract ItemStack transferSlot(PlayerEntity player, int index);
 
-    @Shadow @Final public List<Slot> slots;
+    @Shadow @Final public DefaultedList<Slot> slots;
 
-    @Shadow protected abstract ItemStack method_30010(int i, int j, SlotActionType slotActionType, PlayerEntity playerEntity);
+    @Shadow protected abstract ItemStack removeStack(int i, int j, SlotActionType slotActionType, PlayerEntity playerEntity);
 
     @Unique private RecipeBookEmulator recipeBookEmulator = new RecipeBookEmulator((ScreenHandler) (Object) this);
 
@@ -42,7 +41,7 @@ public abstract class MixinScreenHandler implements IScreenHandler {
         return recipeBookEmulator;
     }
 
-    @Inject(method = "method_30010",
+    @Inject(method = "removeStack",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/ScreenHandler;transferSlot(Lnet/minecraft/entity/player/PlayerEntity;I)Lnet/minecraft/item/ItemStack;",
                     ordinal = 0,
                     shift = At.Shift.BEFORE), cancellable = true)
@@ -53,7 +52,7 @@ public abstract class MixinScreenHandler implements IScreenHandler {
             if (!itemstack6.isEmpty()) {
                 itemStack = itemstack6.copy();
                 if (this.slots.get(slotId).getStack().getItem() == itemstack6.getItem()) {
-                    this.method_30010(slotId, clickData, SlotActionType.QUICK_MOVE, playerEntity);
+                    this.removeStack(slotId, clickData, SlotActionType.QUICK_MOVE, playerEntity);
                 }
             }
             cir.setReturnValue(itemStack);

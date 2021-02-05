@@ -8,6 +8,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.DyeColor;
+import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -40,12 +41,12 @@ public class MixinBannerBlockEntity extends BlockEntity {
         WALL_BANNERS_BY_COLOR.put(DyeColor.BLACK, Blocks.BLACK_WALL_BANNER);
     }
 
-    public MixinBannerBlockEntity(BlockEntityType<?> type) {
-        super(type);
+    public MixinBannerBlockEntity(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState blockState) {
+        super(blockEntityType, blockPos, blockState);
     }
 
-    @Inject(method = "fromTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/BlockEntity;fromTag(Lnet/minecraft/block/BlockState;Lnet/minecraft/nbt/CompoundTag;)V", shift = At.Shift.AFTER))
-    private void readBase(BlockState blockState, CompoundTag tag, CallbackInfo ci) {
+    @Inject(method = "fromTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/BlockEntity;fromTag(Lnet/minecraft/nbt/CompoundTag;)V", shift = At.Shift.AFTER))
+    private void readBase(CompoundTag tag, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             setBaseColor(DyeColor.byId(tag.getInt("Base")));
         }
@@ -54,7 +55,7 @@ public class MixinBannerBlockEntity extends BlockEntity {
     @Unique
     private void setBaseColor(DyeColor color) {
         BlockState state = getCachedState();
-        if (!getType().supports(state.getBlock()))
+        if (!getType().supports(state))
             return;
 
         BlockState newState;

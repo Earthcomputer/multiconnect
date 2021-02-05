@@ -4,6 +4,7 @@ import net.minecraft.network.packet.s2c.play.LightUpdateS2CPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
+import java.util.BitSet;
 import java.util.List;
 
 @Mixin(LightUpdateS2CPacket.class)
@@ -16,10 +17,10 @@ public interface LightUpdatePacketAccessor {
     void setChunkZ(int chunkZ);
 
     @Accessor
-    void setSkyLightMask(int skylightMask);
+    void setSkyLightMask(BitSet skylightMask);
 
     @Accessor
-    void setBlockLightMask(int blocklightMask);
+    void setBlockLightMask(BitSet blocklightMask);
 
     @Accessor
     void setBlockLightUpdates(List<byte[]> blockLightUpdates);

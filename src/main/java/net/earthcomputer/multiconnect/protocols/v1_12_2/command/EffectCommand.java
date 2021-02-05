@@ -7,7 +7,7 @@ import static com.mojang.brigadier.arguments.BoolArgumentType.*;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EntityArgumentType_1_12_2.*;
-import static net.minecraft.command.argument.MobEffectArgumentType.*;
+import static net.minecraft.command.argument.StatusEffectArgumentType.*;
 
 public class EffectCommand {
 
@@ -16,7 +16,7 @@ public class EffectCommand {
             .then(argument("target", entities())
                 .then(literal("clear")
                     .executes(ctx -> 0))
-                .then(argument("effect", mobEffect())
+                .then(argument("effect", statusEffect())
                     .executes(ctx -> 0)
                     .then(argument("seconds", integer(0, 1000000))
                         .executes(ctx -> 0)

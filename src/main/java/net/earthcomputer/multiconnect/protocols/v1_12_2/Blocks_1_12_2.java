@@ -383,7 +383,7 @@ public class Blocks_1_12_2 {
         register(registry, PURPUR_SLAB, 205, "purpur_slab");
         register(registry, END_STONE_BRICKS, 206, "end_bricks");
         register(registry, BEETROOTS, 207, "beetroots");
-        register(registry, GRASS_PATH, 208, "grass_path");
+        register(registry, DIRT_PATH, 208, "grass_path");
         register(registry, END_GATEWAY, 209, "end_gateway");
         register(registry, REPEATING_COMMAND_BLOCK, 210, "repeating_command_block");
         register(registry, CHAIN_COMMAND_BLOCK, 211, "chain_command_block");

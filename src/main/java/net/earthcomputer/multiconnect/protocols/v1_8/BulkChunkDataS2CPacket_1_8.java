@@ -1,6 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_8;
 
 import net.earthcomputer.multiconnect.protocols.generic.IChunkDataS2CPacket;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.PendingFullChunkData;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.Protocol_1_16_4;
 import net.earthcomputer.multiconnect.protocols.v1_8.mixin.ChunkDataS2CAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.OffThreadException;
@@ -8,9 +10,10 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.world.biome.source.BiomeArray;
+import net.minecraft.util.math.ChunkPos;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 
 public class BulkChunkDataS2CPacket_1_8 implements Packet<ClientPlayPacketListener> {
     private Entry[] entries;
@@ -48,9 +51,9 @@ public class BulkChunkDataS2CPacket_1_8 implements Packet<ClientPlayPacketListen
 
             accessor.setChunkX(entry.x);
             accessor.setChunkZ(entry.z);
-            accessor.setIsFullChunk(true);
-            accessor.setVerticalStripBitmask(entry.verticalStripBitmask);
-            accessor.setBiomeArray(new int[BiomeArray.DEFAULT_LENGTH]);
+            PendingFullChunkData.setPendingFullChunk(new ChunkPos(entry.x, entry.z), true);
+            accessor.setVerticalStripBitmask(BitSet.valueOf(new long[] {entry.verticalStripBitmask}));
+            accessor.setBiomeArray(new int[Protocol_1_16_4.BIOME_ARRAY_LENGTH]);
             accessor.setHeightmaps(new CompoundTag());
             accessor.setBlockEntities(new ArrayList<>(0));
             iPacket.setData(entry.data);

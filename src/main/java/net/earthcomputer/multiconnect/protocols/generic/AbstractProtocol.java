@@ -21,6 +21,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.*;
+import net.minecraft.world.event.GameEvent;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -82,17 +83,17 @@ public abstract class AbstractProtocol implements IUtils {
     protected void recomputeBlockStates() {
         ((IIdList) Block.STATE_IDS).multiconnect_clear();
         for (Block block : Registry.BLOCK) {
-            addStates(block, Block.STATE_IDS::add);
+            Stream<BlockState> states = getStatesForBlock(block).filter(this::acceptBlockState);
+            Comparator<BlockState> order = getBlockStateOrder(block);
+            if (order != null) {
+                states = states.sorted(order);
+            }
+            states.forEach(Block.STATE_IDS::add);
         }
     }
 
-    protected void addStates(Block block, Consumer<BlockState> stateAdder) {
-        Stream<BlockState> states = block.getStateManager().getStates().stream().filter(this::acceptBlockState);
-        Comparator<BlockState> order = getBlockStateOrder(block);
-        if (order != null) {
-            states = states.sorted(order);
-        }
-        states.forEach(stateAdder);
+    protected Stream<BlockState> getStatesForBlock(Block block) {
+        return block.getStateManager().getStates().stream();
     }
 
     protected Comparator<BlockState> getBlockStateOrder(Block block) {
@@ -164,6 +165,9 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
+    }
+
+    public void addExtraGameEventTags(TagRegistry<GameEvent> tags) {
     }
 
     public BlockConnector getBlockConnector() {

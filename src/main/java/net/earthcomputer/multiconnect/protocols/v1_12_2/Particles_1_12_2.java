@@ -23,7 +23,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.RegistryKey;
-import org.lwjgl.opengl.GL11;
 
 import static net.minecraft.particle.ParticleTypes.*;
 
@@ -213,7 +212,7 @@ public class Particles_1_12_2 {
             textureManager.bindTexture(FOOTPRINT_TEXTURE);
             RenderSystem.enableBlend();
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
-            ((BufferBuilder) vc).begin(GL11.GL_QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+            ((BufferBuilder) vc).begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
             vc.vertex(x - radius, y, z + radius).texture(0, 1).color(light, light, light, alpha).next();
             vc.vertex(x + radius, y, z + radius).texture(1, 1).color(light, light, light, alpha).next();
             vc.vertex(x + radius, y, z - radius).texture(1, 0).color(light, light, light, alpha).next();

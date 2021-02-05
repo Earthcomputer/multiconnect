@@ -20,6 +20,7 @@ import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.EntitySpawnGlobalS2CPacket_1_15_2;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.ChunkDeltaUpdateS2CPacket_1_16_1;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.MapUpdateS2CPacket_1_16_4;
 import net.earthcomputer.multiconnect.protocols.v1_8.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
 import net.earthcomputer.multiconnect.protocols.v1_9_2.UpdateSignS2CPacket;
@@ -32,7 +33,8 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.OtherClientPlayerEntity;
-import net.minecraft.client.options.ChatVisibility;
+import net.minecraft.client.option.ChatVisibility;
+import net.minecraft.command.CommandSource;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
@@ -79,6 +81,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class Protocol_1_8 extends Protocol_1_9 {
 
@@ -87,8 +90,8 @@ public class Protocol_1_8 extends Protocol_1_9 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            int verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
-            int sectionCount = Integer.bitCount(verticalStripBitmask & 0xffff);
+            BitSet verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
+            int sectionCount = Integer.bitCount(verticalStripBitmask.cardinality());
             Char2CharMap paletteMap = new Char2CharOpenHashMap();
             byte[] bitsPerBlock = new byte[sectionCount];
             char[][] palette = new char[sectionCount][];
@@ -286,7 +289,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
             buf.pendingRead(Double.class, buf.readInt() / 32.0); // z
             buf.applyPendingReads();
         });
-        ProtocolRegistry.registerInboundTranslator(MapUpdateS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(MapUpdateS2CPacket_1_16_4.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt(); // id
             buf.readByte(); // scale
@@ -425,7 +428,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         ProtocolRegistry.registerOutboundTranslator(HandSwingC2SPacket.class, buf -> {
             buf.skipWrite(Hand.class);
         });
-        ProtocolRegistry.registerOutboundTranslator(ClickWindowC2SPacket.class, buf -> {
+        ProtocolRegistry.registerOutboundTranslator(ClickSlotC2SPacket.class, buf -> {
             buf.passthroughWrite(Byte.class); // sync id
             buf.passthroughWrite(Short.class); // slot
             buf.passthroughWrite(Byte.class); // click data
@@ -535,7 +538,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, CommandSuggestionsS2CPacket.class);
         remove(packets, GameMessageS2CPacket.class);
         remove(packets, ChunkDeltaUpdateS2CPacket_1_16_1.class);
-        remove(packets, ConfirmGuiActionS2CPacket.class);
+        remove(packets, ConfirmScreenActionS2CPacket.class);
         remove(packets, GuiOpenS2CPacket_1_13_2.class);
         remove(packets, ScreenHandlerSlotUpdateS2CPacket.class);
         remove(packets, CooldownUpdateS2CPacket.class);
@@ -565,7 +568,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, PlayerRespawnS2CPacket.class);
         remove(packets, EntitySetHeadYawS2CPacket.class);
         remove(packets, SetCameraEntityS2CPacket.class);
-        remove(packets, HeldItemChangeS2CPacket.class);
+        remove(packets, UpdateSelectedSlotS2CPacket.class);
         remove(packets, ScoreboardDisplayS2CPacket.class);
         remove(packets, EntityTrackerUpdateS2CPacket.class);
         remove(packets, EntityAttachS2CPacket.class);
@@ -595,8 +598,8 @@ public class Protocol_1_8 extends Protocol_1_9 {
         insertAfter(packets, PlayerSpawnPositionS2CPacket.class, PacketInfo.of(HealthUpdateS2CPacket.class, HealthUpdateS2CPacket::new));
         insertAfter(packets, HealthUpdateS2CPacket.class, PacketInfo.of(PlayerRespawnS2CPacket.class, PlayerRespawnS2CPacket::new));
         insertAfter(packets, PlayerRespawnS2CPacket.class, PacketInfo.of(PlayerPositionLookS2CPacket.class, PlayerPositionLookS2CPacket::new));
-        insertAfter(packets, PlayerPositionLookS2CPacket.class, PacketInfo.of(HeldItemChangeS2CPacket.class, HeldItemChangeS2CPacket::new));
-        insertAfter(packets, HeldItemChangeS2CPacket.class, PacketInfo.of(UseBedS2CPacket.class, UseBedS2CPacket::new));
+        insertAfter(packets, PlayerPositionLookS2CPacket.class, PacketInfo.of(UpdateSelectedSlotS2CPacket.class, UpdateSelectedSlotS2CPacket::new));
+        insertAfter(packets, UpdateSelectedSlotS2CPacket.class, PacketInfo.of(UseBedS2CPacket.class, UseBedS2CPacket::new));
         insertAfter(packets, UseBedS2CPacket.class, PacketInfo.of(EntityAnimationS2CPacket.class, EntityAnimationS2CPacket::new));
         insertAfter(packets, EntityAnimationS2CPacket.class, PacketInfo.of(PlayerSpawnS2CPacket.class, PlayerSpawnS2CPacket::new));
         insertAfter(packets, PlayerSpawnS2CPacket.class, PacketInfo.of(ItemPickupAnimationS2CPacket.class, ItemPickupAnimationS2CPacket::new));
@@ -629,9 +632,9 @@ public class Protocol_1_8 extends Protocol_1_9 {
         insertAfter(packets, GameStateChangeS2CPacket.class, PacketInfo.of(EntitySpawnGlobalS2CPacket_1_15_2.class, EntitySpawnGlobalS2CPacket_1_15_2::new));
         insertAfter(packets, EntitySpawnGlobalS2CPacket_1_15_2.class, PacketInfo.of(GuiOpenS2CPacket_1_13_2.class, GuiOpenS2CPacket_1_13_2::new));
         insertAfter(packets, CloseScreenS2CPacket.class, PacketInfo.of(ScreenHandlerSlotUpdateS2CPacket.class, ScreenHandlerSlotUpdateS2CPacket::new));
-        insertAfter(packets, ScreenHandlerPropertyUpdateS2CPacket.class, PacketInfo.of(ConfirmGuiActionS2CPacket.class, ConfirmGuiActionS2CPacket::new));
-        insertAfter(packets, ConfirmGuiActionS2CPacket.class, PacketInfo.of(UpdateSignS2CPacket.class, UpdateSignS2CPacket::new));
-        insertAfter(packets, MapUpdateS2CPacket.class, PacketInfo.of(BlockEntityUpdateS2CPacket.class, BlockEntityUpdateS2CPacket::new));
+        insertAfter(packets, ScreenHandlerPropertyUpdateS2CPacket.class, PacketInfo.of(ConfirmScreenActionS2CPacket.class, ConfirmScreenActionS2CPacket::new));
+        insertAfter(packets, ConfirmScreenActionS2CPacket.class, PacketInfo.of(UpdateSignS2CPacket.class, UpdateSignS2CPacket::new));
+        insertAfter(packets, MapUpdateS2CPacket_1_16_4.class, PacketInfo.of(BlockEntityUpdateS2CPacket.class, BlockEntityUpdateS2CPacket::new));
         insertAfter(packets, SignEditorOpenS2CPacket.class, PacketInfo.of(StatisticsS2CPacket.class, StatisticsS2CPacket::new));
         insertAfter(packets, StatisticsS2CPacket.class, PacketInfo.of(PlayerListS2CPacket.class, PlayerListS2CPacket::new));
         insertAfter(packets, PlayerAbilitiesS2CPacket.class, PacketInfo.of(CommandSuggestionsS2CPacket.class, CommandSuggestionsS2CPacket::new));
@@ -656,10 +659,10 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, RequestCommandCompletionsC2SPacket.class);
         remove(packets, ClientStatusC2SPacket_1_11_2.class);
         remove(packets, ClientSettingsC2SPacket.class);
-        remove(packets, ConfirmGuiActionC2SPacket.class);
+        remove(packets, ConfirmScreenActionC2SPacket.class);
         remove(packets, ButtonClickC2SPacket.class);
-        remove(packets, ClickWindowC2SPacket.class);
-        remove(packets, GuiCloseC2SPacket.class);
+        remove(packets, ClickSlotC2SPacket.class);
+        remove(packets, CloseHandledScreenC2SPacket.class);
         remove(packets, CustomPayloadC2SPacket_1_12_2.class);
         remove(packets, KeepAliveC2SPacket.class);
         remove(packets, PlayerMoveC2SPacket.LookOnly.class);
@@ -678,9 +681,9 @@ public class Protocol_1_8 extends Protocol_1_9 {
         insertAfter(packets, PlayerActionC2SPacket.class, PacketInfo.of(PlayerUseItemC2SPacket_1_8.class, PlayerUseItemC2SPacket_1_8::new));
         insertAfter(packets, PlayerUseItemC2SPacket_1_8.class, PacketInfo.of(UpdateSelectedSlotC2SPacket.class, UpdateSelectedSlotC2SPacket::new));
         insertAfter(packets, UpdateSelectedSlotC2SPacket.class, PacketInfo.of(HandSwingC2SPacket.class, HandSwingC2SPacket::new));
-        insertAfter(packets, PlayerInputC2SPacket.class, PacketInfo.of(GuiCloseC2SPacket.class, GuiCloseC2SPacket::new));
-        insertAfter(packets, GuiCloseC2SPacket.class, PacketInfo.of(ClickWindowC2SPacket.class, ClickWindowC2SPacket::new));
-        insertAfter(packets, ClickWindowC2SPacket.class, PacketInfo.of(ConfirmGuiActionC2SPacket.class, ConfirmGuiActionC2SPacket::new));
+        insertAfter(packets, PlayerInputC2SPacket.class, PacketInfo.of(CloseHandledScreenC2SPacket.class, CloseHandledScreenC2SPacket::new));
+        insertAfter(packets, CloseHandledScreenC2SPacket.class, PacketInfo.of(ClickSlotC2SPacket.class, ClickSlotC2SPacket::new));
+        insertAfter(packets, ClickSlotC2SPacket.class, PacketInfo.of(ConfirmScreenActionC2SPacket.class, ConfirmScreenActionC2SPacket::new));
         insertAfter(packets, CreativeInventoryActionC2SPacket.class, PacketInfo.of(ButtonClickC2SPacket.class, ButtonClickC2SPacket::new));
         insertAfter(packets, UpdateSignC2SPacket.class, PacketInfo.of(UpdatePlayerAbilitiesC2SPacket.class, UpdatePlayerAbilitiesC2SPacket::new));
         insertAfter(packets, UpdatePlayerAbilitiesC2SPacket.class, PacketInfo.of(RequestCommandCompletionsC2SPacket.class, RequestCommandCompletionsC2SPacket::new));
@@ -726,9 +729,9 @@ public class Protocol_1_8 extends Protocol_1_9 {
             }
             return false;
         }
-        if (packet instanceof ClickWindowC2SPacket) {
-            ClickWindowC2SPacket clickWindow = (ClickWindowC2SPacket) packet;
-            if (clickWindow.getActionType() == SlotActionType.SWAP && clickWindow.getClickData() == 40) {
+        if (packet instanceof ClickSlotC2SPacket) {
+            ClickSlotC2SPacket clickSlot = (ClickSlotC2SPacket) packet;
+            if (clickSlot.getActionType() == SlotActionType.SWAP && clickSlot.getClickData() == 40) {
                 // swap with offhand
                 return false;
             }
@@ -770,7 +773,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         registry.purge(Blocks.PURPUR_SLAB);
         registry.purge(Blocks.END_STONE_BRICKS);
         registry.purge(Blocks.BEETROOTS);
-        registry.purge(Blocks.GRASS_PATH);
+        registry.purge(Blocks.DIRT_PATH);
         registry.purge(Blocks.END_GATEWAY);
         registry.purge(Blocks.REPEATING_COMMAND_BLOCK);
         registry.purge(Blocks.CHAIN_COMMAND_BLOCK);
@@ -841,51 +844,49 @@ public class Protocol_1_8 extends Protocol_1_9 {
     }
 
     @Override
-    protected void addStates(Block block, Consumer<BlockState> stateAdder) {
+    protected Stream<BlockState> getStatesForBlock(Block block) {
         if (block == Blocks.COMMAND_BLOCK) {
-            stateAdder.accept(block.getDefaultState()); // triggered = false
-            stateAdder.accept(block.getDefaultState()); // triggered = true
-            return;
+            // triggered = false, true
+            return Stream.of(block.getDefaultState(), block.getDefaultState());
         }
         if (block == Blocks.FIRE) {
+            List<BlockState> states = new ArrayList<>();
             for (int alt = 0; alt < 2; alt++) {
                 for (int east = 0; east < 2; east++) {
                     for (int flip = 0; flip < 2; flip++) {
                         for (BlockState state : block.getStateManager().getStates()) {
                             if (!acceptBlockState(state)) continue;
                             if (state.get(FireBlock.EAST) == (east == 0)) continue;
-                            stateAdder.accept(state);
+                            states.add(state);
                             if (state.get(FireBlock.UP) && state.get(FireBlock.WEST)) {
-                                stateAdder.accept(state.with(FireBlock.WEST, false)); // upper = 2, west = false
-                                stateAdder.accept(state); // upper = 2, west = true
+                                states.add(state.with(FireBlock.WEST, false)); // upper = 2, west = false
+                                states.add(state); // upper = 2, west = true
                             }
                         }
                     }
                 }
             }
-            return;
+            return states.stream();
         }
         if (block == Blocks.TRIPWIRE_HOOK) {
-            for (BlockState state : block.getStateManager().getStates()) {
-                if (!acceptBlockState(state)) continue;
-                stateAdder.accept(state); // suspended = false
-                stateAdder.accept(state); // suspended = true
-            }
-            return;
+            return block.getStateManager().getStates().stream()
+                    .filter(this::acceptBlockState)
+                    .flatMap(state -> Stream.of(state, state)); // suspended = false, true
         }
         if (block == Blocks.TRIPWIRE) {
+            List<BlockState> states = new ArrayList<>();
             for (BlockState state : block.getStateManager().getStates()) {
                 if (!acceptBlockState(state)) continue;
-                stateAdder.accept(state); // suspended = false
+                states.add(state); // suspended = false
                 if (state.get(TripwireBlock.WEST)) {
                     // suspended = true
-                    stateAdder.accept(state.with(TripwireBlock.WEST, false));
-                    stateAdder.accept(state);
+                    states.add(state.with(TripwireBlock.WEST, false));
+                    states.add(state);
                 }
             }
-            return;
+            return states.stream();
         }
-        super.addStates(block, stateAdder);
+        return super.getStatesForBlock(block);
     }
 
     @Override

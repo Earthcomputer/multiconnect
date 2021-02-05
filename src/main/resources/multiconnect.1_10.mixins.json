@@ -7,7 +7,7 @@
     "GuardianEntityAccessor",
     "HorseBaseEntityAccessor",
     "HorseEntityAccessor",
-    "MixinCauldronBlock",
+    "MixinCauldronBehavior",
     "MixinChatScreen",
     "MixinFenceBlock",
     "MixinFlowerPotBlock",

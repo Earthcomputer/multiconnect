@@ -20,4 +20,14 @@ public class BlockConnectionsWorldView implements IBlockConnectionsBlockView {
     public void setBlockState(BlockPos pos, BlockState state) {
         world.setBlockState(pos, state, 18);
     }
+
+    @Override
+    public int getMinY() {
+        return world.getDimension().getMinimumY();
+    }
+
+    @Override
+    public int getMaxY() {
+        return getMinY() + world.getDimension().getHeight() - 1;
+    }
 }

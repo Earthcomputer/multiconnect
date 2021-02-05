@@ -10,12 +10,12 @@ import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.AbstractPiglinEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.PiglinEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_2.Protocol_1_16_2;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.Protocol_1_16_4;
 import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
@@ -28,9 +28,6 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.RecipeBookDataC2SPacket;
 import net.minecraft.network.packet.c2s.play.RecipeCategoryOptionsC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
-import net.minecraft.recipe.book.RecipeBook;
-import net.minecraft.recipe.book.RecipeBookCategory;
-import net.minecraft.recipe.book.RecipeBookOptions;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.BlockTags;
@@ -39,7 +36,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.dimension.DimensionType;
 
 import java.util.*;
@@ -72,8 +68,8 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
             );
             Identifier dimTypeId = buf.readIdentifier();
             DynamicRegistryManager defaultRegistryManager = DynamicRegistryManager.create();
-            DimensionType dimType = defaultRegistryManager.getDimensionTypes().get(dimTypeId);
-            if (dimType == null) dimType = defaultRegistryManager.getDimensionTypes().get(DimensionType.OVERWORLD_REGISTRY_KEY);
+            DimensionType dimType = defaultRegistryManager.get(Registry.DIMENSION_TYPE_KEY).get(dimTypeId);
+            if (dimType == null) dimType = defaultRegistryManager.get(Registry.DIMENSION_TYPE_KEY).get(DimensionType.OVERWORLD_REGISTRY_KEY);
             DimensionType dimType_f = dimType;
             buf.pendingRead(Codecked.class, new Codecked<>(DimensionType.REGISTRY_CODEC, () -> dimType_f));
             buf.enablePassthroughMode();
@@ -86,8 +82,8 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
         ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
             DynamicRegistryManager defaultRegistryManager = DynamicRegistryManager.create();
             Identifier dimTypeId = buf.readIdentifier();
-            DimensionType dimType = defaultRegistryManager.getDimensionTypes().get(dimTypeId);
-            if (dimType == null) dimType = defaultRegistryManager.getDimensionTypes().get(DimensionType.OVERWORLD_REGISTRY_KEY);
+            DimensionType dimType = defaultRegistryManager.get(Registry.DIMENSION_TYPE_KEY).get(dimTypeId);
+            if (dimType == null) dimType = defaultRegistryManager.get(Registry.DIMENSION_TYPE_KEY).get(DimensionType.OVERWORLD_REGISTRY_KEY);
             DimensionType dimType_f = dimType;
             buf.pendingRead(Codecked.class, new Codecked<>(DimensionType.REGISTRY_CODEC, () -> dimType_f));
             buf.applyPendingReads();
@@ -107,7 +103,7 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
             buf.readVarInt(); // vertical strip bitmask
             buf.readCompoundTag(); // heightmaps
             buf.disablePassthroughMode();
-            int[] biomes = new int[BiomeArray.DEFAULT_LENGTH];
+            int[] biomes = new int[Protocol_1_16_4.BIOME_ARRAY_LENGTH];
             for (int i = 0; i < biomes.length; i++) {
                 biomes[i] = buf.readInt();
             }
@@ -273,7 +269,7 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
 
     @Override
     public boolean acceptBlockState(BlockState state) {
-        if (state.getBlock() instanceof LanternBlock && state.get(LanternBlock.field_26441)) {
+        if (state.getBlock() instanceof LanternBlock && state.get(LanternBlock.WATERLOGGED)) {
             return false;
         }
         if (state.getBlock() == Blocks.CHAIN && state.get(ChainBlock.AXIS) != Direction.Axis.Y) {

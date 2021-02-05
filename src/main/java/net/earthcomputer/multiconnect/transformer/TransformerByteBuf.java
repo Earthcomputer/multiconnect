@@ -478,8 +478,14 @@ public final class TransformerByteBuf extends PacketByteBuf {
         return read(BlockPos.class, super::readBlockPos);
     }
 
+    @Override
     public BlockHitResult readBlockHitResult() {
         return read(BlockHitResult.class, super::readBlockHitResult);
+    }
+
+    @Override
+    public BitSet method_33558() {
+        return read(BitSet.class, super::method_33558);
     }
 
     @Override
@@ -701,6 +707,11 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
+    public long[] method_33134() {
+        return read(long[].class, super::method_33134);
+    }
+
+    @Override
     public long[] readLongArray(long[] out) {
         return read(long[].class,
                 () -> super.readLongArray(out),
@@ -914,6 +925,11 @@ public final class TransformerByteBuf extends PacketByteBuf {
     @Override
     public void writeBlockHitResult(BlockHitResult val) {
         write(BlockHitResult.class, val, super::writeBlockHitResult);
+    }
+
+    @Override
+    public void method_33557(BitSet val) {
+        write(BitSet.class, val, super::method_33557);
     }
 
     @Override

@@ -18,6 +18,9 @@ public interface IBlockConnectionsBlockView {
     BlockState getBlockState(BlockPos pos);
     void setBlockState(BlockPos pos, BlockState state);
 
+    int getMinY();
+    int getMaxY();
+
     static <T> T withNullWorld(Block block, T def, Supplier<T> supplier) {
         try {
             return supplier.get();

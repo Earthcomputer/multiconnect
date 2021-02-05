@@ -7,6 +7,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,12 +17,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(SkullBlockEntity.class)
 public abstract class MixinSkullBlockEntity extends BlockEntity {
 
-    public MixinSkullBlockEntity(BlockEntityType<?> type) {
-        super(type);
+    public MixinSkullBlockEntity(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState blockState) {
+        super(blockEntityType, blockPos, blockState);
     }
 
     @Inject(method = "fromTag", at = @At("RETURN"))
-    private void onFromTag(BlockState blockState, CompoundTag tag, CallbackInfo ci) {
+    private void onFromTag(CompoundTag tag, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             setSkullType(tag.getByte("SkullType"));
             setRotation(tag.getByte("Rot"));
@@ -31,7 +32,7 @@ public abstract class MixinSkullBlockEntity extends BlockEntity {
     @Unique
     public void setSkullType(int skullType) {
         BlockState state = getCachedState();
-        if (!getType().supports(state.getBlock()))
+        if (!getType().supports(state))
             return;
 
         if (skullType < 0 || skullType > 5)
@@ -50,7 +51,7 @@ public abstract class MixinSkullBlockEntity extends BlockEntity {
     @Unique
     public void setRotation(int rot) {
         BlockState state = getCachedState();
-        if (!getType().supports(state.getBlock()) || !(state.getBlock() instanceof SkullBlock))
+        if (!getType().supports(state) || !(state.getBlock() instanceof SkullBlock))
             return;
 
         assert world != null;

@@ -37,6 +37,7 @@ public abstract class MixinEntity {
             ci.cancel();
     }
 
+    @SuppressWarnings("deprecation")
     @Inject(method = "updateMovementInFluid", at = @At("HEAD"), cancellable = true)
     private void modifyFluidMovementBoundingBox(Tag<Fluid> fluidTag, double d, CallbackInfoReturnable<Boolean> ci) {
         if (ConnectionInfo.protocolVersion > Protocols.V1_12_2)

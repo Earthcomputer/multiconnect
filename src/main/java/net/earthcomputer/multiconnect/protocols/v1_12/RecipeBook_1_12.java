@@ -57,11 +57,11 @@ public class RecipeBook_1_12<C extends Inventory> {
             recipeBookWidget.showGhostRecipe(recipe, container.slots);
 
             if (!transactionFromMatrix.isEmpty()) {
-                short transactionId = mc.player.currentScreenHandler.getNextActionId(mc.player.inventory);
+                short transactionId = mc.player.currentScreenHandler.getNextActionId(mc.player.getInventory());
                 mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionFromMatrix, new ArrayList<>()));
 
                 if (iRecipeBookWidget.getRecipeBook().isFilteringCraftable(container)) {
-                    mc.player.inventory.markDirty();
+                    mc.player.getInventory().markDirty();
                 }
             }
         }
@@ -118,9 +118,9 @@ public class RecipeBook_1_12<C extends Inventory> {
                 List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsFromMatrix = clearCraftMatrix();
                 List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsToMatrix = new ArrayList<>();
                 placeRecipe(recipe, slots, actualCount, inputItemIds, transactionsToMatrix);
-                short transactionId = mc.player.currentScreenHandler.getNextActionId(mc.player.inventory);
+                short transactionId = mc.player.currentScreenHandler.getNextActionId(mc.player.getInventory());
                 mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionsFromMatrix, transactionsToMatrix));
-                mc.player.inventory.markDirty();
+                mc.player.getInventory().markDirty();
             }
         }
     }
@@ -129,7 +129,7 @@ public class RecipeBook_1_12<C extends Inventory> {
         assert mc.player != null;
 
         iRecipeBookWidget.getGhostSlots().reset();
-        PlayerInventory playerInv = mc.player.inventory;
+        PlayerInventory playerInv = mc.player.getInventory();
         List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsFromMatrix = new ArrayList<>();
 
         int serverSlot = 1;
@@ -240,8 +240,8 @@ public class RecipeBook_1_12<C extends Inventory> {
     private PlaceRecipeC2SPacket_1_12.Transaction findAndMoveToCraftMatrix(int destSlotIndex, Slot destSlot, ItemStack stackNeeded) {
         assert mc.player != null;
 
-        PlayerInventory playerInv = mc.player.inventory;
-        int fromSlot = playerInv.method_7371(stackNeeded);
+        PlayerInventory playerInv = mc.player.getInventory();
+        int fromSlot = playerInv.indexOf(stackNeeded);
 
         if (fromSlot == -1) {
             return null;
@@ -275,7 +275,7 @@ public class RecipeBook_1_12<C extends Inventory> {
     private boolean canClearCraftMatrix() {
         assert mc.player != null;
 
-        PlayerInventory invPlayer = mc.player.inventory;
+        PlayerInventory invPlayer = mc.player.getInventory();
 
         for (int i = 0; i < container.getCraftingSlotCount(); ++i) {
             if (i == container.getCraftingResultSlotIndex()) continue;

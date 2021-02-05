@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_8.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.PendingFullChunkData;
 import net.earthcomputer.multiconnect.protocols.v1_8.DataTrackerEntry_1_8;
 import net.earthcomputer.multiconnect.protocols.v1_8.Protocol_1_8;
 import net.minecraft.client.MinecraftClient;
@@ -16,6 +17,7 @@ import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.EulerAngle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,7 +49,9 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onChunkData", at = @At("HEAD"), cancellable = true)
     private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_8 && packet.isFullChunk() && packet.getVerticalStripBitmask() == 0) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_8
+                && PendingFullChunkData.isFullChunk(new ChunkPos(packet.getX(), packet.getZ()), false)
+                && packet.getVerticalStripBitmask().isEmpty()) {
             onUnloadChunk(new UnloadChunkS2CPacket(packet.getX(), packet.getZ()));
             ci.cancel();
         }

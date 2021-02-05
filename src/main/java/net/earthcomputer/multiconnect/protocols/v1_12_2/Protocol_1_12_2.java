@@ -14,6 +14,7 @@ import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ZombieEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_1_16_1;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.MapUpdateS2CPacket_1_16_4;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.WallMountLocation;
@@ -123,10 +124,10 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            int verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
+            BitSet verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
-                if ((verticalStripBitmask & (1 << sectionY)) != 0) {
+                if (verticalStripBitmask.get(sectionY)) {
                     int paletteSize = ChunkData.skipPalette(buf);
                     if (paletteSize > 8) {
                         buf.disablePassthroughMode();
@@ -140,7 +141,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 }
             }
             buf.disablePassthroughMode();
-            if (ChunkDataTranslator.current().getPacket().isFullChunk()) {
+            if (ChunkDataTranslator.current().isFullChunk()) {
                 for (int i = 0; i < 256; i++) {
                     buf.pendingRead(Integer.class, buf.readByte() & 0xff);
                 }
@@ -173,7 +174,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(MapUpdateS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(MapUpdateS2CPacket_1_16_4.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt(); // map id
             buf.readByte(); // map scale
@@ -451,7 +452,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 int meta = from.getDamage();
                 assert from.getTag() != null;
                 from.getTag().remove("Damage");
-                if (from.getTag().isEmpty())
+                if (from.getTag().getSize() == 0)
                     from.setTag(null);
                 return Items_1_12_2.oldItemStackToNew(from, meta);
             }
@@ -521,7 +522,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                             buf.pendingWrite(Short.class, itemId, (Consumer<Short>) buf::writeShort);
                             buf.pendingWrite(Byte.class, count, (Consumer<Byte>) buf::writeByte);
                             buf.pendingWrite(Short.class, () -> (short) meta, (Consumer<Short>) buf::writeShort);
-                            buf.pendingWrite(CompoundTag.class, () -> oldTag.isEmpty() ? null : oldTag, buf::writeCompoundTag);
+                            buf.pendingWrite(CompoundTag.class, () -> oldTag.getSize() == 0 ? null : oldTag, buf::writeCompoundTag);
                         });
                     }
                 });
@@ -697,7 +698,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         remove(packets, UpdateCommandBlockMinecartC2SPacket.class);
         remove(packets, UpdateStructureBlockC2SPacket.class);
         remove(packets, CustomPayloadC2SPacket.class);
-        insertAfter(packets, GuiCloseC2SPacket.class, PacketInfo.of(CustomPayloadC2SPacket_1_12_2.class, CustomPayloadC2SPacket_1_12_2::new));
+        insertAfter(packets, CloseHandledScreenC2SPacket.class, PacketInfo.of(CustomPayloadC2SPacket_1_12_2.class, CustomPayloadC2SPacket_1_12_2::new));
         return packets;
     }
 
@@ -891,7 +892,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                     return false;
             }
             buf.writeString(updateStructBlock.getMetadata());
-            buf.writeBoolean(updateStructBlock.getIgnoreEntities());
+            buf.writeBoolean(updateStructBlock.shouldIgnoreEntities());
             buf.writeBoolean(updateStructBlock.shouldShowAir());
             buf.writeBoolean(updateStructBlock.shouldShowBoundingBox());
             buf.writeFloat(updateStructBlock.getIntegrity());

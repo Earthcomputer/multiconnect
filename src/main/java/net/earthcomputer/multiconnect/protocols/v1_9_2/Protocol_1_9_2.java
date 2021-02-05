@@ -54,10 +54,10 @@ public class Protocol_1_9_2 extends Protocol_1_9_4 {
             if (data.getSections()[sectionY] != null) {
                 for (BlockPos pos : BlockPos.iterate(minX, 16 * sectionY, minZ, minX + 15, 16 * sectionY + 15, minZ + 15)) {
                     BlockState state = data.getBlockState(pos);
-                    if (state.getBlock().hasBlockEntity()) {
+                    if (state.hasBlockEntity()) {
                         BlockEntityType<?> blockEntityType = null;
                         for (BlockEntityType<?> type : Registry.BLOCK_ENTITY_TYPE) {
-                            if (type.supports(state.getBlock())) {
+                            if (type.supports(state)) {
                                 blockEntityType = type;
                                 break;
                             }
