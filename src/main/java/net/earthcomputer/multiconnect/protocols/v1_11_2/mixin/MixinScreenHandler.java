@@ -27,9 +27,9 @@ public abstract class MixinScreenHandler implements IScreenHandler {
 
     @Shadow @Final public DefaultedList<Slot> slots;
 
-    @Shadow protected abstract ItemStack removeStack(int i, int j, SlotActionType slotActionType, PlayerEntity playerEntity);
+    @Shadow protected abstract ItemStack internalOnSlotClick(int i, int j, SlotActionType slotActionType, PlayerEntity playerEntity);
 
-    @Unique private RecipeBookEmulator recipeBookEmulator = new RecipeBookEmulator((ScreenHandler) (Object) this);
+    @Unique private final RecipeBookEmulator recipeBookEmulator = new RecipeBookEmulator((ScreenHandler) (Object) this);
 
     @Override
     public short multiconnect_getCurrentActionId() {
@@ -41,7 +41,7 @@ public abstract class MixinScreenHandler implements IScreenHandler {
         return recipeBookEmulator;
     }
 
-    @Inject(method = "removeStack",
+    @Inject(method = "internalOnSlotClick",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/ScreenHandler;transferSlot(Lnet/minecraft/entity/player/PlayerEntity;I)Lnet/minecraft/item/ItemStack;",
                     ordinal = 0,
                     shift = At.Shift.BEFORE), cancellable = true)
@@ -52,7 +52,7 @@ public abstract class MixinScreenHandler implements IScreenHandler {
             if (!itemstack6.isEmpty()) {
                 itemStack = itemstack6.copy();
                 if (this.slots.get(slotId).getStack().getItem() == itemstack6.getItem()) {
-                    this.removeStack(slotId, clickData, SlotActionType.QUICK_MOVE, playerEntity);
+                    this.internalOnSlotClick(slotId, clickData, SlotActionType.QUICK_MOVE, playerEntity);
                 }
             }
             cir.setReturnValue(itemStack);

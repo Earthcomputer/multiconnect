@@ -3,13 +3,17 @@ package net.earthcomputer.multiconnect.protocols.v1_16_4;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.DimensionTypeAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.EntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.ShulkerEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
+import net.earthcomputer.multiconnect.transformer.Codecked;
+import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
@@ -32,12 +36,14 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.source.BiomeArray;
+import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.event.GameEvent;
 
 import java.util.BitSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class Protocol_1_16_4 extends Protocol_1_17 {
@@ -64,7 +70,11 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
                     Utils.singletonKeyCodec("minecraft:dimension_type", Utils.singletonKeyCodec("value", dimensionSetCodec)),
                     ImmutableSet.of(new Identifier("overworld"), new Identifier("the_nether"), new Identifier("the_end"), new Identifier("overworld_caves"))::equals
             );
-            Utils.translateDimensionType(buf);
+            translateDimensionType(buf);
+            buf.applyPendingReads();
+        });
+        ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
+            translateDimensionType(buf);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
@@ -145,6 +155,26 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
             buf.pendingRead(Boolean.class, false); // required
             buf.applyPendingReads();
         });
+    }
+
+    private static void translateDimensionType(TransformerByteBuf buf) {
+        Codecked<Supplier<DimensionType>> dimensionTypeCodecked = Utils.translateDimensionType(buf);
+        if (dimensionTypeCodecked != null) {
+            Supplier<DimensionType> oldSupplier = dimensionTypeCodecked.getValue();
+            dimensionTypeCodecked.setValue(() -> {
+                DimensionType oldDimensionType = oldSupplier.get();
+                if (oldDimensionType.getMinimumY() == 0 && oldDimensionType.getHeight() == 256) {
+                    // nothing to change
+                    return oldDimensionType;
+                }
+                DimensionType newDimensionType = Utils.clone(DimensionType.CODEC, oldDimensionType);
+                DimensionTypeAccessor accessor = (DimensionTypeAccessor) newDimensionType;
+                accessor.setMinimumY(0);
+                accessor.setLogicalHeight(256);
+                accessor.setHeight(256);
+                return newDimensionType;
+            });
+        }
     }
 
     @Override

@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_16_4.mixin;
 import net.earthcomputer.multiconnect.impl.MixinHelper;
 import net.minecraft.world.dimension.DimensionType;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(DimensionType.class)
@@ -21,4 +22,16 @@ public interface DimensionTypeAccessor {
     static DimensionType getTheEnd() {
         return MixinHelper.fakeInstance();
     }
+
+    @Mutable
+    @Accessor
+    void setMinimumY(int minimumY);
+
+    @Mutable
+    @Accessor
+    void setHeight(int height);
+
+    @Mutable
+    @Accessor
+    void setLogicalHeight(int logicalHeight);
 }

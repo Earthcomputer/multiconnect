@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 
 public final class Codecked<T> {
     private final Codec<T> codec;
-    private final T value;
+    private T value;
 
     public Codecked(Codec<T> codec, T value) {
         this.codec = codec;
@@ -17,5 +17,9 @@ public final class Codecked<T> {
 
     public T getValue() {
         return value;
+    }
+
+    public void setValue(T value) {
+        this.value = value;
     }
 }
