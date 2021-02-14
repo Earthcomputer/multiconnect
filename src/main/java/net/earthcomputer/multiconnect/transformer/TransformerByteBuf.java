@@ -1,10 +1,16 @@
 package net.earthcomputer.multiconnect.transformer;
 
+import com.google.common.collect.Iterables;
 import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import net.earthcomputer.multiconnect.connect.ConnectionMode;
+import net.earthcomputer.multiconnect.impl.AligningFormatter;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.INetworkState;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.SharedConstants;
@@ -13,15 +19,16 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.*;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
+import java.io.*;
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.GatheringByteChannel;
@@ -32,11 +39,32 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 
 public final class TransformerByteBuf extends PacketByteBuf {
+    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
+    private static final Consumer<String> PACKET_DEBUG_OUTPUT;
+    static {
+        String fileName = System.getProperty("multiconnect.debugTransformerOutput");
+        if (fileName != null) {
+            File file = new File(fileName);
+            PrintWriter writer;
+            try {
+                writer = new PrintWriter(new FileWriter(file));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            PACKET_DEBUG_OUTPUT = str -> {
+                writer.println(str);
+                writer.flush();
+            };
+        } else {
+            PACKET_DEBUG_OUTPUT = LOGGER::info;
+        }
+    }
 
     private final ChannelHandlerContext context;
     private final TranslatorRegistry translatorRegistry;
 
     private boolean transformationEnabled = false;
+    private boolean writeMode = false;
     private final Deque<StackFrame> stack = new ArrayDeque<>();
     private boolean forceSuper = false;
 
@@ -57,21 +85,42 @@ public final class TransformerByteBuf extends PacketByteBuf {
     @SuppressWarnings("unchecked")
     public TransformerByteBuf readTopLevelType(Object type) {
         transformationEnabled = true;
-        stack.push(new StackFrame(type, ConnectionInfo.protocolVersion));
-        List<Pair<Integer, InboundTranslator<?>>> translators = (List<Pair<Integer, InboundTranslator<?>>>) (List<?>)
-                translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
-        for (Pair<Integer, InboundTranslator<?>> translator : translators) {
-            getStackFrame().version = translator.getLeft();
-            translator.getRight().onRead(this);
+        writeMode = false;
+        stack.push(new StackFrame(type, ConnectionInfo.protocolVersion, false));
+        if (getStackFrame().traceEnabled) {
+            getStackFrame().startPos = readerIndex();
         }
-        getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
+        try {
+            List<Pair<Integer, InboundTranslator<?>>> translators = (List<Pair<Integer, InboundTranslator<?>>>) (List<?>)
+                    translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
+            for (Pair<Integer, InboundTranslator<?>> translator : translators) {
+                if (getStackFrame().traceEnabled) {
+                    getStackFrame().tracePasses.add(new StackFrame.TracePass(translator.getLeft()));
+                }
+                getStackFrame().version = translator.getLeft();
+                translator.getRight().onRead(this);
+            }
+            getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
+            if (getStackFrame().traceEnabled) {
+                getStackFrame().endPos = readerIndex();
+            }
+        } finally {
+            List<String> traceDump = getTraceDump();
+            if (traceDump != null) {
+                for (String line : traceDump) {
+                    PACKET_DEBUG_OUTPUT.accept(line);
+                }
+            }
+        }
+        getStackFrame().traceEnabled = false;
         return this;
     }
 
     @SuppressWarnings("unchecked")
     public TransformerByteBuf writeTopLevelType(Object type) {
         transformationEnabled = true;
-        stack.push(new StackFrame(type, SharedConstants.getGameVersion().getProtocolVersion()));
+        writeMode = true;
+        stack.push(new StackFrame(type, SharedConstants.getGameVersion().getProtocolVersion(), false));
         List<Pair<Integer, OutboundTranslator<?>>> translators = (List<Pair<Integer, OutboundTranslator<?>>>) (List<?>)
                 translatorRegistry.getOutboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
         for (Pair<Integer, OutboundTranslator<?>> translator : translators) {
@@ -141,7 +190,14 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
         boolean passthroughMode = getStackFrame().passthroughMode;
         Queue<PendingValue<STORED>> pendingReads = (Queue<PendingValue<STORED>>) (Queue<?>) getStackFrame().pendingReads.get(type);
-        stack.push(new StackFrame(type, ConnectionInfo.protocolVersion));
+        StackFrame newFrame = new StackFrame(type, ConnectionInfo.protocolVersion, getStackFrame().traceEnabled);
+        if (getStackFrame().traceEnabled) {
+            Util.getLast(getStackFrame().tracePasses).frames.add(newFrame);
+        }
+        stack.push(newFrame);
+        if (getStackFrame().traceEnabled) {
+            getStackFrame().startPos = readerIndex();
+        }
         List<Pair<Integer, InboundTranslator<STORED>>> translators;
 
         STORED value;
@@ -152,15 +208,32 @@ public final class TransformerByteBuf extends PacketByteBuf {
         } else {
             translators = translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
             for (Pair<Integer, InboundTranslator<STORED>> translator : translators) {
+                if (getStackFrame().traceEnabled) {
+                    getStackFrame().tracePasses.add(new StackFrame.TracePass(translator.getLeft()));
+                }
                 getStackFrame().version = translator.getLeft();
                 translator.getRight().onRead(this);
             }
 
+            if (getStackFrame().traceEnabled) {
+                getStackFrame().tracePasses.add(new StackFrame.TracePass(SharedConstants.getGameVersion().getProtocolVersion()));
+            }
             getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
             if (!passthroughMode && translators.isEmpty()) {
-                RETURN ret = readMethod.get();
+                RETURN ret;
+                STORED val = null;
+                if (getStackFrame().traceEnabled) {
+                    val = storedValueExtractor.get();
+                    ret = returnValueExtractor.apply(val);
+                } else {
+                    ret = readMethod.get();
+                }
                 if (!getStackFrame().pendingPendingReads.isEmpty())
                     throw new IllegalStateException("You forgot to apply pending reads!");
+                if (getStackFrame().traceEnabled) {
+                    getStackFrame().value = val;
+                    getStackFrame().endPos = readerIndex();
+                }
                 stack.pop();
                 return ret;
             }
@@ -175,6 +248,18 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
         if (!getStackFrame().pendingPendingReads.isEmpty())
             throw new IllegalStateException("You forgot to apply pending reads!");
+        if (getStackFrame().traceEnabled) {
+            getStackFrame().value = value;
+            getStackFrame().endPos = readerIndex();
+            if (!Iterables.get(stack, 1).traceEnabled) {
+                List<String> traceDump = getTraceDump();
+                if (traceDump != null) {
+                    for (String line : traceDump) {
+                        PACKET_DEBUG_OUTPUT.accept(line);
+                    }
+                }
+            }
+        }
         stack.pop();
 
         if (passthroughMode) {
@@ -258,9 +343,19 @@ public final class TransformerByteBuf extends PacketByteBuf {
         getStackFrame().version = version;
 
         if (!skipWrite) {
-            stack.push(new StackFrame(type, SharedConstants.getGameVersion().getProtocolVersion()));
+            StackFrame newFrame = new StackFrame(type, SharedConstants.getGameVersion().getProtocolVersion(), getStackFrame().traceEnabled);
+            if (getStackFrame().traceEnabled) {
+                Util.getLast(getStackFrame().tracePasses).frames.add(newFrame);
+            }
+            stack.push(newFrame);
+            if (getStackFrame().traceEnabled) {
+                getStackFrame().startPos = writerIndex();
+            }
             translators = translatorRegistry.getOutboundTranslators(type, minVersion, SharedConstants.getGameVersion().getProtocolVersion());
             for (Pair<Integer, OutboundTranslator<T>> translator : translators) {
+                if (getStackFrame().traceEnabled) {
+                    getStackFrame().tracePasses.add(new StackFrame.TracePass(translator.getLeft()));
+                }
                 translator.getRight().onWrite(this);
                 getStackFrame().version = translator.getLeft();
             }
@@ -268,6 +363,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
             getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
             writeMethod.accept(value);
 
+            if (getStackFrame().traceEnabled) {
+                getStackFrame().endPos = writerIndex();
+            }
             stack.pop();
         }
 
@@ -333,9 +431,37 @@ public final class TransformerByteBuf extends PacketByteBuf {
         final Map<Object, Deque<PendingValue<?>>> pendingPendingReads = new HashMap<>();
         final TreeMap<Integer, Queue<WriteInstruction>> writeInstructions = new TreeMap<>(Comparator.reverseOrder());
 
-        public StackFrame(Object type, int version) {
+        // Debug
+        private static final Class<?> DEBUG_TYPE;
+        static {
+            String type = System.getProperty("multiconnect.debugTransformerType");
+            try {
+                DEBUG_TYPE = type == null ? null : Class.forName(type);
+            } catch (ClassNotFoundException e) {
+                throw new AssertionError("Invalid debug type", e);
+            }
+        }
+        boolean traceEnabled;
+        final List<TracePass> tracePasses;
+        // the range that was physically read/written in this stack frame
+        int startPos;
+        int endPos = -1; // -1 for unknown
+        Object value;
+
+        public StackFrame(Object type, int version, boolean traceEnabled) {
             this.type = type;
             this.version = version;
+            this.traceEnabled = traceEnabled || type == DEBUG_TYPE;
+            this.tracePasses = this.traceEnabled ? new ArrayList<>() : null;
+        }
+
+        static final class TracePass {
+            final int version; // the version this trace pass is reading from / writing to
+            final List<StackFrame> frames = new ArrayList<>();
+
+            TracePass(int version) {
+                this.version = version;
+            }
         }
     }
 
@@ -461,6 +587,134 @@ public final class TransformerByteBuf extends PacketByteBuf {
                 writeMethod.accept(v);
             });
         }
+    }
+
+    public List<String> getTraceDump() {
+        if (stack.isEmpty()) {
+            return null;
+        }
+        if (!getStackFrame().traceEnabled) {
+            return null;
+        }
+        StackFrame prevFrame = null;
+        for (StackFrame frame : stack) {
+            if (!frame.traceEnabled) {
+                break;
+            }
+            prevFrame = frame;
+        }
+        assert prevFrame != null;
+        return writeMode ? getWriteTraceDump(prevFrame) : getReadTraceDump(prevFrame);
+    }
+
+    private List<String> getReadTraceDump(StackFrame stackFrame) {
+        AligningFormatter formatter = new AligningFormatter();
+
+        int separatorRow = formatter.addRow();
+
+        int rawBytesRow = formatter.addRow();
+
+        IntList rawByteNodes = new IntArrayList();
+        int prevReaderIndex = readerIndex();
+        transformationEnabled = false;
+        if (stackFrame.endPos == -1) stackFrame.endPos = prevReaderIndex;
+        readerIndex(stackFrame.startPos);
+        for (int pos = stackFrame.startPos; pos < stackFrame.endPos; pos++) {
+            if (pos != stackFrame.startPos) {
+                formatter.add(rawBytesRow, " ");
+            }
+            rawByteNodes.add(formatter.add(rawBytesRow, String.format("%02X", readUnsignedByte())));
+        }
+        transformationEnabled = true;
+        readerIndex(prevReaderIndex);
+
+        int separatorNode = formatter.add(separatorRow, "=");
+        if (!rawByteNodes.isEmpty()) {
+            formatter.hExpand(separatorNode);
+            formatter.leftAlign(separatorNode, rawByteNodes.getInt(0));
+            formatter.rightAlign(separatorNode, rawByteNodes.getInt(rawByteNodes.size() - 1));
+        }
+
+        int rawBytesLabelRow = formatter.addRow();
+
+        dumpReadStackFrame(stackFrame, formatter, rawByteNodes, rawBytesLabelRow, stackFrame.startPos, formatter.rowCount(), stackFrame.startPos, -1, false, new int[1]);
+
+        return formatter.getLines();
+    }
+
+    private int dumpReadStackFrame(StackFrame stackFrame, AligningFormatter formatter, IntList rawByteNodes, int rawBytesLabelRow, int firstPos, int startRow, int pos, int parentNext, boolean last, int[] bottomRow) {
+        if (stackFrame.startPos < pos) {
+            stackFrame.startPos = pos;
+        }
+        if (stackFrame.endPos == -1) {
+            stackFrame.endPos = readerIndex();
+        } else if (stackFrame.endPos < pos) {
+            stackFrame.endPos = pos;
+        }
+
+        if (startRow == formatter.rowCount()) {
+            formatter.addRow();
+        }
+        String typeName;
+        if (stackFrame.type.getClass() == Class.class) {
+            Class<?> clazz = (Class<?>) stackFrame.type;
+            if (clazz.isArray() && clazz.isInstance(stackFrame.value)) {
+                typeName = clazz.getComponentType().getSimpleName() + "[" + Array.getLength(stackFrame.value) + "]";
+            } else {
+                typeName = clazz.getSimpleName();
+            }
+        } else {
+            typeName = String.valueOf(stackFrame.type);
+        }
+        int stackFrameLabel = formatter.add(startRow, String.format("%s: %s ", typeName, Utils.toString(stackFrame.value, 16)));
+        if (last) {
+            formatter.leftAlign(formatter.add(startRow, ""), parentNext);
+        }
+        int stackFrameLabelNext = formatter.add(startRow, "");
+
+        int row = startRow;
+        boolean stackFrameEmpty = true;
+        for (int tracePassIdx = 0; tracePassIdx < stackFrame.tracePasses.size(); tracePassIdx++) {
+            StackFrame.TracePass tracePass = stackFrame.tracePasses.get(tracePassIdx);
+            if (tracePass.frames.isEmpty()) continue;
+            stackFrameEmpty = false;
+            row++;
+            if (row == formatter.rowCount()) {
+                formatter.addRow();
+            }
+            int versionNode = formatter.add(row, String.format("  %d (%s) ::", tracePass.version, ConnectionMode.byValue(tracePass.version).getName()));
+            formatter.leftAlign(versionNode, stackFrameLabel);
+            int newBottomRow = row;
+            for (int frameIdx = 0; frameIdx < tracePass.frames.size(); frameIdx++) {
+                StackFrame subFrame = tracePass.frames.get(frameIdx);
+                formatter.add(row, " ");
+                int[] subBottomRow = new int[1];
+                pos = dumpReadStackFrame(subFrame, formatter, rawByteNodes, rawBytesLabelRow, firstPos, row, pos,
+                        stackFrameLabelNext, frameIdx == tracePass.frames.size() - 1 && tracePassIdx == stackFrame.tracePasses.size() - 1, subBottomRow);
+                if (subBottomRow[0] > newBottomRow) {
+                    newBottomRow = subBottomRow[0];
+                }
+            }
+            row = newBottomRow;
+        }
+        bottomRow[0] = row;
+
+        if (stackFrame.endPos != stackFrame.startPos && stackFrameEmpty) {
+            int label = formatter.add(rawBytesLabelRow, "^");
+            formatter.hExpand(label);
+            formatter.leftAlign(label, rawByteNodes.getInt(stackFrame.startPos - firstPos));
+            formatter.rightAlign(label, rawByteNodes.getInt(stackFrame.endPos - firstPos - 1));
+            formatter.vAttach(label, stackFrameLabel, '|');
+            formatter.leftAlign(stackFrameLabel, label);
+            formatter.rightAlign(stackFrameLabel, label);
+        }
+
+        return Math.max(pos, stackFrame.endPos);
+    }
+
+    private List<String> getWriteTraceDump(StackFrame stackFrame) {
+        // TODO: write mode
+        return null;
     }
 
     @Override

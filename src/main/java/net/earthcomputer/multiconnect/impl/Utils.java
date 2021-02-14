@@ -42,6 +42,7 @@ import net.minecraft.world.dimension.DimensionType;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -334,5 +335,29 @@ public class Utils {
                 bitSet.clear(i);
             }
         }
+    }
+
+    public static String toString(Object o) {
+        if (o == null || !o.getClass().isArray()) {
+            return String.valueOf(o);
+        }
+
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0, e = Array.getLength(o); i < e; i++) {
+            if (i != 0) {
+                sb.append(", ");
+            }
+            sb.append(toString(Array.get(o, i)));
+        }
+
+        return sb.append("]").toString();
+    }
+
+    public static String toString(Object o, int maxLen) {
+        String str = toString(o);
+        if (str.length() > maxLen && maxLen > "...".length()) {
+            return str.substring(0, maxLen - "...".length()) + "...";
+        }
+        return str;
     }
 }

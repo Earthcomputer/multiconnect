@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.transformer;
 
 abstract class Box<T> {
 
-    private T value;
+    private final T value;
 
     public Box(T value) {
         this.value = value;
