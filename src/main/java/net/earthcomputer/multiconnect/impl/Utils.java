@@ -5,10 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.Dynamic;
-import com.mojang.serialization.DynamicOps;
-import com.mojang.serialization.Lifecycle;
+import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
@@ -39,6 +36,9 @@ import net.minecraft.util.Util;
 import net.minecraft.util.collection.Int2ObjectBiMap;
 import net.minecraft.util.registry.*;
 import net.minecraft.world.dimension.DimensionType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -46,9 +46,12 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class Utils {
+    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
+
     public static CompoundTag datafix(DSL.TypeReference type, CompoundTag old) {
         return (CompoundTag) datafix(type, NbtOps.INSTANCE, old);
     }
@@ -208,8 +211,9 @@ public class Utils {
             DimensionType.THE_END_ID, DimensionTypeAccessor.getTheEnd()
     );
 
-    public static void translateDimensionType(TransformerByteBuf buf) {
-        translateExperimentalCodec(
+    @Nullable
+    public static Codecked<Supplier<DimensionType>> translateDimensionType(TransformerByteBuf buf) {
+        return translateExperimentalCodec(
                 buf,
                 Utils.singletonKeyCodec("effects", Identifier.CODEC),
                 DIMENSION_TYPES_BY_ID::containsKey,
@@ -219,7 +223,8 @@ public class Utils {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T, U> void translateExperimentalCodec(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate, Codec<U> thingCodec, Function<T, U> thingCreator) {
+    @Nullable
+    private static <T, U> Codecked<U> translateExperimentalCodec(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate, Codec<U> thingCodec, Function<T, U> thingCreator) {
         // TODO: support actual translation when this format stops being experimental
         boolean[] hasDecoded = {false};
         T oldThing;
@@ -233,19 +238,22 @@ public class Utils {
         }
         if (!hasDecoded[0]) {
             // already valid
-            buf.pendingRead(Codecked.class, new Codecked<>(thingCodec, (U) oldThing));
-            return;
+            Codecked<U> codecked = new Codecked<>(thingCodec, (U) oldThing);
+            buf.pendingRead(Codecked.class, codecked);
+            return codecked;
         }
         if (!allowablePredicate.test(oldThing)) {
             ClientConnection connection = buf.getConnection();
             if (connection != null) {
                 connection.disconnect(new TranslatableText("multiconnect.unsupportedExperimentalCodec"));
             }
-            return;
+            return null;
         }
 
         U thing = thingCreator.apply(oldThing);
-        buf.pendingRead(Codecked.class, new Codecked<>(thingCodec, thing));
+        Codecked<U> codecked = new Codecked<>(thingCodec, thing);
+        buf.pendingRead(Codecked.class, codecked);
+        return codecked;
     }
 
     /**
@@ -255,6 +263,26 @@ public class Utils {
     public static <T> Codec<T> singletonKeyCodec(String key, Codec<T> codec) {
         return RecordCodecBuilder.<Optional<T>>create(inst -> inst.group(codec.fieldOf(key).forGetter(Optional::get)).apply(inst, Optional::of))
                 .xmap(Optional::get, Optional::of);
+    }
+
+    /**
+     * Clones an object with its codec by serializing and deserializing it
+     */
+    public static <T> T clone(Codec<T> codec, T val) {
+        DataResult<net.minecraft.nbt.Tag> tagDataResult = codec.encodeStart(NbtOps.INSTANCE, val);
+        if (tagDataResult.error().isPresent()) {
+            LOGGER.info("Failed to encode for cloning");
+            return val;
+        }
+        //noinspection OptionalGetWithoutIsPresent
+        DataResult<T> cloneDataResult = codec.parse(NbtOps.INSTANCE, tagDataResult.result().get());
+        if (cloneDataResult.error().isPresent()) {
+            LOGGER.info("Failed to decode for cloning");
+            return val;
+        }
+
+        //noinspection OptionalGetWithoutIsPresent
+        return cloneDataResult.result().get();
     }
 
     public static void dumpBlockStates() {
