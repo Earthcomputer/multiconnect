@@ -91,7 +91,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
             BitSet verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
-            int sectionCount = Integer.bitCount(verticalStripBitmask.cardinality());
+            int sectionCount = verticalStripBitmask.cardinality();
             Char2CharMap paletteMap = new Char2CharOpenHashMap();
             byte[] bitsPerBlock = new byte[sectionCount];
             char[][] palette = new char[sectionCount][];
