@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinScreenHandler {
     @Shadow @Final public DefaultedList<Slot> slots;
 
-    @Inject(method = "removeStack", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "internalOnSlotClick", at = @At("HEAD"), cancellable = true)
     private void onSetSlot(int slot, int clickData, SlotActionType actionType, PlayerEntity player, CallbackInfoReturnable<ItemStack> ci) {
         if (actionType == SlotActionType.SWAP && clickData == 40) {
             ci.setReturnValue(this.slots.get(slot).getStack());
