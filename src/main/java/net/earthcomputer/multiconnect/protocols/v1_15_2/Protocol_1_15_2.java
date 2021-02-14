@@ -199,12 +199,12 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.disablePassthroughMode();
             ClientPlayerInteractionManager interactionManager = MinecraftClient.getInstance().interactionManager;
             byte previousGameMode;
-            if (interactionManager != null) {
+            if (interactionManager != null && interactionManager.getPreviousGameMode() != null) {
                 previousGameMode = (byte) interactionManager.getPreviousGameMode().getId();
             } else {
-                previousGameMode = (byte)0; // survival
+                previousGameMode = (byte)-1; // none
             }
-            buf.pendingRead(UnsignedByte.class, new UnsignedByte(previousGameMode));
+            buf.pendingRead(Byte.class, previousGameMode);
             String genType = buf.readString(16);
             buf.pendingRead(Boolean.class, "debug_all_block_states".equalsIgnoreCase(genType)); // debug mode
             buf.pendingRead(Boolean.class, "flat".equalsIgnoreCase(genType)); // flat world
