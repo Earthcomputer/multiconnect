@@ -25,6 +25,7 @@
     "MixinClientPlayNetworkHandler",
     "MixinHeldItemRenderer",
     "MixinItemStack",
+    "MixinMinecraftClient",
     "MixinPlayerEntity",
     "MixinPlayerInventory",
     "MixinPlayerScreenHandler",
