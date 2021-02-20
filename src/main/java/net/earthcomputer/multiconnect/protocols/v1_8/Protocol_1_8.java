@@ -35,7 +35,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.OtherClientPlayerEntity;
 import net.minecraft.client.option.ChatVisibility;
 import net.minecraft.command.CommandSource;
-import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.*;
@@ -700,10 +699,10 @@ public class Protocol_1_8 extends Protocol_1_9 {
             return false;
         }
         if (packet instanceof BoatPaddleStateC2SPacket) {
-            return false; // TODO: better behavior?
+            return false;
         }
         if (packet instanceof VehicleMoveC2SPacket) {
-            return false; // TODO: better behavior
+            return false;
         }
         if (packet instanceof ClientCommandC2SPacket && ((ClientCommandC2SPacket) packet).getMode() == ClientCommandC2SPacket.Mode.STOP_RIDING_JUMP) {
             return false;
