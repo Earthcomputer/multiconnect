@@ -21,8 +21,8 @@ public abstract class MixinSkullBlockEntity extends BlockEntity {
         super(blockEntityType, blockPos, blockState);
     }
 
-    @Inject(method = "fromTag", at = @At("RETURN"))
-    private void onFromTag(CompoundTag tag, CallbackInfo ci) {
+    @Inject(method = "readNbt", at = @At("RETURN"))
+    private void onReadNbt(CompoundTag tag, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             setSkullType(tag.getByte("SkullType"));
             setRotation(tag.getByte("Rot"));

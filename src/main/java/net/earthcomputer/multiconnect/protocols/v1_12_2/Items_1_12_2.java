@@ -80,9 +80,9 @@ public class Items_1_12_2 {
                         CompoundTag item = items.getCompound(i);
                         int itemMeta = item.getShort("Damage");
                         int slot = item.getByte("Slot");
-                        ItemStack itemStack = ItemStack.fromTag(item);
+                        ItemStack itemStack = ItemStack.fromNbt(item);
                         itemStack = oldItemStackToNew(itemStack, itemMeta);
-                        CompoundTag newItemTag = itemStack.toTag(new CompoundTag());
+                        CompoundTag newItemTag = itemStack.writeNbt(new CompoundTag());
                         newItemTag.putByte("Slot", (byte)slot);
                         items.set(i, newItemTag);
                     }
@@ -156,7 +156,7 @@ public class Items_1_12_2 {
             }
         }
         else if (stack.getItem() == ENCHANTED_BOOK) {
-            ListTag enchantments = EnchantedBookItem.getEnchantmentTag(stack);
+            ListTag enchantments = EnchantedBookItem.getEnchantmentNbt(stack);
             if (!enchantments.isEmpty()) {
                 stack = stack.copy();
                 copiedTag = true;
@@ -195,10 +195,10 @@ public class Items_1_12_2 {
                     for (int i = 0; i < items.size(); i++) {
                         CompoundTag item = items.getCompound(i);
                         int slot = item.getByte("Slot");
-                        ItemStack itemStack = ItemStack.fromTag(item);
+                        ItemStack itemStack = ItemStack.fromNbt(item);
                         Pair<ItemStack, Integer> itemStackAndMeta = newItemStackToOld(itemStack);
                         itemStack = itemStackAndMeta.getLeft();
-                        CompoundTag newItemTag = itemStack.toTag(new CompoundTag());
+                        CompoundTag newItemTag = itemStack.writeNbt(new CompoundTag());
                         newItemTag.putShort("Damage", itemStackAndMeta.getRight().shortValue());
                         newItemTag.putByte("Slot", (byte)slot);
                         items.set(i, newItemTag);
