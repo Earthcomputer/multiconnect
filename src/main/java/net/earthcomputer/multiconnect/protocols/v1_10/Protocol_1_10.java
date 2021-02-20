@@ -530,7 +530,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
         }
 
         // copy the entity
-        destEntity.fromTag(entity.toTag(new CompoundTag()));
+        destEntity.readNbt(entity.writeNbt(new CompoundTag()));
         destEntity.updateTrackedPosition(entity.getTrackedPosition());
 
         // replace entity in world and exchange entity id

@@ -20,8 +20,8 @@ public class FlowerPotBlockEntity extends BlockEntity {
     }
 
     @Override
-    public void fromTag(CompoundTag tag) {
-        super.fromTag(tag);
+    public void readNbt(CompoundTag tag) {
+        super.readNbt(tag);
         Item flowerPotItem;
         if (tag.contains("Item", 8))
             flowerPotItem = Registry.ITEM.get(new Identifier(tag.getString("Item")));

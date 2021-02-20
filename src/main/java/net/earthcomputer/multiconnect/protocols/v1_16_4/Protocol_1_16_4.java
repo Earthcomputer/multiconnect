@@ -17,6 +17,7 @@ import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.client.option.ChatVisibility;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
@@ -24,12 +25,14 @@ import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.ShulkerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.c2s.play.ClientSettingsC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.tag.*;
+import net.minecraft.util.Arm;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -154,6 +157,15 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
             buf.disablePassthroughMode();
             buf.pendingRead(Boolean.class, false); // required
             buf.applyPendingReads();
+        });
+        ProtocolRegistry.registerOutboundTranslator(ClientSettingsC2SPacket.class, buf -> {
+            buf.passthroughWrite(String.class); // language
+            buf.passthroughWrite(Byte.class); // view distance
+            buf.passthroughWrite(ChatVisibility.class); // chat visibility
+            buf.passthroughWrite(Boolean.class); // chat colors
+            buf.passthroughWrite(Byte.class); // player model bitmask
+            buf.passthroughWrite(Arm.class); // main arm
+            buf.skipWrite(Boolean.class); // no filtering
         });
     }
 
@@ -301,6 +313,21 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Blocks.SMALL_DRIPLEAF);
         registry.unregister(Blocks.ROOTED_DIRT);
         registry.unregister(Blocks.HANGING_ROOTS);
+        registry.unregister(Blocks.CHISELED_GRIMSTONE);
+        registry.unregister(Blocks.GRIMSTONE);
+        registry.unregister(Blocks.GRIMSTONE_BRICK_SLAB);
+        registry.unregister(Blocks.GRIMSTONE_BRICK_STAIRS);
+        registry.unregister(Blocks.GRIMSTONE_BRICK_WALL);
+        registry.unregister(Blocks.GRIMSTONE_BRICKS);
+        registry.unregister(Blocks.GRIMSTONE_TILE_SLAB);
+        registry.unregister(Blocks.GRIMSTONE_TILE_STAIRS);
+        registry.unregister(Blocks.GRIMSTONE_TILE_WALL);
+        registry.unregister(Blocks.GRIMSTONE_TILES);
+        registry.unregister(Blocks.GRIMSTONE_WALL);
+        registry.unregister(Blocks.POLISHED_GRIMSTONE);
+        registry.unregister(Blocks.POLISHED_GRIMSTONE_SLAB);
+        registry.unregister(Blocks.POLISHED_GRIMSTONE_STAIRS);
+        registry.unregister(Blocks.POLISHED_GRIMSTONE_WALL);
     }
 
     private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
