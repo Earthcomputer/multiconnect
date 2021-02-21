@@ -23,6 +23,8 @@
     "MixinClientPlayerEntity",
     "MixinClientPlayerInteractionManager",
     "MixinClientPlayNetworkHandler",
+    "MixinEntityModels",
+    "MixinEntityRenderDispatcher",
     "MixinHeldItemRenderer",
     "MixinItemStack",
     "MixinMinecraftClient",
