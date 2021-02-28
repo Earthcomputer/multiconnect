@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_13_2;
 import com.google.gson.JsonParseException;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.*;
@@ -385,28 +386,31 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         byte[][] blockLight = (byte[][]) translator.getUserData("blockLight");
         byte[][] skyLight = (byte[][]) translator.getUserData("skyLight");
 
-        TransformerByteBuf buf = TransformerByteBuf.forPacketConstruction(LightUpdateS2CPacket.class, Protocols.V1_14);
-        buf.pendingRead(VarInt.class, new VarInt(packet.getX()));
-        buf.pendingRead(VarInt.class, new VarInt(packet.getZ()));
-        int blockLightMask = bitSetToInt(packet.getVerticalStripBitmask()) << 1;
-        buf.pendingRead(VarInt.class, new VarInt(translator.getDimension().hasSkyLight() ? blockLightMask : 0)); // sky light mask
-        buf.pendingRead(VarInt.class, new VarInt(blockLightMask)); // block light mask
-        for (int i = 0; i < 16; i++) {
-            byte[] skyData = skyLight[i];
-            if (skyData != null) {
-                buf.pendingRead(byte[].class, skyData);
+        LightUpdateS2CPacket lightUpdatePacket = Utils.createPacket(LightUpdateS2CPacket.class, LightUpdateS2CPacket::new, Protocols.V1_14, buf -> {
+            buf.pendingRead(VarInt.class, new VarInt(packet.getX()));
+            buf.pendingRead(VarInt.class, new VarInt(packet.getZ()));
+            int blockLightMask = bitSetToInt(packet.getVerticalStripBitmask()) << 1;
+            buf.pendingRead(VarInt.class, new VarInt(translator.getDimension().hasSkyLight() ? blockLightMask : 0)); // sky light mask
+            buf.pendingRead(VarInt.class, new VarInt(blockLightMask)); // block light mask
+            buf.pendingRead(VarInt.class, new VarInt(0)); // filled sky light mask
+            buf.pendingRead(VarInt.class, new VarInt(0)); // filled block light mask
+            for (int i = 0; i < 16; i++) {
+                byte[] skyData = skyLight[i];
+                if (skyData != null) {
+                    buf.pendingRead(byte[].class, skyData);
+                }
             }
-        }
-        for (int i = 0; i < 16; i++) {
-            byte[] blockData = blockLight[i];
-            if (blockData != null) {
-                buf.pendingRead(byte[].class, blockData);
+            for (int i = 0; i < 16; i++) {
+                byte[] blockData = blockLight[i];
+                if (blockData != null) {
+                    buf.pendingRead(byte[].class, blockData);
+                }
             }
-        }
 
-        buf.applyPendingReads();
+            buf.applyPendingReads();
+        });
 
-        translator.getPostPackets().add(new LightUpdateS2CPacket(buf));
+        translator.getPostPackets().add(lightUpdatePacket);
 
         // Heightmaps and counts
         for (ChunkSection section : data.getSections()) {

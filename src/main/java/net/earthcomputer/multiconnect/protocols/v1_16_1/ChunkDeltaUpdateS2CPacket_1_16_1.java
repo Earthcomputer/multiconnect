@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.earthcomputer.multiconnect.transformer.VarLong;
 import net.minecraft.network.OffThreadException;
@@ -52,31 +52,33 @@ public class ChunkDeltaUpdateS2CPacket_1_16_1 implements Packet<ClientPlayPacket
         BlockPos.Mutable blockPos = new BlockPos.Mutable();
         for (int sectionY = 0; sectionY < 16; sectionY++) {
             if ((updatedSectionBitmask & (1 << sectionY)) != 0) {
-                TransformerByteBuf buf = TransformerByteBuf.forPacketConstruction(ChunkDeltaUpdateS2CPacket.class, Protocols.V1_16_2);
-                buf.pendingRead(Long.class, ((long)pos.x << 42) | ((long)pos.z << 20) | sectionY); // pos
-                buf.pendingRead(Boolean.class, false); // suppress light updates
+                int sectionY_f = sectionY;
+                ChunkDeltaUpdateS2CPacket packet = Utils.createPacket(ChunkDeltaUpdateS2CPacket.class, ChunkDeltaUpdateS2CPacket::new, Protocols.V1_16_2, buf -> {
+                    buf.pendingRead(Long.class, ((long)pos.x << 42) | ((long)pos.z << 20) | sectionY_f); // pos
+                    buf.pendingRead(Boolean.class, false); // suppress light updates
 
-                ShortList filteredIndices = new ShortArrayList();
-                IntList filteredStateIds = new IntArrayList();
-                for (int i = 0; i < indices.length; i++) {
-                    int index = indices[i];
-                    int y = index & 255;
-                    if (y >> 4 == sectionY) {
-                        int x = (index >> 12) & 15;
-                        int z = (index >> 8) & 15;
-                        filteredIndices.add(ChunkSectionPos.packLocal(blockPos.set(x, y & 15, z)));
-                        filteredStateIds.add(stateIds[i]);
+                    ShortList filteredIndices = new ShortArrayList();
+                    IntList filteredStateIds = new IntArrayList();
+                    for (int i = 0; i < indices.length; i++) {
+                        int index = indices[i];
+                        int y = index & 255;
+                        if (y >> 4 == sectionY_f) {
+                            int x = (index >> 12) & 15;
+                            int z = (index >> 8) & 15;
+                            filteredIndices.add(ChunkSectionPos.packLocal(blockPos.set(x, y & 15, z)));
+                            filteredStateIds.add(stateIds[i]);
+                        }
                     }
-                }
 
-                buf.pendingRead(VarInt.class, new VarInt(filteredIndices.size()));
-                for (int i = 0; i < filteredIndices.size(); i++) {
-                    buf.pendingRead(VarLong.class, new VarLong(((long)filteredStateIds.getInt(i) << 12) | filteredIndices.getShort(i)));
-                }
+                    buf.pendingRead(VarInt.class, new VarInt(filteredIndices.size()));
+                    for (int i = 0; i < filteredIndices.size(); i++) {
+                        buf.pendingRead(VarLong.class, new VarLong(((long)filteredStateIds.getInt(i) << 12) | filteredIndices.getShort(i)));
+                    }
 
-                buf.applyPendingReads();
+                    buf.applyPendingReads();
+                });
                 try {
-                    listener.onChunkDeltaUpdate(new ChunkDeltaUpdateS2CPacket(buf));
+                    listener.onChunkDeltaUpdate(packet);
                 } catch (OffThreadException e) {
                     offThreadException = e;
                 }

@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.transformer;
 import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.EmptyByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
@@ -52,10 +51,6 @@ public final class TransformerByteBuf extends PacketByteBuf {
     private final Deque<StackFrame> stack = new ArrayDeque<>();
     private boolean forceSuper = false;
 
-    public static TransformerByteBuf forPacketConstruction(Class<? extends Packet<?>> packetClass, int protocolVersion) {
-        return new TransformerByteBuf(new EmptyByteBuf(ByteBufAllocator.DEFAULT), null).readTopLevelType(packetClass, protocolVersion);
-    }
-
     public TransformerByteBuf(ByteBuf delegate, ChannelHandlerContext context) {
         this(delegate, context, ProtocolRegistry.getTranslatorRegistry());
     }
@@ -74,13 +69,14 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     public TransformerByteBuf readTopLevelType(Class<?> type) {
-        return readTopLevelType(type, ConnectionInfo.protocolVersion);
+        return readTopLevelType(type, ConnectionInfo.protocolVersion, buf -> {});
     }
 
     @SuppressWarnings("unchecked")
-    public TransformerByteBuf readTopLevelType(Class<?> type, int protocolVersion) {
+    public <T> TransformerByteBuf readTopLevelType(Class<T> type, int protocolVersion, InboundTranslator<T> additionalTranslator) {
         transformationEnabled = true;
         stack.push(new StackFrame(type, protocolVersion));
+        additionalTranslator.onRead(this);
         List<Pair<Integer, InboundTranslator<?>>> translators = (List<Pair<Integer, InboundTranslator<?>>>) (List<?>)
                 translatorRegistry.getInboundTranslators(type, protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
         for (Pair<Integer, InboundTranslator<?>> translator : translators) {

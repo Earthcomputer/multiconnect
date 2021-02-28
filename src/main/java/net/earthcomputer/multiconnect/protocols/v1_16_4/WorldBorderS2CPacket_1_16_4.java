@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_16_4;
 
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.earthcomputer.multiconnect.transformer.VarLong;
 import net.minecraft.*;
@@ -63,55 +63,61 @@ public class WorldBorderS2CPacket_1_16_4 implements Packet<ClientPlayPacketListe
     public void apply(ClientPlayPacketListener listener) {
         switch (type) {
             case SET_SIZE: {
-                TransformerByteBuf buf = TransformerByteBuf.forPacketConstruction(class_5897.class, Protocols.V1_17);
-                buf.pendingRead(Double.class, newSize);
-                buf.applyPendingReads();
-                listener.method_34079(new class_5897(buf));
+                class_5897 packet = Utils.createPacket(class_5897.class, class_5897::new, Protocols.V1_17, buf -> {
+                    buf.pendingRead(Double.class, newSize);
+                    buf.applyPendingReads();
+                });
+                listener.method_34079(packet);
             }
             break;
             case LERP_SIZE: {
-                TransformerByteBuf buf = TransformerByteBuf.forPacketConstruction(class_5896.class, Protocols.V1_17);
-                buf.pendingRead(Double.class, oldSize);
-                buf.pendingRead(Double.class, newSize);
-                buf.pendingRead(VarLong.class, new VarLong(lerpTime));
-                buf.applyPendingReads();
-                listener.method_34078(new class_5896(buf));
+                class_5896 packet = Utils.createPacket(class_5896.class, class_5896::new, Protocols.V1_17, buf -> {
+                    buf.pendingRead(Double.class, oldSize);
+                    buf.pendingRead(Double.class, newSize);
+                    buf.pendingRead(VarLong.class, new VarLong(lerpTime));
+                    buf.applyPendingReads();
+                });
+                listener.method_34078(packet);
             }
             break;
             case SET_CENTER: {
-                TransformerByteBuf buf = TransformerByteBuf.forPacketConstruction(class_5895.class, Protocols.V1_17);
-                buf.pendingRead(Double.class, newCenterX);
-                buf.pendingRead(Double.class, newCenterZ);
-                buf.applyPendingReads();
-                listener.method_34077(new class_5895(buf));
+                class_5895 packet = Utils.createPacket(class_5895.class, class_5895::new, Protocols.V1_17, buf -> {
+                    buf.pendingRead(Double.class, newCenterX);
+                    buf.pendingRead(Double.class, newCenterZ);
+                    buf.applyPendingReads();
+                });
+                listener.method_34077(packet);
             }
             break;
             case SET_WARNING_BLOCKS: {
-                TransformerByteBuf buf = TransformerByteBuf.forPacketConstruction(class_5899.class, Protocols.V1_17);
-                buf.pendingRead(VarInt.class, new VarInt(warningBlocks));
-                buf.applyPendingReads();
-                listener.method_34081(new class_5899(buf));
+                class_5899 packet = Utils.createPacket(class_5899.class, class_5899::new, Protocols.V1_17, buf -> {
+                    buf.pendingRead(VarInt.class, new VarInt(warningBlocks));
+                    buf.applyPendingReads();
+                });
+                listener.method_34081(packet);
             }
             break;
             case SET_WARNING_TIME: {
-                TransformerByteBuf buf = TransformerByteBuf.forPacketConstruction(class_5898.class, Protocols.V1_17);
-                buf.pendingRead(VarInt.class, new VarInt(warningTime));
-                buf.applyPendingReads();
-                listener.method_34080(new class_5898(buf));
+                class_5898 packet = Utils.createPacket(class_5898.class, class_5898::new, Protocols.V1_17, buf -> {
+                    buf.pendingRead(VarInt.class, new VarInt(warningTime));
+                    buf.applyPendingReads();
+                });
+                listener.method_34080(packet);
             }
             break;
             case INITIALIZE: {
-                TransformerByteBuf buf = TransformerByteBuf.forPacketConstruction(class_5889.class, Protocols.V1_17);
-                buf.pendingRead(Double.class, newCenterX);
-                buf.pendingRead(Double.class, newCenterZ);
-                buf.pendingRead(Double.class, oldSize);
-                buf.pendingRead(Double.class, newSize);
-                buf.pendingRead(VarLong.class, new VarLong(lerpTime));
-                buf.pendingRead(VarInt.class, new VarInt(newAbsoluteMaxSize));
-                buf.pendingRead(VarInt.class, new VarInt(warningBlocks));
-                buf.pendingRead(VarInt.class, new VarInt(warningTime));
-                buf.applyPendingReads();
-                listener.method_34072(new class_5889(buf));
+                class_5889 packet = Utils.createPacket(class_5889.class, class_5889::new, Protocols.V1_17, buf -> {
+                    buf.pendingRead(Double.class, newCenterX);
+                    buf.pendingRead(Double.class, newCenterZ);
+                    buf.pendingRead(Double.class, oldSize);
+                    buf.pendingRead(Double.class, newSize);
+                    buf.pendingRead(VarLong.class, new VarLong(lerpTime));
+                    buf.pendingRead(VarInt.class, new VarInt(newAbsoluteMaxSize));
+                    buf.pendingRead(VarInt.class, new VarInt(warningBlocks));
+                    buf.pendingRead(VarInt.class, new VarInt(warningTime));
+                    buf.applyPendingReads();
+                });
+                listener.method_34072(packet);
             }
             break;
         }

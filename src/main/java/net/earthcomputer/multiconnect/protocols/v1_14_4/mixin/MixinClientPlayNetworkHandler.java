@@ -2,10 +2,10 @@ package net.earthcomputer.multiconnect.protocols.v1_14_4.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.IBiomeStorage_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.IChunkDataS2CPacket;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.PendingDataTrackerEntries;
-import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.earthcomputer.multiconnect.transformer.UnsignedByte;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -60,12 +60,11 @@ public abstract class MixinClientPlayNetworkHandler {
             List<DataTracker.Entry<?>> entries = PendingDataTrackerEntries.getEntries(entityId);
             if (entries != null) {
                 PendingDataTrackerEntries.setEntries(entityId, null);
-                TransformerByteBuf buf = TransformerByteBuf.forPacketConstruction(EntityTrackerUpdateS2CPacket.class, Protocols.V1_15);
-                buf.pendingRead(VarInt.class, new VarInt(entityId));
-                buf.pendingRead(UnsignedByte.class, new UnsignedByte((short)255)); // terminating byte
-                buf.applyPendingReads();
-                EntityTrackerUpdateS2CPacket packet = new EntityTrackerUpdateS2CPacket(buf);
-                //noinspection ConstantConditions
+                EntityTrackerUpdateS2CPacket packet = Utils.createPacket(EntityTrackerUpdateS2CPacket.class, EntityTrackerUpdateS2CPacket::new, Protocols.V1_15, buf -> {
+                    buf.pendingRead(VarInt.class, new VarInt(entityId));
+                    buf.pendingRead(UnsignedByte.class, new UnsignedByte((short)255)); // terminating byte
+                    buf.applyPendingReads();
+                });
                 ((TrackerUpdatePacketAccessor) packet).setTrackedValues(entries);
                 onEntityTrackerUpdate(packet);
             }

@@ -55,6 +55,7 @@ public class ChunkDataTranslator {
         ((IChunkDataS2CPacket) packet).multiconnect_setDimension(dimension);
         ChunkDataTranslator translator = new ChunkDataTranslator(packet, isFullChunk, dimension, networkHandler.getRegistryManager());
         EXECUTOR.submit(() -> {
+            try {
             CURRENT_TRANSLATOR.set(translator);
 
             TransformerByteBuf buf = new TransformerByteBuf(packet.getReadBuffer(), null);
@@ -81,6 +82,9 @@ public class ChunkDataTranslator {
                     postPacket.apply(networkHandler);
                 } catch (OffThreadException ignore) {
                 }
+            }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }

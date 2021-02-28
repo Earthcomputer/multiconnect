@@ -7,6 +7,8 @@ import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.EmptyByteBuf;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.bridge.DynamicRegistryManagerImplAccessor;
@@ -14,6 +16,7 @@ import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAcc
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.DimensionTypeAccessor;
 import net.earthcomputer.multiconnect.transformer.Codecked;
+import net.earthcomputer.multiconnect.transformer.InboundTranslator;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
@@ -27,6 +30,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.tag.Tag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
@@ -355,5 +359,11 @@ public class Utils {
                 bitSet.clear(i);
             }
         }
+    }
+
+    public static <T extends Packet<?>> T createPacket(Class<T> packetClass, Function<PacketByteBuf, T> constructor, int protocolVersion, InboundTranslator<T> creator) {
+        TransformerByteBuf buf = new TransformerByteBuf(new EmptyByteBuf(ByteBufAllocator.DEFAULT), null)
+                .readTopLevelType(packetClass, protocolVersion, creator);
+        return constructor.apply(buf);
     }
 }
