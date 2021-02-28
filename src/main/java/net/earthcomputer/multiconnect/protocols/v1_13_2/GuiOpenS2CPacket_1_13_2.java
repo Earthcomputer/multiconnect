@@ -9,21 +9,18 @@ import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.text.Text;
 
 public class GuiOpenS2CPacket_1_13_2 implements Packet<ClientPlayNetworkHandler> {
+    private final int syncId;
+    private final String type;
+    private final Text title;
+    private final int slotCount;
+    private final int horseId;
 
-    private int syncId;
-    private String type;
-    private Text title;
-    private int slotCount;
-    private int horseId;
-
-    @Override
-    public void read(PacketByteBuf buf) {
+    public GuiOpenS2CPacket_1_13_2(PacketByteBuf buf) {
         syncId = buf.readUnsignedByte();
         type = buf.readString(32);
         title = buf.readText();
         slotCount = buf.readUnsignedByte();
-        if (type.equals("EntityHorse"))
-            horseId = buf.readInt();
+        horseId = type.equals("EntityHorse") ? buf.readInt() : 0;
     }
 
     @Override

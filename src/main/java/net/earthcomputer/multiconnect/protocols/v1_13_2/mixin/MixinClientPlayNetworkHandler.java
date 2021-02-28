@@ -21,7 +21,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -149,12 +148,7 @@ public abstract class MixinClientPlayNetworkHandler {
                 onSetTradeOffers(new SetTradeOffersS2CPacket(syncId, trades, 5, 0, false, false));
                 ci.cancel();
             } else if (Protocol_1_13_2.CUSTOM_PAYLOAD_OPEN_BOOK.equals(channel)) {
-                OpenWrittenBookS2CPacket openBookPacket = new OpenWrittenBookS2CPacket();
-                try {
-                    openBookPacket.read(packet.getData());
-                } catch (IOException e) {
-                    MULTICONNECT_LOGGER.error("Failed to read open book packet", e);
-                }
+                OpenWrittenBookS2CPacket openBookPacket = new OpenWrittenBookS2CPacket(packet.getData());
                 onOpenWrittenBook(openBookPacket);
                 ci.cancel();
             }

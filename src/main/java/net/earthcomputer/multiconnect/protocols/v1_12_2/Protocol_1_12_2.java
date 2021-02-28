@@ -18,6 +18,7 @@ import net.earthcomputer.multiconnect.protocols.v1_16_4.MapUpdateS2CPacket_1_16_
 import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.WallMountLocation;
+import net.minecraft.class_5900;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.command.CommandSource;
@@ -362,7 +363,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(TeamS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(class_5900.class, buf -> {
             buf.enablePassthroughMode();
             buf.readString(16); // team name
             int mode = buf.readByte();
@@ -387,9 +388,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         ProtocolRegistry.registerInboundTranslator(BossBarS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readUuid(); // uuid
-            BossBarS2CPacket.Type type = buf.readEnumConstant(BossBarS2CPacket.Type.class);
+            BossBarS2CPacket.class_5883 type = buf.readEnumConstant(BossBarS2CPacket.class_5883.class);
             buf.disablePassthroughMode();
-            if (type == BossBarS2CPacket.Type.UPDATE_PROPERTIES) {
+            if (type == BossBarS2CPacket.class_5883.field_29112) {
                 int flags = buf.readUnsignedByte();
                 buf.pendingRead(UnsignedByte.class, new UnsignedByte((short) (flags | ((flags & 2) << 1)))); // copy bit 2 to 4
             }

@@ -3,14 +3,15 @@ package net.earthcomputer.multiconnect.protocols.v1_13_2;
 import com.google.gson.JsonParseException;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.Protocol_1_15_2;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_1_16_1;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.EntityS2CPacket_1_16_4;
 import net.earthcomputer.multiconnect.protocols.v1_16_4.MapUpdateS2CPacket_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.Protocol_1_16_4;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.minecraft.block.*;
@@ -96,8 +97,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         insertAfter(packets, EntityStatusS2CPacket.class, PacketInfo.of(TagQueryResponseS2CPacket.class, TagQueryResponseS2CPacket::new));
         remove(packets, OpenHorseScreenS2CPacket.class);
         remove(packets, LightUpdateS2CPacket.class);
-        remove(packets, EntityS2CPacket.class);
-        insertAfter(packets, SetTradeOffersS2CPacket.class, PacketInfo.of(EntityS2CPacket.class, EntityS2CPacket::new));
+        remove(packets, EntityS2CPacket_1_16_4.class);
+        insertAfter(packets, SetTradeOffersS2CPacket.class, PacketInfo.of(EntityS2CPacket_1_16_4.class, EntityS2CPacket_1_16_4::new));
         remove(packets, SetTradeOffersS2CPacket.class);
         remove(packets, OpenWrittenBookS2CPacket.class);
         remove(packets, OpenScreenS2CPacket.class);
@@ -114,8 +115,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     public List<PacketInfo<?>> getServerboundPackets() {
         List<PacketInfo<?>> packets = super.getServerboundPackets();
         remove(packets, UpdateDifficultyC2SPacket.class);
-        remove(packets, PlayerMoveC2SPacket.class);
-        insertAfter(packets, UpdateDifficultyLockC2SPacket.class, PacketInfo.of(PlayerMoveC2SPacket.class, PlayerMoveC2SPacket::new));
+        remove(packets, PlayerMoveC2SPacket.class_5911.class);
+        insertAfter(packets, UpdateDifficultyLockC2SPacket.class, PacketInfo.of(PlayerMoveC2SPacket.class_5911.class, PlayerMoveC2SPacket.class_5911::method_34224));
         remove(packets, UpdateDifficultyLockC2SPacket.class);
         remove(packets, UpdateJigsawC2SPacket.class);
         return packets;
@@ -239,9 +240,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
         ProtocolRegistry.registerInboundTranslator(SynchronizeTagsS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            TagGroup.class_5748.method_33160(buf); // block tags
-            TagGroup.class_5748.method_33160(buf); // item tags
-            TagGroup.class_5748.method_33160(buf); // fluid tags
+            Protocol_1_16_4.readTagGroupNetworkData(buf); // block tags
+            Protocol_1_16_4.readTagGroupNetworkData(buf); // item tags
+            Protocol_1_16_4.readTagGroupNetworkData(buf); // fluid tags
             buf.disablePassthroughMode();
             buf.pendingRead(VarInt.class, new VarInt(0)); // entity type count
             buf.applyPendingReads();
@@ -384,37 +385,28 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         byte[][] blockLight = (byte[][]) translator.getUserData("blockLight");
         byte[][] skyLight = (byte[][]) translator.getUserData("skyLight");
 
-        LightUpdateS2CPacket lightPacket = new LightUpdateS2CPacket();
-        //noinspection ConstantConditions
-        LightUpdatePacketAccessor lightPacketAccessor = (LightUpdatePacketAccessor) lightPacket;
-
-        lightPacketAccessor.setChunkX(packet.getX());
-        lightPacketAccessor.setChunkZ(packet.getZ());
-
-        BitSet blockLightMask = new BitSet();
-        blockLightMask.or(packet.getVerticalStripBitmask());
-        Utils.leftShift(blockLightMask, 1);
-        BitSet skyLightMask = translator.getDimension().hasSkyLight() ? blockLightMask : new BitSet();
-        lightPacketAccessor.setBlockLightMask(blockLightMask);
-        lightPacketAccessor.setSkyLightMask(skyLightMask);
-        lightPacketAccessor.setBlockLightUpdates(new ArrayList<>());
-        lightPacketAccessor.setSkyLightUpdates(new ArrayList<>());
-        lightPacketAccessor.setTrustEdges(true);
-
+        TransformerByteBuf buf = TransformerByteBuf.forPacketConstruction(LightUpdateS2CPacket.class, Protocols.V1_14);
+        buf.pendingRead(VarInt.class, new VarInt(packet.getX()));
+        buf.pendingRead(VarInt.class, new VarInt(packet.getZ()));
+        int blockLightMask = bitSetToInt(packet.getVerticalStripBitmask()) << 1;
+        buf.pendingRead(VarInt.class, new VarInt(translator.getDimension().hasSkyLight() ? blockLightMask : 0)); // sky light mask
+        buf.pendingRead(VarInt.class, new VarInt(blockLightMask)); // block light mask
+        for (int i = 0; i < 16; i++) {
+            byte[] skyData = skyLight[i];
+            if (skyData != null) {
+                buf.pendingRead(byte[].class, skyData);
+            }
+        }
         for (int i = 0; i < 16; i++) {
             byte[] blockData = blockLight[i];
             if (blockData != null) {
-                lightPacket.getBlockLightUpdates().add(blockData);
-            }
-            if (skyLight != null) {
-                byte[] skyData = skyLight[i];
-                if (skyData != null) {
-                    lightPacket.getSkyLightUpdates().add(skyData);
-                }
+                buf.pendingRead(byte[].class, blockData);
             }
         }
 
-        translator.getPostPackets().add(lightPacket);
+        buf.applyPendingReads();
+
+        translator.getPostPackets().add(new LightUpdateS2CPacket(buf));
 
         // Heightmaps and counts
         for (ChunkSection section : data.getSections()) {
@@ -460,6 +452,11 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         packet.getHeightmaps().putLongArray("MOTION_BLOCKING", motionBlocking.getStorage());
 
         super.postTranslateChunk(translator, data);
+    }
+
+    private static int bitSetToInt(BitSet bitSet) {
+        long[] longs = bitSet.toLongArray();
+        return longs.length == 0 ? 0 : (int) longs[0];
     }
 
     @Override

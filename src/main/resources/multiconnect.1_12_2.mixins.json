@@ -8,6 +8,7 @@
     "MixinStructureBlockBlockEntity",
     "MixinStructureBlockScreen1",
     "RedstoneWireBlockAccessor",
+    "TagGroupNetworkDataAccessor",
     "WallBlockAccessor"
   ],
   "client": [

@@ -36,7 +36,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.dimension.DimensionType;
 
 import java.util.*;

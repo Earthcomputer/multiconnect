@@ -5,22 +5,18 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 
 public class CustomPayloadC2SPacket_1_12_2 implements Packet<ServerPlayPacketListener> {
-
-    private String channel;
-    private PacketByteBuf data;
+    private final String channel;
+    private final PacketByteBuf data;
     private boolean blocked;
 
-    public CustomPayloadC2SPacket_1_12_2() {}
+    public CustomPayloadC2SPacket_1_12_2(PacketByteBuf buf) {
+        throw new UnsupportedOperationException();
+    }
 
     public CustomPayloadC2SPacket_1_12_2(String channel, PacketByteBuf data) {
         this.channel = channel;
         this.data = data;
         this.blocked = !channel.startsWith("MC|");
-    }
-
-    @Override
-    public void read(PacketByteBuf buf) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

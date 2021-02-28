@@ -3,7 +3,9 @@ package net.earthcomputer.multiconnect.transformer;
 import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.EmptyByteBuf;
 import io.netty.channel.ChannelHandlerContext;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.INetworkState;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
@@ -17,6 +19,13 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.*;
+import org.spongepowered.asm.service.MixinService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,9 +38,12 @@ import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.*;
 
 public final class TransformerByteBuf extends PacketByteBuf {
+    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
     private final ChannelHandlerContext context;
     private final TranslatorRegistry translatorRegistry;
@@ -39,6 +51,10 @@ public final class TransformerByteBuf extends PacketByteBuf {
     private boolean transformationEnabled = false;
     private final Deque<StackFrame> stack = new ArrayDeque<>();
     private boolean forceSuper = false;
+
+    public static TransformerByteBuf forPacketConstruction(Class<? extends Packet<?>> packetClass, int protocolVersion) {
+        return new TransformerByteBuf(new EmptyByteBuf(ByteBufAllocator.DEFAULT), null).readTopLevelType(packetClass, protocolVersion);
+    }
 
     public TransformerByteBuf(ByteBuf delegate, ChannelHandlerContext context) {
         this(delegate, context, ProtocolRegistry.getTranslatorRegistry());
@@ -51,15 +67,22 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     public ClientConnection getConnection() {
+        if (context == null) {
+            return null;
+        }
         return context.channel().pipeline().get(ClientConnection.class);
     }
 
-    @SuppressWarnings("unchecked")
     public TransformerByteBuf readTopLevelType(Class<?> type) {
+        return readTopLevelType(type, ConnectionInfo.protocolVersion);
+    }
+
+    @SuppressWarnings("unchecked")
+    public TransformerByteBuf readTopLevelType(Class<?> type, int protocolVersion) {
         transformationEnabled = true;
-        stack.push(new StackFrame(type, ConnectionInfo.protocolVersion));
+        stack.push(new StackFrame(type, protocolVersion));
         List<Pair<Integer, InboundTranslator<?>>> translators = (List<Pair<Integer, InboundTranslator<?>>>) (List<?>)
-                translatorRegistry.getInboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
+                translatorRegistry.getInboundTranslators(type, protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
         for (Pair<Integer, InboundTranslator<?>> translator : translators) {
             getStackFrame().version = translator.getLeft();
             translator.getRight().onRead(this);
@@ -736,18 +759,204 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T decode(Codec<T> codec) throws IOException {
+    public <T> T decode(Codec<T> codec) {
         // TODO: Make the types here Object rather than class, so we can distinguish the types of Codec
+        return read((Class<Codecked<T>>) (Class<?>) Codecked.class, () -> new Codecked<>(codec, super.decode(codec))).getValue();
+    }
+
+    // TODO: when non-class types get merged from the 1.8 branch, collections here will need a bit of a refactor.
+    // Element type calculation has already been done (albeit not used). The rawtype collection class types will be replaced
+    // with a wrapper type in each of these methods, so future transformers can target "collections of V" rather than just
+    // "collections". A solution for passthrough reading collections will probably involve creating mirrors of all these
+    // collection read methods, which take as a parameter the up-to-date element read method (obtained via accessor mixins),
+    // which is similar to the default read methods already provided internally in this class (which call super).
+
+    public <V, C extends Collection<V>> void pendingReadCollection(Class<C> collectionType, Class<V> elementType, C collection) {
+        pendingRead(collectionType, collection);
+    }
+
+    public <K, V> void pendingReadMap(Class<K> keyClass, Class<V> valueClass, Map<K, V> map) {
+        pendingReadMapUnchecked(keyClass, valueClass, map);
+    }
+
+    public void pendingReadMapUnchecked(Class<?> keyClass, Class<?> valueClass, Map<?, ?> map) {
+        pendingRead(Map.class, map);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T, C extends Collection<T>> C method_34068(IntFunction<C> constructor, Function<PacketByteBuf, T> elementReader) {
+        Class<T> elementType = (Class<T>) getLambdaReturnType(elementReader, 1);
+        return (C) read(Collection.class, () -> super.method_34068(constructor, elementReader));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> void method_34062(Collection<T> val, BiConsumer<PacketByteBuf, T> elementWriter) {
+        Class<T> elementType = (Class<T>) getLambdaParameterType(elementWriter, 0, 1);
+        write((Class<Collection<T>>) (Class<?>) Collection.class, val, c -> super.method_34062(c, elementWriter));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> List<T> method_34066(Function<PacketByteBuf, T> elementReader) {
+        Class<T> elementType = (Class<T>) getLambdaReturnType(elementReader, 0);
+        return read((Class<List<T>>) (Class<?>) List.class, () -> super.method_34066(elementReader));
+    }
+
+    @Override
+    public IntList method_34059() {
+        return read(IntList.class, super::method_34059);
+    }
+
+    @Override
+    public void method_34060(IntList val) {
+        write(IntList.class, val, super::method_34060);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <K, V> Map<K, V> method_34067(Function<PacketByteBuf, K> keyReader, Function<PacketByteBuf, V> valueReader) {
+        Class<K> keyType = (Class<K>) getLambdaReturnType(keyReader, 0);
+        Class<V> valueType = (Class<V>) getLambdaReturnType(valueReader, 1);
+        return read((Class<Map<K, V>>) (Class<?>) Map.class, () -> super.method_34067(keyReader, valueReader));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <K, V, M extends Map<K, V>> M method_34069(IntFunction<M> constructor, Function<PacketByteBuf, K> keyReader, Function<PacketByteBuf, V> valueReader) {
+        Class<K> keyType = (Class<K>) getLambdaReturnType(keyReader, 1);
+        Class<V> valueType = (Class<V>) getLambdaReturnType(valueReader, 2);
+        return read((Class<M>) (Class<?>) Map.class, () -> super.method_34069(constructor, keyReader, valueReader));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <K, V> void method_34063(Map<K, V> map, BiConsumer<PacketByteBuf, K> keyWriter, BiConsumer<PacketByteBuf, V> valueWriter) {
+        Class<K> keyType = (Class<K>) getLambdaParameterType(keyWriter, 0, 1);
+        Class<V> valueType = (Class<V>) getLambdaParameterType(valueWriter, 1, 1);
+        write((Class<Map<K, V>>) (Class<?>) Map.class, map, m -> super.method_34063(m, keyWriter, valueWriter));
+    }
+
+    private static final Map<Class<?>, Class<?>> lambdaElementTypes = new HashMap<>();
+    private static final ReadWriteLock lambdaElementTypeLock = new ReentrantReadWriteLock();
+
+    private Class<?> getLambdaReturnType(Object lambda, int functionalParameterIndex) {
+        return getLambdaElementType(lambda, functionalParameterIndex, Type::getReturnType);
+    }
+
+    private Class<?> getLambdaParameterType(Object lambda, int functionalParameterIndex, int lambdaParameterIndex) {
+        return getLambdaElementType(lambda, functionalParameterIndex, methodType -> methodType.getArgumentTypes()[lambdaParameterIndex]);
+    }
+
+    private Class<?> getLambdaElementType(Object lambda, int functionalParameterIndex, UnaryOperator<Type> elementTypeExtractor) {
+        if (!transformationEnabled) {
+            return null;
+        }
+        Class<?> lambdaClass = lambda.getClass();
+
+        // quick exit with read lock
+        lambdaElementTypeLock.readLock().lock();
         try {
-            return read((Class<Codecked<T>>) (Class<?>) Codecked.class, () -> {
-                try {
-                    return new Codecked<>(codec, super.decode(codec));
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
+            if (lambdaElementTypes.containsKey(lambdaClass)) {
+                return lambdaElementTypes.get(lambdaClass);
+            }
+        } finally {
+            lambdaElementTypeLock.readLock().unlock();
+        }
+
+        lambdaElementTypeLock.writeLock().lock();
+        try {
+            // in case two threads with the same lambda get past the read lock at the same time
+            if (lambdaElementTypes.containsKey(lambdaClass)) {
+                return lambdaElementTypes.get(lambdaClass);
+            }
+
+            StackTraceElement callSite = null;
+            for (StackTraceElement stackTraceElement : Thread.currentThread().getStackTrace()) {
+                if (!stackTraceElement.getClassName().equals(Thread.class.getName())
+                        && !stackTraceElement.getClassName().equals(PacketByteBuf.class.getName())
+                        && !stackTraceElement.getClassName().equals(TransformerByteBuf.class.getName())) {
+                    callSite = stackTraceElement;
+                    break;
                 }
-            }).getValue();
-        } catch (UncheckedIOException e) {
-            throw e.getCause();
+            }
+            assert callSite != null;
+
+            ClassNode callerClass;
+            try {
+                callerClass = MixinService.getService().getBytecodeProvider().getClassNode(callSite.getClassName().replace('.', '/'));
+            } catch (Exception e) {
+                LOGGER.error("Failed to get caller class", e);
+                lambdaElementTypes.put(lambdaClass, null);
+                return null;
+            }
+
+            AbstractInsnNode lineNumberNode = null;
+            if (callerClass.methods != null) {
+                methodLoop:
+                for (MethodNode method : callerClass.methods) {
+                    if (method.name.equals(callSite.getMethodName()) && method.instructions != null) {
+                        for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+                            if (insn.getType() == AbstractInsnNode.LINE && ((LineNumberNode) insn).line == callSite.getLineNumber()) {
+                                lineNumberNode = insn;
+                                break methodLoop;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (lineNumberNode == null) {
+                LOGGER.error("Failed to find relevant line number " + callSite.getLineNumber() + " in caller class" + callSite.getClassName());
+                lambdaElementTypes.put(lambdaClass, null);
+                return null;
+            }
+
+            int lambdaCount = 0;
+            InvokeDynamicInsnNode foundInvokeDynamic = null;
+            for (AbstractInsnNode insn = lineNumberNode.getNext(); insn != null; insn = insn.getNext()) {
+                if (insn.getOpcode() == Opcodes.INVOKEDYNAMIC) {
+                    InvokeDynamicInsnNode invokeDynamic = (InvokeDynamicInsnNode) insn;
+                    if (invokeDynamic.bsm.getOwner().equals("java/lang/invoke/LambdaMetafactory") && invokeDynamic.bsm.getName().equals("metafactory")
+                            && invokeDynamic.bsmArgs != null && invokeDynamic.bsmArgs.length >= 3
+                            && invokeDynamic.bsmArgs[1] instanceof Handle && invokeDynamic.bsmArgs[2] instanceof Type
+                            && lambdaCount++ == functionalParameterIndex) {
+                        foundInvokeDynamic = invokeDynamic;
+                        break;
+                    }
+                }
+            }
+
+            if (foundInvokeDynamic == null) {
+                LOGGER.error("Failed to find lambda " + functionalParameterIndex + " in caller class " + callSite.getClassName() + " at line " + callSite.getLineNumber());
+                lambdaElementTypes.put(lambdaClass, null);
+                return null;
+            }
+
+            Handle handle = (Handle) foundInvokeDynamic.bsmArgs[1];
+            Type lambdaMethodType = (Type) foundInvokeDynamic.bsmArgs[2];
+            if (handle.getOwner().equals(Type.getInternalName(ByteBuf.class))
+                    || handle.getOwner().equals(Type.getInternalName(PacketByteBuf.class))
+                    || handle.getOwner().equals(Type.getInternalName(TransformerByteBuf.class))) {
+                // method reference to a byte buf method, transformer byte buf will handle the type
+                lambdaElementTypes.put(lambdaClass, null);
+                return null;
+            }
+
+            Type elementType = elementTypeExtractor.apply(lambdaMethodType);
+            Class<?> lambdaElementType;
+            try {
+                lambdaElementType = Class.forName(elementType.getSort() == Type.ARRAY ? elementType.getDescriptor() : elementType.getClassName());
+            } catch (ClassNotFoundException e) {
+                LOGGER.error("Failed to convert lambda element type name " + elementType.getClassName() + " to Class", e);
+                lambdaElementTypes.put(lambdaClass, null);
+                return null;
+            }
+            lambdaElementTypes.put(lambdaClass, lambdaElementType);
+            return lambdaElementType;
+        } finally {
+            lambdaElementTypeLock.writeLock().unlock();
         }
     }
 
@@ -901,18 +1110,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> void encode(Codec<T> codec, T object) throws IOException {
-        try {
-            write(Codecked.class, new Codecked<>(codec, object), v -> {
-                try {
-                    super.encode(v.getCodec(), v.getValue());
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            });
-        } catch (UncheckedIOException e) {
-            throw e.getCause();
-        }
+    public <T> void encode(Codec<T> codec, T object) {
+        write(Codecked.class, new Codecked<>(codec, object), v -> super.encode(v.getCodec(), v.getValue()));
     }
 
     @Override

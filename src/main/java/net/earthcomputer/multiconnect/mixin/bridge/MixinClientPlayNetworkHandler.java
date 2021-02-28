@@ -90,7 +90,7 @@ public class MixinClientPlayNetworkHandler {
     }
 
     @Dynamic
-    @Inject(method = "method_31176", remap = false, at = @At("RETURN"))
+    @Inject(method = "method_34007", remap = false, at = @At("RETURN"))
     private void fixDeltaChunk(int flags, BlockPos pos, BlockState state, CallbackInfo ci) {
         Chunk chunk = world.getChunk(pos.getX() >> 4, pos.getZ() >> 4, ChunkStatus.FULL, false);
         if (chunk != null) {

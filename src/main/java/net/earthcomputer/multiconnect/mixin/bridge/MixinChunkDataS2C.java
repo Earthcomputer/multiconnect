@@ -15,6 +15,7 @@ import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.dimension.DimensionType;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -28,7 +29,7 @@ import java.util.List;
 
 @Mixin(ChunkDataS2CPacket.class)
 public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
-    @Shadow private List<CompoundTag> blockEntities;
+    @Shadow @Final private List<CompoundTag> blockEntities;
 
     @Unique
     private boolean dataTranslated = false;
@@ -52,7 +53,7 @@ public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
         return dimension;
     }
 
-    @Inject(method = "read", at = @At("RETURN"))
+    @Inject(method = "<init>(Lnet/minecraft/network/PacketByteBuf;)V", at = @At("RETURN"))
     private void onRead(CallbackInfo ci) {
         DefaultRegistries<?> defaultBlockEntities = DefaultRegistries.DEFAULT_REGISTRIES.get(Registry.BLOCK_ENTITY_TYPE);
         for (int i = 0; i < blockEntities.size(); i++) {

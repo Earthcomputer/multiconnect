@@ -40,8 +40,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -226,15 +224,10 @@ public class Utils {
     private static <T, U> Codecked<U> translateExperimentalCodec(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate, Codec<U> thingCodec, Function<T, U> thingCreator) {
         // TODO: support actual translation when this format stops being experimental
         boolean[] hasDecoded = {false};
-        T oldThing;
-        try {
-            oldThing = buf.decode(oldCodec.xmap(val -> {
-                hasDecoded[0] = true;
-                return val;
-            }, Function.identity()));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        T oldThing = buf.decode(oldCodec.xmap(val -> {
+            hasDecoded[0] = true;
+            return val;
+        }, Function.identity()));
         if (!hasDecoded[0]) {
             // already valid
             Codecked<U> codecked = new Codecked<>(thingCodec, (U) oldThing);

@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.DataTrackerManager;
 import net.earthcomputer.multiconnect.protocols.generic.IDataTracker;
@@ -27,7 +28,7 @@ public abstract class MixinDataTracker implements IDataTracker {
 
     @Shadow @Final @Mutable
     private Entity trackedEntity;
-    @Shadow @Final private Map<Integer, DataTracker.Entry<?>> entries;
+    @Shadow @Final private Int2ObjectMap<DataTracker.Entry<?>> entries;
     @Shadow @Final private ReadWriteLock lock;
     @Shadow private boolean dirty;
 
