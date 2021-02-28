@@ -9,11 +9,10 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
 public class UpdateSignS2CPacket implements Packet<ClientPlayPacketListener> {
-    private BlockPos pos;
+    private final BlockPos pos;
     private final Text[] lines = new Text[4];
 
-    @Override
-    public void read(PacketByteBuf buf) {
+    public UpdateSignS2CPacket(PacketByteBuf buf) {
         pos = buf.readBlockPos();
         for (int i = 0; i < 4; i++) {
             lines[i] = buf.readText();

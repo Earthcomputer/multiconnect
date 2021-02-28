@@ -9,23 +9,20 @@ import java.util.List;
 
 public class PlaceRecipeC2SPacket_1_12 implements Packet<ServerPlayPacketListener> {
 
-    private int syncId;
-    private short transactionId;
-    private List<Transaction> transactionsFromMatrix;
-    private List<Transaction> transactionsToMatrix;
+    private final int syncId;
+    private final short transactionId;
+    private final List<Transaction> transactionsFromMatrix;
+    private final List<Transaction> transactionsToMatrix;
 
-    public PlaceRecipeC2SPacket_1_12() {}
+    public PlaceRecipeC2SPacket_1_12(PacketByteBuf buf) {
+        throw new UnsupportedOperationException();
+    }
 
     public PlaceRecipeC2SPacket_1_12(int syncId, short transactionId, List<Transaction> transactionsFromMatrix, List<Transaction> transactionsToMatrix) {
         this.syncId = syncId;
         this.transactionId = transactionId;
         this.transactionsFromMatrix = transactionsFromMatrix;
         this.transactionsToMatrix = transactionsToMatrix;
-    }
-
-    @Override
-    public void read(PacketByteBuf buf) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

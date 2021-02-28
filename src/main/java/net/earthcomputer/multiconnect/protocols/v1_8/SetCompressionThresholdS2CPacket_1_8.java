@@ -5,10 +5,9 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 
 public class SetCompressionThresholdS2CPacket_1_8 implements Packet<ClientPlayPacketListener> {
-    private int compressionThreshold;
+    private final int compressionThreshold;
 
-    @Override
-    public void read(PacketByteBuf buf) {
+    public SetCompressionThresholdS2CPacket_1_8(PacketByteBuf buf) {
         compressionThreshold = buf.readVarInt();
     }
 

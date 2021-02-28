@@ -14,15 +14,14 @@ import net.minecraft.network.packet.s2c.play.MapUpdateS2CPacket;
 import java.util.Arrays;
 
 public class MapUpdateS2CPacket_1_16_4 implements Packet<ClientPlayPacketListener> {
-    private int id;
-    private byte scale;
-    private boolean showIcons;
-    private boolean locked;
-    private MapIcon[] icons;
-    private MapState.UpdateData data;
+    private final int id;
+    private final byte scale;
+    private final boolean showIcons;
+    private final boolean locked;
+    private final MapIcon[] icons;
+    private final MapState.UpdateData data;
 
-    @Override
-    public void read(PacketByteBuf buf) {
+    public MapUpdateS2CPacket_1_16_4(PacketByteBuf buf) {
         id = buf.readVarInt();
         scale = buf.readByte();
         showIcons = buf.readBoolean();
@@ -40,6 +39,8 @@ public class MapUpdateS2CPacket_1_16_4 implements Packet<ClientPlayPacketListene
             int startY = buf.readUnsignedByte();
             byte[] mapColors = buf.readByteArray();
             data = new MapState.UpdateData(startX, startY, width, height, mapColors);
+        } else {
+            data = null;
         }
     }
 

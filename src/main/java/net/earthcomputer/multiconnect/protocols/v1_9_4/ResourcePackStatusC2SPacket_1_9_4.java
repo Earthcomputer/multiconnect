@@ -6,10 +6,11 @@ import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.packet.c2s.play.ResourcePackStatusC2SPacket;
 
 public class ResourcePackStatusC2SPacket_1_9_4 implements Packet<ServerPlayPacketListener> {
-    private String hash;
-    private ResourcePackStatusC2SPacket.Status status;
+    private final String hash;
+    private final ResourcePackStatusC2SPacket.Status status;
 
-    public ResourcePackStatusC2SPacket_1_9_4() {
+    public ResourcePackStatusC2SPacket_1_9_4(PacketByteBuf buf) {
+        throw new UnsupportedOperationException();
     }
 
     public ResourcePackStatusC2SPacket_1_9_4(String hash, ResourcePackStatusC2SPacket.Status status) {
@@ -18,11 +19,6 @@ public class ResourcePackStatusC2SPacket_1_9_4 implements Packet<ServerPlayPacke
         }
         this.hash = hash;
         this.status = status;
-    }
-
-    @Override
-    public void read(PacketByteBuf buf) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -8,14 +8,15 @@ import net.minecraft.util.math.BlockPos;
 
 public class PlayerUseItemC2SPacket_1_8 implements Packet<ServerPlayPacketListener> {
     private static final BlockPos NULL_POS = new BlockPos(-1, -1, -1);
-    private BlockPos pos;
-    private int hitSide;
-    private ItemStack stack;
-    private float fractionalX;
-    private float fractionalY;
-    private float fractionalZ;
+    private final BlockPos pos;
+    private final int hitSide;
+    private final ItemStack stack;
+    private final float fractionalX;
+    private final float fractionalY;
+    private final float fractionalZ;
 
-    public PlayerUseItemC2SPacket_1_8() {
+    public PlayerUseItemC2SPacket_1_8(PacketByteBuf buf) {
+        throw new UnsupportedOperationException();
     }
 
     public PlayerUseItemC2SPacket_1_8(ItemStack stack) {
@@ -29,11 +30,6 @@ public class PlayerUseItemC2SPacket_1_8 implements Packet<ServerPlayPacketListen
         this.fractionalX = fractionalX;
         this.fractionalY = fractionalY;
         this.fractionalZ = fractionalZ;
-    }
-
-    @Override
-    public void read(PacketByteBuf buf) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -7,6 +7,8 @@ import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.EmptyByteBuf;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.bridge.DynamicRegistryManagerImplAccessor;
@@ -14,6 +16,7 @@ import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAcc
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.DimensionTypeAccessor;
 import net.earthcomputer.multiconnect.transformer.Codecked;
+import net.earthcomputer.multiconnect.transformer.InboundTranslator;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
@@ -27,6 +30,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.tag.Tag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
@@ -40,8 +44,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Function;
@@ -227,15 +229,10 @@ public class Utils {
     private static <T, U> Codecked<U> translateExperimentalCodec(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate, Codec<U> thingCodec, Function<T, U> thingCreator) {
         // TODO: support actual translation when this format stops being experimental
         boolean[] hasDecoded = {false};
-        T oldThing;
-        try {
-            oldThing = buf.decode(oldCodec.xmap(val -> {
-                hasDecoded[0] = true;
-                return val;
-            }, Function.identity()));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        T oldThing = buf.decode(oldCodec.xmap(val -> {
+            hasDecoded[0] = true;
+            return val;
+        }, Function.identity()));
         if (!hasDecoded[0]) {
             // already valid
             Codecked<U> codecked = new Codecked<>(thingCodec, (U) oldThing);
@@ -363,6 +360,12 @@ public class Utils {
                 bitSet.clear(i);
             }
         }
+    }
+
+    public static <T extends Packet<?>> T createPacket(Class<T> packetClass, Function<PacketByteBuf, T> constructor, int protocolVersion, InboundTranslator<T> creator) {
+        TransformerByteBuf buf = new TransformerByteBuf(new EmptyByteBuf(ByteBufAllocator.DEFAULT), null)
+                .readTopLevelType(packetClass, protocolVersion, creator);
+        return constructor.apply(buf);
     }
 
     public static String toString(Object o) {

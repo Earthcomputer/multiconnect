@@ -15,6 +15,7 @@ import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_1_16_1;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.EntityS2CPacket_1_16_4;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -71,8 +72,8 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
-        remove(packets, EntityS2CPacket.class);
-        insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket.class, EntityS2CPacket::new));
+        remove(packets, EntityS2CPacket_1_16_4.class);
+        insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket_1_16_4.class, EntityS2CPacket_1_16_4::new));
         remove(packets, UnlockRecipesS2CPacket.class);
         remove(packets, SelectAdvancementTabS2CPacket.class);
         remove(packets, AdvancementUpdateS2CPacket.class);
@@ -83,8 +84,8 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
     public List<PacketInfo<?>> getServerboundPackets() {
         List<PacketInfo<?>> packets = super.getServerboundPackets();
         remove(packets, PlaceRecipeC2SPacket_1_12.class);
-        remove(packets, PlayerMoveC2SPacket.class);
-        insertAfter(packets, PlayerMoveC2SPacket.LookOnly.class, PacketInfo.of(PlayerMoveC2SPacket.class, PlayerMoveC2SPacket::new));
+        remove(packets, PlayerMoveC2SPacket.class_5911.class);
+        insertAfter(packets, PlayerMoveC2SPacket.LookOnly.class, PacketInfo.of(PlayerMoveC2SPacket.class_5911.class, PlayerMoveC2SPacket.class_5911::method_34224));
         remove(packets, RecipeBookDataC2SPacket_1_16_1.class);
         remove(packets, AdvancementTabC2SPacket.class);
         insertAfter(packets, ClientStatusC2SPacket.class, PacketInfo.of(ClientStatusC2SPacket_1_11_2.class, ClientStatusC2SPacket_1_11_2::new));

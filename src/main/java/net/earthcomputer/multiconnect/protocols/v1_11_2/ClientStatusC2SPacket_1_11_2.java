@@ -5,13 +5,12 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.packet.c2s.play.ClientStatusC2SPacket;
 
-import java.io.IOException;
-
 public class ClientStatusC2SPacket_1_11_2 implements Packet<ServerPlayPacketListener> {
 
-    private Mode mode;
+    private final Mode mode;
 
-    public ClientStatusC2SPacket_1_11_2() {
+    public ClientStatusC2SPacket_1_11_2(PacketByteBuf buf) {
+        throw new UnsupportedOperationException();
     }
 
     public ClientStatusC2SPacket_1_11_2(Mode mode) {
@@ -23,12 +22,7 @@ public class ClientStatusC2SPacket_1_11_2 implements Packet<ServerPlayPacketList
     }
 
     @Override
-    public void read(PacketByteBuf buf) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void write(PacketByteBuf buf) throws IOException {
+    public void write(PacketByteBuf buf) {
         buf.writeEnumConstant(mode);
     }
 

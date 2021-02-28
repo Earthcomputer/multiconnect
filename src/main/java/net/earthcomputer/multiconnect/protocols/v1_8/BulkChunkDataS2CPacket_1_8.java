@@ -1,25 +1,18 @@
 package net.earthcomputer.multiconnect.protocols.v1_8;
 
-import net.earthcomputer.multiconnect.protocols.generic.IChunkDataS2CPacket;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.PendingFullChunkData;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.Protocol_1_16_4;
-import net.earthcomputer.multiconnect.protocols.v1_8.mixin.ChunkDataS2CAccessor;
-import net.minecraft.nbt.CompoundTag;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.Utils;
+import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.network.OffThreadException;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.util.math.ChunkPos;
-
-import java.util.ArrayList;
-import java.util.BitSet;
 
 public class BulkChunkDataS2CPacket_1_8 implements Packet<ClientPlayPacketListener> {
-    private Entry[] entries;
+    private final Entry[] entries;
 
-    @Override
-    public void read(PacketByteBuf buf) {
+    public BulkChunkDataS2CPacket_1_8(PacketByteBuf buf) {
         boolean hasSkyLight = buf.readBoolean();
         int numChunks = buf.readVarInt();
         entries = new Entry[numChunks];
@@ -43,20 +36,15 @@ public class BulkChunkDataS2CPacket_1_8 implements Packet<ClientPlayPacketListen
     @Override
     public void apply(ClientPlayPacketListener listener) {
         for (Entry entry : entries) {
-            ChunkDataS2CPacket packet = new ChunkDataS2CPacket();
-            //noinspection ConstantConditions
-            ChunkDataS2CAccessor accessor = (ChunkDataS2CAccessor) packet;
-            //noinspection ConstantConditions
-            IChunkDataS2CPacket iPacket = (IChunkDataS2CPacket) packet;
-
-            accessor.setChunkX(entry.x);
-            accessor.setChunkZ(entry.z);
-            PendingFullChunkData.setPendingFullChunk(new ChunkPos(entry.x, entry.z), true);
-            accessor.setVerticalStripBitmask(BitSet.valueOf(new long[] {entry.verticalStripBitmask}));
-            accessor.setBiomeArray(new int[Protocol_1_16_4.BIOME_ARRAY_LENGTH]);
-            accessor.setHeightmaps(new CompoundTag());
-            accessor.setBlockEntities(new ArrayList<>(0));
-            iPacket.setData(entry.data);
+            ChunkDataS2CPacket packet = Utils.createPacket(ChunkDataS2CPacket.class, ChunkDataS2CPacket::new, Protocols.V1_9, buf -> {
+                buf.pendingRead(Integer.class, entry.x);
+                buf.pendingRead(Integer.class, entry.z);
+                buf.pendingRead(Boolean.class, true); // full chunk
+                buf.pendingRead(VarInt.class, new VarInt(entry.verticalStripBitmask));
+                buf.pendingRead(VarInt.class, new VarInt(entry.data.length));
+                buf.pendingRead(byte[].class, entry.data);
+                buf.applyPendingReads();
+            });
 
             try {
                 listener.onChunkData(packet);

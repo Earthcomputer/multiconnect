@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.earthcomputer.multiconnect.protocols.generic.IPacketHandler;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.minecraft.network.Packet;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
 import org.apache.logging.log4j.LogManager;
 import org.spongepowered.asm.mixin.Final;
@@ -16,13 +17,13 @@ import org.spongepowered.asm.mixin.Unique;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Mixin(targets = "net.minecraft.network.NetworkState$PacketHandler")
 public abstract class MixinPacketHandler<T extends PacketListener> implements IPacketHandler<T> {
 
-    @Shadow @Final private List<Supplier<? extends Packet<T>>> packetFactories;
+    @Shadow @Final private List<Function<PacketByteBuf, ? extends Packet<T>>> packetFactories;
 
     @Shadow @Final private Object2IntMap<Class<? extends Packet<T>>> packetIds;
 
@@ -36,7 +37,7 @@ public abstract class MixinPacketHandler<T extends PacketListener> implements IP
     }
 
     @Override
-    public <P extends Packet<T>> IPacketHandler<T> multiconnect_register(Class<P> clazz, Supplier<P> factory) {
+    public <P extends Packet<T>> IPacketHandler<T> multiconnect_register(Class<P> clazz, Function<PacketByteBuf, P> factory) {
         int packetId = this.packetFactories.size();
         int oldPacketId = this.packetIds.put(clazz, packetId);
         if (oldPacketId != -1) {
@@ -67,7 +68,7 @@ public abstract class MixinPacketHandler<T extends PacketListener> implements IP
 
     @Unique
     @SuppressWarnings("unchecked")
-    private static <T extends PacketListener, P extends Packet<T>> PacketInfo<P> createPacketInfo(Class<?> packetClass, Supplier<?> factory) {
-        return PacketInfo.of((Class<P>) packetClass, (Supplier<P>) factory);
+    private static <T extends PacketListener, P extends Packet<T>> PacketInfo<P> createPacketInfo(Class<?> packetClass, Function<PacketByteBuf, ?> factory) {
+        return PacketInfo.of((Class<P>) packetClass, (Function<PacketByteBuf, P>) factory);
     }
 }

@@ -1,13 +1,12 @@
-package net.earthcomputer.multiconnect.protocols.v1_8;
+package net.earthcomputer.multiconnect.protocols.v1_16_4;
 
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 
-public class UpdateEntityNbtS2CPacket_1_8 implements Packet<ClientPlayPacketListener> {
-    public UpdateEntityNbtS2CPacket_1_8(PacketByteBuf buf) {
+public class EntityS2CPacket_1_16_4 implements Packet<ClientPlayPacketListener> {
+    public EntityS2CPacket_1_16_4(PacketByteBuf buf) {
         buf.readVarInt(); // entity id
-        buf.readCompoundTag(); // nbt
     }
 
     @Override
@@ -17,6 +16,6 @@ public class UpdateEntityNbtS2CPacket_1_8 implements Packet<ClientPlayPacketList
 
     @Override
     public void apply(ClientPlayPacketListener listener) {
-        // packet appears to do nothing
+        // nothing to do
     }
 }

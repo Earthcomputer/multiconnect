@@ -10,7 +10,9 @@ import net.minecraft.datafixer.TypeReferences;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.util.registry.Registry;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,11 +21,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(BlockEntityUpdateS2CPacket.class)
 public class MixinBlockEntityUpdateS2C {
 
-    @Shadow private int blockEntityType;
+    @Shadow @Final private int blockEntityType;
 
-    @Shadow private CompoundTag tag;
+    @Shadow @Final @Mutable private CompoundTag tag;
 
-    @Inject(method = "read", at = @At("RETURN"))
+    @Inject(method = "<init>(Lnet/minecraft/network/PacketByteBuf;)V", at = @At("RETURN"))
     private void onRead(CallbackInfo ci) {
         BlockEntityType<?> type;
         switch (blockEntityType) {

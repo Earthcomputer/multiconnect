@@ -22,7 +22,7 @@ public class GetProtocolPacketListener implements ClientQueryPacketListener {
     @Override
     public void onResponse(QueryResponseS2CPacket packet) {
         protocol = packet.getServerMetadata().getVersion().getProtocolVersion();
-        connection.send(new QueryPingC2SPacket());
+        connection.send(new QueryPingC2SPacket(0));
     }
 
     @Override

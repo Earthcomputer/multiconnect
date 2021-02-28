@@ -12,7 +12,7 @@ import net.minecraft.recipe.book.RecipeBookOptions;
 import net.minecraft.util.Identifier;
 
 public class RecipeBookDataC2SPacket_1_16_1 implements Packet<ServerPlayPacketListener> {
-    private Mode mode;
+    private final Mode mode;
     private Identifier recipeId;
     private boolean guiOpen;
     private boolean filteringCraftable;
@@ -23,7 +23,8 @@ public class RecipeBookDataC2SPacket_1_16_1 implements Packet<ServerPlayPacketLi
     private boolean smokerGuiOpen;
     private boolean smokerGuiFilteringCraftable;
 
-    public RecipeBookDataC2SPacket_1_16_1() {
+    public RecipeBookDataC2SPacket_1_16_1(PacketByteBuf buf) {
+        throw new UnsupportedOperationException();
     }
 
     public RecipeBookDataC2SPacket_1_16_1(RecipeBookDataC2SPacket packet) {
@@ -61,11 +62,6 @@ public class RecipeBookDataC2SPacket_1_16_1 implements Packet<ServerPlayPacketLi
         } else {
             return bookOptions.isFilteringCraftable(category);
         }
-    }
-
-    @Override
-    public void read(PacketByteBuf buf) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

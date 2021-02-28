@@ -20,7 +20,10 @@ import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.EntitySpawnGlobalS2CPacket_1_15_2;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.ChunkDeltaUpdateS2CPacket_1_16_1;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.CombatEventS2CPacket_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.EntityS2CPacket_1_16_4;
 import net.earthcomputer.multiconnect.protocols.v1_16_4.MapUpdateS2CPacket_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.TitleS2CPacket_1_16_4;
 import net.earthcomputer.multiconnect.protocols.v1_8.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
 import net.earthcomputer.multiconnect.protocols.v1_9_2.UpdateSignS2CPacket;
@@ -30,6 +33,7 @@ import net.earthcomputer.multiconnect.transformer.StringCustomPayload;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.class_5900;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.OtherClientPlayerEntity;
@@ -192,10 +196,10 @@ public class Protocol_1_8 extends Protocol_1_9 {
             buf.pendingRead(byte[].class, chunkData);
             buf.applyPendingReads();
         });
-        ProtocolRegistry.registerInboundTranslator(CombatEventS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(CombatEventS2CPacket_1_16_4.class, buf -> {
             buf.enablePassthroughMode();
-            CombatEventS2CPacket.Type type = buf.readEnumConstant(CombatEventS2CPacket.Type.class);
-            if (type != CombatEventS2CPacket.Type.ENTITY_DIED) {
+            CombatEventS2CPacket_1_16_4.Mode mode = buf.readEnumConstant(CombatEventS2CPacket_1_16_4.Mode.class);
+            if (mode != CombatEventS2CPacket_1_16_4.Mode.ENTITY_DIED) {
                 buf.disablePassthroughMode();
                 buf.applyPendingReads();
                 return;
@@ -382,7 +386,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
             buf.readShort(); // selected item id
             buf.applyPendingReads();
         });
-        ProtocolRegistry.registerInboundTranslator(TeamS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(class_5900.class, buf -> {
             buf.enablePassthroughMode();
             buf.readString(32); // team name
             int mode = buf.readByte();
@@ -480,14 +484,14 @@ public class Protocol_1_8 extends Protocol_1_9 {
         });
         ProtocolRegistry.registerOutboundTranslator(PlayerInteractEntityC2SPacket.class, buf -> {
             buf.passthroughWrite(VarInt.class); // entity id
-            Supplier<PlayerInteractEntityC2SPacket.InteractionType> type = buf.passthroughWrite(PlayerInteractEntityC2SPacket.InteractionType.class);
+            Supplier<PlayerInteractEntityC2SPacket.class_5907> type = buf.passthroughWrite(PlayerInteractEntityC2SPacket.class_5907.class);
             buf.whenWrite(() -> {
-                if (type.get() == PlayerInteractEntityC2SPacket.InteractionType.INTERACT_AT) {
+                if (type.get() == PlayerInteractEntityC2SPacket.class_5907.field_29173) {
                     buf.passthroughWrite(Float.class); // hit x
                     buf.passthroughWrite(Float.class); // hit y
                     buf.passthroughWrite(Float.class); // hit z
                 }
-                if (type.get() == PlayerInteractEntityC2SPacket.InteractionType.INTERACT || type.get() == PlayerInteractEntityC2SPacket.InteractionType.INTERACT_AT) {
+                if (type.get() == PlayerInteractEntityC2SPacket.class_5907.field_29171 || type.get() == PlayerInteractEntityC2SPacket.class_5907.field_29173) {
                     buf.skipWrite(Hand.class); // hand
                 }
             });
@@ -556,7 +560,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, EntityS2CPacket.MoveRelative.class);
         remove(packets, EntityS2CPacket.RotateAndMoveRelative.class);
         remove(packets, EntityS2CPacket.Rotate.class);
-        remove(packets, EntityS2CPacket.class);
+        remove(packets, EntityS2CPacket_1_16_4.class);
         remove(packets, VehicleMoveS2CPacket.class);
         remove(packets, PlayerListS2CPacket.class);
         remove(packets, PlayerPositionLookS2CPacket.class);
@@ -577,7 +581,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, HealthUpdateS2CPacket.class);
         remove(packets, ScoreboardObjectiveUpdateS2CPacket.class);
         remove(packets, EntityPassengersSetS2CPacket.class);
-        remove(packets, TeamS2CPacket.class);
+        remove(packets, class_5900.class);
         remove(packets, ScoreboardPlayerUpdateS2CPacket.class);
         remove(packets, PlayerSpawnPositionS2CPacket.class);
         remove(packets, WorldTimeUpdateS2CPacket.class);
@@ -605,10 +609,10 @@ public class Protocol_1_8 extends Protocol_1_9 {
         insertAfter(packets, PaintingSpawnS2CPacket.class, PacketInfo.of(ExperienceOrbSpawnS2CPacket.class, ExperienceOrbSpawnS2CPacket::new));
         insertAfter(packets, ExperienceOrbSpawnS2CPacket.class, PacketInfo.of(EntityVelocityUpdateS2CPacket.class, EntityVelocityUpdateS2CPacket::new));
         insertAfter(packets, EntityVelocityUpdateS2CPacket.class, PacketInfo.of(EntitiesDestroyS2CPacket.class, EntitiesDestroyS2CPacket::new));
-        insertAfter(packets, EntitiesDestroyS2CPacket.class, PacketInfo.of(EntityS2CPacket.class, EntityS2CPacket::new));
-        insertAfter(packets, EntityS2CPacket.class, PacketInfo.of(EntityS2CPacket.MoveRelative.class, EntityS2CPacket.MoveRelative::new));
-        insertAfter(packets, EntityS2CPacket.MoveRelative.class, PacketInfo.of(EntityS2CPacket.Rotate.class, EntityS2CPacket.Rotate::new));
-        insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket.RotateAndMoveRelative.class, EntityS2CPacket.RotateAndMoveRelative::new));
+        insertAfter(packets, EntitiesDestroyS2CPacket.class, PacketInfo.of(EntityS2CPacket_1_16_4.class, EntityS2CPacket_1_16_4::new));
+        insertAfter(packets, EntityS2CPacket_1_16_4.class, PacketInfo.of(EntityS2CPacket.MoveRelative.class, EntityS2CPacket.MoveRelative::method_34138));
+        insertAfter(packets, EntityS2CPacket.MoveRelative.class, PacketInfo.of(EntityS2CPacket.Rotate.class, EntityS2CPacket.Rotate::method_34140));
+        insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket.RotateAndMoveRelative.class, EntityS2CPacket.RotateAndMoveRelative::method_34139));
         insertAfter(packets, EntityS2CPacket.RotateAndMoveRelative.class, PacketInfo.of(EntityPositionS2CPacket.class, EntityPositionS2CPacket::new));
         insertAfter(packets, EntityPositionS2CPacket.class, PacketInfo.of(EntitySetHeadYawS2CPacket.class, EntitySetHeadYawS2CPacket::new));
         insertAfter(packets, EntitySetHeadYawS2CPacket.class, PacketInfo.of(EntityStatusS2CPacket.class, EntityStatusS2CPacket::new));
@@ -640,12 +644,12 @@ public class Protocol_1_8 extends Protocol_1_9 {
         insertAfter(packets, CommandSuggestionsS2CPacket.class, PacketInfo.of(ScoreboardObjectiveUpdateS2CPacket.class, ScoreboardObjectiveUpdateS2CPacket::new));
         insertAfter(packets, ScoreboardObjectiveUpdateS2CPacket.class, PacketInfo.of(ScoreboardPlayerUpdateS2CPacket.class, ScoreboardPlayerUpdateS2CPacket::new));
         insertAfter(packets, ScoreboardPlayerUpdateS2CPacket.class, PacketInfo.of(ScoreboardDisplayS2CPacket.class, ScoreboardDisplayS2CPacket::new));
-        insertAfter(packets, ScoreboardDisplayS2CPacket.class, PacketInfo.of(TeamS2CPacket.class, TeamS2CPacket::new));
-        insertAfter(packets, TeamS2CPacket.class, PacketInfo.of(CustomPayloadS2CPacket.class, CustomPayloadS2CPacket::new));
+        insertAfter(packets, ScoreboardDisplayS2CPacket.class, PacketInfo.of(class_5900.class, class_5900::new));
+        insertAfter(packets, class_5900.class, PacketInfo.of(CustomPayloadS2CPacket.class, CustomPayloadS2CPacket::new));
         insertAfter(packets, CustomPayloadS2CPacket.class, PacketInfo.of(DisconnectS2CPacket.class, DisconnectS2CPacket::new));
         insertAfter(packets, DisconnectS2CPacket.class, PacketInfo.of(DifficultyS2CPacket.class, DifficultyS2CPacket::new));
-        insertAfter(packets, CombatEventS2CPacket.class, PacketInfo.of(SetCameraEntityS2CPacket.class, SetCameraEntityS2CPacket::new));
-        insertAfter(packets, TitleS2CPacket.class, PacketInfo.of(SetCompressionThresholdS2CPacket_1_8.class, SetCompressionThresholdS2CPacket_1_8::new));
+        insertAfter(packets, CombatEventS2CPacket_1_16_4.class, PacketInfo.of(SetCameraEntityS2CPacket.class, SetCameraEntityS2CPacket::new));
+        insertAfter(packets, TitleS2CPacket_1_16_4.class, PacketInfo.of(SetCompressionThresholdS2CPacket_1_8.class, SetCompressionThresholdS2CPacket_1_8::new));
         insertAfter(packets, PlayerListHeaderS2CPacket.class, PacketInfo.of(ResourcePackSendS2CPacket.class, ResourcePackSendS2CPacket::new));
         insertAfter(packets, ResourcePackSendS2CPacket.class, PacketInfo.of(UpdateEntityNbtS2CPacket_1_8.class, UpdateEntityNbtS2CPacket_1_8::new));
         return packets;
@@ -665,7 +669,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, CustomPayloadC2SPacket_1_12_2.class);
         remove(packets, KeepAliveC2SPacket.class);
         remove(packets, PlayerMoveC2SPacket.LookOnly.class);
-        remove(packets, PlayerMoveC2SPacket.class);
+        remove(packets, PlayerMoveC2SPacket.class_5911.class);
         remove(packets, VehicleMoveC2SPacket.class);
         remove(packets, BoatPaddleStateC2SPacket.class);
         remove(packets, UpdatePlayerAbilitiesC2SPacket.class);
@@ -675,8 +679,8 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, PlayerInteractBlockC2SPacket.class);
         remove(packets, PlayerInteractItemC2SPacket.class);
         packets.add(0, PacketInfo.of(KeepAliveC2SPacket.class, KeepAliveC2SPacket::new));
-        insertAfter(packets, PlayerInteractEntityC2SPacket.class, PacketInfo.of(PlayerMoveC2SPacket.class, PlayerMoveC2SPacket::new));
-        insertAfter(packets, PlayerMoveC2SPacket.PositionOnly.class, PacketInfo.of(PlayerMoveC2SPacket.LookOnly.class, PlayerMoveC2SPacket.LookOnly::new));
+        insertAfter(packets, PlayerInteractEntityC2SPacket.class, PacketInfo.of(PlayerMoveC2SPacket.class_5911.class, PlayerMoveC2SPacket.class_5911::method_34224));
+        insertAfter(packets, PlayerMoveC2SPacket.PositionOnly.class, PacketInfo.of(PlayerMoveC2SPacket.LookOnly.class, PlayerMoveC2SPacket.LookOnly::method_34223));
         insertAfter(packets, PlayerActionC2SPacket.class, PacketInfo.of(PlayerUseItemC2SPacket_1_8.class, PlayerUseItemC2SPacket_1_8::new));
         insertAfter(packets, PlayerUseItemC2SPacket_1_8.class, PacketInfo.of(UpdateSelectedSlotC2SPacket.class, UpdateSelectedSlotC2SPacket::new));
         insertAfter(packets, UpdateSelectedSlotC2SPacket.class, PacketInfo.of(HandSwingC2SPacket.class, HandSwingC2SPacket::new));

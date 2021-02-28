@@ -26,7 +26,7 @@ public abstract class MixinDownloadingTerrainScreen extends Screen {
 
             if (tickCounter % 20 == 0) {
                 //noinspection ConstantConditions
-                MinecraftClient.getInstance().getNetworkHandler().sendPacket(new KeepAliveC2SPacket());
+                MinecraftClient.getInstance().getNetworkHandler().sendPacket(new KeepAliveC2SPacket(0));
             }
         }
     }

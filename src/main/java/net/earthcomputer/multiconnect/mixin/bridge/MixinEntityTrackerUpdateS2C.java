@@ -12,7 +12,7 @@ import java.util.List;
 
 @Mixin(EntityTrackerUpdateS2CPacket.class)
 public class MixinEntityTrackerUpdateS2C {
-    @Redirect(method = "read", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/data/DataTracker;deserializePacket(Lnet/minecraft/network/PacketByteBuf;)Ljava/util/List;"))
+    @Redirect(method = "<init>(Lnet/minecraft/network/PacketByteBuf;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/data/DataTracker;deserializePacket(Lnet/minecraft/network/PacketByteBuf;)Ljava/util/List;"))
     private List<DataTracker.Entry<?>> redirectDeserializePacket(PacketByteBuf buf) {
         return DataTrackerManager.deserializePacket(buf);
     }

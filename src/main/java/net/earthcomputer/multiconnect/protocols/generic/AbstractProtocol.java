@@ -25,7 +25,7 @@ import net.minecraft.world.event.GameEvent;
 
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public abstract class AbstractProtocol implements IUtils {
@@ -76,8 +76,8 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends PacketListener, P extends Packet<T>> void doRegister(IPacketHandler<T> handler, Class<?> packetClass, Supplier<?> factory) {
-        handler.multiconnect_register((Class<P>) packetClass, (Supplier<P>) factory);
+    private static <T extends PacketListener, P extends Packet<T>> void doRegister(IPacketHandler<T> handler, Class<?> packetClass, Function<PacketByteBuf, ?> factory) {
+        handler.multiconnect_register((Class<P>) packetClass, (Function<PacketByteBuf, P>) factory);
     }
 
     protected void recomputeBlockStates() {

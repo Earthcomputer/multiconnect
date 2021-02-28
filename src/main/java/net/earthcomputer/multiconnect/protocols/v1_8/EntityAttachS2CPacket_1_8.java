@@ -1,7 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_8;
 
-import net.earthcomputer.multiconnect.protocols.v1_8.mixin.EntityAttachS2CAccessor;
-import net.earthcomputer.multiconnect.protocols.v1_8.mixin.EntityPassengersSetS2CAccessor;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.Utils;
+import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
@@ -17,12 +18,11 @@ import org.apache.logging.log4j.Logger;
 public class EntityAttachS2CPacket_1_8 implements Packet<ClientPlayPacketListener> {
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
-    private int fromEntityId;
-    private int toEntityId;
-    private int attachType;
+    private final int fromEntityId;
+    private final int toEntityId;
+    private final int attachType;
 
-    @Override
-    public void read(PacketByteBuf buf) {
+    public EntityAttachS2CPacket_1_8(PacketByteBuf buf) {
         fromEntityId = buf.readInt();
         toEntityId = buf.readInt();
         attachType = buf.readUnsignedByte();
@@ -38,9 +38,8 @@ public class EntityAttachS2CPacket_1_8 implements Packet<ClientPlayPacketListene
         NetworkThreadUtils.forceMainThread(this, listener, MinecraftClient.getInstance());
 
         if (attachType == 0) { // mount
-            EntityPassengersSetS2CPacket packet = new EntityPassengersSetS2CPacket();
-            //noinspection ConstantConditions
-            EntityPassengersSetS2CAccessor accessor = (EntityPassengersSetS2CAccessor) packet;
+            int vehicleId;
+            int[] passengerIds;
 
             if (toEntityId == -1) {
                 // dismount
@@ -58,20 +57,26 @@ public class EntityAttachS2CPacket_1_8 implements Packet<ClientPlayPacketListene
                     LOGGER.warn("Received dismount for non-riding entity");
                     return;
                 }
-                accessor.setId(vehicle.getId());
-                accessor.setPassengerIds(new int[0]);
+                vehicleId = vehicle.getId();
+                passengerIds = new int[0];
             } else {
-                accessor.setId(toEntityId);
-                accessor.setPassengerIds(new int[] {fromEntityId});
+                vehicleId = toEntityId;
+                passengerIds = new int[] {fromEntityId};
             }
+
+            EntityPassengersSetS2CPacket packet = Utils.createPacket(EntityPassengersSetS2CPacket.class, EntityPassengersSetS2CPacket::new, Protocols.V1_9, buf -> {
+                buf.pendingRead(VarInt.class, new VarInt(vehicleId));
+                buf.pendingRead(int[].class, passengerIds);
+                buf.applyPendingReads();
+            });
 
             listener.onEntityPassengersSet(packet);
         } else if (attachType == 1) { // leash
-            EntityAttachS2CPacket packet = new EntityAttachS2CPacket();
-            //noinspection ConstantConditions
-            EntityAttachS2CAccessor accessor = (EntityAttachS2CAccessor) packet;
-            accessor.setHoldingId(toEntityId);
-            accessor.setAttachedId(fromEntityId);
+            EntityAttachS2CPacket packet = Utils.createPacket(EntityAttachS2CPacket.class, EntityAttachS2CPacket::new, Protocols.V1_9, buf -> {
+                buf.pendingRead(Integer.class, fromEntityId); // attached id
+                buf.pendingRead(Integer.class, toEntityId); // holding id
+                buf.applyPendingReads();
+            });
             listener.onEntityAttach(packet);
         }
     }
