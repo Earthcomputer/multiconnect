@@ -391,9 +391,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         ProtocolRegistry.registerInboundTranslator(BossBarS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readUuid(); // uuid
-            BossBarS2CPacket.class_5883 type = buf.readEnumConstant(BossBarS2CPacket.class_5883.class);
+            BossBarS2CPacket.Type type = buf.readEnumConstant(BossBarS2CPacket.Type.class);
             buf.disablePassthroughMode();
-            if (type == BossBarS2CPacket.class_5883.field_29112) {
+            if (type == BossBarS2CPacket.Type.UPDATE_PROPERTIES) {
                 int flags = buf.readUnsignedByte();
                 buf.pendingRead(UnsignedByte.class, new UnsignedByte((short) (flags | ((flags & 2) << 1)))); // copy bit 2 to 4
             }

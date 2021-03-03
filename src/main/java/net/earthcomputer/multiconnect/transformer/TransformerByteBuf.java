@@ -753,8 +753,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public BitSet method_33558() {
-        return read(BitSet.class, super::method_33558);
+    public BitSet readBitSet() {
+        return read(BitSet.class, super::readBitSet);
     }
 
     @Override
@@ -976,8 +976,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public long[] method_33134() {
-        return read(long[].class, super::method_33134);
+    public long[] readLongArray() {
+        return read(long[].class, super::readLongArray);
     }
 
     @Override
@@ -1064,57 +1064,57 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T, C extends Collection<T>> C method_34068(IntFunction<C> constructor, Function<PacketByteBuf, T> elementReader) {
+    public <T, C extends Collection<T>> C readCollection(IntFunction<C> constructor, Function<PacketByteBuf, T> elementReader) {
         Class<T> elementType = (Class<T>) getLambdaReturnType(elementReader, 1);
-        return (C) read(Collection.class, () -> super.method_34068(constructor, elementReader));
+        return (C) read(Collection.class, () -> super.readCollection(constructor, elementReader));
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> void method_34062(Collection<T> val, BiConsumer<PacketByteBuf, T> elementWriter) {
+    public <T> void writeCollection(Collection<T> val, BiConsumer<PacketByteBuf, T> elementWriter) {
         Class<T> elementType = (Class<T>) getLambdaParameterType(elementWriter, 0, 1);
-        write((Class<Collection<T>>) (Class<?>) Collection.class, val, c -> super.method_34062(c, elementWriter));
+        write((Class<Collection<T>>) (Class<?>) Collection.class, val, c -> super.writeCollection(c, elementWriter));
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> List<T> method_34066(Function<PacketByteBuf, T> elementReader) {
+    public <T> List<T> readList(Function<PacketByteBuf, T> elementReader) {
         Class<T> elementType = (Class<T>) getLambdaReturnType(elementReader, 0);
-        return read((Class<List<T>>) (Class<?>) List.class, () -> super.method_34066(elementReader));
+        return read((Class<List<T>>) (Class<?>) List.class, () -> super.readList(elementReader));
     }
 
     @Override
-    public IntList method_34059() {
-        return read(IntList.class, super::method_34059);
+    public IntList readIntList() {
+        return read(IntList.class, super::readIntList);
     }
 
     @Override
-    public void method_34060(IntList val) {
-        write(IntList.class, val, super::method_34060);
+    public void writeIntList(IntList val) {
+        write(IntList.class, val, super::writeIntList);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <K, V> Map<K, V> method_34067(Function<PacketByteBuf, K> keyReader, Function<PacketByteBuf, V> valueReader) {
+    public <K, V> Map<K, V> readMap(Function<PacketByteBuf, K> keyReader, Function<PacketByteBuf, V> valueReader) {
         Class<K> keyType = (Class<K>) getLambdaReturnType(keyReader, 0);
         Class<V> valueType = (Class<V>) getLambdaReturnType(valueReader, 1);
-        return read((Class<Map<K, V>>) (Class<?>) Map.class, () -> super.method_34067(keyReader, valueReader));
+        return read((Class<Map<K, V>>) (Class<?>) Map.class, () -> super.readMap(keyReader, valueReader));
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <K, V, M extends Map<K, V>> M method_34069(IntFunction<M> constructor, Function<PacketByteBuf, K> keyReader, Function<PacketByteBuf, V> valueReader) {
+    public <K, V, M extends Map<K, V>> M readMap(IntFunction<M> constructor, Function<PacketByteBuf, K> keyReader, Function<PacketByteBuf, V> valueReader) {
         Class<K> keyType = (Class<K>) getLambdaReturnType(keyReader, 1);
         Class<V> valueType = (Class<V>) getLambdaReturnType(valueReader, 2);
-        return read((Class<M>) (Class<?>) Map.class, () -> super.method_34069(constructor, keyReader, valueReader));
+        return read((Class<M>) (Class<?>) Map.class, () -> super.readMap(constructor, keyReader, valueReader));
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <K, V> void method_34063(Map<K, V> map, BiConsumer<PacketByteBuf, K> keyWriter, BiConsumer<PacketByteBuf, V> valueWriter) {
+    public <K, V> void writeMap(Map<K, V> map, BiConsumer<PacketByteBuf, K> keyWriter, BiConsumer<PacketByteBuf, V> valueWriter) {
         Class<K> keyType = (Class<K>) getLambdaParameterType(keyWriter, 0, 1);
         Class<V> valueType = (Class<V>) getLambdaParameterType(valueWriter, 1, 1);
-        write((Class<Map<K, V>>) (Class<?>) Map.class, map, m -> super.method_34063(m, keyWriter, valueWriter));
+        write((Class<Map<K, V>>) (Class<?>) Map.class, map, m -> super.writeMap(m, keyWriter, valueWriter));
     }
 
     private static final Map<Class<?>, Class<?>> lambdaElementTypes = new HashMap<>();
@@ -1383,8 +1383,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public void method_33557(BitSet val) {
-        write(BitSet.class, val, super::method_33557);
+    public void writeBitSet(BitSet val) {
+        write(BitSet.class, val, super::writeBitSet);
     }
 
     @Override

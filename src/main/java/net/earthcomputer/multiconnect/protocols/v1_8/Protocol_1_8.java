@@ -610,9 +610,9 @@ public class Protocol_1_8 extends Protocol_1_9 {
         insertAfter(packets, ExperienceOrbSpawnS2CPacket.class, PacketInfo.of(EntityVelocityUpdateS2CPacket.class, EntityVelocityUpdateS2CPacket::new));
         insertAfter(packets, EntityVelocityUpdateS2CPacket.class, PacketInfo.of(EntitiesDestroyS2CPacket.class, EntitiesDestroyS2CPacket::new));
         insertAfter(packets, EntitiesDestroyS2CPacket.class, PacketInfo.of(EntityS2CPacket_1_16_4.class, EntityS2CPacket_1_16_4::new));
-        insertAfter(packets, EntityS2CPacket_1_16_4.class, PacketInfo.of(EntityS2CPacket.MoveRelative.class, EntityS2CPacket.MoveRelative::method_34138));
-        insertAfter(packets, EntityS2CPacket.MoveRelative.class, PacketInfo.of(EntityS2CPacket.Rotate.class, EntityS2CPacket.Rotate::method_34140));
-        insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket.RotateAndMoveRelative.class, EntityS2CPacket.RotateAndMoveRelative::method_34139));
+        insertAfter(packets, EntityS2CPacket_1_16_4.class, PacketInfo.of(EntityS2CPacket.MoveRelative.class, EntityS2CPacket.MoveRelative::read));
+        insertAfter(packets, EntityS2CPacket.MoveRelative.class, PacketInfo.of(EntityS2CPacket.Rotate.class, EntityS2CPacket.Rotate::read));
+        insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket.RotateAndMoveRelative.class, EntityS2CPacket.RotateAndMoveRelative::read));
         insertAfter(packets, EntityS2CPacket.RotateAndMoveRelative.class, PacketInfo.of(EntityPositionS2CPacket.class, EntityPositionS2CPacket::new));
         insertAfter(packets, EntityPositionS2CPacket.class, PacketInfo.of(EntitySetHeadYawS2CPacket.class, EntitySetHeadYawS2CPacket::new));
         insertAfter(packets, EntitySetHeadYawS2CPacket.class, PacketInfo.of(EntityStatusS2CPacket.class, EntityStatusS2CPacket::new));

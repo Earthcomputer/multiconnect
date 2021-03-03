@@ -1,9 +1,9 @@
 package net.earthcomputer.multiconnect.protocols.v1_16_4;
 
-import net.minecraft.*;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.text.Text;
 
 public class TitleS2CPacket_1_16_4 implements Packet<ClientPlayPacketListener> {
@@ -38,22 +38,22 @@ public class TitleS2CPacket_1_16_4 implements Packet<ClientPlayPacketListener> {
     public void apply(ClientPlayPacketListener listener) {
         switch (type) {
             case TITLE:
-                listener.method_34083(new class_5904(text));
+                listener.onTitle(new TitleS2CPacket(text));
                 break;
             case SUBTITLE:
-                listener.method_34082(new class_5903(text));
+                listener.onSubtitle(new SubtitleS2CPacket(text));
                 break;
             case ACTIONBAR:
-                listener.method_34076(new class_5894(text));
+                listener.onOverlayMessage(new OverlayMessageS2CPacket(text));
                 break;
             case TIMES:
-                listener.method_34084(new class_5905(fadeInTime, stayTime, fadeOutTime));
+                listener.onTitleFade(new TitleFadeS2CPacket(fadeInTime, stayTime, fadeOutTime));
                 break;
             case CLEAR:
-                listener.method_34071(new class_5888(false));
+                listener.onTitleClear(new ClearTitleS2CPacket(false));
                 break;
             case RESET:
-                listener.method_34071(new class_5888(true));
+                listener.onTitleClear(new ClearTitleS2CPacket(true));
                 break;
         }
     }

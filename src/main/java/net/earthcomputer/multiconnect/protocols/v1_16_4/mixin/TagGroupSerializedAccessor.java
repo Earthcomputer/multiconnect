@@ -9,10 +9,10 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 import java.util.Map;
 
-@Mixin(TagGroup.class_5748.class)
-public interface TagGroupNetworkDataAccessor {
+@Mixin(TagGroup.Serialized.class)
+public interface TagGroupSerializedAccessor {
     @Invoker("<init>")
-    static TagGroup.class_5748 createTagGroupNetworkData(Map<Identifier, IntList> map) {
+    static TagGroup.Serialized createTagGroupSerialized(Map<Identifier, IntList> map) {
         return MixinHelper.fakeInstance();
     }
 }

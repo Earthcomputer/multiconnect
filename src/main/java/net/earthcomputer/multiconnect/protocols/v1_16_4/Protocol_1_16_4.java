@@ -19,7 +19,7 @@ import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.CommandTreeS2CAcce
 import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.DimensionTypeAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.EntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.ShulkerEntityAccessor;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.TagGroupNetworkDataAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.TagGroupSerializedAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
 import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
@@ -162,13 +162,13 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(SynchronizeTagsS2CPacket.class, buf -> {
-            Map<RegistryKey<? extends Registry<?>>, TagGroup.class_5748> tags = new HashMap<>(5);
+            Map<RegistryKey<? extends Registry<?>>, TagGroup.Serialized> tags = new HashMap<>(5);
             tags.put(RegistryKey.ofRegistry(new Identifier("block")), readTagGroupNetworkData(buf));
             tags.put(RegistryKey.ofRegistry(new Identifier("item")), readTagGroupNetworkData(buf));
             tags.put(RegistryKey.ofRegistry(new Identifier("fluid")), readTagGroupNetworkData(buf));
             tags.put(RegistryKey.ofRegistry(new Identifier("entity_type")), readTagGroupNetworkData(buf));
-            tags.put(RegistryKey.ofRegistry(new Identifier("game_event")), TagGroupNetworkDataAccessor.createTagGroupNetworkData(new HashMap<>()));
-            buf.pendingReadMapUnchecked(Identifier.class, TagGroup.class_5748.class, tags);
+            tags.put(RegistryKey.ofRegistry(new Identifier("game_event")), TagGroupSerializedAccessor.createTagGroupSerialized(new HashMap<>()));
+            buf.pendingReadMapUnchecked(Identifier.class, TagGroup.Serialized.class, tags);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(PlayerPositionLookS2CPacket.class, buf -> {
@@ -290,7 +290,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
             List<PlayerListS2CPacket.Entry> entries = new ArrayList<>(numEntries);
             for (int i = 0; i < numEntries; i++) {
                 switch (operation) {
-                    case field_29136: { // add player
+                    case ADD_PLAYER: {
                         GameProfile profile = new GameProfile(buf.readUuid(), buf.readString(16));
                         int numProperties = buf.readVarInt();
                         for (int j = 0; j < numProperties; j++) {
@@ -309,25 +309,25 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
                         entries.add(new PlayerListS2CPacket.Entry(profile, latency, gameMode, displayName));
                     }
                     break;
-                    case field_29137: { // update game mode
+                    case UPDATE_GAME_MODE: {
                         GameProfile profile = new GameProfile(buf.readUuid(), null);
                         GameMode gameMode = GameMode.byId(buf.readVarInt());
                         entries.add(new PlayerListS2CPacket.Entry(profile, 0, gameMode, null));
                     }
                     break;
-                    case field_29138: { // update latency
+                    case UPDATE_LATENCY: {
                         GameProfile profile = new GameProfile(buf.readUuid(), null);
                         int latency = buf.readVarInt();
                         entries.add(new PlayerListS2CPacket.Entry(profile, latency, null, null));
                     }
                     break;
-                    case field_29139: { // update display name
+                    case UPDATE_DISPLAY_NAME: {
                         GameProfile profile = new GameProfile(buf.readUuid(), null);
                         Text displayName = buf.readBoolean() ? buf.readText() : null;
                         entries.add(new PlayerListS2CPacket.Entry(profile, 0, null, displayName));
                     }
                     break;
-                    case field_29140: { // remove player
+                    case REMOVE_PLAYER: {
                         GameProfile profile = new GameProfile(buf.readUuid(), null);
                         entries.add(new PlayerListS2CPacket.Entry(profile, 0, null, null));
                     }
@@ -445,7 +445,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         });
     }
 
-    public static TagGroup.class_5748 readTagGroupNetworkData(TransformerByteBuf buf) {
+    public static TagGroup.Serialized readTagGroupNetworkData(TransformerByteBuf buf) {
         int numTags = buf.readVarInt();
         Map<Identifier, IntList> tags = new HashMap<>();
         for (int i = 0; i < numTags; i++) {
@@ -457,7 +457,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
             }
             tags.put(tagId, entries);
         }
-        return TagGroupNetworkDataAccessor.createTagGroupNetworkData(tags);
+        return TagGroupSerializedAccessor.createTagGroupSerialized(tags);
     }
 
     private static void translateDimensionType(TransformerByteBuf buf) {
@@ -486,7 +486,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         insertAfter(packets, MapUpdateS2CPacket.class, PacketInfo.of(MapUpdateS2CPacket_1_16_4.class, MapUpdateS2CPacket_1_16_4::new));
         remove(packets, MapUpdateS2CPacket.class);
         remove(packets, VibrationS2CPacket.class);
-        remove(packets, class_5888.class);
+        remove(packets, ClearTitleS2CPacket.class);
         remove(packets, class_5889.class);
         insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket_1_16_4.class, EntityS2CPacket_1_16_4::new));
         insertAfter(packets, PlayerAbilitiesS2CPacket.class, PacketInfo.of(CombatEventS2CPacket_1_16_4.class, CombatEventS2CPacket_1_16_4::new));
@@ -494,16 +494,16 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         remove(packets, class_5891.class);
         remove(packets, class_5892.class);
         insertAfter(packets, SelectAdvancementTabS2CPacket.class, PacketInfo.of(WorldBorderS2CPacket_1_16_4.class, WorldBorderS2CPacket_1_16_4::new));
-        remove(packets, class_5894.class);
+        remove(packets, OverlayMessageS2CPacket.class);
         remove(packets, class_5895.class);
         remove(packets, class_5896.class);
         remove(packets, class_5897.class);
         remove(packets, class_5898.class);
         remove(packets, class_5899.class);
-        remove(packets, class_5903.class);
+        remove(packets, SubtitleS2CPacket.class);
         insertAfter(packets, WorldTimeUpdateS2CPacket.class, PacketInfo.of(TitleS2CPacket_1_16_4.class, TitleS2CPacket_1_16_4::new));
-        remove(packets, class_5904.class);
-        remove(packets, class_5905.class);
+        remove(packets, TitleS2CPacket.class);
+        remove(packets, TitleFadeS2CPacket.class);
         return packets;
     }
 
