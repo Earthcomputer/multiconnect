@@ -154,18 +154,18 @@ public class MixinClientPlayNetworkHandler {
         TagGroup<Fluid> fluidTags = setExtraTags("fluid", packet, new TagRegistry<>(Registry.FLUID), requiredTags.get(Registry.FLUID_KEY), ConnectionInfo.protocol::addExtraFluidTags);
         TagGroup<EntityType<?>> entityTypeTags = setExtraTags("entity type", packet, new TagRegistry<>(Registry.ENTITY_TYPE), requiredTags.get(Registry.ENTITY_TYPE_KEY), ConnectionInfo.protocol::addExtraEntityTags);
         TagGroup<GameEvent> gameEventTags = setExtraTags("game event", packet, new TagRegistry<>(Registry.GAME_EVENT), requiredTags.get(Registry.GAME_EVENT_KEY), ConnectionInfo.protocol::addExtraGameEventTags);
-        packet.getTagManager().put(Registry.BLOCK_KEY, blockTags.toPacket(Registry.BLOCK));
-        packet.getTagManager().put(Registry.ITEM_KEY, itemTags.toPacket(Registry.ITEM));
-        packet.getTagManager().put(Registry.FLUID_KEY, fluidTags.toPacket(Registry.FLUID));
-        packet.getTagManager().put(Registry.ENTITY_TYPE_KEY, entityTypeTags.toPacket(Registry.ENTITY_TYPE));
-        packet.getTagManager().put(Registry.GAME_EVENT_KEY, gameEventTags.toPacket(Registry.GAME_EVENT));
+        packet.getGroups().put(Registry.BLOCK_KEY, blockTags.serialize(Registry.BLOCK));
+        packet.getGroups().put(Registry.ITEM_KEY, itemTags.serialize(Registry.ITEM));
+        packet.getGroups().put(Registry.FLUID_KEY, fluidTags.serialize(Registry.FLUID));
+        packet.getGroups().put(Registry.ENTITY_TYPE_KEY, entityTypeTags.serialize(Registry.ENTITY_TYPE));
+        packet.getGroups().put(Registry.GAME_EVENT_KEY, gameEventTags.serialize(Registry.GAME_EVENT));
     }
 
     @Unique
     private static <T> TagGroup<T> setExtraTags(String type, SynchronizeTagsS2CPacket packet, TagRegistry<T> tagRegistry, List<Identifier> requiredTags, Consumer<TagRegistry<T>> tagsAdder) {
         Registry<T> registry = tagRegistry.getRegistry();
-        if (packet.getTagManager().containsKey(registry.getKey())) {
-            TagGroup<T> group = TagGroup.method_33155(packet.getTagManager().get(registry.getKey()), registry);
+        if (packet.getGroups().containsKey(registry.getKey())) {
+            TagGroup<T> group = TagGroup.deserialize(packet.getGroups().get(registry.getKey()), registry);
             group.getTags().forEach((id, tag) -> tagRegistry.put(id, new HashSet<>(tag.values())));
         }
         tagsAdder.accept(tagRegistry);

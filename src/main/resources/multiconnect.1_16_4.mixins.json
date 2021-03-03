@@ -8,7 +8,7 @@
     "EntityAccessor",
     "MapStateAccessor",
     "ShulkerEntityAccessor",
-    "TagGroupNetworkDataAccessor"
+    "TagGroupSerializedAccessor"
   ],
   "client": [
   ],
