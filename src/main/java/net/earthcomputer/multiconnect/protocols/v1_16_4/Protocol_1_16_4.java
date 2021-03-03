@@ -39,6 +39,7 @@ import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.ShulkerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.packet.c2s.play.ClientSettingsC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleType;
@@ -120,7 +121,16 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
                 // TODO: get the actual biome array from somewhere
                 buf.pendingRead(int[].class, new int[BIOME_ARRAY_LENGTH]);
             }
+            int dataLength = buf.readVarInt();
+            buf.readBytes(new byte[dataLength]); // data
             buf.disablePassthroughMode();
+            int numBlockEntities = buf.readVarInt();
+            List<CompoundTag> blockEntities = new ArrayList<>(numBlockEntities);
+            for (int i = 0; i < numBlockEntities; i++) {
+                blockEntities.add(buf.readCompoundTag());
+            }
+            //noinspection unchecked
+            buf.pendingReadCollection((Class<List<CompoundTag>>) (Class<?>) List.class, CompoundTag.class, blockEntities);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(LightUpdateS2CPacket.class, buf -> {
