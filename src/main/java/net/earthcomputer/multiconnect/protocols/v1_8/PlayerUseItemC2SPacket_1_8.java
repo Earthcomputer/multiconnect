@@ -26,7 +26,7 @@ public class PlayerUseItemC2SPacket_1_8 implements Packet<ServerPlayPacketListen
     public PlayerUseItemC2SPacket_1_8(BlockPos pos, int hitSide, ItemStack stack, float fractionalX, float fractionalY, float fractionalZ) {
         this.pos = pos;
         this.hitSide = hitSide;
-        this.stack = stack;
+        this.stack = stack.copy();
         this.fractionalX = fractionalX;
         this.fractionalY = fractionalY;
         this.fractionalZ = fractionalZ;

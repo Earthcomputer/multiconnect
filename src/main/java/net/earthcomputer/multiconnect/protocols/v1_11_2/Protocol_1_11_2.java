@@ -96,10 +96,13 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
     @Override
     public boolean onSendPacket(Packet<?> packet) {
         if (packet instanceof PlaceRecipeC2SPacket_1_12) {
-            PlayerEntity player = MinecraftClient.getInstance().player;
-            assert player != null;
-            RecipeBookEmulator recipeBookEmulator = ((IScreenHandler) player.currentScreenHandler).multiconnect_getRecipeBookEmulator();
-            recipeBookEmulator.emulateRecipePlacement((PlaceRecipeC2SPacket_1_12) packet);
+            MinecraftClient.getInstance().execute(() -> {
+                PlayerEntity player = MinecraftClient.getInstance().player;
+                if (player != null) {
+                    RecipeBookEmulator recipeBookEmulator = ((IScreenHandler) player.currentScreenHandler).multiconnect_getRecipeBookEmulator();
+                    recipeBookEmulator.emulateRecipePlacement((PlaceRecipeC2SPacket_1_12) packet);
+                }
+            });
             return false;
         }
         if (packet instanceof RecipeBookDataC2SPacket_1_16_1) {

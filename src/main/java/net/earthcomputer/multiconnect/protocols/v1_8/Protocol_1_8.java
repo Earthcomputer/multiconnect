@@ -716,20 +716,24 @@ public class Protocol_1_8 extends Protocol_1_9 {
         }
         if (packet instanceof PlayerInteractBlockC2SPacket) {
             PlayerInteractBlockC2SPacket interactBlock = (PlayerInteractBlockC2SPacket) packet;
-            ClientPlayerEntity player = MinecraftClient.getInstance().player;
-            if (player != null) {
-                BlockHitResult hitResult = interactBlock.getBlockHitResult();
-                BlockPos blockPos = hitResult.getBlockPos();
-                Vec3d pos = hitResult.getPos();
-                player.networkHandler.sendPacket(new PlayerUseItemC2SPacket_1_8(blockPos, hitResult.getSide().getId(), player.getMainHandStack(), (float)(pos.x - blockPos.getX()), (float)(pos.y - blockPos.getY()), (float)(pos.z - blockPos.getZ())));
-            }
+            MinecraftClient.getInstance().execute(() -> {
+                ClientPlayerEntity player = MinecraftClient.getInstance().player;
+                if (player != null) {
+                    BlockHitResult hitResult = interactBlock.getBlockHitResult();
+                    BlockPos blockPos = hitResult.getBlockPos();
+                    Vec3d pos = hitResult.getPos();
+                    player.networkHandler.sendPacket(new PlayerUseItemC2SPacket_1_8(blockPos, hitResult.getSide().getId(), player.getMainHandStack(), (float)(pos.x - blockPos.getX()), (float)(pos.y - blockPos.getY()), (float)(pos.z - blockPos.getZ())));
+                }
+            });
             return false;
         }
         if (packet instanceof PlayerInteractItemC2SPacket) {
-            ClientPlayerEntity player = MinecraftClient.getInstance().player;
-            if (player != null) {
-                player.networkHandler.sendPacket(new PlayerUseItemC2SPacket_1_8(player.getMainHandStack()));
-            }
+            MinecraftClient.getInstance().execute(() -> {
+                ClientPlayerEntity player = MinecraftClient.getInstance().player;
+                if (player != null) {
+                    player.networkHandler.sendPacket(new PlayerUseItemC2SPacket_1_8(player.getMainHandStack()));
+                }
+            });
             return false;
         }
         if (packet instanceof ClickSlotC2SPacket) {
