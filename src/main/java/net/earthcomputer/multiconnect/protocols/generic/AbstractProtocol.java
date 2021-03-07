@@ -24,7 +24,6 @@ import net.minecraft.util.registry.*;
 import net.minecraft.world.event.GameEvent;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -49,6 +48,9 @@ public abstract class AbstractProtocol implements IUtils {
         }
         ((MinecraftClientAccessor) MinecraftClient.getInstance()).callInitializeSearchableContainers();
         ((MinecraftClientAccessor) MinecraftClient.getInstance()).getSearchManager().apply(MinecraftClient.getInstance().getResourceManager());
+    }
+
+    public void disable() {
     }
 
     public void doRegistryMutation(boolean reAddMissingValues) {

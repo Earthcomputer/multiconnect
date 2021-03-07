@@ -42,7 +42,6 @@ public class BoatRenderer_1_8 extends EntityRenderer<BoatEntity> {
         }
 
         matrices.scale(-1, -1, 1);
-        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(90));
         model.setAngles(entity, tickDelta, 0, -0.1f, 0, 0);
         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(model.getLayer(TEXTURE));
         model.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, 1, 1, 1, 1);

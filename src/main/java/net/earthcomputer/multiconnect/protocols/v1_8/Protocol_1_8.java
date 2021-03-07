@@ -90,6 +90,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
 
     private static final AtomicInteger FAKE_TELEPORT_ID_COUNTER = new AtomicInteger();
     public static final int WORLD_EVENT_QUIET_GHAST_SHOOT = -1000 + 1;
+    private static final EntityDimensions DEFAULT_BOAT_DIMENSIONS = EntityType.BOAT.getDimensions();
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
@@ -754,6 +755,18 @@ public class Protocol_1_8 extends Protocol_1_9 {
             }
         }
         return super.onSendPacket(packet);
+    }
+
+    @Override
+    public void setup(boolean resourceReload) {
+        super.setup(resourceReload);
+        ((EntityTypeAccessor) EntityType.BOAT).setDimensions(EntityDimensions.changing(1.5f, 0.5625f));
+    }
+
+    @Override
+    public void disable() {
+        ((EntityTypeAccessor) EntityType.BOAT).setDimensions(DEFAULT_BOAT_DIMENSIONS);
+        super.disable();
     }
 
     @Override

@@ -15,6 +15,9 @@ public abstract class MixinMinecraftClient {
 
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At("RETURN"))
     public void onDisconnect(Screen screen, CallbackInfo ci) {
+        if (ConnectionInfo.protocol != null) {
+            ConnectionInfo.protocol.disable();
+        }
         ConnectionInfo.protocolVersion = SharedConstants.getGameVersion().getProtocolVersion();
         ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
         ConnectionInfo.protocol.setup(false);

@@ -6,6 +6,7 @@ import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
@@ -41,12 +42,13 @@ public class EntityAttachS2CPacket_1_8 implements Packet<ClientPlayPacketListene
             int vehicleId;
             int[] passengerIds;
 
+            ClientWorld world = MinecraftClient.getInstance().world;
+            if (world == null) {
+                return;
+            }
+
             if (toEntityId == -1) {
                 // dismount
-                ClientWorld world = MinecraftClient.getInstance().world;
-                if (world == null) {
-                    return;
-                }
                 Entity passenger = world.getEntityById(fromEntityId);
                 if (passenger == null) {
                     LOGGER.warn("Received dismount for unknown entity");
@@ -59,9 +61,18 @@ public class EntityAttachS2CPacket_1_8 implements Packet<ClientPlayPacketListene
                 }
                 vehicleId = vehicle.getId();
                 passengerIds = new int[0];
+
+                if (vehicle instanceof BoatEntity) {
+                    ((IBoatEntity_1_8) vehicle).multiconnect_setBoatEmpty(true);
+                }
             } else {
                 vehicleId = toEntityId;
                 passengerIds = new int[] {fromEntityId};
+
+                Entity vehicle = world.getEntityById(toEntityId);
+                if (vehicle instanceof BoatEntity) {
+                    ((IBoatEntity_1_8) vehicle).multiconnect_setBoatEmpty(false);
+                }
             }
 
             EntityPassengersSetS2CPacket packet = Utils.createPacket(EntityPassengersSetS2CPacket.class, EntityPassengersSetS2CPacket::new, Protocols.V1_9, buf -> {
