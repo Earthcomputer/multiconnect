@@ -24,7 +24,6 @@ import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
 import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.earthcomputer.multiconnect.transformer.VarInt;
-import net.minecraft.*;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.block.*;
@@ -40,7 +39,10 @@ import net.minecraft.entity.mob.ShulkerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Packet;
+import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
 import net.minecraft.network.packet.c2s.play.ClientSettingsC2SPacket;
+import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
@@ -66,13 +68,18 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.event.GameEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class Protocol_1_16_4 extends Protocol_1_17 {
+    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
+
     public static final int BIOME_ARRAY_LENGTH = 1024;
+    private static short lastActionId = 0;
 
     private static final TrackedData<Optional<BlockPos>> OLD_SHULKER_ATTACHED_POSITION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.OPTIONAL_BLOCK_POS);
 
@@ -284,12 +291,12 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         });
         ProtocolRegistry.registerInboundTranslator(PlayerListS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            PlayerListS2CPacket.class_5893 operation = buf.readEnumConstant(PlayerListS2CPacket.class_5893.class);
+            PlayerListS2CPacket.Action action = buf.readEnumConstant(PlayerListS2CPacket.Action.class);
             buf.disablePassthroughMode();
             int numEntries = buf.readVarInt();
             List<PlayerListS2CPacket.Entry> entries = new ArrayList<>(numEntries);
             for (int i = 0; i < numEntries; i++) {
-                switch (operation) {
+                switch (action) {
                     case ADD_PLAYER: {
                         GameProfile profile = new GameProfile(buf.readUuid(), buf.readString(16));
                         int numProperties = buf.readVarInt();
@@ -370,7 +377,7 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
             buf.pendingRead(IntList.class, entities);
             buf.applyPendingReads();
         });
-        ProtocolRegistry.registerInboundTranslator(class_5900.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(TeamS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readString(16); // name
             int mode = buf.readByte();
@@ -480,6 +487,14 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         }
     }
 
+    public static short getLastScreenActionId() {
+        return lastActionId;
+    }
+
+    public static short nextScreenActionId() {
+        return ++lastActionId;
+    }
+
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
@@ -487,24 +502,45 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         remove(packets, MapUpdateS2CPacket.class);
         remove(packets, VibrationS2CPacket.class);
         remove(packets, ClearTitleS2CPacket.class);
-        remove(packets, class_5889.class);
+        remove(packets, WorldBorderInitializeS2CPacket.class);
         insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket_1_16_4.class, EntityS2CPacket_1_16_4::new));
         insertAfter(packets, PlayerAbilitiesS2CPacket.class, PacketInfo.of(CombatEventS2CPacket_1_16_4.class, CombatEventS2CPacket_1_16_4::new));
-        remove(packets, class_5890.class);
-        remove(packets, class_5891.class);
-        remove(packets, class_5892.class);
+        remove(packets, EndCombatS2CPacket.class);
+        remove(packets, EnterCombatS2CPacket.class);
+        remove(packets, DeathMessageS2CPacket.class);
         insertAfter(packets, SelectAdvancementTabS2CPacket.class, PacketInfo.of(WorldBorderS2CPacket_1_16_4.class, WorldBorderS2CPacket_1_16_4::new));
         remove(packets, OverlayMessageS2CPacket.class);
-        remove(packets, class_5895.class);
-        remove(packets, class_5896.class);
-        remove(packets, class_5897.class);
-        remove(packets, class_5898.class);
-        remove(packets, class_5899.class);
+        remove(packets, WorldBorderCenterChangedS2CPacket.class);
+        remove(packets, WorldBorderInterpolateSizeS2CPacket.class);
+        remove(packets, WorldBorderSizeChangedS2CPacket.class);
+        remove(packets, WorldBorderWarningTimeChangedS2CPacket.class);
+        remove(packets, WorldBorderWarningBlocksChangedS2CPacket.class);
         remove(packets, SubtitleS2CPacket.class);
         insertAfter(packets, WorldTimeUpdateS2CPacket.class, PacketInfo.of(TitleS2CPacket_1_16_4.class, TitleS2CPacket_1_16_4::new));
         remove(packets, TitleS2CPacket.class);
         remove(packets, TitleFadeS2CPacket.class);
+        insertAfter(packets, CommandTreeS2CPacket.class, PacketInfo.of(AckScreenActionS2CPacket_1_16_4.class, AckScreenActionS2CPacket_1_16_4::new));
         return packets;
+    }
+
+    @Override
+    public List<PacketInfo<?>> getServerboundPackets() {
+        List<PacketInfo<?>> packets = super.getServerboundPackets();
+        insertAfter(packets, RequestCommandCompletionsC2SPacket.class, PacketInfo.of(AckScreenActionC2SPacket_1_16_4.class, AckScreenActionC2SPacket_1_16_4::new));
+        insertAfter(packets, ClickSlotC2SPacket.class, PacketInfo.of(ClickSlotC2SPacket_1_16_4.class, ClickSlotC2SPacket_1_16_4::new));
+        remove(packets, ClickSlotC2SPacket.class);
+        return packets;
+    }
+
+    @Override
+    public boolean onSendPacket(Packet<?> packet) {
+        if (packet instanceof ClickSlotC2SPacket) {
+            // Packets that go through the ClientPlayerInteractionManager have enough context to be translated, see MixinClientPlayerInteractionManager
+            LOGGER.warn("Dropping untranslated serverbound click slot packet, sent without the client player interaction manager");
+            return false;
+        }
+
+        return super.onSendPacket(packet);
     }
 
     @Override
@@ -646,6 +682,12 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(Blocks.POLISHED_DEEPSLATE_STAIRS);
         registry.unregister(Blocks.POLISHED_DEEPSLATE_WALL);
         registry.unregister(Blocks.SMOOTH_BASALT);
+        registry.unregister(Blocks.CRACKED_DEEPSLATE_BRICKS);
+        registry.unregister(Blocks.CRACKED_DEEPSLATE_TILES);
+        registry.unregister(Blocks.DEEPSLATE_COAL_ORE);
+        registry.unregister(Blocks.DEEPSLATE_COPPER_ORE);
+        registry.unregister(Blocks.DEEPSLATE_EMERALD_ORE);
+        registry.unregister(Blocks.INFESTED_DEEPSLATE);
     }
 
     private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
@@ -983,6 +1025,11 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         registry.unregister(SoundEvents.BLOCK_POLISHED_DEEPSLATE_HIT);
         registry.unregister(SoundEvents.BLOCK_POLISHED_DEEPSLATE_PLACE);
         registry.unregister(SoundEvents.BLOCK_POLISHED_DEEPSLATE_STEP);
+        registry.unregister(SoundEvents.ENTITY_GLOW_ITEM_FRAME_ADD_ITEM);
+        registry.unregister(SoundEvents.ENTITY_GLOW_ITEM_FRAME_BREAK);
+        registry.unregister(SoundEvents.ENTITY_GLOW_ITEM_FRAME_PLACE);
+        registry.unregister(SoundEvents.ENTITY_GLOW_ITEM_FRAME_REMOVE_ITEM);
+        registry.unregister(SoundEvents.ENTITY_GLOW_ITEM_FRAME_ROTATE_ITEM);
     }
 
     @Override
@@ -1001,9 +1048,6 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         if (state.getBlock() instanceof AbstractRailBlock && state.get(AbstractRailBlock.WATERLOGGED)) {
             return false;
         }
-        if (state.getBlock() instanceof AbstractSignBlock && state.get(SignBlock.LIT)) {
-            return false;
-        }
         return super.acceptBlockState(state);
     }
 
@@ -1020,15 +1064,15 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         tags.add(BlockTags.CAVE_VINES);
         tags.addTag(BlockTags.LUSH_PLANTS_REPLACEABLE, BlockTags.BASE_STONE_OVERWORLD);
         tags.addTag(BlockTags.LUSH_PLANTS_REPLACEABLE, BlockTags.CAVE_VINES);
-        tags.addTag(BlockTags.LUSH_PLANTS_REPLACEABLE, BlockTags.FLOWERS);
-        tags.add(BlockTags.LUSH_PLANTS_REPLACEABLE, Blocks.DIRT, Blocks.GRAVEL, Blocks.SAND, Blocks.GRASS, Blocks.TALL_GRASS, Blocks.VINE);
-        tags.addTag(BlockTags.AZALEA_LOG_REPLACEABLE, BlockTags.FLOWERS);
-        tags.addTag(BlockTags.AZALEA_LOG_REPLACEABLE, BlockTags.LEAVES);
-        tags.add(BlockTags.AZALEA_LOG_REPLACEABLE, Blocks.GRASS, Blocks.FERN, Blocks.SWEET_BERRY_BUSH);
+        tags.add(BlockTags.LUSH_PLANTS_REPLACEABLE, Blocks.DIRT, Blocks.GRAVEL, Blocks.SAND);
+        tags.add(BlockTags.LUSH_GROUND_REPLACEABLE, Blocks.CLAY);
         tags.add(BlockTags.IRON_ORES, Blocks.IRON_ORE);
         tags.add(BlockTags.DIAMOND_ORES, Blocks.DIAMOND_ORE);
         tags.add(BlockTags.REDSTONE_ORES, Blocks.REDSTONE_ORE);
         tags.add(BlockTags.LAPIS_ORES, Blocks.LAPIS_ORE);
+        tags.add(BlockTags.COAL_ORES, Blocks.COAL_ORE);
+        tags.add(BlockTags.EMERALD_ORES, Blocks.EMERALD_ORE);
+        tags.add(BlockTags.COPPER_ORES);
         tags.add(BlockTags.STONE_ORE_REPLACEABLES, Blocks.STONE, Blocks.GRANITE, Blocks.DIORITE, Blocks.ANDESITE);
         tags.add(BlockTags.DEEPSLATE_ORE_REPLACEABLES);
         super.addExtraBlockTags(tags);
@@ -1047,6 +1091,9 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         copyBlocks(tags, blockTags, ItemTags.DIAMOND_ORES, BlockTags.DIAMOND_ORES);
         copyBlocks(tags, blockTags, ItemTags.REDSTONE_ORES, BlockTags.REDSTONE_ORES);
         copyBlocks(tags, blockTags, ItemTags.LAPIS_ORES, BlockTags.LAPIS_ORES);
+        copyBlocks(tags, blockTags, ItemTags.COAL_ORES, BlockTags.COAL_ORES);
+        copyBlocks(tags, blockTags, ItemTags.EMERALD_ORES, BlockTags.EMERALD_ORES);
+        copyBlocks(tags, blockTags, ItemTags.COPPER_ORES, BlockTags.COPPER_ORES);
         super.addExtraItemTags(tags, blockTags);
     }
 

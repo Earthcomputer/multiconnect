@@ -7,6 +7,7 @@
     "DimensionTypeAccessor",
     "EntityAccessor",
     "MapStateAccessor",
+    "MixinClientPlayerInteractionManager",
     "ShulkerEntityAccessor",
     "TagGroupSerializedAccessor"
   ],

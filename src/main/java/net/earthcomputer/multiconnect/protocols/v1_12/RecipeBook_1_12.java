@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.Protocol_1_16_4;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.recipebook.RecipeBookWidget;
@@ -24,10 +25,10 @@ import java.util.List;
 
 public class RecipeBook_1_12<C extends Inventory> {
 
-    private MinecraftClient mc = MinecraftClient.getInstance();
-    private RecipeBookWidget recipeBookWidget;
-    private IRecipeBookWidget iRecipeBookWidget;
-    private AbstractRecipeScreenHandler<C> container;
+    private final MinecraftClient mc = MinecraftClient.getInstance();
+    private final RecipeBookWidget recipeBookWidget;
+    private final IRecipeBookWidget iRecipeBookWidget;
+    private final AbstractRecipeScreenHandler<C> container;
 
     public RecipeBook_1_12(RecipeBookWidget recipeBookWidget, IRecipeBookWidget iRecipeBookWidget, AbstractRecipeScreenHandler<C> container) {
         this.recipeBookWidget = recipeBookWidget;
@@ -57,7 +58,7 @@ public class RecipeBook_1_12<C extends Inventory> {
             recipeBookWidget.showGhostRecipe(recipe, container.slots);
 
             if (!transactionFromMatrix.isEmpty()) {
-                short transactionId = mc.player.currentScreenHandler.getNextActionId(mc.player.getInventory());
+                short transactionId = Protocol_1_16_4.nextScreenActionId();
                 mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionFromMatrix, new ArrayList<>()));
 
                 if (iRecipeBookWidget.getRecipeBook().isFilteringCraftable(container)) {
@@ -118,7 +119,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                 List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsFromMatrix = clearCraftMatrix();
                 List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsToMatrix = new ArrayList<>();
                 placeRecipe(recipe, slots, actualCount, inputItemIds, transactionsToMatrix);
-                short transactionId = mc.player.currentScreenHandler.getNextActionId(mc.player.getInventory());
+                short transactionId = Protocol_1_16_4.nextScreenActionId();
                 mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionsFromMatrix, transactionsToMatrix));
                 mc.player.getInventory().markDirty();
             }
@@ -146,9 +147,15 @@ public class RecipeBook_1_12<C extends Inventory> {
                         destSlot = playerInv.getEmptySlot();
                     }
 
+                    if (destSlot == -1) {
+                        // Wtf, this happens?!
+                        break;
+                    }
+
                     ItemStack originalStack = stack.copy();
                     ItemStack targetStack = stack.copy();
                     targetStack.setCount(1);
+                    ItemStack placedOn = playerInv.getStack(destSlot).copy();
 
                     if (playerInv.insertStack(destSlot, targetStack)) {
                         targetStack.increment(1);
@@ -158,7 +165,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                     }
 
                     container.getSlot(i).takeStack(1);
-                    transactionsFromMatrix.add(new PlaceRecipeC2SPacket_1_12.Transaction(originalStack, targetStack.copy(), serverSlot, destSlot));
+                    transactionsFromMatrix.add(new PlaceRecipeC2SPacket_1_12.Transaction(originalStack, targetStack.copy(), placedOn, serverSlot, destSlot));
                 }
             }
 
@@ -260,6 +267,7 @@ public class RecipeBook_1_12<C extends Inventory> {
 
                 ItemStack originalStack = stack.copy();
                 stack.setCount(1);
+                ItemStack placedOn = destSlot.getStack().copy();
 
                 if (destSlot.getStack().isEmpty()) {
                     destSlot.setStack(stack);
@@ -267,7 +275,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                     destSlot.getStack().increment(1);
                 }
 
-                return new PlaceRecipeC2SPacket_1_12.Transaction(originalStack, stack, destSlotIndex, fromSlot);
+                return new PlaceRecipeC2SPacket_1_12.Transaction(originalStack, stack, placedOn, destSlotIndex, fromSlot);
             }
         }
     }

@@ -264,14 +264,14 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
         ProtocolRegistry.registerOutboundTranslator(PlayerInteractEntityC2SPacket.class, buf -> {
             buf.passthroughWrite(VarInt.class); // entity id
-            Supplier<PlayerInteractEntityC2SPacket.class_5907> type = buf.passthroughWrite(PlayerInteractEntityC2SPacket.class_5907.class);
+            Supplier<PlayerInteractEntityC2SPacket.InteractType> type = buf.passthroughWrite(PlayerInteractEntityC2SPacket.InteractType.class);
             buf.whenWrite(() -> {
-                if (type.get() == PlayerInteractEntityC2SPacket.class_5907.field_29173) {
+                if (type.get() == PlayerInteractEntityC2SPacket.InteractType.INTERACT_AT) {
                     buf.passthroughWrite(Float.class); // hit x
                     buf.passthroughWrite(Float.class); // hit y
                     buf.passthroughWrite(Float.class); // hit z
                 }
-                if (type.get() == PlayerInteractEntityC2SPacket.class_5907.field_29171 || type.get() == PlayerInteractEntityC2SPacket.class_5907.field_29173) {
+                if (type.get() == PlayerInteractEntityC2SPacket.InteractType.INTERACT || type.get() == PlayerInteractEntityC2SPacket.InteractType.INTERACT_AT) {
                     buf.passthroughWrite(Hand.class); // hand
                 }
                 buf.skipWrite(Boolean.class); // sneaking

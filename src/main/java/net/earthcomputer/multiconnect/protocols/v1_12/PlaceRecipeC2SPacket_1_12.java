@@ -58,12 +58,14 @@ public class PlaceRecipeC2SPacket_1_12 implements Packet<ServerPlayPacketListene
     public static class Transaction {
         public ItemStack originalStack;
         public ItemStack stack;
+        public ItemStack placedOn;
         public int craftingSlot;
         public int invSlot;
 
-        public Transaction(ItemStack originalStack, ItemStack stack, int craftingSlot, int invSlot) {
+        public Transaction(ItemStack originalStack, ItemStack stack, ItemStack placedOn, int craftingSlot, int invSlot) {
             this.originalStack = originalStack;
             this.stack = stack.copy();
+            this.placedOn = placedOn;
             this.craftingSlot = craftingSlot;
             this.invSlot = invSlot;
         }

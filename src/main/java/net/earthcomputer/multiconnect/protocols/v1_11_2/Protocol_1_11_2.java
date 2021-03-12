@@ -84,8 +84,8 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
     public List<PacketInfo<?>> getServerboundPackets() {
         List<PacketInfo<?>> packets = super.getServerboundPackets();
         remove(packets, PlaceRecipeC2SPacket_1_12.class);
-        remove(packets, PlayerMoveC2SPacket.class_5911.class);
-        insertAfter(packets, PlayerMoveC2SPacket.LookOnly.class, PacketInfo.of(PlayerMoveC2SPacket.class_5911.class, PlayerMoveC2SPacket.class_5911::method_34224));
+        remove(packets, PlayerMoveC2SPacket.OnGroundOnly.class);
+        insertAfter(packets, PlayerMoveC2SPacket.LookAndOnGround.class, PacketInfo.of(PlayerMoveC2SPacket.OnGroundOnly.class, PlayerMoveC2SPacket.OnGroundOnly::read));
         remove(packets, RecipeBookDataC2SPacket_1_16_1.class);
         remove(packets, AdvancementTabC2SPacket.class);
         insertAfter(packets, ClientStatusC2SPacket.class, PacketInfo.of(ClientStatusC2SPacket_1_11_2.class, ClientStatusC2SPacket_1_11_2::new));

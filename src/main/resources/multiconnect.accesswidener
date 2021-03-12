@@ -4,6 +4,6 @@ accessible method net/minecraft/client/particle/ParticleManager$SimpleSpriteProv
 accessible class net/minecraft/util/registry/DynamicRegistryManager$Info
 accessible class net/minecraft/block/entity/BlockEntityType$BlockEntityFactory
 accessible class net/minecraft/tag/RequiredTagList$TagWrapper
-accessible class net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket$class_5907
+accessible class net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket$InteractType
 accessible class net/minecraft/network/packet/s2c/play/BossBarS2CPacket$Type
 accessible class net/minecraft/network/packet/s2c/play/CommandTreeS2CPacket$CommandNodeData

@@ -116,8 +116,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     public List<PacketInfo<?>> getServerboundPackets() {
         List<PacketInfo<?>> packets = super.getServerboundPackets();
         remove(packets, UpdateDifficultyC2SPacket.class);
-        remove(packets, PlayerMoveC2SPacket.class_5911.class);
-        insertAfter(packets, UpdateDifficultyLockC2SPacket.class, PacketInfo.of(PlayerMoveC2SPacket.class_5911.class, PlayerMoveC2SPacket.class_5911::method_34224));
+        remove(packets, PlayerMoveC2SPacket.OnGroundOnly.class);
+        insertAfter(packets, UpdateDifficultyLockC2SPacket.class, PacketInfo.of(PlayerMoveC2SPacket.OnGroundOnly.class, PlayerMoveC2SPacket.OnGroundOnly::read));
         remove(packets, UpdateDifficultyLockC2SPacket.class);
         remove(packets, UpdateJigsawC2SPacket.class);
         return packets;

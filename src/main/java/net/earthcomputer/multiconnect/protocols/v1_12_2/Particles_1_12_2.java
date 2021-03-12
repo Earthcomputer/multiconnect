@@ -13,7 +13,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.particle.*;
 import net.minecraft.client.render.*;
-import net.minecraft.client.texture.TextureManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.BlockStateParticleEffect;
@@ -180,11 +179,9 @@ public class Particles_1_12_2 {
         private static final Identifier FOOTPRINT_TEXTURE = new Identifier("textures/particle/footprint.png");
         private int ticks;
         private final int maxTicks = 200;
-        private final TextureManager textureManager;
 
-        private FootprintParticle(TextureManager textureManager, ClientWorld world, double x, double y, double z) {
+        private FootprintParticle(ClientWorld world, double x, double y, double z) {
             super(world, x, y, z, 0, 0, 0);
-            this.textureManager = textureManager;
             this.velocityX = 0;
             this.velocityY = 0;
             this.velocityZ = 0;
@@ -202,14 +199,14 @@ public class Particles_1_12_2 {
                 alpha = 1;
             alpha *= 0.2;
 
-            RenderSystem.disableLighting();
             final float radius = 0.125f;
             Vec3d cameraPos = camera.getPos();
             float x = (float) (this.x - cameraPos.getX());
             float y = (float) (this.y - cameraPos.getY());
             float z = (float) (this.z - cameraPos.getZ());
             float light = world.getBrightness(new BlockPos(this.x, this.y, this.z));
-            textureManager.bindTexture(FOOTPRINT_TEXTURE);
+            int oldTextureId = RenderSystem.getShaderTexture(0);
+            RenderSystem.setShaderTexture(0, FOOTPRINT_TEXTURE);
             RenderSystem.enableBlend();
             RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
             ((BufferBuilder) vc).begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
@@ -219,7 +216,7 @@ public class Particles_1_12_2 {
             vc.vertex(x - radius, y, z - radius).texture(0, 0).color(light, light, light, alpha).next();
             Tessellator.getInstance().draw();
             RenderSystem.disableBlend();
-            RenderSystem.enableLighting();
+            RenderSystem.setShaderTexture(0, oldTextureId);
         }
 
         @Override
@@ -237,7 +234,7 @@ public class Particles_1_12_2 {
         public static class Factory implements ParticleFactory<DefaultParticleType> {
             @Override
             public Particle createParticle(DefaultParticleType type, ClientWorld world, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
-                return new FootprintParticle(MinecraftClient.getInstance().getTextureManager(), world, x, y, z);
+                return new FootprintParticle(world, x, y, z);
             }
         }
     }

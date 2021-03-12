@@ -4,21 +4,17 @@ import com.google.common.collect.Collections2;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.AchievementManager;
-import net.earthcomputer.multiconnect.protocols.v1_11_2.IScreenHandler;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.PendingAchievements;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.packet.s2c.play.ConfirmScreenActionS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeRecipesS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnlockRecipesS2CPacket;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.book.RecipeBookOptions;
-import net.minecraft.screen.ScreenHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class MixinClientPlayNetworkHandler {
@@ -37,13 +33,6 @@ public abstract class MixinClientPlayNetworkHandler {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_11_2) {
             PendingAchievements achievements = PendingAchievements.poll();
             AchievementManager.update(achievements.getToAdd(), achievements.getToRemove());
-        }
-    }
-
-    @Inject(method = "onConfirmScreenAction", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ConfirmScreenActionS2CPacket;wasAccepted()Z"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void onOnConfirmScreenAction(ConfirmScreenActionS2CPacket packet, CallbackInfo ci, ScreenHandler screenHandler) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_11_2) {
-            ((IScreenHandler) screenHandler).multiconnect_getRecipeBookEmulator().onConfirmTransaction(packet);
         }
     }
 

@@ -18,7 +18,6 @@ import net.earthcomputer.multiconnect.protocols.v1_16_4.MapUpdateS2CPacket_1_16_
 import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.WallMountLocation;
-import net.minecraft.class_5900;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.command.CommandSource;
@@ -363,7 +362,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(class_5900.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(TeamS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readString(16); // team name
             int mode = buf.readByte();
