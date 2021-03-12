@@ -1,11 +1,11 @@
 package net.earthcomputer.multiconnect.protocols.v1_16_4;
 
-import net.minecraft.class_5890;
-import net.minecraft.class_5891;
-import net.minecraft.class_5892;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.s2c.play.DeathMessageS2CPacket;
+import net.minecraft.network.packet.s2c.play.EndCombatS2CPacket;
+import net.minecraft.network.packet.s2c.play.EnterCombatS2CPacket;
 import net.minecraft.text.Text;
 
 public class CombatEventS2CPacket_1_16_4 implements Packet<ClientPlayPacketListener> {
@@ -44,13 +44,13 @@ public class CombatEventS2CPacket_1_16_4 implements Packet<ClientPlayPacketListe
     public void apply(ClientPlayPacketListener listener) {
         switch (mode) {
             case ENTER_COMBAT:
-                listener.method_34074(new class_5891());
+                listener.onEnterCombat(new EnterCombatS2CPacket());
                 break;
             case END_COMBAT:
-                listener.method_34073(new class_5890(killerId, duration));
+                listener.onEndCombat(new EndCombatS2CPacket(killerId, duration));
                 break;
             case ENTITY_DIED:
-                listener.method_34075(new class_5892(playerId, killerId, message));
+                listener.onDeathMessage(new DeathMessageS2CPacket(playerId, killerId, message));
                 break;
         }
     }

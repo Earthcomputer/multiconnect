@@ -2,6 +2,9 @@ package net.earthcomputer.multiconnect.protocols.v1_11_2;
 
 import net.earthcomputer.multiconnect.protocols.v1_11_2.mixin.SlotAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12.PlaceRecipeC2SPacket_1_12;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.AckScreenActionS2CPacket_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.ClickSlotC2SPacket_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_4.Protocol_1_16_4;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -9,10 +12,9 @@ import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
-import net.minecraft.network.packet.s2c.play.ConfirmScreenActionS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.recipe.RecipeType;
+import net.minecraft.screen.AbstractRecipeScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
@@ -26,7 +28,7 @@ public class RecipeBookEmulator {
 
     private final ScreenHandler screenHandler;
 
-    private List<Pair<Short, Short>> recipeTransactionIdRanges = new ArrayList<>();
+    private final List<Pair<Short, Short>> recipeTransactionIdRanges = new ArrayList<>();
 
     public RecipeBookEmulator(ScreenHandler screenHandler) {
         this.screenHandler = screenHandler;
@@ -51,19 +53,19 @@ public class RecipeBookEmulator {
             return;
         }
 
-        short startTransactionId = ((IScreenHandler) screenHandler).multiconnect_getCurrentActionId();
+        short startTransactionId = Protocol_1_16_4.getLastScreenActionId();
 
         for (Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer> transaction : transactionsFromMatrix) {
-            transfer(transaction.getLeft().craftingSlot, transaction.getLeft().invSlot, transaction.getLeft().stack.getCount() * transaction.getRight(), transaction.getLeft().originalStack);
+            transfer(transaction.getLeft().craftingSlot, transaction.getLeft().invSlot, transaction.getLeft().stack.getCount() * transaction.getRight(), transaction.getLeft().placedOn, transaction.getLeft().originalStack);
         }
         for (Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer> transaction : transactionsToMatrix) {
-            transfer(transaction.getLeft().invSlot, transaction.getLeft().craftingSlot, transaction.getLeft().stack.getCount() * transaction.getRight(), transaction.getLeft().originalStack);
+            transfer(transaction.getLeft().invSlot, transaction.getLeft().craftingSlot, transaction.getLeft().stack.getCount() * transaction.getRight(), transaction.getLeft().placedOn, transaction.getLeft().originalStack);
         }
 
-        recipeTransactionIdRanges.add(new Pair<>(startTransactionId, ((IScreenHandler) screenHandler).multiconnect_getCurrentActionId()));
+        recipeTransactionIdRanges.add(new Pair<>(startTransactionId, Protocol_1_16_4.getLastScreenActionId()));
     }
 
-    public void onConfirmTransaction(ConfirmScreenActionS2CPacket packet) {
+    public void onAckScreenAction(AckScreenActionS2CPacket_1_16_4 packet) {
         short transactionId = packet.getActionId();
 
         Iterator<Pair<Short, Short>> itr = recipeTransactionIdRanges.iterator();
@@ -113,12 +115,13 @@ public class RecipeBookEmulator {
         // translate inv slot to container slot
         for (int i = 0; i < merged.size(); i++) {
             Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer> transaction = merged.get(i);
-            int slot = getInvSlot(transaction.getLeft().invSlot);
+            PlaceRecipeC2SPacket_1_12.Transaction firstTransaction = transaction.getLeft();
+            int slot = getInvSlot(firstTransaction.invSlot);
             if (slot == -1) {
                 return null;
             }
             merged.set(i, new Pair<>(
-                    new PlaceRecipeC2SPacket_1_12.Transaction(transaction.getLeft().originalStack, transaction.getLeft().stack, transaction.getLeft().craftingSlot, slot),
+                    new PlaceRecipeC2SPacket_1_12.Transaction(firstTransaction.originalStack, firstTransaction.stack, firstTransaction.placedOn, firstTransaction.craftingSlot, slot),
                     transaction.getRight()
             ));
         }
@@ -138,26 +141,26 @@ public class RecipeBookEmulator {
         return -1;
     }
 
-    private void transfer(int fromSlot, int toSlot, int count, ItemStack clickedStack) {
+    private void transfer(int fromSlot, int toSlot, int count, ItemStack placedOn, ItemStack clickedStack) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         assert player != null;
 
         // pickup (swap with cursor stack)
-        player.networkHandler.sendPacket(new ClickSlotC2SPacket(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, clickedStack, screenHandler.getNextActionId(player.getInventory())));
+        player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_4(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, clickedStack, Protocol_1_16_4.nextScreenActionId()));
 
         // place items
         if (count == clickedStack.getCount()) {
-            player.networkHandler.sendPacket(new ClickSlotC2SPacket(screenHandler.syncId, toSlot, 0, SlotActionType.PICKUP, ItemStack.EMPTY, screenHandler.getNextActionId(player.getInventory())));
+            player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_4(screenHandler.syncId, toSlot, 0, SlotActionType.PICKUP, placedOn, Protocol_1_16_4.nextScreenActionId()));
         } else {
             for (int i = 0; i < count; i++) {
                 ItemStack existingStack = clickedStack.copy();
-                existingStack.setCount(i);
-                player.networkHandler.sendPacket(new ClickSlotC2SPacket(screenHandler.syncId, toSlot, 1, SlotActionType.PICKUP, existingStack, screenHandler.getNextActionId(player.getInventory())));
+                existingStack.setCount(placedOn.getCount() + i);
+                player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_4(screenHandler.syncId, toSlot, 1, SlotActionType.PICKUP, existingStack, Protocol_1_16_4.nextScreenActionId()));
             }
         }
 
         // return (pickup old cursor stack)
-        player.networkHandler.sendPacket(new ClickSlotC2SPacket(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, player.getInventory().getCursorStack(), screenHandler.getNextActionId(player.getInventory())));
+        player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_4(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, screenHandler.method_34255(), Protocol_1_16_4.nextScreenActionId()));
     }
 
     private void resyncContainer() {
@@ -166,7 +169,12 @@ public class RecipeBookEmulator {
         ClientPlayerInteractionManager interactionManager = MinecraftClient.getInstance().interactionManager;
         assert interactionManager != null;
 
+        int craftingResultSlotId = screenHandler instanceof AbstractRecipeScreenHandler ? ((AbstractRecipeScreenHandler<?>) screenHandler).getCraftingResultSlotIndex() : -1;
+
         for (Slot slot : screenHandler.slots) {
+            if (slot.id == craftingResultSlotId) {
+                continue;
+            }
             // If the slot was correctly synced, will swap the cursor stack with the stack in that slot, and back again.
             // If the slot was desynced or the container is locked due to a previous desync, the swap will be denied,
             // and the server will require the client to acknowledge the new item. Since that acknowledgement is

@@ -4,10 +4,10 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.earthcomputer.multiconnect.transformer.VarLong;
-import net.minecraft.*;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.s2c.play.*;
 
 public class WorldBorderS2CPacket_1_16_4 implements Packet<ClientPlayPacketListener> {
     private final Type type;
@@ -63,50 +63,50 @@ public class WorldBorderS2CPacket_1_16_4 implements Packet<ClientPlayPacketListe
     public void apply(ClientPlayPacketListener listener) {
         switch (type) {
             case SET_SIZE: {
-                class_5897 packet = Utils.createPacket(class_5897.class, class_5897::new, Protocols.V1_17, buf -> {
+                WorldBorderSizeChangedS2CPacket packet = Utils.createPacket(WorldBorderSizeChangedS2CPacket.class, WorldBorderSizeChangedS2CPacket::new, Protocols.V1_17, buf -> {
                     buf.pendingRead(Double.class, newSize);
                     buf.applyPendingReads();
                 });
-                listener.method_34079(packet);
+                listener.onWorldBorderSizeChanged(packet);
             }
             break;
             case LERP_SIZE: {
-                class_5896 packet = Utils.createPacket(class_5896.class, class_5896::new, Protocols.V1_17, buf -> {
+                WorldBorderInterpolateSizeS2CPacket packet = Utils.createPacket(WorldBorderInterpolateSizeS2CPacket.class, WorldBorderInterpolateSizeS2CPacket::new, Protocols.V1_17, buf -> {
                     buf.pendingRead(Double.class, oldSize);
                     buf.pendingRead(Double.class, newSize);
                     buf.pendingRead(VarLong.class, new VarLong(lerpTime));
                     buf.applyPendingReads();
                 });
-                listener.method_34078(packet);
+                listener.onWorldBorderInterpolateSize(packet);
             }
             break;
             case SET_CENTER: {
-                class_5895 packet = Utils.createPacket(class_5895.class, class_5895::new, Protocols.V1_17, buf -> {
+                WorldBorderCenterChangedS2CPacket packet = Utils.createPacket(WorldBorderCenterChangedS2CPacket.class, WorldBorderCenterChangedS2CPacket::new, Protocols.V1_17, buf -> {
                     buf.pendingRead(Double.class, newCenterX);
                     buf.pendingRead(Double.class, newCenterZ);
                     buf.applyPendingReads();
                 });
-                listener.method_34077(packet);
+                listener.onWorldBorderCenterChanged(packet);
             }
             break;
             case SET_WARNING_BLOCKS: {
-                class_5899 packet = Utils.createPacket(class_5899.class, class_5899::new, Protocols.V1_17, buf -> {
+                WorldBorderWarningBlocksChangedS2CPacket packet = Utils.createPacket(WorldBorderWarningBlocksChangedS2CPacket.class, WorldBorderWarningBlocksChangedS2CPacket::new, Protocols.V1_17, buf -> {
                     buf.pendingRead(VarInt.class, new VarInt(warningBlocks));
                     buf.applyPendingReads();
                 });
-                listener.method_34081(packet);
+                listener.onWorldBorderWarningBlocksChanged(packet);
             }
             break;
             case SET_WARNING_TIME: {
-                class_5898 packet = Utils.createPacket(class_5898.class, class_5898::new, Protocols.V1_17, buf -> {
+                WorldBorderWarningTimeChangedS2CPacket packet = Utils.createPacket(WorldBorderWarningTimeChangedS2CPacket.class, WorldBorderWarningTimeChangedS2CPacket::new, Protocols.V1_17, buf -> {
                     buf.pendingRead(VarInt.class, new VarInt(warningTime));
                     buf.applyPendingReads();
                 });
-                listener.method_34080(packet);
+                listener.onWorldBorderWarningTimeChanged(packet);
             }
             break;
             case INITIALIZE: {
-                class_5889 packet = Utils.createPacket(class_5889.class, class_5889::new, Protocols.V1_17, buf -> {
+                WorldBorderInitializeS2CPacket packet = Utils.createPacket(WorldBorderInitializeS2CPacket.class, WorldBorderInitializeS2CPacket::new, Protocols.V1_17, buf -> {
                     buf.pendingRead(Double.class, newCenterX);
                     buf.pendingRead(Double.class, newCenterZ);
                     buf.pendingRead(Double.class, oldSize);
@@ -117,7 +117,7 @@ public class WorldBorderS2CPacket_1_16_4 implements Packet<ClientPlayPacketListe
                     buf.pendingRead(VarInt.class, new VarInt(warningTime));
                     buf.applyPendingReads();
                 });
-                listener.method_34072(packet);
+                listener.onWorldBorderInitialize(packet);
             }
             break;
         }
