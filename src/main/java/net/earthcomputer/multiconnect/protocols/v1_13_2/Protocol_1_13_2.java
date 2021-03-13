@@ -394,10 +394,12 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.pendingRead(VarInt.class, new VarInt(blockLightMask)); // block light mask
             buf.pendingRead(VarInt.class, new VarInt(0)); // filled sky light mask
             buf.pendingRead(VarInt.class, new VarInt(0)); // filled block light mask
-            for (int i = 0; i < 16; i++) {
-                byte[] skyData = skyLight[i];
-                if (skyData != null) {
-                    buf.pendingRead(byte[].class, skyData);
+            if (translator.getDimension().hasSkyLight()) {
+                for (int i = 0; i < 16; i++) {
+                    byte[] skyData = skyLight[i];
+                    if (skyData != null) {
+                        buf.pendingRead(byte[].class, skyData);
+                    }
                 }
             }
             for (int i = 0; i < 16; i++) {
