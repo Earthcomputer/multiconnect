@@ -56,8 +56,6 @@ public abstract class MixinBoatEntity extends Entity implements IBoatEntity_1_8 
         super(type, world);
     }
 
-    // TODO: boat/player collision
-
     @Inject(method = "getMountedHeightOffset", at = @At("HEAD"), cancellable = true)
     private void onGetMountedHeightOffset(CallbackInfoReturnable<Double> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
