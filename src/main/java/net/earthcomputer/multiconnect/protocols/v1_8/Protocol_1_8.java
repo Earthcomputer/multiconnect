@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_8;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 import com.mojang.brigadier.CommandDispatcher;
 import it.unimi.dsi.fastutil.chars.Char2CharMap;
 import it.unimi.dsi.fastutil.chars.Char2CharOpenHashMap;
@@ -53,12 +55,17 @@ import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.WitherSkullEntity;
 import net.minecraft.entity.vehicle.*;
 import net.minecraft.item.*;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ShortTag;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionUtil;
+import net.minecraft.potion.Potions;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -75,6 +82,7 @@ import net.minecraft.util.math.EulerAngle;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -87,6 +95,41 @@ public class Protocol_1_8 extends Protocol_1_9 {
     private static final AtomicInteger FAKE_TELEPORT_ID_COUNTER = new AtomicInteger();
     public static final int WORLD_EVENT_QUIET_GHAST_SHOOT = -1000 + 1;
     private static final EntityDimensions DEFAULT_BOAT_DIMENSIONS = EntityType.BOAT.getDimensions();
+
+    private static final BiMap<Potion, Integer> POTION_METAS = ImmutableBiMap.<Potion, Integer>builder()
+            .put(Potions.SWIFTNESS, 2)
+            .put(Potions.STRONG_SWIFTNESS, 2 | 32)
+            .put(Potions.LONG_SWIFTNESS, 2 | 64)
+            .put(Potions.SLOWNESS, 10)
+            .put(Potions.STRONG_SLOWNESS, 10 | 32)
+            .put(Potions.LONG_SLOWNESS, 10 | 64)
+            .put(Potions.STRENGTH, 9)
+            .put(Potions.STRONG_STRENGTH, 9 | 32)
+            .put(Potions.LONG_STRENGTH, 9 | 64)
+            .put(Potions.HEALING, 5)
+            .put(Potions.STRONG_HEALING, 5 | 32)
+            .put(Potions.HARMING, 12)
+            .put(Potions.STRONG_HARMING, 12 | 32)
+            .put(Potions.LEAPING, 11)
+            .put(Potions.STRONG_LEAPING, 11 | 32)
+            .put(Potions.LONG_LEAPING, 11 | 64)
+            .put(Potions.REGENERATION, 1)
+            .put(Potions.STRONG_REGENERATION, 1 | 32)
+            .put(Potions.LONG_REGENERATION, 1 | 64)
+            .put(Potions.FIRE_RESISTANCE, 3)
+            .put(Potions.LONG_FIRE_RESISTANCE, 3 | 64)
+            .put(Potions.WATER_BREATHING, 13)
+            .put(Potions.LONG_WATER_BREATHING, 13 | 64)
+            .put(Potions.INVISIBILITY, 14)
+            .put(Potions.LONG_INVISIBILITY, 14 | 64)
+            .put(Potions.NIGHT_VISION, 6)
+            .put(Potions.LONG_NIGHT_VISION, 6 | 64)
+            .put(Potions.WEAKNESS, 8)
+            .put(Potions.LONG_WEAKNESS, 8 | 64)
+            .put(Potions.POISON, 4)
+            .put(Potions.STRONG_POISON, 4 | 32)
+            .put(Potions.LONG_POISON, 4 | 64)
+            .build();
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
@@ -520,6 +563,81 @@ public class Protocol_1_8 extends Protocol_1_9 {
                 }
             }, buf::writeItemStack);
         });
+    }
+
+    public static ItemStack oldPotionItemToNew(ItemStack stack, int meta) {
+        stack.putSubTag("multiconnect:1.8/potionData", ShortTag.of((short) meta));
+        boolean isSplash = (meta & 16384) != 0;
+        Potion potion;
+        if (meta == 0) {
+            potion = Potions.WATER;
+        } else if (meta == 16) {
+            potion = Potions.AWKWARD;
+        } else if (meta == 32) {
+            potion = Potions.THICK;
+        } else if (meta == 64) {
+            potion = Potions.MUNDANE;
+        } else if (meta == 8192) {
+            potion = Potions.MUNDANE;
+        } else {
+            potion = POTION_METAS.inverse().getOrDefault(meta & 127, Potions.EMPTY);
+        }
+        if (isSplash) {
+            ItemStack newStack = new ItemStack(Items.SPLASH_POTION, stack.getCount());
+            newStack.setTag(stack.getTag());
+            stack = newStack;
+        }
+        PotionUtil.setPotion(stack, potion);
+        return stack;
+    }
+
+    public static Pair<ItemStack, Integer> newPotionItemToOld(ItemStack stack) {
+        Potion potion = PotionUtil.getPotion(stack);
+        CompoundTag tag = stack.getTag();
+        boolean hasForcedMeta = false;
+        int forcedMeta = 0;
+        if (tag != null) {
+            tag.remove("Potion");
+            if (tag.contains("multiconnect:1.8/potionData", 2)) { // short
+                hasForcedMeta = true;
+                forcedMeta = tag.getShort("multiconnect:1.8/potionData") & 0xffff;
+                tag.remove("multiconnect:1.8/potionData");
+            }
+            if (tag.isEmpty()) {
+                stack.setTag(null);
+            }
+        }
+
+        boolean isSplash = stack.getItem() == Items.SPLASH_POTION;
+        if (isSplash) {
+            ItemStack newStack = new ItemStack(Items.POTION, stack.getCount());
+            newStack.setTag(stack.getTag());
+            stack = newStack;
+        }
+
+        if (hasForcedMeta) {
+            return Pair.of(stack, forcedMeta);
+        }
+
+        int meta;
+        if (potion == Potions.WATER) {
+            meta = 0;
+        } else if (potion == Potions.AWKWARD) {
+            meta = 16;
+        } else if (potion == Potions.THICK) {
+            meta = 32;
+        } else if (potion == Potions.MUNDANE) {
+            meta = 8192;
+        } else {
+            meta = POTION_METAS.getOrDefault(potion, 0);
+            if (isSplash) {
+                meta |= 16384;
+            } else {
+                meta |= 8192;
+            }
+        }
+
+        return Pair.of(stack, meta);
     }
 
     @Override

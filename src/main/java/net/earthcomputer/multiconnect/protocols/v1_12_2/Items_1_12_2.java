@@ -2,7 +2,10 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.v1_8.Protocol_1_8;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShulkerBoxBlock;
@@ -54,6 +57,11 @@ public class Items_1_12_2 {
             stack = stack.copy();
             copiedTag = true;
             stack.setDamage(meta);
+        }
+        else if (ConnectionInfo.protocolVersion <= Protocols.V1_8 && stack.getItem() == POTION) {
+            stack = stack.copy();
+            copiedTag = true;
+            stack = Protocol_1_8.oldPotionItemToNew(stack, meta);
         }
         else if (stack.getItem() == BAT_SPAWN_EGG) {
             CompoundTag entityTag = stack.getSubTag("EntityTag");
@@ -174,6 +182,13 @@ public class Items_1_12_2 {
                 if (tag.getSize() == 0)
                     stack.setTag(null);
             }
+        }
+        else if (ConnectionInfo.protocolVersion <= Protocols.V1_8 && (stack.getItem() == POTION || stack.getItem() == SPLASH_POTION)) {
+            stack = stack.copy();
+            copiedTag = true;
+            Pair<ItemStack, Integer> stackAndMeta = Protocol_1_8.newPotionItemToOld(stack);
+            stack = stackAndMeta.getLeft();
+            meta = stackAndMeta.getRight();
         }
         else if (stack.getItem() instanceof SpawnEggItem) {
             ItemStack oldStack = new ItemStack(BAT_SPAWN_EGG, stack.getCount());
