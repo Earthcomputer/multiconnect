@@ -87,7 +87,7 @@ public class Protocol_1_9_4 extends Protocol_1_10 {
 
     private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
         registry.purge(Blocks.MAGMA_BLOCK);
-        registry.purge(Blocks.NETHER_WART);
+        registry.purge(Blocks.NETHER_WART_BLOCK);
         registry.purge(Blocks.RED_NETHER_BRICKS);
         registry.purge(Blocks.BONE_BLOCK);
         registry.purge(Blocks.STRUCTURE_VOID);
