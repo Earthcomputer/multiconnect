@@ -15,7 +15,7 @@ import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_1_16_1;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.EntityS2CPacket_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.EntityS2CPacket_1_16_5;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -72,8 +72,8 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
-        remove(packets, EntityS2CPacket_1_16_4.class);
-        insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket_1_16_4.class, EntityS2CPacket_1_16_4::new));
+        remove(packets, EntityS2CPacket_1_16_5.class);
+        insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket_1_16_5.class, EntityS2CPacket_1_16_5::new));
         remove(packets, UnlockRecipesS2CPacket.class);
         remove(packets, SelectAdvancementTabS2CPacket.class);
         remove(packets, AdvancementUpdateS2CPacket.class);

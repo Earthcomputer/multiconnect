@@ -91,6 +91,9 @@ repositories {
 	maven {
 		url 'https://jitpack.io/'
 	}
+	flatDir {
+		dirs file(remapApiJar.archivePath).parentFile
+	}
 }
 
 dependencies {
@@ -120,7 +123,7 @@ dependencies {
 	}
 
 	compile sourceSets.api.output
-	include files(remapApiJar.archivePath)
+	include name: file(remapApiJar.archivePath).name.with { it.endsWith('.jar') ? it.substring(0, it.length() - 4) : it }
 
 	sourceSets.test.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 	testCompile 'org.junit.jupiter:junit-jupiter-api:5.5.2'

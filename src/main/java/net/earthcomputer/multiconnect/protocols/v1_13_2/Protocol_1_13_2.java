@@ -10,9 +10,9 @@ import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.Protocol_1_15_2;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_1_16_1;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.EntityS2CPacket_1_16_4;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.MapUpdateS2CPacket_1_16_4;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.Protocol_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.EntityS2CPacket_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.MapUpdateS2CPacket_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.minecraft.block.*;
@@ -98,8 +98,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         insertAfter(packets, EntityStatusS2CPacket.class, PacketInfo.of(TagQueryResponseS2CPacket.class, TagQueryResponseS2CPacket::new));
         remove(packets, OpenHorseScreenS2CPacket.class);
         remove(packets, LightUpdateS2CPacket.class);
-        remove(packets, EntityS2CPacket_1_16_4.class);
-        insertAfter(packets, SetTradeOffersS2CPacket.class, PacketInfo.of(EntityS2CPacket_1_16_4.class, EntityS2CPacket_1_16_4::new));
+        remove(packets, EntityS2CPacket_1_16_5.class);
+        insertAfter(packets, SetTradeOffersS2CPacket.class, PacketInfo.of(EntityS2CPacket_1_16_5.class, EntityS2CPacket_1_16_5::new));
         remove(packets, SetTradeOffersS2CPacket.class);
         remove(packets, OpenWrittenBookS2CPacket.class);
         remove(packets, OpenScreenS2CPacket.class);
@@ -175,7 +175,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(MapUpdateS2CPacket_1_16_4.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(MapUpdateS2CPacket_1_16_5.class, buf -> {
             buf.enablePassthroughMode();
             buf.readVarInt(); // id
             buf.readByte(); // scale
@@ -239,9 +239,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
         ProtocolRegistry.registerInboundTranslator(SynchronizeTagsS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            Protocol_1_16_4.readTagGroupNetworkData(buf); // block tags
-            Protocol_1_16_4.readTagGroupNetworkData(buf); // item tags
-            Protocol_1_16_4.readTagGroupNetworkData(buf); // fluid tags
+            Protocol_1_16_5.readTagGroupNetworkData(buf); // block tags
+            Protocol_1_16_5.readTagGroupNetworkData(buf); // item tags
+            Protocol_1_16_5.readTagGroupNetworkData(buf); // fluid tags
             buf.disablePassthroughMode();
             buf.pendingRead(VarInt.class, new VarInt(0)); // entity type count
             buf.applyPendingReads();
@@ -392,10 +392,12 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.pendingRead(VarInt.class, new VarInt(blockLightMask)); // block light mask
             buf.pendingRead(VarInt.class, new VarInt(0)); // filled sky light mask
             buf.pendingRead(VarInt.class, new VarInt(0)); // filled block light mask
-            for (int i = 0; i < 16; i++) {
-                byte[] skyData = skyLight[i];
-                if (skyData != null) {
-                    buf.pendingRead(byte[].class, skyData);
+            if (translator.getDimension().hasSkyLight()) {
+                for (int i = 0; i < 16; i++) {
+                    byte[] skyData = skyLight[i];
+                    if (skyData != null) {
+                        buf.pendingRead(byte[].class, skyData);
+                    }
                 }
             }
             for (int i = 0; i < 16; i++) {

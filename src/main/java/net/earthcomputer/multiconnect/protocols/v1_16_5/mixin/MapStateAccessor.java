@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_16_4.mixin;
+package net.earthcomputer.multiconnect.protocols.v1_16_5.mixin;
 
 import net.minecraft.item.map.MapState;
 import org.spongepowered.asm.mixin.Mixin;

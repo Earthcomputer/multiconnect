@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_8.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.PendingFullChunkData;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.PendingFullChunkData;
 import net.earthcomputer.multiconnect.protocols.v1_8.DataTrackerEntry_1_8;
 import net.earthcomputer.multiconnect.protocols.v1_8.Protocol_1_8;
 import net.minecraft.client.MinecraftClient;

@@ -7,7 +7,6 @@ import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.ICustomPayloadC2SPacket;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1_12_2;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
@@ -36,28 +35,27 @@ public class APIImpl extends MultiConnectAPI {
     }
 
     @Override
-    public void addIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+    public void addClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
         CustomPayloadHandler.addClientboundIdentifierCustomPayloadListener(listener);
     }
 
     @Override
-    public void removeIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+    public void removeClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
         CustomPayloadHandler.removeClientboundIdentifierCustomPayloadListener(listener);
     }
 
     @Override
-    public void addStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+    public void addClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
         CustomPayloadHandler.addClientboundStringCustomPayloadListener(listener);
     }
 
     @Override
-    public void removeStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+    public void removeClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
         CustomPayloadHandler.removeClientboundStringCustomPayloadListener(listener);
     }
 
     @Override
-    public void forceSendCustomPayload(Identifier channel, PacketByteBuf data) {
-        ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+    public void forceSendCustomPayload(ClientPlayNetworkHandler networkHandler, Identifier channel, PacketByteBuf data) {
         if (networkHandler == null) {
             throw new IllegalStateException("Trying to send custom payload when not in-game");
         }
@@ -68,8 +66,7 @@ public class APIImpl extends MultiConnectAPI {
     }
 
     @Override
-    public void forceSendStringCustomPayload(String channel, PacketByteBuf data) {
-        ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+    public void forceSendStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
         if (networkHandler == null) {
             throw new IllegalStateException("Trying to send custom payload when not in-game");
         }
@@ -82,22 +79,22 @@ public class APIImpl extends MultiConnectAPI {
     }
 
     @Override
-    public void addServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+    public void addServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
         CustomPayloadHandler.addServerboundIdentifierCustomPayloadListener(listener);
     }
 
     @Override
-    public void removeServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+    public void removeServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
         CustomPayloadHandler.removeServerboundIdentifierCustomPayloadListener(listener);
     }
 
     @Override
-    public void addServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+    public void addServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
         CustomPayloadHandler.addServerboundStringCustomPayloadListener(listener);
     }
 
     @Override
-    public void removeServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+    public void removeServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
         CustomPayloadHandler.removeServerboundStringCustomPayloadListener(listener);
     }
 
@@ -114,4 +111,104 @@ public class APIImpl extends MultiConnectAPI {
         }
         return ((ISimpleRegistry<T>) registry).getRealEntries().contains(key);
     }
+
+    //region deprecated stuff
+
+    @Deprecated
+    @Override
+    public void addIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+        addClientboundIdentifierCustomPayloadListener(new IdentifierCustomPayloadListenerProxy(listener));
+    }
+
+    @Deprecated
+    @Override
+    public void removeIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+        removeClientboundIdentifierCustomPayloadListener(new IdentifierCustomPayloadListenerProxy(listener));
+    }
+
+    @Deprecated
+    @Override
+    public void addStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+        addClientboundStringCustomPayloadListener(new StringCustomPayloadListenerProxy(listener));
+    }
+
+    @Deprecated
+    @Override
+    public void removeStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+        removeClientboundStringCustomPayloadListener(new StringCustomPayloadListenerProxy(listener));
+    }
+
+    @Deprecated
+    @Override
+    public void addServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+        addServerboundIdentifierCustomPayloadListener(new IdentifierCustomPayloadListenerProxy(listener));
+    }
+
+    @Deprecated
+    @Override
+    public void removeServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
+        removeServerboundIdentifierCustomPayloadListener(new IdentifierCustomPayloadListenerProxy(listener));
+    }
+
+    @Deprecated
+    @Override
+    public void addServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+        addServerboundStringCustomPayloadListener(new StringCustomPayloadListenerProxy(listener));
+    }
+
+    @Deprecated
+    @Override
+    public void removeServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
+        removeServerboundStringCustomPayloadListener(new StringCustomPayloadListenerProxy(listener));
+    }
+
+    @Deprecated
+    private static final class IdentifierCustomPayloadListenerProxy implements ICustomPayloadListener<Identifier> {
+        private final IIdentifierCustomPayloadListener delegate;
+
+        private IdentifierCustomPayloadListenerProxy(IIdentifierCustomPayloadListener delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void onCustomPayload(ICustomPayloadEvent<Identifier> event) {
+            delegate.onCustomPayload(event.getProtocol(), event.getChannel(), event.getData());
+        }
+
+        @Override
+        public int hashCode() {
+            return delegate.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof IdentifierCustomPayloadListenerProxy && delegate.equals(((IdentifierCustomPayloadListenerProxy) obj).delegate);
+        }
+    }
+
+    @Deprecated
+    private static final class StringCustomPayloadListenerProxy implements ICustomPayloadListener<String> {
+        private final IStringCustomPayloadListener delegate;
+
+        private StringCustomPayloadListenerProxy(IStringCustomPayloadListener delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void onCustomPayload(ICustomPayloadEvent<String> event) {
+            delegate.onCustomPayload(event.getProtocol(), event.getChannel(), event.getData());
+        }
+
+        @Override
+        public int hashCode() {
+            return delegate.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof StringCustomPayloadListenerProxy && delegate.equals(((StringCustomPayloadListenerProxy) obj).delegate);
+        }
+    }
+
+    //endregion
 }

@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_16_4;
+package net.earthcomputer.multiconnect.protocols.v1_16_5;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.Utils;
@@ -9,7 +9,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.*;
 
-public class WorldBorderS2CPacket_1_16_4 implements Packet<ClientPlayPacketListener> {
+public class WorldBorderS2CPacket_1_16_5 implements Packet<ClientPlayPacketListener> {
     private final Type type;
     private int newAbsoluteMaxSize;
     private double newCenterX;
@@ -20,7 +20,7 @@ public class WorldBorderS2CPacket_1_16_4 implements Packet<ClientPlayPacketListe
     private int warningTime;
     private int warningBlocks;
 
-    public WorldBorderS2CPacket_1_16_4(PacketByteBuf buf) {
+    public WorldBorderS2CPacket_1_16_5(PacketByteBuf buf) {
         this.type = buf.readEnumConstant(Type.class);
         switch (type) {
             case SET_SIZE:

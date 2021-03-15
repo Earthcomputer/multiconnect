@@ -14,7 +14,7 @@ import net.earthcomputer.multiconnect.protocols.v1_12_2.BlockEntities_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.RecipeInfo;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.TitleS2CPacket_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.TitleS2CPacket_1_16_5;
 import net.earthcomputer.multiconnect.transformer.InboundTranslator;
 import net.earthcomputer.multiconnect.transformer.OutboundTranslator;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
@@ -195,9 +195,9 @@ public class Protocol_1_10 extends Protocol_1_11 {
             buf.pendingRead(VarInt.class, new VarInt(entityType));
             buf.applyPendingReads();
         });
-        ProtocolRegistry.registerInboundTranslator(TitleS2CPacket_1_16_4.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(TitleS2CPacket_1_16_5.class, buf -> {
             buf.enablePassthroughMode();
-            buf.pendingRead(TitleS2CPacket_1_16_4.Type.class, buf.readEnumConstant(TitleType_1_10.class).getNewType());
+            buf.pendingRead(TitleS2CPacket_1_16_5.Type.class, buf.readEnumConstant(TitleType_1_10.class).getNewType());
             buf.disablePassthroughMode();
             buf.applyPendingReads();
         });

@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_16_4.mixin;
+package net.earthcomputer.multiconnect.protocols.v1_16_5.mixin;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.impl.MixinHelper;

@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.Protocol_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.recipebook.RecipeBookWidget;
@@ -58,7 +58,7 @@ public class RecipeBook_1_12<C extends Inventory> {
             recipeBookWidget.showGhostRecipe(recipe, container.slots);
 
             if (!transactionFromMatrix.isEmpty()) {
-                short transactionId = Protocol_1_16_4.nextScreenActionId();
+                short transactionId = Protocol_1_16_5.nextScreenActionId();
                 mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionFromMatrix, new ArrayList<>()));
 
                 if (iRecipeBookWidget.getRecipeBook().isFilteringCraftable(container)) {
@@ -119,7 +119,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                 List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsFromMatrix = clearCraftMatrix();
                 List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsToMatrix = new ArrayList<>();
                 placeRecipe(recipe, slots, actualCount, inputItemIds, transactionsToMatrix);
-                short transactionId = Protocol_1_16_4.nextScreenActionId();
+                short transactionId = Protocol_1_16_5.nextScreenActionId();
                 mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionsFromMatrix, transactionsToMatrix));
                 mc.player.getInventory().markDirty();
             }

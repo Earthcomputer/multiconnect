@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_16_4;
+package net.earthcomputer.multiconnect.protocols.v1_16_5;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.Packet;
@@ -6,7 +6,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.screen.slot.SlotActionType;
 
-public class ClickSlotC2SPacket_1_16_4 implements Packet<ServerPlayPacketListener> {
+public class ClickSlotC2SPacket_1_16_5 implements Packet<ServerPlayPacketListener> {
     private final int syncId;
     private final int slotId;
     private final int clickData;
@@ -14,7 +14,7 @@ public class ClickSlotC2SPacket_1_16_4 implements Packet<ServerPlayPacketListene
     private final SlotActionType slotActionType;
     private final ItemStack slotItemBeforeModification;
 
-    public ClickSlotC2SPacket_1_16_4(int syncId, int slotId, int clickData, SlotActionType slotActionType, ItemStack slotItemBeforeModification, short actionId) {
+    public ClickSlotC2SPacket_1_16_5(int syncId, int slotId, int clickData, SlotActionType slotActionType, ItemStack slotItemBeforeModification, short actionId) {
         this.syncId = syncId;
         this.slotId = slotId;
         this.clickData = clickData;
@@ -23,7 +23,7 @@ public class ClickSlotC2SPacket_1_16_4 implements Packet<ServerPlayPacketListene
         this.actionId = actionId;
     }
 
-    public ClickSlotC2SPacket_1_16_4(PacketByteBuf buf) {
+    public ClickSlotC2SPacket_1_16_5(PacketByteBuf buf) {
         throw new UnsupportedOperationException();
     }
 

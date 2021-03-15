@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_16_3;
 
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.Protocol_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.BookUpdateC2SPacket;
@@ -9,7 +9,7 @@ import net.minecraft.util.Hand;
 
 import java.util.function.Supplier;
 
-public class Protocol_1_16_3 extends Protocol_1_16_4 {
+public class Protocol_1_16_3 extends Protocol_1_16_5 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerOutboundTranslator(BookUpdateC2SPacket.class, buf -> {

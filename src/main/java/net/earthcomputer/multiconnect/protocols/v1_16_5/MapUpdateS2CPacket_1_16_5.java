@@ -1,6 +1,6 @@
-package net.earthcomputer.multiconnect.protocols.v1_16_4;
+package net.earthcomputer.multiconnect.protocols.v1_16_5;
 
-import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.MapStateAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.MapStateAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.FilledMapItem;
 import net.minecraft.item.map.MapIcon;
@@ -13,7 +13,7 @@ import net.minecraft.network.packet.s2c.play.MapUpdateS2CPacket;
 
 import java.util.Arrays;
 
-public class MapUpdateS2CPacket_1_16_4 implements Packet<ClientPlayPacketListener> {
+public class MapUpdateS2CPacket_1_16_5 implements Packet<ClientPlayPacketListener> {
     private final int id;
     private final byte scale;
     private final boolean showIcons;
@@ -21,7 +21,7 @@ public class MapUpdateS2CPacket_1_16_4 implements Packet<ClientPlayPacketListene
     private final MapIcon[] icons;
     private final MapState.UpdateData data;
 
-    public MapUpdateS2CPacket_1_16_4(PacketByteBuf buf) {
+    public MapUpdateS2CPacket_1_16_5(PacketByteBuf buf) {
         id = buf.readVarInt();
         scale = buf.readByte();
         showIcons = buf.readBoolean();
