@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_16_4;
+package net.earthcomputer.multiconnect.protocols.v1_16_5;
 
 import net.minecraft.util.math.ChunkPos;
 

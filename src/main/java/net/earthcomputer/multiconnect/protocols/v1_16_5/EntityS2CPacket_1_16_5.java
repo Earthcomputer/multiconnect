@@ -1,11 +1,11 @@
-package net.earthcomputer.multiconnect.protocols.v1_16_4;
+package net.earthcomputer.multiconnect.protocols.v1_16_5;
 
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 
-public class EntityS2CPacket_1_16_4 implements Packet<ClientPlayPacketListener> {
-    public EntityS2CPacket_1_16_4(PacketByteBuf buf) {
+public class EntityS2CPacket_1_16_5 implements Packet<ClientPlayPacketListener> {
+    public EntityS2CPacket_1_16_5(PacketByteBuf buf) {
         buf.readVarInt(); // entity id
     }
 

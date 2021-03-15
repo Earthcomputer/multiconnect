@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_16_4;
+package net.earthcomputer.multiconnect.protocols.v1_16_5;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
@@ -11,12 +11,12 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.screen.ScreenHandler;
 
-public class AckScreenActionS2CPacket_1_16_4 implements Packet<ClientPlayPacketListener> {
+public class AckScreenActionS2CPacket_1_16_5 implements Packet<ClientPlayPacketListener> {
     private final int syncId;
     private final short actionId;
     private final boolean accepted;
 
-    public AckScreenActionS2CPacket_1_16_4(PacketByteBuf buf) {
+    public AckScreenActionS2CPacket_1_16_5(PacketByteBuf buf) {
         syncId = buf.readUnsignedByte();
         actionId = buf.readShort();
         accepted = buf.readBoolean();
@@ -44,7 +44,7 @@ public class AckScreenActionS2CPacket_1_16_4 implements Packet<ClientPlayPacketL
                     ((IScreenHandler) screenHandler).multiconnect_getRecipeBookEmulator().onAckScreenAction(this);
                 }
                 if (!accepted) {
-                    player.networkHandler.sendPacket(new AckScreenActionC2SPacket_1_16_4(syncId, actionId, true));
+                    player.networkHandler.sendPacket(new AckScreenActionC2SPacket_1_16_5(syncId, actionId, true));
                 }
             }
         }

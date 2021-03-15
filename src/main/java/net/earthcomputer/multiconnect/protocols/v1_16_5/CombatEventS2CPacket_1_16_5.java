@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_16_4;
+package net.earthcomputer.multiconnect.protocols.v1_16_5;
 
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
@@ -8,14 +8,14 @@ import net.minecraft.network.packet.s2c.play.EndCombatS2CPacket;
 import net.minecraft.network.packet.s2c.play.EnterCombatS2CPacket;
 import net.minecraft.text.Text;
 
-public class CombatEventS2CPacket_1_16_4 implements Packet<ClientPlayPacketListener> {
+public class CombatEventS2CPacket_1_16_5 implements Packet<ClientPlayPacketListener> {
     private final Mode mode;
     private final int playerId;
     private final int killerId;
     private final int duration;
     private final Text message;
 
-    public CombatEventS2CPacket_1_16_4(PacketByteBuf buf) {
+    public CombatEventS2CPacket_1_16_5(PacketByteBuf buf) {
         this.mode = buf.readEnumConstant(Mode.class);
         if (mode == Mode.END_COMBAT) {
             this.duration = buf.readVarInt();

@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.protocols.generic;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.PendingFullChunkData;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.PendingFullChunkData;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;

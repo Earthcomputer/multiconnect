@@ -7,7 +7,7 @@ import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.TitleS2CPacket_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.TitleS2CPacket_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_9_4.Protocol_1_9_4;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.BlockState;
@@ -91,7 +91,7 @@ public class Protocol_1_9_2 extends Protocol_1_9_4 {
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
-        insertAfter(packets, TitleS2CPacket_1_16_4.class, PacketInfo.of(UpdateSignS2CPacket.class, UpdateSignS2CPacket::new));
+        insertAfter(packets, TitleS2CPacket_1_16_5.class, PacketInfo.of(UpdateSignS2CPacket.class, UpdateSignS2CPacket::new));
         return packets;
     }
 

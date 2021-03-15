@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_16_4;
+package net.earthcomputer.multiconnect.protocols.v1_16_5;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -15,11 +15,11 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.CommandTreeS2CAccessor;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.DimensionTypeAccessor;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.EntityAccessor;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.ShulkerEntityAccessor;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.mixin.TagGroupSerializedAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.CommandTreeS2CAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.DimensionTypeAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.EntityAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.ShulkerEntityAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.TagGroupSerializedAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
 import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
@@ -75,7 +75,7 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class Protocol_1_16_4 extends Protocol_1_17 {
+public class Protocol_1_16_5 extends Protocol_1_17 {
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
     public static final int BIOME_ARRAY_LENGTH = 1024;
@@ -498,17 +498,17 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
-        insertAfter(packets, MapUpdateS2CPacket.class, PacketInfo.of(MapUpdateS2CPacket_1_16_4.class, MapUpdateS2CPacket_1_16_4::new));
+        insertAfter(packets, MapUpdateS2CPacket.class, PacketInfo.of(MapUpdateS2CPacket_1_16_5.class, MapUpdateS2CPacket_1_16_5::new));
         remove(packets, MapUpdateS2CPacket.class);
         remove(packets, VibrationS2CPacket.class);
         remove(packets, ClearTitleS2CPacket.class);
         remove(packets, WorldBorderInitializeS2CPacket.class);
-        insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket_1_16_4.class, EntityS2CPacket_1_16_4::new));
-        insertAfter(packets, PlayerAbilitiesS2CPacket.class, PacketInfo.of(CombatEventS2CPacket_1_16_4.class, CombatEventS2CPacket_1_16_4::new));
+        insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket_1_16_5.class, EntityS2CPacket_1_16_5::new));
+        insertAfter(packets, PlayerAbilitiesS2CPacket.class, PacketInfo.of(CombatEventS2CPacket_1_16_5.class, CombatEventS2CPacket_1_16_5::new));
         remove(packets, EndCombatS2CPacket.class);
         remove(packets, EnterCombatS2CPacket.class);
         remove(packets, DeathMessageS2CPacket.class);
-        insertAfter(packets, SelectAdvancementTabS2CPacket.class, PacketInfo.of(WorldBorderS2CPacket_1_16_4.class, WorldBorderS2CPacket_1_16_4::new));
+        insertAfter(packets, SelectAdvancementTabS2CPacket.class, PacketInfo.of(WorldBorderS2CPacket_1_16_5.class, WorldBorderS2CPacket_1_16_5::new));
         remove(packets, OverlayMessageS2CPacket.class);
         remove(packets, WorldBorderCenterChangedS2CPacket.class);
         remove(packets, WorldBorderInterpolateSizeS2CPacket.class);
@@ -516,18 +516,18 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
         remove(packets, WorldBorderWarningTimeChangedS2CPacket.class);
         remove(packets, WorldBorderWarningBlocksChangedS2CPacket.class);
         remove(packets, SubtitleS2CPacket.class);
-        insertAfter(packets, WorldTimeUpdateS2CPacket.class, PacketInfo.of(TitleS2CPacket_1_16_4.class, TitleS2CPacket_1_16_4::new));
+        insertAfter(packets, WorldTimeUpdateS2CPacket.class, PacketInfo.of(TitleS2CPacket_1_16_5.class, TitleS2CPacket_1_16_5::new));
         remove(packets, TitleS2CPacket.class);
         remove(packets, TitleFadeS2CPacket.class);
-        insertAfter(packets, CommandTreeS2CPacket.class, PacketInfo.of(AckScreenActionS2CPacket_1_16_4.class, AckScreenActionS2CPacket_1_16_4::new));
+        insertAfter(packets, CommandTreeS2CPacket.class, PacketInfo.of(AckScreenActionS2CPacket_1_16_5.class, AckScreenActionS2CPacket_1_16_5::new));
         return packets;
     }
 
     @Override
     public List<PacketInfo<?>> getServerboundPackets() {
         List<PacketInfo<?>> packets = super.getServerboundPackets();
-        insertAfter(packets, RequestCommandCompletionsC2SPacket.class, PacketInfo.of(AckScreenActionC2SPacket_1_16_4.class, AckScreenActionC2SPacket_1_16_4::new));
-        insertAfter(packets, ClickSlotC2SPacket.class, PacketInfo.of(ClickSlotC2SPacket_1_16_4.class, ClickSlotC2SPacket_1_16_4::new));
+        insertAfter(packets, RequestCommandCompletionsC2SPacket.class, PacketInfo.of(AckScreenActionC2SPacket_1_16_5.class, AckScreenActionC2SPacket_1_16_5::new));
+        insertAfter(packets, ClickSlotC2SPacket.class, PacketInfo.of(ClickSlotC2SPacket_1_16_5.class, ClickSlotC2SPacket_1_16_5::new));
         remove(packets, ClickSlotC2SPacket.class);
         return packets;
     }
@@ -546,12 +546,12 @@ public class Protocol_1_16_4 extends Protocol_1_17 {
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
-        mutator.mutate(Protocols.V1_16_4, Registry.BLOCK, this::mutateBlockRegistry);
-        mutator.mutate(Protocols.V1_16_4, Registry.ITEM, this::mutateItemRegistry);
-        mutator.mutate(Protocols.V1_16_4, Registry.ENTITY_TYPE, this::mutateEntityRegistry);
-        mutator.mutate(Protocols.V1_16_4, Registry.BLOCK_ENTITY_TYPE, this::mutateBlockEntityRegistry);
-        mutator.mutate(Protocols.V1_16_4, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
-        mutator.mutate(Protocols.V1_16_4, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.BLOCK, this::mutateBlockRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.ITEM, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.ENTITY_TYPE, this::mutateEntityRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.BLOCK_ENTITY_TYPE, this::mutateBlockEntityRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
     }
 
     @Override

@@ -1,21 +1,21 @@
-package net.earthcomputer.multiconnect.protocols.v1_16_4;
+package net.earthcomputer.multiconnect.protocols.v1_16_5;
 
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 
-public class AckScreenActionC2SPacket_1_16_4 implements Packet<ServerPlayPacketListener> {
+public class AckScreenActionC2SPacket_1_16_5 implements Packet<ServerPlayPacketListener> {
     private final int syncId;
     private final short actionId;
     private final boolean accepted;
 
-    public AckScreenActionC2SPacket_1_16_4(int syncId, short actionId, boolean accepted) {
+    public AckScreenActionC2SPacket_1_16_5(int syncId, short actionId, boolean accepted) {
         this.syncId = syncId;
         this.actionId = actionId;
         this.accepted = accepted;
     }
 
-    public AckScreenActionC2SPacket_1_16_4(PacketByteBuf buf) {
+    public AckScreenActionC2SPacket_1_16_5(PacketByteBuf buf) {
         throw new UnsupportedOperationException();
     }
 

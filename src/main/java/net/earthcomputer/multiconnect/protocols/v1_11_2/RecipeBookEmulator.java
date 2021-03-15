@@ -2,9 +2,9 @@ package net.earthcomputer.multiconnect.protocols.v1_11_2;
 
 import net.earthcomputer.multiconnect.protocols.v1_11_2.mixin.SlotAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12.PlaceRecipeC2SPacket_1_12;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.AckScreenActionS2CPacket_1_16_4;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.ClickSlotC2SPacket_1_16_4;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.Protocol_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.AckScreenActionS2CPacket_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.ClickSlotC2SPacket_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -53,7 +53,7 @@ public class RecipeBookEmulator {
             return;
         }
 
-        short startTransactionId = Protocol_1_16_4.getLastScreenActionId();
+        short startTransactionId = Protocol_1_16_5.getLastScreenActionId();
 
         for (Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer> transaction : transactionsFromMatrix) {
             transfer(transaction.getLeft().craftingSlot, transaction.getLeft().invSlot, transaction.getLeft().stack.getCount() * transaction.getRight(), transaction.getLeft().placedOn, transaction.getLeft().originalStack);
@@ -62,10 +62,10 @@ public class RecipeBookEmulator {
             transfer(transaction.getLeft().invSlot, transaction.getLeft().craftingSlot, transaction.getLeft().stack.getCount() * transaction.getRight(), transaction.getLeft().placedOn, transaction.getLeft().originalStack);
         }
 
-        recipeTransactionIdRanges.add(new Pair<>(startTransactionId, Protocol_1_16_4.getLastScreenActionId()));
+        recipeTransactionIdRanges.add(new Pair<>(startTransactionId, Protocol_1_16_5.getLastScreenActionId()));
     }
 
-    public void onAckScreenAction(AckScreenActionS2CPacket_1_16_4 packet) {
+    public void onAckScreenAction(AckScreenActionS2CPacket_1_16_5 packet) {
         short transactionId = packet.getActionId();
 
         Iterator<Pair<Short, Short>> itr = recipeTransactionIdRanges.iterator();
@@ -146,21 +146,21 @@ public class RecipeBookEmulator {
         assert player != null;
 
         // pickup (swap with cursor stack)
-        player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_4(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, clickedStack, Protocol_1_16_4.nextScreenActionId()));
+        player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_5(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, clickedStack, Protocol_1_16_5.nextScreenActionId()));
 
         // place items
         if (count == clickedStack.getCount()) {
-            player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_4(screenHandler.syncId, toSlot, 0, SlotActionType.PICKUP, placedOn, Protocol_1_16_4.nextScreenActionId()));
+            player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_5(screenHandler.syncId, toSlot, 0, SlotActionType.PICKUP, placedOn, Protocol_1_16_5.nextScreenActionId()));
         } else {
             for (int i = 0; i < count; i++) {
                 ItemStack existingStack = clickedStack.copy();
                 existingStack.setCount(placedOn.getCount() + i);
-                player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_4(screenHandler.syncId, toSlot, 1, SlotActionType.PICKUP, existingStack, Protocol_1_16_4.nextScreenActionId()));
+                player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_5(screenHandler.syncId, toSlot, 1, SlotActionType.PICKUP, existingStack, Protocol_1_16_5.nextScreenActionId()));
             }
         }
 
         // return (pickup old cursor stack)
-        player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_4(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, screenHandler.method_34255(), Protocol_1_16_4.nextScreenActionId()));
+        player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_5(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, screenHandler.method_34255(), Protocol_1_16_5.nextScreenActionId()));
     }
 
     private void resyncContainer() {

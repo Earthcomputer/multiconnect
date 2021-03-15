@@ -1,9 +1,9 @@
-package net.earthcomputer.multiconnect.protocols.v1_16_4.mixin;
+package net.earthcomputer.multiconnect.protocols.v1_16_5.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.ClickSlotC2SPacket_1_16_4;
-import net.earthcomputer.multiconnect.protocols.v1_16_4.Protocol_1_16_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.ClickSlotC2SPacket_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.item.ItemStack;
@@ -34,7 +34,7 @@ public class MixinClientPlayerInteractionManager {
 
     @ModifyArg(method = "clickSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V"), index = 0)
     private Packet<?> modifySlotClickPacket(Packet<?> packet) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_16_4 && packet instanceof ClickSlotC2SPacket) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_16_5 && packet instanceof ClickSlotC2SPacket) {
             ClickSlotC2SPacket clickSlot = (ClickSlotC2SPacket) packet;
 
             ItemStack slotItemBeforeModification;
@@ -53,13 +53,13 @@ public class MixinClientPlayerInteractionManager {
                 slotItemBeforeModification = oldItems.get(clickSlot.getSlot());
             }
 
-            packet = new ClickSlotC2SPacket_1_16_4(
+            packet = new ClickSlotC2SPacket_1_16_5(
                     clickSlot.getSyncId(),
                     clickSlot.getSlot(),
                     clickSlot.getClickData(),
                     clickSlot.getActionType(),
                     slotItemBeforeModification,
-                    Protocol_1_16_4.nextScreenActionId()
+                    Protocol_1_16_5.nextScreenActionId()
             );
         }
 
