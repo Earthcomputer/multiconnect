@@ -9,8 +9,8 @@ import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.ClickWindowC2SPacket;
-import net.minecraft.network.packet.s2c.play.ConfirmGuiActionS2CPacket;
+import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
+import net.minecraft.network.packet.s2c.play.ConfirmScreenActionS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.recipe.RecipeType;
 import net.minecraft.screen.ScreenHandler;
@@ -63,7 +63,7 @@ public class RecipeBookEmulator {
         recipeTransactionIdRanges.add(new Pair<>(startTransactionId, ((IScreenHandler) screenHandler).multiconnect_getCurrentActionId()));
     }
 
-    public void onConfirmTransaction(ConfirmGuiActionS2CPacket packet) {
+    public void onConfirmTransaction(ConfirmScreenActionS2CPacket packet) {
         short transactionId = packet.getActionId();
 
         Iterator<Pair<Short, Short>> itr = recipeTransactionIdRanges.iterator();
@@ -143,21 +143,21 @@ public class RecipeBookEmulator {
         assert player != null;
 
         // pickup (swap with cursor stack)
-        player.networkHandler.sendPacket(new ClickWindowC2SPacket(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, clickedStack, screenHandler.getNextActionId(player.inventory)));
+        player.networkHandler.sendPacket(new ClickSlotC2SPacket(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, clickedStack, screenHandler.getNextActionId(player.inventory)));
 
         // place items
         if (count == clickedStack.getCount()) {
-            player.networkHandler.sendPacket(new ClickWindowC2SPacket(screenHandler.syncId, toSlot, 0, SlotActionType.PICKUP, ItemStack.EMPTY, screenHandler.getNextActionId(player.inventory)));
+            player.networkHandler.sendPacket(new ClickSlotC2SPacket(screenHandler.syncId, toSlot, 0, SlotActionType.PICKUP, ItemStack.EMPTY, screenHandler.getNextActionId(player.inventory)));
         } else {
             for (int i = 0; i < count; i++) {
                 ItemStack existingStack = clickedStack.copy();
                 existingStack.setCount(i);
-                player.networkHandler.sendPacket(new ClickWindowC2SPacket(screenHandler.syncId, toSlot, 1, SlotActionType.PICKUP, existingStack, screenHandler.getNextActionId(player.inventory)));
+                player.networkHandler.sendPacket(new ClickSlotC2SPacket(screenHandler.syncId, toSlot, 1, SlotActionType.PICKUP, existingStack, screenHandler.getNextActionId(player.inventory)));
             }
         }
 
         // return (pickup old cursor stack)
-        player.networkHandler.sendPacket(new ClickWindowC2SPacket(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, player.inventory.getCursorStack(), screenHandler.getNextActionId(player.inventory)));
+        player.networkHandler.sendPacket(new ClickSlotC2SPacket(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, player.inventory.getCursorStack(), screenHandler.getNextActionId(player.inventory)));
     }
 
     private void resyncContainer() {

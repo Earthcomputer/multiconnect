@@ -7,7 +7,7 @@ import net.earthcomputer.multiconnect.protocols.v1_11_2.AchievementManager;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.IScreenHandler;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.PendingAchievements;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.packet.s2c.play.ConfirmGuiActionS2CPacket;
+import net.minecraft.network.packet.s2c.play.ConfirmScreenActionS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeRecipesS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnlockRecipesS2CPacket;
 import net.minecraft.recipe.Recipe;
@@ -40,8 +40,8 @@ public abstract class MixinClientPlayNetworkHandler {
         }
     }
 
-    @Inject(method = "onGuiActionConfirm", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ConfirmGuiActionS2CPacket;wasAccepted()Z"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void onOnGuiActionConfirm(ConfirmGuiActionS2CPacket packet, CallbackInfo ci, ScreenHandler screenHandler) {
+    @Inject(method = "onConfirmScreenAction", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ConfirmScreenActionS2CPacket;wasAccepted()Z"), locals = LocalCapture.CAPTURE_FAILHARD)
+    private void onOnGuiActionConfirm(ConfirmScreenActionS2CPacket packet, CallbackInfo ci, ScreenHandler screenHandler) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_11_2) {
             ((IScreenHandler) screenHandler).multiconnect_getRecipeBookEmulator().onConfirmTransaction(packet);
         }
