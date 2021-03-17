@@ -646,8 +646,8 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(Blocks.GLOW_LICHEN);
         registry.unregister(Blocks.AZALEA_LEAVES);
         registry.unregister(Blocks.AZALEA_LEAVES_FLOWERS);
-        registry.unregister(Blocks.CAVE_VINES_HEAD);
-        registry.unregister(Blocks.CAVE_VINES_BODY);
+        registry.unregister(Blocks.CAVE_VINES_PLANT);
+        registry.unregister(Blocks.CAVE_VINES);
         registry.unregister(Blocks.SPORE_BLOSSOM);
         registry.unregister(Blocks.AZALEA);
         registry.unregister(Blocks.FLOWERING_AZALEA);
@@ -850,6 +850,10 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(ParticleTypes.GLOW);
         registry.unregister(ParticleTypes.FALLING_SPORE_BLOSSOM);
         registry.unregister(ParticleTypes.SPORE_BLOSSOM_AIR);
+        registry.unregister(ParticleTypes.WAX_ON);
+        registry.unregister(ParticleTypes.WAX_OFF);
+        registry.unregister(ParticleTypes.ELECTRIC_SPARK);
+        registry.unregister(ParticleTypes.SCRAPE);
     }
 
     private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
@@ -1030,6 +1034,9 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(SoundEvents.ENTITY_GLOW_ITEM_FRAME_PLACE);
         registry.unregister(SoundEvents.ENTITY_GLOW_ITEM_FRAME_REMOVE_ITEM);
         registry.unregister(SoundEvents.ENTITY_GLOW_ITEM_FRAME_ROTATE_ITEM);
+        registry.unregister(SoundEvents.ITEM_AXE_SCRAPE);
+        registry.unregister(SoundEvents.ITEM_AXE_WAX_OFF);
+        registry.unregister(SoundEvents.ITEM_HONEYCOMB_WAX_ON);
     }
 
     @Override
@@ -1094,6 +1101,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         copyBlocks(tags, blockTags, ItemTags.COAL_ORES, BlockTags.COAL_ORES);
         copyBlocks(tags, blockTags, ItemTags.EMERALD_ORES, BlockTags.EMERALD_ORES);
         copyBlocks(tags, blockTags, ItemTags.COPPER_ORES, BlockTags.COPPER_ORES);
+        tags.add(ItemTags.CLUSTER_MAX_HARVESTABLES, Items.DIAMOND_PICKAXE, Items.GOLDEN_PICKAXE, Items.IRON_PICKAXE, Items.NETHERITE_PICKAXE, Items.STONE_PICKAXE, Items.WOODEN_PICKAXE);
         super.addExtraItemTags(tags, blockTags);
     }
 
