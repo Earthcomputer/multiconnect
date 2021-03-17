@@ -160,7 +160,7 @@ public class RecipeBookEmulator {
         }
 
         // return (pickup old cursor stack)
-        player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_5(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, screenHandler.method_34255(), Protocol_1_16_5.nextScreenActionId()));
+        player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_5(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, screenHandler.getCursorStack(), Protocol_1_16_5.nextScreenActionId()));
     }
 
     private void resyncContainer() {

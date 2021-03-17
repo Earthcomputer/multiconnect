@@ -28,7 +28,7 @@ public class MixinClientPlayerInteractionManager {
     @ModifyVariable(method = "clickSlot", at = @At(value = "STORE", ordinal = 0), ordinal = 0)
     private List<ItemStack> captureOldItems(List<ItemStack> oldItems) {
         assert client.player != null;
-        oldCursorStack = client.player.currentScreenHandler.method_34255().copy();
+        oldCursorStack = client.player.currentScreenHandler.getCursorStack().copy();
         return this.oldItems = oldItems;
     }
 

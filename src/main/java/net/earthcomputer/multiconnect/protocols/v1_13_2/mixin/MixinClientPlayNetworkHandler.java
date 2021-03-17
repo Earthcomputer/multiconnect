@@ -142,7 +142,7 @@ public abstract class MixinClientPlayNetworkHandler {
                     int maxTradeUses = buf.readInt();
                     TradeOffer trade = new TradeOffer(buy, secondBuy, sell, tradeUses, maxTradeUses, 0, 1);
                     if (locked)
-                        trade.clearUses();
+                        trade.disable();
                     trades.add(trade);
                 }
                 onSetTradeOffers(new SetTradeOffersS2CPacket(syncId, trades, 5, 0, false, false));
