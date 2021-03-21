@@ -26,6 +26,7 @@
     "MixinEntityRenderDispatcher",
     "MixinHeldItemRenderer",
     "MixinItemStack",
+    "MixinLivingEntity",
     "MixinMinecraftClient",
     "MixinPlayerEntity",
     "MixinPlayerInventory",
