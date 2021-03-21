@@ -1,6 +1,5 @@
 package net.earthcomputer.multiconnect.protocols.v1_11_2;
 
-import net.earthcomputer.multiconnect.protocols.v1_11_2.mixin.SlotAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12.PlaceRecipeC2SPacket_1_12;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.AckScreenActionS2CPacket_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.ClickSlotC2SPacket_1_16_5;
@@ -134,7 +133,7 @@ public class RecipeBookEmulator {
         PlayerInventory playerInv = MinecraftClient.getInstance().player.getInventory();
 
         for (Slot slot : screenHandler.slots) {
-            if (slot.inventory == playerInv && ((SlotAccessor) slot).getIndex() == invSlot) {
+            if (slot.inventory == playerInv && slot.getIndex() == invSlot) {
                 return slot.id;
             }
         }
