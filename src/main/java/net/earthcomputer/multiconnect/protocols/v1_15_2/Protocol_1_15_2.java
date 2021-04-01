@@ -32,9 +32,9 @@ import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.*;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.LongArrayTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtLongArray;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.JigsawGeneratingC2SPacket;
@@ -110,16 +110,16 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.enablePassthroughMode();
             buf.readVarInt(); // vertical strip bitmask
             buf.disablePassthroughMode();
-            CompoundTag heightmaps = buf.readCompoundTag();
+            NbtCompound heightmaps = buf.readCompound();
             if (heightmaps != null) {
                 for (String key : heightmaps.getKeys()) {
-                    Tag tag = heightmaps.get(key);
-                    if (tag instanceof LongArrayTag) {
-                        heightmaps.putLongArray(key, BitStorageAlignFix.method_27288(256, 9, ((LongArrayTag) tag).getLongArray()));
+                    NbtElement nbt = heightmaps.get(key);
+                    if (nbt instanceof NbtLongArray) {
+                        heightmaps.putLongArray(key, BitStorageAlignFix.method_27288(256, 9, ((NbtLongArray) nbt).getLongArray()));
                     }
                 }
             }
-            buf.pendingRead(CompoundTag.class, heightmaps);
+            buf.pendingRead(NbtCompound.class, heightmaps);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(LoginSuccessS2CPacket.class, buf -> {
@@ -242,10 +242,10 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             @Override
             public ItemStack translate(ItemStack from) {
                 if (from.getItem() == Items.PLAYER_HEAD && from.hasTag()) {
-                    CompoundTag tag = from.getTag();
+                    NbtCompound tag = from.getTag();
                     assert tag != null;
                     if (tag.contains("SkullOwner", 10)) {
-                        CompoundTag skullOwner = tag.getCompound("SkullOwner");
+                        NbtCompound skullOwner = tag.getCompound("SkullOwner");
                         if (skullOwner.contains("Id", 8)) {
                             try {
                                 UUID uuid = UUID.fromString(skullOwner.getString("Id"));
@@ -314,10 +314,10 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             @Override
             public ItemStack translate(ItemStack from) {
                 if (from.getItem() == Items.PLAYER_HEAD && from.hasTag()) {
-                    CompoundTag tag = from.getTag();
+                    NbtCompound tag = from.getTag();
                     assert tag != null;
                     if (tag.contains("SkullOwner", 10)) {
-                        CompoundTag skullOwner = tag.getCompound("SkullOwner");
+                        NbtCompound skullOwner = tag.getCompound("SkullOwner");
                         if (skullOwner.containsUuid("Id")) {
                             UUID uuid = skullOwner.getUuid("Id");
                             from = from.copy();

@@ -47,7 +47,7 @@ public abstract class AbstractProtocol implements IUtils {
             OldLanguageManager.reloadLanguages();
         }
         ((MinecraftClientAccessor) MinecraftClient.getInstance()).callInitializeSearchableContainers();
-        ((MinecraftClientAccessor) MinecraftClient.getInstance()).getSearchManager().apply(MinecraftClient.getInstance().getResourceManager());
+        ((MinecraftClientAccessor) MinecraftClient.getInstance()).getSearchManager().reload(MinecraftClient.getInstance().getResourceManager());
     }
 
     public void doRegistryMutation(boolean reAddMissingValues) {

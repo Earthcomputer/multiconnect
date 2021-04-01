@@ -11,9 +11,9 @@ import net.minecraft.datafixer.fix.ItemInstanceTheFlatteningFix;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.*;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -56,7 +56,7 @@ public class Items_1_12_2 {
             stack.setDamage(meta);
         }
         else if (stack.getItem() == BAT_SPAWN_EGG) {
-            CompoundTag entityTag = stack.getSubTag("EntityTag");
+            NbtCompound entityTag = stack.getSubTag("EntityTag");
             if (entityTag != null) {
                 String entityId = entityTag.getString("id");
                 EntityType<?> entityType = Registry.ENTITY_TYPE.get(new Identifier(entityId));
@@ -73,16 +73,16 @@ public class Items_1_12_2 {
                 stack = stack.copy();
                 copiedTag = true;
                 assert stack.getTag() != null;
-                CompoundTag blockEntityTag = stack.getTag().getCompound("BlockEntityTag");
+                NbtCompound blockEntityTag = stack.getTag().getCompound("BlockEntityTag");
                 if (blockEntityTag.contains("Items", 9)) {
-                    ListTag items = blockEntityTag.getList("Items", 10);
+                    NbtList items = blockEntityTag.getList("Items", 10);
                     for (int i = 0; i < items.size(); i++) {
-                        CompoundTag item = items.getCompound(i);
+                        NbtCompound item = items.getCompound(i);
                         int itemMeta = item.getShort("Damage");
                         int slot = item.getByte("Slot");
                         ItemStack itemStack = ItemStack.fromNbt(item);
                         itemStack = oldItemStackToNew(itemStack, itemMeta);
-                        CompoundTag newItemTag = itemStack.writeNbt(new CompoundTag());
+                        NbtCompound newItemTag = itemStack.writeNbt(new NbtCompound());
                         newItemTag.putByte("Slot", (byte)slot);
                         items.set(i, newItemTag);
                     }
@@ -98,7 +98,7 @@ public class Items_1_12_2 {
                 copiedTag = true;
             }
             assert stack.getTag() != null;
-            ListTag enchantments = stack.getTag().getList("ench", 10);
+            NbtList enchantments = stack.getTag().getList("ench", 10);
             oldEnchantmentListToNew(enchantments);
             stack.getTag().put("Enchantments", enchantments);
             stack.getTag().remove("ench");
@@ -116,9 +116,9 @@ public class Items_1_12_2 {
         return stack;
     }
 
-    private static void oldEnchantmentListToNew(ListTag enchantments) {
+    private static void oldEnchantmentListToNew(NbtList enchantments) {
         for (int i = 0; i < enchantments.size(); i++) {
-            CompoundTag ench = enchantments.getCompound(i);
+            NbtCompound ench = enchantments.getCompound(i);
             int id = ench.getInt("id");
             Identifier name = Registry.ENCHANTMENT.getId(Registry.ENCHANTMENT.get(id));
             if (name == null) {
@@ -147,7 +147,7 @@ public class Items_1_12_2 {
                 if (stack.getTag() != null) {
                     stack = stack.copy();
                     copiedTag = true;
-                    CompoundTag tag = stack.getTag();
+                    NbtCompound tag = stack.getTag();
                     assert tag != null;
                     tag.remove("map");
                     if (tag.getSize() == 0)
@@ -156,7 +156,7 @@ public class Items_1_12_2 {
             }
         }
         else if (stack.getItem() == ENCHANTED_BOOK) {
-            ListTag enchantments = EnchantedBookItem.getEnchantmentNbt(stack);
+            NbtList enchantments = EnchantedBookItem.getEnchantmentNbt(stack);
             if (!enchantments.isEmpty()) {
                 stack = stack.copy();
                 copiedTag = true;
@@ -168,7 +168,7 @@ public class Items_1_12_2 {
             if (stack.getTag() != null) {
                 stack = stack.copy();
                 copiedTag = true;
-                CompoundTag tag = stack.getTag();
+                NbtCompound tag = stack.getTag();
                 assert tag != null;
                 tag.remove("Damage");
                 if (tag.getSize() == 0)
@@ -179,7 +179,7 @@ public class Items_1_12_2 {
             ItemStack oldStack = new ItemStack(BAT_SPAWN_EGG, stack.getCount());
             oldStack.setTag(stack.getTag() == null ? null : stack.getTag().copy());
             copiedTag = true;
-            CompoundTag entityTag = oldStack.getOrCreateSubTag("EntityTag");
+            NbtCompound entityTag = oldStack.getOrCreateSubTag("EntityTag");
             if (!entityTag.contains("id", 8))
                 entityTag.putString("id", Registry.ENTITY_TYPE.getId(((SpawnEggItem) stack.getItem()).getEntityType(oldStack.getTag())).toString());
             stack = oldStack;
@@ -189,16 +189,16 @@ public class Items_1_12_2 {
                 stack = stack.copy();
                 copiedTag = true;
                 assert stack.getTag() != null;
-                CompoundTag blockEntityTag = stack.getTag().getCompound("BlockEntityTag");
+                NbtCompound blockEntityTag = stack.getTag().getCompound("BlockEntityTag");
                 if (blockEntityTag.contains("Items", 9)) {
-                    ListTag items = blockEntityTag.getList("Items", 10);
+                    NbtList items = blockEntityTag.getList("Items", 10);
                     for (int i = 0; i < items.size(); i++) {
-                        CompoundTag item = items.getCompound(i);
+                        NbtCompound item = items.getCompound(i);
                         int slot = item.getByte("Slot");
                         ItemStack itemStack = ItemStack.fromNbt(item);
                         Pair<ItemStack, Integer> itemStackAndMeta = newItemStackToOld(itemStack);
                         itemStack = itemStackAndMeta.getLeft();
-                        CompoundTag newItemTag = itemStack.writeNbt(new CompoundTag());
+                        NbtCompound newItemTag = itemStack.writeNbt(new NbtCompound());
                         newItemTag.putShort("Damage", itemStackAndMeta.getRight().shortValue());
                         newItemTag.putByte("Slot", (byte)slot);
                         items.set(i, newItemTag);
@@ -214,7 +214,7 @@ public class Items_1_12_2 {
                 stack = stack.copy();
                 copiedTag = true;
             }
-            ListTag enchantments = stack.getEnchantments();
+            NbtList enchantments = stack.getEnchantments();
             newEnchantmentListToOld(enchantments);
             assert stack.getTag() != null;
             stack.getTag().put("ench", enchantments);
@@ -233,9 +233,9 @@ public class Items_1_12_2 {
         return Pair.of(stack, meta);
     }
 
-    private static void newEnchantmentListToOld(ListTag enchantments) {
+    private static void newEnchantmentListToOld(NbtList enchantments) {
         for (int i = 0; i < enchantments.size(); i++) {
-            CompoundTag ench = enchantments.getCompound(i);
+            NbtCompound ench = enchantments.getCompound(i);
             Identifier name = Identifier.tryParse(ench.getString("id"));
             Enchantment enchObj = Registry.ENCHANTMENT.get(name);
             if (enchObj == null) {
@@ -249,11 +249,11 @@ public class Items_1_12_2 {
 
     private static ItemStack invertBannerColors(ItemStack stack) {
         stack = stack.copy();
-        CompoundTag blockEntityTag = stack.getSubTag("BlockEntityTag");
+        NbtCompound blockEntityTag = stack.getSubTag("BlockEntityTag");
         if (blockEntityTag != null && blockEntityTag.contains("Patterns", 9)) {
-            ListTag patterns = blockEntityTag.getList("Patterns", 10);
-            for (Tag t : patterns) {
-                CompoundTag pattern = (CompoundTag) t;
+            NbtList patterns = blockEntityTag.getList("Patterns", 10);
+            for (NbtElement t : patterns) {
+                NbtCompound pattern = (NbtCompound) t;
                 if (pattern.contains("Color", 3))
                     pattern.putInt("Color", 15 - pattern.getInt("Color"));
             }

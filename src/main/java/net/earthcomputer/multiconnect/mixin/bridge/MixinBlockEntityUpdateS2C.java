@@ -7,7 +7,7 @@ import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.datafixer.TypeReferences;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.util.registry.Registry;
 import org.spongepowered.asm.mixin.Final;
@@ -23,7 +23,7 @@ public class MixinBlockEntityUpdateS2C {
 
     @Shadow @Final private int blockEntityType;
 
-    @Shadow @Final @Mutable private CompoundTag tag;
+    @Shadow @Final @Mutable private NbtCompound tag;
 
     @Inject(method = "<init>(Lnet/minecraft/network/PacketByteBuf;)V", at = @At("RETURN"))
     private void onRead(CallbackInfo ci) {

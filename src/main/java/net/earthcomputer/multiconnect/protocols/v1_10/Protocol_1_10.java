@@ -39,7 +39,7 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.s2c.play.ItemPickupAnimationS2CPacket;
@@ -209,7 +209,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
             @Override
             public ItemStack translate(ItemStack from) {
                 if (from.getItem() == Items.BAT_SPAWN_EGG) {
-                    CompoundTag entityTag = from.getSubTag("EntityTag");
+                    NbtCompound entityTag = from.getSubTag("EntityTag");
                     if (entityTag != null) {
                         String entityId = entityTag.getString("id");
                         EntityType<?> entityType = ENTITY_IDS.inverse().get(entityId);
@@ -254,7 +254,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
             @Override
             public ItemStack translate(ItemStack from) {
                 if (from.getItem() == Items.BAT_SPAWN_EGG) {
-                    CompoundTag entityTag = from.getSubTag("EntityTag");
+                    NbtCompound entityTag = from.getSubTag("EntityTag");
                     if (entityTag != null) {
                         Identifier entityId = Identifier.tryParse(entityTag.getString("id"));
                         if (entityId != null) {
@@ -530,7 +530,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
         }
 
         // copy the entity
-        destEntity.readNbt(entity.writeNbt(new CompoundTag()));
+        destEntity.readNbt(entity.writeNbt(new NbtCompound()));
         destEntity.updateTrackedPosition(entity.getTrackedPosition());
 
         // replace entity in world and exchange entity id

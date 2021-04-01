@@ -82,7 +82,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
                 return;
             }
             buf.readVarInt(); // vertical strip bitmask
-            buf.readCompoundTag(); // heightmaps
+            buf.readCompound(); // heightmaps
             buf.disablePassthroughMode();
             for (int i = 0; i < 1024; i++)
                 buf.pendingRead(Integer.class, 0);

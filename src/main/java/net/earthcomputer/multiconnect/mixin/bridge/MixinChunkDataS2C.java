@@ -9,7 +9,7 @@ import net.earthcomputer.multiconnect.protocols.generic.IChunkDataS2CPacket;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.datafixer.TypeReferences;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.Identifier;
@@ -26,7 +26,7 @@ import java.util.List;
 
 @Mixin(ChunkDataS2CPacket.class)
 public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
-    @Shadow @Final private List<CompoundTag> blockEntities;
+    @Shadow @Final private List<NbtCompound> blockEntities;
 
     @Unique
     private boolean dataTranslated = false;
@@ -54,7 +54,7 @@ public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
     private void onRead(CallbackInfo ci) {
         DefaultRegistries<?> defaultBlockEntities = DefaultRegistries.DEFAULT_REGISTRIES.get(Registry.BLOCK_ENTITY_TYPE);
         for (int i = 0; i < blockEntities.size(); i++) {
-            CompoundTag blockEntity = blockEntities.get(i);
+            NbtCompound blockEntity = blockEntities.get(i);
             BlockEntityType<?> blockEntityType;
             if (ConnectionInfo.protocolVersion <= Protocols.V1_10) {
                 blockEntityType = Protocol_1_10.getBlockEntityById(blockEntity.getString("id"));
@@ -64,7 +64,7 @@ public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
             }
             if (blockEntityType != null) {
                 if (defaultBlockEntities.defaultEntryToRawId.containsKey(blockEntityType)) {
-                    CompoundTag fixed = Utils.datafix(TypeReferences.BLOCK_ENTITY, blockEntity);
+                    NbtCompound fixed = Utils.datafix(TypeReferences.BLOCK_ENTITY, blockEntity);
                     fixed.putString("id", String.valueOf(Registry.BLOCK_ENTITY_TYPE.getId(blockEntityType)));
                     blockEntities.set(i, fixed);
                 }

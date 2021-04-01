@@ -36,9 +36,9 @@ import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.network.packet.s2c.play.*;
@@ -158,7 +158,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.readBoolean(); // full chunk
             buf.readVarInt(); // vertical strip bitmask
             buf.disablePassthroughMode();
-            buf.pendingRead(CompoundTag.class, new CompoundTag()); // heightmaps
+            buf.pendingRead(NbtCompound.class, new NbtCompound()); // heightmaps
             buf.applyPendingReads();
         });
 
@@ -289,13 +289,13 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 if (stack.hasTag()) {
                     assert stack.getTag() != null;
                     if (stack.getTag().contains("display", 10)) {
-                        CompoundTag display = stack.getTag().getCompound("display");
+                        NbtCompound display = stack.getTag().getCompound("display");
                         if (display.contains("Lore", 9)) {
-                            ListTag lore = display.getList("Lore", 8);
+                            NbtList lore = display.getList("Lore", 8);
                             display.put("multiconnect:1.13.2/oldLore", lore);
-                            ListTag newLore = new ListTag();
+                            NbtList newLore = new NbtList();
                             for (int i = 0; i < lore.size(); i++) {
-                                newLore.add(StringTag.of(Text.Serializer.toJson(new LiteralText(lore.getString(i)))));
+                                newLore.add(NbtString.of(Text.Serializer.toJson(new LiteralText(lore.getString(i)))));
                             }
                             display.put("Lore", newLore);
                         }
@@ -352,18 +352,18 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 if (stack.hasTag()) {
                     assert stack.getTag() != null;
                     if (stack.getTag().contains("display", 10)) {
-                        CompoundTag display = stack.getTag().getCompound("display");
+                        NbtCompound display = stack.getTag().getCompound("display");
                         if (display.contains("multiconnect:1.13.2/oldLore", 9) || display.contains("Lore", 9)) {
                             stack = stack.copy();
                             assert stack.getTag() != null;
                             display = stack.getTag().getCompound("display");
-                            ListTag lore = display.contains("multiconnect:1.13.2/oldLore", 9) ? display.getList("multiconnect:1.13.2/oldLore", 8) : display.getList("Lore", 8);
-                            ListTag newLore = new ListTag();
+                            NbtList lore = display.contains("multiconnect:1.13.2/oldLore", 9) ? display.getList("multiconnect:1.13.2/oldLore", 8) : display.getList("Lore", 8);
+                            NbtList newLore = new NbtList();
                             for (int i = 0; i < lore.size(); i++) {
                                 try {
                                     Text text = Text.Serializer.fromJson(lore.getString(i));
                                     if (text == null) throw new JsonParseException("text null");
-                                    newLore.add(StringTag.of(text.asString()));
+                                    newLore.add(NbtString.of(text.asString()));
                                 } catch (JsonParseException e) {
                                     newLore.add(lore.get(i));
                                 }
