@@ -26,7 +26,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.item.Item;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
@@ -54,8 +55,8 @@ import java.util.stream.Collectors;
 public class Utils {
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
-    public static CompoundTag datafix(DSL.TypeReference type, CompoundTag old) {
-        return (CompoundTag) datafix(type, NbtOps.INSTANCE, old);
+    public static NbtCompound datafix(DSL.TypeReference type, NbtCompound old) {
+        return (NbtCompound) datafix(type, NbtOps.INSTANCE, old);
     }
 
     public static <T> T datafix(DSL.TypeReference type, DynamicOps<T> ops, T old) {
@@ -266,13 +267,13 @@ public class Utils {
      * Clones an object with its codec by serializing and deserializing it
      */
     public static <T> T clone(Codec<T> codec, T val) {
-        DataResult<net.minecraft.nbt.Tag> tagDataResult = codec.encodeStart(NbtOps.INSTANCE, val);
-        if (tagDataResult.error().isPresent()) {
+        DataResult<NbtElement> nbtDataResult = codec.encodeStart(NbtOps.INSTANCE, val);
+        if (nbtDataResult.error().isPresent()) {
             LOGGER.info("Failed to encode for cloning");
             return val;
         }
         //noinspection OptionalGetWithoutIsPresent
-        DataResult<T> cloneDataResult = codec.parse(NbtOps.INSTANCE, tagDataResult.result().get());
+        DataResult<T> cloneDataResult = codec.parse(NbtOps.INSTANCE, nbtDataResult.result().get());
         if (cloneDataResult.error().isPresent()) {
             LOGGER.info("Failed to decode for cloning");
             return val;

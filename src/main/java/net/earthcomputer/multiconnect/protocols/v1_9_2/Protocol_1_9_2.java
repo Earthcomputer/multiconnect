@@ -13,7 +13,7 @@ import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.command.CommandSource;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
@@ -63,7 +63,7 @@ public class Protocol_1_9_2 extends Protocol_1_9_4 {
                             }
                         }
                         if (blockEntityType != null) {
-                            CompoundTag nbt = new CompoundTag();
+                            NbtCompound nbt = new NbtCompound();
                             String blockEntityId;
                             if (blockEntityType == BlockEntityType.BED) {
                                 blockEntityId = "minecraft:bed"; // block entity that was added in 1.12

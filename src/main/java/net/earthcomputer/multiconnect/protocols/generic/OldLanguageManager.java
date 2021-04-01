@@ -42,7 +42,7 @@ public class OldLanguageManager {
     private static final Map<String, Map<String, File>> langFiles = new HashMap<>();
 
     public static void reloadLanguages() {
-        MinecraftClient.getInstance().getLanguageManager().apply(MinecraftClient.getInstance().getResourceManager());
+        MinecraftClient.getInstance().getLanguageManager().reload(MinecraftClient.getInstance().getResourceManager());
         if (FabricLoader.getInstance().isModLoaded("optifabric")) {
             try {
                 Class.forName("net.optifine.Lang").getMethod("resourcesReloaded").invoke(null);

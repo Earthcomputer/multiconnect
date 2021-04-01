@@ -15,7 +15,7 @@ import net.earthcomputer.multiconnect.protocols.generic.INetworkState;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.SharedConstants;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.*;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -172,7 +172,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
     public int readVarInt() {
         if (!transformationEnabled) {
             int packetId = super.readVarInt();
-            NetworkState state = context.channel().attr(ClientConnection.ATTR_KEY_PROTOCOL).get();
+            NetworkState state = context.channel().attr(ClientConnection.PROTOCOL_ATTRIBUTE_KEY).get();
             //noinspection ConstantConditions
             Class<? extends Packet<?>> packetClass = ((INetworkState) (Object) state).getPacketHandlers()
                     .get(NetworkSide.CLIENTBOUND).multiconnect_getPacketClassById(packetId);
@@ -300,7 +300,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
     public PacketByteBuf writeVarInt(int val) {
         if (!transformationEnabled) {
             super.writeVarInt(val);
-            NetworkState state = context.channel().attr(ClientConnection.ATTR_KEY_PROTOCOL).get();
+            NetworkState state = context.channel().attr(ClientConnection.PROTOCOL_ATTRIBUTE_KEY).get();
             //noinspection ConstantConditions
             Class<? extends Packet<?>> packetClass = ((INetworkState) (Object) state).getPacketHandlers()
                     .get(NetworkSide.SERVERBOUND).multiconnect_getPacketClassById(val);
@@ -778,8 +778,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public CompoundTag readCompoundTag() {
-        return read(CompoundTag.class, super::readCompoundTag);
+    public NbtCompound readCompound() {
+        return read(NbtCompound.class, super::readCompound);
     }
 
     @Override
@@ -1358,8 +1358,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public PacketByteBuf writeCompoundTag(CompoundTag val) {
-        return write(CompoundTag.class, val, super::writeCompoundTag);
+    public PacketByteBuf writeCompound(NbtCompound val) {
+        return write(NbtCompound.class, val, super::writeCompound);
     }
 
     @Override

@@ -19,8 +19,8 @@ public abstract class MixinOtherClientPlayerEntity extends AbstractClientPlayerE
         super(world, gameProfile);
     }
 
-    @Inject(method = "updateSize", at = @At("HEAD"))
-    private void onUpdateSize(CallbackInfo ci) {
+    @Inject(method = "updatePose", at = @At("HEAD"))
+    private void onUpdatePose(CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             EntityPose pose;
             if (isFallFlying()) {

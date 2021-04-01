@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.mixin.compat;
 
 import com.google.common.base.Joiner;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,12 +32,12 @@ public class MixinRegistrySyncManager {
 
     @Dynamic
     @Inject(method = "lambda$receivePacket$0", at = @At("HEAD"), cancellable = true)
-    private static void onApplyModdedRegistry(CompoundTag tag, Consumer<Exception> errorHandler, CallbackInfoReturnable<Object> ci) {
+    private static void onApplyModdedRegistry(NbtCompound tag, Consumer<Exception> errorHandler, CallbackInfoReturnable<Object> ci) {
         if (tag == null) {
             return;
         }
-        CompoundTag mainTag = tag.getCompound("registries");
-        Set<String> registries = mainTag.getKeys();
+        NbtCompound mainNbt = tag.getCompound("registries");
+        Set<String> registries = mainNbt.getKeys();
         if (!registries.isEmpty()) {
             String registriesStr = Joiner.on(", ").join(registries);
             errorHandler.accept(new RuntimeException("Server contains Fabric-modded registries: " + registriesStr + "! Multiconnect does not support modded registries."));

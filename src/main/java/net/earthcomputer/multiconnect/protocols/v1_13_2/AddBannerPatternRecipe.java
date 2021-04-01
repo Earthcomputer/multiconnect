@@ -8,8 +8,8 @@ import net.minecraft.item.BannerItem;
 import net.minecraft.item.DyeItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.recipe.RecipeSerializer;
 import net.minecraft.recipe.SpecialCraftingRecipe;
 import net.minecraft.recipe.SpecialRecipeSerializer;
@@ -64,15 +64,15 @@ public class AddBannerPatternRecipe extends SpecialCraftingRecipe {
                 }
             }
 
-            CompoundTag tileEntityNbt = result.getOrCreateSubTag("BlockEntityTag");
-            ListTag patterns;
+            NbtCompound tileEntityNbt = result.getOrCreateSubTag("BlockEntityTag");
+            NbtList patterns;
             if (tileEntityNbt.contains("Patterns", 9)) {
                 patterns = tileEntityNbt.getList("Patterns", 10);
             } else {
-                patterns = new ListTag();
+                patterns = new NbtList();
                 tileEntityNbt.put("Patterns", patterns);
             }
-            CompoundTag patternNbt = new CompoundTag();
+            NbtCompound patternNbt = new NbtCompound();
             patternNbt.putString("Pattern", pattern.getId());
             patternNbt.putInt("Color", color.getId());
             patterns.add(patternNbt);

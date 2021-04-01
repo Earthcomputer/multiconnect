@@ -30,8 +30,8 @@ public class MixinEntityRenderDispatcher {
         }
     }
 
-    @Inject(method = "apply", at = @At("TAIL"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void onApply(ResourceManager manager, CallbackInfo ci, EntityRendererFactory.Context context) {
+    @Inject(method = "reload", at = @At("TAIL"), locals = LocalCapture.CAPTURE_FAILHARD)
+    private void onReload(ResourceManager manager, CallbackInfo ci, EntityRendererFactory.Context context) {
         boatRenderer = new BoatRenderer_1_8(context);
     }
 }

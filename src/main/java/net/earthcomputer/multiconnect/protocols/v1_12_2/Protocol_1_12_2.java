@@ -41,7 +41,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.map.MapIcon;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.*;
@@ -434,13 +434,13 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 }
                 byte count = buf.readByte();
                 short meta = buf.readShort();
-                CompoundTag tag = buf.readCompoundTag();
+                NbtCompound tag = buf.readCompound();
                 if (tag == null)
-                    tag = new CompoundTag();
+                    tag = new NbtCompound();
                 tag.putShort("Damage", meta);
                 buf.pendingRead(Short.class, itemId);
                 buf.pendingRead(Byte.class, count);
-                buf.pendingRead(CompoundTag.class, tag);
+                buf.pendingRead(NbtCompound.class, tag);
                 buf.applyPendingReads();
             }
 
@@ -514,15 +514,15 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                         buf.pendingWrite(Short.class, itemId, (Consumer<Short>) buf::writeShort);
                     } else {
                         Supplier<Byte> count = buf.skipWrite(Byte.class);
-                        Supplier<CompoundTag> tag = buf.skipWrite(CompoundTag.class);
+                        Supplier<NbtCompound> nbt = buf.skipWrite(NbtCompound.class);
                         buf.whenWrite(() -> {
-                            CompoundTag oldTag = tag.get();
-                            int meta = oldTag.getInt("Damage");
-                            oldTag.remove("Damage");
+                            NbtCompound oldNbt = nbt.get();
+                            int meta = oldNbt.getInt("Damage");
+                            oldNbt.remove("Damage");
                             buf.pendingWrite(Short.class, itemId, (Consumer<Short>) buf::writeShort);
                             buf.pendingWrite(Byte.class, count, (Consumer<Byte>) buf::writeByte);
                             buf.pendingWrite(Short.class, () -> (short) meta, (Consumer<Short>) buf::writeShort);
-                            buf.pendingWrite(CompoundTag.class, () -> oldTag.getSize() == 0 ? null : oldTag, buf::writeCompoundTag);
+                            buf.pendingWrite(NbtCompound.class, () -> oldNbt.getSize() == 0 ? null : oldNbt, buf::writeCompound);
                         });
                     }
                 });
@@ -712,14 +712,13 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         ClientPlayNetworkHandler connection = MinecraftClient.getInstance().getNetworkHandler();
         if (packet.getClass() == CustomPayloadC2SPacket.class) {
             assert connection != null;
-            //noinspection ConstantConditions
-            ICustomPayloadC2SPacket customPayload = (ICustomPayloadC2SPacket) packet;
+            CustomPayloadC2SPacket customPayload = (CustomPayloadC2SPacket) packet;
             String channel;
-            if (customPayload.multiconnect_getChannel().equals(CustomPayloadC2SPacket.BRAND))
+            if (customPayload.method_36169().equals(CustomPayloadC2SPacket.BRAND))
                 channel = "MC|Brand";
             else
-                channel = customPayload.multiconnect_getChannel().toString();
-            connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(channel, customPayload.multiconnect_getData()));
+                channel = customPayload.method_36169().toString();
+            connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(channel, customPayload.method_36170()));
             return false;
         }
         if (packet.getClass() == BookUpdateC2SPacket.class) {

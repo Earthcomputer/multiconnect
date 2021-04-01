@@ -7,7 +7,6 @@
     "EnderEyeEntityAccessor",
     "EntityAccessor",
     "FireworkEntityAccessor",
-    "LightUpdatePacketAccessor",
     "LivingEntityAccessor",
     "MixinArgumentTypes",
     "MixinClientChunkManager",

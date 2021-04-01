@@ -38,7 +38,7 @@ import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.ShulkerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
 import net.minecraft.network.packet.c2s.play.ClientSettingsC2SPacket;
@@ -121,7 +121,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             PendingFullChunkData.setPendingFullChunk(new ChunkPos(x, z), fullChunk);
             buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {buf.readVarInt()})); // vertical strip bitmask
             buf.enablePassthroughMode();
-            buf.readCompoundTag(); // heightmaps
+            buf.readCompound(); // heightmaps
             if (fullChunk) {
                 buf.readIntArray(BiomeArray.DEFAULT_LENGTH);
             } else {
@@ -132,12 +132,12 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             buf.readBytesSingleAlloc(dataLength); // data
             buf.disablePassthroughMode();
             int numBlockEntities = buf.readVarInt();
-            List<CompoundTag> blockEntities = new ArrayList<>(numBlockEntities);
+            List<NbtCompound> blockEntities = new ArrayList<>(numBlockEntities);
             for (int i = 0; i < numBlockEntities; i++) {
-                blockEntities.add(buf.readCompoundTag());
+                blockEntities.add(buf.readCompound());
             }
             //noinspection unchecked
-            buf.pendingReadCollection((Class<List<CompoundTag>>) (Class<?>) List.class, CompoundTag.class, blockEntities);
+            buf.pendingReadCollection((Class<List<NbtCompound>>) (Class<?>) List.class, NbtCompound.class, blockEntities);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(LightUpdateS2CPacket.class, buf -> {
@@ -562,9 +562,9 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
     }
 
     private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
-        registry.unregister(Blocks.WATER_CAULDRON);
-        registry.unregister(Blocks.LAVA_CAULDRON);
-        registry.unregister(Blocks.POWDER_SNOW_CAULDRON);
+        registry.unregister(Blocks.WATER_CAULDRON, false);
+        registry.unregister(Blocks.LAVA_CAULDRON, false);
+        registry.unregister(Blocks.POWDER_SNOW_CAULDRON, false);
         rename(registry, Blocks.DIRT_PATH, "grass_path");
         registry.unregister(Blocks.CANDLE);
         registry.unregister(Blocks.WHITE_CANDLE);
@@ -688,6 +688,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(Blocks.DEEPSLATE_COPPER_ORE);
         registry.unregister(Blocks.DEEPSLATE_EMERALD_ORE);
         registry.unregister(Blocks.INFESTED_DEEPSLATE);
+        registry.unregister(Blocks.LIGHT);
     }
 
     private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
@@ -831,6 +832,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(EntityType.AXOLOTL);
         registry.unregister(EntityType.GLOW_ITEM_FRAME);
         registry.unregister(EntityType.GLOW_SQUID);
+        registry.unregister(EntityType.GOAT);
     }
 
     private void mutateBlockEntityRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
@@ -838,6 +840,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
     }
 
     private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
+        registry.unregister(ParticleTypes.LIGHT);
         registry.unregister(ParticleTypes.SMALL_FLAME);
         registry.unregister(ParticleTypes.SNOWFLAKE);
         registry.unregister(ParticleTypes.DRIPPING_DRIPSTONE_LAVA);
@@ -1037,6 +1040,17 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(SoundEvents.ITEM_AXE_SCRAPE);
         registry.unregister(SoundEvents.ITEM_AXE_WAX_OFF);
         registry.unregister(SoundEvents.ITEM_HONEYCOMB_WAX_ON);
+        registry.unregister(SoundEvents.ENTITY_GOAT_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_GOAT_DEATH);
+        registry.unregister(SoundEvents.ENTITY_GOAT_HURT);
+        registry.unregister(SoundEvents.ENTITY_GOAT_MILK);
+        registry.unregister(SoundEvents.ENTITY_GOAT_PREPARE_RAM);
+        registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_AMBIENT);
+        registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_DEATH);
+        registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_HURT);
+        registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_MILK);
+        registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_RAM);
+        registry.unregister(SoundEvents.ENTITY_GOAT_STEP);
     }
 
     @Override
@@ -1082,6 +1096,8 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         tags.add(BlockTags.COPPER_ORES);
         tags.add(BlockTags.STONE_ORE_REPLACEABLES, Blocks.STONE, Blocks.GRANITE, Blocks.DIORITE, Blocks.ANDESITE);
         tags.add(BlockTags.DEEPSLATE_ORE_REPLACEABLES);
+        tags.add(BlockTags.DIRT, Blocks.DIRT, Blocks.COARSE_DIRT, Blocks.PODZOL);
+        tags.add(BlockTags.SNOW, Blocks.SNOW, Blocks.SNOW_BLOCK);
         super.addExtraBlockTags(tags);
     }
 
@@ -1090,7 +1106,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         tags.add(ItemTags.IGNORED_BY_PIGLIN_BABIES, Items.LEATHER);
         tags.add(ItemTags.PIGLIN_FOOD, Items.PORKCHOP, Items.COOKED_PORKCHOP);
         copyBlocks(tags, blockTags, ItemTags.CANDLES, BlockTags.CANDLES);
-        tags.add(ItemTags.FREEZE_IMMUNE_WEARABLES, Items.LEATHER_BOOTS, Items.LEATHER_LEGGINGS, Items.LEATHER_CHESTPLATE, Items.LEATHER_HELMET);
+        tags.add(ItemTags.FREEZE_IMMUNE_WEARABLES, Items.LEATHER_BOOTS, Items.LEATHER_LEGGINGS, Items.LEATHER_CHESTPLATE, Items.LEATHER_HELMET, Items.LEATHER_HORSE_ARMOR);
         tags.add(ItemTags.AXOLOTL_TEMPT_ITEMS, Items.TROPICAL_FISH, Items.TROPICAL_FISH_BUCKET);
         copyBlocks(tags, blockTags, ItemTags.OCCLUDES_VIBRATION_SIGNALS, BlockTags.OCCLUDES_VIBRATION_SIGNALS);
         tags.add(ItemTags.FOX_FOOD, Items.SWEET_BERRIES);
@@ -1108,8 +1124,10 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
     @Override
     public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
         tags.add(EntityTypeTags.POWDER_SNOW_WALKABLE_MOBS, EntityType.RABBIT, EntityType.ENDERMITE, EntityType.SILVERFISH);
-        tags.add(EntityTypeTags.AXOLOTL_ALWAYS_HOSTILES, EntityType.TROPICAL_FISH, EntityType.PUFFERFISH, EntityType.SALMON, EntityType.COD, EntityType.SQUID, EntityType.GLOW_SQUID);
-        tags.add(EntityTypeTags.AXOLOTL_TEMPTED_HOSTILES, EntityType.DROWNED, EntityType.GUARDIAN);
+        tags.add(EntityTypeTags.AXOLOTL_HUNT_TARGETS, EntityType.TROPICAL_FISH, EntityType.PUFFERFISH, EntityType.SALMON, EntityType.COD, EntityType.SQUID, EntityType.GLOW_SQUID);
+        tags.add(EntityTypeTags.AXOLOTL_ALWAYS_HOSTILES, EntityType.DROWNED, EntityType.GUARDIAN, EntityType.ELDER_GUARDIAN);
+        tags.add(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES, EntityType.STRIDER, EntityType.BLAZE, EntityType.MAGMA_CUBE);
+        tags.add(EntityTypeTags.FREEZE_IMMUNE_ENTITY_TYPES, EntityType.STRAY, EntityType.POLAR_BEAR, EntityType.SNOW_GOLEM);
         super.addExtraEntityTags(tags);
     }
 

@@ -101,7 +101,7 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
             }
             buf.enablePassthroughMode();
             buf.readVarInt(); // vertical strip bitmask
-            buf.readCompoundTag(); // heightmaps
+            buf.readCompound(); // heightmaps
             buf.disablePassthroughMode();
             int[] biomes = new int[Protocol_1_16_5.BIOME_ARRAY_LENGTH];
             for (int i = 0; i < biomes.length; i++) {

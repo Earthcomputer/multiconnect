@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_9_2;
 
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
@@ -26,7 +26,7 @@ public class UpdateSignS2CPacket implements Packet<ClientPlayPacketListener> {
 
     @Override
     public void apply(ClientPlayPacketListener listener) {
-        CompoundTag signTag = new CompoundTag();
+        NbtCompound signTag = new NbtCompound();
         for (int i = 0; i < 4; i++) {
             signTag.putString("Text" + (i + 1), Text.Serializer.toJson(lines[i]));
         }

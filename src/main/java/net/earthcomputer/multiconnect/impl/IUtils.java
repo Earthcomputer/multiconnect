@@ -8,7 +8,7 @@ import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.item.Item;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
@@ -22,7 +22,7 @@ import java.util.function.Function;
 
 public interface IUtils {
 
-    default CompoundTag datafix(DSL.TypeReference type, CompoundTag old) {
+    default NbtCompound datafix(DSL.TypeReference type, NbtCompound old) {
         return Utils.datafix(type, old);
     }
 

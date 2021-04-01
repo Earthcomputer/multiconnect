@@ -43,10 +43,9 @@ public abstract class MixinClientConnection {
         if (!ConnectionInfo.protocol.onSendPacket(packet)) {
             ci.cancel();
         } else if (packet instanceof CustomPayloadC2SPacket) {
-            ICustomPayloadC2SPacket customPayload = (ICustomPayloadC2SPacket) packet;
-            if (customPayload.multiconnect_isBlocked()) {
+            if (((ICustomPayloadC2SPacket) packet).multiconnect_isBlocked()) {
                 if (packetListener instanceof ClientPlayNetworkHandler) {
-                    CustomPayloadHandler.handleServerboundCustomPayload((ClientPlayNetworkHandler) packetListener, customPayload);
+                    CustomPayloadHandler.handleServerboundCustomPayload((ClientPlayNetworkHandler) packetListener, (CustomPayloadC2SPacket) packet);
                 }
                 ci.cancel();
             }

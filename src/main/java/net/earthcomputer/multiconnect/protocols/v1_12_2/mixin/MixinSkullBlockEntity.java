@@ -6,7 +6,7 @@ import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.SkullBlockEntity;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -22,7 +22,7 @@ public abstract class MixinSkullBlockEntity extends BlockEntity {
     }
 
     @Inject(method = "readNbt", at = @At("RETURN"))
-    private void onReadNbt(CompoundTag tag, CallbackInfo ci) {
+    private void onReadNbt(NbtCompound tag, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             setSkullType(tag.getByte("SkullType"));
             setRotation(tag.getByte("Rot"));

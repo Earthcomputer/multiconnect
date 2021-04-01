@@ -55,8 +55,8 @@ import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.WitherSkullEntity;
 import net.minecraft.entity.vehicle.*;
 import net.minecraft.item.*;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ShortTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtShort;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.*;
@@ -566,7 +566,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
     }
 
     public static ItemStack oldPotionItemToNew(ItemStack stack, int meta) {
-        stack.putSubTag("multiconnect:1.8/potionData", ShortTag.of((short) meta));
+        stack.putSubTag("multiconnect:1.8/potionData", NbtShort.of((short) meta));
         boolean isSplash = (meta & 16384) != 0;
         Potion potion;
         if (meta == 0) {
@@ -593,7 +593,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
 
     public static Pair<ItemStack, Integer> newPotionItemToOld(ItemStack stack) {
         Potion potion = PotionUtil.getPotion(stack);
-        CompoundTag tag = stack.getTag();
+        NbtCompound tag = stack.getTag();
         boolean hasForcedMeta = false;
         int forcedMeta = 0;
         if (tag != null) {
