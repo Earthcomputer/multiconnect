@@ -8,6 +8,7 @@ import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.util.Identifier;
 
@@ -63,8 +64,8 @@ public class CustomPayloadHandler {
         serverboundStringCustomPayloadListeners.remove(listener);
     }
 
-    public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, ICustomPayloadC2SPacket packet) {
-        CustomPayloadEvent<Identifier> event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.multiconnect_getChannel(), packet.multiconnect_getData(), networkHandler);
+    public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket packet) {
+        CustomPayloadEvent<Identifier> event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.method_36169(), packet.method_36170(), networkHandler);
         serverboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 

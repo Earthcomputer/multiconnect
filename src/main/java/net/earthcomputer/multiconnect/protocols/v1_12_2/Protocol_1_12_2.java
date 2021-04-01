@@ -709,14 +709,13 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         ClientPlayNetworkHandler connection = MinecraftClient.getInstance().getNetworkHandler();
         if (packet.getClass() == CustomPayloadC2SPacket.class) {
             assert connection != null;
-            //noinspection ConstantConditions
-            ICustomPayloadC2SPacket customPayload = (ICustomPayloadC2SPacket) packet;
+            CustomPayloadC2SPacket customPayload = (CustomPayloadC2SPacket) packet;
             String channel;
-            if (customPayload.multiconnect_getChannel().equals(CustomPayloadC2SPacket.BRAND))
+            if (customPayload.method_36169().equals(CustomPayloadC2SPacket.BRAND))
                 channel = "MC|Brand";
             else
-                channel = customPayload.multiconnect_getChannel().toString();
-            connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(channel, customPayload.multiconnect_getData()));
+                channel = customPayload.method_36169().toString();
+            connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(channel, customPayload.method_36170()));
             return false;
         }
         if (packet.getClass() == BookUpdateC2SPacket.class) {
