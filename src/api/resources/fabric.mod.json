@@ -24,10 +24,5 @@
 
   "depends": {
     "fabricloader": ">=0.4.0"
-  },
-
-  "custom": {
-    "modmenu:api": true,
-    "modmenu:clientsideOnly": true
   }
 }
