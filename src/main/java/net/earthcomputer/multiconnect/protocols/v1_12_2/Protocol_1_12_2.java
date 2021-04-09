@@ -694,7 +694,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         remove(packets, UpdateCommandBlockMinecartC2SPacket.class);
         remove(packets, UpdateStructureBlockC2SPacket.class);
         remove(packets, CustomPayloadC2SPacket.class);
-        insertAfter(packets, CloseScreenS2CPacket.class, PacketInfo.of(CustomPayloadC2SPacket_1_12_2.class, CustomPayloadC2SPacket_1_12_2::new));
+        insertAfter(packets, CloseHandledScreenC2SPacket.class, PacketInfo.of(CustomPayloadC2SPacket_1_12_2.class, CustomPayloadC2SPacket_1_12_2::new));
         return packets;
     }
 
