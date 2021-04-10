@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.bridge;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
 import net.minecraft.Bootstrap;
+import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.Identifier;
@@ -26,6 +27,7 @@ public abstract class AbstractRegistryTest {
     }
 
     protected static void initialize(int protocol) {
+        SharedConstants.createGameVersion();
         Bootstrap.initialize();
         Bootstrap.getMissingTranslations(); // forces initialization of translation keys
         DefaultRegistries.initialize();

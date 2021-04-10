@@ -94,8 +94,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
         insertAfter(packets, CloseScreenS2CPacket.class, PacketInfo.of(GuiOpenS2CPacket_1_13_2.class, GuiOpenS2CPacket_1_13_2::new));
-        remove(packets, TagQueryResponseS2CPacket.class);
-        insertAfter(packets, EntityStatusS2CPacket.class, PacketInfo.of(TagQueryResponseS2CPacket.class, TagQueryResponseS2CPacket::new));
+        remove(packets, NbtQueryResponseS2CPacket.class);
+        insertAfter(packets, EntityStatusS2CPacket.class, PacketInfo.of(NbtQueryResponseS2CPacket.class, NbtQueryResponseS2CPacket::new));
         remove(packets, OpenHorseScreenS2CPacket.class);
         remove(packets, LightUpdateS2CPacket.class);
         remove(packets, EntityS2CPacket_1_16_5.class);

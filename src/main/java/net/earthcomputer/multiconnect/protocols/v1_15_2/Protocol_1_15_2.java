@@ -92,7 +92,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
                     } else {
                         buf.disablePassthroughMode();
                         long[] oldData = buf.readLongArray(new long[paletteSize * 64]);
-                        buf.pendingRead(long[].class, BitStorageAlignFix.method_27288(4096, paletteSize, oldData));
+                        buf.pendingRead(long[].class, BitStorageAlignFix.resizePackedIntArray(4096, paletteSize, oldData));
                         buf.enablePassthroughMode();
                     }
                 }
@@ -110,12 +110,12 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.enablePassthroughMode();
             buf.readVarInt(); // vertical strip bitmask
             buf.disablePassthroughMode();
-            NbtCompound heightmaps = buf.readCompound();
+            NbtCompound heightmaps = buf.readNbt();
             if (heightmaps != null) {
                 for (String key : heightmaps.getKeys()) {
                     NbtElement nbt = heightmaps.get(key);
                     if (nbt instanceof NbtLongArray) {
-                        heightmaps.putLongArray(key, BitStorageAlignFix.method_27288(256, 9, ((NbtLongArray) nbt).getLongArray()));
+                        heightmaps.putLongArray(key, BitStorageAlignFix.resizePackedIntArray(256, 9, ((NbtLongArray) nbt).getLongArray()));
                     }
                 }
             }

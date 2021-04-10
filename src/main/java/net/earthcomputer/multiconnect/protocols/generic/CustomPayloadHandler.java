@@ -65,7 +65,7 @@ public class CustomPayloadHandler {
     }
 
     public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket packet) {
-        CustomPayloadEvent<Identifier> event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.method_36169(), packet.method_36170(), networkHandler);
+        CustomPayloadEvent<Identifier> event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
         serverboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 

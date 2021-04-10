@@ -66,7 +66,7 @@ public class BlockConnectors_1_12_2 {
             boolean changed = false;
             for (Direction dir : Direction.values()) {
                 if (dir.getAxis().isHorizontal()) {
-                    BlockState neighborState = world.getBlockState(pos.method_35851(dir));
+                    BlockState neighborState = world.getBlockState(pos.offset(dir));
                     ChestType correctDoubleType = dir == chestFacing.rotateYClockwise() ? ChestType.LEFT : ChestType.RIGHT;
                     if (dir.getAxis() != chestFacing.getAxis()) {
                         if (state.getBlock() == neighborState.getBlock()) {
@@ -99,7 +99,7 @@ public class BlockConnectors_1_12_2 {
             BedPart part = state.get(Properties.BED_PART);
             Direction facing = state.get(Properties.HORIZONTAL_FACING);
             Direction dir = part == BedPart.FOOT ? facing : facing.getOpposite();
-            BlockPos otherPos = pos.method_35851(dir);
+            BlockPos otherPos = pos.offset(dir);
             BlockState otherState = world.getBlockState(otherPos);
             if (otherState.getBlock() instanceof BedBlock && otherState.get(Properties.BED_PART) != part) {
                 world.setBlockState(pos, state.with(Properties.OCCUPIED, otherState.get(Properties.OCCUPIED)));
@@ -119,10 +119,10 @@ public class BlockConnectors_1_12_2 {
 
             BlockState state = Blocks.FIRE.getDefaultState();
             state = state.with(Properties.UP, fireBlock.callIsFlammable(world.getBlockState(pos.up())));
-            state = state.with(Properties.NORTH, fireBlock.callIsFlammable(world.getBlockState(pos.method_35861())));
-            state = state.with(Properties.SOUTH, fireBlock.callIsFlammable(world.getBlockState(pos.method_35859())));
-            state = state.with(Properties.WEST, fireBlock.callIsFlammable(world.getBlockState(pos.method_35857())));
-            state = state.with(Properties.EAST, fireBlock.callIsFlammable(world.getBlockState(pos.method_35855())));
+            state = state.with(Properties.NORTH, fireBlock.callIsFlammable(world.getBlockState(pos.north())));
+            state = state.with(Properties.SOUTH, fireBlock.callIsFlammable(world.getBlockState(pos.south())));
+            state = state.with(Properties.WEST, fireBlock.callIsFlammable(world.getBlockState(pos.west())));
+            state = state.with(Properties.EAST, fireBlock.callIsFlammable(world.getBlockState(pos.east())));
             world.setBlockState(pos, state);
         }));
 
@@ -132,7 +132,7 @@ public class BlockConnectors_1_12_2 {
             Direction facing = state.get(Properties.HORIZONTAL_FACING);
 
             // outer shape
-            BlockState back = world.getBlockState(pos.method_35851(facing));
+            BlockState back = world.getBlockState(pos.offset(facing));
             if (StairsBlock.isStairs(back) && state.get(Properties.BLOCK_HALF) == back.get(Properties.BLOCK_HALF)) {
                 Direction backFacing = back.get(Properties.HORIZONTAL_FACING);
                 if (backFacing.getAxis() != state.get(Properties.HORIZONTAL_FACING).getAxis()) {
@@ -149,11 +149,11 @@ public class BlockConnectors_1_12_2 {
             }
 
             // inner shape
-            BlockState front = world.getBlockState(pos.method_35851(facing.getOpposite()));
+            BlockState front = world.getBlockState(pos.offset(facing.getOpposite()));
             if (StairsBlock.isStairs(front) && state.get(Properties.BLOCK_HALF) == front.get(Properties.BLOCK_HALF)) {
                 Direction frontFacing = front.get(Properties.HORIZONTAL_FACING);
                 if (frontFacing.getAxis() != state.get(Properties.HORIZONTAL_FACING).getAxis()) {
-                    BlockState side = world.getBlockState(pos.method_35851(frontFacing));
+                    BlockState side = world.getBlockState(pos.offset(frontFacing));
                     if (!StairsBlock.isStairs(side) || side.get(Properties.HORIZONTAL_FACING) != state.get(Properties.HORIZONTAL_FACING) || side.get(Properties.BLOCK_HALF) != state.get(Properties.BLOCK_HALF)) {
                         if (frontFacing == facing.rotateYCounterclockwise()) {
                             world.setBlockState(pos, state.with(Properties.STAIR_SHAPE, StairShape.INNER_LEFT));
@@ -176,7 +176,7 @@ public class BlockConnectors_1_12_2 {
             BlockState state = world.getBlockState(pos);
             for (Direction dir : Direction.Type.HORIZONTAL) {
                 Property<WireConnection> property = RedstoneWireBlock.DIRECTION_TO_WIRE_CONNECTION_PROPERTY.get(dir);
-                BlockPos offsetPos = pos.method_35851(dir);
+                BlockPos offsetPos = pos.offset(dir);
                 BlockState offsetState = world.getBlockState(offsetPos);
                 if (RedstoneWireBlockAccessor.callConnectsTo(offsetState, dir) || (
                         !IBlockConnectionsBlockView.withNullWorld(offsetState.getBlock(), false, () -> offsetState.isSolidBlock(null, null))
@@ -218,9 +218,9 @@ public class BlockConnectors_1_12_2 {
             BlockState state = world.getBlockState(pos);
             Direction repeaterFacing = state.get(Properties.HORIZONTAL_FACING);
             Direction rightFacing = repeaterFacing.rotateYClockwise();
-            BlockState right = world.getBlockState(pos.method_35851(rightFacing));
+            BlockState right = world.getBlockState(pos.offset(rightFacing));
             Direction leftFacing = repeaterFacing.rotateYCounterclockwise();
-            BlockState left = world.getBlockState(pos.method_35851(leftFacing));
+            BlockState left = world.getBlockState(pos.offset(leftFacing));
 
             boolean locked = false;
             if (right.getBlock() instanceof AbstractRedstoneGateBlock && right.get(Properties.HORIZONTAL_FACING) == leftFacing && right.get(Properties.POWERED)) {
@@ -252,7 +252,7 @@ public class BlockConnectors_1_12_2 {
         BlockConnections.registerConnector(Protocols.V1_12_2, new SimpleNeighborConnector((world, pos) -> {
             BlockState state = world.getBlockState(pos);
             Direction sideDir = state.get(Properties.HORIZONTAL_FACING).rotateYClockwise();
-            boolean inWall = world.getBlockState(pos.method_35851(sideDir)).isIn(BlockTags.WALLS) || world.getBlockState(pos.offset(sideDir, -1)).isIn(BlockTags.WALLS);
+            boolean inWall = world.getBlockState(pos.offset(sideDir)).isIn(BlockTags.WALLS) || world.getBlockState(pos.offset(sideDir, -1)).isIn(BlockTags.WALLS);
             world.setBlockState(pos, state.with(Properties.IN_WALL, inWall));
         }, Blocks.OAK_FENCE_GATE, Blocks.SPRUCE_FENCE_GATE, Blocks.BIRCH_FENCE_GATE, Blocks.JUNGLE_FENCE_GATE, Blocks.DARK_OAK_FENCE_GATE, Blocks.ACACIA_FENCE_GATE));
 
@@ -266,10 +266,10 @@ public class BlockConnectors_1_12_2 {
         BlockConnections.registerConnector(Protocols.V1_12_2, new SimpleNeighborConnector((world, pos) -> {
             BlockState state = world.getBlockState(pos);
             WallBlockAccessor wallBlock = (WallBlockAccessor) state.getBlock();
-            BlockState north = world.getBlockState(pos.method_35861());
-            BlockState south = world.getBlockState(pos.method_35859());
-            BlockState west = world.getBlockState(pos.method_35857());
-            BlockState east = world.getBlockState(pos.method_35855());
+            BlockState north = world.getBlockState(pos.north());
+            BlockState south = world.getBlockState(pos.south());
+            BlockState west = world.getBlockState(pos.west());
+            BlockState east = world.getBlockState(pos.east());
             boolean connectNorth = wallBlock.callShouldConnectTo(north, IBlockConnectionsBlockView.withNullWorld(north.getBlock(), false, () -> north.isSideSolidFullSquare(null, null, Direction.SOUTH)), Direction.SOUTH);
             boolean connectSouth = wallBlock.callShouldConnectTo(south, IBlockConnectionsBlockView.withNullWorld(south.getBlock(), false, () -> south.isSideSolidFullSquare(null, null, Direction.NORTH)), Direction.NORTH);
             boolean connectWest = wallBlock.callShouldConnectTo(west, IBlockConnectionsBlockView.withNullWorld(west.getBlock(), false, () -> west.isSideSolidFullSquare(null, null, Direction.EAST)), Direction.EAST);
@@ -288,7 +288,7 @@ public class BlockConnectors_1_12_2 {
         BlockConnections.registerConnector(Protocols.V1_12_2, new SimpleNeighborConnector(Blocks.CHORUS_PLANT, (world, pos) -> {
             BlockState state = world.getBlockState(pos);
             for (Direction dir : Direction.values()) {
-                BlockState offsetState = world.getBlockState(pos.method_35851(dir));
+                BlockState offsetState = world.getBlockState(pos.offset(dir));
                 boolean canConnect = offsetState.getBlock() == Blocks.CHORUS_PLANT || offsetState.getBlock() == Blocks.CHORUS_FLOWER || (dir == Direction.DOWN && offsetState.getBlock() == Blocks.END_STONE);
                 state = state.with(ConnectingBlock.FACING_PROPERTIES.get(dir), canConnect);
             }

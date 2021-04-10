@@ -434,7 +434,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 }
                 byte count = buf.readByte();
                 short meta = buf.readShort();
-                NbtCompound tag = buf.readCompound();
+                NbtCompound tag = buf.readNbt();
                 if (tag == null)
                     tag = new NbtCompound();
                 tag.putShort("Damage", meta);
@@ -522,7 +522,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                             buf.pendingWrite(Short.class, itemId, (Consumer<Short>) buf::writeShort);
                             buf.pendingWrite(Byte.class, count, (Consumer<Byte>) buf::writeByte);
                             buf.pendingWrite(Short.class, () -> (short) meta, (Consumer<Short>) buf::writeShort);
-                            buf.pendingWrite(NbtCompound.class, () -> oldNbt.getSize() == 0 ? null : oldNbt, buf::writeCompound);
+                            buf.pendingWrite(NbtCompound.class, () -> oldNbt.getSize() == 0 ? null : oldNbt, buf::writeNbt);
                         });
                     }
                 });
@@ -674,7 +674,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         remove(packets, CommandSuggestionsS2CPacket.class);
         insertAfter(packets, DifficultyS2CPacket.class, PacketInfo.of(CommandSuggestionsS2CPacket.class, CommandSuggestionsS2CPacket::new));
         remove(packets, CommandTreeS2CPacket.class);
-        remove(packets, TagQueryResponseS2CPacket.class);
+        remove(packets, NbtQueryResponseS2CPacket.class);
         remove(packets, LookAtS2CPacket.class);
         remove(packets, StopSoundS2CPacket.class);
         remove(packets, SynchronizeRecipesS2CPacket.class);
@@ -714,11 +714,11 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             assert connection != null;
             CustomPayloadC2SPacket customPayload = (CustomPayloadC2SPacket) packet;
             String channel;
-            if (customPayload.method_36169().equals(CustomPayloadC2SPacket.BRAND))
+            if (customPayload.getChannel().equals(CustomPayloadC2SPacket.BRAND))
                 channel = "MC|Brand";
             else
-                channel = customPayload.method_36169().toString();
-            connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(channel, customPayload.method_36170()));
+                channel = customPayload.getChannel().toString();
+            connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(channel, customPayload.getData()));
             return false;
         }
         if (packet.getClass() == BookUpdateC2SPacket.class) {

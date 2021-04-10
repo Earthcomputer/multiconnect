@@ -7,7 +7,7 @@ import net.minecraft.network.listener.ClientPlayPacketListener;
 public class UpdateEntityNbtS2CPacket_1_8 implements Packet<ClientPlayPacketListener> {
     public UpdateEntityNbtS2CPacket_1_8(PacketByteBuf buf) {
         buf.readVarInt(); // entity id
-        buf.readCompound(); // nbt
+        buf.readNbt(); // nbt
     }
 
     @Override

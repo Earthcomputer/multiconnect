@@ -94,7 +94,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             int numDimensions = buf.readVarInt();
             Set<RegistryKey<World>> dimensionIds = new HashSet<>(numDimensions);
             for (int i = 0; i < numDimensions; i++) {
-                dimensionIds.add(RegistryKey.of(Registry.DIMENSION, buf.readIdentifier()));
+                dimensionIds.add(RegistryKey.of(Registry.WORLD_KEY, buf.readIdentifier()));
             }
             //noinspection unchecked
             buf.pendingReadCollection((Class<Collection<RegistryKey<World>>>) (Class<?>) Collection.class, (Class<RegistryKey<World>>) (Class<?>) RegistryKey.class, dimensionIds);
@@ -121,7 +121,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             PendingFullChunkData.setPendingFullChunk(new ChunkPos(x, z), fullChunk);
             buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {buf.readVarInt()})); // vertical strip bitmask
             buf.enablePassthroughMode();
-            buf.readCompound(); // heightmaps
+            buf.readNbt(); // heightmaps
             if (fullChunk) {
                 buf.readIntArray(BiomeArray.DEFAULT_LENGTH);
             } else {
@@ -134,7 +134,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             int numBlockEntities = buf.readVarInt();
             List<NbtCompound> blockEntities = new ArrayList<>(numBlockEntities);
             for (int i = 0; i < numBlockEntities; i++) {
-                blockEntities.add(buf.readCompound());
+                blockEntities.add(buf.readNbt());
             }
             //noinspection unchecked
             buf.pendingReadCollection((Class<List<NbtCompound>>) (Class<?>) List.class, NbtCompound.class, blockEntities);
@@ -689,6 +689,10 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(Blocks.DEEPSLATE_EMERALD_ORE);
         registry.unregister(Blocks.INFESTED_DEEPSLATE);
         registry.unregister(Blocks.LIGHT);
+        registry.unregister(Blocks.WAXED_OXIDIZED_COPPER);
+        registry.unregister(Blocks.WAXED_OXIDIZED_CUT_COPPER);
+        registry.unregister(Blocks.WAXED_OXIDIZED_CUT_COPPER_SLAB);
+        registry.unregister(Blocks.WAXED_OXIDIZED_CUT_COPPER_STAIRS);
     }
 
     private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
@@ -765,6 +769,9 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(Items.TARGET);
         registry.unregister(Items.SLIME_BLOCK);
         registry.unregister(Items.HONEY_BLOCK);
+        registry.unregister(Items.RAW_IRON);
+        registry.unregister(Items.RAW_GOLD);
+        registry.unregister(Items.RAW_COPPER);
         insertAfter(registry, Items.LAPIS_BLOCK, Items.DISPENSER, "dispenser");
         insertAfter(registry, Items.CUT_SANDSTONE, Items.NOTE_BLOCK, "note_block");
         insertAfter(registry, Items.DETECTOR_RAIL, Items.STICKY_PISTON, "sticky_piston");

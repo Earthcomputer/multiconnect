@@ -29,7 +29,7 @@ public class MixinBlockItem {
                 BlockPos pos = context.getBlockPos();
                 boolean foundAdjChest = false;
                 for (Direction dir : Direction.Type.HORIZONTAL) {
-                    BlockState otherState = world.getBlockState(pos.method_35851(dir));
+                    BlockState otherState = world.getBlockState(pos.offset(dir));
                     if (otherState.getBlock() == block) {
                         if (foundAdjChest) {
                             ci.setReturnValue(false);
