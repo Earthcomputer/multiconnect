@@ -23,7 +23,7 @@ public class MixinBlockEntityUpdateS2C {
 
     @Shadow @Final private int blockEntityType;
 
-    @Shadow @Final @Mutable private NbtCompound tag;
+    @Shadow @Final @Mutable private NbtCompound nbt;
 
     @Inject(method = "<init>(Lnet/minecraft/network/PacketByteBuf;)V", at = @At("RETURN"))
     private void onRead(CallbackInfo ci) {
@@ -46,8 +46,8 @@ public class MixinBlockEntityUpdateS2C {
         }
         if (!MultiConnectAPI.instance().doesServerKnow(Registry.BLOCK_ENTITY_TYPE, type)) return;
 
-        tag.putString("id", ConnectionInfo.protocolVersion <= Protocols.V1_10 ? Protocol_1_10.getBlockEntityId(type) : String.valueOf(Registry.BLOCK_ENTITY_TYPE.getId(type)));
-        tag = Utils.datafix(TypeReferences.BLOCK_ENTITY, tag);
+        nbt.putString("id", ConnectionInfo.protocolVersion <= Protocols.V1_10 ? Protocol_1_10.getBlockEntityId(type) : String.valueOf(Registry.BLOCK_ENTITY_TYPE.getId(type)));
+        nbt = Utils.datafix(TypeReferences.BLOCK_ENTITY, nbt);
     }
 
 }

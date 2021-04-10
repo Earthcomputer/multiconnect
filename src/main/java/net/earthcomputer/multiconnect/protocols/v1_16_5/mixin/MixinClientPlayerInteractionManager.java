@@ -56,7 +56,7 @@ public class MixinClientPlayerInteractionManager {
             packet = new ClickSlotC2SPacket_1_16_5(
                     clickSlot.getSyncId(),
                     clickSlot.getSlot(),
-                    clickSlot.getClickData(),
+                    clickSlot.getButton(),
                     clickSlot.getActionType(),
                     slotItemBeforeModification,
                     Protocol_1_16_5.nextScreenActionId()

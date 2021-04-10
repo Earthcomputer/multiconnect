@@ -516,8 +516,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public NbtCompound readCompound() {
-        return read(NbtCompound.class, super::readCompound);
+    public NbtCompound readNbt() {
+        return read(NbtCompound.class, super::readNbt);
     }
 
     @Override
@@ -1075,8 +1075,8 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @Override
-    public PacketByteBuf writeCompound(NbtCompound val) {
-        return write(NbtCompound.class, val, super::writeCompound);
+    public PacketByteBuf writeNbt(NbtCompound val) {
+        return write(NbtCompound.class, val, super::writeNbt);
     }
 
     @Override
