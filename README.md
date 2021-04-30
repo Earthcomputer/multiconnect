@@ -42,21 +42,13 @@ bridges.
 
 ## Installation for Mod Developers
 This section is for when you are developing your own mod and want to use the multiconnect API, or run multiconnect alongside your mod in the IDE. Aside from the first step, you ONLY need to follow the steps applicable to you and your mod.
-1. Add a `repositores {}` block in your `build.gradle` (if there isn't already one), and add Earthcomputer's Bintray mods repository:
-   ```groovy
-   repositories {
-      maven {
-         url 'https://dl.bintray.com/earthcomputer/mods'
-      }
-   }
-   ```
-   - Note: this repositories block is NOT the same as the one inside the `buildscript {}` block.
+1. Explicitly setting a repository is not necessary, as multiconnect is hosted on Maven Central.
 1. If you want to use the API inside your mod, you will have to jar-in-jar it for the release and add it to the classpath. To do this, add the following to your `dependencies {}` block:
    ```groovy
    dependencies {
       // ...
-      modImplementation 'net.earthcomputer:multiconnect:<version>:api'
-      include 'net.earthcomputer:multiconnect:<version>:api'
+      modImplementation 'net.earthcomputer.multiconnect:multiconnect-api:<version>'
+      include 'net.earthcomputer.multiconnect:multiconnect-api:<version>'
    }
    ```
    - Note: replace `<version>` with the version of multiconnect you want to depend on.
@@ -65,7 +57,7 @@ This section is for when you are developing your own mod and want to use the mul
    ```groovy
    dependencies {
       // ...
-      modRuntime 'net.earthcomputer:multiconnect:<version>:slim'
+      modRuntime 'net.earthcomputer.multiconnect:multiconnect-slim:<version>'
    }
    ```
    - Note: the previous step should also be done alongside this step.
