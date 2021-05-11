@@ -139,8 +139,10 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
         } else {
             String property = builder.getInput().substring(builder.getStart(), builder.getStart() + equalsIndex - commaIndex - 1);
             List<String> values = BlockStateReverseFlattening.OLD_PROPERTY_VALUES.get(Pair.of(blockId, property));
-            builder = builder.createOffset(builder.getStart() + equalsIndex - commaIndex);
-            CommandSource.suggestMatching(values, builder);
+            if (values != null) {
+                builder = builder.createOffset(builder.getStart() + equalsIndex - commaIndex);
+                CommandSource.suggestMatching(values, builder);
+            }
         }
 
         return builder.buildFuture();
