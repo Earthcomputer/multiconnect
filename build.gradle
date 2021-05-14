@@ -5,6 +5,7 @@ plugins {
 	id 'fabric-loom' version '0.6-SNAPSHOT'
 	id 'musical-code' version '1.2'
 	id 'maven-publish'
+	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
 	id 'com.github.breadmoirai.github-release' version '2.2.10'
 }
@@ -53,6 +54,11 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 	from sourceSets.main.allSource
 }
 
+task javadocJar(type: Jar, dependsOn: classes) {
+	archiveClassifier = "javadoc"
+
+}
+
 task apiJar(type: Jar, dependsOn: apiClasses) {
 	archiveClassifier = 'api-dev'
 	from (sourceSets.api.output) {
@@ -63,6 +69,20 @@ task apiJar(type: Jar, dependsOn: apiClasses) {
 		exclude "fabric.mod.json"
 	}
 	from 'LICENSE'
+}
+
+task apiSourcesJar(type: Jar, dependsOn: apiClasses) {
+	archiveClassifier = 'api-sources'
+	from sourceSets.api.allSource
+}
+
+task apiJavadoc(type: Javadoc) {
+	source = sourceSets.api.allJava
+}
+
+task apiJavadocJar(type: Jar) {
+	archiveClassifier = 'api-javadoc'
+	from apiJavadoc
 }
 
 task remapApiJar(type: RemapJarTask, dependsOn: project.apiJar) {
@@ -152,36 +172,105 @@ changes = changes.exists() ? changes.getText('UTF-8') : ''
 
 // configure the maven publication
 publishing {
+	repositories {
+		maven {
+			name = 'nexus'
+			url = isBeta ? 'https://s01.oss.sonatype.org/content/repositories/snapshots/' : 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+			credentials {
+				username(project.ext.credentials == null ? 'foo' : project.ext.credentials['ossrhUser'])
+				password(project.ext.credentials == null ? 'bar' : project.ext.credentials['ossrhPass'])
+			}
+		}
+		// mavenLocal()
+	}
+
 	publications {
-		mavenJava(MavenPublication) {
-			// add all the jars that should be included when publishing to maven
+		def configurePom = {
+			packaging 'jar'
+			inceptionYear = '2019'
+			licenses {
+				license {
+					name = 'MIT'
+					url = 'https://github.com/Earthcomputer/multiconnect/blob/master/LICENSE'
+				}
+			}
+			url = 'https://github.com/Earthcomputer/multiconnect'
+			issueManagement {
+				url = 'https://github.com/Earthcomputer/multiconnect/issues'
+			}
+			scm {
+				connection = 'scm:git:https://github.com/Earthcomputer/multiconnect'
+				developerConnection = 'scm:git:https://github.com/Earthcomputer/multiconnect'
+				url = 'https://github.com/Earthcomputer/multiconnect'
+			}
+			developers {
+				developer {
+					name = 'Joseph Burton'
+					id = 'Earthcomputer'
+					email = 'burtonjae@hotmail.co.uk'
+					roles = ['Main Developer']
+				}
+			}
+		}
+
+		mod(MavenPublication) {
+			artifactId 'multiconnect'
 			artifact(remapJar) {
 				builtBy remapJar
 			}
 			artifact(sourcesJar) {
-				builtBy remapSourcesJar
+				builtBy sourcesJar
 			}
+			artifact(javadocJar) {
+				builtBy javadocJar
+			}
+			pom configurePom
+			pom.name = 'multiconnect'
+			pom.description = 'The full multiconnect mod JAR'
+		}
+		api(MavenPublication) {
+			artifactId 'multiconnect-api'
 			artifact(remapApiJar) {
 				builtBy remapApiJar
+				classifier = ''
 			}
+			artifact(apiSourcesJar) {
+				builtBy apiSourcesJar
+				classifier = 'sources'
+			}
+			artifact(apiJavadocJar) {
+				builtBy apiJavadocJar
+				classifier = 'javadoc'
+			}
+			pom configurePom
+			pom.name = 'multiconnect-api'
+			pom.description = 'The multiconnect API'
+		}
+		slim(MavenPublication) {
+			artifactId 'multiconnect-slim'
 			artifact(remapSlimJar) {
 				builtBy remapSlimJar
+				classifier = ''
 			}
+			artifact(sourcesJar) {
+				builtBy sourcesJar
+				classifier = 'sources'
+			}
+			artifact(javadocJar) {
+				builtBy javadocJar
+				classifier = 'javadoc'
+			}
+			pom configurePom
+			pom.name = 'multiconnect-slim'
+			pom.description = 'The multiconnect mod JAR without the API'
 		}
 	}
+}
 
-	// select the repositories you want to publish to
-	repositories {
-		maven {
-			url 'https://api.bintray.com/maven/earthcomputer/mods/multiconnect/'
-			credentials {
-				username = project.ext.credentials == null ? 'foo' : project.ext.credentials['bintrayUser']
-				password = project.ext.credentials == null ? 'bar' : project.ext.credentials['bintrayPass']
-			}
-		}
-		// uncomment to publish to the local maven
-		// mavenLocal()
-	}
+signing {
+	sign publishing.publications.mod
+	sign publishing.publications.api
+	sign publishing.publications.slim
 }
 
 curseforge {
