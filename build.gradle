@@ -158,11 +158,6 @@ test {
 	workingDir 'run'
 }
 
-project.ext.credentials = new Properties()
-try {
-	project.ext.credentials.load(new FileReader(file('credentials.properties')))
-} catch (IOException ignore) {
-}
 def isBeta = version.contains 'pre'
 def changes = file('changelog.txt')
 changes = changes.exists() ? changes.getText('UTF-8') : ''
@@ -174,8 +169,8 @@ publishing {
 			name = 'nexus'
 			url = isBeta ? 'https://s01.oss.sonatype.org/content/repositories/snapshots/' : 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
 			credentials {
-				username(project.ext.credentials == null ? 'foo' : project.ext.credentials['ossrhUser'])
-				password(project.ext.credentials == null ? 'bar' : project.ext.credentials['ossrhPass'])
+				username(project.hasProperty('ossrhUser') ? ossrhUser : 'foo')
+				password(project.hasProperty('ossrhPass') ? ossrhPass : 'bar')
 			}
 		}
 		// mavenLocal()
@@ -272,7 +267,7 @@ signing {
 
 curseforge {
 	project {
-		apiKey = project.ext.credentials == null ? 'baz' :  project.ext.credentials['curseForgeKey']
+		apiKey = project.hasProperty('curseForgeKey') ? curseForgeKey : 'baz'
 		id = '336018'
 		changelog = changes
 		releaseType = isBeta ? 'beta' : 'release'
@@ -291,7 +286,7 @@ curseforge {
 }
 
 githubRelease {
-	token(project.ext.credentials == null ? 'derp' : project.ext.credentials['githubKey'].toString())
+	token(project.hasProperty('githubKey') ? githubKey.toString() : 'derp')
 	owner 'Earthcomputer'
 	repo 'multiconnect'
 	tagName("v$version")
