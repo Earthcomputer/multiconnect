@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_12;
 
 import net.minecraft.client.gui.screen.recipebook.RecipeBookGhostSlots;
 import net.minecraft.client.recipebook.ClientRecipeBook;
-import net.minecraft.recipe.RecipeFinder;
+import net.minecraft.recipe.RecipeMatcher;
 
 public interface IRecipeBookWidget {
 
@@ -12,6 +12,6 @@ public interface IRecipeBookWidget {
 
     ClientRecipeBook getRecipeBook();
 
-    RecipeFinder getRecipeFinder();
+    RecipeMatcher getRecipeFinder();
 
 }

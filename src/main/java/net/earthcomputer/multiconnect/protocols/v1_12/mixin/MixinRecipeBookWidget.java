@@ -12,7 +12,7 @@ import net.minecraft.client.gui.screen.recipebook.RecipeResultCollection;
 import net.minecraft.client.recipebook.ClientRecipeBook;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeFinder;
+import net.minecraft.recipe.RecipeMatcher;
 import net.minecraft.screen.AbstractRecipeScreenHandler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -73,5 +73,5 @@ public abstract class MixinRecipeBookWidget implements IRecipeBookWidget {
 
     @Accessor
     @Override
-    public abstract RecipeFinder getRecipeFinder();
+    public abstract RecipeMatcher getRecipeFinder();
 }

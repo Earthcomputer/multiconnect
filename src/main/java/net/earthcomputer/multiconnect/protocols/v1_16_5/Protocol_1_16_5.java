@@ -197,6 +197,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             buf.readString(40); // hash
             buf.disablePassthroughMode();
             buf.pendingRead(Boolean.class, false); // required
+            buf.pendingRead(Boolean.class, false); // has prompt
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(PlayerSpawnPositionS2CPacket.class, buf -> {
@@ -468,6 +469,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
     }
 
     private static void translateDimensionType(TransformerByteBuf buf) {
+        // TODO: move between the 1.17 and 1.18 protocol when 1.18 changes the world height
         Codecked<Supplier<DimensionType>> dimensionTypeCodecked = Utils.translateDimensionType(buf);
         if (dimensionTypeCodecked != null) {
             Supplier<DimensionType> oldSupplier = dimensionTypeCodecked.getValue();
@@ -693,6 +695,9 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(Blocks.WAXED_OXIDIZED_CUT_COPPER);
         registry.unregister(Blocks.WAXED_OXIDIZED_CUT_COPPER_SLAB);
         registry.unregister(Blocks.WAXED_OXIDIZED_CUT_COPPER_STAIRS);
+        registry.unregister(Blocks.RAW_COPPER_BLOCK);
+        registry.unregister(Blocks.RAW_GOLD_BLOCK);
+        registry.unregister(Blocks.RAW_IRON_BLOCK);
     }
 
     private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
@@ -772,6 +777,18 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(Items.RAW_IRON);
         registry.unregister(Items.RAW_GOLD);
         registry.unregister(Items.RAW_COPPER);
+        registry.unregister(Items.GOLD_ORE);
+        registry.unregister(Items.COAL_ORE);
+        registry.unregister(Items.LAPIS_ORE);
+        registry.unregister(Items.GOLD_BLOCK);
+        registry.unregister(Items.IRON_BLOCK);
+        registry.unregister(Items.DIAMOND_ORE);
+        registry.unregister(Items.DIAMOND_BLOCK);
+        registry.unregister(Items.REDSTONE_ORE);
+        registry.unregister(Items.EMERALD_ORE);
+        registry.unregister(Items.NETHER_QUARTZ_ORE);
+        registry.unregister(Items.COAL_BLOCK);
+        registry.unregister(Items.NETHERITE_BLOCK);
         insertAfter(registry, Items.LAPIS_BLOCK, Items.DISPENSER, "dispenser");
         insertAfter(registry, Items.CUT_SANDSTONE, Items.NOTE_BLOCK, "note_block");
         insertAfter(registry, Items.DETECTOR_RAIL, Items.STICKY_PISTON, "sticky_piston");
@@ -788,6 +805,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         insertAfter(registry, Items.DARK_OAK_PRESSURE_PLATE, Items.CRIMSON_PRESSURE_PLATE, "crimson_pressure_plate");
         insertAfter(registry, Items.CRIMSON_PRESSURE_PLATE, Items.WARPED_PRESSURE_PLATE, "warped_pressure_plate");
         insertAfter(registry, Items.WARPED_PRESSURE_PLATE, Items.POLISHED_BLACKSTONE_PRESSURE_PLATE, "polished_blackstone_pressure_plate");
+        insertAfter(registry, Items.POLISHED_BLACKSTONE_PRESSURE_PLATE, Items.REDSTONE_ORE, "redstone_ore");
         insertAfter(registry, Items.REDSTONE_ORE, Items.REDSTONE_TORCH, "redstone_torch");
         insertAfter(registry, Items.JACK_O_LANTERN, Items.OAK_TRAPDOOR, "oak_trapdoor");
         insertAfter(registry, Items.OAK_TRAPDOOR, Items.SPRUCE_TRAPDOOR, "spruce_trapdoor");
@@ -822,6 +840,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         insertAfter(registry, Items.LIGHT_WEIGHTED_PRESSURE_PLATE, Items.HEAVY_WEIGHTED_PRESSURE_PLATE, "heavy_weighted_pressure_plate");
         insertAfter(registry, Items.HEAVY_WEIGHTED_PRESSURE_PLATE, Items.DAYLIGHT_DETECTOR, "daylight_detector");
         insertAfter(registry, Items.DAYLIGHT_DETECTOR, Items.REDSTONE_BLOCK, "redstone_block");
+        insertAfter(registry, Items.REDSTONE_BLOCK, Items.NETHER_QUARTZ_ORE, "nether_quartz_ore");
         insertAfter(registry, Items.NETHER_QUARTZ_ORE, Items.HOPPER, "hopper");
         insertAfter(registry, Items.ACTIVATOR_RAIL, Items.DROPPER, "dropper");
         insertAfter(registry, Items.BARRIER, Items.IRON_TRAPDOOR, "iron_trapdoor");
@@ -833,6 +852,16 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         insertAfter(registry, Items.ANCIENT_DEBRIS, Items.TARGET, "target");
         insertAfter(registry, Items.DARK_OAK_STAIRS, Items.SLIME_BLOCK, "slime_block");
         insertAfter(registry, Items.HONEY_BOTTLE, Items.HONEY_BLOCK, "honey_block");
+        insertAfter(registry, Items.GRAVEL, Items.GOLD_ORE, "gold_ore");
+        insertAfter(registry, Items.IRON_ORE, Items.COAL_ORE, "coal_ore");
+        insertAfter(registry, Items.GLASS, Items.LAPIS_ORE, "lapis_ore");
+        insertAfter(registry, Items.BAMBOO, Items.GOLD_BLOCK, "gold_block");
+        insertAfter(registry, Items.GOLD_BLOCK, Items.IRON_BLOCK, "iron_block");
+        insertAfter(registry, Items.CHEST, Items.DIAMOND_ORE, "diamond_ore");
+        insertAfter(registry, Items.DIAMOND_ORE, Items.DIAMOND_BLOCK, "diamond_block");
+        insertAfter(registry, Items.SANDSTONE_STAIRS, Items.EMERALD_ORE, "emerald_ore");
+        insertAfter(registry, Items.TERRACOTTA, Items.COAL_BLOCK, "coal_block");
+        insertAfter(registry, Items.LODESTONE, Items.NETHERITE_BLOCK, "netherite_block");
     }
 
     private void mutateEntityRegistry(ISimpleRegistry<EntityType<?>> registry) {
@@ -840,6 +869,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(EntityType.GLOW_ITEM_FRAME);
         registry.unregister(EntityType.GLOW_SQUID);
         registry.unregister(EntityType.GOAT);
+        registry.unregister(EntityType.MARKER);
     }
 
     private void mutateBlockEntityRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
@@ -1056,8 +1086,15 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_DEATH);
         registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_HURT);
         registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_MILK);
-        registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_RAM);
         registry.unregister(SoundEvents.ENTITY_GOAT_STEP);
+        registry.unregister(SoundEvents.ENTITY_GOAT_EAT);
+        registry.unregister(SoundEvents.ENTITY_GOAT_LONG_JUMP);
+        registry.unregister(SoundEvents.ENTITY_GOAT_RAM_IMPACT);
+        registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_EAT);
+        registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_LONG_JUMP);
+        registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_PREPARE_RAM);
+        registry.unregister(SoundEvents.ENTITY_GOAT_SCREAMING_RAM_IMPACT);
+        registry.unregister(SoundEvents.ITEM_BONE_MEAL_USE);
     }
 
     @Override

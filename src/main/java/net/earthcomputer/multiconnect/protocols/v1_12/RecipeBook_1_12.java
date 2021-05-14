@@ -13,7 +13,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeFinder;
+import net.minecraft.recipe.RecipeMatcher;
 import net.minecraft.recipe.ShapedRecipe;
 import net.minecraft.screen.AbstractRecipeScreenHandler;
 import net.minecraft.screen.slot.Slot;
@@ -77,7 +77,7 @@ public class RecipeBook_1_12<C extends Inventory> {
         assert mc.getNetworkHandler() != null;
 
         boolean alreadyPlaced = container.matches(recipe);
-        int possibleCraftCount = iRecipeBookWidget.getRecipeFinder().countRecipeCrafts(recipe, null);
+        int possibleCraftCount = iRecipeBookWidget.getRecipeFinder().countCrafts(recipe, null);
 
         if (alreadyPlaced) {
             // check each item in the input to see if we're already at the max crafts possible
@@ -102,19 +102,19 @@ public class RecipeBook_1_12<C extends Inventory> {
         int craftCount = calcCraftCount(possibleCraftCount, alreadyPlaced);
 
         IntList inputItemIds = new IntArrayList();
-        if (iRecipeBookWidget.getRecipeFinder().findRecipe(recipe, inputItemIds, craftCount)) {
+        if (iRecipeBookWidget.getRecipeFinder().match(recipe, inputItemIds, craftCount)) {
             // take into account max stack sizes now we've found the actual inputs
             int actualCount = craftCount;
 
             for (int itemId : inputItemIds) {
-                int maxCount = RecipeFinder.getStackFromId(itemId).getMaxCount();
+                int maxCount = RecipeMatcher.getStackFromId(itemId).getMaxCount();
 
                 if (actualCount > maxCount) {
                     actualCount = maxCount;
                 }
             }
 
-            if (iRecipeBookWidget.getRecipeFinder().findRecipe(recipe, inputItemIds, actualCount)) {
+            if (iRecipeBookWidget.getRecipeFinder().match(recipe, inputItemIds, actualCount)) {
                 // clear the craft matrix and place the recipe
                 List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsFromMatrix = clearCraftMatrix();
                 List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsToMatrix = new ArrayList<>();
@@ -226,7 +226,7 @@ public class RecipeBook_1_12<C extends Inventory> {
 
                 Slot slot = slots.get(serverSlot);
 
-                ItemStack stackNeeded = RecipeFinder.getStackFromId(inputItemItr.next());
+                ItemStack stackNeeded = RecipeMatcher.getStackFromId(inputItemItr.next());
                 if (!stackNeeded.isEmpty()) {
                     for (int i = 0; i < placeCount; i++) {
                         PlaceRecipeC2SPacket_1_12.Transaction transaction = findAndMoveToCraftMatrix(serverSlot, slot, stackNeeded);
