@@ -2,8 +2,7 @@
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
-	id 'fabric-loom' version '0.6-SNAPSHOT'
-	id 'musical-code' version '1.2'
+	id 'fabric-loom' version '0.7-SNAPSHOT'
 	id 'maven-publish'
 	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
@@ -22,7 +21,12 @@ sourceSets {
 	tools
 }
 
+compileApiJava.dependsOn processApiResources // wtf gradle
+
+sourceSets.main.resources.srcDirs.each { println it }
+
 processResources {
+	duplicatesStrategy = DuplicatesStrategy.WARN
 	inputs.property "version", project.version
 
 	from(sourceSets.main.resources.srcDirs) {
@@ -33,10 +37,6 @@ processResources {
 	from(sourceSets.main.resources.srcDirs) {
 		exclude "fabric.mod.json"
 	}
-}
-
-musicalCode {
-	config 'musical-config.txt'
 }
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
@@ -122,7 +122,7 @@ dependencies {
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modCompileOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	modRuntime "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
-	testCompile "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
+	testImplementation "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 
 	if (true) {
@@ -142,13 +142,13 @@ dependencies {
 		}
 	}
 
-	compile sourceSets.api.output
+	implementation sourceSets.api.output
 	include name: file(remapApiJar.archivePath).name.with { it.endsWith('.jar') ? it.substring(0, it.length() - 4) : it }
 
 	sourceSets.test.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
-	testCompile 'org.junit.jupiter:junit-jupiter-api:5.5.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
 	testRuntimeOnly 'com.github.Earthcomputer.junit5:junit-jupiter-engine:8785ac4d'
-	testCompile 'org.mockito:mockito-all:1.10.19'
+	testImplementation 'org.mockito:mockito-all:1.10.19'
 
 	sourceSets.tools.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 	sourceSets.tools.runtimeClasspath += files({sourceSets.main.runtimeClasspath.toList()})
