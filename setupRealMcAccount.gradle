@@ -1,7 +1,8 @@
 /**
  * To use your real account in the IDE, do the following:
- * - Create a credentials.properties file in the root project directory if it doesn't already exist (it is ignored by the gitignore)
- * - Insert minecraftUser=youremail@example.com and minecraftPass=yourminecraftpassword into the credentials file
+ * - Create a gradle.properties file in ~/.gradle if there isn't one already
+ *   - ~ is your home directory, which is %userprofile% on Windows and ~ on Linux
+ * - Insert minecraftUser=youremail@example.com and minecraftPass=yourminecraftpassword into that file
  * - Duplicate the Minecraft Client run configuration in your IDE. Configure it to run the setupRealMcAccount gradle task after build but before run
  */
 
@@ -25,8 +26,8 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 task setupRealMcAccount {
     group = 'ide'
     doLast {
-        def username = project.ext.credentials['minecraftUser']
-        def password = project.ext.credentials['minecraftPass']
+        def username = minecraftUser
+        def password = minecraftPass
         def auth = new YggdrasilAuthenticationService(Proxy.NO_PROXY, '1').createUserAuthentication(Agent.MINECRAFT)
         auth.username = username
         auth.password = password
