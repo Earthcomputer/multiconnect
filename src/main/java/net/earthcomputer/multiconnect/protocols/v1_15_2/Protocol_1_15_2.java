@@ -114,8 +114,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             if (heightmaps != null) {
                 for (String key : heightmaps.getKeys()) {
                     NbtElement nbt = heightmaps.get(key);
-                    if (nbt instanceof NbtLongArray) {
-                        heightmaps.putLongArray(key, BitStorageAlignFix.resizePackedIntArray(256, 9, ((NbtLongArray) nbt).getLongArray()));
+                    if (nbt instanceof NbtLongArray nbtLongArray) {
+                        heightmaps.putLongArray(key, BitStorageAlignFix.resizePackedIntArray(256, 9, nbtLongArray.getLongArray()));
                     }
                 }
             }
@@ -998,8 +998,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         if (clazz == TameableEntity.class && data == TameableEntityAccessor.getTameableFlags()) {
             DataTrackerManager.registerOldTrackedData(TameableEntity.class, OLD_TAMEABLE_FLAGS, (byte)0, (entity, val) -> {
                 byte newVal = val;
-                if (entity instanceof WolfEntity) {
-                    ((WolfEntity) entity).setAngerTime((newVal & 2) != 0 ? 400 : 0);
+                if (entity instanceof WolfEntity wolf) {
+                    wolf.setAngerTime((newVal & 2) != 0 ? 400 : 0);
                     newVal = (byte) (newVal & ~2);
                 }
                 entity.getDataTracker().set(TameableEntityAccessor.getTameableFlags(), newVal);

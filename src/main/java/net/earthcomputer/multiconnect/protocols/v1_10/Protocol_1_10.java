@@ -448,8 +448,8 @@ public class Protocol_1_10 extends Protocol_1_11 {
             DataTrackerManager.registerOldTrackedData(HorseBaseEntity.class, OLD_HORSE_FLAGS, (byte)0, (entity, val) -> {
                 // keep the bottom 3 flags, skip the 4th and shift the higher ones down
                 entity.getDataTracker().set(HorseBaseEntityAccessor.getHorseFlags(), (byte) ((val & 7) | ((val & ~15) >>> 1)));
-                if (entity instanceof AbstractDonkeyEntity) {
-                    ((AbstractDonkeyEntity) entity).setHasChest((val & 8) != 0);
+                if (entity instanceof AbstractDonkeyEntity donkey) {
+                    donkey.setHasChest((val & 8) != 0);
                 }
             });
             DataTrackerManager.registerOldTrackedData(HorseBaseEntity.class, OLD_HORSE_TYPE, 0, (entity, val) -> {

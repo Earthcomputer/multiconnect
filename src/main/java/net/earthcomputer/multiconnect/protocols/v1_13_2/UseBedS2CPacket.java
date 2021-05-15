@@ -30,8 +30,8 @@ public class UseBedS2CPacket implements Packet<ClientPlayNetworkHandler> {
         ClientWorld world = MinecraftClient.getInstance().world;
         assert world != null;
         Entity entity = world.getEntityById(playerId);
-        if (entity instanceof PlayerEntity) {
-            ((PlayerEntity) entity).trySleep(bedPos);
+        if (entity instanceof PlayerEntity player) {
+            player.trySleep(bedPos);
         }
     }
 }

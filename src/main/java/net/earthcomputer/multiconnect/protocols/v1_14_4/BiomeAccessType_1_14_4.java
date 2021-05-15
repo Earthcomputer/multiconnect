@@ -14,8 +14,8 @@ public final class BiomeAccessType_1_14_4 implements BiomeAccessType {
     @Override
     public Biome getBiome(long seed, int x, int y, int z, BiomeAccess.Storage storage) {
         Biome biome = null;
-        if (storage instanceof IBiomeStorage_1_14_4) {
-            biome = ((IBiomeStorage_1_14_4) storage).multiconnect_getBiome_1_14_4(x, z);
+        if (storage instanceof IBiomeStorage_1_14_4 storage114) {
+            biome = storage114.multiconnect_getBiome_1_14_4(x, z);
         }
         if (biome == null) {
             return BuiltinBiomes.PLAINS;

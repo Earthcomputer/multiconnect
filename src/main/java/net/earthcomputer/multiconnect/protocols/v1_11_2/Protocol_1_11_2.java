@@ -95,27 +95,26 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
 
     @Override
     public boolean onSendPacket(Packet<?> packet) {
-        if (packet instanceof PlaceRecipeC2SPacket_1_12) {
+        if (packet instanceof PlaceRecipeC2SPacket_1_12 recipePlacement) {
             PlayerEntity player = MinecraftClient.getInstance().player;
             assert player != null;
             RecipeBookEmulator recipeBookEmulator = ((IScreenHandler) player.currentScreenHandler).multiconnect_getRecipeBookEmulator();
-            recipeBookEmulator.emulateRecipePlacement((PlaceRecipeC2SPacket_1_12) packet);
+            recipeBookEmulator.emulateRecipePlacement(recipePlacement);
             return false;
         }
         if (packet instanceof RecipeBookDataC2SPacket_1_16_1) {
             return false;
         }
-        if (packet instanceof AdvancementTabC2SPacket) {
-            AdvancementTabC2SPacket advancementTabPacket = (AdvancementTabC2SPacket) packet;
+        if (packet instanceof AdvancementTabC2SPacket advancementTabPacket) {
             if (advancementTabPacket.getAction() == AdvancementTabC2SPacket.Action.OPENED_TAB) {
                 assert MinecraftClient.getInstance().getNetworkHandler() != null;
                 MinecraftClient.getInstance().getNetworkHandler().onSelectAdvancementTab(new SelectAdvancementTabS2CPacket(advancementTabPacket.getTabToOpen()));
             }
             return false;
         }
-        if (packet instanceof ClientStatusC2SPacket) {
+        if (packet instanceof ClientStatusC2SPacket clientStatus) {
             assert MinecraftClient.getInstance().getNetworkHandler() != null;
-            MinecraftClient.getInstance().getNetworkHandler().sendPacket(new ClientStatusC2SPacket_1_11_2((ClientStatusC2SPacket) packet));
+            MinecraftClient.getInstance().getNetworkHandler().sendPacket(new ClientStatusC2SPacket_1_11_2(clientStatus));
             return false;
         }
         return super.onSendPacket(packet);

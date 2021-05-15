@@ -207,8 +207,7 @@ public class RecipeBook_1_12<C extends Inventory> {
         int width = container.getCraftingWidth();
         int height = container.getCraftingHeight();
 
-        if (recipe instanceof ShapedRecipe) {
-            ShapedRecipe shaped = (ShapedRecipe) recipe;
+        if (recipe instanceof ShapedRecipe shaped) {
             width = shaped.getWidth();
             height = shaped.getHeight();
         }

@@ -59,8 +59,8 @@ public class AddBannerPatternRecipe extends SpecialCraftingRecipe {
             DyeColor color = ConnectionInfo.protocolVersion <= Protocols.V1_12_2 ? DyeColor.BLACK : DyeColor.WHITE;
             for (int i = 0; i < inv.size(); i++) {
                 Item item = inv.getStack(i).getItem();
-                if (item instanceof DyeItem) {
-                    color = ((DyeItem) item).getColor();
+                if (item instanceof DyeItem dyeItem) {
+                    color = dyeItem.getColor();
                 }
             }
 
