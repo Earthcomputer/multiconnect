@@ -370,15 +370,6 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             }
             buf.applyPendingReads();
         });
-        ProtocolRegistry.registerInboundTranslator(EntitiesDestroyS2CPacket.class, buf -> {
-            int numEntities = buf.readVarInt();
-            IntList entities = new IntArrayList(numEntities);
-            for (int i = 0; i < numEntities; i++) {
-                entities.add(buf.readVarInt());
-            }
-            buf.pendingRead(IntList.class, entities);
-            buf.applyPendingReads();
-        });
         ProtocolRegistry.registerInboundTranslator(TeamS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readString(16); // name
@@ -527,6 +518,8 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         remove(packets, TitleS2CPacket.class);
         remove(packets, TitleFadeS2CPacket.class);
         insertAfter(packets, CommandTreeS2CPacket.class, PacketInfo.of(AckScreenActionS2CPacket_1_16_5.class, AckScreenActionS2CPacket_1_16_5::new));
+        insertAfter(packets, EntityDestroyS2CPacket.class, PacketInfo.of(EntitiesDestroyS2CPacket_1_16_5.class, EntitiesDestroyS2CPacket_1_16_5::new));
+        remove(packets, EntityDestroyS2CPacket.class);
         return packets;
     }
 
@@ -1156,6 +1149,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         tags.add(BlockTags.DEEPSLATE_ORE_REPLACEABLES);
         tags.add(BlockTags.DIRT, Blocks.DIRT, Blocks.GRASS_BLOCK, Blocks.PODZOL, Blocks.COARSE_DIRT, Blocks.MYCELIUM);
         tags.add(BlockTags.SNOW, Blocks.SNOW, Blocks.SNOW_BLOCK);
+        tags.add(BlockTags.SMALL_DRIPLEAF_PLACEABLE, Blocks.CLAY);
         super.addExtraBlockTags(tags);
     }
 
@@ -1185,7 +1179,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         tags.add(EntityTypeTags.AXOLOTL_HUNT_TARGETS, EntityType.TROPICAL_FISH, EntityType.PUFFERFISH, EntityType.SALMON, EntityType.COD, EntityType.SQUID, EntityType.GLOW_SQUID);
         tags.add(EntityTypeTags.AXOLOTL_ALWAYS_HOSTILES, EntityType.DROWNED, EntityType.GUARDIAN, EntityType.ELDER_GUARDIAN);
         tags.add(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES, EntityType.STRIDER, EntityType.BLAZE, EntityType.MAGMA_CUBE);
-        tags.add(EntityTypeTags.FREEZE_IMMUNE_ENTITY_TYPES, EntityType.STRAY, EntityType.POLAR_BEAR, EntityType.SNOW_GOLEM);
+        tags.add(EntityTypeTags.FREEZE_IMMUNE_ENTITY_TYPES, EntityType.STRAY, EntityType.POLAR_BEAR, EntityType.SNOW_GOLEM, EntityType.WITHER);
         super.addExtraEntityTags(tags);
     }
 

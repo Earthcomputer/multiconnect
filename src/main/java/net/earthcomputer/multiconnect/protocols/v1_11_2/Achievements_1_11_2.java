@@ -57,7 +57,7 @@ public class Achievements_1_11_2 {
     static {
         for (Advancement advancement : ACHIEVEMENTS.values()) {
             assert advancement.getDisplay() != null;
-            advancement.getDisplay().setPosition(advancement.getDisplay().getX() - minX, advancement.getDisplay().getY() - minY);
+            advancement.getDisplay().setPos(advancement.getDisplay().getX() - minX, advancement.getDisplay().getY() - minY);
         }
     }
 
@@ -87,7 +87,7 @@ public class Achievements_1_11_2 {
                 true,
                 false
         );
-        display.setPosition(x, y);
+        display.setPos(x, y);
         Map<String, AdvancementCriterion> criteria = ImmutableMap.of(AchievementManager.REQUIREMENT, new AdvancementCriterion(new ImpossibleCriterion.Conditions()));
         String[][] requirements = {{AchievementManager.REQUIREMENT}};
         Advancement advancement = new Advancement(id, parent, display, AdvancementRewards.NONE, criteria, requirements);

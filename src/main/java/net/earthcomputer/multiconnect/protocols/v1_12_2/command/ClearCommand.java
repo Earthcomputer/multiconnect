@@ -7,7 +7,7 @@ import static com.mojang.brigadier.arguments.IntegerArgumentType.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EntityArgumentType_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.ItemArgumentType_1_12_2.*;
-import static net.minecraft.command.argument.NbtCompoundTagArgumentType.*;
+import static net.minecraft.command.argument.NbtCompoundArgumentType.*;
 
 public class ClearCommand {
 
