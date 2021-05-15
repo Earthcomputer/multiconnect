@@ -1123,6 +1123,22 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
     }
 
     @Override
+    public float getBlockHardness(BlockState state, float hardness) {
+        if (state.getBlock() instanceof InfestedBlock) {
+            return 0;
+        }
+        return super.getBlockHardness(state, hardness);
+    }
+
+    @Override
+    public float getBlockResistance(Block block, float resistance) {
+        if (block instanceof InfestedBlock) {
+            return 0.75f;
+        }
+        return super.getBlockResistance(block, resistance);
+    }
+
+    @Override
     public void addExtraBlockTags(TagRegistry<Block> tags) {
         tags.add(BlockTags.CANDLES);
         tags.add(BlockTags.CANDLE_CAKES);

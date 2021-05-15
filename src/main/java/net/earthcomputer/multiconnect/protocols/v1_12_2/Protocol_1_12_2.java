@@ -15,7 +15,6 @@ import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ZombieEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_1_16_1;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.MapUpdateS2CPacket_1_16_5;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.WallMountLocation;
@@ -1172,6 +1171,14 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 && state.get(PillarBlock.AXIS) != Direction.Axis.Y)
             return false;
         return true;
+    }
+
+    @Override
+    public float getBlockHardness(BlockState state, float hardness) {
+        if (state.getBlock() instanceof InfestedBlock) {
+            return 0.75f;
+        }
+        return super.getBlockHardness(state, hardness);
     }
 
     @Override
