@@ -23,8 +23,6 @@ sourceSets {
 
 compileApiJava.dependsOn processApiResources // wtf gradle
 
-sourceSets.main.resources.srcDirs.each { println it }
-
 processResources {
 	duplicatesStrategy = DuplicatesStrategy.WARN
 	inputs.property "version", project.version
