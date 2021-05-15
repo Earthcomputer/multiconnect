@@ -789,6 +789,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(Items.NETHER_QUARTZ_ORE);
         registry.unregister(Items.COAL_BLOCK);
         registry.unregister(Items.NETHERITE_BLOCK);
+        registry.unregister(Items.ANCIENT_DEBRIS);
         insertAfter(registry, Items.LAPIS_BLOCK, Items.DISPENSER, "dispenser");
         insertAfter(registry, Items.CUT_SANDSTONE, Items.NOTE_BLOCK, "note_block");
         insertAfter(registry, Items.DETECTOR_RAIL, Items.STICKY_PISTON, "sticky_piston");
@@ -849,6 +850,8 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         insertAfter(registry, Items.REPEATER, Items.COMPARATOR, "comparator");
         insertAfter(registry, Items.SADDLE, Items.REDSTONE, "redstone");
         insertAfter(registry, Items.GRINDSTONE, Items.LECTERN, "lectern");
+        insertAfter(registry, Items.LODESTONE, Items.NETHERITE_BLOCK, "netherite_block");
+        insertAfter(registry, Items.NETHERITE_BLOCK, Items.ANCIENT_DEBRIS, "ancient_debris");
         insertAfter(registry, Items.ANCIENT_DEBRIS, Items.TARGET, "target");
         insertAfter(registry, Items.DARK_OAK_STAIRS, Items.SLIME_BLOCK, "slime_block");
         insertAfter(registry, Items.HONEY_BOTTLE, Items.HONEY_BLOCK, "honey_block");
@@ -861,7 +864,6 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         insertAfter(registry, Items.DIAMOND_ORE, Items.DIAMOND_BLOCK, "diamond_block");
         insertAfter(registry, Items.SANDSTONE_STAIRS, Items.EMERALD_ORE, "emerald_ore");
         insertAfter(registry, Items.TERRACOTTA, Items.COAL_BLOCK, "coal_block");
-        insertAfter(registry, Items.LODESTONE, Items.NETHERITE_BLOCK, "netherite_block");
     }
 
     private void mutateEntityRegistry(ISimpleRegistry<EntityType<?>> registry) {

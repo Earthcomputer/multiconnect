@@ -18,6 +18,7 @@ lectern
 loom
 merchant
 shulker_box
+smithing
 smoker
 cartography_table
 stonecutter

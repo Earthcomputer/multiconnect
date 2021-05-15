@@ -9,6 +9,7 @@ thorns
 depth_strider
 frost_walker
 binding_curse
+soul_speed
 sharpness
 smite
 bane_of_arthropods

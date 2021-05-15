@@ -25,6 +25,8 @@ falling_dust
 firework
 fishing
 flame
+soul_fire_flame
+soul
 flash
 happy_villager
 composter
@@ -60,3 +62,11 @@ dripping_honey
 falling_honey
 landing_honey
 falling_nectar
+ash
+crimson_spore
+warped_spore
+dripping_obsidian_tear
+falling_obsidian_tear
+landing_obsidian_tear
+reverse_portal
+white_ash

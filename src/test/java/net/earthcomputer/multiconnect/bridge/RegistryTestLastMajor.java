@@ -12,7 +12,7 @@ public class RegistryTestLastMajor extends AbstractRegistryTest {
 
     @BeforeAll
     public static void beforeAll() {
-        initialize(Protocols.V1_15_2);
+        initialize(Protocols.V1_16_5);
     }
 
     @Test
