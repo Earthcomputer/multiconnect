@@ -954,6 +954,10 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         tags.addTag(BlockTags.INFINIBURN_END, BlockTags.INFINIBURN_OVERWORLD);
         tags.add(BlockTags.INFINIBURN_END, Blocks.BEDROCK);
         super.addExtraBlockTags(tags);
+
+        tags.get(BlockTags.HOE_MINEABLE.getId()).clear();
+        Set<Block> pickaxeMineableTag = tags.get(BlockTags.PICKAXE_MINEABLE.getId());
+        Arrays.asList(Blocks.PISTON, Blocks.STICKY_PISTON, Blocks.PISTON_HEAD).forEach(pickaxeMineableTag::remove);
     }
 
     @Override
@@ -1006,19 +1010,6 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             return false;
         }
         return super.acceptEntityData(clazz, data);
-    }
-
-    @Override
-    public float modifyMiningSpeed(ItemStack tool, BlockState mined, float miningSpeed) {
-        miningSpeed = super.modifyMiningSpeed(tool, mined, miningSpeed);
-        Item toolItem = tool.getItem();
-        Block minedBlock = mined.getBlock();
-        if (toolItem instanceof HoeItem) {
-            miningSpeed = 1;
-        } else if (toolItem instanceof PickaxeItem && (minedBlock == Blocks.PISTON || minedBlock == Blocks.STICKY_PISTON || minedBlock == Blocks.PISTON_HEAD)) {
-            miningSpeed = 1;
-        }
-        return miningSpeed;
     }
 
     @Override
