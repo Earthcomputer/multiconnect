@@ -15,6 +15,7 @@ import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ZombieEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_1_16_1;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.MapUpdateS2CPacket_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.WallMountLocation;
@@ -634,7 +635,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             case "cauldronUsed": return Stats.USE_CAULDRON;
             case "bannerCleaned": return Stats.CLEAN_BANNER;
             case "itemEnchanted": return Stats.ENCHANT_ITEM;
-            case "playOneMinute": return Stats.PLAY_ONE_MINUTE;
+            case "playOneMinute": return Stats.PLAY_TIME;
             case "minecartOneCm": return Stats.MINECART_ONE_CM;
             case "timeSinceDeath": return Stats.TIME_SINCE_DEATH;
             case "cauldronFilled": return Stats.FILL_CAULDRON;

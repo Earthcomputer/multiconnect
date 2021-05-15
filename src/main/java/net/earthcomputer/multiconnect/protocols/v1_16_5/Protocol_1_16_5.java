@@ -52,6 +52,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.Stat;
 import net.minecraft.stat.StatType;
+import net.minecraft.stat.Stats;
 import net.minecraft.tag.*;
 import net.minecraft.text.Text;
 import net.minecraft.util.Arm;
@@ -558,6 +559,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         mutator.mutate(Protocols.V1_16_5, Registry.BLOCK_ENTITY_TYPE, this::mutateBlockEntityRegistry);
         mutator.mutate(Protocols.V1_16_5, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
         mutator.mutate(Protocols.V1_16_5, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
     }
 
     @Override
@@ -1103,6 +1105,11 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(SoundEvents.ITEM_BONE_MEAL_USE);
     }
 
+    private void mutateCustomStatRegistry(ISimpleRegistry<Identifier> registry) {
+        rename(registry, Stats.PLAY_TIME, "play_one_minute");
+        registry.unregister(Stats.TOTAL_WORLD_TIME);
+    }
+
     @Override
     protected Stream<BlockState> getStatesForBlock(Block block) {
         if (block == Blocks.CAULDRON) {
@@ -1133,10 +1140,11 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         tags.add(BlockTags.DRIPSTONE_REPLACEABLE_BLOCKS, Blocks.DIRT);
         tags.addTag(BlockTags.OCCLUDES_VIBRATION_SIGNALS, BlockTags.WOOL);
         tags.add(BlockTags.CAVE_VINES);
-        tags.addTag(BlockTags.LUSH_PLANTS_REPLACEABLE, BlockTags.BASE_STONE_OVERWORLD);
-        tags.addTag(BlockTags.LUSH_PLANTS_REPLACEABLE, BlockTags.CAVE_VINES);
-        tags.add(BlockTags.LUSH_PLANTS_REPLACEABLE, Blocks.DIRT, Blocks.GRAVEL, Blocks.SAND);
-        tags.add(BlockTags.LUSH_GROUND_REPLACEABLE, Blocks.CLAY);
+        tags.addTag(BlockTags.MOSS_REPLACEABLE, BlockTags.BASE_STONE_OVERWORLD);
+        tags.addTag(BlockTags.MOSS_REPLACEABLE, BlockTags.CAVE_VINES);
+        tags.add(BlockTags.MOSS_REPLACEABLE, Blocks.DIRT);
+        tags.addTag(BlockTags.LUSH_GROUND_REPLACEABLE, BlockTags.MOSS_REPLACEABLE);
+        tags.add(BlockTags.LUSH_GROUND_REPLACEABLE, Blocks.CLAY, Blocks.GRAVEL, Blocks.SAND);
         tags.add(BlockTags.IRON_ORES, Blocks.IRON_ORE);
         tags.add(BlockTags.DIAMOND_ORES, Blocks.DIAMOND_ORE);
         tags.add(BlockTags.REDSTONE_ORES, Blocks.REDSTONE_ORE);
@@ -1146,7 +1154,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         tags.add(BlockTags.COPPER_ORES);
         tags.add(BlockTags.STONE_ORE_REPLACEABLES, Blocks.STONE, Blocks.GRANITE, Blocks.DIORITE, Blocks.ANDESITE);
         tags.add(BlockTags.DEEPSLATE_ORE_REPLACEABLES);
-        tags.add(BlockTags.DIRT, Blocks.DIRT, Blocks.COARSE_DIRT, Blocks.PODZOL);
+        tags.add(BlockTags.DIRT, Blocks.DIRT, Blocks.GRASS_BLOCK, Blocks.PODZOL, Blocks.COARSE_DIRT, Blocks.MYCELIUM);
         tags.add(BlockTags.SNOW, Blocks.SNOW, Blocks.SNOW_BLOCK);
         super.addExtraBlockTags(tags);
     }
