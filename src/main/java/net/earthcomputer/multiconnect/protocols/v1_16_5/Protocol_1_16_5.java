@@ -254,7 +254,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             for (int i = 0; i < numStats; i++) {
                 StatType<?> statType = Registry.STAT_TYPE.get(buf.readVarInt());
                 if (statType != null) {
-                    Stat<?> stat = (Stat<?>) statType.getRegistry().get(buf.readVarInt());
+                    Stat<?> stat = getStat(statType, buf.readVarInt());
                     int value = buf.readVarInt();
                     stats.put(stat, value);
                 }
@@ -495,6 +495,10 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
 
     public static short nextScreenActionId() {
         return ++lastActionId;
+    }
+
+    private static <T> Stat<T> getStat(StatType<T> statType, int id) {
+        return statType.getOrCreateStat(statType.getRegistry().get(id));
     }
 
     @Override
