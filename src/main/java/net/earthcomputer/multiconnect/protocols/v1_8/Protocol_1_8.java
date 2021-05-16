@@ -283,25 +283,13 @@ public class Protocol_1_8 extends Protocol_1_9 {
             buf.readVarInt(); // entity id
             buf.disablePassthroughMode();
             int oldSlot = buf.readShort();
-            EquipmentSlot newSlot;
-            switch (oldSlot) {
-                case 0:
-                default:
-                    newSlot = EquipmentSlot.MAINHAND;
-                    break;
-                case 1:
-                    newSlot = EquipmentSlot.FEET;
-                    break;
-                case 2:
-                    newSlot = EquipmentSlot.LEGS;
-                    break;
-                case 3:
-                    newSlot = EquipmentSlot.CHEST;
-                    break;
-                case 4:
-                    newSlot = EquipmentSlot.HEAD;
-                    break;
-            }
+            EquipmentSlot newSlot = switch (oldSlot) {
+                default -> EquipmentSlot.MAINHAND;
+                case 1 -> EquipmentSlot.FEET;
+                case 2 -> EquipmentSlot.LEGS;
+                case 3 -> EquipmentSlot.CHEST;
+                case 4 -> EquipmentSlot.HEAD;
+            };
             buf.pendingRead(EquipmentSlot.class, newSlot);
             buf.applyPendingReads();
         });
@@ -478,23 +466,15 @@ public class Protocol_1_8 extends Protocol_1_9 {
             buf.passthroughWrite(Short.class); // action id
             Supplier<SlotActionType> mode = buf.skipWrite(SlotActionType.class);
             buf.pendingWrite(Byte.class, () -> {
-                switch (mode.get()) {
-                    case PICKUP:
-                    default:
-                        return (byte)0;
-                    case QUICK_MOVE:
-                        return (byte)1;
-                    case SWAP:
-                        return (byte)2;
-                    case CLONE:
-                        return (byte)3;
-                    case THROW:
-                        return (byte)4;
-                    case QUICK_CRAFT:
-                        return (byte)5;
-                    case PICKUP_ALL:
-                        return (byte)6;
-                }
+                return switch (mode.get()) {
+                    default -> (byte) 0;
+                    case QUICK_MOVE -> (byte) 1;
+                    case SWAP -> (byte) 2;
+                    case CLONE -> (byte) 3;
+                    case THROW -> (byte) 4;
+                    case QUICK_CRAFT -> (byte) 5;
+                    case PICKUP_ALL -> (byte) 6;
+                };
             }, (Consumer<Byte>) buf::writeByte);
         });
         ProtocolRegistry.registerOutboundTranslator(ClientSettingsC2SPacket.class, buf -> {
@@ -829,8 +809,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         if (packet instanceof PlayerActionC2SPacket && ((PlayerActionC2SPacket) packet).getAction() == PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND) {
             return false;
         }
-        if (packet instanceof PlayerInteractBlockC2SPacket) {
-            PlayerInteractBlockC2SPacket interactBlock = (PlayerInteractBlockC2SPacket) packet;
+        if (packet instanceof PlayerInteractBlockC2SPacket interactBlock) {
             MinecraftClient.getInstance().execute(() -> {
                 ClientPlayerEntity player = MinecraftClient.getInstance().player;
                 if (player != null) {
@@ -851,15 +830,13 @@ public class Protocol_1_8 extends Protocol_1_9 {
             });
             return false;
         }
-        if (packet instanceof ClickSlotC2SPacket_1_16_5) {
-            ClickSlotC2SPacket_1_16_5 clickSlot = (ClickSlotC2SPacket_1_16_5) packet;
+        if (packet instanceof ClickSlotC2SPacket_1_16_5 clickSlot) {
             if (clickSlot.getSlotActionType() == SlotActionType.SWAP && clickSlot.getClickData() == 40) {
                 // swap with offhand
                 return false;
             }
         }
-        if (packet instanceof CustomPayloadC2SPacket_1_12_2) {
-            CustomPayloadC2SPacket_1_12_2 customPayload = (CustomPayloadC2SPacket_1_12_2) packet;
+        if (packet instanceof CustomPayloadC2SPacket_1_12_2 customPayload) {
             if ("MC|Struct".equals(customPayload.getChannel())) {
                 return false;
             }
@@ -1042,36 +1019,19 @@ public class Protocol_1_8 extends Protocol_1_9 {
 
             int serializerId = (n & 0b11100000) >> 5;
             int id = n & 0b00011111;
-            Object value;
-            switch (serializerId) {
-                case 0:
-                    value = buf.readByte();
-                    break;
-                case 1:
-                    value = buf.readShort();
-                    break;
-                case 2:
-                    value = buf.readInt();
-                    break;
-                case 3:
-                    value = buf.readFloat();
-                    break;
-                case 4:
-                    value = buf.readString(32767);
-                    break;
-                case 5:
-                    value = buf.readItemStack();
-                    break;
-                case 6:
-                    value = new BlockPos(buf.readInt(), buf.readInt(), buf.readInt());
-                    break;
-                case 7:
-                    value = new EulerAngle(buf.readFloat(), buf.readFloat(), buf.readFloat());
-                    break;
-                default:
-                    // serializer id ranges from 0-7
-                    throw new AssertionError();
-            }
+            Object value = switch (serializerId) {
+                case 0 -> buf.readByte();
+                case 1 -> buf.readShort();
+                case 2 -> buf.readInt();
+                case 3 -> buf.readFloat();
+                case 4 -> buf.readString(32767);
+                case 5 -> buf.readItemStack();
+                case 6 -> new BlockPos(buf.readInt(), buf.readInt(), buf.readInt());
+                case 7 -> new EulerAngle(buf.readFloat(), buf.readFloat(), buf.readFloat());
+                default ->
+                        // serializer id ranges from 0-7
+                        throw new AssertionError();
+            };
 
             entries.add(new DataTrackerEntry_1_8(serializerId, id, value));
         }
@@ -1085,8 +1045,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
             if (usingItem) {
                 data &= ~16;
             }
-            if (entity instanceof OtherClientPlayerEntity) {
-                OtherClientPlayerEntity player = (OtherClientPlayerEntity) entity;
+            if (entity instanceof OtherClientPlayerEntity player) {
                 if (usingItem) {
                     player.setCurrentHand(Hand.MAIN_HAND);
                 } else {
@@ -1222,8 +1181,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
     public static void handleShortTrackedData(Entity entity, int id, short data) {
         if (id == 1) {
             entity.setAir(data);
-        } else if (entity instanceof EndermanEntity) {
-            EndermanEntity enderman = (EndermanEntity) entity;
+        } else if (entity instanceof EndermanEntity enderman) {
             if (id == 16) {
                 BlockState heldState = Block.STATE_IDS.get(Blocks_1_12_2.convertToStateRegistryId(data));
                 if (heldState == null || heldState.isAir()) {
@@ -1269,16 +1227,14 @@ public class Protocol_1_8 extends Protocol_1_9 {
                 if (id == 16) {
                     entity.getDataTracker().set(Protocol_1_13_2.OLD_VILLAGER_PROFESSION, data);
                 }
-            } else if (entity instanceof WitherEntity) {
-                WitherEntity wither = (WitherEntity) entity;
+            } else if (entity instanceof WitherEntity wither) {
                 if (id >= 17 && id <= 19) {
                     wither.setTrackedEntityId(id - 17, data);
                 } else if (id == 20) {
                     wither.setInvulTimer(data);
                 }
             }
-        } else if (entity instanceof BoatEntity) {
-            BoatEntity boat = (BoatEntity) entity;
+        } else if (entity instanceof BoatEntity boat) {
             if (id == 17) {
                 boat.setDamageWobbleTicks(data);
             } else if (id == 18) {
@@ -1288,8 +1244,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
             if (id == 8) {
                 // TODO: health??
             }
-        } else if (entity instanceof AbstractMinecartEntity) {
-            AbstractMinecartEntity minecart = (AbstractMinecartEntity) entity;
+        } else if (entity instanceof AbstractMinecartEntity minecart) {
             if (id == 17) {
                 minecart.setDamageWobbleTicks(data);
             } else if (id == 18) {
@@ -1329,8 +1284,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
     public static void handleStringTrackedData(Entity entity, int id, String data) {
         if (id == 2) {
             entity.getDataTracker().set(Protocol_1_12_2.OLD_CUSTOM_NAME, data);
-        } else if (entity instanceof HorseBaseEntity) {
-            HorseBaseEntity horse = (HorseBaseEntity) entity;
+        } else if (entity instanceof HorseBaseEntity horse) {
             if (id == 21) {
                 if (data.isEmpty()) {
                     horse.setOwnerUuid(null);
@@ -1348,8 +1302,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
             } else if (id == 24) {
                 entity.getDataTracker().set(CommandBlockMinecartEntityAccessor.getLastOutput(), new LiteralText(data));
             }
-        } else if (entity instanceof TameableEntity) {
-            TameableEntity tameable = (TameableEntity) entity;
+        } else if (entity instanceof TameableEntity tameable) {
             if (id == 17) {
                 if (data.isEmpty()) {
                     tameable.setOwnerUuid(null);
@@ -1387,24 +1340,12 @@ public class Protocol_1_8 extends Protocol_1_9 {
     public static void handleEulerAngleTrackedData(Entity entity, int id, EulerAngle data) {
         if (entity instanceof ArmorStandEntity) {
             switch (id) {
-                case 11:
-                    entity.getDataTracker().set(ArmorStandEntity.TRACKER_HEAD_ROTATION, data);
-                    break;
-                case 12:
-                    entity.getDataTracker().set(ArmorStandEntity.TRACKER_BODY_ROTATION, data);
-                    break;
-                case 13:
-                    entity.getDataTracker().set(ArmorStandEntity.TRACKER_LEFT_ARM_ROTATION, data);
-                    break;
-                case 14:
-                    entity.getDataTracker().set(ArmorStandEntity.TRACKER_RIGHT_ARM_ROTATION, data);
-                    break;
-                case 15:
-                    entity.getDataTracker().set(ArmorStandEntity.TRACKER_LEFT_LEG_ROTATION, data);
-                    break;
-                case 16:
-                    entity.getDataTracker().set(ArmorStandEntity.TRACKER_RIGHT_LEG_ROTATION, data);
-                    break;
+                case 11 -> entity.getDataTracker().set(ArmorStandEntity.TRACKER_HEAD_ROTATION, data);
+                case 12 -> entity.getDataTracker().set(ArmorStandEntity.TRACKER_BODY_ROTATION, data);
+                case 13 -> entity.getDataTracker().set(ArmorStandEntity.TRACKER_LEFT_ARM_ROTATION, data);
+                case 14 -> entity.getDataTracker().set(ArmorStandEntity.TRACKER_RIGHT_ARM_ROTATION, data);
+                case 15 -> entity.getDataTracker().set(ArmorStandEntity.TRACKER_LEFT_LEG_ROTATION, data);
+                case 16 -> entity.getDataTracker().set(ArmorStandEntity.TRACKER_RIGHT_LEG_ROTATION, data);
             }
         }
     }

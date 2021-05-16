@@ -12,16 +12,14 @@ public enum ClientCommandMode_1_8 {
     OPEN_INVENTORY;
 
     public static ClientCommandMode_1_8 fromNew(ClientCommandC2SPacket.Mode mode) {
-        switch (mode) {
-            case PRESS_SHIFT_KEY: return PRESS_SHIFT_KEY;
-            case RELEASE_SHIFT_KEY: return RELEASE_SHIFT_KEY;
-            case STOP_SLEEPING: return STOP_SLEEPING;
-            case START_SPRINTING: return START_SPRINTING;
-            case STOP_SPRINTING: return STOP_SPRINTING;
-            case START_RIDING_JUMP: return HORSE_JUMP;
-            case OPEN_INVENTORY:
-            default:
-                return OPEN_INVENTORY;
-        }
+        return switch (mode) {
+            case PRESS_SHIFT_KEY -> PRESS_SHIFT_KEY;
+            case RELEASE_SHIFT_KEY -> RELEASE_SHIFT_KEY;
+            case STOP_SLEEPING -> STOP_SLEEPING;
+            case START_SPRINTING -> START_SPRINTING;
+            case STOP_SPRINTING -> STOP_SPRINTING;
+            case START_RIDING_JUMP -> HORSE_JUMP;
+            default -> OPEN_INVENTORY;
+        };
     }
 }

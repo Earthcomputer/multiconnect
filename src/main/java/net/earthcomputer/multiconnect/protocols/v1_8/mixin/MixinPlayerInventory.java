@@ -18,7 +18,7 @@ public class MixinPlayerInventory {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
             // Create a list which has size 0 but doesn't throw array index out of bounds exceptions.
             //noinspection MixinInnerClass
-            return new DefaultedList<T>(new AbstractList<T>() {
+            return new DefaultedList<>(new AbstractList<T>() {
                 @Override
                 public T get(int index) {
                     return def;

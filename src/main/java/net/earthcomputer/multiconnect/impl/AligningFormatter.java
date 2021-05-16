@@ -320,16 +320,12 @@ public class AligningFormatter {
                                 Node node = edge.nodes.get(nodeIndex);
                                 char leftChar = node.value.isEmpty() || !node.hExpand ? ' ' : node.value.charAt(0);
                                 int leftPaddingNeeded = ((spacesNeeded + nodeIndex) / edge.nodes.size()) / 2;
-                                for (int i = 0; i < leftPaddingNeeded; i++) {
-                                    sb.append(leftChar);
-                                }
+                                sb.append(String.valueOf(leftChar).repeat(Math.max(0, leftPaddingNeeded)));
                                 addVAttach(vAttaches, sb, node);
                                 sb.append(node.value);
                                 char rightChar = node.value.isEmpty() || !node.hExpand ? ' ' : node.value.charAt(node.value.length() - 1);
                                 int rightPaddingNeeded = (((spacesNeeded + nodeIndex) / edge.nodes.size()) + 1) / 2;
-                                for (int i = 0; i < rightPaddingNeeded; i++) {
-                                    sb.append(rightChar);
-                                }
+                                sb.append(String.valueOf(rightChar).repeat(Math.max(0, rightPaddingNeeded)));
                             }
                         } else {
                             for (int i = 0, e = edgeRow.get(edgeIndex + 1).depth - edge.depth - edge.minLength; i < e; i++) {

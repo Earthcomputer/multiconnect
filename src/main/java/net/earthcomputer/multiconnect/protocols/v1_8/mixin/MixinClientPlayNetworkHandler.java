@@ -65,38 +65,25 @@ public abstract class MixinClientPlayNetworkHandler {
             Entity entity = world.getEntityById(packet.id());
             if (entity != null) {
                 for (DataTracker.Entry<?> entry : packet.getTrackedValues()) {
-                    if (!(entry instanceof DataTrackerEntry_1_8)) {
+                    if (!(entry instanceof DataTrackerEntry_1_8 entry_1_8)) {
                         MULTICONNECT_LOGGER.warn("Not handling entity tracker update entry which was not constructed for 1.8");
                         continue;
                     }
-                    DataTrackerEntry_1_8 entry_1_8 = (DataTrackerEntry_1_8) entry;
                     switch (entry_1_8.getSerializerId()) {
-                        case 0:
-                            Protocol_1_8.handleByteTrackedData(entity, entry_1_8.getId(), (Byte) entry_1_8.get());
-                            break;
-                        case 1:
-                            Protocol_1_8.handleShortTrackedData(entity, entry_1_8.getId(), (Short) entry_1_8.get());
-                            break;
-                        case 2:
-                            Protocol_1_8.handleIntTrackedData(entity, entry_1_8.getId(), (Integer) entry_1_8.get());
-                            break;
-                        case 3:
-                            Protocol_1_8.handleFloatTrackedData(entity, entry_1_8.getId(), (Float) entry_1_8.get());
-                            break;
-                        case 4:
-                            Protocol_1_8.handleStringTrackedData(entity, entry_1_8.getId(), (String) entry_1_8.get());
-                            break;
-                        case 5:
-                            Protocol_1_8.handleItemStackTrackedData(entity, entry_1_8.getId(), (ItemStack) entry_1_8.get());
-                            break;
-                        case 6:
-                            Protocol_1_8.handleBlockPosTrackedData(entity, entry_1_8.getId(), (BlockPos) entry_1_8.get());
-                            break;
-                        case 7:
-                            Protocol_1_8.handleEulerAngleTrackedData(entity, entry_1_8.getId(), (EulerAngle) entry_1_8.get());
-                            break;
-                        default:
-                            throw new AssertionError();
+                        case 0 -> Protocol_1_8.handleByteTrackedData(entity, entry_1_8.getId(), (Byte) entry_1_8.get());
+                        case 1 -> Protocol_1_8.handleShortTrackedData(entity, entry_1_8.getId(),
+                                (Short) entry_1_8.get());
+                        case 2 -> Protocol_1_8.handleIntTrackedData(entity, entry_1_8.getId(),
+                                (Integer) entry_1_8.get());
+                        case 3 -> Protocol_1_8.handleFloatTrackedData(entity, entry_1_8.getId(),
+                                (Float) entry_1_8.get());
+                        case 4 -> Protocol_1_8.handleStringTrackedData(entity, entry_1_8.getId(),
+                                (String) entry_1_8.get());
+                        case 5 -> Protocol_1_8.handleItemStackTrackedData(entity, entry_1_8.getId(),
+                                (ItemStack) entry_1_8.get());
+                        case 6 -> Protocol_1_8.handleBlockPosTrackedData(entity, entry_1_8.getId(), (BlockPos) entry_1_8.get());
+                        case 7 -> Protocol_1_8.handleEulerAngleTrackedData(entity, entry_1_8.getId(), (EulerAngle) entry_1_8.get());
+                        default -> throw new AssertionError();
                     }
                 }
             }
