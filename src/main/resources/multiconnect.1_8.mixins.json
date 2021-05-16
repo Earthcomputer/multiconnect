@@ -33,6 +33,7 @@
     "MixinPlayerInventory",
     "MixinPlayerScreenHandler",
     "MixinScreenHandler",
+    "MixinShovelItem",
     "MixinSwordItem",
     "MixinWorldRenderer",
     "MobEntityAccessor",
