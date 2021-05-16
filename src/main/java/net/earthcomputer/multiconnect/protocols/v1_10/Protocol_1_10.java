@@ -4,6 +4,8 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
+import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.DataTrackerManager;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
@@ -40,6 +42,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.s2c.play.ItemPickupAnimationS2CPacket;
@@ -166,10 +169,14 @@ public class Protocol_1_10 extends Protocol_1_11 {
             .put(BlockEntityType.SIGN, "Sign")
             .put(BlockEntityType.SKULL, "Skull")
             .put(BlockEntityType.STRUCTURE_BLOCK, "Structure")
-            .put(BlockEntityType.TRAPPED_CHEST, "Trap")
+            .put(BlockEntityType.DISPENSER, "Trap")
+            .put(BlockEntityType.TRAPPED_CHEST, "TrappedChest") // Not actually in 1.10 but useful to have an ID
             .build();
 
     public static String getBlockEntityId(BlockEntityType<?> blockEntityType) {
+        if (blockEntityType == BlockEntityType.TRAPPED_CHEST) {
+            return "Chest";
+        }
         return BLOCK_ENTITY_IDS.get(blockEntityType);
     }
 
@@ -271,6 +278,27 @@ public class Protocol_1_10 extends Protocol_1_11 {
                 return from;
             }
         });
+    }
+
+    @Override
+    public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
+        // Replace chest block entities with trapped chests depending on the block
+        for (NbtCompound blockEntityTag : translator.getPacket().getBlockEntityTagList()) {
+            if (blockEntityTag.contains("id", NbtElement.STRING_TYPE)
+                    && blockEntityTag.contains("x", NbtElement.NUMBER_TYPE)
+                    && blockEntityTag.contains("y", NbtElement.NUMBER_TYPE)
+                    && blockEntityTag.contains("z", NbtElement.NUMBER_TYPE)) {
+                if ("Chest".equals(blockEntityTag.getString("id"))) {
+                    int x = blockEntityTag.getInt("x");
+                    int y = blockEntityTag.getInt("y");
+                    int z = blockEntityTag.getInt("z");
+                    if (data.getBlockState(x, y, z).getBlock() == Blocks.TRAPPED_CHEST) {
+                        blockEntityTag.putString("id", "TrappedChest");
+                    }
+                }
+            }
+        }
+        super.postTranslateChunk(translator, data);
     }
 
     @Override
