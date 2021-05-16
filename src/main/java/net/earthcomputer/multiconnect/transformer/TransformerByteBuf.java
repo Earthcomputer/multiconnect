@@ -244,13 +244,35 @@ public final class TransformerByteBuf extends PacketByteBuf {
         boolean skipWrite = false;
 
         int translatorsIndex = 0;
+
         versionLoop:
-        for
-        (
-        var entry
-        :
-        getStackFrame().writeInstructions.tailMap(version).entrySet()
-        )
+        for (var entry : getStackFrame().writeInstructions.tailMap(version).entrySet()) {
+            int ver = entry.getKey();
+
+            while (translatorsIndex < translators.size() && translators.get(translatorsIndex).getLeft() >= ver) {
+                value = translators.get(translatorsIndex).getRight().translate(value);
+                translatorsIndex++;
+            }
+            getStackFrame().version = ver;
+
+            Queue<WriteInstruction> instructions = entry.getValue();
+            while (!instructions.isEmpty()) {
+                WriteInstruction insn = instructions.poll();
+                if (!insn.matchesType(type)) {
+                    throw new IllegalStateException("Write instruction expected type " + insn.getExpectedType().getName() + ", but got " + type.getName());
+                }
+                insn.onWrite(value);
+                if (insn.consumesWrite()) {
+                    if (insn.skipsWrite()) {
+                        skipWrite = true;
+                        minVersion = ver;
+                        break versionLoop;
+                    }
+                    break;
+                }
+            }
+        }
+
         for (; translatorsIndex < translators.size(); translatorsIndex++) {
             value = translators.get(translatorsIndex).getRight().translate(value);
         }
