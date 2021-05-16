@@ -17,9 +17,9 @@ public class BlockConnections {
     }
 
     public static BlockConnector buildConnector(int protocol) {
-        Map<Block, IBlockConnector> mergedConnectors = new HashMap<>();
+        var mergedConnectors = new HashMap<Block, IBlockConnector>();
 
-        Map<Integer, Map<Block, IBlockConnector>> relevantConnectors = connectors.tailMap(protocol);
+        var relevantConnectors = connectors.tailMap(protocol);
         Set<Block> blocks = relevantConnectors.values().stream()
                 .flatMap(conn -> conn.keySet().stream())
                 .collect(Collectors.toSet());

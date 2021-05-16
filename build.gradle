@@ -2,15 +2,15 @@
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
-	id 'fabric-loom' version '0.6-SNAPSHOT'
-	id 'musical-code' version '1.2'
+	id 'fabric-loom' version '0.8-SNAPSHOT'
 	id 'maven-publish'
+	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
 	id 'com.github.breadmoirai.github-release' version '2.2.10'
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_16
+targetCompatibility = JavaVersion.VERSION_16
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -21,7 +21,10 @@ sourceSets {
 	tools
 }
 
+compileApiJava.dependsOn processApiResources // wtf gradle
+
 processResources {
+	duplicatesStrategy = DuplicatesStrategy.WARN
 	inputs.property "version", project.version
 
 	from(sourceSets.main.resources.srcDirs) {
@@ -34,15 +37,12 @@ processResources {
 	}
 }
 
-musicalCode {
-	config 'musical-config.txt'
-}
-
 // ensure that the encoding is set to UTF-8, no matter what the system default is
 // this fixes some edge cases with special characters not displaying correctly
 // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
 tasks.withType(JavaCompile) {
 	options.encoding = "UTF-8"
+	options.release = 16
 }
 
 // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
@@ -51,6 +51,11 @@ tasks.withType(JavaCompile) {
 task sourcesJar(type: Jar, dependsOn: classes) {
 	archiveClassifier = "sources"
 	from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: classes) {
+	archiveClassifier = "javadoc"
+
 }
 
 task apiJar(type: Jar, dependsOn: apiClasses) {
@@ -63,6 +68,20 @@ task apiJar(type: Jar, dependsOn: apiClasses) {
 		exclude "fabric.mod.json"
 	}
 	from 'LICENSE'
+}
+
+task apiSourcesJar(type: Jar, dependsOn: apiClasses) {
+	archiveClassifier = 'api-sources'
+	from sourceSets.api.allSource
+}
+
+task apiJavadoc(type: Javadoc) {
+	source = sourceSets.api.allJava
+}
+
+task apiJavadocJar(type: Jar) {
+	archiveClassifier = 'api-javadoc'
+	from apiJavadoc
 }
 
 task remapApiJar(type: RemapJarTask, dependsOn: project.apiJar) {
@@ -102,7 +121,7 @@ dependencies {
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modCompileOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	modRuntime "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
-	testCompile "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
+	testImplementation "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 
 	if (true) {
@@ -122,13 +141,13 @@ dependencies {
 		}
 	}
 
-	compile sourceSets.api.output
+	implementation sourceSets.api.output
 	include name: file(remapApiJar.archivePath).name.with { it.endsWith('.jar') ? it.substring(0, it.length() - 4) : it }
 
 	sourceSets.test.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
-	testCompile 'org.junit.jupiter:junit-jupiter-api:5.5.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
 	testRuntimeOnly 'com.github.Earthcomputer.junit5:junit-jupiter-engine:8785ac4d'
-	testCompile 'org.mockito:mockito-all:1.10.19'
+	testImplementation 'org.mockito:mockito-all:1.10.19'
 
 	sourceSets.tools.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 	sourceSets.tools.runtimeClasspath += files({sourceSets.main.runtimeClasspath.toList()})
@@ -141,52 +160,116 @@ test {
 	workingDir 'run'
 }
 
-project.ext.credentials = new Properties()
-try {
-	project.ext.credentials.load(new FileReader(file('credentials.properties')))
-} catch (IOException ignore) {
-}
 def isBeta = version.contains 'pre'
 def changes = file('changelog.txt')
 changes = changes.exists() ? changes.getText('UTF-8') : ''
 
 // configure the maven publication
 publishing {
+	repositories {
+		maven {
+			name = 'nexus'
+			url = isBeta ? 'https://s01.oss.sonatype.org/content/repositories/snapshots/' : 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+			credentials {
+				username(project.hasProperty('ossrhUser') ? ossrhUser : 'foo')
+				password(project.hasProperty('ossrhPass') ? ossrhPass : 'bar')
+			}
+		}
+		// mavenLocal()
+	}
+
 	publications {
-		mavenJava(MavenPublication) {
-			// add all the jars that should be included when publishing to maven
+		def configurePom = {
+			packaging 'jar'
+			inceptionYear = '2019'
+			licenses {
+				license {
+					name = 'MIT'
+					url = 'https://github.com/Earthcomputer/multiconnect/blob/master/LICENSE'
+				}
+			}
+			url = 'https://github.com/Earthcomputer/multiconnect'
+			issueManagement {
+				url = 'https://github.com/Earthcomputer/multiconnect/issues'
+			}
+			scm {
+				connection = 'scm:git:https://github.com/Earthcomputer/multiconnect'
+				developerConnection = 'scm:git:https://github.com/Earthcomputer/multiconnect'
+				url = 'https://github.com/Earthcomputer/multiconnect'
+			}
+			developers {
+				developer {
+					name = 'Joseph Burton'
+					id = 'Earthcomputer'
+					email = 'burtonjae@hotmail.co.uk'
+					roles = ['Main Developer']
+				}
+			}
+		}
+
+		mod(MavenPublication) {
+			artifactId 'multiconnect'
 			artifact(remapJar) {
 				builtBy remapJar
 			}
 			artifact(sourcesJar) {
-				builtBy remapSourcesJar
+				builtBy sourcesJar
 			}
+			artifact(javadocJar) {
+				builtBy javadocJar
+			}
+			pom configurePom
+			pom.name = 'multiconnect'
+			pom.description = 'The full multiconnect mod JAR'
+		}
+		api(MavenPublication) {
+			artifactId 'multiconnect-api'
 			artifact(remapApiJar) {
 				builtBy remapApiJar
+				classifier = ''
 			}
+			artifact(apiSourcesJar) {
+				builtBy apiSourcesJar
+				classifier = 'sources'
+			}
+			artifact(apiJavadocJar) {
+				builtBy apiJavadocJar
+				classifier = 'javadoc'
+			}
+			pom configurePom
+			pom.name = 'multiconnect-api'
+			pom.description = 'The multiconnect API'
+		}
+		slim(MavenPublication) {
+			artifactId 'multiconnect-slim'
 			artifact(remapSlimJar) {
 				builtBy remapSlimJar
+				classifier = ''
 			}
+			artifact(sourcesJar) {
+				builtBy sourcesJar
+				classifier = 'sources'
+			}
+			artifact(javadocJar) {
+				builtBy javadocJar
+				classifier = 'javadoc'
+			}
+			pom configurePom
+			pom.name = 'multiconnect-slim'
+			pom.description = 'The multiconnect mod JAR without the API'
 		}
 	}
+}
 
-	// select the repositories you want to publish to
-	repositories {
-		maven {
-			url 'https://api.bintray.com/maven/earthcomputer/mods/multiconnect/'
-			credentials {
-				username = project.ext.credentials == null ? 'foo' : project.ext.credentials['bintrayUser']
-				password = project.ext.credentials == null ? 'bar' : project.ext.credentials['bintrayPass']
-			}
-		}
-		// uncomment to publish to the local maven
-		// mavenLocal()
-	}
+signing {
+	sign publishing.publications.mod
+	sign publishing.publications.api
+	sign publishing.publications.slim
 }
 
 curseforge {
 	project {
-		apiKey = project.ext.credentials == null ? 'baz' :  project.ext.credentials['curseForgeKey']
+		apiKey = project.hasProperty('curseForgeKey') ? curseForgeKey : 'baz'
 		id = '336018'
 		changelog = changes
 		releaseType = isBeta ? 'beta' : 'release'
@@ -205,7 +288,7 @@ curseforge {
 }
 
 githubRelease {
-	token(project.ext.credentials == null ? 'derp' : project.ext.credentials['githubKey'].toString())
+	token(project.hasProperty('githubKey') ? githubKey.toString() : 'derp')
 	owner 'Earthcomputer'
 	repo 'multiconnect'
 	tagName("v$version")

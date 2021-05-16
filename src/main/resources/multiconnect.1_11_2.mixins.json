@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "net.earthcomputer.multiconnect.protocols.v1_11_2.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_16",
   "mixins": [
     "MixinClientPlayNetworkHandler",
     "MixinCraftingScreenHandler",

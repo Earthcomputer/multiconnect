@@ -73,7 +73,7 @@ public class APIImpl extends MultiConnectAPI {
         if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
             throw new IllegalStateException("Trying to send string custom payload to " + ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName() + " server");
         }
-        CustomPayloadC2SPacket_1_12_2 packet = new CustomPayloadC2SPacket_1_12_2(channel, data);
+        var packet = new CustomPayloadC2SPacket_1_12_2(channel, data);
         packet.unblock();
         networkHandler.sendPacket(packet);
     }

@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
+import net.minecraft.client.network.ServerAddress;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
@@ -19,14 +20,14 @@ import net.minecraft.text.TranslatableText;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.Locale;
 
 public class ConnectionHandler {
 
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
-    public static boolean preConnect(InetAddress addr, int port, String addressField) {
+    public static boolean preConnect(InetSocketAddress addr, ServerAddress serverAddress, String addressField) {
         // Hypixel has their own closed-source connection proxy and closed-source anti-cheat.
         // Users were getting banned for odd reasons. Their maps are designed to have fair play between clients on any
         // version, so we force the current protocol version here to disable any kind of bridge, in the hope that users
@@ -59,12 +60,12 @@ public class ConnectionHandler {
             return true;
         IConnectScreen connectScreen = (IConnectScreen) screen;
 
-        ClientConnection connection = ClientConnection.connect(addr, port, false);
+        ClientConnection connection = ClientConnection.connect(addr, false);
         connectScreen.multiconnect_setVersionRequestConnection(connection);
         GetProtocolPacketListener listener = new GetProtocolPacketListener(connection);
         connection.setPacketListener(listener);
 
-        HandshakeC2SPacket handshake  = new HandshakeC2SPacket(addr.getHostName(), port, NetworkState.STATUS);
+        HandshakeC2SPacket handshake  = new HandshakeC2SPacket(serverAddress.getAddress(), serverAddress.getPort(), NetworkState.STATUS);
         //noinspection ConstantConditions
         ((HandshakePacketAccessor) handshake).setProtocolVersion(-1);
         connection.send(handshake);

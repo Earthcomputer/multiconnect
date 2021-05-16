@@ -10,7 +10,7 @@ import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.ItemArgumentType_1_12_2.*;
 import static net.minecraft.command.argument.BlockPosArgumentType.*;
 import static net.minecraft.command.argument.ItemSlotArgumentType.*;
-import static net.minecraft.command.argument.NbtCompoundTagArgumentType.*;
+import static net.minecraft.command.argument.NbtCompoundArgumentType.*;
 
 public class ReplaceItemCommand {
 

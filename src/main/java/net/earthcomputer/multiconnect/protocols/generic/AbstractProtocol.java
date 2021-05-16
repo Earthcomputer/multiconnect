@@ -13,7 +13,6 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
@@ -183,10 +182,6 @@ public abstract class AbstractProtocol implements IUtils {
         return oldBlock != newBlock;
     }
 
-    public float modifyMiningSpeed(ItemStack tool, BlockState mined, float miningSpeed) {
-        return miningSpeed;
-    }
-
     public float getBlockHardness(BlockState state, float hardness) {
         return hardness;
     }
@@ -212,7 +207,7 @@ public abstract class AbstractProtocol implements IUtils {
 
         private static void initialize() {
             //noinspection ConstantConditions
-            Map<NetworkSide, ? extends IPacketHandler<?>> packetHandlerMap = ((INetworkState) (Object) NetworkState.PLAY).getPacketHandlers();
+            var packetHandlerMap = ((INetworkState) (Object) NetworkState.PLAY).getPacketHandlers();
             IPacketHandler<?> clientPacketMap = packetHandlerMap.get(NetworkSide.CLIENTBOUND);
             CLIENTBOUND.addAll(clientPacketMap.multiconnect_values());
             IPacketHandler<?> serverPacketMap = packetHandlerMap.get(NetworkSide.SERVERBOUND);

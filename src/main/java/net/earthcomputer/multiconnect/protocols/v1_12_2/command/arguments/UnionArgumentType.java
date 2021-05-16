@@ -45,8 +45,8 @@ public final class UnionArgumentType<L, R> implements ArgumentType<Either<L, R>>
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        CompletableFuture<Suggestions> leftFuture = left.listSuggestions(context, builder.restart());
-        CompletableFuture<Suggestions> rightFuture = right.listSuggestions(context, builder.restart());
+        var leftFuture = left.listSuggestions(context, builder.restart());
+        var rightFuture = right.listSuggestions(context, builder.restart());
         return CompletableFuture.allOf(leftFuture, rightFuture)
                 .thenCompose(v -> mergeSuggestions(leftFuture.join(), rightFuture.join()));
     }

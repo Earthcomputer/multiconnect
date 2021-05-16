@@ -39,7 +39,7 @@ public abstract class MixinMerchantContainer extends ScreenHandler {
         if (recipeId >= getRecipes().size())
             return;
 
-        ClientPlayerInteractionManager interactionManager = MinecraftClient.getInstance().interactionManager;
+        var interactionManager = MinecraftClient.getInstance().interactionManager;
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         assert player != null;
         assert interactionManager != null;

@@ -13,7 +13,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeFinder;
+import net.minecraft.recipe.RecipeMatcher;
 import net.minecraft.recipe.ShapedRecipe;
 import net.minecraft.screen.AbstractRecipeScreenHandler;
 import net.minecraft.screen.slot.Slot;
@@ -54,12 +54,13 @@ public class RecipeBook_1_12<C extends Inventory> {
             tryPlaceRecipe(recipe, container.slots);
         } else {
             // clear craft matrix and show ghost recipe
-            List<PlaceRecipeC2SPacket_1_12.Transaction> transactionFromMatrix = clearCraftMatrix();
+            var transactionFromMatrix = clearCraftMatrix();
             recipeBookWidget.showGhostRecipe(recipe, container.slots);
 
             if (!transactionFromMatrix.isEmpty()) {
                 short transactionId = Protocol_1_16_5.nextScreenActionId();
-                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionFromMatrix, new ArrayList<>()));
+                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId,
+                        transactionFromMatrix, new ArrayList<>()));
 
                 if (iRecipeBookWidget.getRecipeBook().isFilteringCraftable(container)) {
                     mc.player.getInventory().markDirty();
@@ -77,7 +78,7 @@ public class RecipeBook_1_12<C extends Inventory> {
         assert mc.getNetworkHandler() != null;
 
         boolean alreadyPlaced = container.matches(recipe);
-        int possibleCraftCount = iRecipeBookWidget.getRecipeFinder().countRecipeCrafts(recipe, null);
+        int possibleCraftCount = iRecipeBookWidget.getRecipeFinder().countCrafts(recipe, null);
 
         if (alreadyPlaced) {
             // check each item in the input to see if we're already at the max crafts possible
@@ -102,25 +103,26 @@ public class RecipeBook_1_12<C extends Inventory> {
         int craftCount = calcCraftCount(possibleCraftCount, alreadyPlaced);
 
         IntList inputItemIds = new IntArrayList();
-        if (iRecipeBookWidget.getRecipeFinder().findRecipe(recipe, inputItemIds, craftCount)) {
+        if (iRecipeBookWidget.getRecipeFinder().match(recipe, inputItemIds, craftCount)) {
             // take into account max stack sizes now we've found the actual inputs
             int actualCount = craftCount;
 
             for (int itemId : inputItemIds) {
-                int maxCount = RecipeFinder.getStackFromId(itemId).getMaxCount();
+                int maxCount = RecipeMatcher.getStackFromId(itemId).getMaxCount();
 
                 if (actualCount > maxCount) {
                     actualCount = maxCount;
                 }
             }
 
-            if (iRecipeBookWidget.getRecipeFinder().findRecipe(recipe, inputItemIds, actualCount)) {
+            if (iRecipeBookWidget.getRecipeFinder().match(recipe, inputItemIds, actualCount)) {
                 // clear the craft matrix and place the recipe
-                List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsFromMatrix = clearCraftMatrix();
-                List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsToMatrix = new ArrayList<>();
+                var transactionsFromMatrix = clearCraftMatrix();
+                var transactionsToMatrix = new ArrayList<PlaceRecipeC2SPacket_1_12.Transaction>();
                 placeRecipe(recipe, slots, actualCount, inputItemIds, transactionsToMatrix);
                 short transactionId = Protocol_1_16_5.nextScreenActionId();
-                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionsFromMatrix, transactionsToMatrix));
+                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId,
+                        transactionsFromMatrix, transactionsToMatrix));
                 mc.player.getInventory().markDirty();
             }
         }
@@ -131,7 +133,7 @@ public class RecipeBook_1_12<C extends Inventory> {
 
         iRecipeBookWidget.getGhostSlots().reset();
         PlayerInventory playerInv = mc.player.getInventory();
-        List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsFromMatrix = new ArrayList<>();
+        var transactionsFromMatrix = new ArrayList<PlaceRecipeC2SPacket_1_12.Transaction>();
 
         int serverSlot = 1;
         for (int i = 0; i < container.getCraftingSlotCount(); i++) {
@@ -165,7 +167,8 @@ public class RecipeBook_1_12<C extends Inventory> {
                     }
 
                     container.getSlot(i).takeStack(1);
-                    transactionsFromMatrix.add(new PlaceRecipeC2SPacket_1_12.Transaction(originalStack, targetStack.copy(), placedOn, serverSlot, destSlot));
+                    transactionsFromMatrix.add(new PlaceRecipeC2SPacket_1_12.Transaction(originalStack,
+                            targetStack.copy(), placedOn, serverSlot, destSlot));
                 }
             }
 
@@ -207,8 +210,7 @@ public class RecipeBook_1_12<C extends Inventory> {
         int width = container.getCraftingWidth();
         int height = container.getCraftingHeight();
 
-        if (recipe instanceof ShapedRecipe) {
-            ShapedRecipe shaped = (ShapedRecipe) recipe;
+        if (recipe instanceof ShapedRecipe shaped) {
             width = shaped.getWidth();
             height = shaped.getHeight();
         }
@@ -226,10 +228,10 @@ public class RecipeBook_1_12<C extends Inventory> {
 
                 Slot slot = slots.get(serverSlot);
 
-                ItemStack stackNeeded = RecipeFinder.getStackFromId(inputItemItr.next());
+                ItemStack stackNeeded = RecipeMatcher.getStackFromId(inputItemItr.next());
                 if (!stackNeeded.isEmpty()) {
                     for (int i = 0; i < placeCount; i++) {
-                        PlaceRecipeC2SPacket_1_12.Transaction transaction = findAndMoveToCraftMatrix(serverSlot, slot, stackNeeded);
+                        var transaction = findAndMoveToCraftMatrix(serverSlot, slot, stackNeeded);
                         if (transaction != null) {
                             transactionsToMatrix.add(transaction);
                         }

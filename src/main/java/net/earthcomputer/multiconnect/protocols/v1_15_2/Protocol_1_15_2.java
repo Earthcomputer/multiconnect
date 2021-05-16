@@ -114,8 +114,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             if (heightmaps != null) {
                 for (String key : heightmaps.getKeys()) {
                     NbtElement nbt = heightmaps.get(key);
-                    if (nbt instanceof NbtLongArray) {
-                        heightmaps.putLongArray(key, BitStorageAlignFix.resizePackedIntArray(256, 9, ((NbtLongArray) nbt).getLongArray()));
+                    if (nbt instanceof NbtLongArray nbtLongArray) {
+                        heightmaps.putLongArray(key, BitStorageAlignFix.resizePackedIntArray(256, 9, nbtLongArray.getLongArray()));
                     }
                 }
             }
@@ -138,7 +138,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.disablePassthroughMode();
             // not_set game mode, unsigned -1 gets cast back to signed in 1.16.1 when
             // https://bugs.mojang.com/browse/MC-189885 was fixed
-            buf.pendingRead(UnsignedByte.class, new UnsignedByte((short)-1));
+            buf.pendingRead(UnsignedByte.class, new UnsignedByte((short) -1));
             buf.pendingRead(VarInt.class, new VarInt(3)); // dimension count
             // dimension ids
             buf.pendingRead(Identifier.class, World.OVERWORLD.getValue());
@@ -147,10 +147,11 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             int dimensionId = buf.readInt();
             Identifier dimensionName = dimensionIdToName(dimensionId);
 
-            DynamicRegistryManager.Impl registries = DynamicRegistryManager.create();
+            var registries = DynamicRegistryManager.create();
             //noinspection ConstantConditions
             ((DynamicRegistryManagerImplAccessor) (Object) registries).setRegistries(ImmutableMap.of());
-            buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, registries)); // dynamic registry mutator will fix this
+            buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, registries)); //
+            // dynamic registry mutator will fix this
             buf.pendingRead(Identifier.class, dimensionName); // dimension type
             buf.pendingRead(Identifier.class, dimensionName); // dimension
             buf.enablePassthroughMode();
@@ -197,12 +198,12 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.readLong(); // sha256 seed
             buf.readUnsignedByte(); // game mode
             buf.disablePassthroughMode();
-            ClientPlayerInteractionManager interactionManager = MinecraftClient.getInstance().interactionManager;
+            var interactionManager = MinecraftClient.getInstance().interactionManager;
             byte previousGameMode;
             if (interactionManager != null && interactionManager.getPreviousGameMode() != null) {
                 previousGameMode = (byte) interactionManager.getPreviousGameMode().getId();
             } else {
-                previousGameMode = (byte)-1; // none
+                previousGameMode = (byte) -1; // none
             }
             buf.pendingRead(Byte.class, previousGameMode);
             String genType = buf.readString(16);
@@ -234,7 +235,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.pendingRead(Byte.class, (byte)buf.readEnumConstant(EquipmentSlot.class).ordinal()); // slot
             buf.applyPendingReads();
         });
-        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<ItemStack>() {
+        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<>() {
             @Override
             public void onRead(TransformerByteBuf buf) {
             }
@@ -264,7 +265,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
         ProtocolRegistry.registerOutboundTranslator(PlayerInteractEntityC2SPacket.class, buf -> {
             buf.passthroughWrite(VarInt.class); // entity id
-            Supplier<PlayerInteractEntityC2SPacket.InteractType> type = buf.passthroughWrite(PlayerInteractEntityC2SPacket.InteractType.class);
+            var type = buf.passthroughWrite(PlayerInteractEntityC2SPacket.InteractType.class);
             buf.whenWrite(() -> {
                 if (type.get() == PlayerInteractEntityC2SPacket.InteractType.INTERACT_AT) {
                     buf.passthroughWrite(Float.class); // hit x
@@ -306,7 +307,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.passthroughWrite(String.class); // final state
             buf.skipWrite(String.class); // joint type
         });
-        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<ItemStack>() {
+        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<>() {
             @Override
             public void onWrite(TransformerByteBuf buf) {
             }
@@ -345,15 +346,11 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     private static Identifier dimensionIdToName(int dimensionId) {
-        switch (dimensionId) {
-            case -1:
-                return DimensionType.THE_NETHER_REGISTRY_KEY.getValue();
-            case 1:
-                return DimensionType.THE_END_REGISTRY_KEY.getValue();
-            case 0:
-            default:
-                return DimensionType.OVERWORLD_REGISTRY_KEY.getValue();
-        }
+        return switch (dimensionId) {
+            case -1 -> DimensionType.THE_NETHER_REGISTRY_KEY.getValue();
+            case 1 -> DimensionType.THE_END_REGISTRY_KEY.getValue();
+            default -> DimensionType.OVERWORLD_REGISTRY_KEY.getValue();
+        };
     }
 
     public static void skipChunkSection(PacketByteBuf buf) {
@@ -954,6 +951,10 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         tags.addTag(BlockTags.INFINIBURN_END, BlockTags.INFINIBURN_OVERWORLD);
         tags.add(BlockTags.INFINIBURN_END, Blocks.BEDROCK);
         super.addExtraBlockTags(tags);
+
+        tags.get(BlockTags.HOE_MINEABLE.getId()).clear();
+        Set<Block> pickaxeMineableTag = tags.get(BlockTags.PICKAXE_MINEABLE.getId());
+        Arrays.asList(Blocks.PISTON, Blocks.STICKY_PISTON, Blocks.PISTON_HEAD).forEach(pickaxeMineableTag::remove);
     }
 
     @Override
@@ -994,8 +995,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         if (clazz == TameableEntity.class && data == TameableEntityAccessor.getTameableFlags()) {
             DataTrackerManager.registerOldTrackedData(TameableEntity.class, OLD_TAMEABLE_FLAGS, (byte)0, (entity, val) -> {
                 byte newVal = val;
-                if (entity instanceof WolfEntity) {
-                    ((WolfEntity) entity).setAngerTime((newVal & 2) != 0 ? 400 : 0);
+                if (entity instanceof WolfEntity wolf) {
+                    wolf.setAngerTime((newVal & 2) != 0 ? 400 : 0);
                     newVal = (byte) (newVal & ~2);
                 }
                 entity.getDataTracker().set(TameableEntityAccessor.getTameableFlags(), newVal);
@@ -1006,19 +1007,6 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             return false;
         }
         return super.acceptEntityData(clazz, data);
-    }
-
-    @Override
-    public float modifyMiningSpeed(ItemStack tool, BlockState mined, float miningSpeed) {
-        miningSpeed = super.modifyMiningSpeed(tool, mined, miningSpeed);
-        Item toolItem = tool.getItem();
-        Block minedBlock = mined.getBlock();
-        if (toolItem instanceof HoeItem) {
-            miningSpeed = 1;
-        } else if (toolItem instanceof PickaxeItem && (minedBlock == Blocks.PISTON || minedBlock == Blocks.STICKY_PISTON || minedBlock == Blocks.PISTON_HEAD)) {
-            miningSpeed = 1;
-        }
-        return miningSpeed;
     }
 
     @Override

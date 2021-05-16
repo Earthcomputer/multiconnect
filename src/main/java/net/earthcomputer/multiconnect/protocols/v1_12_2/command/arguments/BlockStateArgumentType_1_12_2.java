@@ -38,7 +38,7 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
 
     @Override
     public Custom_1_12_Argument parse(StringReader reader) throws CommandSyntaxException {
-        List<ParsedArgument<?, ?>> result = new ArrayList<>();
+        var result = new ArrayList<ParsedArgument<?, ?>>();
 
         int start = reader.getCursor();
         Identifier id = Identifier.fromCommandInput(reader);
@@ -139,8 +139,10 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
         } else {
             String property = builder.getInput().substring(builder.getStart(), builder.getStart() + equalsIndex - commaIndex - 1);
             List<String> values = BlockStateReverseFlattening.OLD_PROPERTY_VALUES.get(Pair.of(blockId, property));
-            builder = builder.createOffset(builder.getStart() + equalsIndex - commaIndex);
-            CommandSource.suggestMatching(values, builder);
+            if (values != null) {
+                builder = builder.createOffset(builder.getStart() + equalsIndex - commaIndex);
+                CommandSource.suggestMatching(values, builder);
+            }
         }
 
         return builder.buildFuture();

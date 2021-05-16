@@ -72,7 +72,7 @@ public class Utils {
 
     @SafeVarargs
     public static <T, U> Comparator<T> orderBy(Function<T, U> mapper, U... order) {
-        ImmutableMap.Builder<U, Integer> indexBuilder = ImmutableMap.builder();
+        var indexBuilder = ImmutableMap.<U, Integer>builder();
         for (int i = 0; i < order.length; i++) {
             indexBuilder.put(order[i], i);
         }
@@ -115,9 +115,9 @@ public class Utils {
     }
 
     public static void removeTrackedDataHandler(TrackedDataHandler<?> handler) {
-        Int2ObjectBiMap<TrackedDataHandler<?>> biMap = TrackedDataHandlerRegistryAccessor.getDataHandlers();
+        var biMap = TrackedDataHandlerRegistryAccessor.getDataHandlers();
         //noinspection unchecked
-        IInt2ObjectBiMap<TrackedDataHandler<?>> iBiMap = (IInt2ObjectBiMap<TrackedDataHandler<?>>) biMap;
+        var iBiMap = (IInt2ObjectBiMap<TrackedDataHandler<?>>) biMap;
         int id = TrackedDataHandlerRegistry.getId(handler);
         iBiMap.multiconnect_remove(handler);
         for (; TrackedDataHandlerRegistry.get(id + 1) != null; id++) {
@@ -180,8 +180,7 @@ public class Utils {
     @SuppressWarnings("unchecked")
     public static <T, R extends Registry<T>> void addRegistry(DynamicRegistryManager.Impl registries, RegistryKey<R> registryKey) {
         //noinspection ConstantConditions
-        Map<RegistryKey<? extends Registry<?>>, SimpleRegistry<?>> registryMap =
-                (Map<RegistryKey<? extends Registry<?>>, SimpleRegistry<?>>) ((DynamicRegistryManagerImplAccessor) (Object) registries).getRegistries();
+        var registryMap = (Map<RegistryKey<? extends Registry<?>>, SimpleRegistry<?>>) ((DynamicRegistryManagerImplAccessor) (Object) registries).getRegistries();
 
         if (registryMap.containsKey(registryKey)) {
             return;
@@ -191,19 +190,22 @@ public class Utils {
         if (registryKey == Registry.DIMENSION_TYPE_KEY) {
             DimensionType.addRegistryDefaults(registries);
         } else {
-            SimpleRegistry<T> builtinRegistry = (SimpleRegistry<T>) ((Registry<R>) BuiltinRegistries.REGISTRIES).get(registryKey);
+            SimpleRegistry<T> builtinRegistry =
+                    (SimpleRegistry<T>) ((Registry<R>) BuiltinRegistries.REGISTRIES).get(registryKey);
             assert builtinRegistry != null;
-            for (Map.Entry<RegistryKey<T>, T> entry : builtinRegistry.getEntries()) {
-                registry.set(builtinRegistry.getRawId(entry.getValue()), entry.getKey(), entry.getValue(), builtinRegistry.getEntryLifecycle(entry.getValue()));
+            for (var entry : builtinRegistry.getEntries()) {
+                registry.set(builtinRegistry.getRawId(entry.getValue()), entry.getKey(), entry.getValue(),
+                        builtinRegistry.getEntryLifecycle(entry.getValue()));
             }
         }
     }
 
     public static <T> void translateDynamicRegistries(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate) {
         translateExperimentalCodec(buf, oldCodec, allowablePredicate, DynamicRegistryManager.Impl.CODEC, thing -> {
-            DynamicRegistryManager.Impl registryManager = DynamicRegistryManager.create();
+            var registryManager = DynamicRegistryManager.create();
             //noinspection ConstantConditions
-            ((DynamicRegistryManagerImplAccessor) (Object) registryManager).setRegistries(ImmutableMap.of()); // dynamic registry mutator will fix this
+            ((DynamicRegistryManagerImplAccessor) (Object) registryManager).setRegistries(ImmutableMap.of()); //
+            // dynamic registry mutator will fix this
             return registryManager;
         });
     }
@@ -301,34 +303,34 @@ public class Utils {
     }
 
     public static DropDownWidget<ConnectionMode> createVersionDropdown(Screen screen, ConnectionMode initialMode) {
-        DropDownWidget<ConnectionMode> versionDropDown = new DropDownWidget<>(screen.width - 80, 5, 75, 20, initialMode, mode -> {
+        var versionDropDown = new DropDownWidget<>(screen.width - 80, 5, 75, 20, initialMode, mode -> {
             LiteralText text = new LiteralText(mode.getName());
             if (mode.isMulticonnectBeta()) {
                 text.append(new LiteralText(" !").formatted(Formatting.RED));
             }
             return text;
         })
-        .setCategoryLabelExtractor(mode -> {
-            LiteralText text = new LiteralText(mode.getMajorReleaseName());
-            if (mode.isMulticonnectBeta()) {
-                text.append(new LiteralText(" !").formatted(Formatting.RED));
-            }
-            return text;
-        })
-        .setTooltipRenderer((matrices, mode, x, y, isCategory) -> {
-            if (mode.isMulticonnectBeta()) {
-                String modeName = isCategory ? mode.getMajorReleaseName() : mode.getName();
-                screen.renderTooltip(matrices, ImmutableList.of(
-                        new TranslatableText("multiconnect.betaWarning.line1", modeName),
-                        new TranslatableText("multiconnect.betaWarning.line2", modeName)
-                ), x, y);
-            }
-        });
+                .setCategoryLabelExtractor(mode -> {
+                    LiteralText text = new LiteralText(mode.getMajorReleaseName());
+                    if (mode.isMulticonnectBeta()) {
+                        text.append(new LiteralText(" !").formatted(Formatting.RED));
+                    }
+                    return text;
+                })
+                .setTooltipRenderer((matrices, mode, x, y, isCategory) -> {
+                    if (mode.isMulticonnectBeta()) {
+                        String modeName = isCategory ? mode.getMajorReleaseName() : mode.getName();
+                        screen.renderTooltip(matrices, ImmutableList.of(
+                                new TranslatableText("multiconnect.betaWarning.line1", modeName),
+                                new TranslatableText("multiconnect.betaWarning.line2", modeName)
+                        ), x, y);
+                    }
+                });
 
         // populate the versions
         for (ConnectionMode mode : ConnectionMode.values()) {
             if (mode.isMajorRelease()) {
-                DropDownWidget<ConnectionMode>.Category category = versionDropDown.add(mode);
+                var category = versionDropDown.add(mode);
                 List<IProtocol> children = mode.getMinorReleases();
                 if (children.size() > 1) {
                     for (IProtocol child : children) {

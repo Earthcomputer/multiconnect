@@ -43,22 +43,26 @@ public class RecipeBookEmulator {
     }
 
     public void emulateRecipePlacement(PlaceRecipeC2SPacket_1_12 packet) {
-        List<Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer>> transactionsFromMatrix = mergeTransactions(packet.getTransactionsFromMatrix());
+        var transactionsFromMatrix = mergeTransactions(packet.getTransactionsFromMatrix());
         if (transactionsFromMatrix == null) {
             return;
         }
-        List<Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer>> transactionsToMatrix = mergeTransactions(packet.getTransactionsToMatrix());
+        var transactionsToMatrix = mergeTransactions(packet.getTransactionsToMatrix());
         if (transactionsToMatrix == null) {
             return;
         }
 
         short startTransactionId = Protocol_1_16_5.getLastScreenActionId();
 
-        for (Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer> transaction : transactionsFromMatrix) {
-            transfer(transaction.getLeft().craftingSlot, transaction.getLeft().invSlot, transaction.getLeft().stack.getCount() * transaction.getRight(), transaction.getLeft().placedOn, transaction.getLeft().originalStack);
+        for (var transaction : transactionsFromMatrix) {
+            transfer(transaction.getLeft().craftingSlot, transaction.getLeft().invSlot,
+                    transaction.getLeft().stack.getCount() * transaction.getRight(), transaction.getLeft().placedOn,
+                    transaction.getLeft().originalStack);
         }
-        for (Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer> transaction : transactionsToMatrix) {
-            transfer(transaction.getLeft().invSlot, transaction.getLeft().craftingSlot, transaction.getLeft().stack.getCount() * transaction.getRight(), transaction.getLeft().placedOn, transaction.getLeft().originalStack);
+        for (var transaction : transactionsToMatrix) {
+            transfer(transaction.getLeft().invSlot, transaction.getLeft().craftingSlot,
+                    transaction.getLeft().stack.getCount() * transaction.getRight(), transaction.getLeft().placedOn,
+                    transaction.getLeft().originalStack);
         }
 
         recipeTransactionIdRanges.add(new Pair<>(startTransactionId, Protocol_1_16_5.getLastScreenActionId()));
@@ -67,7 +71,7 @@ public class RecipeBookEmulator {
     public void onAckScreenAction(AckScreenActionS2CPacket_1_16_5 packet) {
         short transactionId = packet.getActionId();
 
-        Iterator<Pair<Short, Short>> itr = recipeTransactionIdRanges.iterator();
+        var itr = recipeTransactionIdRanges.iterator();
         while (itr.hasNext()) {
             Pair<Short, Short> range = itr.next();
             short min = range.getLeft();
@@ -91,11 +95,11 @@ public class RecipeBookEmulator {
 
     private List<Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer>> mergeTransactions(List<PlaceRecipeC2SPacket_1_12.Transaction> transactions) {
         // merge
-        List<Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer>> merged = new ArrayList<>();
-        for (PlaceRecipeC2SPacket_1_12.Transaction transaction : transactions) {
+        var merged = new ArrayList<Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer>>();
+        for (var transaction : transactions) {
             boolean canMerge = false;
             if (!merged.isEmpty()) {
-                PlaceRecipeC2SPacket_1_12.Transaction lastTransaction = merged.get(merged.size() - 1).getLeft();
+                var lastTransaction = merged.get(merged.size() - 1).getLeft();
                 if (lastTransaction.stack.getCount() == transaction.stack.getCount()
                         && lastTransaction.craftingSlot == transaction.craftingSlot
                         && lastTransaction.invSlot == transaction.invSlot) {
@@ -104,7 +108,7 @@ public class RecipeBookEmulator {
             }
 
             if (canMerge) {
-                Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer> lastTransaction = merged.get(merged.size() - 1);
+                var lastTransaction = merged.get(merged.size() - 1);
                 merged.set(merged.size() - 1, new Pair<>(lastTransaction.getLeft(), lastTransaction.getRight() + 1));
             } else {
                 merged.add(new Pair<>(transaction, 1));
@@ -113,14 +117,15 @@ public class RecipeBookEmulator {
 
         // translate inv slot to container slot
         for (int i = 0; i < merged.size(); i++) {
-            Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer> transaction = merged.get(i);
-            PlaceRecipeC2SPacket_1_12.Transaction firstTransaction = transaction.getLeft();
+            var transaction = merged.get(i);
+            var firstTransaction = transaction.getLeft();
             int slot = getInvSlot(firstTransaction.invSlot);
             if (slot == -1) {
                 return null;
             }
             merged.set(i, new Pair<>(
-                    new PlaceRecipeC2SPacket_1_12.Transaction(firstTransaction.originalStack, firstTransaction.stack, firstTransaction.placedOn, firstTransaction.craftingSlot, slot),
+                    new PlaceRecipeC2SPacket_1_12.Transaction(firstTransaction.originalStack, firstTransaction.stack,
+                            firstTransaction.placedOn, firstTransaction.craftingSlot, slot),
                     transaction.getRight()
             ));
         }
@@ -165,10 +170,11 @@ public class RecipeBookEmulator {
     private void resyncContainer() {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         assert player != null;
-        ClientPlayerInteractionManager interactionManager = MinecraftClient.getInstance().interactionManager;
+        var interactionManager = MinecraftClient.getInstance().interactionManager;
         assert interactionManager != null;
 
-        int craftingResultSlotId = screenHandler instanceof AbstractRecipeScreenHandler ? ((AbstractRecipeScreenHandler<?>) screenHandler).getCraftingResultSlotIndex() : -1;
+        int craftingResultSlotId = screenHandler instanceof AbstractRecipeScreenHandler ?
+                ((AbstractRecipeScreenHandler<?>) screenHandler).getCraftingResultSlotIndex() : -1;
 
         for (Slot slot : screenHandler.slots) {
             if (slot.id == craftingResultSlotId) {

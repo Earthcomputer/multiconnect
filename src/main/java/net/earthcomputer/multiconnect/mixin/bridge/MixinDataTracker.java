@@ -82,7 +82,7 @@ public abstract class MixinDataTracker implements IDataTracker {
     public void multiconnect_recomputeEntries() {
         if (entries == null)
             return;
-        List<DataTracker.Entry<?>> entryList = new ArrayList<>(entries.values());
+        var entryList = new ArrayList<>(entries.values());
         entries.clear();
         for (DataTracker.Entry<?> entry : entryList) {
             entries.put(entry.getData().getId(), entry);
@@ -100,8 +100,8 @@ public abstract class MixinDataTracker implements IDataTracker {
         lock.writeLock().lock();
         this.trackedEntity = entity;
         //noinspection ConstantConditions
-        Collection<DataTracker.Entry<?>> otherEntries = ((MixinDataTracker) (Object) entity.getDataTracker()).entries.values();
-        Map<Integer, DataTracker.Entry<?>> oldThisEntries = new HashMap<>(this.entries);
+        var otherEntries = ((MixinDataTracker) (Object) entity.getDataTracker()).entries.values();
+        var oldThisEntries = new HashMap<>(this.entries);
         this.entries.clear();
         for (DataTracker.Entry<?> otherEntry : otherEntries) {
             int dataId = otherEntry.getData().getId();

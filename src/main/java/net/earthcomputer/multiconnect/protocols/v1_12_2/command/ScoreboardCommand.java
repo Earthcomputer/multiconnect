@@ -18,7 +18,7 @@ import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EntityArgumentType_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12_2.command.arguments.EnumArgumentType.*;
 import static net.minecraft.command.argument.ColorArgumentType.*;
-import static net.minecraft.command.argument.NbtCompoundTagArgumentType.*;
+import static net.minecraft.command.argument.NbtCompoundArgumentType.*;
 import static net.minecraft.command.argument.ScoreboardCriterionArgumentType.*;
 
 public class ScoreboardCommand {
@@ -174,8 +174,8 @@ public class ScoreboardCommand {
     }
 
     private static CommandNode<CommandSource> addPlayerList(ArgumentBuilder<CommandSource, ?> parentBuilder) {
-        CommandNode<CommandSource> parent = parentBuilder.executes(ctx -> 0).build();
-        CommandNode<CommandSource> child = argument("player", entities())
+        var parent = parentBuilder.executes(ctx -> 0).build();
+        var child = argument("player", entities())
                 .executes(ctx -> 0)
                 .redirect(parent)
                 .build();

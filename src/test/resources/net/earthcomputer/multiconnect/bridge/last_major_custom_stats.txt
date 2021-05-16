@@ -17,6 +17,7 @@ pig_one_cm
 horse_one_cm
 aviate_one_cm
 swim_one_cm
+strider_one_cm
 jump
 drop
 damage_dealt
@@ -69,3 +70,5 @@ raid_trigger
 raid_win
 interact_with_anvil
 interact_with_grindstone
+target_hit
+interact_with_smithing_table

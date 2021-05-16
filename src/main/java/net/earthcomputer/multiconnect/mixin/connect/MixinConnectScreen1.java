@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.mixin.connect;
 
 import net.earthcomputer.multiconnect.connect.ConnectionHandler;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
@@ -13,19 +14,19 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 @Mixin(targets = "net.minecraft.client.gui.screen.ConnectScreen$1")
 public class MixinConnectScreen1 {
 
     @SuppressWarnings("ShadowTarget")
     @Shadow
-    private int field_2415; // port
+    private ServerAddress field_33737;
 
-    @Inject(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;connect(Ljava/net/InetAddress;IZ)Lnet/minecraft/network/ClientConnection;"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-    public void beforeConnect(CallbackInfo ci, InetAddress address) {
+    @Inject(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;connect(Ljava/net/InetSocketAddress;Z)Lnet/minecraft/network/ClientConnection;"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
+    public void beforeConnect(CallbackInfo ci, InetSocketAddress address) {
         ServerInfo serverEntry = MinecraftClient.getInstance().getCurrentServerEntry();
-        if (!ConnectionHandler.preConnect(address, field_2415, serverEntry == null ? null : serverEntry.address)) {
+        if (!ConnectionHandler.preConnect(address, field_33737, serverEntry == null ? null : serverEntry.address)) {
             ci.cancel();
         }
     }

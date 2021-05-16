@@ -48,7 +48,7 @@ public class MixinIdList<T> implements IIdList {
             minHighIds = Integer.MAX_VALUE;
             while (id >= list.size())
                 list.add(null);
-            Iterator<Int2ObjectMap.Entry<T>> itr = highIdsMap.int2ObjectEntrySet().iterator();
+            var itr = highIdsMap.int2ObjectEntrySet().iterator();
             while (itr.hasNext()) {
                 Int2ObjectMap.Entry<T> entry = itr.next();
                 if (entry.getIntKey() <= id) {

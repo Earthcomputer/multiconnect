@@ -18,3 +18,4 @@ blasting
 smoking
 campfire_cooking
 stonecutting
+smithing

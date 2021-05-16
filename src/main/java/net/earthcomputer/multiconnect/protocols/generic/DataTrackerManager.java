@@ -116,7 +116,7 @@ public class DataTrackerManager {
         NEXT_IDS.clear();
         oldTrackedData.clear();
         oldTrackedDataHandlers.clear();
-        Set<Class<? extends Entity>> alreadyReregistered = new HashSet<>();
+        var alreadyReregistered = new HashSet<Class<? extends Entity>>();
         for (Class<? extends Entity> clazz : DEFAULT_DATA.keySet()) {
             reregisterDataForClass(clazz, alreadyReregistered);
         }
@@ -142,7 +142,7 @@ public class DataTrackerManager {
 
     public static synchronized void startTrackingOldTrackedData(Entity entity) {
         for (Class<?> clazz = entity.getClass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
-            List<Pair<TrackedData<?>, ?>> trackedData = oldTrackedData.get(clazz);
+            var trackedData = oldTrackedData.get(clazz);
             if (trackedData != null) {
                 for (Pair<TrackedData<?>, ?> pair : trackedData) {
                     doStartTracking(entity, pair.getLeft(), pair.getRight());

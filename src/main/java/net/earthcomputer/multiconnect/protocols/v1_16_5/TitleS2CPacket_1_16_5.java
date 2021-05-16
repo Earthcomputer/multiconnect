@@ -37,24 +37,12 @@ public class TitleS2CPacket_1_16_5 implements Packet<ClientPlayPacketListener> {
     @Override
     public void apply(ClientPlayPacketListener listener) {
         switch (type) {
-            case TITLE:
-                listener.onTitle(new TitleS2CPacket(text));
-                break;
-            case SUBTITLE:
-                listener.onSubtitle(new SubtitleS2CPacket(text));
-                break;
-            case ACTIONBAR:
-                listener.onOverlayMessage(new OverlayMessageS2CPacket(text));
-                break;
-            case TIMES:
-                listener.onTitleFade(new TitleFadeS2CPacket(fadeInTime, stayTime, fadeOutTime));
-                break;
-            case CLEAR:
-                listener.onTitleClear(new ClearTitleS2CPacket(false));
-                break;
-            case RESET:
-                listener.onTitleClear(new ClearTitleS2CPacket(true));
-                break;
+            case TITLE -> listener.onTitle(new TitleS2CPacket(text));
+            case SUBTITLE -> listener.onSubtitle(new SubtitleS2CPacket(text));
+            case ACTIONBAR -> listener.onOverlayMessage(new OverlayMessageS2CPacket(text));
+            case TIMES -> listener.onTitleFade(new TitleFadeS2CPacket(fadeInTime, stayTime, fadeOutTime));
+            case CLEAR -> listener.onTitleClear(new ClearTitleS2CPacket(false));
+            case RESET -> listener.onTitleClear(new ClearTitleS2CPacket(true));
         }
     }
 

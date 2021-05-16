@@ -8,7 +8,7 @@ import net.minecraft.util.registry.RegistryKey;
 public class Entities_1_12_2 {
 
     private static void register(ISimpleRegistry<EntityType<?>> registry, EntityType<?> entity, int id, String name, String oldName) {
-        RegistryKey<EntityType<?>> key = RegistryKey.of(registry.getRegistryKey(), new Identifier(name));
+        var key = RegistryKey.of(registry.getRegistryKey(), new Identifier(name));
         registry.register(entity, id, key, false);
     }
 

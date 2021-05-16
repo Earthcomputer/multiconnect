@@ -30,8 +30,9 @@ public abstract class MixinWorld implements IBiomeStorage_1_14_4 {
     @Override
     public Biome multiconnect_getBiome_1_14_4(int x, int z) {
         Chunk chunk = getChunk(x >> 4, z >> 4, ChunkStatus.BIOMES, false);
-        if (chunk instanceof IBiomeStorage_1_14_4)
-            return ((IBiomeStorage_1_14_4) chunk).multiconnect_getBiome_1_14_4(x & 15, z & 15);
+        if (chunk instanceof IBiomeStorage_1_14_4 storage114) {
+            return storage114.multiconnect_getBiome_1_14_4(x & 15, z & 15);
+        }
         return null;
     }
 

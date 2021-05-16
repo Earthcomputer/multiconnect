@@ -64,9 +64,10 @@ public class ChunkDataTranslator {
 
                 TransformerByteBuf buf = new TransformerByteBuf(packet.getReadBuffer(), null);
                 buf.readTopLevelType(ChunkData.class);
-                ChunkData chunkData = ChunkData.read(dimension.getMinimumY(), dimension.getMinimumY() + dimension.getHeight() - 1, buf);
+                ChunkData chunkData = ChunkData.read(dimension.getMinimumY(),
+                    dimension.getMinimumY() + dimension.getHeight() - 1, buf);
 
-                EnumMap<EightWayDirection, IntSet> blocksNeedingConnectionUpdate = new EnumMap<>(EightWayDirection.class);
+                var blocksNeedingConnectionUpdate = new EnumMap<EightWayDirection, IntSet>(EightWayDirection.class);
                 ConnectionInfo.protocol.getBlockConnector().fixChunkData(chunkData, blocksNeedingConnectionUpdate);
                 ((IChunkDataS2CPacket) packet).multiconnect_setBlocksNeedingUpdate(blocksNeedingConnectionUpdate);
 
@@ -81,7 +82,7 @@ public class ChunkDataTranslator {
                 } catch (OffThreadException ignore) {
                 }
 
-                for (Packet<ClientPlayPacketListener> postPacket : translator.postPackets) {
+                for (var postPacket : translator.postPackets) {
                     try {
                         postPacket.apply(networkHandler);
                     } catch (OffThreadException ignore) {

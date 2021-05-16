@@ -44,16 +44,15 @@ public abstract class MixinClientConnection {
             ci.cancel();
         } else if (packet instanceof CustomPayloadC2SPacket) {
             if (((ICustomPayloadC2SPacket) packet).multiconnect_isBlocked()) {
-                if (packetListener instanceof ClientPlayNetworkHandler) {
-                    CustomPayloadHandler.handleServerboundCustomPayload((ClientPlayNetworkHandler) packetListener, (CustomPayloadC2SPacket) packet);
+                if (packetListener instanceof ClientPlayNetworkHandler networkHandler) {
+                    CustomPayloadHandler.handleServerboundCustomPayload(networkHandler, (CustomPayloadC2SPacket) packet);
                 }
                 ci.cancel();
             }
-        } else if (packet instanceof CustomPayloadC2SPacket_1_12_2) {
-            CustomPayloadC2SPacket_1_12_2 customPayload = (CustomPayloadC2SPacket_1_12_2) packet;
+        } else if (packet instanceof CustomPayloadC2SPacket_1_12_2 customPayload) {
             if (customPayload.isBlocked()) {
-                if (packetListener instanceof ClientPlayNetworkHandler) {
-                    CustomPayloadHandler.handleServerboundCustomPayload((ClientPlayNetworkHandler) packetListener, customPayload);
+                if (packetListener instanceof ClientPlayNetworkHandler networkHandler) {
+                    CustomPayloadHandler.handleServerboundCustomPayload(networkHandler, customPayload);
                 }
                 ci.cancel();
             }
