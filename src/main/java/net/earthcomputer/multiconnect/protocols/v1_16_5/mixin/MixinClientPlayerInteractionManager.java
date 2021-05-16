@@ -34,9 +34,7 @@ public class MixinClientPlayerInteractionManager {
 
     @ModifyArg(method = "clickSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V"), index = 0)
     private Packet<?> modifySlotClickPacket(Packet<?> packet) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_16_5 && packet instanceof ClickSlotC2SPacket) {
-            ClickSlotC2SPacket clickSlot = (ClickSlotC2SPacket) packet;
-
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_16_5 && packet instanceof ClickSlotC2SPacket clickSlot) {
             ItemStack slotItemBeforeModification;
             if (clickSlot.getActionType() == SlotActionType.QUICK_CRAFT) {
                 // Special case: quick craft always uses empty stack for verification

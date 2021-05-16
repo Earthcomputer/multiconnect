@@ -9,7 +9,6 @@ import net.minecraft.util.collection.DefaultedList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 public final class RecipeInfo<T extends Recipe<?>> {
@@ -53,8 +52,7 @@ public final class RecipeInfo<T extends Recipe<?>> {
         int i;
         int width = 0;
         List<String> shape = new ArrayList<>();
-        for (i = 0; i < args.length && args[i] instanceof String; i++) {
-            String str = (String) args[i];
+        for (i = 0; i < args.length && args[i] instanceof String str; i++) {
             if (i == 0)
                 width = str.length();
             else if (str.length() != width)
@@ -62,8 +60,7 @@ public final class RecipeInfo<T extends Recipe<?>> {
             shape.add(str);
         }
         var legend = new HashMap<Character, Ingredient>();
-        while (i < args.length && args[i] instanceof Character) {
-            Character key = (Character) args[i];
+        while (i < args.length && args[i] instanceof Character key) {
             i++;
             List<ItemConvertible> items = new ArrayList<>();
             for (; i < args.length && args[i] instanceof ItemConvertible; i++) {

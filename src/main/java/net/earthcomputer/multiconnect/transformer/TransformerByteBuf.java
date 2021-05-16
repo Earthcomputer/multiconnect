@@ -320,7 +320,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
         int version = getStackFrame().version;
         int minVersion = ConnectionInfo.protocolVersion;
-        var translators = translatorRegistry.getOutboundTranslators(type, minVersion, version);
+        var translators = translatorRegistry.<T>getOutboundTranslators(type, minVersion, version);
 
         boolean skipWrite = false;
 

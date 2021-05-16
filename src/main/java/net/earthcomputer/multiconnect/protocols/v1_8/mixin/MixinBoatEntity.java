@@ -142,8 +142,8 @@ public abstract class MixinBoatEntity extends Entity implements IBoatEntity_1_8 
             // spawn boat movement splash particles
             double oldHorizontalSpeed = Math.sqrt(getVelocity().x * getVelocity().x + getVelocity().z * getVelocity().z);
             if (oldHorizontalSpeed > 0.2975) {
-                double rx = Math.cos(yaw * Math.PI / 180);
-                double rz = Math.sin(yaw * Math.PI / 180);
+                double rx = Math.cos(getYaw() * Math.PI / 180);
+                double rz = Math.sin(getYaw() * Math.PI / 180);
                 for (int i = 0; i < 1 + oldHorizontalSpeed * 60; i++) {
                     double dForward = random.nextFloat() * 2 - 1;
                     double dSideways = (random.nextInt(2) * 2 - 1) * 0.7;
@@ -166,8 +166,8 @@ public abstract class MixinBoatEntity extends Entity implements IBoatEntity_1_8 
                     double newX = getX() + (this.x - getX()) / boatPosRotationIncrements;
                     double newY = getY() + (this.y - getY()) / boatPosRotationIncrements;
                     double newZ = getZ() + (this.z - getZ()) / boatPosRotationIncrements;
-                    double newYaw = this.yaw + (this.boatYaw - this.yaw) / boatPosRotationIncrements;
-                    double newPitch = this.pitch + (this.boatPitch - this.pitch) / boatPosRotationIncrements;
+                    double newYaw = this.getYaw() + (this.boatYaw - this.getYaw()) / boatPosRotationIncrements;
+                    double newPitch = this.getPitch() + (this.boatPitch - this.getPitch()) / boatPosRotationIncrements;
                     boatPosRotationIncrements--;
                     setPosition(newX, newY, newZ);
                     setRotation((float)newYaw, (float)newPitch);
@@ -189,9 +189,8 @@ public abstract class MixinBoatEntity extends Entity implements IBoatEntity_1_8 
                     setVelocity(getVelocity().add(0, 0.007, 0));
                 }
 
-                if (getPrimaryPassenger() instanceof LivingEntity) {
-                    LivingEntity passenger = (LivingEntity) getPrimaryPassenger();
-                    float boatAngle = passenger.yaw - passenger.sidewaysSpeed * 90;
+                if (getPrimaryPassenger() instanceof LivingEntity passenger) {
+                    float boatAngle = passenger.getYaw() - passenger.sidewaysSpeed * 90;
                     double xAcceleration = -Math.sin(boatAngle * Math.PI / 180) * speedMultiplier * passenger.forwardSpeed * 0.05;
                     double zAcceleration = Math.cos(boatAngle * Math.PI / 180) * speedMultiplier * passenger.forwardSpeed * 0.05;
                     setVelocity(getVelocity().add(xAcceleration, 0, zAcceleration));
@@ -245,11 +244,11 @@ public abstract class MixinBoatEntity extends Entity implements IBoatEntity_1_8 
                     setVelocity(getVelocity().multiply(0.99, 0.95, 0.99));
                 }
 
-                pitch = 0;
+                setPitch(0);
                 double deltaX = prevX - getX();
                 double deltaZ = prevZ - getZ();
                 if (deltaX * deltaX + deltaZ * deltaZ > 0.001) {
-                    yaw = MathHelper.stepAngleTowards(yaw, (float)(MathHelper.atan2(deltaZ, deltaX) * 180 / Math.PI), 20);
+                    setYaw(MathHelper.stepAngleTowards(getYaw(), (float)(MathHelper.atan2(deltaZ, deltaX) * 180 / Math.PI), 20));
                 }
 
             }
@@ -262,8 +261,8 @@ public abstract class MixinBoatEntity extends Entity implements IBoatEntity_1_8 
     private void onUpdatePassengerPosition(Entity passenger, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
             if (hasPassenger(passenger)) {
-                double dx = Math.cos(this.yaw * Math.PI / 180) * 0.4;
-                double dz = Math.sin(this.yaw * Math.PI / 180) * 0.4;
+                double dx = Math.cos(this.getYaw() * Math.PI / 180) * 0.4;
+                double dz = Math.sin(this.getYaw() * Math.PI / 180) * 0.4;
                 passenger.setPosition(getX() + dx, getY() + getMountedHeightOffset(), getZ() + dz);
             }
             ci.cancel();
