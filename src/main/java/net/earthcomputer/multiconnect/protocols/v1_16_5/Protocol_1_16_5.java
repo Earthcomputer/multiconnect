@@ -541,11 +541,6 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
 
     @Override
     public boolean onSendPacket(Packet<?> packet) {
-        if (packet instanceof ClickSlotC2SPacket) {
-            // Packets that go through the ClientPlayerInteractionManager have enough context to be translated, see MixinClientPlayerInteractionManager
-            LOGGER.warn("Dropping untranslated serverbound click slot packet, sent without the client player interaction manager");
-            return false;
-        }
         if (packet instanceof class_6374) {
             return false;
         }

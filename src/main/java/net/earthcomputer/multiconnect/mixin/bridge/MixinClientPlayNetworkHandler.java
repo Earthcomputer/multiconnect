@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.*;
@@ -14,18 +13,23 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityType;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
+import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
+import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.tag.*;
-import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.BuiltinRegistries;
@@ -39,6 +43,7 @@ import net.minecraft.world.event.GameEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Dynamic;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -55,6 +60,7 @@ import java.util.stream.Collectors;
 public class MixinClientPlayNetworkHandler {
 
     @Shadow private ClientWorld world;
+    @Shadow @Final private MinecraftClient client;
 
     @Unique private static final Logger MULTICONNECT_LOGGER = LogManager.getLogger("multiconnect");
 
@@ -135,7 +141,7 @@ public class MixinClientPlayNetworkHandler {
         iregistry.lockRealEntries();
         for (T val : builtinRegistry) {
             builtinRegistry.getKey(val).ifPresent(key -> {
-                if (!dynamicRegistry.getOrEmpty(key).isPresent()) {
+                if (dynamicRegistry.getOrEmpty(key).isEmpty()) {
                     iregistry.register(val, iregistry.getNextId(), key, false);
                 }
             });
@@ -207,6 +213,50 @@ public class MixinClientPlayNetworkHandler {
             CustomPayloadHandler.handleClientboundCustomPayload((ClientPlayNetworkHandler) (Object) this, packet);
             ci.cancel();
         }
+    }
+
+    @ModifyVariable(method = "onScreenHandlerSlotUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), ordinal = 0, argsOnly = true)
+    private ScreenHandlerSlotUpdateS2CPacket modifySlotUpdatePacket(ScreenHandlerSlotUpdateS2CPacket packet) {
+        ClientPlayerEntity player = client.player;
+        assert player != null;
+        ScreenHandler screenHandler = player.currentScreenHandler;
+        if (packet.getSyncId() != screenHandler.syncId) {
+            return packet;
+        }
+
+        int slot = ConnectionInfo.protocol.serverSlotIdToClient(screenHandler, packet.getSlot());
+        if (slot != packet.getSlot()) {
+            packet = new ScreenHandlerSlotUpdateS2CPacket(packet.getSyncId(), slot, packet.getItemStack());
+        }
+
+        return packet;
+    }
+
+    @ModifyVariable(method = "onInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), ordinal = 0, argsOnly = true)
+    private InventoryS2CPacket modifyInventoryPacket(InventoryS2CPacket packet) {
+        ClientPlayerEntity player = client.player;
+        assert player != null;
+        ScreenHandler screenHandler = player.currentScreenHandler;
+        if (packet.getSyncId() != screenHandler.syncId) {
+            return packet;
+        }
+
+        List<ItemStack> newStacks = new ArrayList<>(packet.getContents().size());
+        boolean modified = false;
+        for (int oldSlotId = 0; oldSlotId < packet.getContents().size(); oldSlotId++) {
+            int newSlotId = ConnectionInfo.protocol.serverSlotIdToClient(screenHandler, oldSlotId);
+            while (newStacks.size() <= newSlotId) {
+                newStacks.add(ItemStack.EMPTY);
+            }
+            newStacks.set(newSlotId, packet.getContents().get(oldSlotId));
+            modified |= newSlotId != oldSlotId;
+        }
+
+        if (modified) {
+            packet = new InventoryS2CPacket(packet.getSyncId(), DefaultedList.copyOf(ItemStack.EMPTY, newStacks.toArray(ItemStack[]::new)));
+        }
+
+        return packet;
     }
 
 }

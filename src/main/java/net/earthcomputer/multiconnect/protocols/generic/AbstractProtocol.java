@@ -18,15 +18,21 @@ import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
+import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.*;
 import net.minecraft.world.event.GameEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public abstract class AbstractProtocol implements IUtils {
+    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
+
     private int protocolVersion;
     private BlockConnector blockConnector;
 
@@ -109,6 +115,21 @@ public abstract class AbstractProtocol implements IUtils {
         return new ArrayList<>(DefaultPackets.SERVERBOUND);
     }
 
+    public final boolean preSendPacket(Packet<?> packet) {
+        if (packet instanceof IServerboundSlotPacket slotPacket) {
+            if (!slotPacket.multiconnect_isProcessed()) {
+                // Packets that go through the ClientPlayerInteractionManager have enough context to be translated, see MixinClientPlayerInteractionManager
+                LOGGER.warn("Dropping untranslated serverbound click slot packet, sent without the client player interaction manager");
+                return false;
+            }
+            if (slotPacket.multiconnect_getSlotId() == -1) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public boolean onSendPacket(Packet<?> packet) {
         return true;
     }
@@ -188,6 +209,14 @@ public abstract class AbstractProtocol implements IUtils {
 
     public float getBlockResistance(Block block, float resistance) {
         return resistance;
+    }
+
+    public int clientSlotIdToServer(ScreenHandler screenHandler, int slotId) {
+        return slotId;
+    }
+
+    public int serverSlotIdToClient(ScreenHandler screenHandler, int slotId) {
+        return slotId;
     }
 
     /**

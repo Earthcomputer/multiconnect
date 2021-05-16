@@ -66,6 +66,8 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionUtil;
 import net.minecraft.potion.Potions;
+import net.minecraft.screen.BrewingStandScreenHandler;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -1375,5 +1377,29 @@ public class Protocol_1_8 extends Protocol_1_9 {
         }
 
         return OptionalDouble.empty();
+    }
+
+    @Override
+    public int clientSlotIdToServer(ScreenHandler screenHandler, int slotId) {
+        slotId = super.clientSlotIdToServer(screenHandler, slotId);
+        if (slotId == -1) {
+            return -1;
+        }
+        if (screenHandler instanceof BrewingStandScreenHandler) {
+            if (slotId == 4) { // fuel slot
+                return -1;
+            } else if (slotId > 4) {
+                slotId--;
+            }
+        }
+        return slotId;
+    }
+
+    @Override
+    public int serverSlotIdToClient(ScreenHandler screenHandler, int slotId) {
+        if (screenHandler instanceof BrewingStandScreenHandler && slotId >= 4) {
+            slotId++;
+        }
+        return super.serverSlotIdToClient(screenHandler, slotId);
     }
 }

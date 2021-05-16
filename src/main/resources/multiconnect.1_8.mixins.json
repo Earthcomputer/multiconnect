@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "net.earthcomputer.multiconnect.protocols.v1_8.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_16",
   "mixins": [
     "BatEntityAccessor",
     "BlazeEntityAccessor",
@@ -19,6 +19,7 @@
     "ItemFrameEntityAccessor",
     "LivingEntityAccessor",
     "MixinBoatEntity",
+    "MixinBrewingStandFuelSlot",
     "MixinClientPlayerEntity",
     "MixinClientPlayerInteractionManager",
     "MixinClientPlayNetworkHandler",
