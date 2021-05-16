@@ -69,7 +69,7 @@ public class AchievementManager {
     private static void synchronize(boolean clearAll) {
         Set<Advancement> toEarn = new HashSet<>();
         Set<Identifier> toRemove = new HashSet<>();
-        Map<Identifier, AdvancementProgress> progress = new HashMap<>();
+        var progress = new HashMap<Identifier, AdvancementProgress>();
 
         for (Advancement achievement : visibleAchievements) {
             if (!lastVisibleAchievements.contains(achievement)) {
@@ -98,7 +98,8 @@ public class AchievementManager {
 
         if (clearAll || !toEarn.isEmpty() || !toRemove.isEmpty() || !progress.isEmpty()) {
             assert MinecraftClient.getInstance().getNetworkHandler() != null;
-            MinecraftClient.getInstance().getNetworkHandler().onAdvancements(new AdvancementUpdateS2CPacket(clearAll, toEarn, toRemove, progress));
+            MinecraftClient.getInstance().getNetworkHandler().onAdvancements(new AdvancementUpdateS2CPacket(clearAll,
+                    toEarn, toRemove, progress));
         }
     }
 

@@ -38,7 +38,7 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
 
     @Override
     public Custom_1_12_Argument parse(StringReader reader) throws CommandSyntaxException {
-        List<ParsedArgument<?, ?>> result = new ArrayList<>();
+        var result = new ArrayList<ParsedArgument<?, ?>>();
 
         int start = reader.getCursor();
         Identifier id = Identifier.fromCommandInput(reader);

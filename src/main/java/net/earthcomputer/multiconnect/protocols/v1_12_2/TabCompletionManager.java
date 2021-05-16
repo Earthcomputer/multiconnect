@@ -44,15 +44,16 @@ public class TabCompletionManager {
 
     public static CompletableFuture<List<String>> requestCustomCompletion(String command) {
         assert MinecraftClient.getInstance().getNetworkHandler() != null;
-        CompletableFuture<List<String>> future = new CompletableFuture<>();
+        var future = new CompletableFuture<List<String>>();
         customCompletions.add(future);
-        MinecraftClient.getInstance().getNetworkHandler().sendPacket(new RequestCommandCompletionsC2SPacket(-2, command));
+        MinecraftClient.getInstance().getNetworkHandler().sendPacket(new RequestCommandCompletionsC2SPacket(-2,
+                command));
         return future;
     }
 
     public static boolean handleCustomCompletions(CommandSuggestionsS2CPacket packet) {
         if (packet.getCompletionId() == -1) {
-            CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
+            var dispatcher = new CommandDispatcher<CommandSource>();
             Commands_1_12_2.registerAll(dispatcher, packet.getSuggestions().getList().stream()
                     .map(Suggestion::getText)
                     .filter(str -> !str.isEmpty())

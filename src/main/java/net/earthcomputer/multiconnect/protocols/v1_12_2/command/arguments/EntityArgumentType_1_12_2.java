@@ -91,7 +91,9 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
         if ((reader.canRead() && reader.peek() == '@') || !suggestPlayerNames) {
             playerCompletions = Suggestions.empty();
         } else {
-            playerCompletions = ((CommandSource) context.getSource()).getCompletions((CommandContext<CommandSource>) context, builder.restart());
+            playerCompletions =
+                    ((CommandSource) context.getSource()).getCompletions((CommandContext<CommandSource>) context,
+                            builder.restart());
         }
 
         EntitySelectorParser parser = new EntitySelectorParser(reader, singleTarget, playersOnly);
@@ -99,10 +101,11 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
             parser.parse();
         } catch (CommandSyntaxException ignore) {
         }
-        CompletableFuture<Suggestions> selectorCompletions = parser.suggestor.apply(builder.restart());
+        var selectorCompletions = parser.suggestor.apply(builder.restart());
 
         return CompletableFuture.allOf(playerCompletions, selectorCompletions)
-                .thenCompose(v -> UnionArgumentType.mergeSuggestions(playerCompletions.join(), selectorCompletions.join()));
+                .thenCompose(v -> UnionArgumentType.mergeSuggestions(playerCompletions.join(),
+                        selectorCompletions.join()));
     }
 
     @Override
@@ -229,18 +232,10 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
                         reader.readUnquotedString();
                         if (reader.canRead() && (reader.peek() == ',' || reader.peek() == ']')) {
                             switch (seenOptions.size()) {
-                                case 0:
-                                    seenOptions.add("x");
-                                    break;
-                                case 1:
-                                    seenOptions.add("y");
-                                    break;
-                                case 2:
-                                    seenOptions.add("z");
-                                    break;
-                                case 3:
-                                    seenOptions.add("r");
-                                    break;
+                                case 0 -> seenOptions.add("x");
+                                case 1 -> seenOptions.add("y");
+                                case 2 -> seenOptions.add("z");
+                                case 3 -> seenOptions.add("r");
                             }
                             return;
                         } else {
@@ -284,19 +279,19 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
                         .filter(opt -> !seenOptionsCopy.contains(opt))
                         .map(opt -> opt + "=")
                         .collect(Collectors.toSet()), normalOptionBuilder);
-                CompletableFuture<Suggestions> normalOptions = normalOptionBuilder.buildFuture();
+                var normalOptions = normalOptionBuilder.buildFuture();
 
                 SuggestionsBuilder scoreOptionBuilder = builder.createOffset(start);
-                CompletableFuture<Suggestions> scoreOptions = getScoreObjectives().thenCompose(objectives -> {
+                var scoreOptions = getScoreObjectives().thenCompose(objectives -> {
                     CommandSource.suggestMatching(objectives.stream()
-                            .map(str -> "score_" + str)
-                            .filter(str -> !seenOptionsCopy.contains(str))
-                            .map(str -> str + "="),
+                                    .map(str -> "score_" + str)
+                                    .filter(str -> !seenOptionsCopy.contains(str))
+                                    .map(str -> str + "="),
                             scoreOptionBuilder);
                     CommandSource.suggestMatching(objectives.stream()
-                            .map(str -> "score_" + str + "_min")
-                            .filter(str -> !seenOptionsCopy.contains(str))
-                            .map(str -> str + "="),
+                                    .map(str -> "score_" + str + "_min")
+                                    .filter(str -> !seenOptionsCopy.contains(str))
+                                    .map(str -> str + "="),
                             scoreOptionBuilder);
                     return scoreOptionBuilder.buildFuture();
                 });

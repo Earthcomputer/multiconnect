@@ -44,9 +44,9 @@ public class RegistryMutator {
         for (i = protocols.length - 1; i >= 0; i--) {
             int protocol = protocols[i];
             for (Registry<?> registry : registries) {
-                Int2ObjectMap<Consumer<ISimpleRegistry<?>>> registryMutators = mutators.get(registry);
+                var registryMutators = mutators.get(registry);
                 if (registryMutators != null) {
-                    Consumer<ISimpleRegistry<?>> mutator = registryMutators.get(protocol);
+                    var mutator = registryMutators.get(protocol);
                     if (mutator != null) {
                         mutator.accept((ISimpleRegistry<?>) registry);
                     }

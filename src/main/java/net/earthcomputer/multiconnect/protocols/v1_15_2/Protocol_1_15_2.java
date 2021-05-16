@@ -138,7 +138,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.disablePassthroughMode();
             // not_set game mode, unsigned -1 gets cast back to signed in 1.16.1 when
             // https://bugs.mojang.com/browse/MC-189885 was fixed
-            buf.pendingRead(UnsignedByte.class, new UnsignedByte((short)-1));
+            buf.pendingRead(UnsignedByte.class, new UnsignedByte((short) -1));
             buf.pendingRead(VarInt.class, new VarInt(3)); // dimension count
             // dimension ids
             buf.pendingRead(Identifier.class, World.OVERWORLD.getValue());
@@ -147,10 +147,11 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             int dimensionId = buf.readInt();
             Identifier dimensionName = dimensionIdToName(dimensionId);
 
-            DynamicRegistryManager.Impl registries = DynamicRegistryManager.create();
+            var registries = DynamicRegistryManager.create();
             //noinspection ConstantConditions
             ((DynamicRegistryManagerImplAccessor) (Object) registries).setRegistries(ImmutableMap.of());
-            buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, registries)); // dynamic registry mutator will fix this
+            buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, registries)); //
+            // dynamic registry mutator will fix this
             buf.pendingRead(Identifier.class, dimensionName); // dimension type
             buf.pendingRead(Identifier.class, dimensionName); // dimension
             buf.enablePassthroughMode();
@@ -197,12 +198,12 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.readLong(); // sha256 seed
             buf.readUnsignedByte(); // game mode
             buf.disablePassthroughMode();
-            ClientPlayerInteractionManager interactionManager = MinecraftClient.getInstance().interactionManager;
+            var interactionManager = MinecraftClient.getInstance().interactionManager;
             byte previousGameMode;
             if (interactionManager != null && interactionManager.getPreviousGameMode() != null) {
                 previousGameMode = (byte) interactionManager.getPreviousGameMode().getId();
             } else {
-                previousGameMode = (byte)-1; // none
+                previousGameMode = (byte) -1; // none
             }
             buf.pendingRead(Byte.class, previousGameMode);
             String genType = buf.readString(16);
@@ -264,7 +265,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
         ProtocolRegistry.registerOutboundTranslator(PlayerInteractEntityC2SPacket.class, buf -> {
             buf.passthroughWrite(VarInt.class); // entity id
-            Supplier<PlayerInteractEntityC2SPacket.InteractType> type = buf.passthroughWrite(PlayerInteractEntityC2SPacket.InteractType.class);
+            var type = buf.passthroughWrite(PlayerInteractEntityC2SPacket.InteractType.class);
             buf.whenWrite(() -> {
                 if (type.get() == PlayerInteractEntityC2SPacket.InteractType.INTERACT_AT) {
                     buf.passthroughWrite(Float.class); // hit x
@@ -345,15 +346,11 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     private static Identifier dimensionIdToName(int dimensionId) {
-        switch (dimensionId) {
-            case -1:
-                return DimensionType.THE_NETHER_REGISTRY_KEY.getValue();
-            case 1:
-                return DimensionType.THE_END_REGISTRY_KEY.getValue();
-            case 0:
-            default:
-                return DimensionType.OVERWORLD_REGISTRY_KEY.getValue();
-        }
+        return switch (dimensionId) {
+            case -1 -> DimensionType.THE_NETHER_REGISTRY_KEY.getValue();
+            case 1 -> DimensionType.THE_END_REGISTRY_KEY.getValue();
+            default -> DimensionType.OVERWORLD_REGISTRY_KEY.getValue();
+        };
     }
 
     public static void skipChunkSection(PacketByteBuf buf) {

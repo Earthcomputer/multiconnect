@@ -43,15 +43,9 @@ public class CombatEventS2CPacket_1_16_5 implements Packet<ClientPlayPacketListe
     @Override
     public void apply(ClientPlayPacketListener listener) {
         switch (mode) {
-            case ENTER_COMBAT:
-                listener.onEnterCombat(new EnterCombatS2CPacket());
-                break;
-            case END_COMBAT:
-                listener.onEndCombat(new EndCombatS2CPacket(killerId, duration));
-                break;
-            case ENTITY_DIED:
-                listener.onDeathMessage(new DeathMessageS2CPacket(playerId, killerId, message));
-                break;
+            case ENTER_COMBAT -> listener.onEnterCombat(new EnterCombatS2CPacket());
+            case END_COMBAT -> listener.onEndCombat(new EndCombatS2CPacket(killerId, duration));
+            case ENTITY_DIED -> listener.onDeathMessage(new DeathMessageS2CPacket(playerId, killerId, message));
         }
     }
 

@@ -174,8 +174,8 @@ public class ScoreboardCommand {
     }
 
     private static CommandNode<CommandSource> addPlayerList(ArgumentBuilder<CommandSource, ?> parentBuilder) {
-        CommandNode<CommandSource> parent = parentBuilder.executes(ctx -> 0).build();
-        CommandNode<CommandSource> child = argument("player", entities())
+        var parent = parentBuilder.executes(ctx -> 0).build();
+        var child = argument("player", entities())
                 .executes(ctx -> 0)
                 .redirect(parent)
                 .build();

@@ -61,7 +61,7 @@ public final class RecipeInfo<T extends Recipe<?>> {
                 throw new IllegalArgumentException("Rows do not have consistent width");
             shape.add(str);
         }
-        Map<Character, Ingredient> legend = new HashMap<>();
+        var legend = new HashMap<Character, Ingredient>();
         while (i < args.length && args[i] instanceof Character) {
             Character key = (Character) args[i];
             i++;
@@ -91,7 +91,8 @@ public final class RecipeInfo<T extends Recipe<?>> {
         }
 
         final int width_f = width;
-        return new RecipeInfo<>(id -> new ShapedRecipe(id, group, width_f, height, ingredients, output), RecipeSerializer.SHAPED, output);
+        return new RecipeInfo<>(id -> new ShapedRecipe(id, group, width_f, height, ingredients, output),
+                RecipeSerializer.SHAPED, output);
     }
 
     public static RecipeInfo<ShapedRecipe> shaped(String group, ItemConvertible output, Object... args) {

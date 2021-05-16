@@ -317,7 +317,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         });
 
         ProtocolRegistry.registerOutboundTranslator(RecipeBookDataC2SPacket_1_16_1.class, buf -> {
-            Supplier<RecipeBookDataC2SPacket_1_16_1.Mode> mode = buf.passthroughWrite(RecipeBookDataC2SPacket_1_16_1.Mode.class);
+            var mode = buf.passthroughWrite(RecipeBookDataC2SPacket_1_16_1.Mode.class);
             buf.whenWrite(() -> {
                 if (mode.get() == RecipeBookDataC2SPacket_1_16_1.Mode.SETTINGS) {
                     buf.passthroughWrite(Boolean.class); // gui open
@@ -533,117 +533,66 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         if (clazz == HorseEntity.class)
             DataTrackerManager.registerOldTrackedData(HorseEntity.class, OLD_HORSE_ARMOR, 0, (entity, val) -> {
                 switch (val) {
-                    case 1:
-                        entity.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.IRON_HORSE_ARMOR));
-                        break;
-                    case 2:
-                        entity.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.GOLDEN_HORSE_ARMOR));
-                        break;
-                    case 3:
-                        entity.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_HORSE_ARMOR));
-                        break;
-                    default:
-                        entity.equipStack(EquipmentSlot.CHEST, ItemStack.EMPTY);
+                    case 1 -> entity.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.IRON_HORSE_ARMOR));
+                    case 2 -> entity.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.GOLDEN_HORSE_ARMOR));
+                    case 3 -> entity.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_HORSE_ARMOR));
+                    default -> entity.equipStack(EquipmentSlot.CHEST, ItemStack.EMPTY);
                 }
             });
         super.postEntityDataRegister(clazz);
     }
 
     private static EntityType<?> mapObjectId(int id, int entityData) {
-        switch (id) {
-            case 10:
-                switch (entityData) {
-                    case 1:
-                        return EntityType.CHEST_MINECART;
-                    case 2:
-                        return EntityType.FURNACE_MINECART;
-                    case 3:
-                        return EntityType.TNT_MINECART;
-                    case 4:
-                        return EntityType.SPAWNER_MINECART;
-                    case 5:
-                        return EntityType.HOPPER_MINECART;
-                    case 6:
-                        return EntityType.COMMAND_BLOCK_MINECART;
-                    case 0:
-                    default:
-                        return EntityType.MINECART;
-                }
-            case 90:
-                return EntityType.FISHING_BOBBER;
-            case 60:
-                return EntityType.ARROW;
-            case 91:
-                return EntityType.SPECTRAL_ARROW;
-            case 94:
-                return EntityType.TRIDENT;
-            case 61:
-                return EntityType.SNOWBALL;
-            case 68:
-                return EntityType.LLAMA_SPIT;
-            case 71:
-                return EntityType.ITEM_FRAME;
-            case 77:
-                return EntityType.LEASH_KNOT;
-            case 65:
-                return EntityType.ENDER_PEARL;
-            case 72:
-                return EntityType.EYE_OF_ENDER;
-            case 76:
-                return EntityType.FIREWORK_ROCKET;
-            case 63:
-                return EntityType.FIREBALL;
-            case 93:
-                return EntityType.DRAGON_FIREBALL;
-            case 64:
-                return EntityType.SMALL_FIREBALL;
-            case 66:
-                return EntityType.WITHER_SKULL;
-            case 67:
-                return EntityType.SHULKER_BULLET;
-            case 62:
-                return EntityType.EGG;
-            case 79:
-                return EntityType.EVOKER_FANGS;
-            case 73:
-                return EntityType.POTION;
-            case 75:
-                return EntityType.EXPERIENCE_BOTTLE;
-            case 1:
-                return EntityType.BOAT;
-            case 50:
-                return EntityType.TNT;
-            case 78:
-                return EntityType.ARMOR_STAND;
-            case 51:
-                return EntityType.END_CRYSTAL;
-            case 2:
-                return EntityType.ITEM;
-            case 70:
-                return EntityType.FALLING_BLOCK;
-            case 3:
-                return EntityType.AREA_EFFECT_CLOUD;
-            default:
-                return ENTITY_REGISTRY_1_13.get(id);
-        }
+        return switch (id) {
+            case 10 -> switch (entityData) {
+                case 1 -> EntityType.CHEST_MINECART;
+                case 2 -> EntityType.FURNACE_MINECART;
+                case 3 -> EntityType.TNT_MINECART;
+                case 4 -> EntityType.SPAWNER_MINECART;
+                case 5 -> EntityType.HOPPER_MINECART;
+                case 6 -> EntityType.COMMAND_BLOCK_MINECART;
+                default -> EntityType.MINECART;
+            };
+            case 90 -> EntityType.FISHING_BOBBER;
+            case 60 -> EntityType.ARROW;
+            case 91 -> EntityType.SPECTRAL_ARROW;
+            case 94 -> EntityType.TRIDENT;
+            case 61 -> EntityType.SNOWBALL;
+            case 68 -> EntityType.LLAMA_SPIT;
+            case 71 -> EntityType.ITEM_FRAME;
+            case 77 -> EntityType.LEASH_KNOT;
+            case 65 -> EntityType.ENDER_PEARL;
+            case 72 -> EntityType.EYE_OF_ENDER;
+            case 76 -> EntityType.FIREWORK_ROCKET;
+            case 63 -> EntityType.FIREBALL;
+            case 93 -> EntityType.DRAGON_FIREBALL;
+            case 64 -> EntityType.SMALL_FIREBALL;
+            case 66 -> EntityType.WITHER_SKULL;
+            case 67 -> EntityType.SHULKER_BULLET;
+            case 62 -> EntityType.EGG;
+            case 79 -> EntityType.EVOKER_FANGS;
+            case 73 -> EntityType.POTION;
+            case 75 -> EntityType.EXPERIENCE_BOTTLE;
+            case 1 -> EntityType.BOAT;
+            case 50 -> EntityType.TNT;
+            case 78 -> EntityType.ARMOR_STAND;
+            case 51 -> EntityType.END_CRYSTAL;
+            case 2 -> EntityType.ITEM;
+            case 70 -> EntityType.FALLING_BLOCK;
+            case 3 -> EntityType.AREA_EFFECT_CLOUD;
+            default -> ENTITY_REGISTRY_1_13.get(id);
+        };
     }
 
     private static VillagerProfession getVillagerProfession(int id) {
-        switch (id) {
-            case 0:
-                return VillagerProfession.FARMER;
-            case 1:
-                return VillagerProfession.LIBRARIAN;
-            case 2:
-                return VillagerProfession.CLERIC;
-            case 3:
-                return VillagerProfession.ARMORER;
-            case 4:
-                return VillagerProfession.BUTCHER;
-            case 5:
-            default:
-                return VillagerProfession.NITWIT;
-        }
+        return switch (id) {
+            case 0 -> VillagerProfession.FARMER;
+            case 1 -> VillagerProfession.LIBRARIAN;
+            case 2 -> VillagerProfession.CLERIC;
+            case 3 -> VillagerProfession.ARMORER;
+            case 4 -> VillagerProfession.BUTCHER;
+            default -> VillagerProfession.NITWIT;
+        };
     }
 
     @Override
@@ -824,7 +773,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(EntityType.CAT);
         int ocelotId = Registry.ENTITY_TYPE.getRawId(EntityType.OCELOT);
         registry.unregister(EntityType.OCELOT);
-        RegistryKey<EntityType<?>> ocelotKey = RegistryKey.of(registry.getRegistryKey(), new Identifier("ocelot"));
+        var ocelotKey = RegistryKey.of(registry.getRegistryKey(), new Identifier("ocelot"));
         registry.register(EntityType.CAT, ocelotId, ocelotKey);
         registry.unregister(EntityType.FOX);
         registry.unregister(EntityType.PANDA);
@@ -886,7 +835,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(RecipeSerializer.SMOKING);
         registry.unregister(RecipeSerializer.CAMPFIRE_COOKING);
         registry.unregister(RecipeSerializer.STONECUTTING);
-        RegistryKey<RecipeSerializer<?>> bannerAddPatternKey = RegistryKey.of(registry.getRegistryKey(), new Identifier("crafting_special_banneraddpattern"));
+        var bannerAddPatternKey = RegistryKey.of(registry.getRegistryKey(), new Identifier("crafting_special_banneraddpattern"));
         registry.register(AddBannerPatternRecipe.SERIALIZER, registry.getNextId(), bannerAddPatternKey);
     }
 

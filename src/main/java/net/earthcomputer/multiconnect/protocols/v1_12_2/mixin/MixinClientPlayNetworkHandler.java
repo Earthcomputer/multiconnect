@@ -48,7 +48,7 @@ public abstract class MixinClientPlayNetworkHandler {
             }
             onSynchronizeRecipes(new SynchronizeRecipesS2CPacket(recipes));
 
-            CommandDispatcher<CommandSource> dispatcher = new CommandDispatcher<>();
+            var dispatcher = new CommandDispatcher<CommandSource>();
             Commands_1_12_2.registerAll(dispatcher, null);
             onCommandTree(new CommandTreeS2CPacket(dispatcher.getRoot()));
             TabCompletionManager.requestCommandList();

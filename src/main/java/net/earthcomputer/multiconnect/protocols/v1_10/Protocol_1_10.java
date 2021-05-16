@@ -414,22 +414,11 @@ public class Protocol_1_10 extends Protocol_1_11 {
         }
         if (clazz == ZombieEntity.class && data == ZombieEntityAccessor.getZombieType()) {
             DataTrackerManager.registerOldTrackedData(ZombieEntity.class, OLD_ZOMBIE_TYPE, 0, (entity, val) -> {
-                EntityType<?> newType;
-                switch (val) {
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 5:
-                        newType = EntityType.ZOMBIE_VILLAGER;
-                        break;
-                    case 6:
-                        newType = EntityType.HUSK;
-                        break;
-                    case 0:
-                    default:
-                        newType = EntityType.ZOMBIE;
-                }
+                EntityType<?> newType = switch (val) {
+                    case 1, 2, 3, 4, 5 -> EntityType.ZOMBIE_VILLAGER;
+                    case 6 -> EntityType.HUSK;
+                    default -> EntityType.ZOMBIE;
+                };
                 if (newType != entity.getType()) {
                     entity = (ZombieEntity) changeEntityType(entity, newType);
                 }
@@ -453,24 +442,13 @@ public class Protocol_1_10 extends Protocol_1_11 {
                 }
             });
             DataTrackerManager.registerOldTrackedData(HorseBaseEntity.class, OLD_HORSE_TYPE, 0, (entity, val) -> {
-                EntityType<?> newType;
-                switch (val) {
-                    case 1:
-                        newType = EntityType.DONKEY;
-                        break;
-                    case 2:
-                        newType = EntityType.MULE;
-                        break;
-                    case 3:
-                        newType = EntityType.ZOMBIE_HORSE;
-                        break;
-                    case 4:
-                        newType = EntityType.SKELETON_HORSE;
-                        break;
-                    case 0:
-                    default:
-                        newType = EntityType.HORSE;
-                }
+                EntityType<?> newType = switch (val) {
+                    case 1 -> EntityType.DONKEY;
+                    case 2 -> EntityType.MULE;
+                    case 3 -> EntityType.ZOMBIE_HORSE;
+                    case 4 -> EntityType.SKELETON_HORSE;
+                    default -> EntityType.HORSE;
+                };
                 if (newType != entity.getType()) {
                     changeEntityType(entity, newType);
                 }
@@ -490,18 +468,11 @@ public class Protocol_1_10 extends Protocol_1_11 {
         }
         if (clazz == AbstractSkeletonEntity.class && data == Protocol_1_13_2.OLD_SKELETON_ATTACKING) {
             DataTrackerManager.registerOldTrackedData(AbstractSkeletonEntity.class, OLD_SKELETON_TYPE, 0, (entity, val) -> {
-                EntityType<?> newType;
-                switch (val) {
-                    case 1:
-                        newType = EntityType.WITHER_SKELETON;
-                        break;
-                    case 2:
-                        newType = EntityType.STRAY;
-                        break;
-                    case 0:
-                    default:
-                        newType = EntityType.SKELETON;
-                }
+                EntityType<?> newType = switch (val) {
+                    case 1 -> EntityType.WITHER_SKELETON;
+                    case 2 -> EntityType.STRAY;
+                    default -> EntityType.SKELETON;
+                };
                 if (newType != entity.getType()) {
                     changeEntityType(entity, newType);
                 }

@@ -88,7 +88,7 @@ public class Achievements_1_11_2 {
                 false
         );
         display.setPos(x, y);
-        Map<String, AdvancementCriterion> criteria = ImmutableMap.of(AchievementManager.REQUIREMENT, new AdvancementCriterion(new ImpossibleCriterion.Conditions()));
+        var criteria = ImmutableMap.of(AchievementManager.REQUIREMENT, new AdvancementCriterion(new ImpossibleCriterion.Conditions()));
         String[][] requirements = {{AchievementManager.REQUIREMENT}};
         Advancement advancement = new Advancement(id, parent, display, AdvancementRewards.NONE, criteria, requirements);
         ACHIEVEMENTS.put(name, advancement);

@@ -32,7 +32,7 @@ public final class TPArgumentType implements ArgumentType<Custom_1_12_Argument> 
 
     @Override
     public Custom_1_12_Argument parse(StringReader reader) throws CommandSyntaxException {
-        List<ParsedArgument<?, ?>> result = new ArrayList<>();
+        var result = new ArrayList<ParsedArgument<?, ?>>();
 
         String[] args = reader.getRemaining().split(" ", -1);
         if (args.length == 2 || args.length == 4 || args.length == 6) {
@@ -63,7 +63,7 @@ public final class TPArgumentType implements ArgumentType<Custom_1_12_Argument> 
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        List<CompletableFuture<Suggestions>> suggestions = new ArrayList<>();
+        var suggestions = new ArrayList<CompletableFuture<Suggestions>>();
 
         String[] args = builder.getRemaining().split(" ", -1);
         if (args.length == 1) {
@@ -107,13 +107,15 @@ public final class TPArgumentType implements ArgumentType<Custom_1_12_Argument> 
                     reader.skip();
                     isCoordinateArg(reader);
                     reader.skip();
-                    suggestions.add(CommandSource.suggestMatching(new String[] {"~", "~ ~"}, builder.createOffset(reader.getCursor())));
+                    suggestions.add(CommandSource.suggestMatching(new String[]{"~", "~ ~"},
+                            builder.createOffset(reader.getCursor())));
                 }
             }
         }
 
         return CompletableFuture.allOf(suggestions.toArray(new CompletableFuture[0]))
-                .thenApply(v -> Suggestions.merge(builder.getInput(), suggestions.stream().map(CompletableFuture::join).collect(Collectors.toList())));
+                .thenApply(v -> Suggestions.merge(builder.getInput(),
+                        suggestions.stream().map(CompletableFuture::join).collect(Collectors.toList())));
     }
 
     private static boolean isCoordinateArg(StringReader reader) {

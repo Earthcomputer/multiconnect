@@ -28,14 +28,15 @@ public class TranslatorRegistry {
     // min version inclusive, max version exclusive
     @SuppressWarnings("unchecked")
     public <STORED> List<Pair<Integer, InboundTranslator<STORED>>> getInboundTranslators(Class<?> type, int minVersion, int maxVersion) {
-        List<Pair<Integer, InboundTranslator<STORED>>> translators = (List<Pair<Integer, InboundTranslator<STORED>>>) (List<?>) inboundTranslators.get(type);
-        return translators == null ? Collections.emptyList() : Lists.reverse(getTranslatorRange(translators, minVersion, maxVersion));
+        var translators = (List<Pair<Integer, InboundTranslator<STORED>>>) (List<?>) inboundTranslators.get(type);
+        return translators == null ? Collections.emptyList() : Lists.reverse(getTranslatorRange(translators,
+                minVersion, maxVersion));
     }
 
     // min version inclusive, max version exclusive
     @SuppressWarnings("unchecked")
     public <T> List<Pair<Integer, OutboundTranslator<T>>> getOutboundTranslators(Class<T> type, int minVersion, int maxVersion) {
-        List<Pair<Integer, OutboundTranslator<T>>> translators = (List<Pair<Integer, OutboundTranslator<T>>>) (List<?>) outboundTranslators.get(type);
+        var translators = (List<Pair<Integer, OutboundTranslator<T>>>) (List<?>) outboundTranslators.get(type);
         return translators == null ? Collections.emptyList() : getTranslatorRange(translators, minVersion, maxVersion);
     }
 

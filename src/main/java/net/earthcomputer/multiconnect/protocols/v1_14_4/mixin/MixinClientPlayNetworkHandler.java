@@ -57,12 +57,12 @@ public abstract class MixinClientPlayNetworkHandler {
     @Unique
     private void applyPendingEntityTrackerValues(int entityId) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_14_4) {
-            List<DataTracker.Entry<?>> entries = PendingDataTrackerEntries.getEntries(entityId);
+            var entries = PendingDataTrackerEntries.getEntries(entityId);
             if (entries != null) {
                 PendingDataTrackerEntries.setEntries(entityId, null);
-                EntityTrackerUpdateS2CPacket packet = Utils.createPacket(EntityTrackerUpdateS2CPacket.class, EntityTrackerUpdateS2CPacket::new, Protocols.V1_15, buf -> {
+                var packet = Utils.createPacket(EntityTrackerUpdateS2CPacket.class, EntityTrackerUpdateS2CPacket::new, Protocols.V1_15, buf -> {
                     buf.pendingRead(VarInt.class, new VarInt(entityId));
-                    buf.pendingRead(UnsignedByte.class, new UnsignedByte((short)255)); // terminating byte
+                    buf.pendingRead(UnsignedByte.class, new UnsignedByte((short) 255)); // terminating byte
                     buf.applyPendingReads();
                 });
                 ((TrackerUpdatePacketAccessor) packet).setTrackedValues(entries);

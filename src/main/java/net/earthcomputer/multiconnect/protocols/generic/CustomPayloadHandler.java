@@ -65,12 +65,14 @@ public class CustomPayloadHandler {
     }
 
     public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket packet) {
-        CustomPayloadEvent<Identifier> event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
+        var event = new CustomPayloadEvent<Identifier>(ConnectionInfo.protocolVersion,
+                packet.getChannel(), packet.getData(), networkHandler);
         serverboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
     public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket_1_12_2 packet) {
-        CustomPayloadEvent<String> event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
+        var event = new CustomPayloadEvent<String>(ConnectionInfo.protocolVersion,
+                packet.getChannel(), packet.getData(), networkHandler);
         serverboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
@@ -87,12 +89,14 @@ public class CustomPayloadHandler {
     }
 
     private static void handleClientboundIdentifierCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadS2CPacket packet) {
-        CustomPayloadEvent<Identifier> event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
+        var event = new CustomPayloadEvent<Identifier>(ConnectionInfo.protocolVersion,
+                packet.getChannel(), packet.getData(), networkHandler);
         clientboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
     private static void handleClientboundStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
-        CustomPayloadEvent<String> event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, channel, data, networkHandler);
+        var event = new CustomPayloadEvent<String>(ConnectionInfo.protocolVersion, channel, data,
+                networkHandler);
         clientboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
@@ -105,7 +109,7 @@ public class CustomPayloadHandler {
     }
 
     static {
-        ImmutableSet.Builder<Identifier> vanillaChannels = ImmutableSet.builder();
+        var vanillaChannels = ImmutableSet.<Identifier>builder();
 
         // existing vanilla ones
         for (Field field : CustomPayloadS2CPacket.class.getDeclaredFields()) {

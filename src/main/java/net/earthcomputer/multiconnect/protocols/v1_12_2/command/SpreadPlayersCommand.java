@@ -13,19 +13,19 @@ import static net.minecraft.command.argument.Vec2ArgumentType.*;
 public class SpreadPlayersCommand {
 
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
-        CommandNode<CommandSource> respectTeams = argument("respectTeams", bool())
+        var respectTeams = argument("respectTeams", bool())
                 .executes(ctx -> 0)
                 .build();
-        CommandNode<CommandSource> target = argument("target", entities())
+        var target = argument("target", entities())
                 .executes(ctx -> 0)
                 .redirect(respectTeams)
                 .build();
         respectTeams.addChild(target);
         dispatcher.register(literal("spreadplayers")
-            .then(argument("center", vec2())
-                .then(argument("spreadDistance", doubleArg(0))
-                    .then(argument("maxRange", doubleArg(1))
-                        .then(respectTeams)))));
+                .then(argument("center", vec2())
+                        .then(argument("spreadDistance", doubleArg(0))
+                                .then(argument("maxRange", doubleArg(1))
+                                        .then(respectTeams)))));
     }
 
 }

@@ -172,12 +172,13 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(SynchronizeTagsS2CPacket.class, buf -> {
-            Map<RegistryKey<? extends Registry<?>>, TagGroup.Serialized> tags = new HashMap<>(5);
+            var tags = new HashMap<RegistryKey<? extends Registry<?>>, TagGroup.Serialized>(5);
             tags.put(RegistryKey.ofRegistry(new Identifier("block")), readTagGroupNetworkData(buf));
             tags.put(RegistryKey.ofRegistry(new Identifier("item")), readTagGroupNetworkData(buf));
             tags.put(RegistryKey.ofRegistry(new Identifier("fluid")), readTagGroupNetworkData(buf));
             tags.put(RegistryKey.ofRegistry(new Identifier("entity_type")), readTagGroupNetworkData(buf));
-            tags.put(RegistryKey.ofRegistry(new Identifier("game_event")), TagGroupSerializedAccessor.createTagGroupSerialized(new HashMap<>()));
+            tags.put(RegistryKey.ofRegistry(new Identifier("game_event")),
+                    TagGroupSerializedAccessor.createTagGroupSerialized(new HashMap<>()));
             buf.pendingReadMapUnchecked(Identifier.class, TagGroup.Serialized.class, tags);
             buf.applyPendingReads();
         });
@@ -234,21 +235,23 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             buf.readVarInt(); // entity id
             buf.disablePassthroughMode();
             int numEntries = buf.readInt();
-            List<EntityAttributesS2CPacket.Entry> entries = new ArrayList<>(numEntries);
+            var entries = new ArrayList<EntityAttributesS2CPacket.Entry>(numEntries);
             for (int i = 0; i < numEntries; i++) {
                 Identifier attributeId = buf.readIdentifier();
                 EntityAttribute attribute = Registry.ATTRIBUTE.get(attributeId);
                 double baseValue = buf.readDouble();
                 int modifierCount = buf.readVarInt();
-                List<EntityAttributeModifier> modifiers = new ArrayList<>(modifierCount);
+                var modifiers = new ArrayList<EntityAttributeModifier>(modifierCount);
                 for (int j = 0; j < modifierCount; j++) {
                     UUID uuid = buf.readUuid();
-                    modifiers.add(new EntityAttributeModifier(uuid, "Unknown synced attribute modifier", buf.readDouble(), EntityAttributeModifier.Operation.fromId(buf.readByte())));
+                    modifiers.add(new EntityAttributeModifier(uuid, "Unknown synced attribute modifier",
+                            buf.readDouble(), EntityAttributeModifier.Operation.fromId(buf.readByte())));
                 }
                 entries.add(new EntityAttributesS2CPacket.Entry(attribute, baseValue, modifiers));
             }
             //noinspection unchecked
-            buf.pendingReadCollection((Class<List<EntityAttributesS2CPacket.Entry>>) (Class<?>) List.class, EntityAttributesS2CPacket.Entry.class, entries);
+            buf.pendingReadCollection((Class<List<EntityAttributesS2CPacket.Entry>>) (Class<?>) List.class,
+                    EntityAttributesS2CPacket.Entry.class, entries);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(StatisticsS2CPacket.class, buf -> {
@@ -285,23 +288,24 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         });
         ProtocolRegistry.registerInboundTranslator(CommandTreeS2CPacket.class, buf -> {
             int numNodes = buf.readVarInt();
-            List<CommandTreeS2CPacket.CommandNodeData> nodes = new ArrayList<>(numNodes);
+            var nodes = new ArrayList<CommandTreeS2CPacket.CommandNodeData>(numNodes);
             for (int i = 0; i < numNodes; i++) {
                 nodes.add(CommandTreeS2CAccessor.callReadCommandNode(buf));
             }
             //noinspection unchecked
-            buf.pendingReadCollection((Class<List<CommandTreeS2CPacket.CommandNodeData>>) (Class<?>) List.class, CommandTreeS2CPacket.CommandNodeData.class, nodes);
+            buf.pendingReadCollection((Class<List<CommandTreeS2CPacket.CommandNodeData>>) (Class<?>) List.class,
+                    CommandTreeS2CPacket.CommandNodeData.class, nodes);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(PlayerListS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            PlayerListS2CPacket.Action action = buf.readEnumConstant(PlayerListS2CPacket.Action.class);
+            var action = buf.readEnumConstant(PlayerListS2CPacket.Action.class);
             buf.disablePassthroughMode();
             int numEntries = buf.readVarInt();
-            List<PlayerListS2CPacket.Entry> entries = new ArrayList<>(numEntries);
+            var entries = new ArrayList<PlayerListS2CPacket.Entry>(numEntries);
             for (int i = 0; i < numEntries; i++) {
                 switch (action) {
-                    case ADD_PLAYER: {
+                    case ADD_PLAYER -> {
                         GameProfile profile = new GameProfile(buf.readUuid(), buf.readString(16));
                         int numProperties = buf.readVarInt();
                         for (int j = 0; j < numProperties; j++) {
@@ -319,39 +323,35 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
                         Text displayName = buf.readBoolean() ? buf.readText() : null;
                         entries.add(new PlayerListS2CPacket.Entry(profile, latency, gameMode, displayName));
                     }
-                    break;
-                    case UPDATE_GAME_MODE: {
+                    case UPDATE_GAME_MODE -> {
                         GameProfile profile = new GameProfile(buf.readUuid(), null);
                         GameMode gameMode = GameMode.byId(buf.readVarInt());
                         entries.add(new PlayerListS2CPacket.Entry(profile, 0, gameMode, null));
                     }
-                    break;
-                    case UPDATE_LATENCY: {
+                    case UPDATE_LATENCY -> {
                         GameProfile profile = new GameProfile(buf.readUuid(), null);
                         int latency = buf.readVarInt();
                         entries.add(new PlayerListS2CPacket.Entry(profile, latency, null, null));
                     }
-                    break;
-                    case UPDATE_DISPLAY_NAME: {
+                    case UPDATE_DISPLAY_NAME -> {
                         GameProfile profile = new GameProfile(buf.readUuid(), null);
                         Text displayName = buf.readBoolean() ? buf.readText() : null;
                         entries.add(new PlayerListS2CPacket.Entry(profile, 0, null, displayName));
                     }
-                    break;
-                    case REMOVE_PLAYER: {
+                    case REMOVE_PLAYER -> {
                         GameProfile profile = new GameProfile(buf.readUuid(), null);
                         entries.add(new PlayerListS2CPacket.Entry(profile, 0, null, null));
                     }
-                    break;
                 }
             }
             //noinspection unchecked
-            buf.pendingReadCollection((Class<List<PlayerListS2CPacket.Entry>>) (Class<?>) List.class, PlayerListS2CPacket.Entry.class, entries);
+            buf.pendingReadCollection((Class<List<PlayerListS2CPacket.Entry>>) (Class<?>) List.class,
+                    PlayerListS2CPacket.Entry.class, entries);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(UnlockRecipesS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            UnlockRecipesS2CPacket.Action action = buf.readEnumConstant(UnlockRecipesS2CPacket.Action.class);
+            var action = buf.readEnumConstant(UnlockRecipesS2CPacket.Action.class);
             RecipeBookOptions.fromPacket(buf); // options
             buf.disablePassthroughMode();
             int numRecipeIdsToChange = buf.readVarInt();
@@ -360,7 +360,8 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
                 recipeIdsToChange.add(buf.readIdentifier());
             }
             //noinspection unchecked
-            buf.pendingReadCollection((Class<List<Identifier>>) (Class<?>) List.class, Identifier.class, recipeIdsToChange);
+            buf.pendingReadCollection((Class<List<Identifier>>) (Class<?>) List.class, Identifier.class,
+                    recipeIdsToChange);
             if (action == UnlockRecipesS2CPacket.Action.INIT) {
                 int numRecipeIdsToInit = buf.readVarInt();
                 List<Identifier> recipeIdsToInit = new ArrayList<>(numRecipeIdsToInit);
@@ -368,7 +369,8 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
                     recipeIdsToInit.add(buf.readIdentifier());
                 }
                 //noinspection unchecked
-                buf.pendingReadCollection((Class<List<Identifier>>) (Class<?>) List.class, Identifier.class, recipeIdsToInit);
+                buf.pendingReadCollection((Class<List<Identifier>>) (Class<?>) List.class, Identifier.class,
+                        recipeIdsToInit);
             }
             buf.applyPendingReads();
         });
@@ -406,7 +408,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             buf.readBoolean(); // clear current
             buf.disablePassthroughMode();
             int numToEarn = buf.readVarInt();
-            Map<Identifier, Advancement.Task> toEarn = new HashMap<>(numToEarn);
+            var toEarn = new HashMap<Identifier, Advancement.Task>(numToEarn);
             for (int i = 0; i < numToEarn; i++) {
                 toEarn.put(buf.readIdentifier(), Advancement.Task.fromPacket(buf));
             }
@@ -417,9 +419,10 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
                 toRemove.add(buf.readIdentifier());
             }
             //noinspection unchecked
-            buf.pendingReadCollection((Class<Collection<Identifier>>) (Class<?>) Collection.class, Identifier.class, toRemove);
+            buf.pendingReadCollection((Class<Collection<Identifier>>) (Class<?>) Collection.class, Identifier.class,
+                    toRemove);
             int numToSetProgress = buf.readVarInt();
-            Map<Identifier, AdvancementProgress> toSetProgress = new HashMap<>(numToSetProgress);
+            var toSetProgress = new HashMap<Identifier, AdvancementProgress>(numToSetProgress);
             for (int i = 0; i < numToSetProgress; i++) {
                 toSetProgress.put(buf.readIdentifier(), AdvancementProgress.fromPacket(buf));
             }
@@ -464,7 +467,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
 
     private static void translateDimensionType(TransformerByteBuf buf) {
         // TODO: move between the 1.17 and 1.18 protocol when 1.18 changes the world height
-        Codecked<Supplier<DimensionType>> dimensionTypeCodecked = Utils.translateDimensionType(buf);
+        var dimensionTypeCodecked = Utils.translateDimensionType(buf);
         if (dimensionTypeCodecked != null) {
             Supplier<DimensionType> oldSupplier = dimensionTypeCodecked.getValue();
             dimensionTypeCodecked.setValue(() -> {

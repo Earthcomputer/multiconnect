@@ -204,7 +204,7 @@ public abstract class AbstractProtocol implements IUtils {
 
         private static void initialize() {
             //noinspection ConstantConditions
-            Map<NetworkSide, ? extends IPacketHandler<?>> packetHandlerMap = ((INetworkState) (Object) NetworkState.PLAY).getPacketHandlers();
+            var packetHandlerMap = ((INetworkState) (Object) NetworkState.PLAY).getPacketHandlers();
             IPacketHandler<?> clientPacketMap = packetHandlerMap.get(NetworkSide.CLIENTBOUND);
             CLIENTBOUND.addAll(clientPacketMap.multiconnect_values());
             IPacketHandler<?> serverPacketMap = packetHandlerMap.get(NetworkSide.SERVERBOUND);

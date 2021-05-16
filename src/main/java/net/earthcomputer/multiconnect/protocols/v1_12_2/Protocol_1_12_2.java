@@ -266,7 +266,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
         ProtocolRegistry.registerInboundTranslator(UnlockRecipesS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            UnlockRecipesS2CPacket.Action action = buf.readEnumConstant(UnlockRecipesS2CPacket.Action.class);
+            var action = buf.readEnumConstant(UnlockRecipesS2CPacket.Action.class);
             buf.readBoolean(); // gui open
             buf.readBoolean(); // filtering craftable
             buf.pendingRead(Boolean.class, false); // furnace gui open
@@ -295,7 +295,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             if (mode == 0 || mode == 2) {
                 buf.pendingRead(Text.class, new LiteralText(buf.readString(32))); // display name
                 String renderTypeName = buf.readString(16);
-                ScoreboardCriterion.RenderType renderType = "hearts".equals(renderTypeName) ? ScoreboardCriterion.RenderType.HEARTS : ScoreboardCriterion.RenderType.INTEGER;
+                var renderType = "hearts".equals(renderTypeName) ?
+                        ScoreboardCriterion.RenderType.HEARTS : ScoreboardCriterion.RenderType.INTEGER;
                 buf.pendingRead(ScoreboardCriterion.RenderType.class, renderType);
             }
             buf.applyPendingReads();
@@ -313,16 +314,16 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
         ProtocolRegistry.registerInboundTranslator(StatisticsS2CPacket.class, buf -> {
             int count = buf.readVarInt();
-            List<Triple<StatType<Object>, Object, Integer>> stats = new ArrayList<>(count);
+            var stats = new ArrayList<Triple<StatType<Object>, Object, Integer>>(count);
             for (int i = 0; i < count; i++) {
                 String stat = buf.readString(32767);
-                Pair<StatType<Object>, Object> statKey = translateStat(stat);
+                var statKey = translateStat(stat);
                 int value = buf.readVarInt();
                 if (statKey != null)
                     stats.add(Triple.of(statKey.getLeft(), statKey.getRight(), value));
             }
             buf.pendingRead(VarInt.class, new VarInt(stats.size()));
-            for (Triple<StatType<Object>, Object, Integer> stat : stats) {
+            for (var stat : stats) {
                 buf.pendingRead(VarInt.class, new VarInt(Registry.STAT_TYPE.getRawId(stat.getLeft())));
                 buf.pendingRead(VarInt.class, new VarInt(stat.getLeft().getRegistry().getRawId(stat.getMiddle())));
                 buf.pendingRead(VarInt.class, new VarInt(stat.getRight()));
@@ -331,7 +332,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         });
 
         ProtocolRegistry.registerInboundTranslator(CommandSuggestionsS2CPacket.class, buf -> {
-            TabCompletionManager.Entry entry = TabCompletionManager.nextEntry();
+            var entry = TabCompletionManager.nextEntry();
             if (entry == null) {
                 LOGGER.error("Received unrequested tab completion packet");
                 int count = buf.readVarInt();
@@ -468,7 +469,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         });
 
         ProtocolRegistry.registerOutboundTranslator(RecipeBookDataC2SPacket_1_16_1.class, buf -> {
-            Supplier<RecipeBookDataC2SPacket_1_16_1.Mode> mode = buf.passthroughWrite(RecipeBookDataC2SPacket_1_16_1.Mode.class);
+            var mode = buf.passthroughWrite(RecipeBookDataC2SPacket_1_16_1.Mode.class);
             buf.whenWrite(() -> {
                 if (mode.get() == RecipeBookDataC2SPacket_1_16_1.Mode.SHOWN) {
                     Supplier<Identifier> recipeId = buf.skipWrite(Identifier.class);
@@ -602,61 +603,61 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     }
 
     private static Identifier translateCustomStat(String id) {
-        switch (id) {
-            case "jump": return Stats.JUMP;
-            case "drop": return Stats.DROP;
-            case "deaths": return Stats.DEATHS;
-            case "mobKills": return Stats.MOB_KILLS;
-            case "pigOneCm": return Stats.PIG_ONE_CM;
-            case "flyOneCm": return Stats.FLY_ONE_CM;
-            case "leaveGame": return Stats.LEAVE_GAME;
-            case "diveOneCm": return Stats.WALK_UNDER_WATER_ONE_CM;
-            case "swimOneCm": return Stats.SWIM_ONE_CM;
-            case "fallOneCm": return Stats.FALL_ONE_CM;
-            case "walkOneCm": return Stats.WALK_ONE_CM;
-            case "boatOneCm": return Stats.BOAT_ONE_CM;
-            case "sneakTime": return Stats.SNEAK_TIME;
-            case "horseOneCm": return Stats.HORSE_ONE_CM;
-            case "sleepInBed": return Stats.SLEEP_IN_BED;
-            case "fishCaught": return Stats.FISH_CAUGHT;
-            case "climbOneCm": return Stats.CLIMB_ONE_CM;
-            case "aviateOneCm": return Stats.AVIATE_ONE_CM;
-            case "crouchOneCm": return Stats.CROUCH_ONE_CM;
-            case "sprintOneCm": return Stats.SPRINT_ONE_CM;
-            case "animalsBred": return Stats.ANIMALS_BRED;
-            case "chestOpened": return Stats.OPEN_CHEST;
-            case "damageTaken": return Stats.DAMAGE_TAKEN;
-            case "damageDealt": return Stats.DAMAGE_DEALT;
-            case "playerKills": return Stats.PLAYER_KILLS;
-            case "armorCleaned": return Stats.CLEAN_ARMOR;
-            case "flowerPotted": return Stats.POT_FLOWER;
-            case "recordPlayed": return Stats.PLAY_RECORD;
-            case "cauldronUsed": return Stats.USE_CAULDRON;
-            case "bannerCleaned": return Stats.CLEAN_BANNER;
-            case "itemEnchanted": return Stats.ENCHANT_ITEM;
-            case "playOneMinute": return Stats.PLAY_TIME;
-            case "minecartOneCm": return Stats.MINECART_ONE_CM;
-            case "timeSinceDeath": return Stats.TIME_SINCE_DEATH;
-            case "cauldronFilled": return Stats.FILL_CAULDRON;
-            case "noteblockTuned": return Stats.TUNE_NOTEBLOCK;
-            case "noteblockPlayed": return Stats.PLAY_NOTEBLOCK;
-            case "cakeSlicesEaten": return Stats.EAT_CAKE_SLICE;
-            case "hopperInspected": return Stats.INSPECT_HOPPER;
-            case "shulkerBoxOpened": return Stats.OPEN_SHULKER_BOX;
-            case "talkedToVillager": return Stats.TALKED_TO_VILLAGER;
-            case "enderchestOpened": return Stats.OPEN_ENDERCHEST;
-            case "dropperInspected": return Stats.INSPECT_DROPPER;
-            case "beaconInteraction": return Stats.INTERACT_WITH_BEACON;
-            case "furnaceInteraction": return Stats.INTERACT_WITH_FURNACE;
-            case "dispenserInspected": return Stats.INSPECT_DISPENSER;
-            case "tradedWithVillager": return Stats.TRADED_WITH_VILLAGER;
-            case "trappedChestTriggered": return Stats.TRIGGER_TRAPPED_CHEST;
-            case "brewingstandInteraction": return Stats.INTERACT_WITH_BREWINGSTAND;
-            case "craftingTableInteraction": return Stats.INTERACT_WITH_CRAFTING_TABLE;
-            case "junkFished": return Protocol_1_11.JUNK_FISHED;
-            case "treasureFished": return Protocol_1_11.TREASURE_FISHED;
-            default: return null;
-        }
+        return switch (id) {
+            case "jump" -> Stats.JUMP;
+            case "drop" -> Stats.DROP;
+            case "deaths" -> Stats.DEATHS;
+            case "mobKills" -> Stats.MOB_KILLS;
+            case "pigOneCm" -> Stats.PIG_ONE_CM;
+            case "flyOneCm" -> Stats.FLY_ONE_CM;
+            case "leaveGame" -> Stats.LEAVE_GAME;
+            case "diveOneCm" -> Stats.WALK_UNDER_WATER_ONE_CM;
+            case "swimOneCm" -> Stats.SWIM_ONE_CM;
+            case "fallOneCm" -> Stats.FALL_ONE_CM;
+            case "walkOneCm" -> Stats.WALK_ONE_CM;
+            case "boatOneCm" -> Stats.BOAT_ONE_CM;
+            case "sneakTime" -> Stats.SNEAK_TIME;
+            case "horseOneCm" -> Stats.HORSE_ONE_CM;
+            case "sleepInBed" -> Stats.SLEEP_IN_BED;
+            case "fishCaught" -> Stats.FISH_CAUGHT;
+            case "climbOneCm" -> Stats.CLIMB_ONE_CM;
+            case "aviateOneCm" -> Stats.AVIATE_ONE_CM;
+            case "crouchOneCm" -> Stats.CROUCH_ONE_CM;
+            case "sprintOneCm" -> Stats.SPRINT_ONE_CM;
+            case "animalsBred" -> Stats.ANIMALS_BRED;
+            case "chestOpened" -> Stats.OPEN_CHEST;
+            case "damageTaken" -> Stats.DAMAGE_TAKEN;
+            case "damageDealt" -> Stats.DAMAGE_DEALT;
+            case "playerKills" -> Stats.PLAYER_KILLS;
+            case "armorCleaned" -> Stats.CLEAN_ARMOR;
+            case "flowerPotted" -> Stats.POT_FLOWER;
+            case "recordPlayed" -> Stats.PLAY_RECORD;
+            case "cauldronUsed" -> Stats.USE_CAULDRON;
+            case "bannerCleaned" -> Stats.CLEAN_BANNER;
+            case "itemEnchanted" -> Stats.ENCHANT_ITEM;
+            case "playOneMinute" -> Stats.PLAY_TIME;
+            case "minecartOneCm" -> Stats.MINECART_ONE_CM;
+            case "timeSinceDeath" -> Stats.TIME_SINCE_DEATH;
+            case "cauldronFilled" -> Stats.FILL_CAULDRON;
+            case "noteblockTuned" -> Stats.TUNE_NOTEBLOCK;
+            case "noteblockPlayed" -> Stats.PLAY_NOTEBLOCK;
+            case "cakeSlicesEaten" -> Stats.EAT_CAKE_SLICE;
+            case "hopperInspected" -> Stats.INSPECT_HOPPER;
+            case "shulkerBoxOpened" -> Stats.OPEN_SHULKER_BOX;
+            case "talkedToVillager" -> Stats.TALKED_TO_VILLAGER;
+            case "enderchestOpened" -> Stats.OPEN_ENDERCHEST;
+            case "dropperInspected" -> Stats.INSPECT_DROPPER;
+            case "beaconInteraction" -> Stats.INTERACT_WITH_BEACON;
+            case "furnaceInteraction" -> Stats.INTERACT_WITH_FURNACE;
+            case "dispenserInspected" -> Stats.INSPECT_DISPENSER;
+            case "tradedWithVillager" -> Stats.TRADED_WITH_VILLAGER;
+            case "trappedChestTriggered" -> Stats.TRIGGER_TRAPPED_CHEST;
+            case "brewingstandInteraction" -> Stats.INTERACT_WITH_BREWINGSTAND;
+            case "craftingTableInteraction" -> Stats.INTERACT_WITH_CRAFTING_TABLE;
+            case "junkFished" -> Protocol_1_11.JUNK_FISHED;
+            case "treasureFished" -> Protocol_1_11.TREASURE_FISHED;
+            default -> null;
+        };
     }
 
     @Override
@@ -707,9 +708,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         ClientPlayNetworkHandler connection = MinecraftClient.getInstance().getNetworkHandler();
-        if (packet.getClass() == CustomPayloadC2SPacket.class) {
+        if (packet instanceof CustomPayloadC2SPacket customPayload) {
             assert connection != null;
-            CustomPayloadC2SPacket customPayload = (CustomPayloadC2SPacket) packet;
             String channel;
             if (customPayload.getChannel().equals(CustomPayloadC2SPacket.BRAND))
                 channel = "MC|Brand";
@@ -718,45 +718,40 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(channel, customPayload.getData()));
             return false;
         }
-        if (packet.getClass() == BookUpdateC2SPacket.class) {
+        if (packet instanceof BookUpdateC2SPacket bookUpdate) {
             assert connection != null;
-            BookUpdateC2SPacket bookUpdate = (BookUpdateC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
             buf.writeItemStack(bookUpdate.getBook());
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(bookUpdate.wasSigned() ? "MC|BSign" : "MC|BEdit", buf));
             return false;
         }
-        if (packet.getClass() == PickFromInventoryC2SPacket.class) {
+        if (packet instanceof PickFromInventoryC2SPacket pickFromInventoryPacket) {
             assert connection != null;
-            PickFromInventoryC2SPacket pickFromInventoryPacket = (PickFromInventoryC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
             buf.writeVarInt(pickFromInventoryPacket.getSlot());
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|PickItem", buf));
             return false;
         }
-        if (packet.getClass() == RenameItemC2SPacket.class) {
+        if (packet instanceof RenameItemC2SPacket renameItem) {
             assert connection != null;
-            RenameItemC2SPacket renameItem = (RenameItemC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
             buf.writeString(renameItem.getName(), 32767);
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|ItemName", buf));
             return false;
         }
-        if (packet.getClass() == SelectMerchantTradeC2SPacket.class) {
+        if (packet instanceof SelectMerchantTradeC2SPacket selectTrade) {
             assert connection != null;
-            SelectMerchantTradeC2SPacket selectTrade = (SelectMerchantTradeC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
             buf.writeInt(selectTrade.getTradeId());
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|TrSel", buf));
             return false;
         }
-        if (packet.getClass() == UpdateBeaconC2SPacket.class) {
+        if (packet instanceof UpdateBeaconC2SPacket updateBeacon) {
             assert connection != null;
-            UpdateBeaconC2SPacket updateBeacon = (UpdateBeaconC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
             buf.writeInt(updateBeacon.getPrimaryEffectId());
@@ -764,9 +759,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|Beacon", buf));
             return false;
         }
-        if (packet.getClass() == UpdateCommandBlockC2SPacket.class) {
+        if (packet instanceof UpdateCommandBlockC2SPacket updateCmdBlock) {
             assert connection != null;
-            UpdateCommandBlockC2SPacket updateCmdBlock = (UpdateCommandBlockC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
             buf.writeInt(updateCmdBlock.getBlockPos().getX());
@@ -775,27 +769,21 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.writeString(updateCmdBlock.getCommand());
             buf.writeBoolean(updateCmdBlock.shouldTrackOutput());
             switch (updateCmdBlock.getType()) {
-                case AUTO:
-                    buf.writeString("AUTO");
-                    break;
-                case REDSTONE:
-                    buf.writeString("REDSTONE");
-                    break;
-                case SEQUENCE:
-                    buf.writeString("SEQUENCE");
-                    break;
-                default:
+                case AUTO -> buf.writeString("AUTO");
+                case REDSTONE -> buf.writeString("REDSTONE");
+                case SEQUENCE -> buf.writeString("SEQUENCE");
+                default -> {
                     LOGGER.error("Unknown command block type: " + updateCmdBlock.getType());
                     return false;
+                }
             }
             buf.writeBoolean(updateCmdBlock.isConditional());
             buf.writeBoolean(updateCmdBlock.isAlwaysActive());
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|AutoCmd", buf));
             return false;
         }
-        if (packet.getClass() == UpdateCommandBlockMinecartC2SPacket.class) {
+        if (packet instanceof UpdateCommandBlockMinecartC2SPacket updateCmdMinecart) {
             assert connection != null;
-            UpdateCommandBlockMinecartC2SPacket updateCmdMinecart = (UpdateCommandBlockMinecartC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
             buf.writeByte(1); // command block type (minecart)
@@ -805,47 +793,32 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|AdvCmd", buf));
             return false;
         }
-        if (packet.getClass() == UpdateStructureBlockC2SPacket.class) {
+        if (packet instanceof UpdateStructureBlockC2SPacket updateStructBlock) {
             assert connection != null;
-            UpdateStructureBlockC2SPacket updateStructBlock = (UpdateStructureBlockC2SPacket) packet;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(CustomPayload.class);
             buf.writeInt(updateStructBlock.getPos().getX());
             buf.writeInt(updateStructBlock.getPos().getY());
             buf.writeInt(updateStructBlock.getPos().getZ());
             switch (updateStructBlock.getAction()) {
-                case UPDATE_DATA:
-                    buf.writeByte(1);
-                    break;
-                case SAVE_AREA:
-                    buf.writeByte(2);
-                    break;
-                case LOAD_AREA:
-                    buf.writeByte(3);
-                    break;
-                case SCAN_AREA:
-                    buf.writeByte(4);
-                    break;
-                default:
+                case UPDATE_DATA -> buf.writeByte(1);
+                case SAVE_AREA -> buf.writeByte(2);
+                case LOAD_AREA -> buf.writeByte(3);
+                case SCAN_AREA -> buf.writeByte(4);
+                default -> {
                     LOGGER.error("Unknown structure block action: " + updateStructBlock.getAction());
                     return false;
+                }
             }
             switch (updateStructBlock.getMode()) {
-                case SAVE:
-                    buf.writeString("SAVE");
-                    break;
-                case LOAD:
-                     buf.writeString("LOAD");
-                     break;
-                case CORNER:
-                    buf.writeString("CORNER");
-                    break;
-                case DATA:
-                    buf.writeString("DATA");
-                    break;
-                default:
+                case SAVE -> buf.writeString("SAVE");
+                case LOAD -> buf.writeString("LOAD");
+                case CORNER -> buf.writeString("CORNER");
+                case DATA -> buf.writeString("DATA");
+                default -> {
                     LOGGER.error("Unknown structure block mode: " + updateStructBlock.getMode());
                     return false;
+                }
             }
             buf.writeString(updateStructBlock.getStructureName());
             buf.writeInt(updateStructBlock.getOffset().getX());
@@ -855,35 +828,23 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.writeInt(updateStructBlock.getSize().getY());
             buf.writeInt(updateStructBlock.getSize().getZ());
             switch (updateStructBlock.getMirror()) {
-                case NONE:
-                    buf.writeString("NONE");
-                    break;
-                case LEFT_RIGHT:
-                    buf.writeString("LEFT_RIGHT");
-                    break;
-                case FRONT_BACK:
-                    buf.writeString("FRONT_BACK");
-                    break;
-                default:
+                case NONE -> buf.writeString("NONE");
+                case LEFT_RIGHT -> buf.writeString("LEFT_RIGHT");
+                case FRONT_BACK -> buf.writeString("FRONT_BACK");
+                default -> {
                     LOGGER.error("Unknown mirror: " + updateStructBlock.getMirror());
                     return false;
+                }
             }
             switch (updateStructBlock.getRotation()) {
-                case NONE:
-                    buf.writeString("NONE");
-                    break;
-                case CLOCKWISE_90:
-                    buf.writeString("CLOCKWISE_90");
-                    break;
-                case CLOCKWISE_180:
-                    buf.writeString("CLOCKWISE_180");
-                    break;
-                case COUNTERCLOCKWISE_90:
-                    buf.writeString("COUNTERCLOCKWISE_90");
-                    break;
-                default:
+                case NONE -> buf.writeString("NONE");
+                case CLOCKWISE_90 -> buf.writeString("CLOCKWISE_90");
+                case CLOCKWISE_180 -> buf.writeString("CLOCKWISE_180");
+                case COUNTERCLOCKWISE_90 -> buf.writeString("COUNTERCLOCKWISE_90");
+                default -> {
                     LOGGER.error("Unknown rotation: " + updateStructBlock.getRotation());
                     return false;
+                }
             }
             buf.writeString(updateStructBlock.getMetadata());
             buf.writeBoolean(updateStructBlock.shouldIgnoreEntities());
@@ -1077,7 +1038,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                         block = Registry.BLOCK.get(new Identifier(fixedName));
                     }
                     if (block != Blocks.AIR || blockId == 0) {
-                        StateManager<Block, BlockState> stateManager = block instanceof DummyBlock ? ((DummyBlock) block).original.getBlock().getStateManager() : block.getStateManager();
+                        var stateManager = block instanceof DummyBlock ? ((DummyBlock) block).original.getBlock().getStateManager() : block.getStateManager();
                         BlockState _default = block instanceof DummyBlock ? ((DummyBlock) block).original : block.getDefaultState();
                         BlockState state = _default;
                         for (Map.Entry<String, String> entry : dynamicState.get("Properties").asMap(k -> k.asString(""), v -> v.asString("")).entrySet()) {

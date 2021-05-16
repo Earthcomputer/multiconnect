@@ -54,12 +54,13 @@ public class RecipeBook_1_12<C extends Inventory> {
             tryPlaceRecipe(recipe, container.slots);
         } else {
             // clear craft matrix and show ghost recipe
-            List<PlaceRecipeC2SPacket_1_12.Transaction> transactionFromMatrix = clearCraftMatrix();
+            var transactionFromMatrix = clearCraftMatrix();
             recipeBookWidget.showGhostRecipe(recipe, container.slots);
 
             if (!transactionFromMatrix.isEmpty()) {
                 short transactionId = Protocol_1_16_5.nextScreenActionId();
-                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionFromMatrix, new ArrayList<>()));
+                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId,
+                        transactionFromMatrix, new ArrayList<>()));
 
                 if (iRecipeBookWidget.getRecipeBook().isFilteringCraftable(container)) {
                     mc.player.getInventory().markDirty();
@@ -116,11 +117,12 @@ public class RecipeBook_1_12<C extends Inventory> {
 
             if (iRecipeBookWidget.getRecipeFinder().match(recipe, inputItemIds, actualCount)) {
                 // clear the craft matrix and place the recipe
-                List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsFromMatrix = clearCraftMatrix();
-                List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsToMatrix = new ArrayList<>();
+                var transactionsFromMatrix = clearCraftMatrix();
+                var transactionsToMatrix = new ArrayList<PlaceRecipeC2SPacket_1_12.Transaction>();
                 placeRecipe(recipe, slots, actualCount, inputItemIds, transactionsToMatrix);
                 short transactionId = Protocol_1_16_5.nextScreenActionId();
-                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId, transactionsFromMatrix, transactionsToMatrix));
+                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(container.syncId, transactionId,
+                        transactionsFromMatrix, transactionsToMatrix));
                 mc.player.getInventory().markDirty();
             }
         }
@@ -131,7 +133,7 @@ public class RecipeBook_1_12<C extends Inventory> {
 
         iRecipeBookWidget.getGhostSlots().reset();
         PlayerInventory playerInv = mc.player.getInventory();
-        List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsFromMatrix = new ArrayList<>();
+        var transactionsFromMatrix = new ArrayList<PlaceRecipeC2SPacket_1_12.Transaction>();
 
         int serverSlot = 1;
         for (int i = 0; i < container.getCraftingSlotCount(); i++) {
@@ -165,7 +167,8 @@ public class RecipeBook_1_12<C extends Inventory> {
                     }
 
                     container.getSlot(i).takeStack(1);
-                    transactionsFromMatrix.add(new PlaceRecipeC2SPacket_1_12.Transaction(originalStack, targetStack.copy(), placedOn, serverSlot, destSlot));
+                    transactionsFromMatrix.add(new PlaceRecipeC2SPacket_1_12.Transaction(originalStack,
+                            targetStack.copy(), placedOn, serverSlot, destSlot));
                 }
             }
 
@@ -228,7 +231,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                 ItemStack stackNeeded = RecipeMatcher.getStackFromId(inputItemItr.next());
                 if (!stackNeeded.isEmpty()) {
                     for (int i = 0; i < placeCount; i++) {
-                        PlaceRecipeC2SPacket_1_12.Transaction transaction = findAndMoveToCraftMatrix(serverSlot, slot, stackNeeded);
+                        var transaction = findAndMoveToCraftMatrix(serverSlot, slot, stackNeeded);
                         if (transaction != null) {
                             transactionsToMatrix.add(transaction);
                         }
