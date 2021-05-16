@@ -24,6 +24,7 @@
     "MixinClientPlayerInteractionManager",
     "MixinClientPlayNetworkHandler",
     "MixinEntityModels",
+    "MixinEntityPredicates",
     "MixinEntityRenderDispatcher",
     "MixinHeldItemRenderer",
     "MixinItemStack",
