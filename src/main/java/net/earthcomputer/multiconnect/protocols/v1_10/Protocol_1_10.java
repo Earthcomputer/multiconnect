@@ -201,7 +201,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
             buf.disablePassthroughMode();
             buf.applyPendingReads();
         });
-        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<ItemStack>() {
+        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<>() {
             @Override
             public void onRead(TransformerByteBuf buf) {
             }
@@ -246,7 +246,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
             buf.pendingWrite(Byte.class, () -> (byte) (fractionalY.get() * 16), (Consumer<Byte>) buf::writeByte);
             buf.pendingWrite(Byte.class, () -> (byte) (fractionalZ.get() * 16), (Consumer<Byte>) buf::writeByte);
         });
-        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<ItemStack>() {
+        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<>() {
             @Override
             public void onWrite(TransformerByteBuf buf) {
             }

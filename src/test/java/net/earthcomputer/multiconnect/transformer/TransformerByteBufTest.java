@@ -162,7 +162,7 @@ public class TransformerByteBufTest {
     @Test
     public void testSimpleTranslateRead() {
         TransformerByteBuf buf = inboundBuf(new TranslatorRegistry()
-                    .registerInboundTranslator(0, Integer.class, new InboundTranslator<Integer>() {
+                    .registerInboundTranslator(0, Integer.class, new InboundTranslator<>() {
                         @Override
                         public void onRead(TransformerByteBuf buf) {
                         }
@@ -179,7 +179,7 @@ public class TransformerByteBufTest {
     @Test
     public void testInapplicableTranslateRead() {
         TransformerByteBuf buf = inboundBuf(new TranslatorRegistry()
-                    .registerInboundTranslator(-1, Integer.class, new InboundTranslator<Integer>() {
+                    .registerInboundTranslator(-1, Integer.class, new InboundTranslator<>() {
                         @Override
                         public void onRead(TransformerByteBuf buf) {
                         }
@@ -312,7 +312,7 @@ public class TransformerByteBufTest {
     @Test
     public void testSimpleTranslateWrite() {
         TransformerByteBuf buf = outboundBuf(new TranslatorRegistry()
-                    .registerOutboundTranslator(0, Integer.class, new OutboundTranslator<Integer>() {
+                    .registerOutboundTranslator(0, Integer.class, new OutboundTranslator<>() {
                         @Override
                         public void onWrite(TransformerByteBuf buf) {
                         }
@@ -330,7 +330,7 @@ public class TransformerByteBufTest {
     @Test
     public void testInapplicableTranslateWrite() {
         TransformerByteBuf buf = outboundBuf(new TranslatorRegistry()
-                        .registerOutboundTranslator(-1, Integer.class, new OutboundTranslator<Integer>() {
+                        .registerOutboundTranslator(-1, Integer.class, new OutboundTranslator<>() {
                             @Override
                             public void onWrite(TransformerByteBuf buf) {
                             }

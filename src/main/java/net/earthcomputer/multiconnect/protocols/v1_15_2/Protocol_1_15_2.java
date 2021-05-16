@@ -235,7 +235,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.pendingRead(Byte.class, (byte)buf.readEnumConstant(EquipmentSlot.class).ordinal()); // slot
             buf.applyPendingReads();
         });
-        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<ItemStack>() {
+        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<>() {
             @Override
             public void onRead(TransformerByteBuf buf) {
             }
@@ -307,7 +307,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             buf.passthroughWrite(String.class); // final state
             buf.skipWrite(String.class); // joint type
         });
-        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<ItemStack>() {
+        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<>() {
             @Override
             public void onWrite(TransformerByteBuf buf) {
             }

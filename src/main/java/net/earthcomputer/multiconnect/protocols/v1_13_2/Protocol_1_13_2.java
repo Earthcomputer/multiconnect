@@ -279,7 +279,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<ItemStack>() {
+        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<>() {
             @Override
             public void onRead(TransformerByteBuf buf) {
             }
@@ -342,7 +342,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             }, buf::writeLong);
         });
 
-        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<ItemStack>() {
+        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<>() {
             @Override
             public void onWrite(TransformerByteBuf buf) {
             }

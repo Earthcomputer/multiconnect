@@ -421,7 +421,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             buf.applyPendingReads();
         });
 
-        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<ItemStack>() {
+        ProtocolRegistry.registerInboundTranslator(ItemStack.class, new InboundTranslator<>() {
             @Override
             public void onRead(TransformerByteBuf buf) {
                 short itemId = buf.readShort();
@@ -503,7 +503,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                 buf.pendingWrite(BlockPos.class, ((BlockHitResult) hitResult)::getBlockPos, buf::writeBlockPos);
         });
 
-        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<ItemStack>() {
+        ProtocolRegistry.registerOutboundTranslator(ItemStack.class, new OutboundTranslator<>() {
             @Override
             public void onWrite(TransformerByteBuf buf) {
                 Supplier<Short> itemId = buf.skipWrite(Short.class);

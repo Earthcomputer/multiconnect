@@ -32,7 +32,7 @@ public class MixinStatType<T> {
             final Map<T, Stat<T>> removedStats = this.removedStats;
 
             //noinspection MixinInnerClass
-            iregistry.addRegisterListener((new IRegistryUpdateListener<T>() {
+            iregistry.addRegisterListener((new IRegistryUpdateListener<>() {
                 @Override
                 public void onUpdate(T thing, boolean inPlace) {
                     Stat<T> stat = removedStats.remove(thing);
@@ -47,7 +47,7 @@ public class MixinStatType<T> {
                 }
             }));
             //noinspection MixinInnerClass
-            iregistry.addUnregisterListener((new IRegistryUpdateListener<T>() {
+            iregistry.addUnregisterListener((new IRegistryUpdateListener<>() {
                 @Override
                 public void onUpdate(T thing, boolean inPlace) {
                     Stat<T> stat = stats.remove(thing);
