@@ -15,7 +15,7 @@ public class MixinBrewingStandFuelSlot extends Slot {
         super(inventory, index, x, y);
     }
 
-    @Inject(method = "matches", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "matches(Lnet/minecraft/item/ItemStack;)Z", at = @At("HEAD"), cancellable = true)
     private static void removeFuelSlot(CallbackInfoReturnable<Boolean> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
             ci.setReturnValue(false);
