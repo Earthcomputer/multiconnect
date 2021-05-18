@@ -59,12 +59,15 @@ public class Items_1_12_2 {
             NbtCompound entityTag = stack.getSubTag("EntityTag");
             if (entityTag != null) {
                 String entityId = entityTag.getString("id");
-                EntityType<?> entityType = Registry.ENTITY_TYPE.get(new Identifier(entityId));
-                newItem = SpawnEggItem.forEntity(entityType);
-                if (newItem != null) {
-                    ItemStack newStack = new ItemStack(newItem, stack.getCount());
-                    newStack.setTag(stack.getTag());
-                    stack = newStack;
+                Identifier identifier = Identifier.tryParse(entityId);
+                if(identifier != null) {
+                    EntityType<?> entityType = Registry.ENTITY_TYPE.get(identifier);
+                    newItem = SpawnEggItem.forEntity(entityType);
+                    if (newItem != null) {
+                        ItemStack newStack = new ItemStack(newItem, stack.getCount());
+                        newStack.setTag(stack.getTag());
+                        stack = newStack;
+                    }
                 }
             }
         }
