@@ -1126,7 +1126,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(SoundEvents.BLOCK_STONE_STEP);
         registry.unregister(SoundEvents.BLOCK_SWEET_BERRY_BUSH_BREAK);
         registry.unregister(SoundEvents.BLOCK_SWEET_BERRY_BUSH_PLACE);
-        registry.unregister(SoundEvents.ITEM_SWEET_BERRIES_PICK_FROM_BUSH);
+        registry.unregister(SoundEvents.BLOCK_SWEET_BERRY_BUSH_PICK_BERRIES);
         registry.unregister(SoundEvents.ENCHANT_THORNS_HIT);
         registry.unregister(SoundEvents.ITEM_TOTEM_USE);
         registry.unregister(SoundEvents.ITEM_TRIDENT_HIT);

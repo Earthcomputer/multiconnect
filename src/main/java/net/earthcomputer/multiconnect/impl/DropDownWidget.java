@@ -1,9 +1,10 @@
 package net.earthcomputer.multiconnect.impl;
 
+import net.minecraft.class_6382;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AbstractPressableButtonWidget;
+import net.minecraft.client.gui.widget.PressableWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class DropDownWidget<T> extends AbstractPressableButtonWidget {
+public class DropDownWidget<T> extends PressableWidget {
 
     private static final int DROP_DOWN_ELEMENT_HEIGHT = 20;
     private static final Text EXPAND_DOWN_TEXT = new LiteralText("v");
@@ -164,7 +165,7 @@ public class DropDownWidget<T> extends AbstractPressableButtonWidget {
     }
 
     private void renderButtonBackground(MatrixStack matrices, int x, int y, boolean hovered) {
-        MinecraftClient.getInstance().getTextureManager().bindTexture(WIDGETS_LOCATION);
+        MinecraftClient.getInstance().getTextureManager().bindTexture(WIDGETS_TEXTURE);
         int yImage = getYImage(hovered);
         drawTexture(matrices, x, y, 0, 46 + yImage * 20, width / 2, height);
         drawTexture(matrices, x + width / 2, y, 200 - width / 2, 46 + yImage * 20, width / 2, height);
@@ -229,6 +230,12 @@ public class DropDownWidget<T> extends AbstractPressableButtonWidget {
         Screen currentScreen = MinecraftClient.getInstance().currentScreen;
         assert currentScreen != null;
         return y + height + DROP_DOWN_ELEMENT_HEIGHT * hoveredCategory + DROP_DOWN_ELEMENT_HEIGHT * categories.get(hoveredCategory).children.size() > currentScreen.height;
+    }
+
+    @Override
+    public void method_37020(class_6382 narrationConsumer) {
+        // TODO: better narration and accessibility
+        this.method_37021(narrationConsumer);
     }
 
     public class Category {

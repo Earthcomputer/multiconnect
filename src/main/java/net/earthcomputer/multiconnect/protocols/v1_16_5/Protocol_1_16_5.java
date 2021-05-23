@@ -21,15 +21,12 @@ import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.EntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.ShulkerEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.TagGroupSerializedAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
-import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.class_6373;
-import net.minecraft.class_6374;
 import net.minecraft.client.option.ChatVisibility;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -44,6 +41,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
 import net.minecraft.network.packet.c2s.play.ClientSettingsC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayPongC2SPacket;
 import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.ParticleType;
@@ -525,7 +523,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         insertAfter(packets, CommandTreeS2CPacket.class, PacketInfo.of(AckScreenActionS2CPacket_1_16_5.class, AckScreenActionS2CPacket_1_16_5::new));
         insertAfter(packets, EntityDestroyS2CPacket.class, PacketInfo.of(EntitiesDestroyS2CPacket_1_16_5.class, EntitiesDestroyS2CPacket_1_16_5::new));
         remove(packets, EntityDestroyS2CPacket.class);
-        remove(packets, class_6373.class);
+        remove(packets, PlayPingS2CPacket.class);
         return packets;
     }
 
@@ -535,7 +533,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         insertAfter(packets, RequestCommandCompletionsC2SPacket.class, PacketInfo.of(AckScreenActionC2SPacket_1_16_5.class, AckScreenActionC2SPacket_1_16_5::new));
         insertAfter(packets, ClickSlotC2SPacket.class, PacketInfo.of(ClickSlotC2SPacket_1_16_5.class, ClickSlotC2SPacket_1_16_5::new));
         remove(packets, ClickSlotC2SPacket.class);
-        remove(packets, class_6374.class);
+        remove(packets, PlayPongC2SPacket.class);
         return packets;
     }
 
@@ -546,7 +544,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             LOGGER.warn("Dropping untranslated serverbound click slot packet, sent without the client player interaction manager");
             return false;
         }
-        if (packet instanceof class_6374) {
+        if (packet instanceof PlayPongC2SPacket) {
             return false;
         }
 
@@ -914,6 +912,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
     }
 
     private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+        rename(registry, SoundEvents.BLOCK_SWEET_BERRY_BUSH_PICK_BERRIES, "item.sweet_berries.pick_from_bush");
         registry.unregister(SoundEvents.BLOCK_AMETHYST_BLOCK_BREAK);
         registry.unregister(SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME);
         registry.unregister(SoundEvents.BLOCK_AMETHYST_BLOCK_FALL);

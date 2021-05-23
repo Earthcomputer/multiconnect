@@ -5,6 +5,7 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.block.entity.JigsawBlockEntity;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.JigsawBlockScreen;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
@@ -30,10 +31,10 @@ public class MixinJigsawBlockScreen extends Screen {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_15_2) {
             nameField.active = false;
             jointRotationButton.active = false;
-            int index = buttons.indexOf(jointRotationButton);
-            buttons.get(index + 1).active = false; // levels slider
-            buttons.get(index + 2).active = false; // keep jigsaws toggle
-            buttons.get(index + 3).active = false; // generate button
+            int index = children().indexOf(jointRotationButton);
+            ((ClickableWidget) children().get(index + 1)).active = false; // levels slider
+            ((ClickableWidget) children().get(index + 2)).active = false; // keep jigsaws toggle
+            ((ClickableWidget) children().get(index + 3)).active = false; // generate button
         }
     }
 
