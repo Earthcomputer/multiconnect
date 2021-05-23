@@ -35,7 +35,7 @@ public abstract class MixinAddServerScreen extends Screen {
     private void createButtons(CallbackInfo ci) {
         forceProtocolLabel = new TranslatableText("multiconnect.changeForcedProtocol").append(" ->").asOrderedText();
         protocolSelector = Utils.createVersionDropdown(this, ConnectionMode.byValue(ServersExt.getInstance().getForcedProtocol(server.address)));
-        children.add(0, protocolSelector);
+        method_37063(protocolSelector);
     }
 
     @Inject(method = "render", at = @At("RETURN"))
