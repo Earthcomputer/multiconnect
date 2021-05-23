@@ -7,13 +7,13 @@ import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public interface IBlockConnectionsBlockView {
     Logger LOGGER = LogManager.getLogger("multiconnect");
-    Set<Block> WARNED_NPE_BLOCKS = new HashSet<>();
+    Set<Block> WARNED_NPE_BLOCKS = ConcurrentHashMap.newKeySet();
 
     BlockState getBlockState(BlockPos pos);
     void setBlockState(BlockPos pos, BlockState state);

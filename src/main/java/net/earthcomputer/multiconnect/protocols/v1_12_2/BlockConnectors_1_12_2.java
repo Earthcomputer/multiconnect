@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectionsBlockView;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.HorizontalNeighborConnector;
@@ -233,8 +234,32 @@ public class BlockConnectors_1_12_2 {
         }));
 
         // glass pane and iron bars connections
-        BlockConnections.registerConnector(Protocols.V1_12_2, new HorizontalNeighborConnector(
-                (thisState, otherState, dir) -> ((PaneBlock) thisState.getBlock()).connectsTo(otherState, IBlockConnectionsBlockView.withNullWorld(otherState.getBlock(), false, () -> otherState.isSideSolidFullSquare(null, null, dir.getOpposite()))),
+        BlockConnections.registerConnector(Protocols.V1_12_2, new SimpleNeighborConnector(
+                (world, pos) -> {
+                    BlockState newState = world.getBlockState(pos);
+                    PaneBlock paneBlock = (PaneBlock) newState.getBlock();
+
+                    BlockState northState = world.getBlockState(pos.north());
+                    Boolean north = paneBlock.connectsTo(northState, IBlockConnectionsBlockView.withNullWorld(northState.getBlock(), false, () -> northState.isSideSolidFullSquare(null, null, Direction.SOUTH)));
+                    newState = newState.with(Properties.NORTH, north);
+                    BlockState southState = world.getBlockState(pos.south());
+                    Boolean south = paneBlock.connectsTo(southState, IBlockConnectionsBlockView.withNullWorld(southState.getBlock(), false, () -> southState.isSideSolidFullSquare(null, null, Direction.NORTH)));
+                    newState = newState.with(Properties.SOUTH, south);
+                    BlockState westState = world.getBlockState(pos.west());
+                    Boolean west = paneBlock.connectsTo(westState, IBlockConnectionsBlockView.withNullWorld(westState.getBlock(), false, () -> westState.isSideSolidFullSquare(null, null, Direction.EAST)));
+                    newState = newState.with(Properties.WEST, west);
+                    BlockState eastState = world.getBlockState(pos.east());
+                    Boolean east = paneBlock.connectsTo(eastState, IBlockConnectionsBlockView.withNullWorld(eastState.getBlock(), false, () -> eastState.isSideSolidFullSquare(null, null, Direction.WEST)));
+                    newState = newState.with(Properties.EAST, east);
+
+                    if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
+                        if (!north && !south && !west && !east) {
+                            newState = newState.with(Properties.NORTH, true).with(Properties.SOUTH, true).with(Properties.WEST, true).with(Properties.EAST, true);
+                        }
+                    }
+
+                    world.setBlockState(pos, newState);
+                },
                 Blocks.IRON_BARS, Blocks.GLASS_PANE, Blocks.WHITE_STAINED_GLASS_PANE, Blocks.ORANGE_STAINED_GLASS_PANE,
                 Blocks.MAGENTA_STAINED_GLASS_PANE, Blocks.LIGHT_BLUE_STAINED_GLASS_PANE, Blocks.YELLOW_STAINED_GLASS_PANE, Blocks.LIME_STAINED_GLASS_PANE,
                 Blocks.PINK_STAINED_GLASS_PANE, Blocks.GRAY_STAINED_GLASS_PANE, Blocks.LIGHT_GRAY_STAINED_GLASS_PANE, Blocks.CYAN_STAINED_GLASS_PANE,
