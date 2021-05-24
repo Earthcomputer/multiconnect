@@ -38,9 +38,10 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow public abstract void onEntityStatus(EntityStatusS2CPacket packet);
 
-    @Inject(method = "onGameJoin", at = @At("TAIL"))
-    private void onOnGameJoin(CallbackInfo ci) {
+    @Inject(method = {"onGameJoin", "onPlayerRespawn"}, at = @At("TAIL"))
+    private void onOnGameJoinOrRespawn(CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
+            // client permission level 4 to enable features just in case we're opped
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             assert player != null;
             onEntityStatus(new EntityStatusS2CPacket(player, (byte) 28));
