@@ -18,10 +18,10 @@ import java.util.stream.Collectors;
 
 public final class TPArgumentType implements ArgumentType<Custom_1_12_Argument> {
 
-    private EntityArgumentType_1_12_2 victim = EntityArgumentType_1_12_2.entities().noSuggestPlayerNames();
-    private EntityArgumentType_1_12_2 target = EntityArgumentType_1_12_2.oneEntity().noSuggestPlayerNames();
-    private BlockPosArgumentType blockPos = BlockPosArgumentType.blockPos();
-    private RotationArgumentType rotation = RotationArgumentType.rotation();
+    private final EntityArgumentType_1_12_2 victim = EntityArgumentType_1_12_2.entities();
+    private final EntityArgumentType_1_12_2 target = EntityArgumentType_1_12_2.oneEntity();
+    private final BlockPosArgumentType blockPos = BlockPosArgumentType.blockPos();
+    private final RotationArgumentType rotation = RotationArgumentType.rotation();
 
     private TPArgumentType() {
     }
@@ -69,7 +69,6 @@ public final class TPArgumentType implements ArgumentType<Custom_1_12_Argument> 
         if (args.length == 1) {
             suggestions.add(blockPos.listSuggestions(context, builder.restart()));
             suggestions.add(victim.listSuggestions(context, builder.restart()));
-            suggestions.add(target.listSuggestions(context, builder.restart()));
         } else {
             StringReader reader = new StringReader(builder.getInput());
             reader.setCursor(builder.getStart());
