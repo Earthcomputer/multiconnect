@@ -1,10 +1,12 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.minecraft.class_6382;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.PressableWidget;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -165,7 +167,12 @@ public class DropDownWidget<T> extends PressableWidget {
     }
 
     private void renderButtonBackground(MatrixStack matrices, int x, int y, boolean hovered) {
-        MinecraftClient.getInstance().getTextureManager().bindTexture(WIDGETS_TEXTURE);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, WIDGETS_TEXTURE);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.enableDepthTest();
         int yImage = getYImage(hovered);
         drawTexture(matrices, x, y, 0, 46 + yImage * 20, width / 2, height);
         drawTexture(matrices, x + width / 2, y, 200 - width / 2, 46 + yImage * 20, width / 2, height);
@@ -233,9 +240,9 @@ public class DropDownWidget<T> extends PressableWidget {
     }
 
     @Override
-    public void method_37020(class_6382 narrationConsumer) {
+    public void appendNarrations(NarrationMessageBuilder messageBuilder) {
         // TODO: better narration and accessibility
-        this.method_37021(narrationConsumer);
+        this.method_37021(messageBuilder);
     }
 
     public class Category {

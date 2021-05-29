@@ -35,7 +35,7 @@ public class MixinDirectConnectScreen extends Screen {
     private void createButtons(CallbackInfo ci) {
         forceProtocolLabel = new TranslatableText("multiconnect.changeForcedProtocol").append(" ->").asOrderedText();
         protocolSelector = Utils.createVersionDropdown(this, ConnectionMode.AUTO);
-        method_37063(protocolSelector);
+        addDrawableChild(protocolSelector);
     }
 
     @Inject(method = "tick", at = @At("RETURN"))

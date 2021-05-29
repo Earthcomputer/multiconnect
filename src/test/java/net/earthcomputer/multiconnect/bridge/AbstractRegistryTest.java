@@ -19,9 +19,11 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class AbstractRegistryTest {
+    protected final int protocol;
     protected final String versionPrefix;
 
-    protected AbstractRegistryTest(String versionPrefix) {
+    protected AbstractRegistryTest(int protocol, String versionPrefix) {
+        this.protocol = protocol;
         this.versionPrefix = versionPrefix;
     }
 
@@ -42,6 +44,7 @@ public abstract class AbstractRegistryTest {
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to read " + versionPrefix + "_blockstates.txt", e);
         }
+        ProtocolRegistry.get(protocol).doRegistryMutation(true); // add missing values
         for (int id = 0; id < blocks.size(); id++) {
             int id_f = id;
             BlockState state = Block.STATE_IDS.get(id);
@@ -49,6 +52,7 @@ public abstract class AbstractRegistryTest {
             Block block = state.getBlock();
             assertEquals(blocks.get(id), Registry.BLOCK.getId(block).getPath(), () -> "Block state at id " + id_f + " is wrong value of block " + block.getTranslationKey().replaceFirst("block.minecraft.", ""));
         }
+        ProtocolRegistry.get(protocol).doRegistryMutation(false);
     }
 
     protected final void testRegistryMatches(Registry<?> registry) {

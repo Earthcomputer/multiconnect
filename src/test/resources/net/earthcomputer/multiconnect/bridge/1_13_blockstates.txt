@@ -238,7 +238,8 @@
 4 nether_wart
 1 enchanting_table
 8 brewing_stand
-4 cauldron
+1 cauldron
+3 water_cauldron
 1 end_portal
 8 end_portal_frame
 1 end_stone

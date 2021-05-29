@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 public class RegistryTest13 extends AbstractRegistryTest {
     protected RegistryTest13() {
-        super("1_13");
+        super(Protocols.V1_13, "1_13");
     }
 
     @BeforeAll
