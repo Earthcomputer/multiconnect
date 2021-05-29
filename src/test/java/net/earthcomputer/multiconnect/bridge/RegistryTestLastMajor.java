@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 public class RegistryTestLastMajor extends AbstractRegistryTest {
     protected RegistryTestLastMajor() {
-        super("last_major");
+        super(Protocols.V1_16_5, "last_major");
     }
 
     @BeforeAll

@@ -121,12 +121,26 @@ public abstract class AbstractProtocol implements IUtils {
         if (!reAddMissingValues) {
             return;
         }
-        if (registry instanceof DefaultedRegistry) return;
         DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
         if (defaultRegistries == null) return;
+
+        Identifier defaultId;
+        T defaultValue;
+        if (registry instanceof DefaultedRegistry<T> defaultedRegistry) {
+            defaultId = defaultedRegistry.getDefaultId();
+            defaultValue = defaultedRegistry.get(defaultId);
+        } else {
+            defaultId = null;
+            defaultValue = null;
+        }
+
         for (Map.Entry<Identifier, T> entry : defaultRegistries.defaultIdToEntry.entrySet()) {
-            if (registry.getId(entry.getValue()) == null) {
-                RegistryKey<T> key = RegistryKey.of(iregistry.getRegistryKey(), entry.getKey());
+            if (Objects.equals(registry.getId(entry.getValue()), defaultId) && entry.getValue() != defaultValue) {
+                Identifier id = entry.getKey();
+                for (int suffix = 1; registry.containsId(id); suffix++) {
+                    id = new Identifier(entry.getKey().getNamespace(), entry.getKey().getPath() + suffix);
+                }
+                RegistryKey<T> key = RegistryKey.of(iregistry.getRegistryKey(), id);
                 iregistry.register(entry.getValue(), iregistry.getNextId(), key, false);
             }
         }
