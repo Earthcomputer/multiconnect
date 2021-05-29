@@ -18,10 +18,10 @@ import java.util.stream.Collectors;
 
 public final class TPArgumentType implements ArgumentType<Custom_1_12_Argument> {
 
-    private EntityArgumentType_1_12_2 victim = EntityArgumentType_1_12_2.entities().noSuggestPlayerNames();
-    private EntityArgumentType_1_12_2 target = EntityArgumentType_1_12_2.oneEntity().noSuggestPlayerNames();
-    private BlockPosArgumentType blockPos = BlockPosArgumentType.blockPos();
-    private RotationArgumentType rotation = RotationArgumentType.rotation();
+    final private EntityArgumentType_1_12_2 victim = EntityArgumentType_1_12_2.entities();
+    final private EntityArgumentType_1_12_2 target = EntityArgumentType_1_12_2.oneEntity();
+    final private BlockPosArgumentType blockPos = BlockPosArgumentType.blockPos();
+    final private RotationArgumentType rotation = RotationArgumentType.rotation();
 
     private TPArgumentType() {
     }
