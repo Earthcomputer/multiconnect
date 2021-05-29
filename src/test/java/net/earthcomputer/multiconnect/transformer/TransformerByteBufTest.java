@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.transformer;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import net.earthcomputer.multiconnect.TestUtil;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.Bootstrap;
 import net.minecraft.SharedConstants;
@@ -29,7 +30,7 @@ public class TransformerByteBufTest {
 
     @BeforeAll
     public static void beforeAll() {
-        Bootstrap.initialize();
+        TestUtil.callBootstrap();
     }
 
     @BeforeEach
