@@ -62,7 +62,7 @@ public abstract class MixinDisconnectedScreen extends Screen {
         if (isProtocolReason) {
             protocolSelector = Utils.createVersionDropdown(this, getForcedVersion());
             protocolSelector.setValueListener(mode -> ServersExt.getInstance().getOrCreateServer(server.address).forcedProtocol = mode.getValue());
-            method_37063(protocolSelector);
+            addDrawableChild(protocolSelector);
         }
     }
 

@@ -705,6 +705,8 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(Blocks.RAW_COPPER_BLOCK);
         registry.unregister(Blocks.RAW_GOLD_BLOCK);
         registry.unregister(Blocks.RAW_IRON_BLOCK);
+        registry.unregister(Blocks.POTTED_AZALEA_BUSH);
+        registry.unregister(Blocks.POTTED_FLOWERING_AZALEA_BUSH);
     }
 
     private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
@@ -800,6 +802,44 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(Items.LAPIS_LAZULI);
         registry.unregister(Items.EMERALD);
         registry.unregister(Items.QUARTZ);
+        registry.unregister(Items.POWERED_RAIL);
+        registry.unregister(Items.DETECTOR_RAIL);
+        registry.unregister(Items.RAIL);
+        registry.unregister(Items.ACTIVATOR_RAIL);
+        registry.unregister(Items.MINECART);
+        registry.unregister(Items.SADDLE);
+        registry.unregister(Items.OAK_BOAT);
+        registry.unregister(Items.CHEST_MINECART);
+        registry.unregister(Items.FURNACE_MINECART);
+        registry.unregister(Items.CARROT_ON_A_STICK);
+        registry.unregister(Items.WARPED_FUNGUS_ON_A_STICK);
+        registry.unregister(Items.TNT_MINECART);
+        registry.unregister(Items.HOPPER_MINECART);
+        registry.unregister(Items.ELYTRA);
+        registry.unregister(Items.SPRUCE_BOAT);
+        registry.unregister(Items.BIRCH_BOAT);
+        registry.unregister(Items.JUNGLE_BOAT);
+        registry.unregister(Items.ACACIA_BOAT);
+        registry.unregister(Items.DARK_OAK_BOAT);
+        insertAfter(registry, Items.CUT_SANDSTONE, Items.POWERED_RAIL, "powered_rail");
+        insertAfter(registry, Items.POWERED_RAIL, Items.DETECTOR_RAIL, "detector_rail");
+        insertAfter(registry, Items.LADDER, Items.RAIL, "rail");
+        insertAfter(registry, Items.QUARTZ_STAIRS, Items.ACTIVATOR_RAIL, "activator_rail");
+        insertAfter(registry, Items.LAVA_BUCKET, Items.MINECART, "minecart");
+        insertAfter(registry, Items.MINECART, Items.SADDLE, "saddle");
+        insertAfter(registry, Items.SNOWBALL, Items.OAK_BOAT, "oak_boat");
+        insertAfter(registry, Items.SLIME_BALL, Items.CHEST_MINECART, "chest_minecart");
+        insertAfter(registry, Items.CHEST_MINECART, Items.FURNACE_MINECART, "furnace_minecart");
+        insertAfter(registry, Items.DRAGON_HEAD, Items.CARROT_ON_A_STICK, "carrot_on_a_stick");
+        insertAfter(registry, Items.CARROT_ON_A_STICK, Items.WARPED_FUNGUS_ON_A_STICK, "warped_fungus_on_a_stick");
+        insertAfter(registry, Items.NETHER_BRICK, Items.TNT_MINECART, "tnt_minecart");
+        insertAfter(registry, Items.TNT_MINECART, Items.HOPPER_MINECART, "hopper_minecart");
+        insertAfter(registry, Items.SHIELD, Items.ELYTRA, "elytra");
+        insertAfter(registry, Items.ELYTRA, Items.SPRUCE_BOAT, "spruce_boat");
+        insertAfter(registry, Items.SPRUCE_BOAT, Items.BIRCH_BOAT, "birch_boat");
+        insertAfter(registry, Items.BIRCH_BOAT, Items.JUNGLE_BOAT, "jungle_boat");
+        insertAfter(registry, Items.JUNGLE_BOAT, Items.ACACIA_BOAT, "acacia_boat");
+        insertAfter(registry, Items.ACACIA_BOAT, Items.DARK_OAK_BOAT, "dark_oak_boat");
         insertAfter(registry, Items.LAPIS_BLOCK, Items.DISPENSER, "dispenser");
         insertAfter(registry, Items.CUT_SANDSTONE, Items.NOTE_BLOCK, "note_block");
         insertAfter(registry, Items.DETECTOR_RAIL, Items.STICKY_PISTON, "sticky_piston");
@@ -1279,6 +1319,10 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         tags.add(BlockTags.NEEDS_STONE_TOOL, Blocks.IRON_BLOCK, Blocks.IRON_ORE, Blocks.LAPIS_BLOCK, Blocks.LAPIS_ORE);
         tags.add(BlockTags.NEEDS_IRON_TOOL, Blocks.DIAMOND_BLOCK, Blocks.DIAMOND_ORE, Blocks.EMERALD_ORE, Blocks.EMERALD_BLOCK, Blocks.GOLD_BLOCK, Blocks.GOLD_ORE, Blocks.REDSTONE_ORE);
         tags.add(BlockTags.NEEDS_DIAMOND_TOOL, Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK, Blocks.RESPAWN_ANCHOR, Blocks.ANCIENT_DEBRIS);
+        tags.add(BlockTags.FEATURES_CANNOT_REPLACE, Blocks.BEDROCK, Blocks.SPAWNER, Blocks.CHEST, Blocks.END_PORTAL_FRAME);
+        tags.addTag(BlockTags.LAVA_POOL_STONE_REPLACEABLES, BlockTags.FEATURES_CANNOT_REPLACE);
+        tags.addTag(BlockTags.LAVA_POOL_STONE_REPLACEABLES, BlockTags.LEAVES);
+        tags.add(BlockTags.GEODE_INVALID_BLOCKS, Blocks.BEDROCK, Blocks.WATER, Blocks.LAVA, Blocks.ICE, Blocks.PACKED_ICE, Blocks.BLUE_ICE);
         super.addExtraBlockTags(tags);
     }
 

@@ -1,9 +1,9 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.minecraft.class_6382;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.PressableWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
@@ -233,9 +233,9 @@ public class DropDownWidget<T> extends PressableWidget {
     }
 
     @Override
-    public void method_37020(class_6382 narrationConsumer) {
+    public void appendNarrations(NarrationMessageBuilder messageBuilder) {
         // TODO: better narration and accessibility
-        this.method_37021(narrationConsumer);
+        this.method_37021(messageBuilder);
     }
 
     public class Category {
