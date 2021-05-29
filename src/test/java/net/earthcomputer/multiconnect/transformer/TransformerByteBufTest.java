@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.transformer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.minecraft.Bootstrap;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.login.LoginHelloC2SPacket;
@@ -13,6 +14,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +26,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings({"VariableUseSideOnly", "MethodCallSideOnly"})
 public class TransformerByteBufTest {
+
+    @BeforeAll
+    public static void beforeAll() {
+        Bootstrap.initialize();
+    }
 
     @BeforeEach
     public void beforeEach() {
