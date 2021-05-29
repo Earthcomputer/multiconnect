@@ -69,7 +69,6 @@ public final class TPArgumentType implements ArgumentType<Custom_1_12_Argument> 
         if (args.length == 1) {
             suggestions.add(blockPos.listSuggestions(context, builder.restart()));
             suggestions.add(victim.listSuggestions(context, builder.restart()));
-            suggestions.add(target.listSuggestions(context, builder.restart()));
         } else {
             StringReader reader = new StringReader(builder.getInput());
             reader.setCursor(builder.getStart());
