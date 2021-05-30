@@ -31,6 +31,7 @@
     "MixinHeldItemRenderer",
     "MixinItemCooldownManager",
     "MixinItemStack",
+    "MixinLadderBlock",
     "MixinLivingEntity",
     "MixinMinecraftClient",
     "MixinPlayerEntity",

@@ -1003,6 +1003,12 @@ public class Protocol_1_8 extends Protocol_1_9 {
     }
 
     @Override
+    protected void markChangedCollisionBoxes() {
+        super.markChangedCollisionBoxes();
+        markCollisionBoxChanged(Blocks.LADDER);
+    }
+
+    @Override
     public void registerCommands(CommandDispatcher<CommandSource> dispatcher, Set<String> serverCommands) {
         super.registerCommands(dispatcher, serverCommands);
         BrigadierRemover.of(dispatcher).get("time").get("query").get("day").remove();
