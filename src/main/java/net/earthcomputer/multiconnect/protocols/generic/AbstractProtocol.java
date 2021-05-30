@@ -27,6 +27,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public abstract class AbstractProtocol implements IUtils {
+    private static final List<Block> collisionBoxesToRevert = new ArrayList<>();
+
     private int protocolVersion;
     private BlockConnector blockConnector;
 
@@ -36,6 +38,7 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     public void setup(boolean resourceReload) {
+        revertCollisionBoxes();
         if (!resourceReload) {
             modifyPacketLists();
             DataTrackerManager.onConnectToServer();
@@ -45,6 +48,7 @@ public abstract class AbstractProtocol implements IUtils {
             removeTrackedDataHandlers();
             OldLanguageManager.reloadLanguages();
         }
+        markChangedCollisionBoxes();
         ((MinecraftClientAccessor) MinecraftClient.getInstance()).callInitializeSearchableContainers();
         ((MinecraftClientAccessor) MinecraftClient.getInstance()).getSearchManager().reload(MinecraftClient.getInstance().getResourceManager());
     }
@@ -155,6 +159,25 @@ public abstract class AbstractProtocol implements IUtils {
 
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         return true;
+    }
+
+    protected void markChangedCollisionBoxes() {
+    }
+
+    private void revertCollisionBoxes() {
+        for (Block block : collisionBoxesToRevert) {
+            for (BlockState state : block.getStateManager().getStates()) {
+                state.initShapeCache();
+            }
+        }
+        collisionBoxesToRevert.clear();
+    }
+
+    protected void markCollisionBoxChanged(Block block) {
+        for (BlockState state : block.getStateManager().getStates()) {
+            state.initShapeCache();
+        }
+        collisionBoxesToRevert.add(block);
     }
 
     public void postEntityDataRegister(Class<? extends Entity> clazz) {
