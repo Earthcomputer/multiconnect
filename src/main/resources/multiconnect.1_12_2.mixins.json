@@ -5,6 +5,7 @@
   "mixins": [
     "FireBlockAccessor",
     "MixinAbstractBlockState",
+    "MixinClientPlayerInteractionManager",
     "MixinStructureBlockBlockEntity",
     "MixinStructureBlockScreen1",
     "RedstoneWireBlockAccessor",
