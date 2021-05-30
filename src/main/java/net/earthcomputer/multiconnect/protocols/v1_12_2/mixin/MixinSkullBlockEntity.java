@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.ISkullBlockEntity;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
@@ -15,7 +16,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SkullBlockEntity.class)
-public abstract class MixinSkullBlockEntity extends BlockEntity {
+public abstract class MixinSkullBlockEntity extends BlockEntity implements ISkullBlockEntity {
+    @Unique private int skullType;
+    @Unique private int rotation;
 
     public MixinSkullBlockEntity(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState blockState) {
         super(blockEntityType, blockPos, blockState);
@@ -24,17 +27,21 @@ public abstract class MixinSkullBlockEntity extends BlockEntity {
     @Inject(method = "readNbt", at = @At("RETURN"))
     private void onReadNbt(NbtCompound tag, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            setSkullType(tag.getByte("SkullType"));
-            setRotation(tag.getByte("Rot"));
+            this.skullType = tag.getByte("SkullType");
+            this.rotation = tag.getByte("Rot");
+            if (world != null) {
+                world.setBlockState(pos, multiconnect_getActualState(), Block.NOTIFY_LISTENERS | Block.FORCE_STATE);
+            }
         }
     }
 
-    @Unique
-    public void setSkullType(int skullType) {
+    @Override
+    public BlockState multiconnect_getActualState() {
         BlockState state = getCachedState();
         if (!getType().supports(state))
-            return;
+            return state;
 
+        int skullType = this.skullType;
         if (skullType < 0 || skullType > 5)
             skullType = 0;
 
@@ -42,20 +49,9 @@ public abstract class MixinSkullBlockEntity extends BlockEntity {
         final Block[] wallSkullBlocks = {Blocks.SKELETON_WALL_SKULL, Blocks.WITHER_SKELETON_WALL_SKULL, Blocks.ZOMBIE_WALL_HEAD, Blocks.PLAYER_WALL_HEAD, Blocks.CREEPER_WALL_HEAD, Blocks.DRAGON_WALL_HEAD};
         assert world != null;
         if (state.getBlock() instanceof WallSkullBlock) {
-            world.setBlockState(pos, wallSkullBlocks[skullType].getDefaultState().with(WallSkullBlock.FACING, state.get(WallSkullBlock.FACING)), 18);
+            return wallSkullBlocks[skullType].getDefaultState().with(WallSkullBlock.FACING, state.get(WallSkullBlock.FACING));
         } else {
-            world.setBlockState(pos, skullBlocks[skullType].getDefaultState().with(SkullBlock.ROTATION, state.get(SkullBlock.ROTATION)), 18);
+            return skullBlocks[skullType].getDefaultState().with(SkullBlock.ROTATION, rotation & 15);
         }
     }
-
-    @Unique
-    public void setRotation(int rot) {
-        BlockState state = getCachedState();
-        if (!getType().supports(state) || !(state.getBlock() instanceof SkullBlock))
-            return;
-
-        assert world != null;
-        world.setBlockState(pos, state.with(SkullBlock.ROTATION, rot & 15));
-    }
-
 }

@@ -136,6 +136,12 @@ public class MixinClientPlayNetworkHandler {
             if (connector != null) {
                 connector.onBlockChange(pos, state.getBlock(), true);
             }
+
+            BlockState currentState = world.getBlockState(pos);
+            BlockState newState = ConnectionInfo.protocol.getActualState(world, pos, currentState);
+            if (newState != currentState) {
+                world.setBlockState(pos, newState, Block.NOTIFY_ALL | Block.FORCE_STATE | Block.SKIP_LIGHTING_UPDATES);
+            }
         }
     }
 

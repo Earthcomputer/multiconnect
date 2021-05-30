@@ -20,7 +20,6 @@ public class MixinFlowerPotBlock {
 
     @Inject(method = "onUse", at = @At(value = "FIELD", target = "Lnet/minecraft/block/FlowerPotBlock;content:Lnet/minecraft/block/Block;", ordinal = 0), cancellable = true)
     private void cancelEmptyingFlowerPot(CallbackInfoReturnable<ActionResult> ci) {
-        // TODO: this doesn't fully work, WTF?!
         if (ConnectionInfo.protocolVersion <= Protocols.V1_10 && content != Blocks.AIR) {
             ci.setReturnValue(ActionResult.CONSUME);
         }

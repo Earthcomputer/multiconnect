@@ -20,7 +20,9 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.*;
+import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -201,6 +203,10 @@ public abstract class AbstractProtocol implements IUtils {
             state.initShapeCache();
         }
         collisionBoxesToRevert.add(block);
+    }
+
+    public BlockState getActualState(World world, BlockPos pos, BlockState state) {
+        return state;
     }
 
     public void postEntityDataRegister(Class<? extends Entity> clazz) {

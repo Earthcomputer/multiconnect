@@ -1,7 +1,9 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.ChunkConnector;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectableChunk;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
@@ -34,6 +36,12 @@ public abstract class MixinClientWorld extends World {
             if (connector != null) {
                 connector.onBlockChange(pos, state.getBlock(), true);
                 ci.cancel();
+            }
+
+            BlockState currentState = getBlockState(pos);
+            BlockState newState = ConnectionInfo.protocol.getActualState(this, pos, currentState);
+            if (newState != currentState) {
+                setBlockState(pos, newState, Block.NOTIFY_ALL | Block.FORCE_STATE);
             }
         }
     }

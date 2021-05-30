@@ -68,6 +68,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import org.apache.commons.lang3.tuple.Pair;
@@ -1145,6 +1146,23 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return 0.75f;
         }
         return super.getBlockHardness(state, hardness);
+    }
+
+    @Override
+    public BlockState getActualState(World world, BlockPos pos, BlockState state) {
+        if (state.getBlock() instanceof FlowerPotBlock) {
+            if (world.getBlockEntity(pos) instanceof FlowerPotBlockEntity flowerPot) {
+                BlockState flowerPotState = flowerPot.getFlowerPotState();
+                if (flowerPotState != null) {
+                    return flowerPotState;
+                }
+            }
+        } else if (state.getBlock() instanceof AbstractSkullBlock) {
+            if (world.getBlockEntity(pos) instanceof ISkullBlockEntity skull) {
+                return skull.multiconnect_getActualState();
+            }
+        }
+        return super.getActualState(world, pos, state);
     }
 
     @Override

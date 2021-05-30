@@ -12,8 +12,10 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
+import org.jetbrains.annotations.Nullable;
 
 public class FlowerPotBlockEntity extends BlockEntity {
+    private BlockState flowerPotState;
 
     public FlowerPotBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntities_1_12_2.FLOWER_POT, pos, state);
@@ -40,7 +42,13 @@ public class FlowerPotBlockEntity extends BlockEntity {
             block = FlowerPotBlockAccessor.getContentToPotted().getOrDefault(block, Blocks.FLOWER_POT);
         }
         assert world != null;
-        world.setBlockState(pos, block.getDefaultState());
+        flowerPotState = block.getDefaultState();
+        world.setBlockState(pos, flowerPotState);
+    }
+
+    @Nullable
+    public BlockState getFlowerPotState() {
+        return flowerPotState;
     }
 
 }
