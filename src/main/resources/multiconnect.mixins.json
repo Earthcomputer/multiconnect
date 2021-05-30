@@ -3,6 +3,7 @@
   "package": "net.earthcomputer.multiconnect.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
+    "bridge.ChunkDeltaUpdateS2CAccessor",
     "bridge.DataTrackerAccessor",
     "bridge.DynamicRegistryManagerAccessor",
     "bridge.DynamicRegistryManagerImplAccessor",
