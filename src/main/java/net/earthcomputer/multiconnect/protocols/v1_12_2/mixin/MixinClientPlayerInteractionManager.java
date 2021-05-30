@@ -52,6 +52,15 @@ public class MixinClientPlayerInteractionManager {
             }
         }
     }
+
+    @Inject(method = "interactBlock",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/util/ActionResult;PASS:Lnet/minecraft/util/ActionResult;", ordinal = 0),
+            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getItemCooldownManager()Lnet/minecraft/entity/player/ItemCooldownManager;", ordinal = 0)))
+    private void onUsedOnBlockCoolingDown(ClientPlayerEntity player, ClientWorld world, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> ci) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
+            networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand, hitResult));
+        }
+    }
 }
 
 class SendInteractBlockInjectionPoint extends InjectionPoint {
