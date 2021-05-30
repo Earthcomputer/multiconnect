@@ -19,8 +19,10 @@ public class MixinPlayerEntity {
 
     @Inject(method = "getDimensions", at = @At("HEAD"), cancellable = true)
     private void onGetDimensions(EntityPose pose, CallbackInfoReturnable<EntityDimensions> ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            if (pose == EntityPose.CROUCHING) {
+        if (pose == EntityPose.CROUCHING) {
+            if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
+                ci.setReturnValue(PlayerEntity.STANDING_DIMENSIONS);
+            } else if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
                 ci.setReturnValue(SNEAKING_DIMENSIONS_1_13_2);
             }
         }
