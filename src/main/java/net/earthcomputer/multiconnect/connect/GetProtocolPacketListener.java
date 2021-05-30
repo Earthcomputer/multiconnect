@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.connect;
 
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.listener.ClientQueryPacketListener;
-import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket;
 import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket;
 import net.minecraft.network.packet.s2c.query.QueryResponseS2CPacket;
 import net.minecraft.text.Text;
@@ -10,7 +9,7 @@ import net.minecraft.text.TranslatableText;
 
 public class GetProtocolPacketListener implements ClientQueryPacketListener {
 
-    private ClientConnection connection;
+    private final ClientConnection connection;
     private int protocol;
     private volatile boolean completed = false;
     private boolean failed = false;
@@ -22,13 +21,12 @@ public class GetProtocolPacketListener implements ClientQueryPacketListener {
     @Override
     public void onResponse(QueryResponseS2CPacket packet) {
         protocol = packet.getServerMetadata().getVersion().getProtocolVersion();
-        connection.send(new QueryPingC2SPacket(0));
+        completed = true;
+        connection.disconnect(new TranslatableText("multiplayer.status.finished"));
     }
 
     @Override
     public void onPong(QueryPongS2CPacket packet) {
-        completed = true;
-        connection.disconnect(new TranslatableText("multiplayer.status.finished"));
     }
 
     @Override
