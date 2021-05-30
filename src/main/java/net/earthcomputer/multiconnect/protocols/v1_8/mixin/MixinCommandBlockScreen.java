@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_8.mixin;
 
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.block.entity.CommandBlockBlockEntity;
 import net.minecraft.client.gui.screen.ingame.CommandBlockScreen;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
@@ -19,9 +21,11 @@ public abstract class MixinCommandBlockScreen {
 
     @Inject(method = "init", at = @At("TAIL"))
     private void afterInit(CallbackInfo ci) {
-        modeButton.visible = false;
-        conditionalModeButton.visible = false;
-        redstoneTriggerButton.visible = false;
-        updateCommandBlock();
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
+            modeButton.visible = false;
+            conditionalModeButton.visible = false;
+            redstoneTriggerButton.visible = false;
+            updateCommandBlock();
+        }
     }
 }
