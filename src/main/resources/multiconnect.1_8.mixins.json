@@ -23,6 +23,7 @@
     "MixinClientPlayerEntity",
     "MixinClientPlayerInteractionManager",
     "MixinClientPlayNetworkHandler",
+    "MixinCommandBlockScreen",
     "MixinEnderPearlItem",
     "MixinEntityModels",
     "MixinEntityPredicates",
