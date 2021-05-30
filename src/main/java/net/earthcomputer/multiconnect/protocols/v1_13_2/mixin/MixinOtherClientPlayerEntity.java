@@ -22,21 +22,7 @@ public abstract class MixinOtherClientPlayerEntity extends AbstractClientPlayerE
     @Inject(method = "updatePose", at = @At("HEAD"))
     private void onUpdatePose(CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            EntityPose pose;
-            if (isFallFlying()) {
-                pose = EntityPose.FALL_FLYING;
-            } else if (isSleeping()) {
-                pose = EntityPose.SLEEPING;
-            } else if (isSwimming()) {
-                pose = EntityPose.SWIMMING;
-            } else if (isUsingRiptide()) {
-                pose = EntityPose.SPIN_ATTACK;
-            } else if (isSneaking() && !getAbilities().flying) {
-                pose = EntityPose.CROUCHING;
-            } else {
-                pose = EntityPose.STANDING;
-            }
-            setPose(pose);
+            super.updatePose();
         }
     }
 
