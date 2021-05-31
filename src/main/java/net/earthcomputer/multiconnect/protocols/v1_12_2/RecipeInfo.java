@@ -155,6 +155,23 @@ public final class RecipeInfo<T extends Recipe<?>> {
         return shapeless("", count, output, inputs);
     }
 
+    public static RecipeInfo<SmeltingRecipe> smelting(ItemConvertible output, ItemConvertible input, float experience) {
+        return smelting(output, input, experience, 200);
+    }
+
+    public static RecipeInfo<SmeltingRecipe> smelting(ItemConvertible output, Ingredient input, float experience) {
+        return smelting(output, input, experience, 200);
+    }
+
+    public static RecipeInfo<SmeltingRecipe> smelting(ItemConvertible output, ItemConvertible input, float experience, int cookTime) {
+        return smelting(output, Ingredient.ofItems(input), experience, cookTime);
+    }
+
+    public static RecipeInfo<SmeltingRecipe> smelting(ItemConvertible output, Ingredient input, float experience, int cookTime) {
+        ItemStack outputStack = new ItemStack(output);
+        return new RecipeInfo<>(id -> new SmeltingRecipe(id, "", input, outputStack, experience, cookTime), RecipeSerializer.SMELTING, outputStack);
+    }
+
     public RecipeInfo<T> distinguisher(String distinguisher) {
         this.distinguisher = distinguisher;
         return this;

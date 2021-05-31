@@ -9,6 +9,7 @@
     "MixinStructureBlockBlockEntity",
     "MixinStructureBlockScreen1",
     "RedstoneWireBlockAccessor",
+    "UnlockRecipesS2CAccessor",
     "WallBlockAccessor"
   ],
   "client": [

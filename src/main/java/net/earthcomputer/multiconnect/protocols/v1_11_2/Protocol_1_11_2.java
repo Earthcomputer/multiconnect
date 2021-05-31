@@ -20,6 +20,7 @@ import net.minecraft.advancement.Advancement;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ConcretePowderBlock;
+import net.minecraft.block.GlazedTerracottaBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
@@ -233,11 +234,13 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
     }
 
     @Override
-    public List<RecipeInfo<?>> getCraftingRecipes() {
-        List<RecipeInfo<?>> recipes = super.getCraftingRecipes();
+    public List<RecipeInfo<?>> getRecipes() {
+        List<RecipeInfo<?>> recipes = super.getRecipes();
         recipes.removeIf(recipe -> {
-            if (recipe.getOutput().getItem() instanceof BlockItem && ((BlockItem) recipe.getOutput().getItem()).getBlock() instanceof ConcretePowderBlock) {
-                return true;
+            if (recipe.getOutput().getItem() instanceof BlockItem block) {
+                if (block.getBlock() instanceof ConcretePowderBlock || block.getBlock() instanceof GlazedTerracottaBlock) {
+                    return true;
+                }
             }
             return false;
         });

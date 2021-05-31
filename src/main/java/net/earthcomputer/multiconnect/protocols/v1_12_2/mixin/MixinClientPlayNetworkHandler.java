@@ -11,6 +11,8 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.command.CommandSource;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.recipe.Recipe;
+import net.minecraft.recipe.RecipeManager;
+import net.minecraft.recipe.RecipeType;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,6 +36,8 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow public abstract void onCommandTree(CommandTreeS2CPacket packet);
 
+    @Shadow @Final private RecipeManager recipeManager;
+
     @Inject(method = "onGameJoin", at = @At("RETURN"))
     private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
@@ -42,7 +46,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
             Protocol_1_12_2 protocol = (Protocol_1_12_2) ConnectionInfo.protocol;
             List<Recipe<?>> recipes = new ArrayList<>();
-            List<RecipeInfo<?>> recipeInfos = protocol.getCraftingRecipes();
+            List<RecipeInfo<?>> recipeInfos = protocol.getRecipes();
             for (int i = 0; i < recipeInfos.size(); i++) {
                 recipes.add(recipeInfos.get(i).create(new Identifier(String.valueOf(i))));
             }
@@ -52,6 +56,28 @@ public abstract class MixinClientPlayNetworkHandler {
             Commands_1_12_2.registerAll(dispatcher, null);
             onCommandTree(new CommandTreeS2CPacket(dispatcher.getRoot()));
             TabCompletionManager.requestCommandList();
+        }
+    }
+
+    @Inject(method = "onUnlockRecipes", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
+    private void onOnUnlockRecipes(UnlockRecipesS2CPacket packet, CallbackInfo ci) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2 && packet.getAction() == UnlockRecipesS2CPacket.Action.INIT) {
+            // ensure recipe lists are mutable
+            UnlockRecipesS2CAccessor accessor = (UnlockRecipesS2CAccessor) packet;
+            accessor.setRecipeIdsToInit(new ArrayList<>(packet.getRecipeIdsToInit()));
+            accessor.setRecipeIdsToChange(new ArrayList<>(packet.getRecipeIdsToChange()));
+
+            // add smelting recipes
+            for (Recipe<?> recipe : recipeManager.values()) {
+                if (recipe.getType() == RecipeType.SMELTING) {
+                    if (!packet.getRecipeIdsToInit().contains(recipe.getId())) {
+                        packet.getRecipeIdsToInit().add(recipe.getId());
+                    }
+                    if (!packet.getRecipeIdsToChange().contains(recipe.getId())) {
+                        packet.getRecipeIdsToChange().add(recipe.getId());
+                    }
+                }
+            }
         }
     }
 

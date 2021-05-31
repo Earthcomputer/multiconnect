@@ -120,8 +120,8 @@ public class Protocol_1_9_4 extends Protocol_1_10 {
     }
 
     @Override
-    public List<RecipeInfo<?>> getCraftingRecipes() {
-        List<RecipeInfo<?>> recipes = super.getCraftingRecipes();
+    public List<RecipeInfo<?>> getRecipes() {
+        List<RecipeInfo<?>> recipes = super.getRecipes();
         recipes.removeIf(recipe -> recipe.getOutput().getItem() == Items.BONE_BLOCK);
         return recipes;
     }

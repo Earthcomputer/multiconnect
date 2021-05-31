@@ -407,10 +407,10 @@ public class Protocol_1_10 extends Protocol_1_11 {
     }
 
     @Override
-    public List<RecipeInfo<?>> getCraftingRecipes() {
-        List<RecipeInfo<?>> recipes = super.getCraftingRecipes();
+    public List<RecipeInfo<?>> getRecipes() {
+        List<RecipeInfo<?>> recipes = super.getRecipes();
         recipes.removeIf(recipe -> recipe.getOutput().getItem() instanceof BlockItem && ((BlockItem) recipe.getOutput().getItem()).getBlock() instanceof ShulkerBoxBlock);
-        recipes.removeIf(recipe -> recipe.getOutput().getItem() == Items.OBSERVER);
+        recipes.removeIf(recipe -> recipe.getOutput().getItem() == Items.OBSERVER || recipe.getOutput().getItem() == Items.IRON_NUGGET || recipe.getOutput().getItem() == Items.GOLD_NUGGET);
         return recipes;
     }
 

@@ -13,6 +13,7 @@ import net.minecraft.client.recipebook.ClientRecipeBook;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.RecipeMatcher;
+import net.minecraft.screen.AbstractFurnaceScreenHandler;
 import net.minecraft.screen.AbstractRecipeScreenHandler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,6 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinRecipeBookWidget implements IRecipeBookWidget {
 
     @Shadow @Final private RecipeBookResults recipesArea;
+    @Shadow protected AbstractRecipeScreenHandler<?> craftingScreenHandler;
 
     @Shadow protected abstract boolean isWide();
 
@@ -37,15 +39,15 @@ public abstract class MixinRecipeBookWidget implements IRecipeBookWidget {
     @Unique private RecipeBook_1_12<?> recipeBook112;
 
     @Inject(method = "initialize", at = @At("RETURN"))
-    private void onInitialize(int parentWidth, int parentHeight, MinecraftClient mc, boolean isNarrow, AbstractRecipeScreenHandler<?> craftingContainer, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_12) {
-            recipeBook112 = new RecipeBook_1_12<>((RecipeBookWidget) (Object) this, this, craftingContainer);
+    private void onInitialize(int parentWidth, int parentHeight, MinecraftClient mc, boolean isNarrow, AbstractRecipeScreenHandler<?> craftingScreenHandler, CallbackInfo ci) {
+        if (shouldUse112RecipeBook()) {
+            recipeBook112 = new RecipeBook_1_12<>((RecipeBookWidget) (Object) this, this, craftingScreenHandler);
         }
     }
 
     @Inject(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/recipebook/RecipeResultCollection;isCraftable(Lnet/minecraft/recipe/Recipe;)Z"), cancellable = true)
     private void redirectRecipeBook(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_12) {
+        if (shouldUse112RecipeBook()) {
             handleRecipeClicked(recipeBook112, recipesArea.getLastClickedRecipe(), recipesArea.getLastClickedResults());
             if (!isWide())
                 setOpen(false);
@@ -74,4 +76,13 @@ public abstract class MixinRecipeBookWidget implements IRecipeBookWidget {
     @Accessor
     @Override
     public abstract RecipeMatcher getRecipeFinder();
+
+    @Unique
+    private boolean shouldUse112RecipeBook() {
+        if (craftingScreenHandler instanceof AbstractFurnaceScreenHandler) {
+            return ConnectionInfo.protocolVersion <= Protocols.V1_12_2;
+        } else {
+            return ConnectionInfo.protocolVersion <= Protocols.V1_12;
+        }
+    }
 }

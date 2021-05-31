@@ -64,8 +64,8 @@ public class Protocol_1_11 extends Protocol_1_11_2 {
     }
 
     @Override
-    public List<RecipeInfo<?>> getCraftingRecipes() {
-        List<RecipeInfo<?>> recipes = super.getCraftingRecipes();
+    public List<RecipeInfo<?>> getRecipes() {
+        List<RecipeInfo<?>> recipes = super.getRecipes();
         recipes.removeIf(recipe -> recipe.getOutput().getItem() == Items.IRON_NUGGET);
         recipes.removeIf(recipe -> recipe.getDistinguisher().equals("iron_nugget_to_ingot"));
         return recipes;

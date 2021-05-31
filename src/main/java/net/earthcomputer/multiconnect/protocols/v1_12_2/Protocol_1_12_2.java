@@ -5,9 +5,13 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.serialization.Dynamic;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11;
+import net.earthcomputer.multiconnect.protocols.v1_11_2.IScreenHandler;
+import net.earthcomputer.multiconnect.protocols.v1_11_2.RecipeBookEmulator;
+import net.earthcomputer.multiconnect.protocols.v1_12.PlaceRecipeC2SPacket_1_12;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
@@ -33,6 +37,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.entity.passive.WolfEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.fluid.Fluid;
@@ -49,7 +54,9 @@ import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.particle.*;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
+import net.minecraft.recipe.book.RecipeBookCategory;
 import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.screen.AbstractRecipeScreenHandler;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.StatType;
@@ -792,7 +799,6 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(new StringCustomPayload("MC|AdvCmd"));
             buf.writeByte(1); // command block type (minecart)
-            //noinspection ConstantConditions
             buf.writeInt(((CommandBlockMinecartC2SAccessor) updateCmdMinecart).getEntityId());
             buf.writeString(updateCmdMinecart.getCommand());
             buf.writeBoolean(updateCmdMinecart.shouldTrackOutput());
@@ -861,6 +867,44 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             // have fun with all that, server!
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2("MC|Struct", buf));
             return false;
+        }
+        if (packet instanceof PlaceRecipeC2SPacket_1_12 recipePlacement) {
+            // emulate furnace recipe placements
+            if (ConnectionInfo.protocolVersion != Protocols.V1_12) {
+                MinecraftClient.getInstance().execute(() -> {
+                    PlayerEntity player = MinecraftClient.getInstance().player;
+                    if (player != null) {
+                        RecipeBookEmulator recipeBookEmulator = ((IScreenHandler) player.currentScreenHandler).multiconnect_getRecipeBookEmulator();
+                        recipeBookEmulator.emulateRecipePlacement(recipePlacement);
+                    }
+                });
+                return false;
+            } else {
+                if (MinecraftClient.getInstance().isOnThread()) {
+                    PlayerEntity player = MinecraftClient.getInstance().player;
+                    if (player != null
+                            && player.currentScreenHandler instanceof AbstractRecipeScreenHandler<?> recipeScreenHandler
+                            && recipeScreenHandler.getCategory() != RecipeBookCategory.CRAFTING) {
+                        RecipeBookEmulator recipeBookEmulator = ((IScreenHandler) player.currentScreenHandler).multiconnect_getRecipeBookEmulator();
+                        recipeBookEmulator.emulateRecipePlacement(recipePlacement);
+                        return false;
+                    }
+                } else {
+                    MinecraftClient.getInstance().execute(() -> {
+                        PlayerEntity player = MinecraftClient.getInstance().player;
+                        if (player != null
+                                && player.currentScreenHandler instanceof AbstractRecipeScreenHandler<?> recipeScreenHandler
+                                && recipeScreenHandler.getCategory() != RecipeBookCategory.CRAFTING) {
+                            RecipeBookEmulator recipeBookEmulator = ((IScreenHandler) player.currentScreenHandler).multiconnect_getRecipeBookEmulator();
+                            recipeBookEmulator.emulateRecipePlacement(recipePlacement);
+                        } else {
+                            assert connection != null;
+                            connection.sendPacket(packet);
+                        }
+                    });
+                    return false;
+                }
+            }
         }
 
         return true;
@@ -1500,7 +1544,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         super.addExtraFluidTags(tags);
     }
 
-    public List<RecipeInfo<?>> getCraftingRecipes() {
+    public List<RecipeInfo<?>> getRecipes() {
         return Recipes_1_12_2.getRecipes();
     }
 
