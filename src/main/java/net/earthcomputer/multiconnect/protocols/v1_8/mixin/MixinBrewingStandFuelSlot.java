@@ -23,7 +23,7 @@ public class MixinBrewingStandFuelSlot extends Slot {
     }
 
     @Override
-    public boolean doDrawHoveringEffect() {
+    public boolean isEnabled() {
         return ConnectionInfo.protocolVersion > Protocols.V1_8;
     }
 }

@@ -69,16 +69,12 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.event.GameEvent;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class Protocol_1_16_5 extends Protocol_1_17 {
-    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
-
     public static final int BIOME_ARRAY_LENGTH = 1024;
     private static short lastActionId = 0;
 
@@ -649,7 +645,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(Blocks.DRIPSTONE_BLOCK);
         registry.unregister(Blocks.GLOW_LICHEN);
         registry.unregister(Blocks.AZALEA_LEAVES);
-        registry.unregister(Blocks.AZALEA_LEAVES_FLOWERS);
+        registry.unregister(Blocks.FLOWERING_AZALEA_LEAVES);
         registry.unregister(Blocks.CAVE_VINES_PLANT);
         registry.unregister(Blocks.CAVE_VINES);
         registry.unregister(Blocks.SPORE_BLOSSOM);
