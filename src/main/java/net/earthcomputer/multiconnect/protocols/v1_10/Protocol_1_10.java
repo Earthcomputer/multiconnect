@@ -49,6 +49,7 @@ import net.minecraft.network.packet.s2c.play.ItemPickupAnimationS2CPacket;
 import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.recipe.RecipeSerializer;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
@@ -409,6 +410,21 @@ public class Protocol_1_10 extends Protocol_1_11 {
     @Override
     public List<RecipeInfo<?>> getRecipes() {
         List<RecipeInfo<?>> recipes = super.getRecipes();
+        recipes.removeIf(recipe -> {
+            Item item = recipe.getOutput().getItem();
+            if (item instanceof BlockItem blockItem) {
+                if (blockItem.getBlock() instanceof ShulkerBoxBlock) {
+                    return true;
+                }
+                return false;
+            } else if (item == Items.OBSERVER || item == Items.IRON_NUGGET) {
+                return true;
+            } else if (item == Items.GOLD_NUGGET) {
+                return recipe.getRecipeType() == RecipeSerializer.SMELTING;
+            } else {
+                return false;
+            }
+        });
         recipes.removeIf(recipe -> recipe.getOutput().getItem() instanceof BlockItem && ((BlockItem) recipe.getOutput().getItem()).getBlock() instanceof ShulkerBoxBlock);
         recipes.removeIf(recipe -> recipe.getOutput().getItem() == Items.OBSERVER || recipe.getOutput().getItem() == Items.IRON_NUGGET || recipe.getOutput().getItem() == Items.GOLD_NUGGET);
         return recipes;
