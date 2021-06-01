@@ -425,8 +425,6 @@ public class Protocol_1_10 extends Protocol_1_11 {
                 return false;
             }
         });
-        recipes.removeIf(recipe -> recipe.getOutput().getItem() instanceof BlockItem && ((BlockItem) recipe.getOutput().getItem()).getBlock() instanceof ShulkerBoxBlock);
-        recipes.removeIf(recipe -> recipe.getOutput().getItem() == Items.OBSERVER || recipe.getOutput().getItem() == Items.IRON_NUGGET || recipe.getOutput().getItem() == Items.GOLD_NUGGET);
         return recipes;
     }
 
