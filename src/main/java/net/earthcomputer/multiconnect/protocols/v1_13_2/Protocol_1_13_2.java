@@ -511,7 +511,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         if (clazz == MooshroomEntity.class && data == MooshroomEntityAccessor.getType())
             return false;
         if (clazz == CatEntity.class) {
-            if (data == CatEntityAccessor.getSleepingWithOwner()
+            if (data == CatEntityAccessor.getInSleepingPose()
                 || data == CatEntityAccessor.getHeadDown()
                 || data == CatEntityAccessor.getCollarColor())
                 return false;

@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(CatEntity.class)
 public interface CatEntityAccessor {
-    @Accessor("SLEEPING_WITH_OWNER")
-    static TrackedData<Boolean> getSleepingWithOwner() {
+    @Accessor("IN_SLEEPING_POSE")
+    static TrackedData<Boolean> getInSleepingPose() {
         return MixinHelper.fakeInstance();
     }
 
