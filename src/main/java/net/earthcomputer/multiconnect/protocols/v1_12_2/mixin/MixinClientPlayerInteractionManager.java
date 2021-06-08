@@ -34,8 +34,10 @@ import java.util.Collection;
 public class MixinClientPlayerInteractionManager {
     @Shadow @Final private ClientPlayNetworkHandler networkHandler;
 
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Redirect(method = "interactBlock", at = @At("net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.SendInteractBlockInjectionPoint"))
+    // FIXME: change back to custom injection point once Mixin is updated to 0.8.3
+    @Redirect(method = "interactBlock",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V", ordinal = 1),
+            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;shouldCancelInteraction()Z")))
     private void cancelInteractBlockPacket(ClientPlayNetworkHandler networkHandler, Packet<?> packet) {
         if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
             networkHandler.sendPacket(packet);
