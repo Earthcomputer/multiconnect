@@ -6,7 +6,7 @@ plugins {
 	id 'maven-publish'
 	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
-	id 'com.github.breadmoirai.github-release' version '2.2.10'
+	id 'com.github.breadmoirai.github-release' version '2.2.12'
 }
 
 sourceCompatibility = JavaVersion.VERSION_16
@@ -76,6 +76,7 @@ task apiSourcesJar(type: Jar, dependsOn: apiClasses) {
 }
 
 task apiJavadoc(type: Javadoc) {
+	classpath = sourceSets.main.compileClasspath
 	source = sourceSets.api.allJava
 }
 

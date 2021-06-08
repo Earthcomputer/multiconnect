@@ -35,7 +35,7 @@ public class MultiConnectAPI {
     }
 
     /**
-     * Gets a supported {@link IProtocol} object by its protocol version, or <tt>null</tt> if the protocol is not supported
+     * Gets a supported {@link IProtocol} object by its protocol version, or {@code null} if the protocol is not supported
      */
     public IProtocol byProtocolVersion(int version) {
         return version == SharedConstants.getGameVersion().getProtocolVersion() ? CurrentVersionProtocol.INSTANCE : null;
