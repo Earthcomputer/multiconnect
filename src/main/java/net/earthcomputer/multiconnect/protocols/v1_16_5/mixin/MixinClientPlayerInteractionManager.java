@@ -19,7 +19,8 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import java.util.List;
 
-@Mixin(ClientPlayerInteractionManager.class)
+// priority 0 fixes incompatibility with itemscroller
+@Mixin(value = ClientPlayerInteractionManager.class, priority = 0)
 public class MixinClientPlayerInteractionManager {
     @Shadow @Final private MinecraftClient client;
     private ItemStack oldCursorStack;
