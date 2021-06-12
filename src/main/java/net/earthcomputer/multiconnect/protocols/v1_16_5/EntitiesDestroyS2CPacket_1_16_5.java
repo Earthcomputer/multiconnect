@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_16_5;
 
+import net.minecraft.network.OffThreadException;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
@@ -23,7 +24,10 @@ public class EntitiesDestroyS2CPacket_1_16_5 implements Packet<ClientPlayPacketL
     @Override
     public void apply(ClientPlayPacketListener listener) {
         for (int entityId : entities) {
-            listener.onEntityDestroy(new EntityDestroyS2CPacket(entityId));
+            try {
+                listener.onEntityDestroy(new EntityDestroyS2CPacket(entityId));
+            } catch (OffThreadException ignore) {
+            }
         }
     }
 }
