@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_8.mixin;
 
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
@@ -12,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinScreenHandler {
     @Inject(method = "internalOnSlotClick", at = @At("HEAD"), cancellable = true)
     private void onSetSlot(int slot, int clickData, SlotActionType actionType, PlayerEntity player, CallbackInfo ci) {
-        if (actionType == SlotActionType.SWAP && clickData == 40) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_8 && actionType == SlotActionType.SWAP && clickData == 40) {
             ci.cancel();
         }
     }
