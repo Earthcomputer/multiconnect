@@ -9,6 +9,7 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
 import net.earthcomputer.multiconnect.protocols.generic.ICustomPayloadC2SPacket;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1_12_2;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
@@ -39,6 +40,8 @@ public abstract class MixinClientConnection {
     private void onSend(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>> callback, CallbackInfo ci) {
         if (!ConnectionInfo.protocol.preSendPacket(packet)) {
             ci.cancel();
+        } else if (ConnectionInfo.protocolVersion == SharedConstants.getProtocolVersion()) {
+            // no need to translate or block any packets
         } else if (!ConnectionInfo.protocol.onSendPacket(packet)) {
             ci.cancel();
         } else if (packet instanceof CustomPayloadC2SPacket) {
