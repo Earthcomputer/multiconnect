@@ -6,7 +6,7 @@
     "FireBlockAccessor",
     "MixinAbstractBlockState",
     "MixinClientPlayerInteractionManager",
-    "MixinRotatableBlock",
+    "MixinItemPlacementContext",
     "MixinStructureBlockBlockEntity",
     "MixinStructureBlockScreen1",
     "RedstoneWireBlockAccessor",
