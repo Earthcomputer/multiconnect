@@ -1,6 +1,9 @@
 package net.earthcomputer.multiconnect.protocols.v1_17;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.client.MinecraftClient;
@@ -11,6 +14,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.network.packet.c2s.play.BookUpdateC2SPacket;
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
+import net.minecraft.network.packet.s2c.play.EntityDestroyS2CPacket;
 import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.util.collection.DefaultedList;
@@ -45,6 +49,15 @@ public class Protocol_1_17 extends Protocol_1_17_1 {
             buf.pendingRead(ItemStack.class, ItemStack.EMPTY); // cursor stack
             buf.applyPendingReads();
         });
+        ProtocolRegistry.registerInboundTranslator(EntityDestroyS2CPacket.class, buf -> {
+            int numEntities = buf.readVarInt();
+            IntList entities = new IntArrayList(numEntities);
+            for (int i = 0; i < numEntities; i++) {
+                entities.add(buf.readVarInt());
+            }
+            buf.pendingRead(IntList.class, entities);
+            buf.applyPendingReads();
+        });
 
         ProtocolRegistry.registerOutboundTranslator(BookUpdateC2SPacket.class, buf -> {
             Supplier<VarInt> slot = buf.skipWrite(VarInt.class);
@@ -73,5 +86,13 @@ public class Protocol_1_17 extends Protocol_1_17_1 {
             bookStack.putSubTag("title", NbtString.of(title.get().trim()));
         }
         return bookStack;
+    }
+
+    @Override
+    public List<PacketInfo<?>> getClientboundPackets() {
+        List<PacketInfo<?>> packets = super.getClientboundPackets();
+        insertAfter(packets, EntityDestroyS2CPacket.class, PacketInfo.of(EntityDestroyS2CPacket_1_17.class, EntityDestroyS2CPacket_1_17::new));
+        remove(packets, EntityDestroyS2CPacket.class);
+        return packets;
     }
 }

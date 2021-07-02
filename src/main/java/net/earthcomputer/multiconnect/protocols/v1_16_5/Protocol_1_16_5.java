@@ -20,6 +20,7 @@ import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.DimensionTypeAcces
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.EntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.ShulkerEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.TagGroupSerializedAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_17.EntityDestroyS2CPacket_1_17;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.earthcomputer.multiconnect.transformer.VarInt;
@@ -517,8 +518,8 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         remove(packets, TitleS2CPacket.class);
         remove(packets, TitleFadeS2CPacket.class);
         insertAfter(packets, CommandTreeS2CPacket.class, PacketInfo.of(AckScreenActionS2CPacket_1_16_5.class, AckScreenActionS2CPacket_1_16_5::new));
-        insertAfter(packets, EntityDestroyS2CPacket.class, PacketInfo.of(EntitiesDestroyS2CPacket_1_16_5.class, EntitiesDestroyS2CPacket_1_16_5::new));
-        remove(packets, EntityDestroyS2CPacket.class);
+        insertAfter(packets, EntityDestroyS2CPacket_1_17.class, PacketInfo.of(EntityDestroyS2CPacket.class, EntityDestroyS2CPacket::new));
+        remove(packets, EntityDestroyS2CPacket_1_17.class);
         remove(packets, PlayPingS2CPacket.class);
         return packets;
     }

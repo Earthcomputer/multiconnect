@@ -662,7 +662,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, PlayerListS2CPacket.class);
         remove(packets, PlayerPositionLookS2CPacket.class);
         remove(packets, UseBedS2CPacket.class);
-        remove(packets, EntitiesDestroyS2CPacket_1_16_5.class);
+        remove(packets, EntityDestroyS2CPacket.class);
         remove(packets, RemoveEntityStatusEffectS2CPacket.class);
         remove(packets, ResourcePackSendS2CPacket.class);
         remove(packets, PlayerRespawnS2CPacket.class);
@@ -705,8 +705,8 @@ public class Protocol_1_8 extends Protocol_1_9 {
         insertAfter(packets, PlayerSpawnS2CPacket.class, PacketInfo.of(ItemPickupAnimationS2CPacket.class, ItemPickupAnimationS2CPacket::new));
         insertAfter(packets, PaintingSpawnS2CPacket.class, PacketInfo.of(ExperienceOrbSpawnS2CPacket.class, ExperienceOrbSpawnS2CPacket::new));
         insertAfter(packets, ExperienceOrbSpawnS2CPacket.class, PacketInfo.of(EntityVelocityUpdateS2CPacket.class, EntityVelocityUpdateS2CPacket::new));
-        insertAfter(packets, EntityVelocityUpdateS2CPacket.class, PacketInfo.of(EntitiesDestroyS2CPacket_1_16_5.class, EntitiesDestroyS2CPacket_1_16_5::new));
-        insertAfter(packets, EntitiesDestroyS2CPacket_1_16_5.class, PacketInfo.of(EntityS2CPacket_1_16_5.class, EntityS2CPacket_1_16_5::new));
+        insertAfter(packets, EntityVelocityUpdateS2CPacket.class, PacketInfo.of(EntityDestroyS2CPacket.class, EntityDestroyS2CPacket::new));
+        insertAfter(packets, EntityDestroyS2CPacket.class, PacketInfo.of(EntityS2CPacket_1_16_5.class, EntityS2CPacket_1_16_5::new));
         insertAfter(packets, EntityS2CPacket_1_16_5.class, PacketInfo.of(EntityS2CPacket.MoveRelative.class, EntityS2CPacket.MoveRelative::read));
         insertAfter(packets, EntityS2CPacket.MoveRelative.class, PacketInfo.of(EntityS2CPacket.Rotate.class, EntityS2CPacket.Rotate::read));
         insertAfter(packets, EntityS2CPacket.Rotate.class, PacketInfo.of(EntityS2CPacket.RotateAndMoveRelative.class, EntityS2CPacket.RotateAndMoveRelative::read));
