@@ -58,7 +58,7 @@ public class MixinClientPlayerInteractionManager {
                 modifiedStacks.put(entry.getIntKey(), entry.getValue());
             }
             if (modified) {
-                clickSlotPacket = new ClickSlotC2SPacket(clickSlotPacket.getSyncId(), slot, clickSlotPacket.getButton(), clickSlotPacket.getActionType(), clickSlotPacket.getStack(), modifiedStacks);
+                clickSlotPacket = new ClickSlotC2SPacket(clickSlotPacket.getSyncId(), clickSlotPacket.getRevision(), slot, clickSlotPacket.getButton(), clickSlotPacket.getActionType(), clickSlotPacket.getStack(), modifiedStacks);
             }
 
             //noinspection ConstantConditions

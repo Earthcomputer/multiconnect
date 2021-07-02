@@ -732,9 +732,10 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         if (packet instanceof BookUpdateC2SPacket bookUpdate) {
             assert connection != null;
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
-            String channel = bookUpdate.wasSigned() ? "MC|BSign" : "MC|BEdit";
+            String channel = bookUpdate.getTitle().isPresent() ? "MC|BSign" : "MC|BEdit";
             buf.writeTopLevelType(new StringCustomPayload(channel));
-            buf.writeItemStack(bookUpdate.getBook());
+            ItemStack bookStack = createBookItemStack(bookUpdate.getTitle(), bookUpdate.getPages(), connection);
+            buf.writeItemStack(bookStack);
             connection.sendPacket(new CustomPayloadC2SPacket_1_12_2(channel, buf));
             return false;
         }

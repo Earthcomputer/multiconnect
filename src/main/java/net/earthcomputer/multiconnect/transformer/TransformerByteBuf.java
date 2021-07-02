@@ -22,6 +22,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -403,6 +404,15 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     public <T> Supplier<T> skipWrite(Class<T> type) {
         return skipWriteComplex(type);
+    }
+
+    public <E, T extends Collection<E>> Supplier<T> skipWriteCollection(Class<T> collectionType, Class<E> elementType) {
+        return skipWrite(collectionType);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> Supplier<Optional<T>> skipWriteOptional(Class<T> elementType) {
+        return skipWrite((Class<Optional<T>>) (Class<?>) Optional.class);
     }
 
     public <T> Supplier<T> skipWriteComplex(Object type) {
@@ -1120,6 +1130,18 @@ public final class TransformerByteBuf extends PacketByteBuf {
         write((Class<Map<K, V>>) (Class<?>) Map.class, map, m -> super.writeMap(m, keyWriter, valueWriter));
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> Optional<T> readOptional(Function<PacketByteBuf, T> elementReader) {
+        Class<T> elementType = (Class<T>) getLambdaReturnType(elementReader, 0);
+        return read((Class<Optional<T>>) (Class<?>) Optional.class, () -> super.readOptional(elementReader));
+    }
+
+    @Override
+    public ChunkPos readChunkPos() {
+        return read(ChunkPos.class, super::readChunkPos);
+    }
+
     private static final Map<Class<?>, Class<?>> lambdaElementTypes = new HashMap<>();
     private static final ReadWriteLock lambdaElementTypeLock = new ReentrantReadWriteLock();
 
@@ -1154,16 +1176,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
                 return lambdaElementTypes.get(lambdaClass);
             }
 
-            StackTraceElement callSite = null;
-            for (StackTraceElement stackTraceElement : Thread.currentThread().getStackTrace()) {
-                if (!stackTraceElement.getClassName().equals(Thread.class.getName())
-                        && !stackTraceElement.getClassName().equals(PacketByteBuf.class.getName())
-                        && !stackTraceElement.getClassName().equals(TransformerByteBuf.class.getName())) {
-                    callSite = stackTraceElement;
-                    break;
-                }
-            }
-            assert callSite != null;
+            StackWalker.StackFrame callSite = StackWalker.getInstance().walk(s -> s
+                    .dropWhile(sf -> sf.getClassName().equals(PacketByteBuf.class.getName()) || sf.getClassName().equals(TransformerByteBuf.class.getName()))
+                    .findFirst().orElseThrow(AssertionError::new));
 
             ClassNode callerClass;
             try {
@@ -1561,6 +1576,23 @@ public final class TransformerByteBuf extends PacketByteBuf {
     @Override
     public PacketByteBuf writeString(String val, int len) {
         return write(String.class, val, v -> super.writeString(v, len));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> void writeOptional(Optional<T> val, BiConsumer<PacketByteBuf, T> elementWriter) {
+        Class<T> elementType = (Class<T>) getLambdaParameterType(elementWriter, 0, 1);
+        write((Class<Optional<T>>) (Class<?>) Optional.class, val, o -> super.writeOptional(o, elementWriter));
+    }
+
+    @Override
+    public PacketByteBuf writeChunkPos(ChunkPos val) {
+        return write(ChunkPos.class, val, super::writeChunkPos);
+    }
+
+    @Override
+    public PacketByteBuf writeChunkSectionPos(ChunkSectionPos val) {
+        return write(ChunkSectionPos.class, val, super::writeChunkSectionPos);
     }
 
     @Override

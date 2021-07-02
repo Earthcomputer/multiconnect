@@ -294,7 +294,7 @@ public class MixinClientPlayNetworkHandler {
 
         int slot = ConnectionInfo.protocol.serverSlotIdToClient(screenHandler, packet.getSlot());
         if (slot != packet.getSlot()) {
-            packet = new ScreenHandlerSlotUpdateS2CPacket(packet.getSyncId(), slot, packet.getItemStack());
+            packet = new ScreenHandlerSlotUpdateS2CPacket(packet.getSyncId(), packet.getRevision(), slot, packet.getItemStack());
         }
 
         return packet;
@@ -321,7 +321,8 @@ public class MixinClientPlayNetworkHandler {
         }
 
         if (modified) {
-            packet = new InventoryS2CPacket(packet.getSyncId(), DefaultedList.copyOf(ItemStack.EMPTY, newStacks.toArray(ItemStack[]::new)));
+            DefaultedList<ItemStack> newContents = DefaultedList.copyOf(ItemStack.EMPTY, newStacks.toArray(ItemStack[]::new));
+            packet = new InventoryS2CPacket(packet.getSyncId(), packet.getRevision(), newContents, packet.getCursorStack());
         }
 
         return packet;

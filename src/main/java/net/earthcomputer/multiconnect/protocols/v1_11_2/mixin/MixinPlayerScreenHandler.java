@@ -27,7 +27,7 @@ public abstract class MixinPlayerScreenHandler extends AbstractRecipeScreenHandl
     @Inject(method = "onContentChanged", at = @At("HEAD"))
     private void onUpdateResult(CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_11_2) {
-            RecipeBookEmulator.setCraftingResultSlot(syncId, craftingInput);
+            RecipeBookEmulator.setCraftingResultSlot(syncId, this, craftingInput);
         }
     }
 

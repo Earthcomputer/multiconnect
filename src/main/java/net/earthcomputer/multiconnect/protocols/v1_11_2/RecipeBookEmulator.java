@@ -31,13 +31,13 @@ public class RecipeBookEmulator {
         this.screenHandler = screenHandler;
     }
 
-    public static void setCraftingResultSlot(int syncId, CraftingInventory craftingInv) {
+    public static void setCraftingResultSlot(int syncId, ScreenHandler screenHandler, CraftingInventory craftingInv) {
         ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
         assert networkHandler != null;
         ItemStack result = networkHandler.getRecipeManager().getFirstMatch(RecipeType.CRAFTING, craftingInv, MinecraftClient.getInstance().world)
                 .map(recipe -> recipe.craft(craftingInv))
                 .orElse(ItemStack.EMPTY);
-        networkHandler.onScreenHandlerSlotUpdate(new ScreenHandlerSlotUpdateS2CPacket(syncId, 0, result));
+        networkHandler.onScreenHandlerSlotUpdate(new ScreenHandlerSlotUpdateS2CPacket(syncId, screenHandler.getRevision(), 0, result));
     }
 
     public void emulateRecipePlacement(PlaceRecipeC2SPacket_1_12 packet) {
