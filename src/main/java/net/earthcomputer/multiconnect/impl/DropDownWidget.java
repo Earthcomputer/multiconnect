@@ -242,7 +242,7 @@ public class DropDownWidget<T> extends PressableWidget {
     @Override
     public void appendNarrations(NarrationMessageBuilder messageBuilder) {
         // TODO: better narration and accessibility
-        this.method_37021(messageBuilder);
+        this.appendDefaultNarrations(messageBuilder);
     }
 
     public class Category {

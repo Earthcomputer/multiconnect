@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_17;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.s2c.play.EntityDestroyS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket;
 
 public class EntityDestroyS2CPacket_1_17 implements Packet<ClientPlayPacketListener> {
     private final int entityId;
@@ -19,6 +19,6 @@ public class EntityDestroyS2CPacket_1_17 implements Packet<ClientPlayPacketListe
 
     @Override
     public void apply(ClientPlayPacketListener listener) {
-        listener.onEntityDestroy(new EntityDestroyS2CPacket(entityId));
+        listener.onEntitiesDestroy(new EntitiesDestroyS2CPacket(entityId));
     }
 }

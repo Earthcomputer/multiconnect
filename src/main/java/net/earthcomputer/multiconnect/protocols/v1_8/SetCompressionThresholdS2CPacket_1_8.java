@@ -19,7 +19,7 @@ public class SetCompressionThresholdS2CPacket_1_8 implements Packet<ClientPlayPa
     @Override
     public void apply(ClientPlayPacketListener listener) {
         if (!listener.getConnection().isLocal()) {
-            listener.getConnection().setCompressionThreshold(compressionThreshold);
+            listener.getConnection().setCompressionThreshold(compressionThreshold, false);
         }
     }
 }

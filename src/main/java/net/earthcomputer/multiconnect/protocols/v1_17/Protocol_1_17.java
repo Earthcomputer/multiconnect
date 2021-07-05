@@ -14,7 +14,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.network.packet.c2s.play.BookUpdateC2SPacket;
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
-import net.minecraft.network.packet.s2c.play.EntityDestroyS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket;
 import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.util.collection.DefaultedList;
@@ -49,7 +49,7 @@ public class Protocol_1_17 extends Protocol_1_17_1 {
             buf.pendingRead(ItemStack.class, ItemStack.EMPTY); // cursor stack
             buf.applyPendingReads();
         });
-        ProtocolRegistry.registerInboundTranslator(EntityDestroyS2CPacket.class, buf -> {
+        ProtocolRegistry.registerInboundTranslator(EntitiesDestroyS2CPacket.class, buf -> {
             int numEntities = buf.readVarInt();
             IntList entities = new IntArrayList(numEntities);
             for (int i = 0; i < numEntities; i++) {
@@ -91,8 +91,8 @@ public class Protocol_1_17 extends Protocol_1_17_1 {
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
-        insertAfter(packets, EntityDestroyS2CPacket.class, PacketInfo.of(EntityDestroyS2CPacket_1_17.class, EntityDestroyS2CPacket_1_17::new));
-        remove(packets, EntityDestroyS2CPacket.class);
+        insertAfter(packets, EntitiesDestroyS2CPacket.class, PacketInfo.of(EntityDestroyS2CPacket_1_17.class, EntityDestroyS2CPacket_1_17::new));
+        remove(packets, EntitiesDestroyS2CPacket.class);
         return packets;
     }
 }
