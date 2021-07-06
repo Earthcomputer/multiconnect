@@ -44,6 +44,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Unique private static final Logger MULTICONNECT_LOGGER = LogManager.getLogger("multiconnect");
     // Handle reordering of the (synthetic) render distance center packet, to allow the chunk data to arrive beforehand and queue it
+    @Unique private boolean hasReceivedServerPosition;
     @Unique private int centerChunkX;
     @Unique private int centerChunkZ;
     @Unique private int viewDistance = 12;
@@ -79,7 +80,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onChunkRenderDistanceCenter", at = @At("RETURN"))
     private void onOnRenderDistanceCenter(ChunkRenderDistanceCenterS2CPacket packet, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2 && hasReceivedServerPosition) {
             centerChunkX = packet.getChunkX();
             centerChunkZ = packet.getChunkZ();
 
@@ -165,6 +166,7 @@ public abstract class MixinClientPlayNetworkHandler {
     @Inject(method = "onPlayerRespawn", at = @At("TAIL"))
     private void onOnPlayerRespawn(PlayerRespawnS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
+            hasReceivedServerPosition = false;
             onDifficulty(new DifficultyS2CPacket(PendingDifficulty.getPendingDifficulty(), false));
         }
     }
@@ -185,6 +187,7 @@ public abstract class MixinClientPlayNetworkHandler {
     @Inject(method = "onPlayerPositionLook", at = @At("TAIL"))
     private void onOnPlayerPositionLook(PlayerPositionLookS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
+            hasReceivedServerPosition = true;
             Protocol_1_13_2.updateCameraPosition();
         }
     }
