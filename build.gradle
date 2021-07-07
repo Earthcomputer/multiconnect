@@ -1,4 +1,7 @@
 
+import net.fabricmc.loader.minecraft.McVersion
+// Once fabric loader updates:
+// import net.fabricmc.loader.impl.game.minecraft.McVersion
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
@@ -23,13 +26,17 @@ sourceSets {
 
 compileApiJava.dependsOn processApiResources // wtf gradle
 
+def normalizedVersion = new McVersion.Builder().setNameAndRelease(project.minecraft_version).build().normalized
+
 processResources {
 	duplicatesStrategy = DuplicatesStrategy.WARN
 	inputs.property "version", project.version
+	inputs.property "mcversion", normalizedVersion
 
 	from(sourceSets.main.resources.srcDirs) {
 		include "fabric.mod.json"
-		expand "version": project.version
+		expand "version": project.version,
+				"mcversion": normalizedVersion
 	}
 
 	from(sourceSets.main.resources.srcDirs) {

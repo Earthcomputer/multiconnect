@@ -1,14 +1,23 @@
 pluginManagement {
     repositories {
-        jcenter()
         maven {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
         }
-        maven {
-            name = 'Earthcomputer Tools'
-            url = 'https://dl.bintray.com/earthcomputer/util'
-        }
         gradlePluginPortal()
+    }
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+    }
+    dependencies {
+        classpath 'net.fabricmc:fabric-loader:+'
+        classpath 'org.ow2.asm:asm:+'
     }
 }
