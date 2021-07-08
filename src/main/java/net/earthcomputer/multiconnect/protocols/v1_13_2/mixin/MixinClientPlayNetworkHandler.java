@@ -1,7 +1,11 @@
 package net.earthcomputer.multiconnect.protocols.v1_13_2.mixin;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.*;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.EntityType;
@@ -9,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.TradeOfferList;
@@ -23,12 +28,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
+import java.util.concurrent.TimeUnit;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class MixinClientPlayNetworkHandler {
-
-    @Shadow public abstract void onLightUpdate(LightUpdateS2CPacket packet);
 
     @Shadow public abstract void onOpenWrittenBook(OpenWrittenBookS2CPacket packet);
 
@@ -48,24 +51,25 @@ public abstract class MixinClientPlayNetworkHandler {
     @Unique private int centerChunkX;
     @Unique private int centerChunkZ;
     @Unique private int viewDistance = 12;
-    @Unique private final List<ChunkDataS2CPacket> chunkDataPacketQueue = new ArrayList<>();
-    @Unique private final List<LightUpdateS2CPacket> lightUpdatePacketQueue = new ArrayList<>();
+    @Unique private static final int MAX_VIEW_DISTANCE = 32;
+    @Unique private final Cache<ChunkPos, List<ChunkDataS2CPacket>> waitingChunkDataPackets = CacheBuilder.newBuilder()
+            .expireAfterWrite(10, TimeUnit.SECONDS)
+            .removalListener((RemovalListener<ChunkPos, List<ChunkDataS2CPacket>>) notification -> {
+                if (notification.wasEvicted()) {
+                    MULTICONNECT_LOGGER.warn("Dropping chunk packet(s) at {}, {} because it was too far away from the render distance center {}, {}", notification.getKey().x, notification.getKey().z, centerChunkX, centerChunkZ);
+                }
+            })
+            .build();
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void onConstruct(CallbackInfo ci) {
+        Utils.autoCleanUp(waitingChunkDataPackets, 10, TimeUnit.SECONDS);
+    }
 
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
     private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             if (!isInRange(packet.getX(), packet.getZ())) {
-                chunkDataPacketQueue.add(packet);
-                ci.cancel();
-            }
-        }
-    }
-
-    @Inject(method = "onLightUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
-    private void onOnLightUpdate(LightUpdateS2CPacket packet, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            if (!isInRange(packet.getChunkX(), packet.getChunkZ())) {
-                lightUpdatePacketQueue.add(packet);
+                waitingChunkDataPackets.asMap().computeIfAbsent(new ChunkPos(packet.getX(), packet.getZ()), k -> new ArrayList<>()).add(packet);
                 ci.cancel();
             }
         }
@@ -84,33 +88,26 @@ public abstract class MixinClientPlayNetworkHandler {
             centerChunkX = packet.getChunkX();
             centerChunkZ = packet.getChunkZ();
 
-            // Increase radius if necessary, up to a limit of 32
-            int newViewDistance = IntStream.concat(
-                    chunkDataPacketQueue.stream().mapToInt(chunkData -> getRequiredRange(chunkData.getX(), chunkData.getZ())),
-                    lightUpdatePacketQueue.stream().mapToInt(lightUpdate -> getRequiredRange(lightUpdate.getChunkX(), lightUpdate.getChunkZ()))
-            ).filter(distance -> distance <= 32).max().orElse(0);
+            // Increase radius if necessary, up to a limit of MAX_VIEW_DISTANCE
+            int newViewDistance = waitingChunkDataPackets.asMap().keySet().stream()
+                    .mapToInt(pos -> getRequiredRange(pos.x, pos.z))
+                    .filter(distance -> distance <= MAX_VIEW_DISTANCE)
+                    .max().orElse(0);
             if (newViewDistance > viewDistance) {
                 onChunkLoadDistance(new ChunkLoadDistanceS2CPacket(newViewDistance));
             }
 
             // Process queued packets
-            for (ChunkDataS2CPacket chunkData : chunkDataPacketQueue) {
-                if (isInRange(chunkData.getX(), chunkData.getZ())) {
-                    onChunkData(chunkData);
-                } else {
-                    MULTICONNECT_LOGGER.warn("Dropping chunk packet at {}, {} because it was too far away from the render distance center {}, {}", chunkData.getX(), chunkData.getZ(), centerChunkX, centerChunkZ);
+            for (int dx = centerChunkX - viewDistance; dx <= centerChunkX + viewDistance; dx++) {
+                for (int dz = centerChunkZ - viewDistance; dz <= centerChunkZ + viewDistance; dz++) {
+                    List<ChunkDataS2CPacket> chunkDataPackets = waitingChunkDataPackets.asMap().remove(new ChunkPos(dx, dz));
+                    if (chunkDataPackets != null) {
+                        for (ChunkDataS2CPacket chunkDataPacket : chunkDataPackets) {
+                            onChunkData(chunkDataPacket);
+                        }
+                    }
                 }
             }
-            chunkDataPacketQueue.clear();
-
-            for (LightUpdateS2CPacket lightUpdate : lightUpdatePacketQueue) {
-                if (isInRange(lightUpdate.getChunkX(), lightUpdate.getChunkZ())) {
-                    onLightUpdate(lightUpdate);
-                } else {
-                    MULTICONNECT_LOGGER.warn("Dropping light update packet at {}, {} because it was too far away from the render distance center {}, {}", lightUpdate.getChunkX(), lightUpdate.getChunkZ(), centerChunkX, centerChunkZ);
-                }
-            }
-            lightUpdatePacketQueue.clear();
         }
     }
 

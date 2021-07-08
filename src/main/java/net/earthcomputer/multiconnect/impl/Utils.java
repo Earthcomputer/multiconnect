@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.impl;
 
+import com.google.common.cache.Cache;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,15 +39,20 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
-import net.minecraft.util.collection.Int2ObjectBiMap;
 import net.minecraft.util.registry.*;
 import net.minecraft.world.dimension.DimensionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.Cleaner;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -369,6 +375,19 @@ public class Utils {
         TransformerByteBuf buf = new TransformerByteBuf(new EmptyByteBuf(ByteBufAllocator.DEFAULT), null)
                 .readTopLevelType(packetClass, protocolVersion, creator);
         return constructor.apply(buf);
+    }
+
+    private static final ScheduledExecutorService AUTO_CACHE_CLEAN_EXECUTOR = Executors.newScheduledThreadPool(1);
+    private static final Cleaner AUTO_CACHE_CLEANER = Cleaner.create();
+    public static void autoCleanUp(Cache<?, ?> cache, long time, TimeUnit timeUnit) {
+        WeakReference<Cache<?, ?>> weakCache = new WeakReference<>(cache);
+        ScheduledFuture<?> autoCleanTask = AUTO_CACHE_CLEAN_EXECUTOR.scheduleAtFixedRate(() -> {
+            Cache<?, ?> c = weakCache.get();
+            if (c != null) {
+                c.cleanUp();
+            }
+        }, time, time, timeUnit);
+        AUTO_CACHE_CLEANER.register(cache, () -> autoCleanTask.cancel(false));
     }
 
     public static String toString(Object o) {

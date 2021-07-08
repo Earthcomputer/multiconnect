@@ -8,6 +8,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.ChunkConnector;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectableChunk;
@@ -33,6 +34,7 @@ import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
+import net.minecraft.network.packet.s2c.play.LightUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
 import net.minecraft.screen.ScreenHandler;
@@ -83,6 +85,10 @@ public class MixinClientPlayNetworkHandler {
                 }
             })
             .build();
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void onConstruct(CallbackInfo ci) {
+        Utils.autoCleanUp(afterChunkLoadPackets, 10, TimeUnit.SECONDS);
+    }
 
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
     private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
@@ -164,6 +170,11 @@ public class MixinClientPlayNetworkHandler {
     @Inject(method = "onBlockEntityUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
     private void onOnBlockEntityUpdate(BlockEntityUpdateS2CPacket packet, CallbackInfo ci) {
         waitForLoadedChunk(packet, new ChunkPos(packet.getPos()), ci);
+    }
+
+    @Inject(method = "onLightUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
+    private void onOnLightUpdate(LightUpdateS2CPacket packet, CallbackInfo ci) {
+        waitForLoadedChunk(packet, new ChunkPos(packet.getChunkX(), packet.getChunkZ()), ci);
     }
 
     @Unique
