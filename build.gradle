@@ -10,6 +10,7 @@ plugins {
 	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
 	id 'com.github.breadmoirai.github-release' version '2.2.12'
+	id 'io.codearte.nexus-staging' version '0.30.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_16
@@ -275,6 +276,11 @@ signing {
 	sign publishing.publications.slim
 }
 
+nexusStaging {
+	serverUrl = 'https://s01.oss.sonatype.org/service/local/'
+}
+closeAndReleaseRepository.mustRunAfter publish
+
 curseforge {
 	project {
 		apiKey = project.hasProperty('curseForgeKey') ? curseForgeKey : 'baz'
@@ -310,6 +316,7 @@ tasks.getByName('githubRelease').dependsOn remapJar
 task releaseAll {
 	group = 'publishing'
 	dependsOn publish
+	dependsOn closeAndReleaseRepository
 	dependsOn tasks.getByName('curseforge')
 	dependsOn tasks.getByName('githubRelease')
 }
