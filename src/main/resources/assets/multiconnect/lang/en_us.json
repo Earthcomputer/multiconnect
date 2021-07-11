@@ -2,5 +2,8 @@
   "multiconnect.betaWarning.line1": "%s is currently in beta support by multiconnect.",
   "multiconnect.betaWarning.line2": "Expect bugs, but report any you find to the issue tracker!",
   "multiconnect.changeForcedProtocol": "Version",
+  "multiconnect.rareBug": "A rare bug just occurred in multiconnect. Please upload your game log to the %s so it can be fixed.",
+  "multiconnect.rareBug.link": "issue tracker",
+  "multiconnect.rareBug.screen": "A rare bug just occurred in multiconnect. Would you like to upload your game log to the issue tracker to help it get fixed?",
   "multiconnect.unsupportedExperimentalCodec": "This server is using experimental features, or features which were experimental on the server version. Multiconnect cannot translate experimental data, and cannot connect to this server."
 }
