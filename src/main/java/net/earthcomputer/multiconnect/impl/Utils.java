@@ -291,23 +291,6 @@ public class Utils {
         return cloneDataResult.result().get();
     }
 
-    public static void dumpBlockStates() {
-        for (int id : ((IIdList) Block.STATE_IDS).multiconnect_ids()) {
-            BlockState state = Block.STATE_IDS.get(id);
-            assert state != null;
-            StringBuilder sb = new StringBuilder().append(id).append(": ").append(Registry.BLOCK.getId(state.getBlock()));
-            if (!state.getEntries().isEmpty()) {
-                sb.append("[")
-                        .append(state.getEntries().entrySet().stream()
-                                .sorted(Comparator.comparing(entry -> entry.getKey().getName()))
-                                .map(entry -> entry.getKey().getName() + "=" + Util.getValueAsString(entry.getKey(), entry.getValue()))
-                                .collect(Collectors.joining(",")))
-                        .append("]");
-            }
-            System.out.println(sb);
-        }
-    }
-
     public static DropDownWidget<ConnectionMode> createVersionDropdown(Screen screen, ConnectionMode initialMode) {
         var versionDropDown = new DropDownWidget<>(screen.width - 80, 5, 75, 20, initialMode, mode -> {
             LiteralText text = new LiteralText(mode.getName());

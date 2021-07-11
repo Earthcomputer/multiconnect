@@ -473,6 +473,14 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     @Override
+    public void preAcceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+        if (clazz == ZombieEntity.class && data == ZombieEntityAccessor.getConvertingInWater()) {
+            DataTrackerManager.registerOldTrackedData(ZombieEntity.class, OLD_ZOMBIE_ATTACKING, false, MobEntity::setAttacking);
+        }
+        super.preAcceptEntityData(clazz, data);
+    }
+
+    @Override
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == Entity.class && data == EntityAccessor.getPose())
             return false;
@@ -498,8 +506,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 return false;
             }
         }
-        if (clazz == ZombieEntity.class && data == ZombieEntityAccessor.getConvertingInWater())
-            DataTrackerManager.registerOldTrackedData(ZombieEntity.class, OLD_ZOMBIE_ATTACKING, false, MobEntity::setAttacking);
         if (clazz == ZombieVillagerEntity.class) {
             TrackedData<VillagerData> villagerData = ZombieVillagerEntityAccessor.getVillagerData();
             if (data == villagerData) {

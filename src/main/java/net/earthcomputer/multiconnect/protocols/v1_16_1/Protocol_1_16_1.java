@@ -279,10 +279,15 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
     }
 
     @Override
-    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+    public void preAcceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == PiglinEntity.class && data == PiglinEntityAccessor.getCharging()) {
             DataTrackerManager.registerOldTrackedData(PiglinEntity.class, OLD_IMMUNE_TO_ZOMBIFICATION, false, AbstractPiglinEntity::setImmuneToZombification);
         }
+        super.preAcceptEntityData(clazz, data);
+    }
+
+    @Override
+    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == AbstractPiglinEntity.class && data == AbstractPiglinEntityAccessor.getImmuneToZombification()) {
             return false;
         }

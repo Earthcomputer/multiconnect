@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.DebugUtils;
 import net.earthcomputer.multiconnect.protocols.generic.DataTrackerManager;
 import net.earthcomputer.multiconnect.protocols.generic.IDataTracker;
 import net.minecraft.entity.Entity;
@@ -71,11 +72,33 @@ public abstract class MixinDataTracker implements IDataTracker {
     @Inject(method = "getEntry", at = @At("RETURN"))
     private void assertCorrectType(TrackedData<?> requested, CallbackInfoReturnable<DataTracker.Entry<?>> ci) {
         if (ci.getReturnValue() == null) {
-            throw new AssertionError("getEntry returned null for ID " + requested.getId() + " for entity " + Registry.ENTITY_TYPE.getId(trackedEntity.getType()) + "!");
+            throw new IllegalStateException("getEntry returned null for ID %d(%s) for entity %s!\n%s".formatted(
+                    requested.getId(),
+                    DebugUtils.getTrackedDataName(requested),
+                    Registry.ENTITY_TYPE.getId(trackedEntity.getType()),
+                    DebugUtils.getAllTrackedData(trackedEntity)));
         }
         if (ci.getReturnValue().getData().getType() != requested.getType()) {
-            throw new AssertionError("getEntry returned wrong type for ID " + requested.getId() + " for entity " + Registry.ENTITY_TYPE.getId(trackedEntity.getType()) + "!");
+            throw new IllegalStateException("getEntry returned wrong type for ID %d(%s) for entity %s!\n%s".formatted(
+                    requested.getId(),
+                    DebugUtils.getTrackedDataName(requested),
+                    Registry.ENTITY_TYPE.getId(trackedEntity.getType()),
+                    DebugUtils.getAllTrackedData(trackedEntity)));
         }
+    }
+
+    @Inject(method = "copyToFrom", at = @At(value = "INVOKE", target = "Ljava/lang/IllegalStateException;<init>(Ljava/lang/String;)V", remap = false))
+    private void improveErrorMessage(DataTracker.Entry<?> entry, DataTracker.Entry<?> entry2, CallbackInfo ci) {
+        throw new IllegalStateException(
+                "Invalid entity data item type for field %d(%s) on entity %s: into=%s(%s), from=%s(%s)\n%s".formatted(
+                entry.getData().getId(),
+                DebugUtils.getTrackedDataName(entry.getData()),
+                Registry.ENTITY_TYPE.getId(trackedEntity.getType()),
+                entry.get(),
+                entry.get().getClass(),
+                entry2.get(),
+                entry2.get().getClass(),
+                DebugUtils.getAllTrackedData(trackedEntity)));
     }
 
     @Override

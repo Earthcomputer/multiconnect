@@ -183,6 +183,9 @@ public abstract class AbstractProtocol implements IUtils {
         return true;
     }
 
+    public void preAcceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+    }
+
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         return true;
     }

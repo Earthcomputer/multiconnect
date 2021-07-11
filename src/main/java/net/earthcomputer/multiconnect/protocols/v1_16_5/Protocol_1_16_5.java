@@ -1356,12 +1356,17 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
     }
 
     @Override
+    public void preAcceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+        if (clazz == ShulkerEntity.class && data == ShulkerEntityAccessor.getPeekAmount()) {
+            DataTrackerManager.registerOldTrackedData(ShulkerEntity.class, OLD_SHULKER_ATTACHED_POSITION, Optional.empty(), (entity, pos) -> {});
+        }
+        super.preAcceptEntityData(clazz, data);
+    }
+
+    @Override
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == Entity.class && data == EntityAccessor.getFrozenTicks()) {
             return false;
-        }
-        if (clazz == ShulkerEntity.class && data == ShulkerEntityAccessor.getPeekAmount()) {
-            DataTrackerManager.registerOldTrackedData(ShulkerEntity.class, OLD_SHULKER_ATTACHED_POSITION, Optional.empty(), (entity, pos) -> {});
         }
         return super.acceptEntityData(clazz, data);
     }

@@ -18,6 +18,38 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.*;
 import java.util.function.BiConsumer;
 
+/**
+ * This class is used to add and remove {@linkplain TrackedData} to entity types.
+ * <p>
+ * <strong>How to use:</strong><br/>
+ *
+ * If a TrackedData was introduced in a version, then the protocol before that version needs to remove that tracked data
+ * again to be able to connect to prior versions. Likewise, if a TrackedData was removed in a version, the protocol
+ * before that version needs to re-add that tracked data and decide how to handle it (if at all) when it's received.
+ * <p>
+ * To remove a TrackedData, override the acceptEntityData method in the protocol class, check that the class is equal to
+ * the class that the TrackedData was declared in, and that the given TrackedData is equal to the TrackedData you want
+ * to remove (you may need to use an accessor mixin), and return false if they match. At the end of the method, return
+ * super.acceptEntityData.
+ * <p>
+ * To add a TrackedData, you first need to create it. Add a static final field for it in the protocol class and create
+ * it with {@linkplain DataTrackerManager#createOldTrackedData(TrackedDataHandler)}, passing in the data type. Then,
+ * find the TrackedData that you want to insert this TrackedData before (make sure it's in the same class). If you are
+ * <i>not</i> removing the TrackedData that you're inserting before in this protocol (i.e. not replacing it), then you
+ * need to override the preAcceptEntityData method in the protocol class, making sure to call super.preAcceptEntityData
+ * at the end of the method. Inside that method, check against the class and the TrackedData that you're inserting
+ * before, then call {@linkplain DataTrackerManager#registerOldTrackedData(Class, TrackedData, Object, BiConsumer)} with
+ * the class, the TrackedData you want to insert, its default value and the handler for when it's received. The reason
+ * to use this method is because an older protocol could remove the TrackedData you're anchoring against, meaning your
+ * code doesn't run; preAcceptEntityData always happens before that. If you <i>are</i> removing the TrackedData you're
+ * anchoring against in the same protocol, you can instead register
+ * the old TrackedData om tje acceptEntityData before the return false.
+ * <p>
+ * If you're adding your TrackedData at the end of the list of TrackedData's for an entity class, there is nothing to
+ * insert it before. In this case, you can override postEntityDataRegister in the protocol class, check against the
+ * entity class and register the TrackedData in there, which adds it to the end of the list for that class. Call
+ * super.postEntityDataRegister at the end of the method.
+ */
 public class DataTrackerManager {
     /*
      * We can't get default data upfront, because that requires the entity class list.
@@ -51,11 +83,12 @@ public class DataTrackerManager {
     }
 
     /**
-     * Called from inside a protocol's acceptEntityData or postEntityDataRegister method to register an old
-     * tracked data no longer in the current version. Will insert the new data before the current data being
-     * checked.
+     * Called from inside a protocol's preAcceptEntityData, acceptEntityData or postEntityDataRegister method to
+     * register an old tracked data no longer in the current version. Will insert the new data before the current data
+     * being checked.
      */
     public static <T, U extends Entity> void registerOldTrackedData(Class<U> clazz, TrackedData<T> data, T _default, BiConsumer<? super U, ? super T> handler) {
+        ConnectionInfo.protocol.preAcceptEntityData(clazz, data);
         if (ConnectionInfo.protocol.acceptEntityData(clazz, data)) {
             int id = getNextId(clazz);
             NEXT_IDS.put(clazz, id + 1);
@@ -98,6 +131,7 @@ public class DataTrackerManager {
     }
 
     private static void reregisterData(Class<? extends Entity> clazz, TrackedData<?> data) {
+        ConnectionInfo.protocol.preAcceptEntityData(clazz, data);
         if (ConnectionInfo.protocol.acceptEntityData(clazz, data)) {
             int id = getNextId(clazz);
             NEXT_IDS.put(clazz, id + 1);

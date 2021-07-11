@@ -436,6 +436,23 @@ public class Protocol_1_10 extends Protocol_1_11 {
     }
 
     @Override
+    public void preAcceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+        if (clazz == AbstractSkeletonEntity.class && data == Protocol_1_13_2.OLD_SKELETON_ATTACKING) {
+            DataTrackerManager.registerOldTrackedData(AbstractSkeletonEntity.class, OLD_SKELETON_TYPE, 0, (entity, val) -> {
+                EntityType<?> newType = switch (val) {
+                    case 1 -> EntityType.WITHER_SKELETON;
+                    case 2 -> EntityType.STRAY;
+                    default -> EntityType.SKELETON;
+                };
+                if (newType != entity.getType()) {
+                    changeEntityType(entity, newType);
+                }
+            });
+        }
+        super.preAcceptEntityData(clazz, data);
+    }
+
+    @Override
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == GuardianEntity.class && data == GuardianEntityAccessor.getSpikesRetracted()) {
             DataTrackerManager.registerOldTrackedData(GuardianEntity.class, OLD_GUARDIAN_FLAGS, (byte)0, (entity, val) -> {
@@ -507,18 +524,6 @@ public class Protocol_1_10 extends Protocol_1_11 {
         }
         if (clazz == AbstractDonkeyEntity.class && data == AbstractDonkeyEntityAccessor.getChest()) {
             return false;
-        }
-        if (clazz == AbstractSkeletonEntity.class && data == Protocol_1_13_2.OLD_SKELETON_ATTACKING) {
-            DataTrackerManager.registerOldTrackedData(AbstractSkeletonEntity.class, OLD_SKELETON_TYPE, 0, (entity, val) -> {
-                EntityType<?> newType = switch (val) {
-                    case 1 -> EntityType.WITHER_SKELETON;
-                    case 2 -> EntityType.STRAY;
-                    default -> EntityType.SKELETON;
-                };
-                if (newType != entity.getType()) {
-                    changeEntityType(entity, newType);
-                }
-            });
         }
         return super.acceptEntityData(clazz, data);
     }

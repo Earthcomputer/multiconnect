@@ -253,13 +253,19 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
     }
 
     @Override
+    public void preAcceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+        if (clazz == WolfEntity.class && data == WolfEntityAccessor.getBegging()) {
+            DataTrackerManager.registerOldTrackedData(WolfEntity.class, OLD_WOLF_HEALTH, 20f, LivingEntity::setHealth);
+        }
+        super.preAcceptEntityData(clazz, data);
+    }
+
+    @Override
     public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == LivingEntity.class && data == LivingEntityAccessor.getStingerCount())
             return false;
         if (clazz == TridentEntity.class && data == TridentEntityAccessor.getHasEnchantmentGlint())
             return false;
-        if (clazz == WolfEntity.class && data == WolfEntityAccessor.getBegging())
-            DataTrackerManager.registerOldTrackedData(WolfEntity.class, OLD_WOLF_HEALTH, 20f, LivingEntity::setHealth);
         if (clazz == EndermanEntity.class && data == EndermanEntityAccessor.getProvoked())
             return false;
 

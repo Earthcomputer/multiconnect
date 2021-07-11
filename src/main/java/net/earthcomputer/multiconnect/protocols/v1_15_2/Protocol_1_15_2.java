@@ -18,7 +18,6 @@ import net.minecraft.block.enums.JigsawOrientation;
 import net.minecraft.block.enums.WallShape;
 import net.minecraft.block.enums.WireConnection;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.datafixer.fix.BitStorageAlignFix;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
@@ -988,10 +987,15 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     @Override
-    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+    public void preAcceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == PersistentProjectileEntity.class && data == ProjectileEntityAccessor.getPierceLevel()) {
             DataTrackerManager.registerOldTrackedData(PersistentProjectileEntity.class, OLD_PROJECTILE_OWNER, Optional.empty(), (entity, val) -> {});
         }
+        super.preAcceptEntityData(clazz, data);
+    }
+
+    @Override
+    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
         if (clazz == TameableEntity.class && data == TameableEntityAccessor.getTameableFlags()) {
             DataTrackerManager.registerOldTrackedData(TameableEntity.class, OLD_TAMEABLE_FLAGS, (byte)0, (entity, val) -> {
                 byte newVal = val;

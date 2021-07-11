@@ -88,6 +88,6 @@ public interface IUtils {
     }
 
     default void dumpBlockStates() {
-        Utils.dumpBlockStates();
+        DebugUtils.dumpBlockStates();
     }
 }

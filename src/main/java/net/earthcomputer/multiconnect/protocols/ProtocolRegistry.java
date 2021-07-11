@@ -52,6 +52,10 @@ public class ProtocolRegistry {
         return protocols.get(SharedConstants.getGameVersion().getProtocolVersion());
     }
 
+    public static Iterable<AbstractProtocol> all() {
+        return protocols.values();
+    }
+
     public static TranslatorRegistry getTranslatorRegistry() {
         return translatorRegistry;
     }
