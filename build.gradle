@@ -278,6 +278,8 @@ signing {
 
 nexusStaging {
 	serverUrl = 'https://s01.oss.sonatype.org/service/local/'
+	username = project.hasProperty('ossrhUser') ? ossrhUser : 'foo'
+	password = project.hasProperty('ossrhPass') ? ossrhPass : 'bar'
 }
 closeAndReleaseRepository.mustRunAfter publish
 
