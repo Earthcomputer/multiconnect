@@ -162,38 +162,39 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {filledSkyLightMask})); // filled sky light mask
             int filledBlockLightMask = buf.readVarInt();
             buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {filledBlockLightMask})); // filled block light mask
-            int numSkyUpdates = Integer.bitCount(skyLightMask);
-            List<byte[]> skyUpdates = new ArrayList<>(numSkyUpdates);
-            for (int i = 0; i < numSkyUpdates; i++) {
-                try {
+            try {
+                int numSkyUpdates = Integer.bitCount(skyLightMask);
+                List<byte[]> skyUpdates = new ArrayList<>(numSkyUpdates);
+                for (int i = 0; i < numSkyUpdates; i++) {
                     skyUpdates.add(buf.readByteArray(2048));
-                } catch (IndexOutOfBoundsException e) {
-                    ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
-                    ClientWorld world = MinecraftClient.getInstance().world;
-                    if (networkHandler != null && world != null) {
-                        LOGGER.error("Protocol version: {}", ConnectionInfo.protocolVersion);
-                        LOGGER.error("Online player list:");
-                        for (PlayerListEntry entry : networkHandler.getPlayerList()) {
-                            LOGGER.error("- {} ({}in view)", entry.getProfile().getName(), world.getPlayerByUuid(entry.getProfile().getId()) == null ? "not " : "");
-                        }
-                        LOGGER.error("Chunk pos: {}, {}", x, z);
-                        LOGGER.error("Trust edges: {}", trustEdges);
-                        LOGGER.error("Light mask: {} (sky), {} (block)", skyLightMask, blockLightMask);
-                        LOGGER.error("Filled light mask: {} (sky), {} (block)", filledSkyLightMask, filledBlockLightMask);
-                    }
-                    DebugUtils.reportRareBug(178);
-                    throw e;
                 }
+                //noinspection unchecked
+                buf.pendingReadCollection((Class<List<byte[]>>) (Class<?>) List.class, byte[].class, skyUpdates);
+                int numBlockUpdates = Integer.bitCount(blockLightMask);
+                List<byte[]> blockUpdates = new ArrayList<>(numBlockUpdates);
+                for (int i = 0; i < numBlockUpdates; i++) {
+                    blockUpdates.add(buf.readByteArray(2048));
+                }
+                //noinspection unchecked
+                buf.pendingReadCollection((Class<List<byte[]>>) (Class<?>) List.class, byte[].class, blockUpdates);
+            } catch (IndexOutOfBoundsException e) {
+                ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+                ClientWorld world = MinecraftClient.getInstance().world;
+                if (networkHandler != null && world != null) {
+                    LOGGER.error("Protocol version: {}", ConnectionInfo.protocolVersion);
+                    LOGGER.error("Online player list:");
+                    for (PlayerListEntry entry : networkHandler.getPlayerList()) {
+                        LOGGER.error("- {} ({}in view)", entry.getProfile().getName(), world.getPlayerByUuid(entry.getProfile().getId()) == null ? "not " : "");
+                    }
+                    LOGGER.error("Chunk pos: {}, {}", x, z);
+                    LOGGER.error("Trust edges: {}", trustEdges);
+                    LOGGER.error("Light mask: {} (sky), {} (block)", skyLightMask, blockLightMask);
+                    LOGGER.error("Filled light mask: {} (sky), {} (block)", filledSkyLightMask, filledBlockLightMask);
+                }
+                LOGGER.error("Raw data: " + Base64.getEncoder().encodeToString(buf.array()));
+                DebugUtils.reportRareBug(178);
+                throw e;
             }
-            //noinspection unchecked
-            buf.pendingReadCollection((Class<List<byte[]>>) (Class<?>) List.class, byte[].class, skyUpdates);
-            int numBlockUpdates = Integer.bitCount(blockLightMask);
-            List<byte[]> blockUpdates = new ArrayList<>(numBlockUpdates);
-            for (int i = 0; i < numBlockUpdates; i++) {
-                blockUpdates.add(buf.readByteArray(2048));
-            }
-            //noinspection unchecked
-            buf.pendingReadCollection((Class<List<byte[]>>) (Class<?>) List.class, byte[].class, blockUpdates);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(SynchronizeTagsS2CPacket.class, buf -> {
