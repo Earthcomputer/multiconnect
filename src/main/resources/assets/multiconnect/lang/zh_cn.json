@@ -2,8 +2,8 @@
   "multiconnect.betaWarning.line1": "当前 %s 的支持在multiconnect属于测试版功能。",
   "multiconnect.betaWarning.line2": "可能会出现问题，务必向问题追踪器汇报！",
   "multiconnect.changeForcedProtocol": "版本",
-  "multiconnect.rareBug": "multiconnect发生了一个不寻常的问题。请上传你的游戏日志到 %s 以确保它能被修复。",
+  "multiconnect.rareBug": "multiconnect发生了一个不常见的问题。请上传你的游戏日志到 %s 以确保它能被修复。",
   "multiconnect.rareBug.link": "问题追踪器",
-  "multiconnect.rareBug.screen": "multiconnect发生了一个不寻常的问题给。 你是否愿意上传游戏日志帮助修复问题?",
+  "multiconnect.rareBug.screen": "multiconnect发生了一个不常见的问题。 你是否愿意上传游戏日志帮助修复问题？",
   "multiconnect.unsupportedExperimentalCodec": "此服务器使用了实验性功能。multiconnect无法转译实验性数据，因此无法连接至此服务器。"
 }
