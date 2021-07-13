@@ -1,3 +1,9 @@
 {
-  "multiconnect.changeForcedProtocol": "Versão"
+  "multiconnect.betaWarning.line1": "%s está em suporte beta pelo multiconnect.",
+  "multiconnect.betaWarning.line2": "Defeitos são esperados, entretanto reporte ao gerenciador de incidentes caso encontre algum!",
+  "multiconnect.changeForcedProtocol": "Versão",
+  "multiconnect.rareBug": "Houve um defeito raro no multiconnect. Por favor, envie o log de seu jogo %s para sua correção.",
+  "multiconnect.rareBug.link": "ao gerenciador de incidentes",
+  "multiconnect.rareBug.screen": "Houve um defeito raro no multiconnect. Deseja enviar o log de seu jogo ao gerenciador de incidentes para ajudar em sua correção?",
+  "multiconnect.unsupportedExperimentalCodec": "Este servidor está utilizando recursos que são experimentais, ou que foram na versão daquele. O multiconnect não consegue traduzir esses dados, portanto não pode conectar."
 }
