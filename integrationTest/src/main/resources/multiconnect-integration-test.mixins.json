@@ -3,7 +3,9 @@
   "package": "net.earthcomputer.multiconnect.integrationtest.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "MixinJsMacrosCore"
+    "MixinInputUtil",
+    "MixinJsMacrosCore",
+    "MixinWindow"
   ],
   "client": [
   ],

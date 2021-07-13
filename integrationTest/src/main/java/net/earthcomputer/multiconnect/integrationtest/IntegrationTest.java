@@ -210,7 +210,7 @@ public class IntegrationTest implements ModInitializer {
     }
 
     private static class ServerHandle {
-        AtomicBoolean isStopping;
+        AtomicBoolean isStopping = new AtomicBoolean(false);
         PrintWriter stdin;
     }
 }
