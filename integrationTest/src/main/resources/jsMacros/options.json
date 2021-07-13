@@ -13,7 +13,7 @@
         },
         {
           "triggerType": "EVENT",
-          "event": "ResourcesReloaded",
+          "event": "ResourcePackLoaded",
           "scriptFile": "runTests.py",
           "enabled": true
         }

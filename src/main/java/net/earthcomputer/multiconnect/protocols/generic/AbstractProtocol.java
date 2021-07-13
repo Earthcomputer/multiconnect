@@ -54,7 +54,7 @@ public abstract class AbstractProtocol implements IUtils {
         doRegistryMutation(true);
         if (!resourceReload) {
             removeTrackedDataHandlers();
-            OldLanguageManager.reloadLanguages();
+            AssetDownloader.reloadLanguages();
         }
         markChangedCollisionBoxes();
         ((MinecraftClientAccessor) MinecraftClient.getInstance()).callInitializeSearchableContainers();

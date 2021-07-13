@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
-import net.earthcomputer.multiconnect.protocols.generic.OldLanguageManager;
+import net.earthcomputer.multiconnect.protocols.generic.AssetDownloader;
 import net.minecraft.client.resource.language.LanguageDefinition;
 import net.minecraft.client.resource.language.TranslationStorage;
 import net.minecraft.resource.ResourceManager;
@@ -20,7 +20,7 @@ public class MixinTranslationStorage {
             at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableMap;copyOf(Ljava/util/Map;)Lcom/google/common/collect/ImmutableMap;", remap = false),
             locals = LocalCapture.CAPTURE_FAILHARD)
     private static void onLoad(ResourceManager resourceManager, List<LanguageDefinition> languages, CallbackInfoReturnable<TranslationStorage> ci, Map<String, String> translations) {
-        OldLanguageManager.addExtraTranslations(languages.get(languages.size() - 1).getCode(), translations::put);
+        AssetDownloader.addExtraTranslations(languages.get(languages.size() - 1).getCode(), translations::put);
     }
 
 }

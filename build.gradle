@@ -120,6 +120,7 @@ subprojects {
 		afterEvaluate {
 			dependencies {
 				implementation project(':')
+				implementation rootProject.sourceSets.api.output
 			}
 		}
 	}

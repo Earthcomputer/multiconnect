@@ -25,7 +25,7 @@ import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OldLanguageManager {
+public class AssetDownloader {
 
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
     private static final Gson GSON = new Gson();
@@ -115,6 +115,17 @@ public class OldLanguageManager {
     private static String getAssetUrl(String version) {
         if (versionAssetUrls.containsKey(version))
             return versionAssetUrls.get(version);
+        VersionFile versionFile = getVersionFile(version);
+        if (versionFile == null) {
+            versionAssetUrls.put(version, null);
+            return null;
+        }
+
+        versionAssetUrls.put(version, versionFile.assetIndex.url);
+        return versionFile.assetIndex.url;
+    }
+
+    private static VersionFile getVersionFile(String version) {
         URL versionUrl;
         try {
             String url = getVersionUrls().get(version);
@@ -130,14 +141,7 @@ public class OldLanguageManager {
             return null;
         }
 
-        VersionFile versionFile = downloadJson(versionUrl, version + "/" + version + ".json", VersionFile.class);
-        if (versionFile == null) {
-            versionAssetUrls.put(version, null);
-            return null;
-        }
-
-        versionAssetUrls.put(version, versionFile.assetIndex.url);
-        return versionFile.assetIndex.url;
+        return downloadJson(versionUrl, version + "/" + version + ".json", VersionFile.class);
     }
 
     private static Map<String, String> getLangFileUrls(String version) {
@@ -238,6 +242,21 @@ public class OldLanguageManager {
         return translations;
     }
 
+    public static File downloadServer(String version) {
+        VersionFile versionFile = getVersionFile(version);
+        if (versionFile == null) {
+            return null;
+        }
+        URL serverUrl;
+        try {
+            serverUrl = new URL(versionFile.downloads.server.url);
+        } catch (MalformedURLException e) {
+            LOGGER.error("Malformed url for server version " + version, e);
+            return null;
+        }
+        return download(serverUrl, version + "/server.jar");
+    }
+
     // Downloads a json file if un-downloaded, or if it has a json syntax error (corrupted)
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private static <T> T downloadJson(URL url, String dest, Class<T> type) {
@@ -332,10 +351,12 @@ public class OldLanguageManager {
     }
 
     static class VersionFile {
-        AssetIndex assetIndex;
-        static class AssetIndex {
-            String url;
-        }
+        Asset assetIndex;
+        Downloads downloads;
+    }
+
+    static class Downloads {
+        Asset server;
     }
 
     static class AssetFile {
@@ -343,6 +364,10 @@ public class OldLanguageManager {
         static class Obj {
             String hash;
         }
+    }
+
+    static class Asset {
+        String url;
     }
 
 }
