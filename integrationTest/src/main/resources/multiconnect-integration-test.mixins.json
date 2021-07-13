@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.integrationtest.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "MixinJsMacrosCore"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

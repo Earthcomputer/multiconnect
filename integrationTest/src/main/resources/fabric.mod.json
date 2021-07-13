@@ -18,6 +18,7 @@
 
   "environment": "client",
   "mixins": [
+    "multiconnect-integration-test.mixins.json"
   ],
 
   "depends": {

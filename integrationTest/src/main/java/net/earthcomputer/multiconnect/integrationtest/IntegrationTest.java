@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.integrationtest;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
-import xyz.wagyourtail.jsmacros.core.Core;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,18 +17,9 @@ import java.util.stream.Stream;
 public class IntegrationTest implements ModInitializer {
     @Override
     public void onInitialize() {
-        try {
-            syncMacrosFolder();
-
-            // Reload jsmacros config in case it had already loaded
-            Core.instance.config.reloadRawConfigFromFile();
-            Core.instance.config.loadConfig();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
-    private static void syncMacrosFolder() throws IOException, URISyntaxException {
+    public static void syncMacrosFolder() throws IOException, URISyntaxException {
         Path jsMacrosDir = FabricLoader.getInstance().getConfigDir().resolve("jsMacros");
         if (Files.isSymbolicLink(jsMacrosDir)) {
             return;
