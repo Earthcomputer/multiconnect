@@ -1,0 +1,134 @@
+{
+  "version": 2,
+  "core": {
+    "maxLockTime": 500,
+    "defaultProfile": "default",
+    "profiles": {
+      "default": [
+        {
+          "triggerType": "EVENT",
+          "event": "ProfileLoad",
+          "scriptFile": "index.js",
+          "enabled": false
+        },
+        {
+          "triggerType": "EVENT",
+          "event": "ResourcesReloaded",
+          "scriptFile": "runTests.py",
+          "enabled": true
+        }
+      ]
+    },
+    "extraJsOptions": {}
+  },
+  "client": {
+    "sortMethod": "Enabled",
+    "disableKeyWhenScreenOpen": true,
+    "editorTheme": {
+      "constant": [
+        33,
+        180,
+        62
+      ],
+      "string": [
+        18,
+        212,
+        137
+      ],
+      "interpolation-punctuation": [
+        204,
+        120,
+        50
+      ],
+      "builtin": [
+        33,
+        180,
+        62
+      ],
+      "quantifier": [
+        121,
+        171,
+        255
+      ],
+      "charset-negation": [
+        204,
+        120,
+        50
+      ],
+      "operator": [
+        216,
+        216,
+        216
+      ],
+      "class-name": [
+        33,
+        180,
+        62
+      ],
+      "number": [
+        121,
+        171,
+        255
+      ],
+      "regex": [
+        18,
+        212,
+        137
+      ],
+      "boolean": [
+        255,
+        226,
+        0
+      ],
+      "function-variable": [
+        121,
+        171,
+        255
+      ],
+      "function": [
+        162,
+        234,
+        34
+      ],
+      "punctuation": [
+        216,
+        216,
+        216
+      ],
+      "charclass": [
+        255,
+        226,
+        0
+      ],
+      "comment": [
+        160,
+        160,
+        160
+      ],
+      "keyword": [
+        204,
+        120,
+        50
+      ],
+      "charset-punctuation": [
+        216,
+        216,
+        216
+      ],
+      "escape": [
+        255,
+        226,
+        0
+      ],
+      "format-spec": [
+        204,
+        120,
+        50
+      ]
+    },
+    "editorLinterOverrides": {},
+    "editorHistorySize": 20,
+    "editorSuggestions": true,
+    "editorFont": "jsmacros:jetbrainsmono"
+  }
+}

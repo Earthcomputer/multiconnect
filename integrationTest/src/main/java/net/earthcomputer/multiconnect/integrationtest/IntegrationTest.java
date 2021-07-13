@@ -25,7 +25,7 @@ public class IntegrationTest implements ModInitializer {
     }
 
     private static void syncMacrosFolder() throws IOException, URISyntaxException {
-        Path jsMacrosDir = FabricLoader.getInstance().getConfigDir().resolve("jsMacros").resolve("Macros");
+        Path jsMacrosDir = FabricLoader.getInstance().getConfigDir().resolve("jsMacros");
         if (Files.isSymbolicLink(jsMacrosDir)) {
             return;
         }
@@ -38,12 +38,12 @@ public class IntegrationTest implements ModInitializer {
         File modFile = new File(IntegrationTest.class.getProtectionDomain().getCodeSource().getLocation().toURI());
         if (modFile.isDirectory()) {
             modFile = new File(modFile.getAbsolutePath().replace("classes" + File.separator + "java", "resources"));
-            Path fromMacrosDir = modFile.toPath().resolve("Macros");
-            try (Stream<Path> paths = Files.walk(fromMacrosDir)) {
+            Path fromJsMacrosDir = modFile.toPath().resolve("jsMacros");
+            try (Stream<Path> paths = Files.walk(fromJsMacrosDir)) {
                 for (Path path : (Iterable<Path>) paths::iterator) {
                     if (!Files.isDirectory(path)) {
                         try (InputStream from = Files.newInputStream(path)) {
-                            copyFile(fromMacrosDir.relativize(path).toString().replace(File.separator, "/"), from, jsMacrosDir);
+                            copyFile(fromJsMacrosDir.relativize(path).toString().replace(File.separator, "/"), from, jsMacrosDir);
                         }
                     }
                 }
@@ -53,8 +53,8 @@ public class IntegrationTest implements ModInitializer {
                 Enumeration<JarEntry> entries = modJar.entries();
                 while (entries.hasMoreElements()) {
                     JarEntry entry = entries.nextElement();
-                    if (entry.getName().startsWith("Macros/") && !entry.isDirectory()) {
-                        copyFile(entry.getName().substring("Macros/".length()), modJar.getInputStream(entry), jsMacrosDir);
+                    if (entry.getName().startsWith("jsMacros/") && !entry.isDirectory()) {
+                        copyFile(entry.getName().substring("jsMacros/".length()), modJar.getInputStream(entry), jsMacrosDir);
                     }
                 }
             }
