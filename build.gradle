@@ -115,6 +115,16 @@ minecraft {
 	accessWidener 'src/main/resources/multiconnect.accesswidener'
 }
 
+subprojects {
+	if (name == 'integrationTest') {
+		afterEvaluate {
+			dependencies {
+				implementation project(':')
+			}
+		}
+	}
+}
+
 repositories {
 	maven {
 		url 'https://jitpack.io/'

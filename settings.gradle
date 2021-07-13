@@ -21,3 +21,5 @@ buildscript {
         classpath 'org.ow2.asm:asm:+'
     }
 }
+
+include 'integrationTest'

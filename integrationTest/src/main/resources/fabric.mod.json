@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "multiconnect-integration-test",
+  "version": "${version}",
+
+  "name": "Multiconnect Integration Test",
+  "authors": [
+    "Earthcomputer"
+  ],
+
+  "license": "MIT",
+
+  "entrypoints": {
+    "main": [
+      "net.earthcomputer.multiconnect.integrationtest.IntegrationTest"
+    ]
+  },
+
+  "environment": "client",
+  "mixins": [
+  ],
+
+  "depends": {
+    "multiconnect": "${version}",
+    "jsmacros": ">=1.5",
+    "jsmacros-jython": ">=1.1.1"
+  }
+}

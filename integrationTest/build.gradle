@@ -1,0 +1,61 @@
+plugins {
+    id 'fabric-loom'
+}
+
+sourceCompatibility = JavaVersion.VERSION_16
+targetCompatibility = JavaVersion.VERSION_16
+
+version = rootProject.version
+
+repositories {
+    maven {
+        name = 'CurseMaven'
+        url = 'https://cursemaven.com/'
+    }
+    maven {
+        name = 'JitPack'
+        url = 'https://jitpack.io/'
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+    mappings "net.fabricmc:yarn:${rootProject.yarn_mappings}:v2"
+    modImplementation "com.github.Earthcomputer:fabric-loader:${rootProject.loader_version}"
+
+    // Fabric API
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fapi_version}"
+
+    // JSMacros
+    modImplementation("com.github.wagyourtail:JSMacros:${project.jsmacros_version}") {
+        transitive = false
+    }
+    modImplementation("com.github.wagyourtail:JSMacros-Jython:${project.jsmacros_jython_version}") {
+        transitive = false
+    }
+    implementation "org.graalvm.sdk:graal-sdk:${project.graal_version}"
+    implementation "org.graalvm.js:js:${project.graal_version}"
+    implementation "org.python:jython-standalone:${project.jython_version}"
+    implementation "io.noties:prism4j:${project.prism_version}"
+
+    // Mod Menu
+    if (project.enable_mod_menu.toBoolean()) {
+        modImplementation("curse.maven:modmenu-308702:${project.modmenu_fileid}") {
+            transitive = false
+        }
+    }
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+    inputs.property "version", project.version
+
+    from(sourceSets.main.resources.srcDirs) {
+        include "fabric.mod.json"
+        expand "version": project.version
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude "fabric.mod.json"
+    }
+}
