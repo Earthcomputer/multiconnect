@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.integrationtest;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
+import xyz.wagyourtail.jsmacros.core.Core;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +20,11 @@ public class IntegrationTest implements ModInitializer {
     public void onInitialize() {
         try {
             syncMacrosFolder();
-        } catch (IOException | URISyntaxException e) {
+
+            // Reload jsmacros config in case it had already loaded
+            Core.instance.config.reloadRawConfigFromFile();
+            Core.instance.config.loadConfig();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
