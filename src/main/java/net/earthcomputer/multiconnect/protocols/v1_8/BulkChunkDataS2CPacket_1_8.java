@@ -20,7 +20,7 @@ public class BulkChunkDataS2CPacket_1_8 implements Packet<ClientPlayPacketListen
             Entry entry = entries[i] = new Entry();
             entry.x = buf.readInt();
             entry.z = buf.readInt();
-            entry.verticalStripBitmask = buf.readShort();
+            entry.verticalStripBitmask = buf.readUnsignedShort();
             entry.data = new byte[calcDataSize(Integer.bitCount(entry.verticalStripBitmask), hasSkyLight)];
         }
         for (int i = 0; i < numChunks; i++) {
