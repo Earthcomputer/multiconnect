@@ -113,7 +113,6 @@ public class IntegrationTest implements ModInitializer {
         if (!currentServer.compareAndSet(null, serverHandle)) {
             throw new IllegalStateException("Cannot start a server when a server is already running");
         }
-        serverStopWait.writeLock().lock();
 
         String versionName = ConnectionMode.byValue(protocol).getName();
         LOGGER.info("Starting server version {}", versionName);
@@ -133,6 +132,7 @@ public class IntegrationTest implements ModInitializer {
         int port = Integer.getInteger("multiconnect.integrationTest.port", 25564);
         Properties serverProperties = new Properties();
         serverProperties.setProperty("enable-command-block", "true");
+        serverProperties.setProperty("generate-structures", "false");
         serverProperties.setProperty("level-type", "flat");
         serverProperties.setProperty("online-mode", "false");
         serverProperties.setProperty("server-port", String.valueOf(port));
@@ -150,6 +150,7 @@ public class IntegrationTest implements ModInitializer {
 
         Semaphore serverStarted = new Semaphore(0);
         Thread serverOutputThread = new Thread(() -> {
+            serverStopWait.writeLock().lock();
             boolean hasServerStarted = false;
             Scanner scanner = new Scanner(server.getInputStream());
             while (scanner.hasNextLine()) {

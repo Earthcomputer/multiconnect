@@ -31,3 +31,5 @@ bin/
 run/*
 !run/.gitkeep
 changelog.txt
+
+*.class
