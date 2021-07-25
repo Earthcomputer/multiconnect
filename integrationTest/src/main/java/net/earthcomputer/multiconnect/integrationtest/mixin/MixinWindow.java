@@ -4,7 +4,9 @@ import net.minecraft.client.util.Window;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Window.class)
 public class MixinWindow {
@@ -12,5 +14,10 @@ public class MixinWindow {
     private int onCreateWindow(int width) {
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_FALSE);
         return width;
+    }
+
+    @Inject(method = "onWindowFocusChanged", at = @At("HEAD"), cancellable = true)
+    private void disableWindowFocusListener(CallbackInfo ci) {
+        ci.cancel();
     }
 }

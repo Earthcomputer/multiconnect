@@ -41,8 +41,11 @@ for protocol in MultiConnectAPI.instance().getSupportedProtocols():
     connected_to_server = False
     Client.connect(ip)
     timer = 0
+    tries = 0
     while not connected_to_server:
         if timer > 100:
+            if tries > 5:
+                Client.shutdown()
             screen = Hud.getOpenScreen()
             if screen:
                 buttons = screen.getButtonWidgets()
@@ -51,6 +54,7 @@ for protocol in MultiConnectAPI.instance().getSupportedProtocols():
                     Client.waitTick()
                     Client.connect(ip)
             timer = 0
+            tries += 1
         timer += 1
         Client.waitTick()
 
