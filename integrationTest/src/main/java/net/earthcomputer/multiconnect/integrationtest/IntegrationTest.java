@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.integrationtest;
 
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.protocols.generic.AssetDownloader;
 import net.fabricmc.api.ModInitializer;
@@ -162,7 +163,13 @@ public class IntegrationTest implements ModInitializer {
                 }
                 Matcher joinedGameMatcher = JOINED_GAME_PATTERN.matcher(line);
                 if (joinedGameMatcher.find()) {
-                    serverHandle.stdin.println("op " + joinedGameMatcher.group(1));
+                    String playerName = joinedGameMatcher.group(1);
+                    serverHandle.stdin.printf("op %s\n", playerName);
+                    if (protocol <= Protocols.V1_12_2) {
+                        serverHandle.stdin.printf("tp %s 0 ~ 0\n", playerName);
+                    } else {
+                        serverHandle.stdin.printf("execute at %s run teleport 0 ~ 0\n", playerName);
+                    }
                     serverHandle.stdin.flush();
                 }
             }
@@ -182,6 +189,8 @@ public class IntegrationTest implements ModInitializer {
 
         serverHandle.stdin.println("gamerule doMobSpawning false");
         serverHandle.stdin.println("gamerule doWeatherCycle false");
+        serverHandle.stdin.println("setworldspawn 0 0 0");
+        serverHandle.stdin.println("gamerule spawnRadius 0");
         serverHandle.stdin.flush();
 
         LOGGER.info("Server started! Took %.3f seconds".formatted((System.nanoTime() - startTime) / 1000000000.0));
