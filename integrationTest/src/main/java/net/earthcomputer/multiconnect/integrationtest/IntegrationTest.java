@@ -9,6 +9,7 @@ import net.minecraft.util.Util;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -28,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.BiConsumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
@@ -39,6 +42,9 @@ public class IntegrationTest implements ModInitializer {
     private static final Logger SERVER_LOGGER = LogManager.getLogger("Server");
     private static final AtomicReference<ServerHandle> currentServer = new AtomicReference<>();
     private static final ReadWriteLock serverStopWait = new ReentrantReadWriteLock();
+
+    private static int lastStartedProtocol;
+    private static BiConsumer<String, String> addFailureFunc;
 
     @Override
     public void onInitialize() {
@@ -82,6 +88,30 @@ public class IntegrationTest implements ModInitializer {
         }
     }
 
+    public static void setAddFailureFunc(BiConsumer<String, String> func) {
+        addFailureFunc = func;
+    }
+
+    public static void addFailure(String description, @Nullable String stackTrace) {
+        if (addFailureFunc != null) {
+            addFailureFunc.accept(description, stackTrace);
+        }
+    }
+
+    public static void addFailure(String description) {
+        addFailure(description, (String) null);
+    }
+
+    public static void addFailure(String description, @Nullable Throwable throwable) {
+        String stackTrace = null;
+        if (throwable != null) {
+            StringWriter sw = new StringWriter();
+            throwable.printStackTrace(new PrintWriter(sw));
+            stackTrace = sw.toString();
+        }
+        addFailure(description, stackTrace);
+    }
+
     private static void recursiveDelete(Path dir) throws IOException {
         try (Stream<Path> files = Files.list(dir)) {
             for (Path file : (Iterable<Path>) files::iterator) {
@@ -110,11 +140,7 @@ public class IntegrationTest implements ModInitializer {
     private static final Pattern JOINED_GAME_PATTERN = Pattern.compile("(\\w+) joined the game");
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static String setupServer(int protocol) throws IOException {
-        ServerHandle serverHandle = new ServerHandle();
-        if (!currentServer.compareAndSet(null, serverHandle)) {
-            throw new IllegalStateException("Cannot start a server when a server is already running");
-        }
-
+        lastStartedProtocol = protocol;
         String versionName = ConnectionMode.byValue(protocol).getName();
         LOGGER.info("Starting server version {}", versionName);
         long startTime = System.nanoTime();
@@ -141,6 +167,21 @@ public class IntegrationTest implements ModInitializer {
         try (Writer writer = new FileWriter(new File(serverDir, "server.properties"))) {
             serverProperties.store(writer, "");
             writer.flush();
+        }
+
+        String ip = startServer(protocol);
+
+        LOGGER.info("Server started! Took %.3f seconds".formatted((System.nanoTime() - startTime) / 1000000000.0));
+
+        return ip;
+    }
+
+    private static String startServer(int protocol) throws IOException {
+        File serverDir = new File("integrationTestServer");
+
+        ServerHandle serverHandle = new ServerHandle();
+        if (!currentServer.compareAndSet(null, serverHandle)) {
+            throw new IllegalStateException("Cannot start a server when a server is already running");
         }
 
         String javaExePath = Util.getOperatingSystem() == Util.OperatingSystem.WINDOWS ? "java.exe" : "java";
@@ -193,12 +234,8 @@ public class IntegrationTest implements ModInitializer {
         serverHandle.stdin.println("gamerule spawnRadius 0");
         serverHandle.stdin.flush();
 
-        LOGGER.info("Server started! Took %.3f seconds".formatted((System.nanoTime() - startTime) / 1000000000.0));
-
+        int port = Integer.getInteger("multiconnect.integrationTest.port", 25564);
         return "127.0.0.1:" + port;
-    }
-
-    public static void waitForServerStop() {
     }
 
     public static void stopServer() {
@@ -217,6 +254,33 @@ public class IntegrationTest implements ModInitializer {
                 serverStopWait.readLock().unlock();
             }
         }
+    }
+
+    public static String resetServer() throws IOException {
+        return restartServer(true);
+    }
+
+    public static String restartServer() throws IOException {
+        return restartServer(false);
+    }
+
+    private static String restartServer(boolean resetWorld) throws IOException {
+        long startTime = System.nanoTime();
+
+        stopServer();
+
+        if (resetWorld) {
+            File worldDir = new File("integrationTest", "world");
+            if (worldDir.exists()) {
+                FileUtils.deleteDirectory(worldDir);
+            }
+        }
+
+        String ip = startServer(lastStartedProtocol);
+
+        LOGGER.info("Server restarted! Took %.3f seconds".formatted((System.nanoTime() - startTime) / 1000000000.0));
+
+        return ip;
     }
 
     private static class ServerHandle {

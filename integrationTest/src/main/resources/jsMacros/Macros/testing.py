@@ -1,17 +1,44 @@
 import os
 import re
 import sys
-from java.lang import Integer, System
+from java.lang import Exception, Integer, InterruptedException, System, Thread
+from java.io import PrintWriter, StringWriter
 from jsmacros import *
 from net.earthcomputer.multiconnect.api import MultiConnectAPI, Protocols
+from net.earthcomputer.multiconnect.integrationtest import IntegrationTest
 import traceback
 
+current_protocol = 0
 server_ip = ''
+current_test = None
+test_failures = []
+is_test_canceled = False
+testing_thread = Thread.currentThread()
 
 
-def set_server_ip(ip):
+def set_server(protocol, ip):
+    global current_protocol
     global server_ip
+    current_protocol = protocol
     server_ip = ip
+
+
+def set_current_test(test):
+    global current_test
+    current_test = test
+
+
+def get_is_test_canceled():
+    return is_test_canceled
+
+
+def set_is_test_canceled(canceled):
+    global is_test_canceled
+    is_test_canceled = canceled
+
+
+def get_test_failures():
+    return test_failures
 
 
 all_tests = []
@@ -55,15 +82,37 @@ JsMacros.on('JoinServer', JavaWrapper.methodToJava(on_join_server))
 
 
 class Test:
-    def __init__(self, func, min_protocol, max_protocol):
+    def __init__(self, func, min_protocol, max_protocol, name):
         self.func = func
         self.min_protocol = min_protocol
         self.max_protocol = max_protocol
+        self.name = name
 
 
-def test(min_protocol=0, max_protocol=Integer.MAX_VALUE):
+class TestFailure:
+    def __init__(self, description):
+        self.protocol = current_protocol
+        self.test = current_test
+        self.description = description
+        sw = StringWriter()
+        Exception('Stack trace').printStackTrace(PrintWriter(sw))
+        self.stack_trace = sw.toString()
+        self.tb = '\n'.join((line.strip() for line in traceback.format_stack()))
+
+    def print_to_stderr(self):
+        System.err.println('=====')
+        System.err.println('Test "' + self.test.name + '" failed!')
+        System.err.println('Protocol: ' + str(self.protocol))
+        System.err.println(self.description)
+        System.err.println(self.stack_trace)
+
+
+def test(min_protocol=0, max_protocol=Integer.MAX_VALUE, name=None):
     def decorator(test_func):
-        all_tests.append(Test(test_func, min_protocol, max_protocol))
+        actual_name = name
+        if actual_name is None:
+            actual_name = test_func.__name__
+        all_tests.append(Test(test_func, min_protocol, max_protocol, actual_name))
         return test_func
     return decorator
 
@@ -72,9 +121,14 @@ def get_all_tests():
     return all_tests
 
 
-def clean_up_test():
-    Chat.say('/clear')
-    Client.waitTick()
+def clean_up_test(failed, is_last_test):
+    if not failed:
+        Chat.say('/clear')
+        Client.waitTick()
+    else:
+        if not is_last_test:
+            IntegrationTest.resetServer()
+            connect_to_server()
 
 
 def check(condition):
@@ -91,19 +145,33 @@ def check(condition):
 
 def check_desc(condition, description):
     if not condition:
-        filename = None
-        lineno = None
-        name = None
         line = None
         for _filename, _lineno, _name, _line in traceback.extract_stack():
             if _filename != 'testing.py' and not _filename.endswith(os.sep + 'testing.py'):
-                filename = _filename
-                lineno = _lineno
-                name = _name
                 line = _line
         if callable(description):
             description = description(line)
-        System.err.println('Check failed in ' + filename + ' line ' + str(lineno) + ' in ' + name + ': ' + description)
+        add_failure(description)
+
+
+def add_failure(description, tb=None, stack_trace=None, cancel_test=True):
+    failure = TestFailure(description)
+    if tb is not None:
+        failure.tb = tb
+    if stack_trace is not None:
+        failure.stack_trace = stack_trace
+    failure.print_to_stderr()
+    test_failures.append(failure)
+    if cancel_test:
+        global is_test_canceled
+        is_test_canceled = True
+        if Thread.currentThread() == testing_thread:
+            raise InterruptedException()
+        else:
+            testing_thread.interrupt()
+
+
+IntegrationTest.setAddFailureFunc(JavaWrapper.methodToJava(lambda desc, stack_trace: add_failure(desc, stack_trace=stack_trace)))
 
 
 def connect_to_server():
