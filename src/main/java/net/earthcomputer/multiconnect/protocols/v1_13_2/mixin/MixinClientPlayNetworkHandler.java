@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.Constants;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.*;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -53,7 +54,7 @@ public abstract class MixinClientPlayNetworkHandler {
     @Unique private int viewDistance = 12;
     @Unique private static final int MAX_VIEW_DISTANCE = 32;
     @Unique private final Cache<ChunkPos, List<ChunkDataS2CPacket>> waitingChunkDataPackets = CacheBuilder.newBuilder()
-            .expireAfterWrite(10, TimeUnit.SECONDS)
+            .expireAfterWrite(Constants.PACKET_QUEUE_DROP_TIMEOUT, TimeUnit.SECONDS)
             .removalListener((RemovalListener<ChunkPos, List<ChunkDataS2CPacket>>) notification -> {
                 if (notification.wasEvicted()) {
                     MULTICONNECT_LOGGER.warn("Dropping chunk packet(s) at {}, {} because it was too far away from the render distance center {}, {}", notification.getKey().x, notification.getKey().z, centerChunkX, centerChunkZ);
@@ -62,7 +63,7 @@ public abstract class MixinClientPlayNetworkHandler {
             .build();
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onConstruct(CallbackInfo ci) {
-        Utils.autoCleanUp(waitingChunkDataPackets, 10, TimeUnit.SECONDS);
+        Utils.autoCleanUp(waitingChunkDataPackets, Constants.PACKET_QUEUE_DROP_TIMEOUT, TimeUnit.SECONDS);
     }
 
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)

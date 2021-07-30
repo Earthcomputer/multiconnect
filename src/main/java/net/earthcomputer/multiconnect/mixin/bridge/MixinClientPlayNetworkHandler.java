@@ -8,6 +8,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.Constants;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.ChunkConnector;
@@ -78,7 +79,7 @@ public class MixinClientPlayNetworkHandler {
     @Shadow @Final private MinecraftClient client;
 
     @Unique private final Cache<ChunkPos, List<Packet<ClientPlayPacketListener>>> afterChunkLoadPackets = CacheBuilder.newBuilder()
-            .expireAfterWrite(10, TimeUnit.SECONDS)
+            .expireAfterWrite(Constants.PACKET_QUEUE_DROP_TIMEOUT, TimeUnit.SECONDS)
             .removalListener((RemovalListener<ChunkPos, List<Packet<ClientPlayPacketListener>>>) notification -> {
                 if (notification.wasEvicted()) {
                     MULTICONNECT_LOGGER.warn("{} packets for chunk {}, {} were dropped due to the chunk not being loaded", notification.getValue().size(), notification.getKey().x, notification.getKey().z);
@@ -87,7 +88,7 @@ public class MixinClientPlayNetworkHandler {
             .build();
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onConstruct(CallbackInfo ci) {
-        Utils.autoCleanUp(afterChunkLoadPackets, 10, TimeUnit.SECONDS);
+        Utils.autoCleanUp(afterChunkLoadPackets, Constants.PACKET_QUEUE_DROP_TIMEOUT, TimeUnit.SECONDS);
     }
 
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
