@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.integrationtest;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
+import net.earthcomputer.multiconnect.impl.TestingAPI;
 import net.earthcomputer.multiconnect.protocols.generic.AssetDownloader;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
@@ -23,8 +24,10 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -49,6 +52,7 @@ public class IntegrationTest implements ModInitializer {
     @Override
     public void onInitialize() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> stopServer(false)));
+        TestingAPI.setUnexpectedDisconnectListener(t -> addFailure(t.toString(), t));
     }
 
     public static void syncMacrosFolder() throws IOException, URISyntaxException {
@@ -193,6 +197,7 @@ public class IntegrationTest implements ModInitializer {
         Semaphore serverStarted = new Semaphore(0);
         Thread serverOutputThread = new Thread(() -> {
             serverStopWait.writeLock().lock();
+            Set<String> alreadyInitializedPlayers = new HashSet<>();
             boolean hasServerStarted = false;
             Scanner scanner = new Scanner(server.getInputStream());
             while (scanner.hasNextLine()) {
@@ -205,13 +210,15 @@ public class IntegrationTest implements ModInitializer {
                 Matcher joinedGameMatcher = JOINED_GAME_PATTERN.matcher(line);
                 if (joinedGameMatcher.find()) {
                     String playerName = joinedGameMatcher.group(1);
-                    serverHandle.stdin.printf("op %s\n", playerName);
-                    if (protocol <= Protocols.V1_12_2) {
-                        serverHandle.stdin.printf("tp %s 0 ~ 0\n", playerName);
-                    } else {
-                        serverHandle.stdin.printf("execute at %s run teleport 0 ~ 0\n", playerName);
+                    if (alreadyInitializedPlayers.add(playerName)) {
+                        serverHandle.stdin.printf("op %s\n", playerName);
+                        if (protocol <= Protocols.V1_12_2) {
+                            serverHandle.stdin.printf("tp %s 0 ~ 0\n", playerName);
+                        } else {
+                            serverHandle.stdin.printf("execute at %s run teleport 0 ~ 0\n", playerName);
+                        }
+                        serverHandle.stdin.flush();
                     }
-                    serverHandle.stdin.flush();
                 }
             }
 

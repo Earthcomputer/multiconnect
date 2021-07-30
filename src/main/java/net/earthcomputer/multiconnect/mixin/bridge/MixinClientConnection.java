@@ -6,6 +6,7 @@ import io.netty.handler.timeout.TimeoutException;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.TestingAPI;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
 import net.earthcomputer.multiconnect.protocols.generic.ICustomPayloadC2SPacket;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1_12_2;
@@ -32,6 +33,7 @@ public abstract class MixinClientConnection {
     @Inject(method = "exceptionCaught", at = @At("HEAD"))
     public void onExceptionCaught(ChannelHandlerContext context, Throwable t, CallbackInfo ci) {
         if (!(t instanceof PacketEncoderException) && !(t instanceof TimeoutException) && channel.isOpen()) {
+            TestingAPI.onUnexpectedDisconnect(t);
             LogManager.getLogger("multiconnect").error("Unexpectedly disconnected from server!", t);
         }
     }

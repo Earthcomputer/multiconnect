@@ -57,6 +57,8 @@ for protocol in MultiConnectAPI.instance().getSupportedProtocols():
             typ, val, tb = sys.exc_info()
             add_failure(str(val), tb=tb, cancel_test=False)
         clean_up_test(fail_count != len(get_test_failures()), index == len(tests) - 1)
+
+    expect_disconnect()
     IntegrationTest.stopServer()
 
 if len(get_test_failures()) > 0:

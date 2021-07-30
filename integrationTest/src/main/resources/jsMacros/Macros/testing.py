@@ -81,6 +81,23 @@ connected_to_server = False
 JsMacros.on('JoinServer', JavaWrapper.methodToJava(on_join_server))
 
 
+def on_disconnected(event, ctx):
+    if not expected_disconnect:
+        Client.waitTick(100)
+        add_failure('Unexpectedly disconnected from server')
+    else:
+        expect_disconnect(False)
+
+
+def expect_disconnect(val=True):
+    global expected_disconnect
+    expected_disconnect = val
+
+
+expected_disconnect = False
+JsMacros.on('Disconnect', JavaWrapper.methodToJava(on_disconnected))
+
+
 class Test:
     def __init__(self, func, min_protocol, max_protocol, name):
         self.func = func
@@ -127,6 +144,7 @@ def clean_up_test(failed, is_last_test):
         Client.waitTick()
     else:
         if not is_last_test:
+            expect_disconnect()
             IntegrationTest.resetServer()
             connect_to_server()
 
@@ -165,6 +183,7 @@ def add_failure(description, tb=None, stack_trace=None, cancel_test=True):
     if cancel_test:
         global is_test_canceled
         is_test_canceled = True
+        expect_disconnect()
         if Thread.currentThread() == testing_thread:
             raise InterruptedException()
         else:
@@ -175,13 +194,14 @@ IntegrationTest.setAddFailureFunc(JavaWrapper.methodToJava(lambda desc, stack_tr
 
 
 def connect_to_server():
+    expect_disconnect(False)
     global connected_to_server
     connected_to_server = False
     Client.connect(server_ip)
     timer = 0
     tries = 0
     while not connected_to_server:
-        if timer > 100:
+        if timer > 20 * 10:  # 10 seconds
             if tries > 5:
                 Client.shutdown()
             screen = Hud.getOpenScreen()
@@ -200,6 +220,7 @@ def connect_to_server():
 
 
 def relog():
+    expect_disconnect()
     Client.disconnect()
     JsMacros.waitForEvent('OpenScreen').context.releaseLock()
     connect_to_server()
