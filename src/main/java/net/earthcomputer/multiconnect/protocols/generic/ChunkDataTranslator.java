@@ -259,7 +259,7 @@ public class ChunkDataTranslator {
         public IHasChunkPos take() throws InterruptedException {
             semaphore.acquire();
             //noinspection ConstantConditions
-            return poll();
+            return poll0();
         }
 
         @Nullable
@@ -268,7 +268,7 @@ public class ChunkDataTranslator {
             if (!semaphore.tryAcquire(timeout, unit)) {
                 return null;
             }
-            return poll();
+            return poll0();
         }
 
         @Override
@@ -279,7 +279,7 @@ public class ChunkDataTranslator {
         @Override
         public synchronized boolean remove(Object o) {
             ensureSorted();
-            if (queue.remove(o)) {
+            if (semaphore.tryAcquire() && queue.remove(o)) {
                 Utils.heapify(queue, this);
                 return true;
             } else {
@@ -294,17 +294,12 @@ public class ChunkDataTranslator {
 
         @Override
         public int drainTo(@NotNull Collection<? super IHasChunkPos> c) {
-            return drainTo(c, Integer.MAX_VALUE);
+            return 0; // unsupported
         }
 
         @Override
-        public synchronized int drainTo(@NotNull Collection<? super IHasChunkPos> c, int maxElements) {
-            ensureSorted();
-            int removed = 0;
-            for (; !queue.isEmpty() && removed < maxElements; removed++) {
-                c.add(Utils.heapRemove(queue, this));
-            }
-            return removed;
+        public int drainTo(@NotNull Collection<? super IHasChunkPos> c, int maxElements) {
+            return 0; // unsupported
         }
 
         @Override
@@ -317,7 +312,15 @@ public class ChunkDataTranslator {
         }
 
         @Override
-        public synchronized IHasChunkPos poll() {
+        public IHasChunkPos poll() {
+            if (semaphore.tryAcquire()) {
+                return poll0();
+            } else {
+                return null;
+            }
+        }
+
+        private synchronized IHasChunkPos poll0() {
             ensureSorted();
             if (queue.isEmpty()) {
                 return null;
@@ -389,28 +392,17 @@ public class ChunkDataTranslator {
 
         @Override
         public synchronized boolean removeAll(@NotNull Collection<?> c) {
-            ensureSorted();
-            if (queue.removeAll(c)) {
-                Utils.heapify(queue, this);
-                return true;
-            } else {
-                return false;
-            }
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public synchronized boolean retainAll(@NotNull Collection<?> c) {
-            ensureSorted();
-            if (queue.retainAll(c)) {
-                Utils.heapify(queue, this);
-                return true;
-            } else {
-                return false;
-            }
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public synchronized void clear() {
+            semaphore.drainPermits();
             queue.clear();
         }
 
