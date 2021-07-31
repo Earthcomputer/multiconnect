@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import net.earthcomputer.multiconnect.TestUtil;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.minecraft.Bootstrap;
 import net.minecraft.SharedConstants;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.login.LoginHelloC2SPacket;

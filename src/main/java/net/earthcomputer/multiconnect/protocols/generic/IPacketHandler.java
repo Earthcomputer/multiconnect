@@ -13,7 +13,7 @@ public interface IPacketHandler<T extends PacketListener> {
 
     <P extends Packet<T>> IPacketHandler<T> multiconnect_register(Class<P> clazz, Function<PacketByteBuf, P> factory);
 
-    Class<? extends Packet<T>> multiconnect_getPacketClassById(int id);
+    <P extends Packet<T>> PacketInfo<? extends Packet<T>> multiconnect_getPacketInfoById(int id);
 
     List<PacketInfo<? extends Packet<T>>> multiconnect_values();
 

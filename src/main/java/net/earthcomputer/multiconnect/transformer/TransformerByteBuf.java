@@ -11,7 +11,6 @@ import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.AligningFormatter;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Utils;
-import net.earthcomputer.multiconnect.protocols.generic.INetworkState;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.SharedConstants;
 import net.minecraft.item.ItemStack;
@@ -182,16 +181,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     @Override
     public int readVarInt() {
-        if (!transformationEnabled) {
-            int packetId = super.readVarInt();
-            NetworkState state = context.channel().attr(ClientConnection.PROTOCOL_ATTRIBUTE_KEY).get();
-            //noinspection ConstantConditions
-            var packetClass = ((INetworkState) (Object) state).getPacketHandlers().get(NetworkSide.CLIENTBOUND).multiconnect_getPacketClassById(packetId);
-            readTopLevelType(packetClass);
-            return packetId;
-        } else {
-            return read(VarInt.class, () -> new VarInt(super.readVarInt())).get();
-        }
+        return read(VarInt.class, () -> new VarInt(super.readVarInt())).get();
     }
 
     private <T> T read(Class<T> type, Supplier<T> readMethod) {
@@ -311,16 +301,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     @Override
     public PacketByteBuf writeVarInt(int val) {
-        if (!transformationEnabled) {
-            super.writeVarInt(val);
-            NetworkState state = context.channel().attr(ClientConnection.PROTOCOL_ATTRIBUTE_KEY).get();
-            //noinspection ConstantConditions
-            var packetClass = ((INetworkState) (Object) state).getPacketHandlers().get(NetworkSide.SERVERBOUND).multiconnect_getPacketClassById(val);
-            writeTopLevelType(packetClass);
-            return this;
-        } else {
-            return write(VarInt.class, new VarInt(val), v -> super.writeVarInt(v.get()));
-        }
+        return write(VarInt.class, new VarInt(val), v -> super.writeVarInt(v.get()));
     }
 
     private <T> PacketByteBuf write(Object type, T value, Consumer<T> writeMethod) {

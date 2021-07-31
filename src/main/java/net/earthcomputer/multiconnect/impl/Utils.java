@@ -21,7 +21,6 @@ import net.earthcomputer.multiconnect.transformer.InboundTranslator;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.data.TrackedDataHandler;
@@ -38,7 +37,6 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
 import net.minecraft.util.registry.*;
 import net.minecraft.world.dimension.DimensionType;
 import org.apache.logging.log4j.LogManager;
@@ -56,7 +54,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class Utils {
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
@@ -395,5 +392,76 @@ public class Utils {
             return str.substring(0, maxLen - "...".length()) + "...";
         }
         return str;
+    }
+
+    public static <T extends Comparable<T>> void heapify(List<T> list) {
+        heapify(list, Comparator.naturalOrder());
+    }
+
+    public static <T> void heapify(List<T> list, Comparator<? super T> comparator) {
+        // See: PriorityQueue.heapify
+        int n = list.size();
+        for (int i = (n >>> 1) - 1; i >= 0; i--) {
+            heapSiftDown(list, i, comparator);
+        }
+    }
+
+    public static <T extends Comparable<T>> void heapAdd(List<T> list, T element) {
+        heapAdd(list, element, Comparator.naturalOrder());
+    }
+
+    public static <T> void heapAdd(List<T> list, T element, Comparator<? super T> comparator) {
+        list.add(element);
+        heapSiftUp(list, list.size() - 1, comparator);
+    }
+
+    public static <T extends Comparable<T>> T heapRemove(List<T> list) {
+        return heapRemove(list, Comparator.naturalOrder());
+    }
+
+    public static <T> T heapRemove(List<T> list, Comparator<? super T> comparator) {
+        if (list.size() <= 1) {
+            return list.remove(0);
+        }
+        T result = list.set(0, list.remove(list.size() - 1));
+        heapSiftDown(list, 0, comparator);
+        return result;
+    }
+
+    private static <T> void heapSiftDown(List<T> list, int k, Comparator<? super T> comparator) {
+        // See: PriorityQueue.siftDown
+        int n = list.size();
+        int half = n >>> 1;
+        T x = list.get(k);
+        while (k < half) {
+            int child = (k << 1) + 1;
+            T c = list.get(child);
+            int right = child + 1;
+            if (right < n && comparator.compare(c, list.get(right)) > 0) {
+                child = right;
+                c = list.get(child);
+            }
+            if (comparator.compare(x, c) <= 0) {
+                break;
+            }
+            list.set(k, c);
+            k = child;
+        }
+        list.set(k, x);
+    }
+
+    private static <T> void heapSiftUp(List<T> list, int k, Comparator<? super T> comparator) {
+        // See: PriorityQueue.siftUp
+        T x = list.get(k);
+        while (k > 0) {
+            int parent = (k - 1) >>> 1;
+            T e = list.get(parent);
+            if (comparator.compare(x, e) >= 0) {
+                break;
+            }
+            list.set(k, e);
+            k = parent;
+        }
+        list.set(k, x);
     }
 }

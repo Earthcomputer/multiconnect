@@ -27,7 +27,7 @@ public abstract class MixinPacketHandler<T extends PacketListener> implements IP
 
     @Shadow @Final private Object2IntMap<Class<? extends Packet<T>>> packetIds;
 
-    @Unique private Int2ObjectMap<Class<? extends Packet<T>>> packetClassesById = new Int2ObjectOpenHashMap<>();
+    @Unique private final Int2ObjectMap<Class<? extends Packet<T>>> packetClassesById = new Int2ObjectOpenHashMap<>();
 
     @Override
     public void multiconnect_clear() {
@@ -50,12 +50,15 @@ public abstract class MixinPacketHandler<T extends PacketListener> implements IP
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Class<? extends Packet<T>> multiconnect_getPacketClassById(int id) {
-        return packetClassesById.computeIfAbsent(id, k -> packetIds.object2IntEntrySet().stream()
+    public <P extends Packet<T>> PacketInfo<P> multiconnect_getPacketInfoById(int id) {
+        var packetClass = (Class<P>) packetClassesById.computeIfAbsent(id, k -> packetIds.object2IntEntrySet().stream()
                 .filter(it -> it.getIntValue() == id)
                 .map(Map.Entry::getKey)
                 .findAny().orElse(null));
+        var packetFactory = (Function<PacketByteBuf, P>) packetFactories.get(id);
+        return PacketInfo.of(packetClass, packetFactory);
     }
 
     @Override

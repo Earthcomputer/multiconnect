@@ -18,10 +18,12 @@ import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.tag.RequiredTagListRegistry;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.*;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
@@ -278,6 +280,23 @@ public abstract class AbstractProtocol implements IUtils {
      * 1.14) should be directly translated to the current version.
      */
     public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
+    }
+
+    /**
+     * Whether the given packet should translate async (and not block the network thread). Currently only packets with
+     * an associated chunk position can be translated. Override {@link #extractChunkPos} as well to extract the chunk
+     * pos of a packet.
+     */
+    public boolean shouldTranslateAsync(Class<? extends Packet<?>> packetClass) {
+        return packetClass == ChunkDataS2CPacket.class;
+    }
+
+    public ChunkPos extractChunkPos(Class<? extends Packet<?>> packetClass, PacketByteBuf buf) {
+        if (packetClass == ChunkDataS2CPacket.class) {
+            return new ChunkPos(buf.readInt(), buf.readInt());
+        } else {
+            throw new IllegalArgumentException();
+        }
     }
 
     static {
