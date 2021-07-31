@@ -48,6 +48,7 @@ import java.util.function.*;
 
 public final class TransformerByteBuf extends PacketByteBuf {
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
+    private static final boolean PROFILE_TRANSFORMER = Boolean.getBoolean("multiconnect.profilePacketTransformer");
     private static final Consumer<String> PACKET_DEBUG_OUTPUT;
     static {
         String fileName = System.getProperty("multiconnect.debugTransformerOutput");
@@ -99,6 +100,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
 
     @SuppressWarnings("unchecked")
     public <T> TransformerByteBuf readTopLevelType(Object type, int protocolVersion, InboundTranslator<T> additionalTranslator) {
+        long startTime = PROFILE_TRANSFORMER ? System.nanoTime() : 0;
         transformationEnabled = true;
         writeMode = false;
         stack.push(new StackFrame(type, protocolVersion, false));
@@ -129,11 +131,16 @@ public final class TransformerByteBuf extends PacketByteBuf {
             }
         }
         getStackFrame().traceEnabled = false;
+        if (PROFILE_TRANSFORMER) {
+            long time = System.nanoTime() - startTime;
+            LOGGER.info("Transforming inbound {} took {}us", type, time / 1000.0);
+        }
         return this;
     }
 
     @SuppressWarnings("unchecked")
     public TransformerByteBuf writeTopLevelType(Object type) {
+        long startTime = PROFILE_TRANSFORMER ? System.nanoTime() : 0;
         transformationEnabled = true;
         writeMode = true;
         stack.push(new StackFrame(type, SharedConstants.getGameVersion().getProtocolVersion(), false));
@@ -144,6 +151,10 @@ public final class TransformerByteBuf extends PacketByteBuf {
             getStackFrame().version = translator.getLeft();
         }
         getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
+        if (PROFILE_TRANSFORMER) {
+            long time = System.nanoTime() - startTime;
+            LOGGER.info("Transforming outbound {} took {}us (note: may be inaccurate for outbound)", type, time / 1000.0);
+        }
         return this;
     }
 
