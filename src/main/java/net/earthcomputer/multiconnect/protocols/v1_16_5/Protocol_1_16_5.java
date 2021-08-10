@@ -12,8 +12,6 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.impl.DebugUtils;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
@@ -30,11 +28,7 @@ import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.option.ChatVisibility;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.EntityAttribute;
@@ -76,16 +70,12 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.event.GameEvent;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class Protocol_1_16_5 extends Protocol_1_17 {
-    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
-
     public static final int BIOME_ARRAY_LENGTH = 1024;
     private static short lastActionId = 0;
 
@@ -150,51 +140,32 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         });
         ProtocolRegistry.registerInboundTranslator(LightUpdateS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            int x = buf.readVarInt(); // x
-            int z = buf.readVarInt(); // z
-            boolean trustEdges = buf.readBoolean(); // trust edges
+            buf.readVarInt(); // x
+            buf.readVarInt(); // z
+            buf.readBoolean(); // trust edges
             buf.disablePassthroughMode();
-            int skyLightMask = buf.readVarInt();
+            int skyLightMask = buf.readVarInt() & 0x3ffff;
             buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {skyLightMask})); // sky light mask
-            int blockLightMask = buf.readVarInt();
+            int blockLightMask = buf.readVarInt() & 0x3ffff;
             buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {blockLightMask})); // block light mask
-            int filledSkyLightMask = buf.readVarInt();
+            int filledSkyLightMask = buf.readVarInt() & 0x3ffff;
             buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {filledSkyLightMask})); // filled sky light mask
-            int filledBlockLightMask = buf.readVarInt();
+            int filledBlockLightMask = buf.readVarInt() & 0x3ffff;
             buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {filledBlockLightMask})); // filled block light mask
-            try {
-                int numSkyUpdates = Integer.bitCount(skyLightMask);
-                List<byte[]> skyUpdates = new ArrayList<>(numSkyUpdates);
-                for (int i = 0; i < numSkyUpdates; i++) {
-                    skyUpdates.add(buf.readByteArray(2048));
-                }
-                //noinspection unchecked
-                buf.pendingReadCollection((Class<List<byte[]>>) (Class<?>) List.class, byte[].class, skyUpdates);
-                int numBlockUpdates = Integer.bitCount(blockLightMask);
-                List<byte[]> blockUpdates = new ArrayList<>(numBlockUpdates);
-                for (int i = 0; i < numBlockUpdates; i++) {
-                    blockUpdates.add(buf.readByteArray(2048));
-                }
-                //noinspection unchecked
-                buf.pendingReadCollection((Class<List<byte[]>>) (Class<?>) List.class, byte[].class, blockUpdates);
-            } catch (IndexOutOfBoundsException e) {
-                ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
-                ClientWorld world = MinecraftClient.getInstance().world;
-                if (networkHandler != null && world != null) {
-                    LOGGER.error("Protocol version: {}", ConnectionInfo.protocolVersion);
-                    LOGGER.error("Online player list:");
-                    for (PlayerListEntry entry : networkHandler.getPlayerList()) {
-                        LOGGER.error("- {} ({}in view)", entry.getProfile().getName(), world.getPlayerByUuid(entry.getProfile().getId()) == null ? "not " : "");
-                    }
-                    LOGGER.error("Chunk pos: {}, {}", x, z);
-                    LOGGER.error("Trust edges: {}", trustEdges);
-                    LOGGER.error("Light mask: {} (sky), {} (block)", skyLightMask, blockLightMask);
-                    LOGGER.error("Filled light mask: {} (sky), {} (block)", filledSkyLightMask, filledBlockLightMask);
-                }
-                LOGGER.error("Raw data: " + Base64.getEncoder().encodeToString(buf.array()));
-                DebugUtils.reportRareBug(178);
-                throw e;
+            int numSkyUpdates = Integer.bitCount(skyLightMask);
+            List<byte[]> skyUpdates = new ArrayList<>(numSkyUpdates);
+            for (int i = 0; i < numSkyUpdates; i++) {
+                skyUpdates.add(buf.readByteArray(2048));
             }
+            //noinspection unchecked
+            buf.pendingReadCollection((Class<List<byte[]>>) (Class<?>) List.class, byte[].class, skyUpdates);
+            int numBlockUpdates = Integer.bitCount(blockLightMask);
+            List<byte[]> blockUpdates = new ArrayList<>(numBlockUpdates);
+            for (int i = 0; i < numBlockUpdates; i++) {
+                blockUpdates.add(buf.readByteArray(2048));
+            }
+            //noinspection unchecked
+            buf.pendingReadCollection((Class<List<byte[]>>) (Class<?>) List.class, byte[].class, blockUpdates);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(SynchronizeTagsS2CPacket.class, buf -> {
