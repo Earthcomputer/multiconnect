@@ -2,10 +2,10 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.timeout.TimeoutException;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.DebugUtils;
 import net.earthcomputer.multiconnect.impl.TestingAPI;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
 import net.earthcomputer.multiconnect.protocols.generic.ICustomPayloadC2SPacket;
@@ -14,7 +14,6 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
-import net.minecraft.network.PacketEncoderException;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +31,7 @@ public abstract class MixinClientConnection {
 
     @Inject(method = "exceptionCaught", at = @At("HEAD"))
     public void onExceptionCaught(ChannelHandlerContext context, Throwable t, CallbackInfo ci) {
-        if (!(t instanceof PacketEncoderException) && !(t instanceof TimeoutException) && channel.isOpen()) {
+        if (DebugUtils.isUnexpectedDisconnect(t) && channel.isOpen()) {
             TestingAPI.onUnexpectedDisconnect(t);
             LogManager.getLogger("multiconnect").error("Unexpectedly disconnected from server!", t);
         }

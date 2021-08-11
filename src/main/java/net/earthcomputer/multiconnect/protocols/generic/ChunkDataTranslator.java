@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.DebugUtils;
 import net.earthcomputer.multiconnect.impl.TestingAPI;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.PendingFullChunkData;
@@ -39,9 +40,12 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ChunkDataTranslator {
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
+
+    private static final AtomicBoolean hasDumpedChunkData = new AtomicBoolean(false);
 
     private static final ExecutorService EXECUTOR = createExecutor();
     private static final ThreadLocal<ChunkDataTranslator> CURRENT_TRANSLATOR = new ThreadLocal<>();
@@ -78,6 +82,7 @@ public class ChunkDataTranslator {
                 ((ChannelInboundHandler) context.handler()).channelRead(context, packet);
             } catch (Throwable e) {
                 TestingAPI.onUnexpectedDisconnect(e);
+                DebugUtils.logPacketDisconnectError(data);
                 LOGGER.error("Failed to async translate packet", e);
                 context.disconnect();
             }
@@ -124,6 +129,9 @@ public class ChunkDataTranslator {
                     }
                 }
             } catch (Throwable e) {
+                if (!hasDumpedChunkData.getAndSet(true)) {
+                    DebugUtils.logPacketDisconnectError(packet.getReadBuffer().array());
+                }
                 LOGGER.error("Failed to translate chunk " + packet.getX() + ", " + packet.getZ(), e);
             }
         }));
