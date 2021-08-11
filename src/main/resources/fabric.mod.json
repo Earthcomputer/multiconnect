@@ -21,7 +21,6 @@
   "environment": "client",
   "mixins": [
     "multiconnect.mixins.json",
-    "multiconnect.1_17.mixins.json",
     "multiconnect.1_16_5.mixins.json",
     "multiconnect.1_16_1.mixins.json",
     "multiconnect.1_15_2.mixins.json",
