@@ -5,6 +5,7 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.ClickSlotC2SPacket_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.Packet;
@@ -13,9 +14,7 @@ import net.minecraft.screen.slot.SlotActionType;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.*;
 
 import java.util.List;
 
@@ -25,6 +24,14 @@ public class MixinClientPlayerInteractionManager {
     @Shadow @Final private MinecraftClient client;
     private ItemStack oldCursorStack;
     private List<ItemStack> oldItems;
+
+    @Redirect(method = "interactItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V", ordinal = 0),
+            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;syncSelectedSlot()V"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V", ordinal = 1)))
+    private void redirectPlayerPosPacket(ClientPlayNetworkHandler clientPlayNetworkHandler, Packet<?> packet) {
+        if(ConnectionInfo.protocolVersion >= Protocols.V1_17){
+            clientPlayNetworkHandler.sendPacket(packet);
+        }
+    }
 
     @ModifyVariable(method = "clickSlot", at = @At(value = "STORE", ordinal = 0), ordinal = 0)
     private List<ItemStack> captureOldItems(List<ItemStack> oldItems) {
