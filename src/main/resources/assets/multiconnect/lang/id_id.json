@@ -1,0 +1,9 @@
+{
+  "multiconnect.betaWarning.line1": "%s saat ini saat dalam dukungan beta oleh multiconnect.",
+  "multiconnect.betaWarning.line2": "Harapkan bug, tetapi kamu bisa lapor apapun yang kamu temukan di pelacak bug!",
+  "multiconnect.changeForcedProtocol": "Versi",
+  "multiconnect.rareBug": "Bug yang jarang baru saja terjadi di multiconnect. Silahkan unggah catatan permainan ke %s agar bisa diperbaiki.",
+  "multiconnect.rareBug.link": "pelacak bug",
+  "multiconnect.rareBug.screen": "Bug yang jarang baru saja terjadi di multiconnect. Bisakah kamu unggah catatan permainan ke pelacak masalah agar bisa diperbaiki?",
+  "multiconnect.unsupportedExperimentalCodec": "Sever ini menggunakkan fitur eksperimental, atau fitur yang eksperimental di versi server. Multiconnect tidak bisa menerjemahkan data eksperimental, dan tidak bisa terhubung ke server ini."
+}
