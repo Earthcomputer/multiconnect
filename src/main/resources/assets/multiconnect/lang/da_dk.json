@@ -1,0 +1,9 @@
+{
+  "multiconnect.betaWarning.line1": "%s er lige nu i beta-support i multiconnect.",
+  "multiconnect.betaWarning.line2": "Du kan derfor forvente fejl og andre glitches, men rapporter gerne alle problemer på issue trackeren!",
+  "multiconnect.changeForcedProtocol": "Version",
+  "multiconnect.rareBug": "En sjælden fejl er lige opstået i multiconnect. Upload venligst dit spils logfil til %s, så den kan hjælpe med at løse fejlen!",
+  "multiconnect.rareBug.link": "issue tracker",
+  "multiconnect.rareBug.screen": "En sjælden fejl er lige opstået i multiconnect. Ønsker du at uploade dit spils logfil til udvikleren på issue trackeren for at hjælpe med at løse fejlen?",
+  "multiconnect.unsupportedExperimentalCodec": "Denne server bruger ukendte funktioner eller funktioner, som er eksperimentale i dens nuværende version. Multiconnect kan ikke oversætte eksperimentelle data og kan derfor ikke oprette forbindelse til serveren."
+}
