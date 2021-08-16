@@ -1,5 +1,5 @@
 {
-  "multiconnect.betaWarning.line1": "%s is currently in beta support by multiconnect. %s saat ini saat dalam dukungan beta oleh multiconnect.",
+  "multiconnect.betaWarning.line1": "%s saat ini saat dalam dukungan beta oleh multiconnect.",
   "multiconnect.betaWarning.line2": "Harapkan bug, tetapi kamu bisa lapor apapun yang kamu temukan di pelacak bug!",
   "multiconnect.changeForcedProtocol": "Versi",
   "multiconnect.rareBug": "Bug yang jarang baru saja terjadi di multiconnect. Silahkan unggah catatan permainan ke %s agar bisa diperbaiki.",
