@@ -47,7 +47,7 @@ public class ChunkDataTranslator {
 
     private static final AtomicBoolean hasDumpedChunkData = new AtomicBoolean(false);
 
-    private static final ExecutorService EXECUTOR = createExecutor();
+    private static ExecutorService executor = createExecutor();
     private static final ThreadLocal<ChunkDataTranslator> CURRENT_TRANSLATOR = new ThreadLocal<>();
 
     public static ChunkDataTranslator current() {
@@ -70,7 +70,7 @@ public class ChunkDataTranslator {
 
     public static <T extends Packet<?>> void asyncTranslatePacket(ChannelHandlerContext context, PacketInfo<T> packetInfo, byte[] data) {
         ChunkPos pos = ConnectionInfo.protocol.extractChunkPos(packetInfo.getPacketClass(), new PacketByteBuf(Unpooled.wrappedBuffer(data)));
-        EXECUTOR.submit(new TranslationTask(pos, () -> {
+        executor.submit(new TranslationTask(pos, () -> {
             try {
                 TransformerByteBuf buf = new TransformerByteBuf(Unpooled.wrappedBuffer(data), context);
                 buf.readTopLevelType(packetInfo.getPacketClass());
@@ -98,7 +98,7 @@ public class ChunkDataTranslator {
         DimensionType dimension = mc.world.getDimension();
         ((IChunkDataS2CPacket) packet).multiconnect_setDimension(dimension);
         ChunkDataTranslator translator = new ChunkDataTranslator(packet, isFullChunk, dimension, networkHandler.getRegistryManager());
-        EXECUTOR.submit(new TranslationTask(new ChunkPos(packet.getX(), packet.getZ()), () -> {
+        executor.submit(new TranslationTask(new ChunkPos(packet.getX(), packet.getZ()), () -> {
             try {
                 CURRENT_TRANSLATOR.set(translator);
 
@@ -135,6 +135,17 @@ public class ChunkDataTranslator {
                 LOGGER.error("Failed to translate chunk " + packet.getX() + ", " + packet.getZ(), e);
             }
         }));
+    }
+
+    public static void clear() {
+        executor.shutdownNow();
+        try {
+            //noinspection ResultOfMethodCallIgnored
+            executor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            // meh
+        }
+        executor = createExecutor();
     }
 
     public ChunkDataS2CPacket getPacket() {
