@@ -3,6 +3,7 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_14_4.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
+    "BiomeAccessAccessor",
     "MixinChunkDataS2C",
     "MixinWorldView"
   ],
