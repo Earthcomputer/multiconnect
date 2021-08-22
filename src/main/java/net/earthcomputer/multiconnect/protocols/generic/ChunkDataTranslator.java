@@ -89,6 +89,10 @@ public class ChunkDataTranslator {
         }));
     }
 
+    public static void asyncExecute(ChunkPos pos, Runnable runnable) {
+        executor.submit(new TranslationTask(pos, runnable));
+    }
+
     public static void submit(ChunkDataS2CPacket packet) {
         MinecraftClient mc = MinecraftClient.getInstance();
         assert mc.world != null;

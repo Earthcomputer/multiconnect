@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_8.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.protocols.generic.IChunkDataS2CPacket;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.PendingFullChunkData;
 import net.earthcomputer.multiconnect.protocols.v1_8.DataTrackerEntry_1_8;
 import net.earthcomputer.multiconnect.protocols.v1_8.Protocol_1_8;
@@ -16,9 +17,20 @@ import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket;
+import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.EulerAngle;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.registry.DynamicRegistryManager;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeKeys;
+import net.minecraft.world.biome.source.BiomeArray;
+import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.WorldChunk;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,6 +39,9 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Arrays;
+import java.util.EnumMap;
 
 @Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
 public abstract class MixinClientPlayNetworkHandler {
@@ -37,6 +52,10 @@ public abstract class MixinClientPlayNetworkHandler {
     @Shadow public abstract void onUnloadChunk(UnloadChunkS2CPacket packet);
 
     @Shadow public abstract void onEntityStatus(EntityStatusS2CPacket packet);
+
+    @Shadow public abstract void onChunkData(ChunkDataS2CPacket packet);
+
+    @Shadow private DynamicRegistryManager registryManager;
 
     @Inject(method = {"onGameJoin", "onPlayerRespawn"}, at = @At("TAIL"))
     private void onOnGameJoinOrRespawn(CallbackInfo ci) {
@@ -55,6 +74,46 @@ public abstract class MixinClientPlayNetworkHandler {
                 && packet.getVerticalStripBitmask().isEmpty()) {
             onUnloadChunk(new UnloadChunkS2CPacket(packet.getX(), packet.getZ()));
             ci.cancel();
+        }
+    }
+
+    @Inject(method = "onChunkData", at = @At("RETURN"), cancellable = true)
+    private void postChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
+        // 1.8 doesn't send neighboring empty chunks, so we must assume they are empty unless otherwise specified
+
+        // don't load more empty chunks next to empty chunks, that would cause an infinite loop
+        WorldChunk chunk = world.getChunk(packet.getX(), packet.getZ());
+        boolean isEmpty = true;
+        if (!chunk.isEmpty()) {
+            for (ChunkSection section : chunk.getSectionArray()) {
+                if (!ChunkSection.isEmpty(section)) {
+                    isEmpty = false;
+                    break;
+                }
+            }
+        }
+        if (!isEmpty) {
+            for (Direction dir : Direction.Type.HORIZONTAL) {
+                int x = packet.getX() + dir.getOffsetX();
+                int z = packet.getZ() + dir.getOffsetZ();
+                if (world.getChunk(x, z, ChunkStatus.FULL, false) == null) {
+                    Registry<Biome> biomeRegistry = registryManager.get(Registry.BIOME_KEY);
+                    Biome plainsBiome = biomeRegistry.get(BiomeKeys.PLAINS);
+                    int horizontalSectionCount = MathHelper.log2DeBruijn(16) - 2;
+                    int biomeLength = (1 << (horizontalSectionCount + horizontalSectionCount)) * ((world.getHeight() + 3) / 4);
+
+                    ChunkDataS2CPacket neighborPacket = new ChunkDataS2CPacket(new WorldChunk(world, new ChunkPos(x, z), new BiomeArray(biomeRegistry, world, new int[biomeLength])));
+                    //noinspection ConstantConditions
+                    IChunkDataS2CPacket iPacket = (IChunkDataS2CPacket) neighborPacket;
+                    iPacket.multiconnect_setDataTranslated(true);
+                    iPacket.multiconnect_setDimension(((IChunkDataS2CPacket) packet).multiconnect_getDimension());
+                    iPacket.multiconnect_setBlocksNeedingUpdate(new EnumMap<>(EightWayDirection.class));
+                    Biome[] biomes = new Biome[256];
+                    Arrays.fill(biomes, plainsBiome);
+                    ((net.earthcomputer.multiconnect.protocols.v1_14_4.IChunkDataS2CPacket) iPacket).set_1_14_4_biomeData(biomes);
+                    onChunkData(neighborPacket);
+                }
+            }
         }
     }
 

@@ -9,7 +9,6 @@ import net.earthcomputer.multiconnect.protocols.v1_14_4.PendingDataTrackerEntrie
 import net.earthcomputer.multiconnect.transformer.UnsignedByte;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.entity.data.DataTracker;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
