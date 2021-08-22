@@ -38,6 +38,8 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.*;
+import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.dimension.DimensionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -71,6 +73,18 @@ public class Utils {
         DataFixer fixer = MinecraftClient.getInstance().getDataFixer();
         Dynamic<T> translated = fixer.update(type, new Dynamic<>(ops, old), oldVersion, currentVersion);
         return translated.getValue();
+    }
+
+    public static boolean isChunkEmpty(WorldChunk chunk) {
+        if (chunk.isEmpty()) {
+            return true;
+        }
+        for (ChunkSection section : chunk.getSectionArray()) {
+            if (!ChunkSection.isEmpty(section)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @SafeVarargs

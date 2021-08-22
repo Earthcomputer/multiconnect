@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_8.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.IChunkDataS2CPacket;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.PendingFullChunkData;
 import net.earthcomputer.multiconnect.protocols.v1_8.DataTrackerEntry_1_8;
@@ -28,7 +29,6 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.BiomeArray;
-import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 import org.apache.logging.log4j.LogManager;
@@ -83,16 +83,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
         // don't load more empty chunks next to empty chunks, that would cause an infinite loop
         WorldChunk chunk = world.getChunk(packet.getX(), packet.getZ());
-        boolean isEmpty = true;
-        if (!chunk.isEmpty()) {
-            for (ChunkSection section : chunk.getSectionArray()) {
-                if (!ChunkSection.isEmpty(section)) {
-                    isEmpty = false;
-                    break;
-                }
-            }
-        }
-        if (!isEmpty) {
+        if (!Utils.isChunkEmpty(chunk)) {
             for (Direction dir : Direction.Type.HORIZONTAL) {
                 int x = packet.getX() + dir.getOffsetX();
                 int z = packet.getZ() + dir.getOffsetZ();

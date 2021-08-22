@@ -117,7 +117,7 @@ public class MixinClientPlayNetworkHandler {
     @ModifyVariable(method = "onChunkData", ordinal = 0, at = @At(value = "STORE", ordinal = 0))
     private WorldChunk fixChunk(WorldChunk chunk, ChunkDataS2CPacket packet) {
         if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()) {
-            if (chunk != null) {
+            if (chunk != null && !Utils.isChunkEmpty(chunk)) {
                 var blocksNeedingUpdate = ((IChunkDataS2CPacket) packet).multiconnect_getBlocksNeedingUpdate();
                 ChunkConnector chunkConnector = new ChunkConnector(chunk, ConnectionInfo.protocol.getBlockConnector(), blocksNeedingUpdate);
                 ((IBlockConnectableChunk) chunk).multiconnect_setChunkConnector(chunkConnector);
@@ -126,7 +126,10 @@ public class MixinClientPlayNetworkHandler {
                             packet.getZ() + side.getOffsetZ(), ChunkStatus.FULL, false);
                     if (neighborChunk != null) {
                         chunkConnector.onNeighborChunkLoaded(side);
-                        ((IBlockConnectableChunk) neighborChunk).multiconnect_getChunkConnector().onNeighborChunkLoaded(side.getOpposite());
+                        ChunkConnector neighborConnector = ((IBlockConnectableChunk) neighborChunk).multiconnect_getChunkConnector();
+                        if (neighborConnector != null) {
+                            neighborConnector.onNeighborChunkLoaded(side.getOpposite());
+                        }
                     }
                 }
             }
