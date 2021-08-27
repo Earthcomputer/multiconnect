@@ -1,4 +1,5 @@
 
+import com.modrinth.minotaur.TaskModrinthUpload
 import net.fabricmc.loader.minecraft.McVersion
 // Once fabric loader updates:
 // import net.fabricmc.loader.impl.game.minecraft.McVersion
@@ -9,6 +10,7 @@ plugins {
 	id 'maven-publish'
 	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
+	id 'com.modrinth.minotaur' version '1.2.1'
 	id 'com.github.breadmoirai.github-release' version '2.2.12'
 	id 'io.codearte.nexus-staging' version '0.30.0'
 }
@@ -314,6 +316,23 @@ curseforge {
 
 }
 
+task publishModrinth(type: TaskModrinthUpload) {
+	dependsOn remapJar
+
+	onlyIf {
+		project.hasProperty('modrinthKey')
+	}
+
+	token = project.hasProperty('modrinthKey') ? modrinthKey : 'foo'
+	projectId = 'sfEDKnlo'
+	versionName = version
+	versionNumber = version
+	uploadFile = remapJar
+	changelog = changes
+	addGameVersion project.minecraft_version
+	addLoader 'fabric'
+}
+
 githubRelease {
 	token(project.hasProperty('githubKey') ? githubKey.toString() : 'derp')
 	owner 'Earthcomputer'
@@ -331,6 +350,7 @@ task releaseAll {
 	dependsOn publish
 	dependsOn closeAndReleaseRepository
 	dependsOn tasks.getByName('curseforge')
+	dependsOn tasks.getByName('publishModrinth')
 	dependsOn tasks.getByName('githubRelease')
 }
 
