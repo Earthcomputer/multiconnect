@@ -44,6 +44,14 @@
     "fabricloader": ">=0.9.1"
   },
 
+  "__comment__": "breaks is for incompatible, conflicts is for warning",
+  "breaks": {
+    "immersive_portals": "*"
+  },
+  "conflicts": {
+    "optifabric": "*"
+  },
+
   "custom": {
     "lithium:options": {
       "mixin.entity.data_tracker": false
