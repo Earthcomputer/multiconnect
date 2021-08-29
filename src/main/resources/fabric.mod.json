@@ -46,9 +46,9 @@
 
   "__comment__": "breaks is for incompatible, conflicts is for warning",
   "breaks": {
-    "immersive_portals": "*"
   },
   "conflicts": {
+    "immersive_portals": "*",
     "optifabric": "*"
   },
 
