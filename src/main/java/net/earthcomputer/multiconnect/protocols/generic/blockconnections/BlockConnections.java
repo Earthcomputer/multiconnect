@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
 
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.CompoundConnector;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.IBlockConnector;
 import net.minecraft.block.Block;
@@ -16,7 +17,8 @@ public class BlockConnections {
         }
     }
 
-    public static BlockConnector buildConnector(int protocol) {
+    @ThreadSafe
+    public static synchronized BlockConnector buildConnector(int protocol) {
         var mergedConnectors = new HashMap<Block, IBlockConnector>();
 
         var relevantConnectors = connectors.tailMap(protocol);

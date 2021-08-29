@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.Codec;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
@@ -145,6 +146,7 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
     }
 
     @Override
+    @ThreadSafe
     public boolean onSendPacket(Packet<?> packet) {
         if (packet.getClass() == RecipeBookDataC2SPacket.class) {
             ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
@@ -170,6 +172,7 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
     }
 
     @Override
+    @ThreadSafe(withGameThread = false)
     public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
         super.mutateDynamicRegistries(mutator, registries);
         addRegistry(registries, Registry.DIMENSION_TYPE_KEY);

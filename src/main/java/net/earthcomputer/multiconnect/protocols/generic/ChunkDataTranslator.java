@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.DebugUtils;
 import net.earthcomputer.multiconnect.impl.TestingAPI;
@@ -50,6 +51,7 @@ public class ChunkDataTranslator {
     private static ExecutorService executor = createExecutor();
     private static final ThreadLocal<ChunkDataTranslator> CURRENT_TRANSLATOR = new ThreadLocal<>();
 
+    @ThreadSafe(withGameThread = false)
     public static ChunkDataTranslator current() {
         return CURRENT_TRANSLATOR.get();
     }
@@ -68,6 +70,7 @@ public class ChunkDataTranslator {
         this.registryManager = registryManager;
     }
 
+    @ThreadSafe
     public static <T extends Packet<?>> void asyncTranslatePacket(ChannelHandlerContext context, PacketInfo<T> packetInfo, byte[] data) {
         ChunkPos pos = ConnectionInfo.protocol.extractChunkPos(packetInfo.getPacketClass(), new PacketByteBuf(Unpooled.wrappedBuffer(data)));
         executor.submit(new TranslationTask(pos, () -> {
@@ -89,10 +92,12 @@ public class ChunkDataTranslator {
         }));
     }
 
+    @ThreadSafe
     public static void asyncExecute(ChunkPos pos, Runnable runnable) {
         executor.submit(new TranslationTask(pos, runnable));
     }
 
+    @ThreadSafe
     public static void submit(ChunkDataS2CPacket packet) {
         MinecraftClient mc = MinecraftClient.getInstance();
         assert mc.world != null;

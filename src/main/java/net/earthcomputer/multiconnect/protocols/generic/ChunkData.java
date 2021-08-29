@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.generic;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectionsBlockView;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -23,6 +24,7 @@ public final class ChunkData implements IBlockConnectionsBlockView {
         this.maxY = maxY;
     }
 
+    @ThreadSafe(withGameThread = false)
     public static ChunkData read(int minY, int maxY, PacketByteBuf buf) {
         ChunkData data = new ChunkData(new ChunkSection[(maxY + 1 - minY + 15) >> 4], minY, maxY);
         ChunkDataS2CPacket packet = ChunkDataTranslator.current().getPacket();
@@ -110,6 +112,7 @@ public final class ChunkData implements IBlockConnectionsBlockView {
         return maxY;
     }
 
+    @ThreadSafe(withGameThread = false)
     public static int skipPalette(PacketByteBuf buf) {
         int paletteSize = buf.readByte();
         if (paletteSize <= 8) {

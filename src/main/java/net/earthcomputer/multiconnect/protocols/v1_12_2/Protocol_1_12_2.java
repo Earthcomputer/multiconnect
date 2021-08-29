@@ -5,6 +5,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.serialization.Dynamic;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
@@ -712,6 +713,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     }
 
     @Override
+    @ThreadSafe
     public boolean onSendPacket(Packet<?> packet) {
         if (!super.onSendPacket(packet))
             return false;
@@ -720,7 +722,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         }
         ClientPlayNetworkHandler connection = MinecraftClient.getInstance().getNetworkHandler();
         if (packet instanceof CustomPayloadC2SPacket customPayload) {
-            assert connection != null;
+            checkConnectionValid(connection);
             String channel;
             if (customPayload.getChannel().equals(CustomPayloadC2SPacket.BRAND))
                 channel = "MC|Brand";
@@ -730,7 +732,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet instanceof BookUpdateC2SPacket bookUpdate) {
-            assert connection != null;
+            checkConnectionValid(connection);
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             String channel = bookUpdate.getTitle().isPresent() ? "MC|BSign" : "MC|BEdit";
             buf.writeTopLevelType(new StringCustomPayload(channel));
@@ -740,7 +742,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet instanceof PickFromInventoryC2SPacket pickFromInventoryPacket) {
-            assert connection != null;
+            checkConnectionValid(connection);
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(new StringCustomPayload("MC|PickItem"));
             buf.writeVarInt(pickFromInventoryPacket.getSlot());
@@ -748,7 +750,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet instanceof RenameItemC2SPacket renameItem) {
-            assert connection != null;
+            checkConnectionValid(connection);
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(new StringCustomPayload("MC|ItemName"));
             buf.writeString(renameItem.getName(), 32767);
@@ -756,7 +758,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet instanceof SelectMerchantTradeC2SPacket selectTrade) {
-            assert connection != null;
+            checkConnectionValid(connection);
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(new StringCustomPayload("MC|TrSel"));
             buf.writeInt(selectTrade.getTradeId());
@@ -764,7 +766,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet instanceof UpdateBeaconC2SPacket updateBeacon) {
-            assert connection != null;
+            checkConnectionValid(connection);
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(new StringCustomPayload("MC|Beacon"));
             buf.writeInt(updateBeacon.getPrimaryEffectId());
@@ -773,7 +775,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet instanceof UpdateCommandBlockC2SPacket updateCmdBlock) {
-            assert connection != null;
+            checkConnectionValid(connection);
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(new StringCustomPayload("MC|AutoCmd"));
             buf.writeInt(updateCmdBlock.getBlockPos().getX());
@@ -796,7 +798,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet instanceof UpdateCommandBlockMinecartC2SPacket updateCmdMinecart) {
-            assert connection != null;
+            checkConnectionValid(connection);
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(new StringCustomPayload("MC|AdvCmd"));
             buf.writeByte(1); // command block type (minecart)
@@ -807,7 +809,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
             return false;
         }
         if (packet instanceof UpdateStructureBlockC2SPacket updateStructBlock) {
-            assert connection != null;
+            checkConnectionValid(connection);
             TransformerByteBuf buf = new TransformerByteBuf(Unpooled.buffer(), null);
             buf.writeTopLevelType(new StringCustomPayload("MC|Struct"));
             buf.writeInt(updateStructBlock.getPos().getX());
@@ -891,6 +893,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                         return false;
                     }
                 } else {
+                    checkConnectionValid(connection);
                     MinecraftClient.getInstance().execute(() -> {
                         PlayerEntity player = MinecraftClient.getInstance().player;
                         if (player != null
@@ -899,7 +902,6 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                             RecipeBookEmulator recipeBookEmulator = ((IScreenHandler) player.currentScreenHandler).multiconnect_getRecipeBookEmulator();
                             recipeBookEmulator.emulateRecipePlacement(recipePlacement);
                         } else {
-                            assert connection != null;
                             connection.sendPacket(packet);
                         }
                     });
@@ -1584,6 +1586,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     }
 
     @Override
+    @ThreadSafe(withGameThread = false)
     public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
         super.mutateDynamicRegistries(mutator, registries);
         mutator.mutate(Protocols.V1_12_2, registries.get(Registry.BIOME_KEY), this::mutateBiomeRegistry);
@@ -1598,6 +1601,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         registry.unregister(Potions.LONG_SLOW_FALLING);
     }
 
+    @ThreadSafe(withGameThread = false)
     private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
         rename(registry, BiomeKeys.MOUNTAINS, "extreme_hills");
         rename(registry, BiomeKeys.SWAMP, "swampland");

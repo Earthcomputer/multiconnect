@@ -22,6 +22,7 @@ public class MultiConnectAPI {
     /**
      * Returns the singleton instance of this API
      */
+    @ThreadSafe
     public static MultiConnectAPI instance() {
         return INSTANCE;
     }
@@ -30,6 +31,7 @@ public class MultiConnectAPI {
      * Gets the protocol version of the server currently connected to,
      * or the current game version if not connected to a server
      */
+    @ThreadSafe
     public int getProtocolVersion() {
         return SharedConstants.getGameVersion().getProtocolVersion();
     }
@@ -37,6 +39,7 @@ public class MultiConnectAPI {
     /**
      * Gets a supported {@link IProtocol} object by its protocol version, or {@code null} if the protocol is not supported
      */
+    @ThreadSafe
     public IProtocol byProtocolVersion(int version) {
         return version == SharedConstants.getGameVersion().getProtocolVersion() ? CurrentVersionProtocol.INSTANCE : null;
     }
@@ -44,6 +47,7 @@ public class MultiConnectAPI {
     /**
      * Returns a list of supported protocols, from newest to oldest
      */
+    @ThreadSafe
     public List<IProtocol> getSupportedProtocols() {
         return Collections.singletonList(CurrentVersionProtocol.INSTANCE);
     }
@@ -101,6 +105,7 @@ public class MultiConnectAPI {
      * @param channel The channel to send data on
      * @param data The data to send
      */
+    @ThreadSafe
     public void forceSendCustomPayload(ClientPlayNetworkHandler networkHandler, Identifier channel, PacketByteBuf data) {
         if (networkHandler == null) {
             throw new IllegalArgumentException("Trying to send custom payload when not in-game");
@@ -116,6 +121,7 @@ public class MultiConnectAPI {
      * @param channel The channel to send data on
      * @param data The data to send
      */
+    @ThreadSafe
     public void forceSendStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
         throw new IllegalStateException("Trying to send custom payload to " + SharedConstants.getGameVersion().getName() + " server");
     }
@@ -170,6 +176,7 @@ public class MultiConnectAPI {
     /**
      * Returns whether the given registry contains the given value on the server.
      */
+    @ThreadSafe
     public <T> boolean doesServerKnow(Registry<T> registry, T value) {
         return registry.getKey(value).isPresent();
     }
@@ -177,6 +184,7 @@ public class MultiConnectAPI {
     /**
      * Returns whether the given registry contains the given value on the server.
      */
+    @ThreadSafe
     public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
         return key.isOf(registry.getKey()) && registry.getOrEmpty(key.getValue()).isPresent();
     }

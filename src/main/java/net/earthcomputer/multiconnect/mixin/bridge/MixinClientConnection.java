@@ -4,6 +4,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
+import net.earthcomputer.multiconnect.impl.ConnectionEndedException;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.DebugUtils;
 import net.earthcomputer.multiconnect.impl.TestingAPI;
@@ -30,6 +32,7 @@ public abstract class MixinClientConnection {
     @Shadow private PacketListener packetListener;
 
     @Inject(method = "exceptionCaught", at = @At("HEAD"))
+    @ThreadSafe
     public void onExceptionCaught(ChannelHandlerContext context, Throwable t, CallbackInfo ci) {
         if (DebugUtils.isUnexpectedDisconnect(t) && channel.isOpen()) {
             TestingAPI.onUnexpectedDisconnect(t);
@@ -38,26 +41,35 @@ public abstract class MixinClientConnection {
     }
 
     @Inject(method = "send(Lnet/minecraft/network/Packet;Lio/netty/util/concurrent/GenericFutureListener;)V", at = @At("HEAD"), cancellable = true)
+    @ThreadSafe
     private void onSend(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>> callback, CallbackInfo ci) {
         if (!ConnectionInfo.protocol.preSendPacket(packet)) {
             ci.cancel();
         } else if (ConnectionInfo.protocolVersion == SharedConstants.getProtocolVersion()) {
             // no need to translate or block any packets
-        } else if (!ConnectionInfo.protocol.onSendPacket(packet)) {
-            ci.cancel();
-        } else if (packet instanceof CustomPayloadC2SPacket) {
-            if (((ICustomPayloadC2SPacket) packet).multiconnect_isBlocked()) {
-                if (packetListener instanceof ClientPlayNetworkHandler networkHandler) {
-                    CustomPayloadHandler.handleServerboundCustomPayload(networkHandler, (CustomPayloadC2SPacket) packet);
-                }
-                ci.cancel();
+        } else {
+            boolean canceled;
+            try {
+                canceled = !ConnectionInfo.protocol.onSendPacket(packet);
+            } catch (ConnectionEndedException e) {
+                canceled = true;
             }
-        } else if (packet instanceof CustomPayloadC2SPacket_1_12_2 customPayload) {
-            if (customPayload.isBlocked()) {
-                if (packetListener instanceof ClientPlayNetworkHandler networkHandler) {
-                    CustomPayloadHandler.handleServerboundCustomPayload(networkHandler, customPayload);
-                }
+            if (canceled) {
                 ci.cancel();
+            } else if (packet instanceof CustomPayloadC2SPacket) {
+                if (((ICustomPayloadC2SPacket) packet).multiconnect_isBlocked()) {
+                    if (packetListener instanceof ClientPlayNetworkHandler networkHandler) {
+                        CustomPayloadHandler.handleServerboundCustomPayload(networkHandler, (CustomPayloadC2SPacket) packet);
+                    }
+                    ci.cancel();
+                }
+            } else if (packet instanceof CustomPayloadC2SPacket_1_12_2 customPayload) {
+                if (customPayload.isBlocked()) {
+                    if (packetListener instanceof ClientPlayNetworkHandler networkHandler) {
+                        CustomPayloadHandler.handleServerboundCustomPayload(networkHandler, customPayload);
+                    }
+                    ci.cancel();
+                }
             }
         }
     }

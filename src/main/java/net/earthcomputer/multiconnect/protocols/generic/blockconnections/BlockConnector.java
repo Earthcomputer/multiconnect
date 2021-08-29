@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.IBlockConnector;
@@ -14,6 +15,7 @@ import net.minecraft.world.chunk.ChunkSection;
 import java.util.EnumMap;
 import java.util.Map;
 
+@ThreadSafe
 public class BlockConnector {
     private final Map<Block, IBlockConnector> connectors;
 

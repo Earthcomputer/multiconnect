@@ -12,6 +12,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
@@ -537,6 +538,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
     }
 
     @Override
+    @ThreadSafe
     public boolean onSendPacket(Packet<?> packet) {
         if (packet instanceof PlayPongC2SPacket) {
             return false;
@@ -558,6 +560,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
     }
 
     @Override
+    @ThreadSafe(withGameThread = false)
     public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
         super.mutateDynamicRegistries(mutator, registries);
         addRegistry(registries, Registry.DIMENSION_TYPE_KEY);

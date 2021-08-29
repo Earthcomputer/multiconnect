@@ -1,8 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_15_2;
 
-import com.google.common.collect.ImmutableMap;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.mixin.bridge.DynamicRegistryManagerImplAccessor;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
@@ -146,11 +146,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             int dimensionId = buf.readInt();
             Identifier dimensionName = dimensionIdToName(dimensionId);
 
-            var registries = DynamicRegistryManager.create();
-            //noinspection ConstantConditions
-            ((DynamicRegistryManagerImplAccessor) (Object) registries).setRegistries(ImmutableMap.of());
-            buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, registries)); //
-            // dynamic registry mutator will fix this
+            var registries = Utils.createMutableDynamicRegistryManager();
+            buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, registries));
             buf.pendingRead(Identifier.class, dimensionName); // dimension type
             buf.pendingRead(Identifier.class, dimensionName); // dimension
             buf.enablePassthroughMode();
@@ -377,6 +374,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     @Override
+    @ThreadSafe(withGameThread = false)
     public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
         super.mutateDynamicRegistries(mutator, registries);
         addRegistry(registries, Registry.DIMENSION_TYPE_KEY);
@@ -400,6 +398,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     @Override
+    @ThreadSafe
     public boolean onSendPacket(Packet<?> packet) {
         if (packet instanceof JigsawGeneratingC2SPacket) {
             return false;
@@ -558,6 +557,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Enchantments.SOUL_SPEED);
     }
 
+    @ThreadSafe(withGameThread = false)
     private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
         rename(registry, BiomeKeys.NETHER_WASTES, "nether");
         registry.unregister(BiomeKeys.SOUL_SAND_VALLEY);

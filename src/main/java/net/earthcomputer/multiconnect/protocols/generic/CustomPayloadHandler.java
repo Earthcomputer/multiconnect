@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.generic;
 
 import com.google.common.collect.ImmutableSet;
 import net.earthcomputer.multiconnect.api.ICustomPayloadListener;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.CustomPayloadEvent;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1_12_2;
@@ -64,16 +65,19 @@ public class CustomPayloadHandler {
         serverboundStringCustomPayloadListeners.remove(listener);
     }
 
+    @ThreadSafe
     public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket packet) {
         var event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
         serverboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
+    @ThreadSafe
     public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket_1_12_2 packet) {
         var event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
         serverboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
+    @ThreadSafe
     public static void handleClientboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadS2CPacket packet) {
         String str;
         synchronized (clientboundStringCustomPayloadChannels) {
@@ -86,16 +90,19 @@ public class CustomPayloadHandler {
         }
     }
 
+    @ThreadSafe
     private static void handleClientboundIdentifierCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadS2CPacket packet) {
         var event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
         clientboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
+    @ThreadSafe
     private static void handleClientboundStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
         var event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, channel, data, networkHandler);
         clientboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
+    @ThreadSafe
     public static Identifier getClientboundIdentifierForStringCustomPayload(String channel) {
         synchronized (clientboundStringCustomPayloadChannels) {
             Identifier id = new Identifier("multiconnect", "generated_" + Integer.toUnsignedString(clientboundStringCustomPayloadId++));

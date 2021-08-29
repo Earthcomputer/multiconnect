@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
 import com.google.gson.JsonParseException;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.*;
@@ -19,6 +20,8 @@ import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.enums.Instrument;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.*;
@@ -376,6 +379,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         });
     }
 
+    @ThreadSafe(withGameThread = false)
     @Override
     public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
         // Split off into separate light packet
@@ -464,6 +468,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     @Override
+    @ThreadSafe
     public boolean onSendPacket(Packet<?> packet) {
         if (!super.onSendPacket(packet))
             return false;
@@ -621,6 +626,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         mutator.mutate(Protocols.V1_13_2, registries.get(Registry.BIOME_KEY), this::mutateBiomeRegistry);
     }
 
+    @ThreadSafe(withGameThread = false)
     private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
         registry.unregister(Blocks.BAMBOO);
         registry.unregister(Blocks.BAMBOO_SAPLING);
@@ -1517,12 +1523,15 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         super.addExtraEntityTags(tags);
     }
 
+    @ThreadSafe
     public static void updateCameraPosition() {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            assert MinecraftClient.getInstance().getNetworkHandler() != null;
-            assert MinecraftClient.getInstance().player != null;
-            ChunkSectionPos chunkPos = ChunkSectionPos.from(MinecraftClient.getInstance().player);
-            MinecraftClient.getInstance().getNetworkHandler().onChunkRenderDistanceCenter(new ChunkRenderDistanceCenterS2CPacket(chunkPos.getSectionX(), chunkPos.getSectionZ()));
+            ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+            ClientPlayerEntity player = MinecraftClient.getInstance().player;
+            if (networkHandler != null && player != null) {
+                ChunkSectionPos chunkPos = ChunkSectionPos.from(player);
+                networkHandler.onChunkRenderDistanceCenter(new ChunkRenderDistanceCenterS2CPacket(chunkPos.getSectionX(), chunkPos.getSectionZ()));
+            }
         }
     }
 }

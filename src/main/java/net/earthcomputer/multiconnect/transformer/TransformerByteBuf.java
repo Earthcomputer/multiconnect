@@ -7,6 +7,7 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.AligningFormatter;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
@@ -1137,18 +1138,18 @@ public final class TransformerByteBuf extends PacketByteBuf {
     private static final Map<Class<?>, Class<?>> lambdaElementTypes = new HashMap<>();
     private static final ReadWriteLock lambdaElementTypeLock = new ReentrantReadWriteLock();
 
-    private Class<?> getLambdaReturnType(Object lambda, int functionalParameterIndex) {
+    @ThreadSafe
+    private static Class<?> getLambdaReturnType(Object lambda, int functionalParameterIndex) {
         return getLambdaElementType(lambda, functionalParameterIndex, Type::getReturnType);
     }
 
-    private Class<?> getLambdaParameterType(Object lambda, int functionalParameterIndex, int lambdaParameterIndex) {
+    @ThreadSafe
+    private static Class<?> getLambdaParameterType(Object lambda, int functionalParameterIndex, int lambdaParameterIndex) {
         return getLambdaElementType(lambda, functionalParameterIndex, methodType -> methodType.getArgumentTypes()[lambdaParameterIndex]);
     }
 
-    private Class<?> getLambdaElementType(Object lambda, int functionalParameterIndex, UnaryOperator<Type> elementTypeExtractor) {
-        if (!transformationEnabled) {
-            return null;
-        }
+    @ThreadSafe
+    private static Class<?> getLambdaElementType(Object lambda, int functionalParameterIndex, UnaryOperator<Type> elementTypeExtractor) {
         Class<?> lambdaClass = lambda.getClass();
 
         // quick exit with read lock

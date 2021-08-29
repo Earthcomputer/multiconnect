@@ -16,5 +16,6 @@ public interface ICustomPayloadListener<T> {
     /**
      * Called on a custom payload.
      */
+    @ThreadSafe
     void onCustomPayload(ICustomPayloadEvent<T> event);
 }

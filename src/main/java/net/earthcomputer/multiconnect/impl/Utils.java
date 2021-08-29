@@ -10,6 +10,7 @@ import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.EmptyByteBuf;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.bridge.DynamicRegistryManagerImplAccessor;
@@ -23,6 +24,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.item.Item;
@@ -43,6 +45,7 @@ import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.dimension.DimensionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.Cleaner;
@@ -163,6 +166,7 @@ public class Utils {
     }
 
     @SuppressWarnings("unchecked")
+    @ThreadSafe
     public static <T> void rename(ISimpleRegistry<T> registry, T value, String newName) {
         int id = ((SimpleRegistry<T>) registry).getRawId(value);
         registry.purge(value);
@@ -171,11 +175,13 @@ public class Utils {
     }
 
     @SuppressWarnings("unchecked")
+    @ThreadSafe
     public static <T> void rename(ISimpleRegistry<T> registry, RegistryKey<T> from, String newName) {
         rename(registry, ((SimpleRegistry<T>) registry).get(from), newName);
     }
 
     @SuppressWarnings("unchecked")
+    @ThreadSafe
     public static <T> void reregister(ISimpleRegistry<T> registry, T value, boolean inPlace) {
         if (registry.getIdToEntry().containsValue(value))
             return;
@@ -195,6 +201,7 @@ public class Utils {
     }
 
     @SuppressWarnings("unchecked")
+    @ThreadSafe
     public static <T, R extends Registry<T>> void addRegistry(DynamicRegistryManager.Impl registries, RegistryKey<R> registryKey) {
         //noinspection ConstantConditions
         var registryMap = (Map<RegistryKey<? extends Registry<?>>, SimpleRegistry<?>>) ((DynamicRegistryManagerImplAccessor) (Object) registries).getRegistries();
@@ -217,14 +224,21 @@ public class Utils {
         }
     }
 
+    @ThreadSafe
     public static <T> void translateDynamicRegistries(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate) {
-        translateExperimentalCodec(buf, oldCodec, allowablePredicate, DynamicRegistryManager.Impl.CODEC, thing -> {
-            var registryManager = DynamicRegistryManager.create();
-            //noinspection ConstantConditions
-            ((DynamicRegistryManagerImplAccessor) (Object) registryManager).setRegistries(ImmutableMap.of()); //
-            // dynamic registry mutator will fix this
-            return registryManager;
-        });
+        translateExperimentalCodec(buf, oldCodec, allowablePredicate, DynamicRegistryManager.Impl.CODEC, thing -> createMutableDynamicRegistryManager());
+    }
+
+    @ThreadSafe
+    public static DynamicRegistryManager.Impl createMutableDynamicRegistryManager() {
+        var registryManager = DynamicRegistryManager.create();
+        //noinspection ConstantConditions
+        var registryManagerAccessor = (DynamicRegistryManagerImplAccessor) (Object) registryManager;
+        registryManagerAccessor.setRegistries(new HashMap<>()); // make them mutable
+        RegistryMutator mutator = new RegistryMutator();
+        ConnectionInfo.protocol.mutateDynamicRegistries(mutator, registryManager);
+        // mutator.runMutations(registryManagerAccessor.getRegistries().values()); // TODO: just rewrite this whole registry system my fucking god
+        return registryManager;
     }
 
     private static final Map<Identifier, DimensionType> DIMENSION_TYPES_BY_ID = ImmutableMap.of(
@@ -234,6 +248,7 @@ public class Utils {
     );
 
     @Nullable
+    @ThreadSafe
     public static Codecked<Supplier<DimensionType>> translateDimensionType(TransformerByteBuf buf) {
         return translateExperimentalCodec(
                 buf,
@@ -246,6 +261,7 @@ public class Utils {
 
     @SuppressWarnings("unchecked")
     @Nullable
+    @ThreadSafe
     private static <T, U> Codecked<U> translateExperimentalCodec(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate, Codec<U> thingCodec, Function<T, U> thingCreator) {
         // TODO: support actual translation when this format stops being experimental
         boolean[] hasDecoded = {false};
@@ -277,6 +293,7 @@ public class Utils {
      * Creates a codec which recognizes an object {"key": value} from a codec which recognizes value.
      * This returned codec extracts value from this object, ignoring all other information
      */
+    @ThreadSafe
     public static <T> Codec<T> singletonKeyCodec(String key, Codec<T> codec) {
         return RecordCodecBuilder.<Optional<T>>create(inst -> inst.group(codec.fieldOf(key).forGetter(Optional::get)).apply(inst, Optional::of))
                 .xmap(Optional::get, Optional::of);
@@ -285,6 +302,7 @@ public class Utils {
     /**
      * Clones an object with its codec by serializing and deserializing it
      */
+    @ThreadSafe
     public static <T> T clone(Codec<T> codec, T val) {
         DataResult<NbtElement> nbtDataResult = codec.encodeStart(NbtOps.INSTANCE, val);
         if (nbtDataResult.error().isPresent()) {
@@ -343,6 +361,7 @@ public class Utils {
         return versionDropDown;
     }
 
+    @ThreadSafe
     public static void leftShift(BitSet bitSet, int n) {
         if (n < 0) {
             rightShift(bitSet, -n);
@@ -354,6 +373,7 @@ public class Utils {
         }
     }
 
+    @ThreadSafe
     public static void rightShift(BitSet bitSet, int n) {
         if (n < 0) {
             leftShift(bitSet, -n);
@@ -365,6 +385,7 @@ public class Utils {
         }
     }
 
+    @ThreadSafe
     public static <T extends Packet<?>> T createPacket(Class<T> packetClass, Function<PacketByteBuf, T> constructor, int protocolVersion, InboundTranslator<T> creator) {
         TransformerByteBuf buf = new TransformerByteBuf(new EmptyByteBuf(ByteBufAllocator.DEFAULT), null)
                 .readTopLevelType(packetClass, protocolVersion, creator);
@@ -384,6 +405,7 @@ public class Utils {
         AUTO_CACHE_CLEANER.register(cache, () -> autoCleanTask.cancel(false));
     }
 
+    @ThreadSafe
     public static String toString(Object o) {
         if (o == null || !o.getClass().isArray()) {
             return String.valueOf(o);
@@ -400,6 +422,7 @@ public class Utils {
         return sb.append("]").toString();
     }
 
+    @ThreadSafe
     public static String toString(Object o, int maxLen) {
         String str = toString(o);
         if (str.length() > maxLen && maxLen > "...".length()) {
@@ -408,10 +431,12 @@ public class Utils {
         return str;
     }
 
+    @ThreadSafe
     public static <T extends Comparable<T>> void heapify(List<T> list) {
         heapify(list, Comparator.naturalOrder());
     }
 
+    @ThreadSafe
     public static <T> void heapify(List<T> list, Comparator<? super T> comparator) {
         // See: PriorityQueue.heapify
         int n = list.size();
@@ -420,19 +445,23 @@ public class Utils {
         }
     }
 
+    @ThreadSafe
     public static <T extends Comparable<T>> void heapAdd(List<T> list, T element) {
         heapAdd(list, element, Comparator.naturalOrder());
     }
 
+    @ThreadSafe
     public static <T> void heapAdd(List<T> list, T element, Comparator<? super T> comparator) {
         list.add(element);
         heapSiftUp(list, list.size() - 1, comparator);
     }
 
+    @ThreadSafe
     public static <T extends Comparable<T>> T heapRemove(List<T> list) {
         return heapRemove(list, Comparator.naturalOrder());
     }
 
+    @ThreadSafe
     public static <T> T heapRemove(List<T> list, Comparator<? super T> comparator) {
         if (list.size() <= 1) {
             return list.remove(0);
@@ -442,6 +471,7 @@ public class Utils {
         return result;
     }
 
+    @ThreadSafe
     private static <T> void heapSiftDown(List<T> list, int k, Comparator<? super T> comparator) {
         // See: PriorityQueue.siftDown
         int n = list.size();
@@ -464,6 +494,7 @@ public class Utils {
         list.set(k, x);
     }
 
+    @ThreadSafe
     private static <T> void heapSiftUp(List<T> list, int k, Comparator<? super T> comparator) {
         // See: PriorityQueue.siftUp
         T x = list.get(k);
@@ -477,5 +508,13 @@ public class Utils {
             k = parent;
         }
         list.set(k, x);
+    }
+
+    @ThreadSafe
+    @Contract("null -> fail")
+    public static void checkConnectionValid(@Nullable ClientPlayNetworkHandler networkHandler) {
+        if (networkHandler == null) {
+            throw new ConnectionEndedException();
+        }
     }
 }

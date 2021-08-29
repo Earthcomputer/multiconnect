@@ -193,12 +193,11 @@ public class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
     private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
-        RegistryMutator mutator = new RegistryMutator();
         var registries = (DynamicRegistryManager.Impl) packet.getRegistryManager();
+        assert registries != null;
         //noinspection ConstantConditions
         var registriesAccessor = (DynamicRegistryManagerImplAccessor) (Object) registries;
         registriesAccessor.setRegistries(new HashMap<>(registriesAccessor.getRegistries())); // make registries mutable
-        ConnectionInfo.protocol.mutateDynamicRegistries(mutator, registries);
 
         for (var registryKey : DynamicRegistryManagerAccessor.getInfos().keySet()) {
             if (registryKey != Registry.DIMENSION_TYPE_KEY && DynamicRegistryManagerAccessor.getInfos().get(registryKey).isSynced()) {
@@ -206,8 +205,7 @@ public class MixinClientPlayNetworkHandler {
             }
         }
 
-        registriesAccessor.setRegistries(ImmutableMap.copyOf(registriesAccessor.getRegistries())); // make immutable
-        // again (faster)
+        registriesAccessor.setRegistries(ImmutableMap.copyOf(registriesAccessor.getRegistries())); // make immutable again (faster)
     }
 
     @SuppressWarnings("unchecked")

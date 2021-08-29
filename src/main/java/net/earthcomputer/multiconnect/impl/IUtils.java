@@ -6,6 +6,7 @@ import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.minecraft.block.Block;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NbtCompound;
@@ -15,6 +16,8 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.List;
@@ -89,5 +92,10 @@ public interface IUtils {
 
     default void dumpBlockStates() {
         DebugUtils.dumpBlockStates();
+    }
+
+    @Contract("null -> fail")
+    default void checkConnectionValid(@Nullable ClientPlayNetworkHandler networkHandler) {
+        Utils.checkConnectionValid(networkHandler);
     }
 }

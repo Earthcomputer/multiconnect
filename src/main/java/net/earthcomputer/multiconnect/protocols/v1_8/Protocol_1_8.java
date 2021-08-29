@@ -6,6 +6,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import it.unimi.dsi.fastutil.chars.Char2CharMap;
 import it.unimi.dsi.fastutil.chars.Char2CharOpenHashMap;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
@@ -795,6 +796,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
     }
 
     @Override
+    @ThreadSafe
     public boolean onSendPacket(Packet<?> packet) {
         if (packet instanceof TeleportConfirmC2SPacket) {
             return false;

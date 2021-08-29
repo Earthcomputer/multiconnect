@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_9_2;
 
 import com.mojang.brigadier.CommandDispatcher;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
@@ -46,6 +47,7 @@ public class Protocol_1_9_2 extends Protocol_1_9_4 {
     }
 
     @Override
+    @ThreadSafe(withGameThread = false)
     public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
         // add block entities to blocks that have them
         int minX = translator.getPacket().getX() * 16;

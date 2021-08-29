@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
+import com.google.common.base.Suppliers;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.IUtils;
 import net.earthcomputer.multiconnect.mixin.bridge.MinecraftClientAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
@@ -32,6 +34,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public abstract class AbstractProtocol implements IUtils {
@@ -40,7 +43,7 @@ public abstract class AbstractProtocol implements IUtils {
     private static final List<Block> collisionBoxesToRevert = new ArrayList<>();
 
     private int protocolVersion;
-    private BlockConnector blockConnector;
+    private final Supplier<BlockConnector> lazyBlockConnector = Suppliers.memoize(() -> BlockConnections.buildConnector(protocolVersion));
 
     // To be called by ProtocolRegistry only!
     public void setProtocolVersion(int protocolVersion) {
@@ -123,6 +126,7 @@ public abstract class AbstractProtocol implements IUtils {
         return new ArrayList<>(DefaultPackets.SERVERBOUND);
     }
 
+    @ThreadSafe
     public final boolean preSendPacket(Packet<?> packet) {
         if (packet instanceof IServerboundSlotPacket slotPacket) {
             if (!slotPacket.multiconnect_isProcessed()) {
@@ -138,6 +142,7 @@ public abstract class AbstractProtocol implements IUtils {
         return true;
     }
 
+    @ThreadSafe
     public boolean onSendPacket(Packet<?> packet) {
         return true;
     }
@@ -178,6 +183,7 @@ public abstract class AbstractProtocol implements IUtils {
         }
     }
 
+    @ThreadSafe(withGameThread = false)
     public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
     }
 
@@ -248,11 +254,9 @@ public abstract class AbstractProtocol implements IUtils {
     public void addExtraGameEventTags(TagRegistry<GameEvent> tags) {
     }
 
+    @ThreadSafe
     public BlockConnector getBlockConnector() {
-        if (blockConnector == null) {
-            blockConnector = BlockConnections.buildConnector(protocolVersion);
-        }
-        return blockConnector;
+        return lazyBlockConnector.get();
     }
 
     public boolean shouldBlockChangeReplaceBlockEntity(Block oldBlock, Block newBlock) {
@@ -276,9 +280,10 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     /**
-     * <strong>Called off thread!</strong> Individual pieces of translation (e.g. heightmap translation for 1.13.2 <->
-     * 1.14) should be directly translated to the current version.
+     * Individual pieces of translation (e.g. heightmap translation for 1.13.2 <-> 1.14) should be directly translated
+     * to the current version.
      */
+    @ThreadSafe(withGameThread = false)
     public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
     }
 
@@ -287,10 +292,12 @@ public abstract class AbstractProtocol implements IUtils {
      * an associated chunk position can be translated. Override {@link #extractChunkPos} as well to extract the chunk
      * pos of a packet.
      */
+    @ThreadSafe(withGameThread = false)
     public boolean shouldTranslateAsync(Class<? extends Packet<?>> packetClass) {
         return packetClass == ChunkDataS2CPacket.class;
     }
 
+    @ThreadSafe
     public ChunkPos extractChunkPos(Class<? extends Packet<?>> packetClass, PacketByteBuf buf) {
         if (packetClass == ChunkDataS2CPacket.class) {
             return new ChunkPos(buf.readInt(), buf.readInt());

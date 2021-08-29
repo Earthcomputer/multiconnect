@@ -4,6 +4,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.DataTrackerManager;
@@ -282,6 +283,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
     }
 
     @Override
+    @ThreadSafe(withGameThread = false)
     public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
         // Replace chest block entities with trapped chests depending on the block
         for (NbtCompound blockEntityTag : translator.getPacket().getBlockEntityTagList()) {

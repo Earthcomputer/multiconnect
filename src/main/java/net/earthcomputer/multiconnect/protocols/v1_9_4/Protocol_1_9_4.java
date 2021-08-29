@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_9_4;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
@@ -70,6 +71,7 @@ public class Protocol_1_9_4 extends Protocol_1_10 {
     }
 
     @Override
+    @ThreadSafe
     public boolean onSendPacket(Packet<?> packet) {
         if (packet instanceof ResourcePackStatusC2SPacket) {
             return false;

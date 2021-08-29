@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_11_2;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
@@ -22,6 +23,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.ConcretePowderBlock;
 import net.minecraft.block.GlazedTerracottaBlock;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -95,6 +97,7 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
     }
 
     @Override
+    @ThreadSafe
     public boolean onSendPacket(Packet<?> packet) {
         if (packet instanceof PlaceRecipeC2SPacket_1_12 recipePlacement) {
             MinecraftClient.getInstance().execute(() -> {
@@ -109,16 +112,17 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
         if (packet instanceof RecipeBookDataC2SPacket_1_16_1) {
             return false;
         }
+        ClientPlayNetworkHandler connection = MinecraftClient.getInstance().getNetworkHandler();
         if (packet instanceof AdvancementTabC2SPacket advancementTabPacket) {
             if (advancementTabPacket.getAction() == AdvancementTabC2SPacket.Action.OPENED_TAB) {
-                assert MinecraftClient.getInstance().getNetworkHandler() != null;
-                MinecraftClient.getInstance().getNetworkHandler().onSelectAdvancementTab(new SelectAdvancementTabS2CPacket(advancementTabPacket.getTabToOpen()));
+                checkConnectionValid(connection);
+                connection.onSelectAdvancementTab(new SelectAdvancementTabS2CPacket(advancementTabPacket.getTabToOpen()));
             }
             return false;
         }
         if (packet instanceof ClientStatusC2SPacket clientStatus) {
-            assert MinecraftClient.getInstance().getNetworkHandler() != null;
-            MinecraftClient.getInstance().getNetworkHandler().sendPacket(new ClientStatusC2SPacket_1_11_2(clientStatus));
+            checkConnectionValid(connection);
+            connection.sendPacket(new ClientStatusC2SPacket_1_11_2(clientStatus));
             return false;
         }
         return super.onSendPacket(packet);

@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.TimeoutException;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.mixin.connect.DecoderHandlerAccessor;
@@ -186,6 +187,7 @@ public class DebugUtils {
         }, parentScreen.getTitle(), new TranslatableText("multiconnect.rareBug.screen"));
     }
 
+    @ThreadSafe
     public static boolean isUnexpectedDisconnect(Throwable t) {
         return !(t instanceof PacketEncoderException) && !(t instanceof TimeoutException);
     }

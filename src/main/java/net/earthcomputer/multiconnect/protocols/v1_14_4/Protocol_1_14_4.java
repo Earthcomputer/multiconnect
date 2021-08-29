@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_14_4;
 
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.EndermanEntityAccessor;
@@ -159,6 +160,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
         });
     }
 
+    @ThreadSafe(withGameThread = false)
     @Override
     public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
         if (translator.isFullChunk()) {
