@@ -77,9 +77,12 @@ public abstract class MixinClientPlayNetworkHandler {
         }
     }
 
-    @Inject(method = "onChunkData", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "onChunkData", at = @At("RETURN"))
     private void postChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
         // 1.8 doesn't send neighboring empty chunks, so we must assume they are empty unless otherwise specified
+        if (ConnectionInfo.protocolVersion > Protocols.V1_8) {
+            return;
+        }
 
         // don't load more empty chunks next to empty chunks, that would cause an infinite loop
         WorldChunk chunk = world.getChunk(packet.getX(), packet.getZ());
