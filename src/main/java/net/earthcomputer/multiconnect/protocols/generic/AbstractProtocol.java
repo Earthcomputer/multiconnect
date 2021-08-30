@@ -98,8 +98,9 @@ public abstract class AbstractProtocol implements IUtils {
         handler.multiconnect_register((Class<P>) packetClass, (Function<PacketByteBuf, P>) factory);
     }
 
+    @SuppressWarnings("unchecked")
     protected void recomputeBlockStates() {
-        ((IIdList) Block.STATE_IDS).multiconnect_clear();
+        ((IIdList<BlockState>) Block.STATE_IDS).multiconnect_clear();
         for (Block block : Registry.BLOCK) {
             Stream<BlockState> states = getStatesForBlock(block).filter(this::acceptBlockState);
             Comparator<BlockState> order = getBlockStateOrder(block);

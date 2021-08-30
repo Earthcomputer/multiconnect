@@ -34,12 +34,20 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.tag.Tag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.*;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeKeys;
+import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.dimension.DimensionType;
@@ -516,5 +524,23 @@ public class Utils {
         if (networkHandler == null) {
             throw new ConnectionEndedException();
         }
+    }
+
+    public static ChunkDataS2CPacket createEmptyChunkDataPacket(int x, int z, World world, DynamicRegistryManager registryManager) {
+        Registry<Biome> biomeRegistry = registryManager.get(Registry.BIOME_KEY);
+        Biome plainsBiome = biomeRegistry.get(BiomeKeys.PLAINS);
+        int horizontalSectionCount = MathHelper.log2DeBruijn(16) - 2;
+        int biomeLength = (1 << (horizontalSectionCount + horizontalSectionCount)) * ((world.getHeight() + 3) / 4);
+
+        ChunkDataS2CPacket packet = new ChunkDataS2CPacket(new WorldChunk(world, new ChunkPos(x, z), new BiomeArray(biomeRegistry, world, new int[biomeLength])));
+        //noinspection ConstantConditions
+        IChunkDataS2CPacket iPacket = (IChunkDataS2CPacket) packet;
+        iPacket.multiconnect_setDataTranslated(true);
+        iPacket.multiconnect_setDimension(world.getDimension());
+        iPacket.multiconnect_setBlocksNeedingUpdate(new EnumMap<>(EightWayDirection.class));
+        Biome[] biomes = new Biome[256];
+        Arrays.fill(biomes, plainsBiome);
+        ((net.earthcomputer.multiconnect.protocols.v1_14_4.IChunkDataS2CPacket) iPacket).set_1_14_4_biomeData(biomes);
+        return packet;
     }
 }

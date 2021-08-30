@@ -1025,6 +1025,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         return type.getParametersFactory().read(type, buf);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void recomputeBlockStates() {
         final int leavesId = Registry.BLOCK.getRawId(Blocks.OAK_LEAVES);
@@ -1039,7 +1040,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         final int trappedChestId = Registry.BLOCK.getRawId(Blocks.TRAPPED_CHEST);
         final int wallBannerId = Registry.BLOCK.getRawId(Blocks.WHITE_WALL_BANNER);
 
-        ((IIdList) Block.STATE_IDS).multiconnect_clear();
+        ((IIdList<BlockState>) Block.STATE_IDS).multiconnect_clear();
         for (int blockId = 0; blockId < 256; blockId++) {
             if (blockId == leavesId) {
                 registerLeavesStates(blockId, Blocks.OAK_LEAVES, Blocks.SPRUCE_LEAVES, Blocks.BIRCH_LEAVES, Blocks.JUNGLE_LEAVES);

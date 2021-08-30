@@ -139,7 +139,11 @@ public class ChunkDataTranslator {
                 }
             } catch (Throwable e) {
                 if (!hasDumpedChunkData.getAndSet(true)) {
-                    DebugUtils.logPacketDisconnectError(packet.getReadBuffer().array());
+                    DebugUtils.logPacketDisconnectError(
+                            packet.getReadBuffer().array(),
+                            "Chunk pos: " + packet.getX() + ", " + packet.getZ(),
+                            "Vertical strip bitmask: " + Arrays.toString(packet.getVerticalStripBitmask().toLongArray())
+                    );
                 }
                 LOGGER.error("Failed to translate chunk " + packet.getX() + ", " + packet.getZ(), e);
             }

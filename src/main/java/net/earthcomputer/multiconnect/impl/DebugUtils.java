@@ -11,6 +11,8 @@ import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.mixin.connect.DecoderHandlerAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
+import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
+import net.earthcomputer.multiconnect.protocols.generic.IChunkDataS2CPacket;
 import net.earthcomputer.multiconnect.protocols.generic.IIdList;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
@@ -21,12 +23,14 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.network.DecoderHandler;
 import net.minecraft.network.PacketEncoderException;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.text.BaseText;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
@@ -34,10 +38,12 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -49,6 +55,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.BitSet;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -67,8 +74,9 @@ public class DebugUtils {
     private static long timeThatRareBugOccurred;
     public static String lastServerBrand = ClientBrandRetriever.VANILLA;
 
+    @SuppressWarnings("unchecked")
     public static void dumpBlockStates() {
-        for (int id : ((IIdList) Block.STATE_IDS).multiconnect_ids()) {
+        for (int id : ((IIdList<BlockState>) Block.STATE_IDS).multiconnect_ids()) {
             BlockState state = Block.STATE_IDS.get(id);
             assert state != null;
             StringBuilder sb = new StringBuilder().append(id).append(": ").append(Registry.BLOCK.getId(state.getBlock()));
@@ -192,7 +200,7 @@ public class DebugUtils {
         return !(t instanceof PacketEncoderException) && !(t instanceof TimeoutException);
     }
 
-    public static void logPacketDisconnectError(byte[] data) {
+    public static void logPacketDisconnectError(byte[] data, String... extraLines) {
         LOGGER.error("!!!!!!!! Unexpected disconnect, please upload this error to " + MULTICONNECT_ISSUES_BASE_URL + " !!!!!!!!");
         LOGGER.error("It may be helpful if you also provide the server IP, but you are not obliged to do this.");
         LOGGER.error("Minecraft version: {}", SharedConstants.getGameVersion().getName());
@@ -202,6 +210,9 @@ public class DebugUtils {
         });
         LOGGER.error("Server version: {} ({})", ConnectionInfo.protocolVersion, ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName());
         LOGGER.error("Server brand: {}", lastServerBrand);
+        for (String extraLine : extraLines) {
+            LOGGER.error(extraLine);
+        }
         LOGGER.error("Compressed packet data: {}", () -> {
             ByteArrayOutputStream result = new ByteArrayOutputStream();
             try (var out = new GZIPOutputStream(Base64.getEncoder().wrap(result))) {
@@ -214,20 +225,49 @@ public class DebugUtils {
     }
 
     public static void handlePacketDump(ClientPlayNetworkHandler networkHandler, String base64, boolean compressed) {
-        byte[] bytes = Base64.getDecoder().decode(base64);
-        if (compressed) {
-            ByteArrayOutputStream result = new ByteArrayOutputStream();
-            try (var in = new GZIPInputStream(new ByteArrayInputStream(bytes))) {
-                IOUtils.copy(in, result);
-            } catch (IOException e) {
-                LOGGER.error("Decompression error", e);
-                return;
-            }
-            bytes = result.toByteArray();
+        byte[] bytes = decode(base64, compressed);
+        if (bytes == null) {
+            return;
         }
+        LOGGER.info("Artificially handling packet of length {}", bytes.length);
         Channel channel = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel();
         assert channel != null;
         channel.pipeline().context("decoder").fireChannelRead(Unpooled.wrappedBuffer(bytes));
+    }
+
+    public static void handleChunkDataDump(ClientPlayNetworkHandler networkHandler, String base64, boolean compressed, int x, int z, BitSet verticalStripBitmask) {
+        byte[] data = decode(base64, compressed);
+        if (data == null) {
+            return;
+        }
+        LOGGER.info("Artificially handling chunk data of length {} at {}, {}", data.length, x, z);
+        ClientWorld world = networkHandler.getWorld();
+        DynamicRegistryManager registryManager = networkHandler.getRegistryManager();
+        ChunkDataS2CPacket packet = Utils.createEmptyChunkDataPacket(x, z, world, registryManager);
+        IChunkDataS2CPacket iPacket = (IChunkDataS2CPacket) packet;
+        iPacket.multiconnect_setDataTranslated(false);
+        iPacket.setData(data);
+        iPacket.setVerticalStripBitmask(verticalStripBitmask);
+        ChunkDataTranslator.submit(packet);
+    }
+
+    private static byte @Nullable [] decode(String base64, boolean compressed) {
+        byte[] bytes = Base64.getDecoder().decode(base64);
+        if (!compressed) {
+            return bytes;
+        }
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        try (var in = new GZIPInputStream(new ByteArrayInputStream(bytes))) {
+            IOUtils.copy(in, result);
+        } catch (IOException e) {
+            LOGGER.error("Decompression error", e);
+            return null;
+        }
+        return result.toByteArray();
+    }
+
+    public static void onDebugKey() {
+
     }
 
     public static class DebugDecoderHandler extends DecoderHandler {

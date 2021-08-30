@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.util.EightWayDirection;
 import net.minecraft.world.dimension.DimensionType;
 
+import java.util.BitSet;
 import java.util.EnumMap;
 
 public interface IChunkDataS2CPacket {
@@ -15,4 +16,5 @@ public interface IChunkDataS2CPacket {
     EnumMap<EightWayDirection, IntSet> multiconnect_getBlocksNeedingUpdate();
 
     void setData(byte[] data);
+    void setVerticalStripBitmask(BitSet verticalStripBitmask);
 }

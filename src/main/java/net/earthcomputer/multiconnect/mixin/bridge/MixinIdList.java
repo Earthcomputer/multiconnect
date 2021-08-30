@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.protocols.generic.IIdList;
 import net.minecraft.util.collection.IdList;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,7 +21,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Mixin(IdList.class)
-public class MixinIdList<T> implements IIdList {
+public class MixinIdList<T> implements IIdList<T> {
 
     @Shadow private int nextId;
     @Shadow @Final private IdentityHashMap<T, Integer> idMap;
@@ -28,6 +29,8 @@ public class MixinIdList<T> implements IIdList {
 
     @Unique private int minHighIds = Integer.MAX_VALUE;
     @Unique private final Int2ObjectMap<T> highIdsMap = new Int2ObjectOpenHashMap<>();
+
+    @Unique private final ThreadLocal<T> defaultValue = new ThreadLocal<>();
 
     @Redirect(method = "set", at = @At(value = "INVOKE", target = "Ljava/util/IdentityHashMap;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", remap = false))
     private Object redirectSetPut(IdentityHashMap<T, Integer> idMap, T key, Object value) {
@@ -64,7 +67,11 @@ public class MixinIdList<T> implements IIdList {
     @Inject(method = "get", at = @At("RETURN"), cancellable = true)
     private void onGet(int id, CallbackInfoReturnable<T> ci) {
         if (ci.getReturnValue() == null) {
-            ci.setReturnValue(highIdsMap.get(id));
+            T returnValue = highIdsMap.get(id);
+            if (returnValue == null) {
+                returnValue = defaultValue.get();
+            }
+            ci.setReturnValue(returnValue);
         }
     }
 
@@ -90,5 +97,10 @@ public class MixinIdList<T> implements IIdList {
     public Iterable<Integer> multiconnect_ids() {
         return Stream.concat(IntStream.range(0, list.size()).filter(i -> list.get(i) != null).boxed(),
                 highIdsMap.keySet().stream().sorted())::iterator;
+    }
+
+    @Override
+    public void multiconnect_setDefaultValue(@Nullable T defaultValue) {
+        this.defaultValue.set(defaultValue);
     }
 }

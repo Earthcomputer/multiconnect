@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.BitSet;
 import java.util.EnumMap;
 import java.util.List;
 
@@ -91,4 +92,9 @@ public abstract class MixinChunkDataS2C implements IChunkDataS2CPacket {
     @Accessor
     @Mutable
     public abstract void setData(byte[] data);
+
+    @Override
+    @Accessor
+    @Mutable
+    public abstract void setVerticalStripBitmask(BitSet verticalStripBitmask);
 }

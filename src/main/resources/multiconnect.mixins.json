@@ -63,7 +63,8 @@
     "connect.MixinDisconnectedScreen",
     "connect.MixinMinecraftClient",
     "connect.MixinServerList",
-    "connect.MixinServerListIcon"
+    "connect.MixinServerListIcon",
+    "debug.MixinKeyboard"
   ],
   "client": [
   ],

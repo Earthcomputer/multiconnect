@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.protocols.v1_8.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Utils;
-import net.earthcomputer.multiconnect.protocols.generic.IChunkDataS2CPacket;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.PendingFullChunkData;
 import net.earthcomputer.multiconnect.protocols.v1_8.DataTrackerEntry_1_8;
 import net.earthcomputer.multiconnect.protocols.v1_8.Protocol_1_8;
@@ -18,17 +17,11 @@ import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket;
-import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.EulerAngle;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeKeys;
-import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 import org.apache.logging.log4j.LogManager;
@@ -40,8 +33,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Arrays;
-import java.util.EnumMap;
+import java.util.List;
 
 @Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
 public abstract class MixinClientPlayNetworkHandler {
@@ -91,21 +83,7 @@ public abstract class MixinClientPlayNetworkHandler {
                 int x = packet.getX() + dir.getOffsetX();
                 int z = packet.getZ() + dir.getOffsetZ();
                 if (world.getChunk(x, z, ChunkStatus.FULL, false) == null) {
-                    Registry<Biome> biomeRegistry = registryManager.get(Registry.BIOME_KEY);
-                    Biome plainsBiome = biomeRegistry.get(BiomeKeys.PLAINS);
-                    int horizontalSectionCount = MathHelper.log2DeBruijn(16) - 2;
-                    int biomeLength = (1 << (horizontalSectionCount + horizontalSectionCount)) * ((world.getHeight() + 3) / 4);
-
-                    ChunkDataS2CPacket neighborPacket = new ChunkDataS2CPacket(new WorldChunk(world, new ChunkPos(x, z), new BiomeArray(biomeRegistry, world, new int[biomeLength])));
-                    //noinspection ConstantConditions
-                    IChunkDataS2CPacket iPacket = (IChunkDataS2CPacket) neighborPacket;
-                    iPacket.multiconnect_setDataTranslated(true);
-                    iPacket.multiconnect_setDimension(((IChunkDataS2CPacket) packet).multiconnect_getDimension());
-                    iPacket.multiconnect_setBlocksNeedingUpdate(new EnumMap<>(EightWayDirection.class));
-                    Biome[] biomes = new Biome[256];
-                    Arrays.fill(biomes, plainsBiome);
-                    ((net.earthcomputer.multiconnect.protocols.v1_14_4.IChunkDataS2CPacket) iPacket).set_1_14_4_biomeData(biomes);
-                    onChunkData(neighborPacket);
+                    onChunkData(Utils.createEmptyChunkDataPacket(x, z, world, registryManager));
                 }
             }
         }
@@ -118,7 +96,11 @@ public abstract class MixinClientPlayNetworkHandler {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
             Entity entity = world.getEntityById(packet.id());
             if (entity != null) {
-                for (DataTracker.Entry<?> entry : packet.getTrackedValues()) {
+                List<DataTracker.Entry<?>> trackedValues = packet.getTrackedValues();
+                if (trackedValues == null) {
+                    return;
+                }
+                for (DataTracker.Entry<?> entry : trackedValues) {
                     if (!(entry instanceof DataTrackerEntry_1_8 entry_1_8)) {
                         MULTICONNECT_LOGGER.warn("Not handling entity tracker update entry which was not constructed for 1.8");
                         continue;
