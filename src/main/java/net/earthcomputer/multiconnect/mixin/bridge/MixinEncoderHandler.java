@@ -2,6 +2,8 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
+import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
+import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.Packet;
@@ -41,7 +43,8 @@ public class MixinEncoderHandler {
         }
 
         TransformerByteBuf transformerBuf = new TransformerByteBuf(buf, context);
-        transformerBuf.writeTopLevelType(packet.getClass());
+        TypedMap userData = IUserDataHolder.extractUserData(packet);
+        transformerBuf.writeTopLevelType(packet.getClass(), userData);
 
         return transformerBuf;
     }

@@ -1,14 +1,19 @@
 package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
 
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
+import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.CompoundConnector;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.IBlockConnector;
 import net.minecraft.block.Block;
+import net.minecraft.util.EightWayDirection;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class BlockConnections {
+    public static final Key<EnumMap<EightWayDirection, IntSet>> BLOCKS_NEEDING_UPDATE_KEY = Key.create("blocksNeedingUpdate");
+
     private static final NavigableMap<Integer, Map<Block, IBlockConnector>> connectors = new TreeMap<>();
 
     public static void registerConnector(int protocol, IBlockConnector connector) {

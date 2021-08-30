@@ -14,21 +14,23 @@ import net.minecraft.world.chunk.ChunkSection;
 
 import java.util.BitSet;
 
-public final class ChunkData implements IBlockConnectionsBlockView {
+public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHolder {
     private final ChunkSection[] sections;
     private final int minY;
     private final int maxY;
+    private final TypedMap userData;
 
-    private ChunkData(ChunkSection[] sections, int minY, int maxY) {
+    private ChunkData(ChunkSection[] sections, int minY, int maxY, TypedMap userData) {
         this.sections = sections;
         this.minY = minY;
         this.maxY = maxY;
+        this.userData = userData;
     }
 
     @SuppressWarnings("unchecked")
     @ThreadSafe(withGameThread = false)
-    public static ChunkData read(int minY, int maxY, PacketByteBuf buf) {
-        ChunkData data = new ChunkData(new ChunkSection[(maxY + 1 - minY + 15) >> 4], minY, maxY);
+    public static ChunkData read(int minY, int maxY, TypedMap userData, PacketByteBuf buf) {
+        ChunkData data = new ChunkData(new ChunkSection[(maxY + 1 - minY + 15) >> 4], minY, maxY, userData);
         ChunkDataS2CPacket packet = ChunkDataTranslator.current().getPacket();
         BitSet verticalStripBitmask = packet.getVerticalStripBitmask();
 
@@ -118,6 +120,11 @@ public final class ChunkData implements IBlockConnectionsBlockView {
     @Override
     public int getMaxY() {
         return maxY;
+    }
+
+    @Override
+    public TypedMap multiconnect_getUserData() {
+        return userData;
     }
 
     @ThreadSafe(withGameThread = false)

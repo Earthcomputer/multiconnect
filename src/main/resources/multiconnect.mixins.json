@@ -3,6 +3,7 @@
   "package": "net.earthcomputer.multiconnect.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
+    "bridge.ChunkDataPacketAccessor",
     "bridge.ChunkDeltaUpdateS2CAccessor",
     "bridge.DataTrackerAccessor",
     "bridge.DynamicRegistryManagerAccessor",
@@ -44,6 +45,7 @@
     "bridge.MixinStatType",
     "bridge.MixinStatusEffectSpriteManager",
     "bridge.MixinTranslationStorage",
+    "bridge.MixinUserDataHolders",
     "bridge.MixinWorldChunk",
     "bridge.RequiredTagListAccessor",
     "bridge.SpawnEggItemAccessor",

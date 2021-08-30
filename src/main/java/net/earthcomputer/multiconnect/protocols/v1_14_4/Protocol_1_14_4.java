@@ -1,7 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_14_4;
 
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.EndermanEntityAccessor;
@@ -19,6 +18,7 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.EndermanEntity;
@@ -43,6 +43,8 @@ import java.util.List;
 public class Protocol_1_14_4 extends Protocol_1_15 {
 
     public static final TrackedData<Float> OLD_WOLF_HEALTH = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.FLOAT);
+    public static final Key<Biome[]> BIOME_DATA_KEY = Key.create("biomeData");
+    public static final Key<List<DataTracker.Entry<?>>> DATA_TRACKER_ENTRIES_KEY = Key.create("dataTrackerEntries");
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
@@ -67,7 +69,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
                     biomeData[i] = biomeRegistry.get(0); // Some servers send invalid biome IDs... for whatever reason
             }
 
-            ChunkDataTranslator.current().setUserData("biomeData", biomeData);
+            buf.multiconnect_setUserData(BIOME_DATA_KEY, biomeData);
 
             buf.applyPendingReads();
         });
@@ -106,7 +108,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
 
         ProtocolRegistry.registerInboundTranslator(MobSpawnS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            int entityId = buf.readVarInt();
+            buf.readVarInt(); // entity id
             buf.readUuid();
             buf.readVarInt();
             buf.readDouble();
@@ -119,7 +121,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.readShort();
             buf.readShort();
             buf.disablePassthroughMode();
-            PendingDataTrackerEntries.setEntries(entityId, DataTrackerManager.deserializePacket(buf));
+            buf.multiconnect_setUserData(DATA_TRACKER_ENTRIES_KEY, DataTrackerManager.deserializePacket(buf));
             buf.applyPendingReads();
         });
 
@@ -147,7 +149,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
 
         ProtocolRegistry.registerInboundTranslator(PlayerSpawnS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            int entityId = buf.readVarInt();
+            buf.readVarInt(); // entity id
             buf.readUuid();
             buf.readDouble();
             buf.readDouble();
@@ -155,20 +157,9 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
             buf.readByte();
             buf.readByte();
             buf.disablePassthroughMode();
-            PendingDataTrackerEntries.setEntries(entityId, DataTrackerManager.deserializePacket(buf));
+            buf.multiconnect_setUserData(DATA_TRACKER_ENTRIES_KEY, DataTrackerManager.deserializePacket(buf));
             buf.applyPendingReads();
         });
-    }
-
-    @ThreadSafe(withGameThread = false)
-    @Override
-    public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
-        if (translator.isFullChunk()) {
-            Biome[] biomeData = (Biome[]) translator.getUserData("biomeData");
-            ((IChunkDataS2CPacket) translator.getPacket()).set_1_14_4_biomeData(biomeData);
-        }
-
-        super.postTranslateChunk(translator, data);
     }
 
     @Override

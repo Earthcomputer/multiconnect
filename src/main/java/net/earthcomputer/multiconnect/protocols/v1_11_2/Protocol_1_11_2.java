@@ -42,6 +42,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.registry.Registry;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -51,6 +52,8 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
         ProtocolRegistry.registerInboundTranslator(StatisticsS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             int count = buf.readVarInt();
+            PendingAchievements pendingAchievements = new PendingAchievements(new ArrayList<>(), new ArrayList<>());
+            buf.multiconnect_setUserData(PendingAchievements.KEY, pendingAchievements);
             for (int i = 0; i < count; i++) {
                 String stat = buf.readString(32767);
                 int value = buf.readVarInt();
@@ -59,9 +62,9 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
                     Advancement achievement = Achievements_1_11_2.ACHIEVEMENTS.get(achievementId);
                     if (achievement != null) {
                         if (value == 0) {
-                            PendingAchievements.takeAchievement(achievement);
+                            pendingAchievements.toRemove().add(achievement);
                         } else {
-                            PendingAchievements.giveAchievement(achievement);
+                            pendingAchievements.toAdd().add(achievement);
                         }
                     }
                     // invalid stat will be removed by 1.12.2 <-> 1.13 translator

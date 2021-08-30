@@ -16,6 +16,8 @@ import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.bridge.DynamicRegistryManagerImplAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.*;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
+import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.DimensionTypeAccessor;
 import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.InboundTranslator;
@@ -395,9 +397,14 @@ public class Utils {
 
     @ThreadSafe
     public static <T extends Packet<?>> T createPacket(Class<T> packetClass, Function<PacketByteBuf, T> constructor, int protocolVersion, InboundTranslator<T> creator) {
+        TypedMap userData = new TypedMap();
         TransformerByteBuf buf = new TransformerByteBuf(new EmptyByteBuf(ByteBufAllocator.DEFAULT), null)
-                .readTopLevelType(packetClass, protocolVersion, creator);
-        return constructor.apply(buf);
+                .readTopLevelType(packetClass, protocolVersion, creator, userData);
+        T packet = constructor.apply(buf);
+        if (packet instanceof IUserDataHolder holder) {
+            holder.multiconnect_getUserData().putAll(userData);
+        }
+        return packet;
     }
 
     private static final ScheduledExecutorService AUTO_CACHE_CLEAN_EXECUTOR = Executors.newScheduledThreadPool(1);
@@ -534,13 +541,13 @@ public class Utils {
 
         ChunkDataS2CPacket packet = new ChunkDataS2CPacket(new WorldChunk(world, new ChunkPos(x, z), new BiomeArray(biomeRegistry, world, new int[biomeLength])));
         //noinspection ConstantConditions
-        IChunkDataS2CPacket iPacket = (IChunkDataS2CPacket) packet;
-        iPacket.multiconnect_setDataTranslated(true);
-        iPacket.multiconnect_setDimension(world.getDimension());
-        iPacket.multiconnect_setBlocksNeedingUpdate(new EnumMap<>(EightWayDirection.class));
+        IUserDataHolder iPacket = (IUserDataHolder) packet;
+        iPacket.multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, true);
+        iPacket.multiconnect_setUserData(ChunkDataTranslator.DIMENSION_KEY, world.getDimension());
+        iPacket.multiconnect_setUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY, new EnumMap<>(EightWayDirection.class));
         Biome[] biomes = new Biome[256];
         Arrays.fill(biomes, plainsBiome);
-        ((net.earthcomputer.multiconnect.protocols.v1_14_4.IChunkDataS2CPacket) iPacket).set_1_14_4_biomeData(biomes);
+        iPacket.multiconnect_setUserData(Protocol_1_14_4.BIOME_DATA_KEY, biomes);
         return packet;
     }
 }

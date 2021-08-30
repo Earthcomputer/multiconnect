@@ -10,7 +10,9 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.DebugUtils;
 import net.earthcomputer.multiconnect.impl.TestingAPI;
 import net.earthcomputer.multiconnect.impl.Utils;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.PendingFullChunkData;
+import net.earthcomputer.multiconnect.mixin.bridge.ChunkDataPacketAccessor;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -46,6 +48,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ChunkDataTranslator {
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
+    public static Key<Boolean> DATA_TRANSLATED_KEY = Key.create("isDataTranslated", false);
+    public static Key<DimensionType> DIMENSION_KEY = Key.create("dimension");
+
     private static final AtomicBoolean hasDumpedChunkData = new AtomicBoolean(false);
 
     private static ExecutorService executor = createExecutor();
@@ -61,7 +66,6 @@ public class ChunkDataTranslator {
     private final DimensionType dimension;
     private final DynamicRegistryManager registryManager;
     private final List<Packet<ClientPlayPacketListener>> postPackets = new ArrayList<>();
-    private final Map<String, Object> userData = new HashMap<>();
 
     public ChunkDataTranslator(ChunkDataS2CPacket packet, boolean isFullChunk, DimensionType dimension, DynamicRegistryManager registryManager) {
         this.packet = packet;
@@ -76,8 +80,12 @@ public class ChunkDataTranslator {
         executor.submit(new TranslationTask(pos, () -> {
             try {
                 TransformerByteBuf buf = new TransformerByteBuf(Unpooled.wrappedBuffer(data), context);
-                buf.readTopLevelType(packetInfo.getPacketClass());
+                TypedMap userData = new TypedMap();
+                buf.readTopLevelType(packetInfo.getPacketClass(), userData);
                 Packet<?> packet = packetInfo.getFactory().apply(buf);
+                if (packet instanceof IUserDataHolder holder) {
+                    holder.multiconnect_getUserData().putAll(userData);
+                }
                 if (buf.readableBytes() != 0) {
                     throw new IOException("Packet " + packet.getClass().getSimpleName() + " was larger than I expected, found " + buf.readableBytes() + " bytes extra whilst reading packet");
                 }
@@ -103,29 +111,29 @@ public class ChunkDataTranslator {
         assert mc.world != null;
         ClientPlayNetworkHandler networkHandler = mc.getNetworkHandler();
         assert networkHandler != null;
-        boolean isFullChunk = PendingFullChunkData.isFullChunk(new ChunkPos(packet.getX(), packet.getZ()), true);
+        boolean isFullChunk = ((IUserDataHolder) packet).multiconnect_getUserData(Protocol_1_16_5.FULL_CHUNK_KEY);
         DimensionType dimension = mc.world.getDimension();
-        ((IChunkDataS2CPacket) packet).multiconnect_setDimension(dimension);
+        ((IUserDataHolder) packet).multiconnect_setUserData(DIMENSION_KEY, dimension);
         ChunkDataTranslator translator = new ChunkDataTranslator(packet, isFullChunk, dimension, networkHandler.getRegistryManager());
         executor.submit(new TranslationTask(new ChunkPos(packet.getX(), packet.getZ()), () -> {
             try {
                 CURRENT_TRANSLATOR.set(translator);
 
                 TransformerByteBuf buf = new TransformerByteBuf(packet.getReadBuffer(), null);
-                buf.readTopLevelType(ChunkData.class);
-                ChunkData chunkData = ChunkData.read(dimension.getMinimumY(),
-                    dimension.getMinimumY() + dimension.getHeight() - 1, buf);
+                TypedMap userData = ((IUserDataHolder) packet).multiconnect_getUserData();
+                buf.readTopLevelType(ChunkData.class, userData);
+                ChunkData chunkData = ChunkData.read(dimension.getMinimumY(), dimension.getMinimumY() + dimension.getHeight() - 1, userData, buf);
 
                 var blocksNeedingConnectionUpdate = new EnumMap<EightWayDirection, IntSet>(EightWayDirection.class);
                 ConnectionInfo.protocol.getBlockConnector().fixChunkData(chunkData, blocksNeedingConnectionUpdate);
-                ((IChunkDataS2CPacket) packet).multiconnect_setBlocksNeedingUpdate(blocksNeedingConnectionUpdate);
+                ((IUserDataHolder) packet).multiconnect_setUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY, blocksNeedingConnectionUpdate);
 
                 ConnectionInfo.protocol.postTranslateChunk(translator, chunkData);
-                ((IChunkDataS2CPacket) packet).setData(chunkData.toByteArray());
+                ((ChunkDataPacketAccessor) packet).setData(chunkData.toByteArray());
 
                 CURRENT_TRANSLATOR.set(null);
 
-                ((IChunkDataS2CPacket) packet).multiconnect_setDataTranslated(true);
+                ((IUserDataHolder) packet).multiconnect_setUserData(DATA_TRANSLATED_KEY, true);
                 try {
                     networkHandler.onChunkData(packet);
                 } catch (OffThreadException ignore) {
@@ -142,7 +150,9 @@ public class ChunkDataTranslator {
                     DebugUtils.logPacketDisconnectError(
                             packet.getReadBuffer().array(),
                             "Chunk pos: " + packet.getX() + ", " + packet.getZ(),
-                            "Vertical strip bitmask: " + Arrays.toString(packet.getVerticalStripBitmask().toLongArray())
+                            "Vertical strip bitmask: " + Arrays.toString(packet.getVerticalStripBitmask().toLongArray()),
+                            "Dimension has sky light: " + ((IUserDataHolder) packet).multiconnect_getUserData(DIMENSION_KEY).hasSkyLight(),
+                            "Full chunk: " + ((IUserDataHolder) packet).multiconnect_getUserData(Protocol_1_16_5.FULL_CHUNK_KEY)
                     );
                 }
                 LOGGER.error("Failed to translate chunk " + packet.getX() + ", " + packet.getZ(), e);
@@ -179,14 +189,6 @@ public class ChunkDataTranslator {
 
     public List<Packet<ClientPlayPacketListener>> getPostPackets() {
         return postPackets;
-    }
-
-    public Object getUserData(String key) {
-        return userData.get(key);
-    }
-
-    public void setUserData(String key, Object value) {
-        userData.put(key, value);
     }
 
     @SuppressWarnings("unchecked") // some evil stuff

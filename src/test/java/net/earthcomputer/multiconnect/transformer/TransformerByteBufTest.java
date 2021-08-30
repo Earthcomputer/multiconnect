@@ -400,7 +400,7 @@ public class TransformerByteBufTest {
         ByteBuf buf = ByteBufAllocator.DEFAULT.buffer(arr.length);
         buf.writeBytes(bytes);
         TransformerByteBuf transformerBuf = new TransformerByteBuf(buf, null, registry);
-        transformerBuf.readTopLevelType(packetClass);
+        transformerBuf.readTopLevelType(packetClass, null);
         return transformerBuf;
     }
 
@@ -409,7 +409,7 @@ public class TransformerByteBufTest {
                                                  int capacity) {
         ByteBuf buf = ByteBufAllocator.DEFAULT.buffer(capacity, capacity);
         TransformerByteBuf transformerBuf = new TransformerByteBuf(buf, null, registry);
-        transformerBuf.writeTopLevelType(packetClass);
+        transformerBuf.writeTopLevelType(packetClass, null);
         return transformerBuf;
     }
 

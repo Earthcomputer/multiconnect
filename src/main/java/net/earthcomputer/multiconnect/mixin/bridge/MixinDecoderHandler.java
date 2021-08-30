@@ -5,6 +5,8 @@ import io.netty.channel.ChannelHandlerContext;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.INetworkState;
+import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
+import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.DecoderHandler;
@@ -16,6 +18,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -30,6 +33,7 @@ public class MixinDecoderHandler {
     @Unique private final ThreadLocal<ChannelHandlerContext> context = new ThreadLocal<>();
     @Unique private final ThreadLocal<Integer> packetId = new ThreadLocal<>();
     @Unique private final ThreadLocal<Boolean> canceled = new ThreadLocal<>();
+    @Unique private final ThreadLocal<TypedMap> userData = new ThreadLocal<>();
 
     @Inject(method = "decode", at = @At(value = "INVOKE", target = "Lio/netty/channel/ChannelHandlerContext;channel()Lio/netty/channel/Channel;", ordinal = 0, remap = false), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onDecodeHead(ChannelHandlerContext context, ByteBuf buf, List<Object> output, CallbackInfo ci, PacketByteBuf packetBuf, int packetId) {
@@ -60,7 +64,8 @@ public class MixinDecoderHandler {
         }
 
         TransformerByteBuf transformerBuf = new TransformerByteBuf(buf, context);
-        transformerBuf.readTopLevelType(packetInfo.getPacketClass());
+        userData.set(new TypedMap());
+        transformerBuf.readTopLevelType(packetInfo.getPacketClass(), userData.get());
         return transformerBuf;
     }
 
@@ -69,6 +74,15 @@ public class MixinDecoderHandler {
         if (canceled.get()) {
             ci.cancel();
         }
+    }
+
+    @ModifyArg(method = "decode", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", remap = false))
+    private Object onAddPacket(Object packet) {
+        if (packet instanceof IUserDataHolder holder) {
+            holder.multiconnect_getUserData().putAll(userData.get());
+        }
+        userData.set(null);
+        return packet;
     }
 
 }

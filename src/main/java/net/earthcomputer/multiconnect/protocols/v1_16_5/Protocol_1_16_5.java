@@ -61,7 +61,6 @@ import net.minecraft.util.Arm;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
@@ -81,6 +80,8 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
     private static short lastActionId = 0;
 
     private static final TrackedData<Optional<BlockPos>> OLD_SHULKER_ATTACHED_POSITION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.OPTIONAL_BLOCK_POS);
+
+    public static final Key<Boolean> FULL_CHUNK_KEY = Key.create("fullChunk", true);
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
@@ -113,11 +114,11 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         });
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            int x = buf.readInt();
-            int z = buf.readInt();
+            buf.readInt();
+            buf.readInt();
             buf.disablePassthroughMode();
             boolean fullChunk = buf.readBoolean();
-            PendingFullChunkData.setPendingFullChunk(new ChunkPos(x, z), fullChunk);
+            buf.multiconnect_setUserData(FULL_CHUNK_KEY, fullChunk);
             buf.pendingRead(BitSet.class, BitSet.valueOf(new long[] {buf.readVarInt()})); // vertical strip bitmask
             buf.enablePassthroughMode();
             buf.readNbt(); // heightmaps

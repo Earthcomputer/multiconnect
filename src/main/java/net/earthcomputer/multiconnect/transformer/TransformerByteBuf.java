@@ -13,6 +13,8 @@ import net.earthcomputer.multiconnect.impl.AligningFormatter;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
+import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.SharedConstants;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -27,6 +29,7 @@ import net.minecraft.util.math.ChunkSectionPos;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -46,7 +49,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.*;
 
-public final class TransformerByteBuf extends PacketByteBuf {
+public final class TransformerByteBuf extends PacketByteBuf implements IUserDataHolder {
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
     private static final boolean PROFILE_TRANSFORMER = Boolean.getBoolean("multiconnect.profilePacketTransformer");
     private static final Consumer<String> PACKET_DEBUG_OUTPUT;
@@ -94,12 +97,12 @@ public final class TransformerByteBuf extends PacketByteBuf {
         return context.channel().pipeline().get(ClientConnection.class);
     }
 
-    public TransformerByteBuf readTopLevelType(Object type) {
-        return readTopLevelType(type, ConnectionInfo.protocolVersion, buf -> {});
+    public TransformerByteBuf readTopLevelType(Object type, @Nullable TypedMap outUserData) {
+        return readTopLevelType(type, ConnectionInfo.protocolVersion, buf -> {}, outUserData);
     }
 
     @SuppressWarnings("unchecked")
-    public <T> TransformerByteBuf readTopLevelType(Object type, int protocolVersion, InboundTranslator<T> additionalTranslator) {
+    public <T> TransformerByteBuf readTopLevelType(Object type, int protocolVersion, InboundTranslator<T> additionalTranslator, @Nullable TypedMap outUserData) {
         long startTime = PROFILE_TRANSFORMER ? System.nanoTime() : 0;
         transformationEnabled = true;
         writeMode = false;
@@ -119,6 +122,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
                 translator.getRight().onRead(this);
             }
             getStackFrame().version = SharedConstants.getGameVersion().getProtocolVersion();
+            if (outUserData != null) {
+                outUserData.putAll(getStackFrame().userData);
+            }
             if (getStackFrame().traceEnabled) {
                 getStackFrame().endPos = readerIndex();
             }
@@ -139,11 +145,14 @@ public final class TransformerByteBuf extends PacketByteBuf {
     }
 
     @SuppressWarnings("unchecked")
-    public TransformerByteBuf writeTopLevelType(Object type) {
+    public TransformerByteBuf writeTopLevelType(Object type, @Nullable TypedMap userData) {
         long startTime = PROFILE_TRANSFORMER ? System.nanoTime() : 0;
         transformationEnabled = true;
         writeMode = true;
         stack.push(new StackFrame(type, SharedConstants.getGameVersion().getProtocolVersion(), false));
+        if (userData != null) {
+            getStackFrame().userData.putAll(userData);
+        }
         var translators = (List<Pair<Integer, OutboundTranslator<?>>>) (List<?>)
                 translatorRegistry.getOutboundTranslators(type, ConnectionInfo.protocolVersion, SharedConstants.getGameVersion().getProtocolVersion());
         for (var translator : translators) {
@@ -263,6 +272,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
         for (var translator : translators) {
             getStackFrame().version = translator.getLeft();
             value = translator.getRight().translate(value);
+            translator.getRight().storeUserData(value, getStackFrame().userData);
         }
 
         if (!getStackFrame().pendingPendingReads.isEmpty())
@@ -325,7 +335,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
             int ver = entry.getKey();
 
             while (translatorsIndex < translators.size() && translators.get(translatorsIndex).getLeft() >= ver) {
-                value = translators.get(translatorsIndex).getRight().translate(value);
+                OutboundTranslator<T> translator = translators.get(translatorsIndex).getRight();
+                translator.loadUserData(value, getStackFrame().userData);
+                value = translator.translate(value);
                 translatorsIndex++;
             }
             getStackFrame().version = ver;
@@ -349,7 +361,9 @@ public final class TransformerByteBuf extends PacketByteBuf {
         }
 
         for (; translatorsIndex < translators.size(); translatorsIndex++) {
-            value = translators.get(translatorsIndex).getRight().translate(value);
+            OutboundTranslator<T> translator = translators.get(translatorsIndex).getRight();
+            translator.loadUserData(value, getStackFrame().userData);
+            value = translator.translate(value);
         }
         getStackFrame().version = version;
 
@@ -444,6 +458,11 @@ public final class TransformerByteBuf extends PacketByteBuf {
         return stack.peek();
     }
 
+    @Override
+    public TypedMap multiconnect_getUserData() {
+        return getStackFrame().userData;
+    }
+
     private static final class StackFrame {
         final Object type;
         int version;
@@ -451,6 +470,7 @@ public final class TransformerByteBuf extends PacketByteBuf {
         boolean passthroughMode = false;
         final Map<Object, Deque<PendingValue<?>>> pendingPendingReads = new HashMap<>();
         final TreeMap<Integer, Queue<WriteInstruction>> writeInstructions = new TreeMap<>(Comparator.reverseOrder());
+        final TypedMap userData = new TypedMap();
 
         // Debug
         private static final Class<?> DEBUG_TYPE;

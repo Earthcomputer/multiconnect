@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
+import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.earthcomputer.multiconnect.transformer.CustomPayload;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.network.PacketByteBuf;
@@ -18,7 +19,7 @@ public class MixinCustomPayloadS2C {
 
     @Inject(method = "getData", at = @At("RETURN"), cancellable = true)
     private void onRead(CallbackInfoReturnable<PacketByteBuf> ci) {
-        ci.setReturnValue(new TransformerByteBuf(ci.getReturnValue(), null).readTopLevelType(new CustomPayload(channel)));
+        ci.setReturnValue(new TransformerByteBuf(ci.getReturnValue(), null).readTopLevelType(new CustomPayload(channel), IUserDataHolder.extractUserData(this)));
     }
 
 }

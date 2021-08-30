@@ -12,8 +12,9 @@ import net.earthcomputer.multiconnect.mixin.connect.DecoderHandlerAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
-import net.earthcomputer.multiconnect.protocols.generic.IChunkDataS2CPacket;
+import net.earthcomputer.multiconnect.mixin.bridge.ChunkDataPacketAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.IIdList;
+import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
@@ -244,10 +245,10 @@ public class DebugUtils {
         ClientWorld world = networkHandler.getWorld();
         DynamicRegistryManager registryManager = networkHandler.getRegistryManager();
         ChunkDataS2CPacket packet = Utils.createEmptyChunkDataPacket(x, z, world, registryManager);
-        IChunkDataS2CPacket iPacket = (IChunkDataS2CPacket) packet;
-        iPacket.multiconnect_setDataTranslated(false);
-        iPacket.setData(data);
-        iPacket.setVerticalStripBitmask(verticalStripBitmask);
+        ChunkDataPacketAccessor accessor = (ChunkDataPacketAccessor) packet;
+        ((IUserDataHolder) accessor).multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, false);
+        accessor.setData(data);
+        accessor.setVerticalStripBitmask(verticalStripBitmask);
         ChunkDataTranslator.submit(packet);
     }
 

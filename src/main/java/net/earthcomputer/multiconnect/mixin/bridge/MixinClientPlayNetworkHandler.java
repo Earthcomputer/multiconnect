@@ -11,6 +11,7 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Constants;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.*;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.ChunkConnector;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectableChunk;
 import net.minecraft.SharedConstants;
@@ -94,10 +95,10 @@ public class MixinClientPlayNetworkHandler {
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
     private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()) {
-            if (!((IChunkDataS2CPacket) packet).multiconnect_isDataTranslated()) {
+            if (!((IUserDataHolder) packet).multiconnect_getUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY)) {
                 ChunkDataTranslator.submit(packet);
                 ci.cancel();
-            } else if (((IChunkDataS2CPacket) packet).multiconnect_getDimension() != world.getDimension()) {
+            } else if (((IUserDataHolder) packet).multiconnect_getUserData(ChunkDataTranslator.DIMENSION_KEY) != world.getDimension()) {
                 ci.cancel();
             }
         }
@@ -118,7 +119,7 @@ public class MixinClientPlayNetworkHandler {
     private WorldChunk fixChunk(WorldChunk chunk, ChunkDataS2CPacket packet) {
         if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()) {
             if (chunk != null && !Utils.isChunkEmpty(chunk)) {
-                var blocksNeedingUpdate = ((IChunkDataS2CPacket) packet).multiconnect_getBlocksNeedingUpdate();
+                var blocksNeedingUpdate = ((IUserDataHolder) packet).multiconnect_getUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY);
                 ChunkConnector chunkConnector = new ChunkConnector(chunk, ConnectionInfo.protocol.getBlockConnector(), blocksNeedingUpdate);
                 ((IBlockConnectableChunk) chunk).multiconnect_setChunkConnector(chunkConnector);
                 for (Direction side : Direction.Type.HORIZONTAL) {

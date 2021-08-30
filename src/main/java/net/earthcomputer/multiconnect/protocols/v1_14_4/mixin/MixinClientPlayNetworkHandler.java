@@ -3,12 +3,13 @@ package net.earthcomputer.multiconnect.protocols.v1_14_4.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Utils;
+import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.IBiomeStorage_1_14_4;
-import net.earthcomputer.multiconnect.protocols.v1_14_4.IChunkDataS2CPacket;
-import net.earthcomputer.multiconnect.protocols.v1_14_4.PendingDataTrackerEntries;
+import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
 import net.earthcomputer.multiconnect.transformer.UnsignedByte;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.entity.data.DataTracker;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
@@ -32,19 +33,19 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onMobSpawn", at = @At("RETURN"))
     private void onOnMobSpawn(MobSpawnS2CPacket packet, CallbackInfo ci) {
-        applyPendingEntityTrackerValues(packet.getId());
+        applyPendingEntityTrackerValues(packet.getId(), ((IUserDataHolder) packet).multiconnect_getUserData(Protocol_1_14_4.DATA_TRACKER_ENTRIES_KEY));
     }
 
     @Inject(method = "onPlayerSpawn", at = @At("RETURN"))
     private void onOnPlayerSpawn(PlayerSpawnS2CPacket packet, CallbackInfo ci) {
-        applyPendingEntityTrackerValues(packet.getId());
+        applyPendingEntityTrackerValues(packet.getId(), ((IUserDataHolder) packet).multiconnect_getUserData(Protocol_1_14_4.DATA_TRACKER_ENTRIES_KEY));
     }
 
     @ModifyVariable(method = "onChunkData", ordinal = 0, at = @At(value = "STORE", ordinal = 0))
     private WorldChunk setBiomeArray(WorldChunk chunk, ChunkDataS2CPacket packet) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_14_4) {
             if (chunk != null) {
-                Biome[] biomeData = ((IChunkDataS2CPacket) packet).get_1_14_4_biomeData();
+                Biome[] biomeData = ((IUserDataHolder) packet).multiconnect_getUserData(Protocol_1_14_4.BIOME_DATA_KEY);
                 if (biomeData != null) {
                     ((IBiomeStorage_1_14_4) chunk).multiconnect_setBiomeArray_1_14_4(biomeData);
                 }
@@ -54,11 +55,9 @@ public abstract class MixinClientPlayNetworkHandler {
     }
 
     @Unique
-    private void applyPendingEntityTrackerValues(int entityId) {
+    private void applyPendingEntityTrackerValues(int entityId, List<DataTracker.Entry<?>> entries) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_14_4) {
-            var entries = PendingDataTrackerEntries.getEntries(entityId);
             if (entries != null) {
-                PendingDataTrackerEntries.setEntries(entityId, null);
                 var packet = Utils.createPacket(EntityTrackerUpdateS2CPacket.class, EntityTrackerUpdateS2CPacket::new, Protocols.V1_15, buf -> {
                     buf.pendingRead(VarInt.class, new VarInt(entityId));
                     if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {

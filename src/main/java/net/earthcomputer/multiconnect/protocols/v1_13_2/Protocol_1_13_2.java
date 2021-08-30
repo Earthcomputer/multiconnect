@@ -93,6 +93,10 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
     private static SimpleRegistry<EntityType<?>> ENTITY_REGISTRY_1_13;
 
+    private static final Key<byte[][]> BLOCK_LIGHT_KEY = Key.create("blockLight");
+    private static final Key<byte[][]> SKY_LIGHT_KEY = Key.create("skyLight");
+    public static final Key<Difficulty> DIFFICULTY_KEY = Key.create("difficulty");
+
     @Override
     public List<PacketInfo<?>> getClientboundPackets() {
         List<PacketInfo<?>> packets = super.getClientboundPackets();
@@ -145,9 +149,9 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                     }
                 }
             }
-            ChunkDataTranslator.current().setUserData("blockLight", blockLight);
+            buf.multiconnect_setUserData(BLOCK_LIGHT_KEY, blockLight);
             if (ChunkDataTranslator.current().getDimension().hasSkyLight()) {
-                ChunkDataTranslator.current().setUserData("skyLight", skyLight);
+                buf.multiconnect_setUserData(SKY_LIGHT_KEY, skyLight);
             }
             buf.applyPendingReads();
         });
@@ -169,7 +173,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.readUnsignedByte(); // gamemode
             buf.readInt(); // dimension
             buf.disablePassthroughMode();
-            PendingDifficulty.setPendingDifficulty(Difficulty.byOrdinal(buf.readUnsignedByte()));
+            buf.multiconnect_setUserData(DIFFICULTY_KEY, Difficulty.byOrdinal(buf.readUnsignedByte()));
             buf.enablePassthroughMode();
             buf.readUnsignedByte(); // max players
             buf.readString(16); // generator type
@@ -202,7 +206,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             buf.enablePassthroughMode();
             buf.readInt(); // dimension
             buf.disablePassthroughMode();
-            PendingDifficulty.setPendingDifficulty(Difficulty.byOrdinal(buf.readUnsignedByte()));
+            buf.multiconnect_setUserData(DIFFICULTY_KEY, Difficulty.byOrdinal(buf.readUnsignedByte()));
             buf.applyPendingReads();
         });
 
@@ -385,8 +389,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         // Split off into separate light packet
         ChunkDataS2CPacket packet = translator.getPacket();
 
-        byte[][] blockLight = (byte[][]) translator.getUserData("blockLight");
-        byte[][] skyLight = (byte[][]) translator.getUserData("skyLight");
+        byte[][] blockLight = data.multiconnect_getUserData(BLOCK_LIGHT_KEY);
+        byte[][] skyLight = data.multiconnect_getUserData(SKY_LIGHT_KEY);
 
         LightUpdateS2CPacket lightUpdatePacket = Utils.createPacket(LightUpdateS2CPacket.class, LightUpdateS2CPacket::new, Protocols.V1_14, buf -> {
             buf.pendingRead(VarInt.class, new VarInt(packet.getX()));
