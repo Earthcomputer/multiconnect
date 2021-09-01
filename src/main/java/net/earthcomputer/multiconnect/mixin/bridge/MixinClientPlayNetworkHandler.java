@@ -57,7 +57,6 @@ import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.event.GameEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -138,7 +137,6 @@ public class MixinClientPlayNetworkHandler {
         return chunk;
     }
 
-    @Dynamic
     @Inject(method = "method_34007", remap = false, at = @At("RETURN"))
     private void fixDeltaChunk(int flags, BlockPos pos, BlockState state, CallbackInfo ci) {
         Chunk chunk = world.getChunk(pos.getX() >> 4, pos.getZ() >> 4, ChunkStatus.FULL, false);

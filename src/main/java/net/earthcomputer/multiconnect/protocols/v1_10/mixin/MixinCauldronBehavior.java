@@ -30,7 +30,7 @@ public interface MixinCauldronBehavior {
      * @reason Mixin doesn't support @Inject in interfaces yet.
      * @author Earthcomputer
      */
-    @SuppressWarnings({"OverwriteTarget", "target"})
+    @SuppressWarnings("target")
     @Overwrite(remap = false)
     static ActionResult method_32220(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, ItemStack stack) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_10) {
