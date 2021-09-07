@@ -44,9 +44,6 @@
     "fabricloader": ">=0.9.1"
   },
 
-  "__comment__": "breaks is for incompatible, conflicts is for warning",
-  "breaks": {
-  },
   "conflicts": {
     "immersive_portals": "*",
     "optifabric": "*"
