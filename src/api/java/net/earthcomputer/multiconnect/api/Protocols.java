@@ -11,8 +11,6 @@ public class Protocols {
 
     // 1.16.x
     public static final int V1_16_5 = 754;
-    @Deprecated // Same as 1.16.5
-    public static final int V1_16_4 = 754;
     public static final int V1_16_3 = 753;
     public static final int V1_16_2 = 751;
     public static final int V1_16_1 = 736;
