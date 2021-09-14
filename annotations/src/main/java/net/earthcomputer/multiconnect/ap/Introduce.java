@@ -12,6 +12,7 @@ import java.lang.annotation.Target;
 public @interface Introduce {
     boolean booleanValue() default false;
     int[] intValue() default {};
+    double[] doubleValue() default {};
     String[] stringValue() default {};
 
     boolean defaultConstruct() default false;
