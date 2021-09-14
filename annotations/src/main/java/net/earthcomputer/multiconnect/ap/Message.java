@@ -8,5 +8,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface Message {
-    int protocol() default -1;
+    Protocol translateFromNewer() default @Protocol(value = -1, type = Object.class);
+    Protocol translateFromOlder() default @Protocol(value = -1, type = Object.class);
 }

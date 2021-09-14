@@ -40,9 +40,7 @@ public class SPacketSynchronizeRecipes {
         public List<Ingredient> ingredients;
         public CommonTypes.ItemStack result;
 
-        @Argument("width")
-        @Argument("height")
-        public static int computeLength(int width, int height) {
+        public static int computeLength(@Argument("width") int width, @Argument("height") int height) {
             return width * height;
         }
     }

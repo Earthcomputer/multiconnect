@@ -22,7 +22,13 @@ archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
+configurations {
+	multiconnectProcessor
+	annotationProcessor.extendsFrom multiconnectProcessor
+}
+
 sourceSets {
+	generated
 	api
 	tools
 }
@@ -101,6 +107,17 @@ task remapApiJar(type: RemapJarTask, dependsOn: project.apiJar) {
 	addNestedDependencies = false
 }
 
+task generatedJar(type: Jar, dependsOn: generatedClasses) {
+	archiveClassifier = 'generated-dev'
+	from 'LICENSE'
+}
+
+task remapGeneratedJar(type: RemapJarTask, dependsOn: project.generatedJar) {
+	input = generatedJar.archiveFile
+	classifier = 'generated'
+	addNestedDependencies = false
+}
+
 task remapSlimJar(type: RemapJarTask, dependsOn: jar) {
 	input = jar.archiveFile
 	classifier = 'slim'
@@ -139,7 +156,7 @@ repositories {
 
 dependencies {
 	//to change the versions see the gradle.properties file
-	annotationProcessor project(':annotationProcessor')
+	multiconnectProcessor project(':annotationProcessor')
 	implementation project(':annotations')
 
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -148,6 +165,7 @@ dependencies {
 	modRuntime "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	testImplementation "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
+	sourceSets.generated.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 
 	if (true) {
 		modCompileOnly("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
@@ -168,6 +186,8 @@ dependencies {
 
 	implementation sourceSets.api.output
 	include name: file(remapApiJar.archivePath).name.with { it.endsWith('.jar') ? it.substring(0, it.length() - 4) : it }
+	runtimeOnly sourceSets.generated.output
+	include name: file(remapGeneratedJar.archivePath).name.with { it.endsWith('.jar') ? it.substring(0, it.length() - 4) : it }
 
 	sourceSets.test.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
@@ -183,6 +203,28 @@ test {
 	systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
 	systemProperty 'org.junit.TestClassResolver', 'net.earthcomputer.multiconnect.TestingExtension'
 	workingDir 'run'
+}
+
+afterEvaluate {
+	task generateMulticonnectClasses(type: JavaCompile, group: 'build') {
+		source = sourceSets.main.java
+		classpath = configurations.compileClasspath
+		options.annotationProcessorPath = configurations.multiconnectProcessor
+		options.compilerArgs = [
+				'-proc:only',
+				'-processor', 'net.earthcomputer.multiconnect.ap.MulticonnectAP'
+		]
+		destinationDir = sourceSets.generated.java.srcDirs.iterator().next()
+	}
+
+	compileGeneratedJava {
+		dependsOn generateMulticonnectClasses
+		options.warnings = false
+	}
+
+	clean {
+		delete sourceSets.generated.java.srcDirs
+	}
 }
 
 def isBeta = version.contains 'pre'

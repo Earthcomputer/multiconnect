@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.METHOD)
-public @interface Arguments {
-    Argument[] value();
+@Target(ElementType.FIELD)
+public @interface DualIntroduce {
+    Introduce[] value();
 }

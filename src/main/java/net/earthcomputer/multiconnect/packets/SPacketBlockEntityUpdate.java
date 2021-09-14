@@ -19,8 +19,7 @@ public class SPacketBlockEntityUpdate {
     @Datafix(value = DatafixTypes.BLOCK_ENTITY, preprocess = "preprocessBlockEntityData")
     public NbtCompound data;
 
-    @Argument("blockEntityType")
-    public static void preprocessBlockEntityData(NbtCompound data, byte blockEntityType) {
+    public static void preprocessBlockEntityData(NbtCompound data, @Argument("blockEntityType") byte blockEntityType) {
         BlockEntityType<?> type = switch (blockEntityType) {
             case 1 -> BlockEntityType.MOB_SPAWNER;
             case 2 -> BlockEntityType.COMMAND_BLOCK;

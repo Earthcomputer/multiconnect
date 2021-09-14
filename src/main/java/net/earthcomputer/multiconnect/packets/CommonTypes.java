@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.packets;
 
+import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Message;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Registries;
@@ -26,6 +27,7 @@ public class CommonTypes {
 
     @Polymorphic
     @Message
+    @DefaultConstruct(subType = EmptyItemStack.class)
     public static abstract class ItemStack {
         public boolean present;
     }
@@ -40,6 +42,7 @@ public class CommonTypes {
     public static class NonEmptyItemStack extends ItemStack {
         @Registry(Registries.ITEM)
         public int itemId;
+        @DefaultConstruct(intValue = 1)
         public byte count;
         public NbtCompound tag;
     }

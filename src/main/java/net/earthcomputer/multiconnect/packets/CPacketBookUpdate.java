@@ -7,7 +7,7 @@ import java.util.Optional;
 
 @Message
 public class CPacketBookUpdate {
-    public CommonTypes.Hand hand;
+    public int slot;
     public List<String> pages;
     public Optional<String> title;
 }
