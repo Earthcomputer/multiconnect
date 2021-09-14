@@ -1,0 +1,71 @@
+package net.earthcomputer.multiconnect.packets;
+
+import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.OnlyIf;
+import net.earthcomputer.multiconnect.ap.Type;
+import net.earthcomputer.multiconnect.ap.Types;
+
+import java.util.List;
+import java.util.Optional;
+
+@Message
+public class SPacketMapUpdate {
+    public int mapId;
+    public byte scale;
+    public boolean locked;
+    public boolean trackingPosition;
+    public List<Icon> icons;
+    @Type(Types.UNSIGNED_BYTE)
+    public int columns;
+    @OnlyIf(field = "columns", condition = "hasColumns")
+    public byte rows;
+    @OnlyIf(field = "columns", condition = "hasColumns")
+    public byte x;
+    @OnlyIf(field = "columns", condition = "hasColumns")
+    public byte z;
+    @OnlyIf(field = "columns", condition = "hasColumns")
+    public byte[] data;
+
+    private static boolean hasColumns(int columns) {
+        return columns > 0;
+    }
+
+    @Message
+    public static class Icon {
+        public Type type;
+        public byte x;
+        public byte z;
+        public byte direction;
+        public Optional<CommonTypes.Text> displayName;
+
+        public enum Type {
+            PLAYER,
+            FRAME,
+            RED_MARKER,
+            BLUE_MARKER,
+            TARGET_X,
+            TARGET_POINT,
+            PLAYER_OFF_MAP,
+            PLAYER_OFF_LIMITS,
+            MANSION,
+            MONUMENT,
+            BANNER_WHITE,
+            BANNER_ORANGE,
+            BANNER_MAGENTA,
+            BANNER_LIGHT_BLUE,
+            BANNER_YELLOW,
+            BANNER_LIME,
+            BANNER_PINK,
+            BANNER_GRAY,
+            BANNER_LIGHT_GRAY,
+            BANNER_CYAN,
+            BANNER_PURPLE,
+            BANNER_BLUE,
+            BANNER_BROWN,
+            BANNER_GREEN,
+            BANNER_RED,
+            BANNER_BLACK,
+            RED_X,
+        }
+    }
+}

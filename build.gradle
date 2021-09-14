@@ -139,6 +139,9 @@ repositories {
 
 dependencies {
 	//to change the versions see the gradle.properties file
+	annotationProcessor project(':annotationProcessor')
+	implementation project(':annotations')
+
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modCompileOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
