@@ -8,6 +8,7 @@ import net.earthcomputer.multiconnect.protocols.generic.INetworkState;
 import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
+import net.minecraft.SharedConstants;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.DecoderHandler;
 import net.minecraft.network.NetworkSide;
@@ -55,7 +56,9 @@ public class MixinDecoderHandler {
         INetworkState state = (INetworkState) (Object) context.channel().attr(ClientConnection.PROTOCOL_ATTRIBUTE_KEY).get();
         //noinspection ConstantConditions
         var packetInfo = state.getPacketHandlers().get(NetworkSide.CLIENTBOUND).multiconnect_getPacketInfoById(packetId.get());
-        if (ConnectionInfo.protocol.shouldTranslateAsync(packetInfo.getPacketClass())) {
+        boolean versionMismatch = ConnectionInfo.protocolVersion != SharedConstants.getProtocolVersion();
+        
+        if (versionMismatch && ConnectionInfo.protocol.shouldTranslateAsync(packetInfo.getPacketClass())) {
             byte[] data = new byte[buf.readableBytes()];
             buf.readBytes(data);
             ChunkDataTranslator.asyncTranslatePacket(context, packetInfo, data);
