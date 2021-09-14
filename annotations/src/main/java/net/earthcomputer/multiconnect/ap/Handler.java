@@ -6,7 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.FIELD)
-public @interface OnlyIf {
-    String value();
+@Target(ElementType.METHOD)
+public @interface Handler {
+    /**
+     * Required for serverbound handlers, the version before which this packet must be handled
+     */
+    int protocol() default -1;
 }

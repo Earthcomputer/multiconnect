@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.packets;
 
+import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Message;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Type;
@@ -13,20 +14,19 @@ public class SPacketMapUpdate {
     public int mapId;
     public byte scale;
     public boolean locked;
-    public boolean trackingPosition;
-    public List<Icon> icons;
+    public Optional<List<Icon>> icons;
     @Type(Types.UNSIGNED_BYTE)
     public int columns;
-    @OnlyIf(field = "columns", condition = "hasColumns")
+    @OnlyIf("hasColumns")
     public byte rows;
-    @OnlyIf(field = "columns", condition = "hasColumns")
+    @OnlyIf("hasColumns")
     public byte x;
-    @OnlyIf(field = "columns", condition = "hasColumns")
+    @OnlyIf("hasColumns")
     public byte z;
-    @OnlyIf(field = "columns", condition = "hasColumns")
+    @OnlyIf("hasColumns")
     public byte[] data;
 
-    private static boolean hasColumns(int columns) {
+    private static boolean hasColumns(@Argument("columns") int columns) {
         return columns > 0;
     }
 

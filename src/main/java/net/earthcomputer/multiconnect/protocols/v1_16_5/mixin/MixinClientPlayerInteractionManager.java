@@ -2,7 +2,8 @@ package net.earthcomputer.multiconnect.protocols.v1_16_5.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.ClickSlotC2SPacket_1_16_5;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
+import net.earthcomputer.multiconnect.packets.v1_16_5.CPacketClickSlot_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -59,14 +60,8 @@ public class MixinClientPlayerInteractionManager {
                 slotItemBeforeModification = oldItems.get(clickSlot.getSlot());
             }
 
-            packet = new ClickSlotC2SPacket_1_16_5(
-                    clickSlot.getSyncId(),
-                    clickSlot.getSlot(),
-                    clickSlot.getButton(),
-                    clickSlot.getActionType(),
-                    slotItemBeforeModification,
-                    Protocol_1_16_5.nextScreenActionId()
-            );
+            CPacketClickSlot_1_16_5 newPacket = CPacketClickSlot_1_16_5.create(clickSlot.getSyncId(), clickSlot.getSlot(), clickSlot.getButton(), clickSlot.getActionType(), slotItemBeforeModification, Protocol_1_16_5.nextScreenActionId());
+            packet = PacketSystem.asPacket(Protocols.V1_16_5, newPacket);
         }
 
         oldCursorStack = null;

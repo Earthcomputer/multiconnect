@@ -30,6 +30,19 @@ public class CommonTypes {
     @DefaultConstruct(subType = EmptyItemStack.class)
     public static abstract class ItemStack {
         public boolean present;
+
+        public static ItemStack fromMinecraft(net.minecraft.item.ItemStack stack) {
+            if (stack.isEmpty()) {
+                return new EmptyItemStack();
+            } else {
+                NonEmptyItemStack newStack = new NonEmptyItemStack();
+                newStack.present = true;
+                newStack.itemId = net.minecraft.util.registry.Registry.ITEM.getRawId(stack.getItem());
+                newStack.count = (byte) stack.getCount();
+                newStack.tag = stack.getTag() != null ? stack.getTag().copy() : null;
+                return newStack;
+            }
+        }
     }
 
     @Polymorphic(booleanValue = false)

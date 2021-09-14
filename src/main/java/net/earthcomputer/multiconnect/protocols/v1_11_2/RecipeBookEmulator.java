@@ -1,8 +1,10 @@
 package net.earthcomputer.multiconnect.protocols.v1_11_2;
 
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
+import net.earthcomputer.multiconnect.packets.v1_16_5.CPacketClickSlot_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_12.PlaceRecipeC2SPacket_1_12;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.AckScreenActionS2CPacket_1_16_5;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.ClickSlotC2SPacket_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -67,8 +69,10 @@ public class RecipeBookEmulator {
     }
 
     public void onAckScreenAction(AckScreenActionS2CPacket_1_16_5 packet) {
-        short transactionId = packet.getActionId();
+        onAckScreenAction(packet.getActionId(), packet.wasAccepted());
+    }
 
+    public void onAckScreenAction(short transactionId, boolean wasAccepted) {
         var itr = recipeTransactionIdRanges.iterator();
         while (itr.hasNext()) {
             Pair<Short, Short> range = itr.next();
@@ -81,7 +85,7 @@ public class RecipeBookEmulator {
                 insideRange = transactionId >= min && transactionId <= max;
             }
 
-            if (insideRange && !packet.wasAccepted()) {
+            if (insideRange && !wasAccepted) {
                 recipeTransactionIdRanges.clear();
                 resyncContainer();
                 return;
@@ -148,21 +152,21 @@ public class RecipeBookEmulator {
         assert player != null;
 
         // pickup (swap with cursor stack)
-        player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_5(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, clickedStack, Protocol_1_16_5.nextScreenActionId()));
+        PacketSystem.sendToServer(player.networkHandler, Protocols.V1_16_5, CPacketClickSlot_1_16_5.create(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, clickedStack, Protocol_1_16_5.nextScreenActionId()));
 
         // place items
         if (count == clickedStack.getCount()) {
-            player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_5(screenHandler.syncId, toSlot, 0, SlotActionType.PICKUP, placedOn, Protocol_1_16_5.nextScreenActionId()));
+            PacketSystem.sendToServer(player.networkHandler, Protocols.V1_16_5, CPacketClickSlot_1_16_5.create(screenHandler.syncId, toSlot, 0, SlotActionType.PICKUP, placedOn, Protocol_1_16_5.nextScreenActionId()));
         } else {
             for (int i = 0; i < count; i++) {
                 ItemStack existingStack = clickedStack.copy();
                 existingStack.setCount(placedOn.getCount() + i);
-                player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_5(screenHandler.syncId, toSlot, 1, SlotActionType.PICKUP, existingStack, Protocol_1_16_5.nextScreenActionId()));
+                PacketSystem.sendToServer(player.networkHandler, Protocols.V1_16_5, CPacketClickSlot_1_16_5.create(screenHandler.syncId, toSlot, 1, SlotActionType.PICKUP, existingStack, Protocol_1_16_5.nextScreenActionId()));
             }
         }
 
         // return (pickup old cursor stack)
-        player.networkHandler.sendPacket(new ClickSlotC2SPacket_1_16_5(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, screenHandler.getCursorStack(), Protocol_1_16_5.nextScreenActionId()));
+        PacketSystem.sendToServer(player.networkHandler, Protocols.V1_16_5, CPacketClickSlot_1_16_5.create(screenHandler.syncId, fromSlot, 0, SlotActionType.PICKUP, screenHandler.getCursorStack(), Protocol_1_16_5.nextScreenActionId()));
     }
 
     private void resyncContainer() {

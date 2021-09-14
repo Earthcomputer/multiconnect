@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.packets;
 
+import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Message;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Type;
@@ -33,12 +34,12 @@ public class SPacketAdvancementUpdate {
             public FrameType frameType;
             @Type(Types.INT)
             public int flags;
-            @OnlyIf(field = "flags", condition = "hasBackgroundTexture")
+            @OnlyIf("hasBackgroundTexture")
             public Identifier backgroundTexture;
             public float x;
             public float y;
 
-            public static boolean hasBackgroundTexture(int flags) {
+            public static boolean hasBackgroundTexture(@Argument("flags") int flags) {
                 return (flags & 1) != 0;
             }
 
