@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 @Repeatable(DualIntroduce.class)
 public @interface Introduce {
     boolean booleanValue() default false;
-    int[] intValue() default {};
+    long[] intValue() default {};
     double[] doubleValue() default {};
     String[] stringValue() default {};
 

@@ -9,7 +9,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface Polymorphic {
     boolean booleanValue() default false;
-    int[] intValue() default {};
+    long[] intValue() default {};
+    double[] doubleValue() default {};
     String[] stringValue() default {};
     boolean otherwise() default false;
 

@@ -1,8 +1,8 @@
 package net.earthcomputer.multiconnect.packets;
 
+import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.Message;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
-import net.earthcomputer.multiconnect.ap.RemainingBytes;
 import net.minecraft.util.Identifier;
 
 @Message
@@ -19,7 +19,7 @@ public abstract class SPacketCustomPayload {
     @Polymorphic(otherwise = true)
     @Message
     public static class OtherPayload extends SPacketCustomPayload {
-        @RemainingBytes
+        @Length(remainingBytes = true)
         public byte[] payload;
     }
 }

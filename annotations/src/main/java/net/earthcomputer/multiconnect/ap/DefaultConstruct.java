@@ -10,5 +10,8 @@ import java.lang.annotation.Target;
 public @interface DefaultConstruct {
     Class<?> subType() default Object.class;
     boolean booleanValue() default false;
-    int intValue() default 0;
+    long[] intValue() default {};
+    double[] doubleValue() default {};
+    String[] stringValue() default {};
+    String compute() default "";
 }

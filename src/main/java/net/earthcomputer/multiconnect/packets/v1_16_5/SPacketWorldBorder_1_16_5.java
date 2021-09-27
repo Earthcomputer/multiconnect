@@ -23,7 +23,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
         public double newSize;
 
         @Handler
-        public SPacketWorldBorderSizeChanged handle(
+        public static SPacketWorldBorderSizeChanged handle(
                 @Argument("newSize") double newSize,
                 @DefaultConstruct SPacketWorldBorderSizeChanged packet
         ) {
@@ -40,7 +40,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
         public long lerpTime;
 
         @Handler
-        public SPacketWorldBorderInterpolateSize handle(
+        public static SPacketWorldBorderInterpolateSize handle(
                 @Argument("oldSize") double oldSize,
                 @Argument("newSize") double newSize,
                 @Argument("lerpTime") long lerpTime,

@@ -11,4 +11,5 @@ public @interface Length {
     Types type() default Types.VAR_INT;
     int constant() default -1;
     String compute() default "";
+    boolean remainingBytes() default false;
 }

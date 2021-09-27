@@ -9,7 +9,7 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 
 @Message
-public abstract class SPacketParticle {
+public class SPacketParticle {
     @Registry(Registries.PARTICLE_TYPE)
     @Type(Types.INT)
     public int particleId;
