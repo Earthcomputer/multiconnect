@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 
 @Message
@@ -13,6 +14,7 @@ public class SPacketScoreboardObjectiveUpdate {
     public static abstract class Action {
         public Mode mode;
 
+        @NetworkEnum
         public enum Mode {
             CREATE, REMOVE, UPDATE
         }
@@ -30,6 +32,7 @@ public class SPacketScoreboardObjectiveUpdate {
     public static class RemoveAction extends Action {
     }
 
+    @NetworkEnum
     public enum ObjectiveType {
         INTEGER, HEARTS
     }

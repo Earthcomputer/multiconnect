@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 
 import java.util.List;
@@ -82,6 +83,7 @@ public abstract class SPacketPlayerList {
         }
     }
 
+    @NetworkEnum
     public enum Action {
         ADD_PLAYER, UPDATE_GAMEMODE, UPDATE_LATENCY, UPDATE_DISPLAY_NAME, REMOVE_PLAYER
     }

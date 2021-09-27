@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 
 @Message
@@ -14,6 +15,7 @@ public class SPacketScoreboardPlayerUpdate {
         public Mode mode;
         public String objectiveName;
 
+        @NetworkEnum
         public enum Mode {
             UPDATE, REMOVE
         }

@@ -4,6 +4,7 @@ import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
@@ -101,6 +102,7 @@ public abstract class SPacketTitle_1_16_5 {
         }
     }
 
+    @NetworkEnum
     public enum Mode {
         TITLE, SUBTITLE, ACTIONBAR, TIMES, CLEAR, RESET
     }

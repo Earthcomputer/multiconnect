@@ -4,6 +4,7 @@ import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.packets.SPacketWorldBorderCenterChanged;
 import net.earthcomputer.multiconnect.packets.SPacketWorldBorderInitialize;
@@ -137,6 +138,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
         }
     }
 
+    @NetworkEnum
     public enum Mode {
         SET_SIZE, LERP_SIZE, SET_CENTER, INITIALIZE, SET_WARNING_TIME, SET_WARNING_BLOCKS
     }

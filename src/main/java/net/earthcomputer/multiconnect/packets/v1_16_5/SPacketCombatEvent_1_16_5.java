@@ -4,6 +4,7 @@ import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
@@ -17,6 +18,7 @@ import net.earthcomputer.multiconnect.packets.SPacketEnterCombat;
 public abstract class SPacketCombatEvent_1_16_5 {
     public Mode mode;
 
+    @NetworkEnum
     public enum Mode {
         ENTER_COMBAT, END_COMBAT, ENTITY_DIED
     }

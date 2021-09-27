@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.minecraft.util.Identifier;
 
@@ -31,6 +32,7 @@ public abstract class SPacketUnlockRecipes {
     public static class Other extends SPacketUnlockRecipes {
     }
 
+    @NetworkEnum
     public enum Mode {
         INIT, ADD, REMOVE
     }

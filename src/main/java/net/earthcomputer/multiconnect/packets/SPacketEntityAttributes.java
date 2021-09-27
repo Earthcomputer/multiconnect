@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Protocol;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
@@ -29,6 +30,7 @@ public class SPacketEntityAttributes {
             @Type(Types.BYTE)
             public Operation operation;
 
+            @NetworkEnum
             public enum Operation {
                 ADDITION, MULTIPLY_BASE, MULTIPLY_TOTAL
             }

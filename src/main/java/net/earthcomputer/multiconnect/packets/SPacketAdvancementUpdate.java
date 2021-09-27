@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
@@ -43,6 +44,7 @@ public class SPacketAdvancementUpdate {
                 return (flags & 1) != 0;
             }
 
+            @NetworkEnum
             public enum FrameType {
                 TASK, CHALLENGE, GOAL
             }

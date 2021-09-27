@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
@@ -204,6 +205,7 @@ public class CommonTypes {
                 public CommonTypes.Pose value;
             }
 
+            @NetworkEnum
             public enum Handler {
                 BYTE,
                 VAR_INT,
@@ -228,22 +230,27 @@ public class CommonTypes {
         }
     }
 
+    @NetworkEnum
     public enum SoundCategory {
         MASTER, MUSIC, RECORDS, WEATHER, BLOCKS, HOSTILE, NEUTRAL, PLAYERS, AMBIENT, VOICE
     }
 
+    @NetworkEnum
     public enum Hand {
         MAIN_HAND, OFF_HAND
     }
 
+    @NetworkEnum
     public enum Direction {
         DOWN, UP, NORTH, SOUTH, WEST, EAST
     }
 
+    @NetworkEnum
     public enum Pose {
         STANDING, FALL_FLYING, SLEEPING, SWIMMING, SPIN_ATTACK, SNEAKING, DYING, LONG_JUMPING
     }
 
+    @NetworkEnum
     public enum Formatting {
         BLACK,
         DARK_BLUE,

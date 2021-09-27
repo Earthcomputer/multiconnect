@@ -23,6 +23,11 @@ class MulticonnectAP : AbstractProcessor(), ErrorConsumer {
                 PolymorphicProcessor.process(element, this, processingEnv)
             }
         }
+        if (annotations.any { it.qualifiedName.contentEquals(networkEnumName) }) {
+            for (element in roundEnv.getElementsAnnotatedWith(NetworkEnum::class.java)) {
+                NetworkEnumProcessor.process(element, this, processingEnv)
+            }
+        }
         return true
     }
 

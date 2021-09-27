@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 
 import java.util.List;
@@ -15,6 +16,7 @@ public class SPacketTeam {
     public static abstract class Action {
         public Mode mode;
 
+        @NetworkEnum
         public enum Mode {
             CREATE, REMOVE, UPDATE_INFO, ADD_ENTITIES, REMOVE_ENTITIES
         }

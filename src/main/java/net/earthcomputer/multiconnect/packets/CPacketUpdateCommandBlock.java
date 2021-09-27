@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 
 @Message
 public class CPacketUpdateCommandBlock {
@@ -9,6 +10,7 @@ public class CPacketUpdateCommandBlock {
     public Mode mode;
     public byte flags;
 
+    @NetworkEnum
     public enum Mode {
         SEQUENCE, AUTO, REDSTONE
     }

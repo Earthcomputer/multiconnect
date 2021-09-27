@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
@@ -38,6 +39,7 @@ public class SPacketMapUpdate {
         public byte direction;
         public Optional<CommonTypes.Text> displayName;
 
+        @NetworkEnum
         public enum Type {
             PLAYER,
             FRAME,

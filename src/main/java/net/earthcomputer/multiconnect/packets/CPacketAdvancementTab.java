@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.minecraft.util.Identifier;
 
@@ -9,6 +10,7 @@ import net.minecraft.util.Identifier;
 public abstract class CPacketAdvancementTab {
     public Action action;
 
+    @NetworkEnum
     public enum Action {
         OPENED, CLOSED
     }

@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.packets;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Type;
@@ -133,6 +134,7 @@ public class SPacketCommandTree {
     @Message
     public static class StringArgument extends BrigadierArgument {
         public Type type;
+        @NetworkEnum
         public enum Type {
             SINGLE_WORD, QUOTABLE_PHRASE, GREEDY_PHRASE
         }

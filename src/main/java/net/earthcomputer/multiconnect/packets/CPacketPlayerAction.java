@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 
 @Message
 public class CPacketPlayerAction {
@@ -8,6 +9,7 @@ public class CPacketPlayerAction {
     public CommonTypes.BlockPos pos;
     public CommonTypes.Direction face;
 
+    @NetworkEnum
     public enum Action {
         START_DESTROY_BLOCK,
         ABORT_DESTROY_BLOCK,

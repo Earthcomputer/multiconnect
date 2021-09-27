@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 
 @Message
 public class CPacketUpdateStructureBlock {
@@ -21,18 +22,22 @@ public class CPacketUpdateStructureBlock {
     public long seed;
     public byte flags;
 
+    @NetworkEnum
     public enum Action {
         UPDATE, SAVE, LOAD, SCAN
     }
 
+    @NetworkEnum
     public enum Mode {
         SAVE, LOAD, CORNER, DATA
     }
 
+    @NetworkEnum
     public enum Mirror {
         NONE, LEFT_RIGHT, FRONT_BACK
     }
 
+    @NetworkEnum
     public enum Rotation {
         NONE, CLOCKWISE_90, CLOCKWISE_180, COUNTERCLOCKWISE_90
     }

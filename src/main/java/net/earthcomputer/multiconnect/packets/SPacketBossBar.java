@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
@@ -59,10 +60,12 @@ public class SPacketBossBar {
         public int flags;
     }
 
+    @NetworkEnum
     public enum Color {
         PINK, BLUE, RED, GREEN, YELLOW, PURPLE, WHITE
     }
 
+    @NetworkEnum
     public enum Division {
         NONE, SIX_NOTCHES, TEN_NOTCHES, TWELVE_NOTCHES, TWENTY_NOTCHES
     }

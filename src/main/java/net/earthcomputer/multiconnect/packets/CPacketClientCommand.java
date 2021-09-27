@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 
 @Message
 public class CPacketClientCommand {
@@ -8,6 +9,7 @@ public class CPacketClientCommand {
     public Action action;
     public int horseJumpBoost;
 
+    @NetworkEnum
     public enum Action {
         PRESS_SHIFT_KEY,
         RELEASE_SHIFT_KEY,

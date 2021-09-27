@@ -34,6 +34,7 @@ const val MULTICONNECT_USER_DATA_HOLDER = "net.earthcomputer.multiconnect.protoc
 
 val messageName: String = Message::class.java.canonicalName
 val polymorphicName: String = Polymorphic::class.java.canonicalName
+val networkEnumName: String = NetworkEnum::class.java.canonicalName
 
 fun count(vararg values: Boolean): Int {
     return values.count { it }
@@ -52,7 +53,7 @@ fun Element.hasModifier(modifier: Modifier): Boolean {
 }
 
 val Element.isEnum: Boolean
-    get() = (this as? TypeElement)?.kind == ElementKind.ENUM
+    get() = hasAnnotation(NetworkEnum::class)
 
 val Element.isMessage: Boolean
     get() = hasAnnotation(Message::class)

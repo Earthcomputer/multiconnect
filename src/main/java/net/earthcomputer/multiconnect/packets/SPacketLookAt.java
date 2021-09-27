@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
 
 import java.util.Optional;
 
@@ -12,6 +13,7 @@ public class SPacketLookAt {
     public double targetZ;
     public Optional<EntityInfo> entityInfo;
 
+    @NetworkEnum
     public enum EntityAnchor {
         FEET, EYES
     }
