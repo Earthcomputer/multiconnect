@@ -1,10 +1,10 @@
-@file:Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-
 package net.earthcomputer.multiconnect.ap
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.CompositeEncoder
@@ -15,19 +15,32 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
+import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Method
 import javax.lang.model.type.ArrayType
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.full.createType
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.starProjectedType
+import kotlin.reflect.jvm.jvmErasure
 
 object FromRegistrySerializer : AnnotationSerializer<FilledArgument.FromRegistry>(FilledArgument.FromRegistry::class)
+object LengthSerializer : AnnotationSerializer<Length>(Length::class)
+object DefaultConstructSerializer : AnnotationSerializer<DefaultConstruct>(DefaultConstruct::class)
+object IntroduceSerializer : AnnotationSerializer<Introduce>(Introduce::class)
+object PolymorphicSerializer : AnnotationSerializer<Polymorphic>(Polymorphic::class)
 
 abstract class AnnotationSerializer<T: Annotation>(private val clazz: KClass<T>): KSerializer<T> {
     @OptIn(InternalSerializationApi::class)
-    override val descriptor = buildClassSerialDescriptor(clazz.java.simpleName) {
-        for (method in clazz.java.declaredMethods) {
-            element(method.name, method.returnType.kotlin.serializer().descriptor)
+    override val descriptor by lazy {
+        buildClassSerialDescriptor(clazz.java.simpleName) {
+            for (method in clazz.java.declaredMethods) {
+                element(method.name, method.serializer().descriptor, isOptional = true)
+            }
         }
     }
 
@@ -43,8 +56,52 @@ abstract class AnnotationSerializer<T: Annotation>(private val clazz: KClass<T>)
         }
         encoder.encodeStructure(descriptor) {
             for ((index, method) in clazz.java.declaredMethods.withIndex()) {
-                encode(index, method.returnType.kotlin.serializer(), method.invoke(value))
+                val v = surrogateValue(method.kType!!) {
+                    try {
+                        method.invoke(value)
+                    } catch (e: InvocationTargetException) {
+                        throw e.cause ?: e
+                    }
+                }
+                if (v == ""
+                    || (v is List<*> && v.isEmpty())
+                    || (v.javaClass.isArray && java.lang.reflect.Array.getLength(v) == 0)
+                    || (v is DeclaredType && v.hasQualifiedName(JAVA_LANG_OBJECT))) {
+                    continue
+                }
+                encode(index, method.serializer(), v)
             }
+        }
+    }
+
+    @OptIn(InternalSerializationApi::class)
+    private fun Method.serializer(): KSerializer<*> {
+        return JSON.serializersModule.serializer(surrogateType(kType!!))
+    }
+
+    private val Method.kType: KType?
+        get() = declaringClass.kotlin.memberProperties.firstOrNull { it.name == name }?.returnType
+
+    private fun surrogateType(type: KType): KType {
+        return when {
+            type.classifier == Array::class -> List::class.createType(type.arguments)
+            type.jvmErasure == KClass::class -> TypeMirror::class.starProjectedType
+            else -> type
+        }
+    }
+
+    private fun surrogateValue(type: KType, value: () -> Any): Any {
+        return when {
+            type.classifier == Array::class -> {
+                val v = value()
+                (0 until java.lang.reflect.Array.getLength(v)).map {
+                        index -> surrogateValue(type.arguments[0].type!!) { java.lang.reflect.Array.get(v, index) }
+                }
+            }
+            type.jvmErasure == KClass::class -> {
+                toTypeMirror { value() as KClass<*> }
+            }
+            else -> value()
         }
     }
 }
@@ -87,8 +144,23 @@ object DeclaredTypeMirrorSerializer : SerializationStrategy<TypeMirror> {
     }
 }
 
+object ClassSerializer : KSerializer<Class<*>> {
+    override val descriptor = String.serializer().descriptor
+
+    override fun deserialize(decoder: Decoder): Class<*> {
+        throw UnsupportedOperationException()
+    }
+
+    override fun serialize(encoder: Encoder, value: Class<*>) {
+        encoder.encodeString(value.canonicalName)
+    }
+}
+
+@OptIn(ExperimentalSerializationApi::class)
 val JSON = Json {
     prettyPrint = true
+    prettyPrintIndent = " "
+    explicitNulls = false
 
     serializersModule = SerializersModule {
         polymorphic(TypeMirror::class) {
@@ -101,5 +173,13 @@ val JSON = Json {
                 }
             }
         }
+
+        contextual(Class::class, ClassSerializer)
+
+        contextual(FilledArgument.FromRegistry::class, FromRegistrySerializer)
+        contextual(Length::class, LengthSerializer)
+        contextual(DefaultConstruct::class, DefaultConstructSerializer)
+        contextual(Introduce::class, IntroduceSerializer)
+        contextual(Polymorphic::class, PolymorphicSerializer)
     }
 }

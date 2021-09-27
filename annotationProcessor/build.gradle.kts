@@ -20,6 +20,7 @@ dependencies {
         exclude(module = "kotlinx-serialization-properties-native")
         exclude(module = "kotlinx-serialization-protobuf-native")
     }
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.31")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>() {

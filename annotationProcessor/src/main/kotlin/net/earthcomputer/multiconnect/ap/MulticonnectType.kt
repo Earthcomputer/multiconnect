@@ -1,19 +1,22 @@
 package net.earthcomputer.multiconnect.ap
 
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 
+@Serializable
 data class MulticonnectType(
     val realType: TypeMirror,
     val wireType: Types,
     val registry: Registries?,
-    val lengthInfo: Length?,
-    val defaultConstructInfo: DefaultConstruct?,
+    @Contextual val lengthInfo: Length?,
+    @Contextual val defaultConstructInfo: DefaultConstruct?,
     val onlyIf: String?,
     val datafixType: DatafixTypes?,
     val polymorphicBy: String?,
-    val introduce: List<Introduce>
+    val introduce: List<@Contextual Introduce>
 ) {
     fun isConstantRepresentable(): Boolean {
         return realType.kind.isPrimitive

@@ -66,7 +66,7 @@ val Element.isPolymorphicRoot: Boolean
     }
 
 val Element.polymorphicParent: TypeElement?
-    get() = (this as? TypeElement)?.superclass?.asTypeElement()
+    get() = (this as? TypeElement)?.superclass?.asTypeElement()?.takeIf { !it.qualifiedName.contentEquals(JAVA_LANG_OBJECT) }
 
 val TypeElement.recordFields: List<VariableElement>
     get() = enclosedElements.mapNotNull { elt ->

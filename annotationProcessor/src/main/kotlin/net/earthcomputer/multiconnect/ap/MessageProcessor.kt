@@ -17,6 +17,7 @@ object MessageProcessor {
         val translateFromNewer = message.translateFromNewer.takeIf { it.value != -1 }
         val translateFromOlder = message.translateFromOlder.takeIf { it.value != -1 }
 
+        val multiconnectFields = mutableListOf<MulticonnectField>()
         val multiconnectFunctions = mutableListOf<MulticonnectFunction>()
 
         // check type is constructable
@@ -25,6 +26,17 @@ object MessageProcessor {
             if (defaultConstruct == null && !type.isConstructable(processingEnv)) {
                 errorConsumer.report("@Message type must be constructable", type)
                 return
+            }
+            if (type.polymorphicParent != null) {
+                val polymorphic = type.getAnnotation(Polymorphic::class)
+                if (polymorphic != null) {
+                    if (polymorphic.condition.isNotEmpty()) {
+                        val func = type.findMulticonnectFunction(processingEnv, polymorphic.condition)
+                        if (func != null) {
+                            multiconnectFunctions += func
+                        }
+                    }
+                }
             }
         }
 
@@ -80,6 +92,7 @@ object MessageProcessor {
                 errorConsumer.report("Invalid @Message field type", field)
                 continue
             }
+            multiconnectFields += MulticonnectField(field.simpleName.toString(), multiconnectType)
             val deepComponentType = multiconnectType.realType.deepComponentType(processingEnv)
 
             if (!MulticonnectType.isWireTypeCompatible(deepComponentType, multiconnectType.wireType)) {
@@ -250,8 +263,10 @@ object MessageProcessor {
             }
         }
 
-        type.getHandler(processingEnv, errorConsumer, type)?.let { multiconnectFunctions += it }
-        for (partialHandler in type.getPartialHandlers(processingEnv, errorConsumer, type)) {
+        val handler = type.getHandler(processingEnv, errorConsumer, type)
+        handler?.let { multiconnectFunctions += it }
+        val partialHandlers = type.getPartialHandlers(processingEnv, errorConsumer, type)
+        for (partialHandler in partialHandlers) {
             multiconnectFunctions += partialHandler
         }
 
@@ -261,7 +276,15 @@ object MessageProcessor {
             packageName,
             type.qualifiedName.toString().substring(packageName.length + 1) + ".json"
         )
-        val messageType = MessageType(multiconnectFunctions)
+        val messageType = MessageType(
+            multiconnectFields,
+            multiconnectFunctions,
+            type.polymorphicParent?.qualifiedName?.toString(),
+            type.getAnnotation(Polymorphic::class),
+            defaultConstruct,
+            handler?.name,
+            partialHandlers.map { it.name }
+        )
         jsonFile.openWriter().use { writer ->
             writer.write(JSON.encodeToString(messageType))
         }

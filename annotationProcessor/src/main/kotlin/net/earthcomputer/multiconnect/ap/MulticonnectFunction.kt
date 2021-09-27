@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.ap
 
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import javax.lang.model.type.TypeMirror
@@ -29,6 +30,6 @@ sealed class MulticonnectParameter {
     @SerialName("filled")
     class Filled(
         override val paramType: TypeMirror,
-        @Serializable(with = FromRegistrySerializer::class) val fromRegistry: FilledArgument.FromRegistry?
+        @Contextual val fromRegistry: FilledArgument.FromRegistry?
     ): MulticonnectParameter()
 }
