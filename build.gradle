@@ -166,6 +166,7 @@ dependencies {
 	testImplementation "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 	sourceSets.generated.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
+	generatedImplementation sourceSets.main.output
 
 	if (true) {
 		modCompileOnly("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
@@ -206,7 +207,7 @@ test {
 }
 
 afterEvaluate {
-	task generateMulticonnectClasses(type: JavaCompile, group: 'build') {
+	task multiconnectAP(type: JavaCompile, group: 'build') {
 		source = sourceSets.main.java
 		classpath = configurations.compileClasspath
 		options.annotationProcessorPath = configurations.multiconnectProcessor
@@ -214,11 +215,18 @@ afterEvaluate {
 				'-proc:only',
 				'-processor', 'net.earthcomputer.multiconnect.ap.MulticonnectAP'
 		]
-		destinationDir = sourceSets.generated.java.srcDirs.iterator().next()
+		destinationDirectory.set(file("$buildDir/translatorJsons"))
+	}
+
+	task generateTranslators(group: 'build') {
+		dependsOn multiconnectAP
+		dependsOn ':translatorCompiler:compileTranslator'
+		inputs.dir "$buildDir/translatorJsons"
+		outputs.dirs sourceSets.generated.java.srcDirs
 	}
 
 	compileGeneratedJava {
-		dependsOn generateMulticonnectClasses
+		dependsOn generateTranslators
 		options.warnings = false
 	}
 

@@ -13,7 +13,6 @@
     "bridge.MixinAbstractBlockState",
     "bridge.MixinBlock",
     "bridge.MixinBlockColors",
-    "bridge.MixinBlockEntityUpdateS2C",
     "bridge.MixinBlockModels",
     "bridge.MixinChunkDataS2C",
     "bridge.MixinClickSlotC2SPacket",

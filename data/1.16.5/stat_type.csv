@@ -1,0 +1,10 @@
+id name
+0 mined
+1 crafted
+2 used
+3 broken
+4 picked_up
+5 dropped
+6 killed
+7 killed_by
+8 custom

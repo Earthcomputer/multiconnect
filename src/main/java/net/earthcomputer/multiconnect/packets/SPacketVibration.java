@@ -15,7 +15,7 @@ public class SPacketVibration {
     @Polymorphic
     @Message
     public static abstract class PositionSource {
-        @Registry(Registries.POSITION_SOURCE)
+        @Registry(Registries.POSITION_SOURCE_TYPE)
         public Identifier type;
     }
 

@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.packets;
 
+import io.netty.buffer.ByteBuf;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Message;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
@@ -334,5 +335,51 @@ public class CommonTypes {
         @Message
         public static class SimpleParticlePacket extends Particle {
         }
+    }
+
+    public static int readVarInt(ByteBuf buf) {
+        int result = 0;
+        int shift = 0;
+        int b;
+        do {
+            if (shift >= 32) {
+                throw new IndexOutOfBoundsException("varint too big");
+            }
+            b = buf.readUnsignedByte();
+            result |= (b & 0x7f) << shift;
+            shift += 7;
+        } while ((b & 0x80) != 0);
+        return result;
+    }
+
+    public static long readVarLong(ByteBuf buf) {
+        long result = 0;
+        int shift = 0;
+        int b;
+        do {
+            if (shift >= 64) {
+                throw new IndexOutOfBoundsException("varlong too big");
+            }
+            b = buf.readUnsignedByte();
+            result |= (long) (b & 0x7f) << shift;
+            shift += 7;
+        } while ((b & 0x80) != 0);
+        return result;
+    }
+
+    public static void writeVarInt(ByteBuf buf, int value) {
+        do {
+            int bits = value & 0x7f;
+            value >>>= 7;
+            buf.writeByte(bits | ((value != 0) ? 0x80 : 0));
+        } while (value != 0);
+    }
+
+    public static void writeVarLong(ByteBuf buf, long value) {
+        do {
+            int bits = (int) (value & 0x7f);
+            value >>>= 7;
+            buf.writeByte(bits | ((value != 0) ? 0x80 : 0));
+        } while (value != 0);
     }
 }
