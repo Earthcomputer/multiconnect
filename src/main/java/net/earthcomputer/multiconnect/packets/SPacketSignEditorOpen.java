@@ -3,6 +3,6 @@ package net.earthcomputer.multiconnect.packets;
 import net.earthcomputer.multiconnect.ap.Message;
 
 @Message
-public class SPacketOpenSignEditor {
+public class SPacketSignEditorOpen {
     public CommonTypes.BlockPos position;
 }

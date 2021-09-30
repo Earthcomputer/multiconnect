@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
+import com.google.common.base.Equivalence;
 import com.google.common.base.Suppliers;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.IUtils;
@@ -172,14 +173,14 @@ public abstract class AbstractProtocol implements IUtils {
             defaultValue = null;
         }
 
-        for (Map.Entry<Identifier, T> entry : defaultRegistries.defaultIdToEntry.entrySet()) {
-            if (Objects.equals(registry.getId(entry.getValue()), defaultId) && entry.getValue() != defaultValue) {
+        for (Map.Entry<Identifier, Equivalence.Wrapper<T>> entry : defaultRegistries.defaultIdToEntry.entrySet()) {
+            if (Objects.equals(registry.getId(entry.getValue().get()), defaultId) && entry.getValue().get() != defaultValue) {
                 Identifier id = entry.getKey();
                 for (int suffix = 1; registry.containsId(id); suffix++) {
                     id = new Identifier(entry.getKey().getNamespace(), entry.getKey().getPath() + suffix);
                 }
                 RegistryKey<T> key = RegistryKey.of(iregistry.getRegistryKey(), id);
-                iregistry.register(entry.getValue(), iregistry.getNextId(), key, false);
+                iregistry.register(entry.getValue().get(), iregistry.getNextId(), key, false);
             }
         }
     }

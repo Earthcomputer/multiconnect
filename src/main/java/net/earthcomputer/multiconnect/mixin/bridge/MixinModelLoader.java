@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
+import com.google.common.base.Equivalence;
 import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
 import net.minecraft.block.Block;
 import net.minecraft.client.render.model.ModelLoader;
@@ -31,7 +32,12 @@ public class MixinModelLoader {
     @Redirect(method = "method_4736", remap = false, at = @At(value = "INVOKE", remap = true, target = "Lnet/minecraft/util/registry/DefaultedRegistry;get(Lnet/minecraft/util/Identifier;)Ljava/lang/Object;"))
     private static <T> T redirectGet(DefaultedRegistry<T> registry, Identifier id) {
         DefaultRegistries<T> defaultRegistry = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
-        return defaultRegistry != null ? defaultRegistry.defaultIdToEntry.get(id) : registry.get(id);
+        if (defaultRegistry != null) {
+            Equivalence.Wrapper<T> wrapper = defaultRegistry.defaultIdToEntry.get(id);
+            return wrapper != null ? wrapper.get() : null;
+        } else {
+            return registry.get(id);
+        }
     }
 
 }

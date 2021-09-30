@@ -1,0 +1,44 @@
+id name oldName
+0 poof
+1 explosion
+2 explosion_emitter
+3 firework
+4 bubble
+5 splash
+6 fishing
+7 underwater
+8 null depth_suspend
+9 crit
+10 enchanted_hit
+11 smoke
+12 large_smoke
+13 effect
+14 instant_effect
+15 entity_effect
+16 ambient_entity_effect
+17 witch
+18 dripping_water
+19 dripping_lava
+20 angry_villager
+21 happy_villager
+22 mycelium
+23 note
+24 portal
+25 enchant
+26 flame
+27 lava
+28 null footstep
+29 cloud
+30 dust
+31 item_snowball
+32 null snow_shovel
+33 item_slime
+34 heart
+35 barrier
+36 item iconcrack_
+37 block blockcrack_
+38 null blockdust_
+39 rain
+40 null take
+41 elder_guardian
+46 falling_dust

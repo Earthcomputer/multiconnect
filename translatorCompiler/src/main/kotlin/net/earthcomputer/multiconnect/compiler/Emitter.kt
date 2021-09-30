@@ -35,11 +35,11 @@ class Emitter(
     }
 
     fun appendClassName(name: String): Emitter {
-        val packageName = name.packageName
-        if (packageName != "java.lang" && packageName != currentClass.packageName) {
-            imports += name
+        val (packageName, simpleName) = splitPackageClass(name)
+        if (packageName != "java.lang" && packageName != splitPackageClass(currentClass).first) {
+            imports += "$packageName.${simpleName.substringBefore('.')}"
         }
-        this.text.append(name.simpleName)
+        this.text.append(simpleName)
         return this
     }
 
@@ -71,7 +71,7 @@ class Emitter(
     }
 
     fun createClassText() = buildString {
-        val packageName = currentClass.packageName
+        val (packageName, simpleName) = splitPackageClass(currentClass)
         if (packageName.isNotEmpty()) {
             append("package $packageName;\n\n")
         }
@@ -82,18 +82,12 @@ class Emitter(
             append("\n")
         }
         append("@SuppressWarnings(\"all\")\n")
-        append("public class ${currentClass.simpleName} {\n")
+        append("public class $simpleName {\n")
         for (member in members.values) {
             append(member.text).append("\n\n")
         }
         append("}\n")
     }
-
-    private val String.packageName
-        get() = split(".").takeWhile { it[0].isLowerCase() }.joinToString(".")
-
-    private val String.simpleName
-        get() = split(".").dropWhile { it[0].isLowerCase() }.joinToString(".")
 }
 
 typealias ReturnHandler = (() -> Unit) -> Unit

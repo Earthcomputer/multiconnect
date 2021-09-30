@@ -7,6 +7,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.TimeoutException;
 import net.earthcomputer.multiconnect.ap.Registries;
+import net.earthcomputer.multiconnect.api.MultiConnectAPI;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
@@ -46,11 +47,12 @@ import net.minecraft.text.HoverEvent;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -294,9 +296,11 @@ public class DebugUtils {
         dumpPackets(connectionMode, new File(dir, "spackets.csv"), NetworkSide.CLIENTBOUND, "SPacket", "S2CPacket");
         dumpPackets(connectionMode, new File(dir, "cpackets.csv"), NetworkSide.SERVERBOUND, "CPacket", "C2SPacket");
         for (Registries registries : Registries.values()) {
-            Stream<Pair<Integer, String>> entries;
+            Stream<Triple<Integer, String, String>> entries;
             if (registries == Registries.BLOCK_STATE) {
-                entries = StreamSupport.stream(Block.STATE_IDS.spliterator(), false).map(it -> Pair.of(Block.STATE_IDS.getRawId(it), blockStateToString(it)));
+                entries = StreamSupport.stream(Block.STATE_IDS.spliterator(), false)
+                        .filter(it -> MultiConnectAPI.instance().doesServerKnow(Registry.BLOCK, it.getBlock()))
+                        .map(it -> Triple.of(Block.STATE_IDS.getRawId(it), blockStateToString(it), blockStateToString(it)));
             } else {
                 Registry<T> registry;
                 if (registries == Registries.MOTIVE) {
@@ -308,17 +312,30 @@ public class DebugUtils {
                         throw new AssertionError(e);
                     }
                 }
-                entries = registry.stream().map(it -> Pair.of(registry.getRawId(it), Utils.getUnmodifiedName(registry, it).getPath()));
+                entries = registry.stream()
+                        .filter(it -> MultiConnectAPI.instance().doesServerKnow(registry, it))
+                        .map(it -> {
+                            Identifier unmodifiedName = Utils.getUnmodifiedName(registry, it);
+                            Identifier oldName = registry.getId(it);
+                            return Triple.of(registry.getRawId(it), unmodifiedName == null ? "null" : unmodifiedName.getPath(), oldName == null ? "null" : oldName.getPath());
+                        });
             }
             try (PrintWriter pw = new PrintWriter(new FileWriter(new File(dir, registries.name().toLowerCase(Locale.ROOT) + ".csv")))) {
-                pw.println("id name");
-                entries.forEach(it -> pw.println(it.getLeft() + " " + it.getRight()));
+                pw.println("id name oldName");
+                entries.forEach(it -> {
+                    if (it.getMiddle().equals(it.getRight())) {
+                        pw.println(it.getLeft() + " " + it.getMiddle());
+                    } else {
+                        pw.println(it.getLeft() + " " + it.getMiddle() + " " + it.getRight());
+                    }
+                });
             }
         }
     }
 
     public static String blockStateToString(BlockState state) {
-        String result = Utils.getUnmodifiedName(Registry.BLOCK, state.getBlock()).getPath();
+        Identifier unmodifiedName = Utils.getUnmodifiedName(Registry.BLOCK, state.getBlock());
+        String result = unmodifiedName == null ? "null" : unmodifiedName.getPath();
         if (state.getBlock().getStateManager().getProperties().isEmpty()) return result;
         String stateStr = state.getBlock().getStateManager().getProperties().stream().map(it -> it.getName() + "=" + getName(it, state.get(it))).collect(Collectors.joining(","));
         return result + "[" + stateStr + "]";

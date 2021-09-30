@@ -20,6 +20,7 @@ dependencies {
         exclude(module = "kotlinx-serialization-properties-native")
         exclude(module = "kotlinx-serialization-protobuf-native")
     }
+    implementation("com.google.guava:guava:31.0.1-jre")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>() {

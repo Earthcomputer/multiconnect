@@ -17,6 +17,19 @@ object MessageProcessor {
         val translateFromNewer = message.translateFromNewer.takeIf { it.value != -1 }
         val translateFromOlder = message.translateFromOlder.takeIf { it.value != -1 }
 
+        if (translateFromNewer != null) {
+            if (!toTypeMirror { translateFromNewer.type }.isMessage) {
+                errorConsumer.report("translateFromNewer must refer to a @Message type", type)
+                return
+            }
+        }
+        if (translateFromOlder != null) {
+            if (!toTypeMirror { translateFromOlder.type }.isMessage) {
+                errorConsumer.report("translateFromOlder must refer to a @Message type", type)
+                return
+            }
+        }
+
         val multiconnectFields = mutableListOf<MulticonnectField>()
         val multiconnectFunctions = mutableListOf<MulticonnectFunction>()
 
@@ -283,7 +296,9 @@ object MessageProcessor {
             type.getAnnotation(Polymorphic::class),
             defaultConstruct,
             handler?.name,
-            partialHandlers.map { it.name }
+            partialHandlers.map { it.name },
+            translateFromNewer,
+            translateFromOlder
         )
         jsonFile.openWriter().use { writer ->
             writer.write(JSON.encodeToString(messageType))

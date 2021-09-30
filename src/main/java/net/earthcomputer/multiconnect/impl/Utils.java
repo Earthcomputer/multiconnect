@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.impl;
 
+import com.google.common.base.Equivalence;
 import com.google.common.cache.Cache;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -169,10 +170,11 @@ public class Utils {
     }
 
     @SuppressWarnings("unchecked")
+    @Nullable
     public static <T> Identifier getUnmodifiedName(Registry<T> registry, T value) {
         DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
         if (defaultRegistries == null) return registry.getId(value);
-        return defaultRegistries.defaultIdToEntry.inverse().get(value);
+        return defaultRegistries.defaultIdToEntry.inverse().get(Equivalence.identity().wrap(value));
     }
 
     @SuppressWarnings("unchecked")
@@ -207,7 +209,7 @@ public class Utils {
             }
         }
 
-        insertAfter(registry, prevValue, value, defaultRegistries.defaultIdToEntry.inverse().get(value).toString(), inPlace);
+        insertAfter(registry, prevValue, value, defaultRegistries.defaultIdToEntry.inverse().get(Equivalence.identity().wrap(value)).toString(), inPlace);
     }
 
     @SuppressWarnings("unchecked")
