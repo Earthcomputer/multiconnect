@@ -1,0 +1,124 @@
+digraph {
+    subgraph {
+        node [shape=diamond]
+        IsAnnotatedField [label="Is it in a field\nannotated with @DefaultConstruct?"]
+        WhatType [label="What type is it?"]
+        FieldHasComputeFunction [label="Is there a\ncompute function?"]
+        FieldIsMessageType [label="Is it a\nmessage type?"]
+
+        IsInTailrec [label="Is it in a field\nreferencing a message type\nby tail recursion**?"]
+        IsPolymorphicParent [label="Is it a\npolymorphic base?"]
+        PolymorphicParentHasDefaultConstruct [label="Is the message annotated\nwith @DefaultConstruct?"]
+        IsPolymorphicChild [label="Is it a\npolymorphic child?"]
+        IsPolymorphicChildCompute [label="Is the condition for\nthis child a compute\nfunction?"]
+    }
+
+    subgraph {
+        node [shape=box]
+        FieldUseComputeFunction [label="Use compute function"]
+        FieldAssertMessageTypeIsParent [label="Assert type is\npolymorphic base"]
+        FieldUsePolymorphicSubtype [label="Default construct type\nspecified in subType"]
+        FieldUseConstantValue [label="Use specified\nconstant value*"]
+
+        UsePolymorphicSubtype [label="Default construct type\nspecified in subType"]
+        DefaultConstructPolymorphicTypeField [label="Default construct\npolymorphic type\nfield"]
+        PolymorphicTypeFieldConstant [label="Use first specified\nconstant value* for\npolymorphic type\nfield"]
+        DefaultConstructOtherParentFields [label="Default construct\nother parent fields"]
+        DefaultConstructFields [label="Default construct all\nfields in message class"]
+    }
+
+    subgraph {
+        node [shape=box,label="Use null"]
+        Null1
+        Null2
+    }
+
+    IsAnnotatedField -> FieldHasComputeFunction [label="Yes"]
+    FieldHasComputeFunction -> FieldUseComputeFunction [label="Yes"]
+    FieldHasComputeFunction -> FieldIsMessageType [label="No"]
+    FieldIsMessageType -> FieldAssertMessageTypeIsParent [label="Yes"]
+    FieldAssertMessageTypeIsParent -> FieldUsePolymorphicSubtype
+    FieldIsMessageType -> FieldUseConstantValue [label="No"]
+
+    IsAnnotatedField -> WhatType [label="No"]
+
+    WhatType -> IsInTailrec [label="Message"]
+    IsInTailrec -> Null2 [label="Yes"]
+    IsInTailrec -> IsPolymorphicParent [label="No"]
+    IsPolymorphicParent -> PolymorphicParentHasDefaultConstruct [label="Yes"]
+    PolymorphicParentHasDefaultConstruct -> UsePolymorphicSubtype [label="Yes"]
+    PolymorphicParentHasDefaultConstruct -> Null1 [label="No"]
+    IsPolymorphicParent -> IsPolymorphicChild [label="No"]
+    IsPolymorphicChild -> IsPolymorphicChildCompute [label="Yes"]
+    IsPolymorphicChildCompute -> DefaultConstructPolymorphicTypeField [label="Yes"]
+    IsPolymorphicChildCompute -> PolymorphicTypeFieldConstant [label="No"]
+    DefaultConstructPolymorphicTypeField -> DefaultConstructOtherParentFields
+    PolymorphicTypeFieldConstant -> DefaultConstructOtherParentFields
+    DefaultConstructOtherParentFields -> DefaultConstructFields
+    IsPolymorphicChild -> DefaultConstructFields [label="No"]
+
+    WhatType -> UseFirstEnumValueAttach [dir=none]
+    subgraph {
+        rank = same
+        UseFirstEnumValueAttach [shape=point]
+        UseFirstEnumValue [shape=box,label="Use first\nenum value"]
+        UseFirstEnumValueAttach -> UseFirstEnumValue [label="Network Enum"]
+    }
+    UseFirstEnumValueAttach -> UseZeroAttach [dir=none]
+    subgraph {
+        rank = same
+        UseZeroAttach [shape=point]
+        UseZero [shape=box,label="Use 0"]
+        UseZeroAttach -> UseZero [label="Numeric"]
+    }
+    UseZeroAttach -> UseOptionalEmptyAttach [dir=none]
+    subgraph {
+        rank = same
+        UseOptionalEmptyAttach [shape=point]
+        UseOptionalEmpty [shape=box,label="Use empty()"]
+        UseOptionalEmptyAttach -> UseOptionalEmpty [label="Optional\nOptionalInt\nOptionalLong"]
+    }
+    UseOptionalEmptyAttach -> UseEmptyArrayAttach [dir=none]
+    subgraph {
+        rank = same
+        UseEmptyArrayAttach [shape=point]
+        UseEmptyArray [shape=box,label="Use empty array"]
+        UseEmptyArrayAttach -> UseEmptyArray [label="Array"]
+    }
+    UseEmptyArrayAttach -> UseArrayListAttach [dir=none]
+    subgraph {
+        rank = same
+        UseArrayListAttach [shape=point]
+        UseArrayList [shape=box,label="new ArrayList<>()"]
+        UseArrayListAttach -> UseArrayList [label="List"]
+    }
+    UseArrayListAttach -> UseIntArrayListAttach [dir=none]
+    subgraph {
+        rank = same
+        UseIntArrayListAttach [shape=point]
+        UseIntArrayList [shape=box,label = "new IntArrayList()"]
+        UseIntArrayListAttach -> UseIntArrayList [label="IntList"]
+    }
+    UseIntArrayListAttach -> UseLongArrayListAttach [dir=none]
+    subgraph {
+        rank = same
+        UseLongArrayListAttach [shape=point]
+        UseLongArrayList [shape=box,label = "new LongArrayList()"]
+        UseLongArrayListAttach -> UseLongArrayList [label="LongList"]
+    }
+    UseLongArrayListAttach -> UseBitSetAttach [dir=none]
+    subgraph {
+        rank = same
+        UseBitSetAttach [shape=point]
+        UseBitSet [shape=box,label = "new BitSet()"]
+        UseBitSetAttach -> UseBitSet [label="BitSet"]
+    }
+    UseBitSetAttach -> OtherwiseAttach [dir=none]
+    subgraph {
+        rank = same
+        OtherwiseAttach [shape=point]
+        Otherwise [shape=box,label="Use null"]
+        OtherwiseAttach -> Otherwise [label="Otherwise"]
+    }
+
+}
