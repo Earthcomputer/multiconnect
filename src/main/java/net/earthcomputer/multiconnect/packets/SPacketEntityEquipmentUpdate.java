@@ -9,7 +9,7 @@ public class SPacketEntityEquipmentUpdate {
     public int entityId;
     public Entry firstEntry;
 
-    @Message
+    @Message(tailrec = true)
     public static class Entry {
         public byte slot;
         public CommonTypes.ItemStack stack;

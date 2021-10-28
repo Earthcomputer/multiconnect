@@ -14,7 +14,9 @@ class MessageType @OptIn(ExperimentalSerializationApi::class) constructor(
     @Contextual val defaultConstruct: DefaultConstruct?,
     val handler: String?,
     val partialHandlers: List<String>,
-    @Contextual val translateFromNewer: Protocol?,
-    @Contextual val translateFromOlder: Protocol?,
+    val variantOf: String?,
+    val minVersion: Int?,
+    val maxVersion: Int?,
+    val tailrec: Boolean = false,
     @EncodeDefault(EncodeDefault.Mode.ALWAYS) val type: String = "message"
 )

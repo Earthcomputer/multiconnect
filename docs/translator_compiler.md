@@ -98,7 +98,48 @@ Translator types have default ways of being default constructed:
 \* - see [constants](#constants).  
 \*\* - see [tail recursion](#tail-recursion).
 
-### Message Translation
+## Message Translation
+Message translation is defined between two versions. Let's call these versions *A* and *B*, so that the message is being translated from version *A* to version *B*. If *A* < *B*, then the message must be clientbound (an smessage), and if *A* > *B*, then the message must be serverbound (a cmessage).
+
+### Message Variants
+
+A message may have one or more *variants*. A variant is the structure of a message for a particular version range. A message must have variants that support all versions that multiconnect supports, between the message's minimum supported version and its maximum supported version. To translate a message from *A* to *B*, it is required that both *A* and *B* are within the supported range of the message.
+
+By default, a message is a variant of itself. This can be changed by setting the `variantOf` attribute in the `@Message` annotation. By convention, messages will be variants of the latest message in the group.
+
+A message variant should declare the version range it supports by setting the `minVersion` and `maxVersion` attributes in the `@Message` annotation. If the `minVersion` attribute is absent, then it defaults to the minimum version that multiconnect supports. If the `maxVersion` attribute is absent, then it defaults to the newest version that multiconnect supports. It is an error for multiple variants of the same message to support the same version. It is an error for a message variant to declare support for a version without being used on that version.
+
+### Translation Steps
+
+The message is translated from *A* to *B* in the following phases:
+
+![Message Translation Diagram](message_translation.svg)
+
+where *C* is the version closest to *B* supported by the variant which supports *A*, and *D* is the version closest to *A* supported the variant which supports *B*.
+
+Record Translation is the process of translating all record fields of the message from *A* to *C* or from *D* to *B*. Record fields which are themselves messages are translated as per the normal message translation strategy, except without the pre-translation and post-translation steps. All other record fields are left untouched.
+
+Variant Conversion is the process of converting the message between two adjacent variants, from the variant that supports *A* up until the variant that supports *B*. This is the most complex part of translation and deserves a separate category.
+
+Pre- and Post-Translation applies recursively on this message and all messages contained in its record fields. Pre-Translation only applies in the clientbound direction on packets received from the server before they are translated. Post-Translation only applies in the serverbound direction on packets before they are sent to the server after they have been translated. These steps are used for [registry translation](#registry-translation).
+
+### Variant Conversion
+A variant conversion converts between *adjacent* versions *X* to *Y*, where the message variant that supports *X* is different from the variant which supports *Y*.
+
+There must be a way to fill in every record field in the *Y* variant. There are two ways to fill in a field:
+
+- Automatic transfer - take the value from a record field with the same name in the *X* variant. This value may be coerced if necessary.
+  - All primitive types can be coerced to each other by a simple type cast.
+  - Container types (optionals, lists and arrays) can be coerced in the natural way if the element type is coercible.
+  - Lists and arrays can be coerced to each other.
+  - Two message types which are variants of the same message may be coerced using message translation without pre- and post-translation.
+  - If the type is the same but the wire type is different, then variant conversion causes the field to be decoded and recoded if it wasn't otherwise. This includes the length of a list or array.
+- Introduction - annotating a field with `@Introduce` allows you to specify custom logic for what to fill this field with. You can set a [constant value](#constants), fill the field with a [default constructed](#default-construction) value, or specify a custom [multiconnect function](#multiconnect-functions) to compute the value to fill. Unlike most other multiconnect functions, the *context message* of this function will be message *X*, not message *Y*, allowing you to use values from removed fields.
+
+It is okay if a field in message *X* is not used for filling message *Y*. Such fields will simply be ignored and removed. 
+
+### Registry Translation
+Registry translation may occur on raw IDs or on `Identifier` IDs. Most IDs are known at compile time. The exception is multiconnect-added entries representing entries that were removed in vanilla. These entries are registered at game start and raw IDs may change when joining a singleplayer world or when joining a Fabric server due to Fabric registry sync. `Identifier` IDs and raw IDs of vanilla entries are never dynamic in this way.
 
 ## Packets
 Packets undergo normal [message translation](#message-translation), in addition to a few extra things. This section details those extra things.
@@ -106,16 +147,87 @@ Packets undergo normal [message translation](#message-translation), in addition 
 Packets are not allowed to be polymorphic.
 
 The list of packets for each version is defined in `data/<version>/cpackets.csv` for serverbound packets and `data/<version>/spackets.csv` for clientbound packets. These files define the packet ID in that version, followed by the [message class](#messages) for the packet on that version. 
-- For every supported server version, a clientbound translator is generated for every spacket that servers of that version might send (every packet in that version's spackets file), and for spackets in later versions marked as [sendable](#sendable). 
-- For every supported server version, a serverbound translator is generated for every cpacket that clients of the latest version might send (every packet in the latest version's cpackets file), and for cpackets in versions greater than or equal to the server version that are marked as [sendable](#sendable).
+- For every supported server version, a clientbound [buffer translator](#buffer-translators) is generated for every spacket that servers of that version might send (every packet in that version's spackets file). 
+- For every supported server version, a serverbound [buffer translator](#buffer-translators) is generated for every cpacket that clients of the latest version might send (every packet in the latest version's cpackets file).
+- For every spacket annotated with a `@Sendable` annotation, [explicit translators](#explicit-translators) are generated. See [`@Sendable`](#sendable).
 
 ### Packet Handlers
 Every packet must have some way of being handled. There are two ways that a packet can be handled.
 
 - Fallthrough - the packet is translated into the target version and serialized into the ByteBuf (if it was even deserialized in the first place). This type of handling is implicit and requires no explicit markers.
-- Explicit handlers - a [multiconnect function](#multiconnect-functions) annotated with `@Handler` in any packet class along the chain will be called instead of the packet being translated past the version the handler is declared in. The handler may return `void` for no further processing, or it may return a packet type from the next version in the chain and continue translating from there, or finally it may return a list of such packets, which will be translated and handled in order.
+- Explicit handlers - a [multiconnect function](#multiconnect-functions) annotated with `@Handler` in any packet class along the chain will be called instead of the packet being translated past the version the handler is declared in. The handler may return `void` for no further processing, or it may return a packet type from the next version in the chain and continue translating from there, or finally it may return a list of such packets, which will be translated and handled in order. The handler may also be marked with a protocol. This specifies the minimum server version (for spackets) or maximum server version (for cpackets) that this handler is applied on. Otherwise it is ignored.
 
 ### Partial Packet Handlers
 In addition to handlers, packets may also have partial handlers which don't stop further translation of the packet. Partial handlers are [multiconnect functions](#multiconnect-functions) annotated with `@PartialHandler` in the packet classes. They are called as the packet is translated past the version they are defined for.
 
 ### `@Sendable`
+A packet is *sendable* if it is annotated with the `@Sendable` annotation. Such packets can be sent explicitly from other areas of multiconnect code, as well as from within the translation code, by constructing an instance of the packet class and running it through the [explicit translator](#explicit-translators). Packets can be sent to either the current client or to the server.
+
+Sendable packets declare one or more versions they can be sent in. These versions must be supported by that message variant.
+
+- For sendable cpackets, an explicit translator is generated for every supported server version less than or equal to the declared sendable version. The packet can't be sent when the actual server version is greater than the version the packet is sent in.
+- For sendable spackets, a single explicit translator is generated to translate the packet to the latest version.
+
+## Optimization
+
+### Buffer Translators
+A buffer translator takes a buffer as input and gives a buffer as output. All the fields directly or indirectly required for translation are read from the buffer, and the rest are directly copied as raw data from the input buffer to the output buffer.
+
+For recursive objects where only its record fields need translating, the pattern looks like:
+```java
+boolean condition;
+do {
+    // read record fields
+    condition = ...;
+} while (condition);
+```
+
+For recursive objects where the object itself is required, the read pattern looks like:
+```java
+// if non-polymorphic
+MyObject rootObj = new MyObject();
+// else
+int polymorphicFieldType = readVarInt(buf);
+MyObject rootObj = switch (polymorphicFieldType) {
+    case 0 -> ...;
+    case 1 -> ...;
+        ...
+    default -> throw ...;
+}
+rootObj.polymorphicFieldType = polymorphicFieldType;
+//endif
+MyObject obj = rootObj;
+while (true) {
+    // read record fields to obj
+    if (condition) {
+        // if non-polymorphic
+        MyObject nextObj = new MyObject();
+        // else
+        int polymorphicFieldType = readVarInt(buf);
+        MyObject nextObj = switch (polymorphicFieldType) {
+            case 0 -> ...;
+            case 1 -> ...;
+                ...
+            default -> throw ...;
+        }
+        nextObj.polymorphicFieldType = polymorphicFieldType;
+        //endif
+        obj.next = nextObj;
+        obj = nextObj;
+    } else {
+        break;
+    }
+}
+```
+
+And the write pattern looks like:
+```java
+MyObject obj = rootObj;
+do {
+    // write record fields of obj
+    obj = obj.next;
+} while (obj != null);
+```
+
+### Explicit Translators
+Explicit translators take a message object as input and output a buffer. It is mostly the same as buffer translator, except that all fields are already read, so no direct copying is allowed.

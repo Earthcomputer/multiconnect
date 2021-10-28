@@ -8,6 +8,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface Message {
-    Protocol translateFromNewer() default @Protocol(value = -1, type = Object.class);
-    Protocol translateFromOlder() default @Protocol(value = -1, type = Object.class);
+    Class<?> variantOf() default Object.class;
+    int minVersion() default -1;
+    int maxVersion() default -1;
+    boolean tailrec() default false;
 }

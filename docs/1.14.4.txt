@@ -1,4 +1,0 @@
-Changes compared to 1.14.3:
-- Protocol version updated 490 -> 498
-- Packet BlockPlayerActionS2CPacket added (no action needed)
-- TradeOffer has an extra int field at the end, for demand bonus

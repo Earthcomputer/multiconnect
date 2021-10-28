@@ -1,6 +1,10 @@
 package net.earthcomputer.multiconnect.packets;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.EncoderException;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Message;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
@@ -10,7 +14,13 @@ import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtTagSizeTracker;
+import net.minecraft.network.PacketByteBuf;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.BitSet;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.UUID;
@@ -63,7 +73,7 @@ public class CommonTypes {
     }
 
     @Polymorphic
-    @Message
+    @Message(tailrec = true)
     public static abstract class EntityTrackerEntry {
         @Type(Types.UNSIGNED_BYTE)
         public int field;
@@ -367,6 +377,47 @@ public class CommonTypes {
         return result;
     }
 
+    public static String readString(ByteBuf buf) {
+        int length = readVarInt(buf);
+        if (length > PacketByteBuf.DEFAULT_MAX_STRING_LENGTH * 4) {
+            throw new DecoderException("The received encoded string buffer length is longer than maximum allowed (" + length + " > " + PacketByteBuf.DEFAULT_MAX_STRING_LENGTH * 4 + ")");
+        } else if (length < 0) {
+            throw new DecoderException("The received encoded string buffer length is less than zero! Weird string!");
+        }
+        String string = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
+        buf.readerIndex(buf.readerIndex() + length);
+        if (string.length() > PacketByteBuf.DEFAULT_MAX_STRING_LENGTH) {
+            throw new DecoderException("The received string length is longer than maximum allowed (" + length + " > " + PacketByteBuf.DEFAULT_MAX_STRING_LENGTH + ")");
+        }
+        return string;
+    }
+
+    public static NbtCompound readNbtCompound(ByteBuf buf) {
+        int index = buf.readerIndex();
+        byte b = buf.readByte();
+        if (b == 0) {
+            return null;
+        }
+        buf.readerIndex(index);
+        try {
+            return NbtIo.read(new ByteBufInputStream(buf), new NbtTagSizeTracker(2097152));
+        } catch (IOException e) {
+            throw new DecoderException(e);
+        }
+    }
+
+    public static BitSet readBitSet(ByteBuf buf) {
+        int length = readVarInt(buf);
+        if (length > buf.readableBytes() / 8) {
+            throw new DecoderException("LongArray with size " + length + " is bigger than allowed " + buf.readableBytes() / 8);
+        }
+        long[] array = new long[length];
+        for (int i = 0; i < length; i++) {
+            array[i] = buf.readLong();
+        }
+        return BitSet.valueOf(array);
+    }
+
     public static void writeVarInt(ByteBuf buf, int value) {
         do {
             int bits = value & 0x7f;
@@ -381,5 +432,31 @@ public class CommonTypes {
             value >>>= 7;
             buf.writeByte(bits | ((value != 0) ? 0x80 : 0));
         } while (value != 0);
+    }
+
+    public static void writeString(ByteBuf buf, String value) {
+        byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
+        writeVarInt(buf, bytes.length);
+        buf.writeBytes(bytes);
+    }
+
+    public static void writeNbtCompound(ByteBuf buf, NbtCompound value) {
+        if (value == null) {
+            buf.writeByte(0);
+        } else {
+            try {
+                NbtIo.write(value, new ByteBufOutputStream(buf));
+            } catch (IOException e) {
+                throw new EncoderException(e);
+            }
+        }
+    }
+
+    public static void writeBitSet(ByteBuf buf, BitSet value) {
+        long[] longs = value.toLongArray();
+        writeVarInt(buf, longs.length);
+        for (long element : longs) {
+            buf.writeLong(element);
+        }
     }
 }

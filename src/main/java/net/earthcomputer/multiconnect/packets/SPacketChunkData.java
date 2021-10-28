@@ -7,18 +7,16 @@ import net.earthcomputer.multiconnect.ap.DatafixTypes;
 import net.earthcomputer.multiconnect.ap.Datafix;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Message;
-import net.earthcomputer.multiconnect.ap.Protocol;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.packets.v1_16_5.SPacketChunkData_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.minecraft.nbt.NbtCompound;
 
 import java.util.BitSet;
 import java.util.List;
 
-@Message(translateFromOlder = @Protocol(value = Protocols.V1_16_5, type = SPacketChunkData_1_16_5.class))
+@Message(minVersion = Protocols.V1_17)
 public class SPacketChunkData {
     @Type(Types.INT)
     public int x;

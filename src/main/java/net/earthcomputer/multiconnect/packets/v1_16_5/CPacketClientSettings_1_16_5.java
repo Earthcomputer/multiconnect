@@ -1,13 +1,12 @@
 package net.earthcomputer.multiconnect.packets.v1_16_5;
 
 import net.earthcomputer.multiconnect.ap.Message;
-import net.earthcomputer.multiconnect.ap.Protocol;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketClientSettings;
 
-@Message(translateFromNewer = @Protocol(value = Protocols.V1_17, type = CPacketClientSettings.class))
+@Message(variantOf = CPacketClientSettings.class, maxVersion = Protocols.V1_16_5)
 public class CPacketClientSettings_1_16_5 {
     public String language;
     public byte renderDistance;

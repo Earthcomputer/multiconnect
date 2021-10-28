@@ -131,7 +131,7 @@ fun TypeElement.isConstructable(processingEnv: ProcessingEnvironment): Boolean {
 fun TypeElement.findMulticonnectFunction(
     processingEnv: ProcessingEnvironment,
     name: String,
-    argumentResolveContext: TypeElement = this,
+    argumentResolveContext: TypeElement? = this,
     errorConsumer: ErrorConsumer? = null,
     errorElement: Element? = null
 ): MulticonnectFunction? {
@@ -173,7 +173,7 @@ fun TypeElement.findMulticonnectFunction(
             1 -> {
                 when {
                     argument != null -> {
-                        if (!argumentResolveContext.allRecordFields.any { it.simpleName.contentEquals(argument.value) }) {
+                        if (argumentResolveContext != null && !argumentResolveContext.allRecordFields.any { it.simpleName.contentEquals(argument.value) }) {
                             errorConsumer?.report("Could not resolve argument \"${argument.value}\"", parameter)
                             return null
                         }

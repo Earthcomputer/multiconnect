@@ -5,7 +5,6 @@ import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Message;
-import net.earthcomputer.multiconnect.ap.Protocol;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketBookUpdate;
@@ -18,7 +17,7 @@ import net.minecraft.nbt.NbtString;
 import java.util.List;
 import java.util.Optional;
 
-@Message(translateFromNewer = @Protocol(value = Protocols.V1_17_1, type = CPacketBookUpdate.class))
+@Message(variantOf = CPacketBookUpdate.class, maxVersion = Protocols.V1_17)
 public class CPacketBookUpdate_1_17 {
     @Introduce(compute = "computeStack")
     public CommonTypes.ItemStack stack;

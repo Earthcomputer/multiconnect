@@ -11,7 +11,7 @@ import net.minecraft.screen.slot.SlotActionType;
 
 import java.util.List;
 
-@Message
+@Message(minVersion = Protocols.V1_17_1)
 public class CPacketClickSlot {
     @Type(Types.UNSIGNED_BYTE)
     public int syncId;

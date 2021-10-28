@@ -14,20 +14,23 @@ object MessageProcessor {
     fun process(type: Element, errorConsumer: ErrorConsumer, processingEnv: ProcessingEnvironment) {
         if (type !is TypeElement) return
         val message = type.getAnnotation(Message::class) ?: return
-        val translateFromNewer = message.translateFromNewer.takeIf { it.value != -1 }
-        val translateFromOlder = message.translateFromOlder.takeIf { it.value != -1 }
+        val variantOf = toTypeMirror { message.variantOf }.takeIf { !it.hasQualifiedName(JAVA_LANG_OBJECT) }
+        val minVersion = message.minVersion.takeIf { it != -1 }
+        val maxVersion = message.maxVersion.takeIf { it != -1 }
 
-        if (translateFromNewer != null) {
-            if (!toTypeMirror { translateFromNewer.type }.isMessage) {
-                errorConsumer.report("translateFromNewer must refer to a @Message type", type)
+        if (variantOf != null) {
+            if (!variantOf.isMessage) {
+                errorConsumer.report("variantOf must refer to a @Message type", type)
+                return
+            }
+            if (!toTypeMirror { variantOf.asTypeElement()?.getAnnotation(Message::class)?.variantOf!! }.hasQualifiedName(JAVA_LANG_OBJECT)) {
+                errorConsumer.report("variantOf cannot refer to a type which is a variant of another type", type)
                 return
             }
         }
-        if (translateFromOlder != null) {
-            if (!toTypeMirror { translateFromOlder.type }.isMessage) {
-                errorConsumer.report("translateFromOlder must refer to a @Message type", type)
-                return
-            }
+        if (minVersion != null && maxVersion != null && maxVersion < minVersion) {
+            errorConsumer.report("maxVersion < minVersion", type)
+            return
         }
 
         val multiconnectFields = mutableListOf<MulticonnectField>()
@@ -249,32 +252,45 @@ object MessageProcessor {
                 continue
             }
             for (introduce in multiconnectType.introduce) {
-                if (introduce.direction == Introduce.Direction.AUTO && translateFromNewer != null && translateFromOlder != null) {
-                    errorConsumer.report("Ambiguous AUTO @Introduce direction", field)
-                    continue@fieldLoop
-                }
-                val translateFromType = when (introduce.direction) {
-                    Introduce.Direction.AUTO -> translateFromNewer?.let { toTypeMirror { it.type } } ?: translateFromOlder?.let { toTypeMirror { it.type } }
-                    Introduce.Direction.FROM_NEWER -> translateFromNewer?.let { toTypeMirror { it.type } }
-                    Introduce.Direction.FROM_OLDER -> translateFromOlder?.let { toTypeMirror { it.type } }
-                }?.asTypeElement()
-                if (translateFromType == null) {
-                    errorConsumer.report("There is no type to translate from in that direction", field)
-                    continue@fieldLoop
-                }
-                val defaultInfo = validateDefaultInfo(
-                    type,
-                    processingEnv,
-                    multiconnectType,
-                    DefaultInfo(translateFromType, introduce),
-                    errorConsumer,
-                    field
-                ) ?: continue@fieldLoop
-                if (defaultInfo is MulticonnectFunction) {
-                    multiconnectFunctions += defaultInfo
+                // TODO: move validate of @Introduce into the compiler step
+//                if (introduce.direction == Introduce.Direction.AUTO && translateFromNewer != null && translateFromOlder != null) {
+//                    errorConsumer.report("Ambiguous AUTO @Introduce direction", field)
+//                    continue@fieldLoop
+//                }
+//                val translateFromType = when (introduce.direction) {
+//                    Introduce.Direction.AUTO -> translateFromNewer?.let { toTypeMirror { it.type } } ?: translateFromOlder?.let { toTypeMirror { it.type } }
+//                    Introduce.Direction.FROM_NEWER -> translateFromNewer?.let { toTypeMirror { it.type } }
+//                    Introduce.Direction.FROM_OLDER -> translateFromOlder?.let { toTypeMirror { it.type } }
+//                }?.asTypeElement()
+//                if (translateFromType == null) {
+//                    errorConsumer.report("There is no type to translate from in that direction", field)
+//                    continue@fieldLoop
+//                }
+//                val defaultInfo = validateDefaultInfo(
+//                    type,
+//                    processingEnv,
+//                    multiconnectType,
+//                    DefaultInfo(translateFromType, introduce),
+//                    errorConsumer,
+//                    field
+//                ) ?: continue@fieldLoop
+                if (introduce.compute.isNotEmpty()) {
+                    val function = type.findMulticonnectFunction(
+                        processingEnv,
+                        introduce.compute,
+                        argumentResolveContext = null,
+                        errorConsumer = errorConsumer,
+                        errorElement = field
+                    )
+                    if (function != null) {
+                        multiconnectFunctions += function
+                    }
                 }
             }
         }
+
+        println("Checking ${type.qualifiedName}")
+        checkForRecursiveTypes(type, type, mutableSetOf(), mutableMapOf(), errorConsumer, processingEnv)
 
         val handler = type.getHandler(processingEnv, errorConsumer, type)
         handler?.let { multiconnectFunctions += it }
@@ -297,11 +313,67 @@ object MessageProcessor {
             defaultConstruct,
             handler?.name,
             partialHandlers.map { it.name },
-            translateFromNewer,
-            translateFromOlder
+            variantOf?.asTypeElement()?.qualifiedName?.toString(),
+            minVersion,
+            maxVersion,
+            message.tailrec
         )
         jsonFile.openWriter().use { writer ->
             writer.write(JSON.encodeToString(messageType))
+        }
+    }
+
+    private fun checkForRecursiveTypes(
+        originalType: TypeElement,
+        type: TypeElement,
+        seenTypes: MutableSet<String>,
+        polymorphicSubclasses: MutableMap<String, MutableSet<String>>,
+        errorConsumer: ErrorConsumer,
+        processingEnv: ProcessingEnvironment
+    ) {
+        type.polymorphicParent?.let {
+            polymorphicSubclasses.computeIfAbsent(it.qualifiedName.toString()) { mutableSetOf() } += type.qualifiedName.toString()
+        }
+        val fields = type.recordFields
+        for ((index, field) in fields.withIndex()) {
+            val fieldType = field.asType().asTypeElement()
+            if (fieldType?.isMessage != true) continue
+            val fieldTypeName = fieldType.qualifiedName.toString()
+            if (fieldTypeName in seenTypes) {
+                if (type.qualifiedName != originalType.qualifiedName) continue
+                if (index == fields.lastIndex) {
+                    if (type.qualifiedName.contentEquals(fieldTypeName)) {
+                        if (type.getAnnotation(Message::class)?.tailrec == true
+                            && field.hasAnnotation(OnlyIf::class)
+                            && !type.isPolymorphicRoot) {
+                            continue
+                        }
+                    } else {
+                        val polymorphicParent = type.polymorphicParent
+                        if (polymorphicParent != null) {
+                            if (polymorphicParent.qualifiedName.contentEquals(fieldTypeName)) {
+                                if (polymorphicParent.getAnnotation(Message::class)?.tailrec == true) {
+                                    continue
+                                }
+                            }
+                        }
+                    }
+                }
+                errorConsumer.report("Message is self-referential and not marked as tailrec", field)
+            } else {
+                seenTypes += fieldTypeName
+                checkForRecursiveTypes(originalType, fieldType, seenTypes, polymorphicSubclasses, errorConsumer, processingEnv)
+                seenTypes.remove(fieldTypeName)
+            }
+        }
+        polymorphicSubclasses[type.qualifiedName.toString()]?.let { subclasses ->
+            for (subclass in subclasses) {
+                if (subclass in seenTypes) continue
+                val subType = processingEnv.elementUtils.getTypeElement(subclass) ?: continue
+                seenTypes += subclass
+                checkForRecursiveTypes(originalType, subType, seenTypes, polymorphicSubclasses, errorConsumer, processingEnv)
+                seenTypes.remove(subclass)
+            }
         }
     }
 

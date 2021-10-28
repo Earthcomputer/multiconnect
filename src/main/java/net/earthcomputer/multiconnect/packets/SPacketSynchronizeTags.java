@@ -6,17 +6,15 @@ import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Message;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
-import net.earthcomputer.multiconnect.ap.Protocol;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.packets.v1_16_5.SPacketSynchronizeTags_1_16_5;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Message(translateFromOlder = @Protocol(value = Protocols.V1_16_5, type = SPacketSynchronizeTags_1_16_5.class))
+@Message(minVersion = Protocols.V1_17)
 public class SPacketSynchronizeTags {
     @Introduce(compute = "computeGroups")
     public List<Group> groups;

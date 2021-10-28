@@ -10,13 +10,15 @@ import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.PartialHandler;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.packets.SPacketChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.minecraft.nbt.NbtCompound;
 
 import java.util.List;
 
-@Message
+@Message(variantOf = SPacketChunkData.class, maxVersion = Protocols.V1_16_5)
 public class SPacketChunkData_1_16_5 {
     @Type(Types.INT)
     public int x;
