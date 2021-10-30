@@ -12,7 +12,9 @@ public class MixinBedBlock {
 
     @Inject(method = "bounceEntity", at = @At("HEAD"), cancellable = true)
     public void dontBounceEntity(Entity entity, CallbackInfo ci) {
-        ci.cancel();
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_11_2) {
+            ci.cancel();
+        }
     }
 
 }
