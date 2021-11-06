@@ -5,6 +5,8 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.DebugUtils;
@@ -22,9 +24,13 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket;
 import net.minecraft.util.EightWayDirection;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.registry.DynamicRegistryManager;
+import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.dimension.DimensionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,16 +39,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RunnableFuture;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ChunkDataTranslator {
@@ -123,6 +120,42 @@ public class ChunkDataTranslator {
                 TypedMap userData = ((IUserDataHolder) packet).multiconnect_getUserData();
                 buf.readTopLevelType(ChunkData.class, userData);
                 ChunkData chunkData = ChunkData.read(dimension.getMinimumY(), dimension.getMinimumY() + dimension.getHeight() - 1, userData, buf);
+
+                if (!isFullChunk) {
+                    List<ChunkDeltaUpdateS2CPacket> deltaUpdatePackets = new ArrayList<>();
+                    for (ChunkSection section : chunkData.getSections()) {
+                        if (section == null) continue;
+
+                        ShortSet positions = new ShortOpenHashSet();
+                        BlockPos.Mutable mutable = new BlockPos.Mutable();
+                        for (int x = 0; x < 16; x++) {
+                            for (int y = 0; y < 16; y++) {
+                                for (int z = 0; z < 16; z++) {
+                                    positions.add(ChunkSectionPos.packLocal(mutable.set(x, y, z)));
+                                }
+                            }
+                        }
+
+                        ChunkSectionPos sectionPos = ChunkSectionPos.from(new ChunkPos(packet.getX(), packet.getZ()), section.getYOffset() >> 4);
+                        deltaUpdatePackets.add(new ChunkDeltaUpdateS2CPacket(sectionPos, positions, section, true));
+                    }
+
+                    ConnectionInfo.protocol.postTranslateChunk(translator, chunkData);
+                    CURRENT_TRANSLATOR.set(null);
+                    for (ChunkDeltaUpdateS2CPacket deltaUpdatePacket : deltaUpdatePackets) {
+                        try {
+                            networkHandler.onChunkDeltaUpdate(deltaUpdatePacket);
+                        } catch (OffThreadException ignore) {
+                        }
+                    }
+                    for (var postPacket : translator.postPackets) {
+                        try {
+                            postPacket.apply(networkHandler);
+                        } catch (OffThreadException ignore) {
+                        }
+                    }
+                    return;
+                }
 
                 var blocksNeedingConnectionUpdate = new EnumMap<EightWayDirection, IntSet>(EightWayDirection.class);
                 ConnectionInfo.protocol.getBlockConnector().fixChunkData(chunkData, blocksNeedingConnectionUpdate);
