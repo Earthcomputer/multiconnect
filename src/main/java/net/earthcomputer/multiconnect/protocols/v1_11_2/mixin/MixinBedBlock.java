@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_11_2.mixin;
 
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.block.BedBlock;
 import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
