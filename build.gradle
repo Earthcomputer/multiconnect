@@ -1,8 +1,6 @@
 
 import com.modrinth.minotaur.TaskModrinthUpload
-import net.fabricmc.loader.minecraft.McVersion
-// Once fabric loader updates:
-// import net.fabricmc.loader.impl.game.minecraft.McVersion
+import net.fabricmc.loader.impl.game.minecraft.McVersion
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
