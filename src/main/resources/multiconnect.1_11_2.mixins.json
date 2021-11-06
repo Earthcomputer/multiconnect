@@ -9,6 +9,7 @@
     "MixinPlayerEntityRenderer",
     "MixinPlayerScreenHandler",
     "MixinScreenHandler",
+    "MixinBedBlock",
     "PlayerEntityAccessor"
   ],
   "client": [
