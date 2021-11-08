@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientPlayerEntity.class)
@@ -16,11 +17,8 @@ public abstract class MixinClientPlayerEntity {
 
     @Inject(
         method = "tickMovement()V",
-        at = @At(
-            value = "FIELD",
-            target = "Lnet/minecraft/client/input/Input;sneaking:Z",
-            ordinal = 3
-        )
+        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isCamera()Z")),
+        at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/Input;sneaking:Z", ordinal = 0)
     )
     private void undoSneakSlowdownForFly(CallbackInfo ci) {
         // Versions older than 1.15 undo sneaking effects for
