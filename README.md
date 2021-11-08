@@ -7,8 +7,9 @@
 
 Connect to many different server versions from your Fabric client!
 
-## Discord
-https://discord.gg/Jg7Bun7
+## Social
+Discord: https://discord.gg/Jg7Bun7
+Patreon: https://www.patreon.com/earthcomputer
 
 ## Why another protocol translator?
 Multiconnect distinguishes itself from similar projects such as ViaVersion and ProtocolSupport in that it is
