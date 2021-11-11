@@ -3,7 +3,7 @@
   "package": "net.earthcomputer.multiconnect.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "bridge.ChunkDataPacketAccessor",
+    "bridge.ChunkDataPacketDataAccessor",
     "bridge.ChunkDeltaUpdateS2CAccessor",
     "bridge.DataTrackerAccessor",
     "bridge.DynamicRegistryManagerAccessor",
@@ -15,7 +15,7 @@
     "bridge.MixinBlockColors",
     "bridge.MixinBlockEntityUpdateS2C",
     "bridge.MixinBlockModels",
-    "bridge.MixinChunkDataS2C",
+    "bridge.MixinChunkDataBlockEntity",
     "bridge.MixinClickSlotC2SPacket",
     "bridge.MixinClientConnection",
     "bridge.MixinClientPlayerInteractionManager",

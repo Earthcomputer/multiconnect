@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class MixinBlockColors {
 
     @Redirect(method = {
-                "getColor(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)I",
-                "getColor(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/BlockRenderView;Lnet/minecraft/util/math/BlockPos;I)I",
+                "getParticleColor",
+                "getColor",
                 "registerColorProvider"
             },
             at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/DefaultedRegistry;getRawId(Ljava/lang/Object;)I"))

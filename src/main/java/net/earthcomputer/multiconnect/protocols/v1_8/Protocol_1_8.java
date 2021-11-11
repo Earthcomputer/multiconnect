@@ -24,6 +24,7 @@ import net.earthcomputer.multiconnect.protocols.v1_15_2.EntitySpawnGlobalS2CPack
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.ChunkDeltaUpdateS2CPacket_1_16_1;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.*;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.protocols.v1_8.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
 import net.earthcomputer.multiconnect.protocols.v1_9_2.UpdateSignS2CPacket;
@@ -136,7 +137,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            BitSet verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
+            BitSet verticalStripBitmask = buf.multiconnect_getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
             int sectionCount = verticalStripBitmask.cardinality();
             Char2CharMap paletteMap = new Char2CharOpenHashMap();
             byte[] bitsPerBlock = new byte[sectionCount];
@@ -539,7 +540,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
             buf.pendingWrite(ItemStack.class, () -> {
                 if (stack.get().getItem() == Items.WRITABLE_BOOK) {
                     ItemStack newStack = new ItemStack(Items.WRITTEN_BOOK, stack.get().getCount());
-                    newStack.setTag(stack.get().getTag());
+                    newStack.setNbt(stack.get().getNbt());
                     return newStack;
                 } else {
                     return stack.get();
@@ -549,7 +550,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
     }
 
     public static ItemStack oldPotionItemToNew(ItemStack stack, int meta) {
-        stack.putSubTag("multiconnect:1.8/potionData", NbtShort.of((short) meta));
+        stack.setSubNbt("multiconnect:1.8/potionData", NbtShort.of((short) meta));
         boolean isSplash = (meta & 16384) != 0;
         Potion potion;
         if (meta == 0) {
@@ -567,7 +568,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         }
         if (isSplash) {
             ItemStack newStack = new ItemStack(Items.SPLASH_POTION, stack.getCount());
-            newStack.setTag(stack.getTag());
+            newStack.setNbt(stack.getNbt());
             stack = newStack;
         }
         PotionUtil.setPotion(stack, potion);
@@ -576,7 +577,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
 
     public static Pair<ItemStack, Integer> newPotionItemToOld(ItemStack stack) {
         Potion potion = PotionUtil.getPotion(stack);
-        NbtCompound tag = stack.getTag();
+        NbtCompound tag = stack.getNbt();
         boolean hasForcedMeta = false;
         int forcedMeta = 0;
         if (tag != null) {
@@ -587,14 +588,14 @@ public class Protocol_1_8 extends Protocol_1_9 {
                 tag.remove("multiconnect:1.8/potionData");
             }
             if (tag.isEmpty()) {
-                stack.setTag(null);
+                stack.setNbt(null);
             }
         }
 
         boolean isSplash = stack.getItem() == Items.SPLASH_POTION;
         if (isSplash) {
             ItemStack newStack = new ItemStack(Items.POTION, stack.getCount());
-            newStack.setTag(stack.getTag());
+            newStack.setNbt(stack.getNbt());
             stack = newStack;
         }
 
@@ -654,7 +655,8 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, ChunkDataS2CPacket.class);
         remove(packets, WorldEventS2CPacket.class);
         remove(packets, ParticleS2CPacket.class);
-        remove(packets, GameJoinS2CPacket.class);
+        //noinspection unchecked
+        remove(packets, (Class<? extends Packet<?>>) (Class<?>) GameJoinS2CPacket.class);
         remove(packets, EntityS2CPacket.MoveRelative.class);
         remove(packets, EntityS2CPacket.RotateAndMoveRelative.class);
         remove(packets, EntityS2CPacket.Rotate.class);
@@ -692,7 +694,8 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, EntityStatusEffectS2CPacket.class);
         packets.add(0, PacketInfo.of(KeepAliveS2CPacket.class, KeepAliveS2CPacket::new));
         insertAfter(packets, KeepAliveS2CPacket.class, PacketInfo.of(GameJoinS2CPacket.class, GameJoinS2CPacket::new));
-        insertAfter(packets, GameJoinS2CPacket.class, PacketInfo.of(GameMessageS2CPacket.class, GameMessageS2CPacket::new));
+        //noinspection unchecked
+        insertAfter(packets, (Class<? extends Packet<?>>) (Class<?>) GameJoinS2CPacket.class, PacketInfo.of(GameMessageS2CPacket.class, GameMessageS2CPacket::new));
         insertAfter(packets, GameMessageS2CPacket.class, PacketInfo.of(WorldTimeUpdateS2CPacket.class, WorldTimeUpdateS2CPacket::new));
         insertAfter(packets, WorldTimeUpdateS2CPacket.class, PacketInfo.of(EntityEquipmentUpdateS2CPacket.class, EntityEquipmentUpdateS2CPacket::new));
         insertAfter(packets, EntityEquipmentUpdateS2CPacket.class, PacketInfo.of(PlayerSpawnPositionS2CPacket.class, PlayerSpawnPositionS2CPacket::new));

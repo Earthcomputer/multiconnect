@@ -1,8 +1,8 @@
 package net.earthcomputer.multiconnect;
 
 import net.fabricmc.api.EnvType;
-import net.fabricmc.loader.launch.knot.Knot;
-import net.fabricmc.loader.launch.knot.KnotClassLoaderInterface;
+import net.fabricmc.loader.impl.launch.knot.Knot;
+import net.fabricmc.loader.impl.launch.knot.KnotClassLoaderInterface;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 

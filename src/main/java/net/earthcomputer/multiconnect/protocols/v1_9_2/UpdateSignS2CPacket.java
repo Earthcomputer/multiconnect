@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_9_2;
 
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
@@ -26,10 +28,14 @@ public class UpdateSignS2CPacket implements Packet<ClientPlayPacketListener> {
 
     @Override
     public void apply(ClientPlayPacketListener listener) {
-        NbtCompound signTag = new NbtCompound();
+        NbtCompound signNbt = new NbtCompound();
         for (int i = 0; i < 4; i++) {
-            signTag.putString("Text" + (i + 1), Text.Serializer.toJson(lines[i]));
+            signNbt.putString("Text" + (i + 1), Text.Serializer.toJson(lines[i]));
         }
-        listener.onBlockEntityUpdate(new BlockEntityUpdateS2CPacket(pos, 9, signTag));
+        listener.onBlockEntityUpdate(Utils.createPacket(BlockEntityUpdateS2CPacket.class, BlockEntityUpdateS2CPacket::new, Protocols.V1_9_2, buf -> {
+            buf.pendingRead(BlockPos.class, pos);
+            buf.pendingRead(Byte.class, (byte) 9); // sign type
+            buf.pendingRead(NbtCompound.class, signNbt);
+        }));
     }
 }

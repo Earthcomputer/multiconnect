@@ -23,8 +23,6 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Optional;
-
 import static net.minecraft.item.Items.*;
 
 public class Items_1_12_2 {
@@ -37,20 +35,20 @@ public class Items_1_12_2 {
         Item newItem = OLD_ITEM_TO_NEW.get(Pair.of(stack.getItem(), meta));
         if (newItem != null && newItem != stack.getItem()) {
             ItemStack newStack = new ItemStack(newItem, stack.getCount());
-            newStack.setTag(stack.getTag());
+            newStack.setNbt(stack.getNbt());
             stack = newStack;
         }
         else if (stack.getItem() == FILLED_MAP) {
             stack = stack.copy();
             copiedTag = true;
-            stack.getOrCreateTag().putInt("map", meta);
+            stack.getOrCreateNbt().putInt("map", meta);
         }
         else if (stack.getItem() == ENCHANTED_BOOK) {
-            if (stack.getTag() != null && stack.getTag().contains("StoredEnchantments", 9)) {
+            if (stack.getNbt() != null && stack.getNbt().contains("StoredEnchantments", 9)) {
                 stack = stack.copy();
                 copiedTag = true;
-                assert stack.getTag() != null;
-                oldEnchantmentListToNew(stack.getTag().getList("StoredEnchantments", 10));
+                assert stack.getNbt() != null;
+                oldEnchantmentListToNew(stack.getNbt().getList("StoredEnchantments", 10));
             }
         }
         else if (stack.isDamageable()) {
@@ -64,7 +62,7 @@ public class Items_1_12_2 {
             stack = Protocol_1_8.oldPotionItemToNew(stack, meta);
         }
         else if (stack.getItem() == BAT_SPAWN_EGG) {
-            NbtCompound entityTag = stack.getSubTag("EntityTag");
+            NbtCompound entityTag = stack.getSubNbt("EntityTag");
             if (entityTag != null) {
                 String entityId = entityTag.getString("id");
                 Identifier identifier = Identifier.tryParse(entityId);
@@ -73,18 +71,18 @@ public class Items_1_12_2 {
                     newItem = SpawnEggItem.forEntity(entityType);
                     if (newItem != null) {
                         ItemStack newStack = new ItemStack(newItem, stack.getCount());
-                        newStack.setTag(stack.getTag());
+                        newStack.setNbt(stack.getNbt());
                         stack = newStack;
                     }
                 }
             }
         }
         else if (stack.getItem() instanceof BlockItem && ((BlockItem) stack.getItem()).getBlock() instanceof ShulkerBoxBlock) {
-            if (stack.getTag() != null && stack.getTag().contains("BlockEntityTag", 10)) {
+            if (stack.getNbt() != null && stack.getNbt().contains("BlockEntityTag", 10)) {
                 stack = stack.copy();
                 copiedTag = true;
-                assert stack.getTag() != null;
-                NbtCompound blockEntityTag = stack.getTag().getCompound("BlockEntityTag");
+                assert stack.getNbt() != null;
+                NbtCompound blockEntityTag = stack.getNbt().getCompound("BlockEntityTag");
                 if (blockEntityTag.contains("Items", 9)) {
                     NbtList items = blockEntityTag.getList("Items", 10);
                     for (int i = 0; i < items.size(); i++) {
@@ -103,16 +101,16 @@ public class Items_1_12_2 {
         if (stack.getItem() instanceof BannerItem || stack.getItem() == SHIELD) {
             stack = invertBannerColors(stack);
         }
-        if (stack.getTag() != null && stack.getTag().contains("ench", 9)) {
+        if (stack.getNbt() != null && stack.getNbt().contains("ench", 9)) {
             if (!copiedTag) {
                 stack = stack.copy();
                 copiedTag = true;
             }
-            assert stack.getTag() != null;
-            NbtList enchantments = stack.getTag().getList("ench", 10);
+            assert stack.getNbt() != null;
+            NbtList enchantments = stack.getNbt().getList("ench", 10);
             oldEnchantmentListToNew(enchantments);
-            stack.getTag().put("Enchantments", enchantments);
-            stack.getTag().remove("ench");
+            stack.getNbt().put("Enchantments", enchantments);
+            stack.getNbt().remove("ench");
         }
         if (stack.hasCustomName()) {
             if (!copiedTag) {
@@ -121,7 +119,7 @@ public class Items_1_12_2 {
                 copiedTag = true;
             }
             //noinspection ConstantConditions
-            String displayName = stack.getSubTag("display").getString("Name");
+            String displayName = stack.getSubNbt("display").getString("Name");
             stack.setCustomName(new LiteralText(displayName));
         }
         return stack;
@@ -147,7 +145,7 @@ public class Items_1_12_2 {
         Pair<Item, Integer> oldItemAndMeta = OLD_ITEM_TO_NEW.inverse().get(stack.getItem());
         if (oldItemAndMeta != null) {
             ItemStack oldStack = new ItemStack(oldItemAndMeta.getLeft(), stack.getCount());
-            oldStack.setTag(stack.getTag());
+            oldStack.setNbt(stack.getNbt());
             stack = oldStack;
             meta = oldItemAndMeta.getRight();
         }
@@ -155,14 +153,14 @@ public class Items_1_12_2 {
             Integer mapId = FilledMapItem.getMapId(stack);
             if (mapId != null) {
                 meta = mapId;
-                if (stack.getTag() != null) {
+                if (stack.getNbt() != null) {
                     stack = stack.copy();
                     copiedTag = true;
-                    NbtCompound tag = stack.getTag();
+                    NbtCompound tag = stack.getNbt();
                     assert tag != null;
                     tag.remove("map");
                     if (tag.getSize() == 0)
-                        stack.setTag(null);
+                        stack.setNbt(null);
                 }
             }
         }
@@ -176,14 +174,14 @@ public class Items_1_12_2 {
         }
         else if (stack.isDamageable()) {
             meta = stack.getDamage();
-            if (stack.getTag() != null) {
+            if (stack.getNbt() != null) {
                 stack = stack.copy();
                 copiedTag = true;
-                NbtCompound tag = stack.getTag();
+                NbtCompound tag = stack.getNbt();
                 assert tag != null;
                 tag.remove("Damage");
                 if (tag.getSize() == 0)
-                    stack.setTag(null);
+                    stack.setNbt(null);
             }
         }
         else if (ConnectionInfo.protocolVersion <= Protocols.V1_8 && (stack.getItem() == POTION || stack.getItem() == SPLASH_POTION)) {
@@ -195,19 +193,19 @@ public class Items_1_12_2 {
         }
         else if (stack.getItem() instanceof SpawnEggItem) {
             ItemStack oldStack = new ItemStack(BAT_SPAWN_EGG, stack.getCount());
-            oldStack.setTag(stack.getTag() == null ? null : stack.getTag().copy());
+            oldStack.setNbt(stack.getNbt() == null ? null : stack.getNbt().copy());
             copiedTag = true;
-            NbtCompound entityTag = oldStack.getOrCreateSubTag("EntityTag");
+            NbtCompound entityTag = oldStack.getOrCreateSubNbt("EntityTag");
             if (!entityTag.contains("id", 8))
-                entityTag.putString("id", Registry.ENTITY_TYPE.getId(((SpawnEggItem) stack.getItem()).getEntityType(oldStack.getTag())).toString());
+                entityTag.putString("id", Registry.ENTITY_TYPE.getId(((SpawnEggItem) stack.getItem()).getEntityType(oldStack.getNbt())).toString());
             stack = oldStack;
         }
         else if (stack.getItem() instanceof BlockItem && ((BlockItem) stack.getItem()).getBlock() instanceof ShulkerBoxBlock) {
-            if (stack.getTag() != null && stack.getTag().contains("BlockEntityTag", 10)) {
+            if (stack.getNbt() != null && stack.getNbt().contains("BlockEntityTag", 10)) {
                 stack = stack.copy();
                 copiedTag = true;
-                assert stack.getTag() != null;
-                NbtCompound blockEntityTag = stack.getTag().getCompound("BlockEntityTag");
+                assert stack.getNbt() != null;
+                NbtCompound blockEntityTag = stack.getNbt().getCompound("BlockEntityTag");
                 if (blockEntityTag.contains("Items", 9)) {
                     NbtList items = blockEntityTag.getList("Items", 10);
                     for (int i = 0; i < items.size(); i++) {
@@ -234,9 +232,9 @@ public class Items_1_12_2 {
             }
             NbtList enchantments = stack.getEnchantments();
             newEnchantmentListToOld(enchantments);
-            assert stack.getTag() != null;
-            stack.getTag().put("ench", enchantments);
-            stack.getTag().remove("Enchantments");
+            assert stack.getNbt() != null;
+            stack.getNbt().put("ench", enchantments);
+            stack.getNbt().remove("Enchantments");
         }
         if (stack.hasCustomName()) {
             if (!copiedTag) {
@@ -246,7 +244,7 @@ public class Items_1_12_2 {
             }
             String displayName = stack.getName().asString();
             //noinspection ConstantConditions
-            stack.getSubTag("display").putString("Name", displayName);
+            stack.getSubNbt("display").putString("Name", displayName);
         }
         return Pair.of(stack, meta);
     }
@@ -267,7 +265,7 @@ public class Items_1_12_2 {
 
     private static ItemStack invertBannerColors(ItemStack stack) {
         stack = stack.copy();
-        NbtCompound blockEntityTag = stack.getSubTag("BlockEntityTag");
+        NbtCompound blockEntityTag = stack.getSubNbt("BlockEntityTag");
         if (blockEntityTag != null && blockEntityTag.contains("Patterns", 9)) {
             NbtList patterns = blockEntityTag.getList("Patterns", 10);
             for (NbtElement t : patterns) {

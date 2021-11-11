@@ -1,10 +1,10 @@
 {
   "required": true,
-  "package": "net.earthcomputer.multiconnect.protocols.v1_11.mixin",
+  "package": "net.earthcomputer.multiconnect.protocols.v1_9_2.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "MixinFireworkRocketItem",
-    "PigEntityAccessor"
+    "ChunkDataBlockEntityAccessor",
+    "ChunkDataPacketDataAccessor"
   ],
   "client": [
   ],

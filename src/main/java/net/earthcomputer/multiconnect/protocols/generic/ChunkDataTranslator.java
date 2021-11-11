@@ -12,9 +12,10 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.DebugUtils;
 import net.earthcomputer.multiconnect.impl.TestingAPI;
 import net.earthcomputer.multiconnect.impl.Utils;
-import net.earthcomputer.multiconnect.mixin.bridge.ChunkDataPacketAccessor;
+import net.earthcomputer.multiconnect.mixin.bridge.ChunkDataPacketDataAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -116,7 +117,7 @@ public class ChunkDataTranslator {
             try {
                 CURRENT_TRANSLATOR.set(translator);
 
-                TransformerByteBuf buf = new TransformerByteBuf(packet.getReadBuffer(), null);
+                TransformerByteBuf buf = new TransformerByteBuf(packet.method_38598().method_38586(), null);
                 TypedMap userData = ((IUserDataHolder) packet).multiconnect_getUserData();
                 buf.readTopLevelType(ChunkData.class, userData);
                 ChunkData chunkData = ChunkData.read(dimension.getMinimumY(), dimension.getMinimumY() + dimension.getHeight() - 1, userData, buf);
@@ -162,7 +163,7 @@ public class ChunkDataTranslator {
                 ((IUserDataHolder) packet).multiconnect_setUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY, blocksNeedingConnectionUpdate);
 
                 ConnectionInfo.protocol.postTranslateChunk(translator, chunkData);
-                ((ChunkDataPacketAccessor) packet).setData(chunkData.toByteArray());
+                ((ChunkDataPacketDataAccessor) packet).setData(chunkData.toByteArray());
 
                 CURRENT_TRANSLATOR.set(null);
 
@@ -180,12 +181,18 @@ public class ChunkDataTranslator {
                 }
             } catch (Throwable e) {
                 if (!hasDumpedChunkData.getAndSet(true)) {
+                    IUserDataHolder userDataHolder = (IUserDataHolder) packet;
+                    List<String> extraLines = new ArrayList<>();
+                    extraLines.add("Chunk pos: " + packet.getX() + ", " + packet.getZ());
+                    BitSet verticalStripBitmask = userDataHolder.multiconnect_getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
+                    if (verticalStripBitmask != null) {
+                        extraLines.add("Vertical strip bitmask: " + verticalStripBitmask);
+                    }
+                    extraLines.add("Dimension has sky light: " + userDataHolder.multiconnect_getUserData(DIMENSION_KEY).hasSkyLight());
+                    extraLines.add("Full chunk: " + userDataHolder.multiconnect_getUserData(Protocol_1_16_5.FULL_CHUNK_KEY));
                     DebugUtils.logPacketDisconnectError(
-                            packet.getReadBuffer().array(),
-                            "Chunk pos: " + packet.getX() + ", " + packet.getZ(),
-                            "Vertical strip bitmask: " + Arrays.toString(packet.getVerticalStripBitmask().toLongArray()),
-                            "Dimension has sky light: " + ((IUserDataHolder) packet).multiconnect_getUserData(DIMENSION_KEY).hasSkyLight(),
-                            "Full chunk: " + ((IUserDataHolder) packet).multiconnect_getUserData(Protocol_1_16_5.FULL_CHUNK_KEY)
+                            DebugUtils.getData(packet.method_38598().method_38586()),
+                            extraLines.toArray(new String[0])
                     );
                 }
                 LOGGER.error("Failed to translate chunk " + packet.getX() + ", " + packet.getZ(), e);

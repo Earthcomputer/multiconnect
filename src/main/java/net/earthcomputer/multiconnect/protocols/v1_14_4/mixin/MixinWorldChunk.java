@@ -8,7 +8,6 @@ import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(WorldChunk.class)
 public class MixinWorldChunk implements IBiomeStorage_1_14_4 {
-
     @Unique private Biome[] biomeArray_1_14_4;
 
     @Override

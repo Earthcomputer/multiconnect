@@ -22,4 +22,4 @@ buildscript {
     }
 }
 
-include 'integrationTest'
+//include 'integrationTest'

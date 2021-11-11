@@ -331,7 +331,7 @@ public class RecipeBook_1_12<C extends Inventory> {
     private boolean canStackAddMore(ItemStack existingStack, ItemStack stack) {
         return !existingStack.isEmpty()
                 && existingStack.getItem() == stack.getItem()
-                && ItemStack.areTagsEqual(existingStack, stack)
+                && ItemStack.areNbtEqual(existingStack, stack)
                 && existingStack.isStackable()
                 && existingStack.getCount() < existingStack.getMaxCount()
                 && existingStack.getCount() < 64;

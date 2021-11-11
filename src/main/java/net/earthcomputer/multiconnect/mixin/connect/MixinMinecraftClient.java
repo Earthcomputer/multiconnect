@@ -28,7 +28,7 @@ public abstract class MixinMinecraftClient {
         ConnectionInfo.protocol.setup(false);
     }
 
-    @ModifyVariable(method = "openScreen", at = @At("HEAD"), argsOnly = true)
+    @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)
     private Screen modifyScreen(Screen screen) {
         if (screen instanceof DisconnectedScreen && DebugUtils.wasRareBugReportedRecently()) {
             return DebugUtils.createRareBugScreen(screen);

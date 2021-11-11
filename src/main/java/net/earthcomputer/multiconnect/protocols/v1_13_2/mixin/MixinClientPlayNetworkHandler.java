@@ -158,7 +158,7 @@ public abstract class MixinClientPlayNetworkHandler {
     @Inject(method = "onGameJoin", at = @At("TAIL"))
     private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            onDifficulty(new DifficultyS2CPacket(((IUserDataHolder) packet).multiconnect_getUserData(Protocol_1_13_2.DIFFICULTY_KEY), false));
+            onDifficulty(new DifficultyS2CPacket(((IUserDataHolder) (Object) packet).multiconnect_getUserData(Protocol_1_13_2.DIFFICULTY_KEY), false));
         }
     }
 

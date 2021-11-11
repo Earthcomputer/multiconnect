@@ -44,12 +44,10 @@ import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.*;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
-import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.dimension.DimensionType;
@@ -93,7 +91,7 @@ public class Utils {
             return true;
         }
         for (ChunkSection section : chunk.getSectionArray()) {
-            if (!ChunkSection.isEmpty(section)) {
+            if (!section.isEmpty()) { // TODO: this was ChunkSection.isEmpty (static method), impl the same?
                 return false;
             }
         }
@@ -536,10 +534,8 @@ public class Utils {
     public static ChunkDataS2CPacket createEmptyChunkDataPacket(int x, int z, World world, DynamicRegistryManager registryManager) {
         Registry<Biome> biomeRegistry = registryManager.get(Registry.BIOME_KEY);
         Biome plainsBiome = biomeRegistry.get(BiomeKeys.PLAINS);
-        int horizontalSectionCount = MathHelper.log2DeBruijn(16) - 2;
-        int biomeLength = (1 << (horizontalSectionCount + horizontalSectionCount)) * ((world.getHeight() + 3) / 4);
 
-        ChunkDataS2CPacket packet = new ChunkDataS2CPacket(new WorldChunk(world, new ChunkPos(x, z), new BiomeArray(biomeRegistry, world, new int[biomeLength])));
+        ChunkDataS2CPacket packet = new ChunkDataS2CPacket(new WorldChunk(world, new ChunkPos(x, z)), world.getLightingProvider(), new BitSet(), new BitSet(), true);
         //noinspection ConstantConditions
         IUserDataHolder iPacket = (IUserDataHolder) packet;
         iPacket.multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, true);

@@ -4,12 +4,14 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectionsBlockView;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkSection;
 
 import java.util.BitSet;
@@ -31,15 +33,15 @@ public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHol
     @ThreadSafe(withGameThread = false)
     public static ChunkData read(int minY, int maxY, TypedMap userData, PacketByteBuf buf) {
         ChunkData data = new ChunkData(new ChunkSection[(maxY + 1 - minY + 15) >> 4], minY, maxY, userData);
-        ChunkDataS2CPacket packet = ChunkDataTranslator.current().getPacket();
-        BitSet verticalStripBitmask = packet.getVerticalStripBitmask();
+        BitSet verticalStripBitmask = userData.get(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
+        Registry<Biome> biomeRegistry = ChunkDataTranslator.current().getRegistryManager().get(Registry.BIOME_KEY);
 
         // treat unknown state ids as air (ViaBackwards sometimes sends these)
         ((IIdList<BlockState>) Block.STATE_IDS).multiconnect_setDefaultValue(Blocks.AIR.getDefaultState());
         try {
             for (int sectionY = 0; sectionY < data.sections.length; sectionY++) {
-                if (verticalStripBitmask.get(sectionY)) {
-                    ChunkSection section = new ChunkSection(sectionY);
+                if (verticalStripBitmask == null || verticalStripBitmask.get(sectionY)) {
+                    ChunkSection section = new ChunkSection(sectionY, biomeRegistry);
                     section.fromPacket(buf);
                     data.sections[sectionY] = section;
                 }

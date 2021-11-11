@@ -1,10 +1,10 @@
 
 import com.modrinth.minotaur.TaskModrinthUpload
-import net.fabricmc.loader.impl.game.minecraft.McVersion
 import net.fabricmc.loom.task.RemapJarTask
+import java.util.regex.Pattern
 
 plugins {
-	id 'fabric-loom' version '0.8-SNAPSHOT'
+	id 'fabric-loom' version '0.10-SNAPSHOT'
 	id 'maven-publish'
 	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
@@ -27,7 +27,21 @@ sourceSets {
 
 compileApiJava.dependsOn processApiResources // wtf gradle
 
-def normalizedVersion = new McVersion.Builder().setNameAndRelease(project.minecraft_version).build().normalized
+def snapshotPattern = Pattern.compile('(\\d\\d)w(\\d\\d)([a-z])')
+def prereleasePattern = Pattern.compile('[\\d.]+-(pre|rc)(\\d+)')
+def normalizedVersion = project.minecraft_version
+def snapshotMatcher = snapshotPattern.matcher(project.minecraft_version)
+def prereleaseMatcher = prereleasePattern.matcher(project.minecraft_version)
+if (snapshotMatcher.matches()) {
+    normalizedVersion = project.target_release + '-alpha.' + snapshotMatcher.group(1) + '.' + snapshotMatcher.group(2) + '.' + snapshotMatcher.group(3)
+} else if (prereleaseMatcher.matches()) {
+	def type = prereleaseMatcher.group(1)
+	if (type == 'pre') {
+        normalizedVersion = project.target_release + '-beta.' + prereleaseMatcher.group(2)
+    } else if (type == 'rc') {
+        normalizedVersion = project.target_release + '-rc.' + prereleaseMatcher.group(2)
+    }
+}
 
 processResources {
 	duplicatesStrategy = DuplicatesStrategy.WARN
@@ -111,8 +125,8 @@ jar {
 	from "LICENSE"
 }
 
-minecraft {
-	accessWidener 'src/main/resources/multiconnect.accesswidener'
+loom {
+	accessWidenerPath = file('src/main/resources/multiconnect.accesswidener')
 }
 
 subprojects {
@@ -140,7 +154,7 @@ dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modCompileOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
-	modRuntime "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
+	modRuntimeOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	testImplementation "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 
@@ -148,7 +162,7 @@ dependencies {
 		modCompileOnly("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
 			transitive = false // to stop it using its own fabric-loader
 		}
-		modRuntime("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
+		modRuntimeOnly("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
 			transitive = false // to stop it using its own fabric-loader
 		}
 		include "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
@@ -156,7 +170,7 @@ dependencies {
 		modCompileOnly("net.fabricmc.fabric-api:fabric-api:0.20.2+build.402-1.16") {
 			exclude group: 'net.fabricmc', module: 'fabric-loader'
 		}
-		modRuntime("net.fabricmc.fabric-api:fabric-api:0.20.2+build.402-1.16") {
+		modRuntimeOnly("net.fabricmc.fabric-api:fabric-api:0.20.2+build.402-1.16") {
 			exclude group: 'net.fabricmc', module: 'fabric-loader'
 		}
 	}

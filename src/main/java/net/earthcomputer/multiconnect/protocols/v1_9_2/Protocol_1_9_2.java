@@ -9,14 +9,18 @@ import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.TitleS2CPacket_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_9_2.mixin.ChunkDataBlockEntityAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_9_2.mixin.ChunkDataPacketDataAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_9_4.Protocol_1_9_4;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.class_6603;
 import net.minecraft.command.CommandSource;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -80,7 +84,12 @@ public class Protocol_1_9_2 extends Protocol_1_9_4 {
                             nbt.putInt("x", pos.getX());
                             nbt.putInt("y", pos.getY());
                             nbt.putInt("z", pos.getZ());
-                            translator.getPacket().getBlockEntityTagList().add(nbt);
+                            class_6603.class_6604 blockEntity = ChunkDataBlockEntityAccessor.createChunkDataBlockEntity(
+                                    (ChunkSectionPos.getLocalCoord(pos.getX()) << 4) | ChunkSectionPos.getLocalCoord(pos.getZ()),
+                                    pos.getY(),
+                                    blockEntityType,
+                                    nbt);
+                            ((ChunkDataPacketDataAccessor) translator.getPacket().method_38598()).getBlockEntities().add(blockEntity);
                         }
                     }
                 }

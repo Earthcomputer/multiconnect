@@ -1,4 +1,5 @@
 accessWidener   v1  named
+accessible class net/minecraft/class_6603$class_6604
 accessible class net/minecraft/client/particle/ParticleManager$SimpleSpriteProvider
 accessible method net/minecraft/client/particle/ParticleManager$SimpleSpriteProvider <init> (Lnet/minecraft/client/particle/ParticleManager;)V
 accessible class net/minecraft/util/registry/DynamicRegistryManager$Info

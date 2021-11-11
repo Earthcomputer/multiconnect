@@ -12,6 +12,7 @@ import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAtt
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.WolfEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.JigsawOrientation;
@@ -78,7 +79,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            BitSet verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
+            BitSet verticalStripBitmask = buf.multiconnect_getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if (verticalStripBitmask.get(sectionY)) {
@@ -238,17 +239,17 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
             @Override
             public ItemStack translate(ItemStack from) {
-                if (from.getItem() == Items.PLAYER_HEAD && from.hasTag()) {
-                    NbtCompound tag = from.getTag();
-                    assert tag != null;
-                    if (tag.contains("SkullOwner", 10)) {
-                        NbtCompound skullOwner = tag.getCompound("SkullOwner");
+                if (from.getItem() == Items.PLAYER_HEAD && from.hasNbt()) {
+                    NbtCompound nbt = from.getNbt();
+                    assert nbt != null;
+                    if (nbt.contains("SkullOwner", 10)) {
+                        NbtCompound skullOwner = nbt.getCompound("SkullOwner");
                         if (skullOwner.contains("Id", 8)) {
                             try {
                                 UUID uuid = UUID.fromString(skullOwner.getString("Id"));
                                 from = from.copy();
-                                assert from.getTag() != null;
-                                from.getTag().getCompound("SkullOwner").putUuid("Id", uuid);
+                                assert from.getNbt() != null;
+                                from.getNbt().getCompound("SkullOwner").putUuid("Id", uuid);
                             } catch (IllegalArgumentException e) {
                                 // uuid failed to parse
                             }
@@ -310,16 +311,16 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
             @Override
             public ItemStack translate(ItemStack from) {
-                if (from.getItem() == Items.PLAYER_HEAD && from.hasTag()) {
-                    NbtCompound tag = from.getTag();
-                    assert tag != null;
-                    if (tag.contains("SkullOwner", 10)) {
-                        NbtCompound skullOwner = tag.getCompound("SkullOwner");
+                if (from.getItem() == Items.PLAYER_HEAD && from.hasNbt()) {
+                    NbtCompound nbt = from.getNbt();
+                    assert nbt != null;
+                    if (nbt.contains("SkullOwner", 10)) {
+                        NbtCompound skullOwner = nbt.getCompound("SkullOwner");
                         if (skullOwner.containsUuid("Id")) {
                             UUID uuid = skullOwner.getUuid("Id");
                             from = from.copy();
-                            assert from.getTag() != null;
-                            from.getTag().getCompound("SkullOwner").putString("Id", uuid.toString());
+                            assert from.getNbt() != null;
+                            from.getNbt().getCompound("SkullOwner").putString("Id", uuid.toString());
                         }
                     }
                 }

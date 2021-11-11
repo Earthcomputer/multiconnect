@@ -67,7 +67,6 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.event.GameEvent;
 
@@ -77,6 +76,8 @@ import java.util.stream.Stream;
 
 public class Protocol_1_16_5 extends Protocol_1_17 {
     public static final int BIOME_ARRAY_LENGTH = 1024;
+    private static final int WIDTH_BITS = MathHelper.log2DeBruijn(16) - 2;
+    private static final int DEFAULT_BIOME_LENGTH = 1 << (WIDTH_BITS + WIDTH_BITS + BlockPos.SIZE_BITS_Y - 2);
     private static short lastActionId = 0;
 
     private static final TrackedData<Optional<BlockPos>> OLD_SHULKER_ATTACHED_POSITION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.OPTIONAL_BLOCK_POS);
@@ -123,7 +124,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             buf.enablePassthroughMode();
             buf.readNbt(); // heightmaps
             if (fullChunk) {
-                buf.readIntArray(BiomeArray.DEFAULT_LENGTH);
+                buf.readIntArray(DEFAULT_BIOME_LENGTH);
             } else {
                 // TODO: get the actual biome array from somewhere
                 buf.pendingRead(int[].class, new int[BIOME_ARRAY_LENGTH]);
@@ -1318,8 +1319,8 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         tags.add(BlockTags.NEEDS_IRON_TOOL, Blocks.DIAMOND_BLOCK, Blocks.DIAMOND_ORE, Blocks.EMERALD_ORE, Blocks.EMERALD_BLOCK, Blocks.GOLD_BLOCK, Blocks.GOLD_ORE, Blocks.REDSTONE_ORE);
         tags.add(BlockTags.NEEDS_DIAMOND_TOOL, Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK, Blocks.RESPAWN_ANCHOR, Blocks.ANCIENT_DEBRIS);
         tags.add(BlockTags.FEATURES_CANNOT_REPLACE, Blocks.BEDROCK, Blocks.SPAWNER, Blocks.CHEST, Blocks.END_PORTAL_FRAME);
-        tags.addTag(BlockTags.LAVA_POOL_STONE_REPLACEABLES, BlockTags.FEATURES_CANNOT_REPLACE);
-        tags.addTag(BlockTags.LAVA_POOL_STONE_REPLACEABLES, BlockTags.LEAVES);
+        tags.addTag(BlockTags.LAVA_POOL_STONE_CANNOT_REPLACE, BlockTags.FEATURES_CANNOT_REPLACE);
+        tags.addTag(BlockTags.LAVA_POOL_STONE_CANNOT_REPLACE, BlockTags.LEAVES);
         tags.add(BlockTags.GEODE_INVALID_BLOCKS, Blocks.BEDROCK, Blocks.WATER, Blocks.LAVA, Blocks.ICE, Blocks.PACKED_ICE, Blocks.BLUE_ICE);
         super.addExtraBlockTags(tags);
     }

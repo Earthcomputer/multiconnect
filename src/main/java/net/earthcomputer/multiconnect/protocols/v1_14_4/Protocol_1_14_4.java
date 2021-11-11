@@ -10,6 +10,7 @@ import net.earthcomputer.multiconnect.protocols.v1_14_4.mixin.WolfEntityAccessor
 import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.Protocol_1_15_2;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.minecraft.block.BellBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -48,10 +49,9 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            ChunkDataS2CPacket packet = ChunkDataTranslator.current().getPacket();
             if (!ChunkDataTranslator.current().isFullChunk())
                 return;
-            BitSet verticalStripBitmask = packet.getVerticalStripBitmask();
+            BitSet verticalStripBitmask = buf.multiconnect_getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if (verticalStripBitmask.get(sectionY)) {

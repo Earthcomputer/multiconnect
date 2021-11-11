@@ -20,6 +20,7 @@ import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.ZombieEntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_1_16_1;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.MapUpdateS2CPacket_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.WallMountLocation;
@@ -133,7 +134,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            BitSet verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
+            BitSet verticalStripBitmask = buf.multiconnect_getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if (verticalStripBitmask.get(sectionY)) {
@@ -460,10 +461,10 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
                     return from;
                 from = from.copy();
                 int meta = from.getDamage();
-                assert from.getTag() != null;
-                from.getTag().remove("Damage");
-                if (from.getTag().getSize() == 0)
-                    from.setTag(null);
+                assert from.getNbt() != null;
+                from.getNbt().remove("Damage");
+                if (from.getNbt().getSize() == 0)
+                    from.setNbt(null);
                 return Items_1_12_2.oldItemStackToNew(from, meta);
             }
         });

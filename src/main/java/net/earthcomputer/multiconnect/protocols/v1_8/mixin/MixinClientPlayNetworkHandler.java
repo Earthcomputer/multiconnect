@@ -5,6 +5,7 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.protocols.v1_8.DataTrackerEntry_1_8;
 import net.earthcomputer.multiconnect.protocols.v1_8.Protocol_1_8;
 import net.minecraft.client.MinecraftClient;
@@ -61,9 +62,10 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onChunkData", at = @At("HEAD"), cancellable = true)
     private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
+        IUserDataHolder userDataHolder = (IUserDataHolder) packet;
         if (ConnectionInfo.protocolVersion <= Protocols.V1_8
-                && ((IUserDataHolder) packet).multiconnect_getUserData(Protocol_1_16_5.FULL_CHUNK_KEY)
-                && packet.getVerticalStripBitmask().isEmpty()) {
+                && userDataHolder.multiconnect_getUserData(Protocol_1_16_5.FULL_CHUNK_KEY)
+                && userDataHolder.multiconnect_getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK).isEmpty()) {
             onUnloadChunk(new UnloadChunkS2CPacket(packet.getX(), packet.getZ()));
             ci.cancel();
         }

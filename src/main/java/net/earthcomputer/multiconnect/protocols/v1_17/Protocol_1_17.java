@@ -79,11 +79,11 @@ public class Protocol_1_17 extends Protocol_1_17_1 {
         if (!pages.isEmpty()) {
             NbtList pagesNbt = new NbtList();
             pages.stream().map(NbtString::of).forEach(pagesNbt::add);
-            bookStack.putSubTag("pages", pagesNbt);
+            bookStack.setSubNbt("pages", pagesNbt);
         }
         if (title.isPresent()) {
-            bookStack.putSubTag("author", NbtString.of(connection == null ? "" : connection.getProfile().getName()));
-            bookStack.putSubTag("title", NbtString.of(title.get().trim()));
+            bookStack.setSubNbt("author", NbtString.of(connection == null ? "" : connection.getProfile().getName()));
+            bookStack.setSubNbt("title", NbtString.of(title.get().trim()));
         }
         return bookStack;
     }

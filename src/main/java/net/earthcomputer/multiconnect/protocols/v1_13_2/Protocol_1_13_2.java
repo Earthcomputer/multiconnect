@@ -14,6 +14,7 @@ import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_
 import net.earthcomputer.multiconnect.protocols.v1_16_5.EntityS2CPacket_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.MapUpdateS2CPacket_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.transformer.*;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.minecraft.block.*;
@@ -134,7 +135,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
             byte[][] blockLight = new byte[16][];
             byte[][] skyLight = new byte[16][];
-            BitSet verticalStripBitmask = ChunkDataTranslator.current().getPacket().getVerticalStripBitmask();
+            BitSet verticalStripBitmask = buf.multiconnect_getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if (verticalStripBitmask.get(sectionY)) {
                     buf.pendingRead(Short.class, (short)0);
@@ -291,10 +292,10 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
             @Override
             public ItemStack translate(ItemStack stack) {
-                if (stack.hasTag()) {
-                    assert stack.getTag() != null;
-                    if (stack.getTag().contains("display", 10)) {
-                        NbtCompound display = stack.getTag().getCompound("display");
+                if (stack.hasNbt()) {
+                    assert stack.getNbt() != null;
+                    if (stack.getNbt().contains("display", 10)) {
+                        NbtCompound display = stack.getNbt().getCompound("display");
                         if (display.contains("Lore", 9)) {
                             NbtList lore = display.getList("Lore", 8);
                             display.put("multiconnect:1.13.2/oldLore", lore);
@@ -354,14 +355,14 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
             @Override
             public ItemStack translate(ItemStack stack) {
-                if (stack.hasTag()) {
-                    assert stack.getTag() != null;
-                    if (stack.getTag().contains("display", 10)) {
-                        NbtCompound display = stack.getTag().getCompound("display");
+                if (stack.hasNbt()) {
+                    assert stack.getNbt() != null;
+                    if (stack.getNbt().contains("display", 10)) {
+                        NbtCompound display = stack.getNbt().getCompound("display");
                         if (display.contains("multiconnect:1.13.2/oldLore", 9) || display.contains("Lore", 9)) {
                             stack = stack.copy();
-                            assert stack.getTag() != null;
-                            display = stack.getTag().getCompound("display");
+                            assert stack.getNbt() != null;
+                            display = stack.getNbt().getCompound("display");
                             NbtList lore = display.contains("multiconnect:1.13.2/oldLore", 9) ? display.getList("multiconnect:1.13.2/oldLore", 8) : display.getList("Lore", 8);
                             NbtList newLore = new NbtList();
                             for (int i = 0; i < lore.size(); i++) {
@@ -395,7 +396,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         LightUpdateS2CPacket lightUpdatePacket = Utils.createPacket(LightUpdateS2CPacket.class, LightUpdateS2CPacket::new, Protocols.V1_14, buf -> {
             buf.pendingRead(VarInt.class, new VarInt(packet.getX()));
             buf.pendingRead(VarInt.class, new VarInt(packet.getZ()));
-            int blockLightMask = bitSetToInt(packet.getVerticalStripBitmask()) << 1;
+            int blockLightMask = bitSetToInt(data.multiconnect_getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK)) << 1;
             buf.pendingRead(VarInt.class, new VarInt(translator.getDimension().hasSkyLight() ? blockLightMask : 0)); // sky light mask
             buf.pendingRead(VarInt.class, new VarInt(blockLightMask)); // block light mask
             buf.pendingRead(VarInt.class, new VarInt(0)); // filled sky light mask
@@ -460,8 +461,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 }
             }
         }
-        packet.getHeightmaps().putLongArray("WORLD_SURFACE", worldSurface.getStorage());
-        packet.getHeightmaps().putLongArray("MOTION_BLOCKING", motionBlocking.getStorage());
+        packet.method_38598().method_38594().putLongArray("WORLD_SURFACE", worldSurface.getStorage());
+        packet.method_38598().method_38594().putLongArray("MOTION_BLOCKING", motionBlocking.getStorage());
 
         super.postTranslateChunk(translator, data);
     }

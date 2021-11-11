@@ -43,7 +43,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.s2c.play.ItemPickupAnimationS2CPacket;
@@ -218,13 +217,13 @@ public class Protocol_1_10 extends Protocol_1_11 {
             @Override
             public ItemStack translate(ItemStack from) {
                 if (from.getItem() == Items.BAT_SPAWN_EGG) {
-                    NbtCompound entityTag = from.getSubTag("EntityTag");
+                    NbtCompound entityTag = from.getSubNbt("EntityTag");
                     if (entityTag != null) {
                         String entityId = entityTag.getString("id");
                         EntityType<?> entityType = ENTITY_IDS.inverse().get(entityId);
                         if (entityType != null) {
                             from = from.copy();
-                            entityTag = from.getSubTag("EntityTag");
+                            entityTag = from.getSubNbt("EntityTag");
                             assert entityTag != null;
                             entityTag.putString("id", Registry.ENTITY_TYPE.getId(entityType).toString());
                         }
@@ -263,14 +262,14 @@ public class Protocol_1_10 extends Protocol_1_11 {
             @Override
             public ItemStack translate(ItemStack from) {
                 if (from.getItem() == Items.BAT_SPAWN_EGG) {
-                    NbtCompound entityTag = from.getSubTag("EntityTag");
+                    NbtCompound entityTag = from.getSubNbt("EntityTag");
                     if (entityTag != null) {
                         Identifier entityId = Identifier.tryParse(entityTag.getString("id"));
                         if (entityId != null) {
                             EntityType<?> entityType = Registry.ENTITY_TYPE.getOrEmpty(entityId).orElse(null);
                             if (entityType != null) {
                                 from = from.copy();
-                                entityTag = from.getSubTag("EntityTag");
+                                entityTag = from.getSubNbt("EntityTag");
                                 assert entityTag != null;
                                 entityTag.putString("id", ENTITY_IDS.get(entityType));
                             }
@@ -286,21 +285,14 @@ public class Protocol_1_10 extends Protocol_1_11 {
     @ThreadSafe(withGameThread = false)
     public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
         // Replace chest block entities with trapped chests depending on the block
-        for (NbtCompound blockEntityTag : translator.getPacket().getBlockEntityTagList()) {
-            if (blockEntityTag.contains("id", NbtElement.STRING_TYPE)
-                    && blockEntityTag.contains("x", NbtElement.NUMBER_TYPE)
-                    && blockEntityTag.contains("y", NbtElement.NUMBER_TYPE)
-                    && blockEntityTag.contains("z", NbtElement.NUMBER_TYPE)) {
-                if ("Chest".equals(blockEntityTag.getString("id"))) {
-                    int x = blockEntityTag.getInt("x");
-                    int y = blockEntityTag.getInt("y");
-                    int z = blockEntityTag.getInt("z");
-                    if (data.getBlockState(x, y, z).getBlock() == Blocks.TRAPPED_CHEST) {
-                        blockEntityTag.putString("id", "TrappedChest");
-                    }
+        translator.getPacket().method_38598().method_38587(translator.getPacket().getX(), translator.getPacket().getZ())
+                .accept((pos, type, blockEntityTag) -> {
+            if (blockEntityTag != null && "Chest".equals(blockEntityTag.getString("id"))) {
+                if (data.getBlockState(pos).getBlock() == Blocks.TRAPPED_CHEST) {
+                    blockEntityTag.putString("id", "TrappedChest");
                 }
             }
-        }
+        });
         super.postTranslateChunk(translator, data);
     }
 

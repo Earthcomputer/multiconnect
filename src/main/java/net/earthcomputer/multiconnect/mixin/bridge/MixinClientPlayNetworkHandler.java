@@ -14,19 +14,25 @@ import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.ChunkConnector;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectableChunk;
+import net.earthcomputer.multiconnect.protocols.v1_14_4.IBiomeStorage_1_14_4;
+import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.class_6603;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityType;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.Packet;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.BlockEventS2CPacket;
@@ -51,6 +57,7 @@ import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
@@ -64,6 +71,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.*;
@@ -77,6 +85,7 @@ public class MixinClientPlayNetworkHandler {
 
     @Shadow private ClientWorld world;
     @Shadow @Final private MinecraftClient client;
+    @Unique private ChunkDataS2CPacket currentChunkPacket;
 
     @Unique private final Cache<ChunkPos, List<Packet<ClientPlayPacketListener>>> afterChunkLoadPackets = CacheBuilder.newBuilder()
             .expireAfterWrite(Constants.PACKET_QUEUE_DROP_TIMEOUT, TimeUnit.SECONDS)
@@ -93,18 +102,25 @@ public class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
     private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
+        boolean canceled = false;
         if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()) {
             if (!((IUserDataHolder) packet).multiconnect_getUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY)) {
                 ChunkDataTranslator.submit(packet);
                 ci.cancel();
+                canceled = true;
             } else if (((IUserDataHolder) packet).multiconnect_getUserData(ChunkDataTranslator.DIMENSION_KEY) != world.getDimension()) {
                 ci.cancel();
+                canceled = true;
             }
+        }
+        if (!canceled) {
+            currentChunkPacket = packet;
         }
     }
 
     @Inject(method = "onChunkData", at = @At("TAIL"))
     private void afterOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
+        currentChunkPacket = null;
         ChunkPos pos = new ChunkPos(packet.getX(), packet.getZ());
         List<Packet<ClientPlayPacketListener>> packets = afterChunkLoadPackets.asMap().remove(pos);
         if (packets != null) {
@@ -114,16 +130,17 @@ public class MixinClientPlayNetworkHandler {
         }
     }
 
-    @ModifyVariable(method = "onChunkData", ordinal = 0, at = @At(value = "STORE", ordinal = 0))
-    private WorldChunk fixChunk(WorldChunk chunk, ChunkDataS2CPacket packet) {
+    @Redirect(method = "method_38539", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientChunkManager;loadChunkFromPacket(IILnet/minecraft/network/PacketByteBuf;Lnet/minecraft/nbt/NbtCompound;Ljava/util/function/Consumer;)Lnet/minecraft/world/chunk/WorldChunk;"))
+    private WorldChunk fixChunk(ClientChunkManager instance, int x, int z, PacketByteBuf buf, NbtCompound nbt, Consumer<class_6603.class_6605> blockEntityProcessor) {
+        WorldChunk chunk = instance.loadChunkFromPacket(x, z, buf, nbt, blockEntityProcessor);
         if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()) {
             if (chunk != null && !Utils.isChunkEmpty(chunk)) {
-                var blocksNeedingUpdate = ((IUserDataHolder) packet).multiconnect_getUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY);
+                var blocksNeedingUpdate = ((IUserDataHolder) currentChunkPacket).multiconnect_getUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY);
                 ChunkConnector chunkConnector = new ChunkConnector(chunk, ConnectionInfo.protocol.getBlockConnector(), blocksNeedingUpdate);
                 ((IBlockConnectableChunk) chunk).multiconnect_setChunkConnector(chunkConnector);
                 for (Direction side : Direction.Type.HORIZONTAL) {
-                    Chunk neighborChunk = world.getChunk(packet.getX() + side.getOffsetX(),
-                            packet.getZ() + side.getOffsetZ(), ChunkStatus.FULL, false);
+                    Chunk neighborChunk = world.getChunk(x + side.getOffsetX(),
+                            z + side.getOffsetZ(), ChunkStatus.FULL, false);
                     if (neighborChunk != null) {
                         chunkConnector.onNeighborChunkLoaded(side);
                         ChunkConnector neighborConnector = ((IBlockConnectableChunk) neighborChunk).multiconnect_getChunkConnector();
@@ -131,6 +148,15 @@ public class MixinClientPlayNetworkHandler {
                             neighborConnector.onNeighborChunkLoaded(side.getOpposite());
                         }
                     }
+                }
+            }
+        }
+
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_14_4) {
+            if (chunk != null) {
+                Biome[] biomeData = ((IUserDataHolder) currentChunkPacket).multiconnect_getUserData(Protocol_1_14_4.BIOME_DATA_KEY);
+                if (biomeData != null) {
+                    ((IBiomeStorage_1_14_4) chunk).multiconnect_setBiomeArray_1_14_4(biomeData);
                 }
             }
         }
@@ -192,7 +218,7 @@ public class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
     private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
-        var registries = (DynamicRegistryManager.Impl) packet.getRegistryManager();
+        var registries = (DynamicRegistryManager.Impl) packet.registryManager();
         assert registries != null;
         //noinspection ConstantConditions
         var registriesAccessor = (DynamicRegistryManagerImplAccessor) (Object) registries;

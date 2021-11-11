@@ -37,7 +37,7 @@ public class MixinDecoderHandler {
     @Unique private final ThreadLocal<TypedMap> userData = new ThreadLocal<>();
 
     @Inject(method = "decode", at = @At(value = "INVOKE", target = "Lio/netty/channel/ChannelHandlerContext;channel()Lio/netty/channel/Channel;", ordinal = 0, remap = false), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void onDecodeHead(ChannelHandlerContext context, ByteBuf buf, List<Object> output, CallbackInfo ci, PacketByteBuf packetBuf, int packetId) {
+    private void onDecodeHead(ChannelHandlerContext context, ByteBuf buf, List<Object> output, CallbackInfo ci, int packetSize, PacketByteBuf packetBuf, int packetId) {
         this.context.set(context);
         this.packetId.set(packetId);
         this.canceled.set(false);
