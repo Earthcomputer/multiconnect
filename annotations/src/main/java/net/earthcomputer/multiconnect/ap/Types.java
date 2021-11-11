@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.ap;
 
 public enum Types {
     BITSET,
+    BOOLEAN,
     BYTE,
     DOUBLE,
     IDENTIFIER,

@@ -81,7 +81,7 @@ private class Optimizer(private val rootNode: McNode) {
                     return@forEachNode
                 }
                 val usage = node.usages.single()
-                if (!usage.op.isExpression) {
+                if (!usage.op.isExpression || usage.op is LambdaOp) {
                     return@forEachNode
                 }
                 val variable = VariableId.create()

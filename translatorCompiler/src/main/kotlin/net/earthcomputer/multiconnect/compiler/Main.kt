@@ -21,6 +21,7 @@ fun main(args: Array<String>) {
     protocols = readCsv(File(FileLocations.dataDir, "protocols.csv"))
     protocolNamesById = protocols.associate { it.id to it.name }
     fillIndexes()
+    checkMessages()
 
     for (protocol in protocols) {
         ProtocolCompiler(protocol.name, protocol.id).compile()

@@ -23,8 +23,7 @@ import java.lang.ref.SoftReference
 
 lateinit var protocols: List<RegistryEntry>
 lateinit var protocolNamesById: Map<Int, String>
-val translateToOlder = mutableMapOf<String, ProtocolInfo>()
-val translateToNewer = mutableMapOf<String, ProtocolInfo>()
+val groups = mutableMapOf<String, MutableList<String>>()
 val polymorphicChildren = mutableMapOf<String, MutableList<String>>()
 fun fillIndexes() {
     for (className in FileLocations.jsonDir.walk()
@@ -33,16 +32,23 @@ fun fillIndexes() {
     ) {
         val classInfo = getClassInfo(className)
         if (classInfo !is MessageInfo) continue
-        classInfo.translateFromOlder?.let { translateToNewer[(it.type as McType.DeclaredType).name] = ProtocolInfo(it.value, McType.DeclaredType(className)) }
-        classInfo.translateFromNewer?.let { translateToOlder[(it.type as McType.DeclaredType).name] = ProtocolInfo(it.value, McType.DeclaredType(className)) }
+        val group = classInfo.variantOf ?: className
+        groups.computeIfAbsent(group) { mutableListOf() } += className
         if (classInfo.polymorphicParent != null) {
             polymorphicChildren.computeIfAbsent(classInfo.polymorphicParent) { mutableListOf() } += className
         }
     }
+    for (group in groups.values) {
+        group.sortBy { (getClassInfo(it) as MessageInfo).minVersion ?: -1 }
+    }
 }
 
 @Serializable
-data class RegistryEntry(val id: Int, val name: String, val oldName: String = name)
+data class RegistryEntry(val id: Int, val name: String, val oldName: String = name) {
+    override fun toString(): String {
+        return "$name (ID $id)"
+    }
+}
 
 @Serializable
 data class PacketType(val id: Int, val clazz: String)
@@ -66,10 +72,29 @@ data class MessageInfo(
     val polymorphic: Polymorphic?,
     val defaultConstruct: DefaultConstruct?,
     val handler: String?,
+    val handlerProtocol: Int?,
     val partialHandlers: List<String>,
-    val translateFromNewer: ProtocolInfo?,
-    val translateFromOlder: ProtocolInfo?
-) : ClassInfo()
+    val variantOf: String?,
+    val minVersion: Int?,
+    val maxVersion: Int?,
+    val tailrec: Boolean = false
+) : ClassInfo() {
+    fun findFieldOrNull(name: String): McField? {
+        return fields.firstOrNull { it.name == name }
+    }
+
+    fun findField(name: String): McField {
+        return fields.first { it.name == name }
+    }
+
+    fun findFunctionOrNull(name: String): McFunction? {
+        return functions.firstOrNull { it.name == name }
+    }
+
+    fun findFunction(name: String): McFunction {
+        return functions.first { it.name == name }
+    }
+}
 
 @Serializable
 data class McField(val name: String, val type: FieldType)
@@ -93,7 +118,10 @@ data class McFunction(
     val returnType: McType,
     val positionalParameters: List<McType>,
     val parameters: List<McParameter>
-)
+) {
+    @Transient
+    lateinit var owner: String
+}
 
 @Serializable
 sealed class McParameter {
@@ -186,9 +214,6 @@ sealed class DefaultConstruct {
     data class Compute(val value: String) : DefaultConstruct()
 }
 
-@Serializable
-data class ProtocolInfo(val value: Int, val type: McType)
-
 @Serializable(with = LengthInfo.Serializer::class)
 data class LengthInfo(val type: Types, val computeInfo: ComputeInfo?) {
     @Serializable
@@ -261,15 +286,25 @@ sealed class IntroduceInfo {
 
 private val classInfoCache = mutableMapOf<String, SoftReference<ClassInfo>>()
 
-@OptIn(ExperimentalSerializationApi::class)
 fun getClassInfo(typeName: String): ClassInfo {
+    return getClassInfoOrNull(typeName) ?: throw CompileException("Class info not found for $typeName")
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+fun getClassInfoOrNull(typeName: String): ClassInfo? {
     classInfoCache[typeName]?.get()?.let { return it }
     val (pkg, className) = splitPackageClass(typeName)
     val jsonFile = FileLocations.jsonDir.resolve("${pkg.replace('.', '/')}/$className.json")
+    if (!jsonFile.exists()) return null
     return jsonFile.inputStream().use {
         Json { explicitNulls = false }.decodeFromStream<ClassInfo>(it)
     }.also {
         it.className = typeName
+        if (it is MessageInfo) {
+            for (function in it.functions) {
+                function.owner = typeName
+            }
+        }
         classInfoCache[typeName] = SoftReference(it)
     }
 }

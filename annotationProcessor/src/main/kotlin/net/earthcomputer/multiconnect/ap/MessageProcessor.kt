@@ -292,8 +292,19 @@ object MessageProcessor {
         println("Checking ${type.qualifiedName}")
         checkForRecursiveTypes(type, type, mutableSetOf(), mutableMapOf(), errorConsumer, processingEnv)
 
-        val handler = type.getHandler(processingEnv, errorConsumer, type)
-        handler?.let { multiconnectFunctions += it }
+        val handler = type.handler
+        val handlerProtocol = handler?.getAnnotation(Handler::class.java)?.protocol?.takeIf { it != -1 }
+        if (handler != null) {
+            val multiconnectFunction = type.findMulticonnectFunction(
+                processingEnv,
+                handler.simpleName.toString(),
+                errorConsumer = errorConsumer,
+                errorElement = handler
+            )
+            if (multiconnectFunction != null) {
+                multiconnectFunctions += multiconnectFunction
+            }
+        }
         val partialHandlers = type.getPartialHandlers(processingEnv, errorConsumer, type)
         for (partialHandler in partialHandlers) {
             multiconnectFunctions += partialHandler
@@ -311,7 +322,8 @@ object MessageProcessor {
             type.polymorphicParent?.qualifiedName?.toString(),
             type.getAnnotation(Polymorphic::class),
             defaultConstruct,
-            handler?.name,
+            handler?.simpleName?.toString(),
+            handlerProtocol,
             partialHandlers.map { it.name },
             variantOf?.asTypeElement()?.qualifiedName?.toString(),
             minVersion,

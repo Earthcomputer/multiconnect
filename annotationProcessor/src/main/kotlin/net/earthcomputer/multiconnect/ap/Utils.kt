@@ -92,15 +92,10 @@ val TypeElement.enumConstants: List<VariableElement>
         elt as VariableElement
     }
 
-fun TypeElement.getHandler(
-    processingEnv: ProcessingEnvironment,
-    errorConsumer: ErrorConsumer? = null,
-    errorElement: Element? = null
-): MulticonnectFunction? {
-    if (!isMessage) return null
-    val handler = enclosedElements.singleOrNull { it.hasAnnotation(Handler::class) } as? ExecutableElement ?: return null
-    if (handler.kind != ElementKind.METHOD) return null
-    return findMulticonnectFunction(processingEnv, handler.simpleName.toString(), errorConsumer = errorConsumer, errorElement = errorElement)
+val TypeElement.handler: ExecutableElement?
+    get() {
+        if (!isMessage) return null
+        return (enclosedElements.singleOrNull { it.hasAnnotation(Handler::class) } as? ExecutableElement)?.takeIf { it.kind == ElementKind.METHOD }
 }
 
 fun TypeElement.getPartialHandlers(

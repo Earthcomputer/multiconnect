@@ -4,6 +4,8 @@ import java.util.Collections
 import java.util.SortedSet
 
 class McNode(op: McNodeOp, inputs: MutableList<McNode>) {
+    constructor(op: McNodeOp, vararg inputs: McNode) : this(op, mutableListOf(*inputs))
+
     private var opVal = op
     var op: McNodeOp
         get() = opVal
@@ -104,6 +106,25 @@ class McNode(op: McNodeOp, inputs: MutableList<McNode>) {
         }
     }
 
+    fun castIfNecessary(targetType: McType): McNode {
+        val currentType = op.returnType
+        if (targetType == currentType) {
+            return this
+        }
+        if (currentType is McType.PrimitiveType && targetType is McType.PrimitiveType) {
+            if (currentType.kind == PrimitiveTypeKind.FLOAT && targetType.kind == PrimitiveTypeKind.DOUBLE) {
+                return McNode(ImplicitCastOp(currentType, targetType), this)
+            }
+            if (targetType.kind == PrimitiveTypeKind.LONG) {
+                return McNode(ImplicitCastOp(currentType, targetType), this)
+            }
+            if (targetType.kind == PrimitiveTypeKind.INT && currentType.kind != PrimitiveTypeKind.LONG) {
+                return McNode(ImplicitCastOp(currentType, targetType), this)
+            }
+        }
+        return McNode(CastOp(currentType, targetType), this)
+    }
+
     private var hasSideEffectsCache: Boolean? = null
     fun hasSideEffects(): Boolean = hasSideEffectsCache
         ?: (op.hasSideEffects || inputs.any { it.hasSideEffects() }).also { hasSideEffectsCache = it }
@@ -181,6 +202,16 @@ class CastOp(fromType: McType, private val toType: McType) : McNodeOp {
     }
 }
 
+class ImplicitCastOp(fromType: McType, toType: McType) : McNodeOp {
+    override val paramTypes = listOf(fromType)
+    override val returnType = toType
+    override val isExpensive = false
+    override val precedence = Precedence.PARENTHESES
+    override fun emit(node: McNode, emitter: Emitter) {
+        node.inputs[0].emit(emitter, Precedence.COMMA)
+    }
+}
+
 abstract class CstOp : McNodeOp {
     override val paramTypes = listOf<McType>()
     override val isExpensive = false
@@ -205,6 +236,13 @@ class CstLongOp(private val value: Long) : CstOp() {
     override val returnType = McType.LONG
     override fun emit(node: McNode, emitter: Emitter) {
         emitter.append(value.toString()).append("L")
+    }
+}
+
+class CstFloatOp(private val value: Float) : CstOp() {
+    override val returnType = McType.FLOAT
+    override fun emit(node: McNode, emitter: Emitter) {
+        emitter.append(value.toString()).append("F")
     }
 }
 
@@ -237,11 +275,24 @@ class CstStringOp(private val value: String) : CstOp() {
     }
 }
 
+class CstNullOp(override val returnType: McType) : CstOp() {
+    init {
+        if (returnType is McType.PrimitiveType) {
+            throw IllegalArgumentException("Primitive types are not nullable")
+        }
+    }
+
+    override fun emit(node: McNode, emitter: Emitter) {
+        emitter.append("null")
+    }
+}
+
 fun createCstOp(value: Any): CstOp {
     return when (value) {
         is Boolean -> CstBoolOp(value)
         is Int -> CstIntOp(value)
         is Long -> CstLongOp(value)
+        is Float -> CstFloatOp(value)
         is Double -> CstDoubleOp(value)
         is String -> CstStringOp(value)
         else -> throw CompileException("Invalid constant $value")
@@ -257,6 +308,17 @@ class LoadVariableOp(val variable: VariableId, type: McType) : McNodeOp {
     override val precedence = Precedence.PARENTHESES
     override fun emit(node: McNode, emitter: Emitter) {
         emitter.append(variable.name)
+    }
+}
+
+class LoadFieldOp(ownerType: McType, private val fieldName: String, fieldType: McType) : McNodeOp {
+    override val paramTypes = listOf(ownerType)
+    override val returnType = fieldType
+    override val isExpensive = false
+    override val precedence = Precedence.PARENTHESES
+    override fun emit(node: McNode, emitter: Emitter) {
+        node.inputs[0].emit(emitter, Precedence.PARENTHESES)
+        emitter.append(".").append(fieldName)
     }
 }
 
@@ -414,6 +476,46 @@ class SwitchOp<T: Any>(
     }
 }
 
+class LambdaOp(
+    override val returnType: McType,
+    val bodyReturnType: McType,
+    val bodyParamTypes: List<McType>,
+    val bodyParamNames: List<VariableId>
+) : McNodeOp {
+    init {
+        if (bodyParamTypes.size != bodyParamNames.size) {
+            throw IllegalArgumentException("bodyParamTypes.size != bodyParamNames.size")
+        }
+    }
+
+    override val declaredVariables = bodyParamNames
+    override val paramTypes = listOf(bodyReturnType)
+    override val isExpensive = false
+    override val precedence = Precedence.PARENTHESES
+
+    override fun emit(node: McNode, emitter: Emitter) {
+        if (bodyParamTypes.size == 1) {
+            emitter.append(bodyParamNames.single().name)
+        } else {
+            emitter.append("(").append(bodyParamNames.joinToString(", ") { it.name }).append(")")
+        }
+        emitter.append(" -> ")
+        if (node.inputs[0].op == StmtListOp) {
+            emitter.append("{").indent().appendNewLine()
+            emitter.pushReturnHandler { func ->
+                emitter.append("return ")
+                func()
+                emitter.append(";")
+            }
+            node.inputs[0].emit(emitter, Precedence.COMMA)
+            emitter.popReturnHandler()
+            emitter.dedent().appendNewLine().append("}")
+        } else {
+            node.inputs[0].emit(emitter, Precedence.COMMA)
+        }
+    }
+}
+
 abstract class McStmtOp : McNodeOp {
     override val isExpression = false
     override val precedence = Precedence.PARENTHESES
@@ -473,6 +575,18 @@ class StoreVariableStmtOp(
     }
 }
 
+class StoreFieldStmtOp(ownerType: McType, private val fieldName: String, fieldType: McType) : McStmtOp() {
+    override val paramTypes = listOf(ownerType, fieldType)
+    override val hasSideEffects = true
+
+    override fun emit(node: McNode, emitter: Emitter) {
+        node.inputs[0].emit(emitter, Precedence.PARENTHESES)
+        emitter.append(".").append(fieldName).append(" = ")
+        node.inputs[1].emit(emitter, Precedence.ASSIGNMENT)
+        emitter.append(";")
+    }
+}
+
 class DeclareVariableOnlyStmtOp(private val variable: VariableId, private val type: McType) : McStmtOp() {
     constructor(variable: String, type: McType) : this(VariableId.immediate(variable), type)
 
@@ -505,6 +619,18 @@ object IfElseStmtOp : McStmtOp() {
         IfStmtOp.emit(node, emitter)
         emitter.append(" else {").indent().appendNewLine()
         node.inputs[2].emit(emitter, Precedence.COMMA)
+        emitter.dedent().appendNewLine().append("}")
+    }
+}
+
+object WhileStmtOp : McStmtOp() {
+    override val paramTypes = listOf(McType.BOOLEAN, McType.VOID)
+
+    override fun emit(node: McNode, emitter: Emitter) {
+        emitter.append("while (")
+        node.inputs[0].emit(emitter, Precedence.COMMA)
+        emitter.append(") {").indent().appendNewLine()
+        node.inputs[1].emit(emitter, Precedence.COMMA)
         emitter.dedent().appendNewLine().append("}")
     }
 }

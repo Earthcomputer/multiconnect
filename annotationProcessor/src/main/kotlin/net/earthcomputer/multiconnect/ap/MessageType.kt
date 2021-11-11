@@ -13,6 +13,7 @@ class MessageType @OptIn(ExperimentalSerializationApi::class) constructor(
     @Contextual val polymorphic: Polymorphic?,
     @Contextual val defaultConstruct: DefaultConstruct?,
     val handler: String?,
+    val handlerProtocol: Int?,
     val partialHandlers: List<String>,
     val variantOf: String?,
     val minVersion: Int?,

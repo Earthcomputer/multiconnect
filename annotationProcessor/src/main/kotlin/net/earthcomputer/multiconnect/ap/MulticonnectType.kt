@@ -45,7 +45,8 @@ data class MulticonnectType(
                 return Types.MESSAGE
             }
             return when (realType.kind) {
-                TypeKind.BOOLEAN, TypeKind.BYTE -> Types.BYTE
+                TypeKind.BOOLEAN -> Types.BOOLEAN
+                TypeKind.BYTE -> Types.BYTE
                 TypeKind.SHORT -> Types.SHORT
                 TypeKind.INT -> Types.VAR_INT
                 TypeKind.LONG -> Types.VAR_LONG
@@ -84,6 +85,7 @@ data class MulticonnectType(
 }
 
 private val INTEGRAL_SIZES = mapOf(
+    Types.BOOLEAN to 1,
     Types.BYTE to 1,
     Types.UNSIGNED_BYTE to 1,
     Types.SHORT to 2,
