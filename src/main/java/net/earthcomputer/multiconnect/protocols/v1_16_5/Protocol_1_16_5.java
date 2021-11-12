@@ -23,6 +23,7 @@ import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.ShulkerEntityAcces
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.TagGroupSerializedAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_17.EntityDestroyS2CPacket_1_17;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.advancement.Advancement;
@@ -76,8 +77,6 @@ import java.util.stream.Stream;
 
 public class Protocol_1_16_5 extends Protocol_1_17 {
     public static final int BIOME_ARRAY_LENGTH = 1024;
-    private static final int WIDTH_BITS = MathHelper.log2DeBruijn(16) - 2;
-    private static final int DEFAULT_BIOME_LENGTH = 1 << (WIDTH_BITS + WIDTH_BITS + BlockPos.SIZE_BITS_Y - 2);
     private static short lastActionId = 0;
 
     private static final TrackedData<Optional<BlockPos>> OLD_SHULKER_ATTACHED_POSITION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.OPTIONAL_BLOCK_POS);
@@ -124,7 +123,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             buf.enablePassthroughMode();
             buf.readNbt(); // heightmaps
             if (fullChunk) {
-                buf.readIntArray(DEFAULT_BIOME_LENGTH);
+                buf.readIntArray(Protocol_1_17_1.MAX_BIOME_LENGTH);
             } else {
                 // TODO: get the actual biome array from somewhere
                 buf.pendingRead(int[].class, new int[BIOME_ARRAY_LENGTH]);

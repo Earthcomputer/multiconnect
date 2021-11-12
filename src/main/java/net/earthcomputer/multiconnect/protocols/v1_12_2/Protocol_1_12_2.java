@@ -134,11 +134,11 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            BitSet verticalStripBitmask = buf.multiconnect_getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
+            BitSet verticalStripBitmask = ChunkDataTranslator.current().getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if (verticalStripBitmask.get(sectionY)) {
-                    int paletteSize = ChunkData.skipPalette(buf);
+                    int paletteSize = ChunkData.skipPalette(buf, false);
                     if (paletteSize > 8) {
                         buf.disablePassthroughMode();
                         buf.readVarInt(); // dummy 0
@@ -1628,19 +1628,19 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         rename(registry, BiomeKeys.BADLANDS, "mesa");
         rename(registry, BiomeKeys.WOODED_BADLANDS_PLATEAU, "mesa_rock");
         rename(registry, BiomeKeys.BADLANDS_PLATEAU, "mesa_clear_rock");
-        registry.purge(BiomeKeys.SMALL_END_ISLANDS);
-        registry.purge(BiomeKeys.END_MIDLANDS);
-        registry.purge(BiomeKeys.END_HIGHLANDS);
-        registry.purge(BiomeKeys.END_BARRENS);
-        registry.purge(BiomeKeys.WARM_OCEAN);
-        registry.purge(BiomeKeys.LUKEWARM_OCEAN);
-        registry.purge(BiomeKeys.COLD_OCEAN);
-        registry.purge(BiomeKeys.DEEP_WARM_OCEAN);
-        registry.purge(BiomeKeys.DEEP_LUKEWARM_OCEAN);
-        registry.purge(BiomeKeys.DEEP_WARM_OCEAN);
-        registry.purge(BiomeKeys.DEEP_LUKEWARM_OCEAN);
-        registry.purge(BiomeKeys.DEEP_COLD_OCEAN);
-        registry.purge(BiomeKeys.DEEP_FROZEN_OCEAN);
+        registry.unregister(BiomeKeys.SMALL_END_ISLANDS);
+        registry.unregister(BiomeKeys.END_MIDLANDS);
+        registry.unregister(BiomeKeys.END_HIGHLANDS);
+        registry.unregister(BiomeKeys.END_BARRENS);
+        registry.unregister(BiomeKeys.WARM_OCEAN);
+        registry.unregister(BiomeKeys.LUKEWARM_OCEAN);
+        registry.unregister(BiomeKeys.COLD_OCEAN);
+        registry.unregister(BiomeKeys.DEEP_WARM_OCEAN);
+        registry.unregister(BiomeKeys.DEEP_LUKEWARM_OCEAN);
+        registry.unregister(BiomeKeys.DEEP_WARM_OCEAN);
+        registry.unregister(BiomeKeys.DEEP_LUKEWARM_OCEAN);
+        registry.unregister(BiomeKeys.DEEP_COLD_OCEAN);
+        registry.unregister(BiomeKeys.DEEP_FROZEN_OCEAN);
         rename(registry, BiomeKeys.THE_VOID, "void");
         rename(registry, BiomeKeys.SUNFLOWER_PLAINS, "mutated_plains");
         rename(registry, BiomeKeys.DESERT_LAKES, "mutated_desert");

@@ -255,11 +255,10 @@ public class DebugUtils {
         ClientWorld world = networkHandler.getWorld();
         DynamicRegistryManager registryManager = networkHandler.getRegistryManager();
         ChunkDataS2CPacket packet = Utils.createEmptyChunkDataPacket(x, z, world, registryManager);
-        ChunkDataPacketDataAccessor accessor = (ChunkDataPacketDataAccessor) packet;
-        ((IUserDataHolder) accessor).multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, false);
-        accessor.setData(data);
+        ((IUserDataHolder) packet).multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, false);
+        ((ChunkDataPacketDataAccessor) packet.method_38598()).setData(data);
         if (verticalStripBitmask != null) {
-            ((IUserDataHolder) accessor).multiconnect_setUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK, verticalStripBitmask);
+            ((IUserDataHolder) packet).multiconnect_setUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK, verticalStripBitmask);
         }
         ChunkDataTranslator.submit(packet);
     }

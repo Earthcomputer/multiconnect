@@ -51,7 +51,7 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
             if (!ChunkDataTranslator.current().isFullChunk())
                 return;
-            BitSet verticalStripBitmask = buf.multiconnect_getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
+            BitSet verticalStripBitmask = ChunkDataTranslator.current().getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if (verticalStripBitmask.get(sectionY)) {

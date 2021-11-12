@@ -10,6 +10,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkSection;
@@ -130,13 +131,36 @@ public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHol
     }
 
     @ThreadSafe(withGameThread = false)
-    public static int skipPalette(PacketByteBuf buf) {
+    public static void skipPalettedContainer(PacketByteBuf buf, boolean biomes, boolean allowSingletonPalette) {
+        int paletteSize = skipPalette(buf, allowSingletonPalette);
+        int elementBits;
+        if (paletteSize == 0 && allowSingletonPalette) {
+            elementBits = 1;
+        } else {
+            // TODO: this is a fundamental flaw with how multiconnect works atm, holy shit get that rewrite done
+            if (biomes) {
+                elementBits = paletteSize <= 2 ? paletteSize : MathHelper.log2DeBruijn(ChunkDataTranslator.current().getRegistryManager().get(Registry.BIOME_KEY).size());
+            } else {
+                elementBits = paletteSize <= 8 ? Math.max(4, paletteSize) : MathHelper.log2DeBruijn(Block.STATE_IDS.size());
+            }
+        }
+        int elementsPerLong = 64 / elementBits;
+        int arraySize = ((biomes ? 64 : 4096) + elementsPerLong - 1) / elementsPerLong;
+        buf.readLongArray(new long[arraySize]); // data
+    }
+
+    @ThreadSafe(withGameThread = false)
+    public static int skipPalette(PacketByteBuf buf, boolean allowSingletonPalette) {
         int paletteSize = buf.readByte();
         if (paletteSize <= 8) {
-            // array and bimap palette data look the same enough to use the same code here
-            int size = buf.readVarInt();
-            for (int i = 0; i < size; i++)
-                buf.readVarInt(); // state id
+            if (paletteSize == 0 && allowSingletonPalette) {
+                buf.readVarInt(); // singleton id
+            } else {
+                // array and bimap palette data look the same enough to use the same code here
+                int size = buf.readVarInt();
+                for (int i = 0; i < size; i++)
+                    buf.readVarInt(); // state id
+            }
         }
         return paletteSize;
     }

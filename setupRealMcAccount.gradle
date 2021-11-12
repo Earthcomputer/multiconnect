@@ -99,7 +99,7 @@ task setupRealMcAccount {
 
         def categories = [:]
         def category
-        minecraft.devLauncherConfig.eachLine { line ->
+        loom.files.devLauncherConfig.eachLine { line ->
             if (!line.empty && Character.isWhitespace(line.charAt(0))) {
                 category << line.trim()
             } else {
@@ -123,12 +123,12 @@ task setupRealMcAccount {
         clientArgs << selectedAccount.getRealUUID().toString().replace('-', '')
         clientArgs << '--username'
         clientArgs << selectedAccount.minecraftUsername
-        clientArgs << '--userType'
-        clientArgs << selectedAccount.type
+//        clientArgs << '--userType'
+//        clientArgs << selectedAccount.type
 //        clientArgs << '--userProperties'
 //        clientArgs << userProperties
 
-        def pw = minecraft.devLauncherConfig.newPrintWriter()
+        def pw = loom.files.devLauncherConfig.newPrintWriter()
         for (def ctgy : categories.keySet()) {
             pw.println ctgy
             for (def val : categories[ctgy]) {

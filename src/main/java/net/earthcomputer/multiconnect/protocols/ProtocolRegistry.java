@@ -93,7 +93,7 @@ public class ProtocolRegistry {
 
     static {
         register(V1_18, new Protocol_1_18());
-        register(V1_17_1, new Protocol_1_17_1());
+        register(V1_17_1, new Protocol_1_17_1(), Protocol_1_17_1::registerTranslators);
         register(V1_17, new Protocol_1_17(), Protocol_1_17::registerTranslators);
         register(V1_16_5, new Protocol_1_16_5(), Protocol_1_16_5::registerTranslators);
         register(V1_16_3, new Protocol_1_16_3(), Protocol_1_16_3::registerTranslators);

@@ -79,12 +79,12 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
     public static void registerTranslators() {
         ProtocolRegistry.registerInboundTranslator(ChunkData.class, buf -> {
-            BitSet verticalStripBitmask = buf.multiconnect_getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
+            BitSet verticalStripBitmask = ChunkDataTranslator.current().getUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
             buf.enablePassthroughMode();
             for (int sectionY = 0; sectionY < 16; sectionY++) {
                 if (verticalStripBitmask.get(sectionY)) {
                     buf.readShort(); // non-empty block count
-                    int paletteSize = ChunkData.skipPalette(buf);
+                    int paletteSize = ChunkData.skipPalette(buf, false);
                     // translate from packed chunk data to aligned
                     if (paletteSize == 0 || MathHelper.isPowerOfTwo(paletteSize)) {
                         // shortcut, for powers of 2, elements are already aligned
@@ -356,7 +356,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     public static void skipPalettedContainer(PacketByteBuf buf) {
-        int paletteSize = ChunkData.skipPalette(buf);
+        int paletteSize = ChunkData.skipPalette(buf, false);
         buf.readLongArray(new long[paletteSize * 64]); // chunk data
     }
 

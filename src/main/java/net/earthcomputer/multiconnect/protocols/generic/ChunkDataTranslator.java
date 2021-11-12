@@ -163,7 +163,7 @@ public class ChunkDataTranslator {
                 ((IUserDataHolder) packet).multiconnect_setUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY, blocksNeedingConnectionUpdate);
 
                 ConnectionInfo.protocol.postTranslateChunk(translator, chunkData);
-                ((ChunkDataPacketDataAccessor) packet).setData(chunkData.toByteArray());
+                ((ChunkDataPacketDataAccessor) packet.method_38598()).setData(chunkData.toByteArray());
 
                 CURRENT_TRANSLATOR.set(null);
 
@@ -213,6 +213,10 @@ public class ChunkDataTranslator {
 
     public ChunkDataS2CPacket getPacket() {
         return packet;
+    }
+
+    public <T> T getUserData(Key<T> key) {
+        return ((IUserDataHolder) packet).multiconnect_getUserData(key);
     }
 
     public boolean isFullChunk() {

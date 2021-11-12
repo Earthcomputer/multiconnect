@@ -1011,7 +1011,11 @@ public final class TransformerByteBuf extends PacketByteBuf implements IUserData
         return read(long[].class,
                 () -> super.readLongArray(out),
                 () -> super.readLongArray(out).clone(),
-                value -> System.arraycopy(value, 0, out, 0, value.length),
+                value -> {
+                    if (value.length <= out.length) {
+                        System.arraycopy(value, 0, out, 0, value.length);
+                    }
+                },
                 Function.identity());
     }
 
