@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_14_1.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,6 +29,21 @@ public class MixinClientPlayerEntity {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_14_1) {
             ci.setReturnValue(((ClientPlayerEntity) (Object) this).input.movementForward >= 0.8);
         }
+    }
+
+    @Redirect(
+        method = "tickMovement()V",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/input/Input;hasForwardMovement()Z",
+            ordinal = 0
+        )
+    )
+    private boolean disableSprintSneak(Input input) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_14_1) {
+            return input.movementForward >= 0.8F;
+        }
+        return input.hasForwardMovement();
     }
 
 }
