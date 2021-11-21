@@ -156,7 +156,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
                 int paletteCount = paletteMap.size();
                 char[] secPalette;
                 char[] secData = newData[sec];
-                bitsPerBlock[sec] = (byte) Math.max(4, MathHelper.log2DeBruijn(paletteCount));
+                bitsPerBlock[sec] = (byte) Math.max(4, MathHelper.ceilLog2(paletteCount));
 
                 if (paletteCount <= 256) {
                     secPalette = new char[paletteCount];

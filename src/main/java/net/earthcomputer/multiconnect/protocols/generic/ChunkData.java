@@ -16,6 +16,8 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkSection;
 
 import java.util.BitSet;
+import java.util.HashSet;
+import java.util.Set;
 
 public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHolder {
     private final ChunkSection[] sections;
@@ -58,6 +60,7 @@ public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHol
         Registry<Biome> biomeRegistry = ChunkDataTranslator.current().getRegistryManager().get(Registry.BIOME_KEY);
 
         ChunkSection[] sections = this.sections.clone();
+        Set<Biome> biomes = new HashSet<>();
         for (int ourSectionY = 0; ourSectionY < sections.length; ourSectionY++) {
             if (sections[ourSectionY] == null) {
                 ChunkSection section = new ChunkSection(ourSectionY, biomeRegistry);
@@ -65,14 +68,23 @@ public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHol
                 for (int copyFromSectionY = 1; copyFromSectionY < max; copyFromSectionY = copyFromSectionY > 0 ? -copyFromSectionY : -copyFromSectionY + 1) {
                     if (ourSectionY + copyFromSectionY >= 0 && ourSectionY + copyFromSectionY < sections.length && this.sections[ourSectionY + copyFromSectionY] != null) {
                         // copy biomes from that section
+                        biomes.clear();
                         int copyFromY = copyFromSectionY < ourSectionY ? 3 : 0;
                         for (int z = 0; z < 4; z++) {
                             for (int x = 0; x < 4; x++) {
                                 for (int y = 0; y < 4; y++) {
-                                    section.method_38294().set(x, y, z, this.sections[ourSectionY + copyFromSectionY].method_38294().get(x, copyFromY, z));
+                                    Biome biome = this.sections[ourSectionY + copyFromSectionY].method_38294().get(x, copyFromY, z);
+                                    if (biomes.add(biome)) {
+                                        // check if biomes.size() was *previously* a power of 2 (or 0)
+                                        if (((biomes.size() - 1) & (biomes.size() - 2)) == 0) {
+                                            section.method_38294().onResize(MathHelper.ceilLog2(biomes.size()), biome);
+                                        }
+                                    }
+                                    section.method_38294().set(x, y, z, biome);
                                 }
                             }
                         }
+                        break;
                     }
                 }
                 sections[ourSectionY] = section;
@@ -159,9 +171,9 @@ public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHol
         } else {
             // TODO: this is a fundamental flaw with how multiconnect works atm, holy shit get that rewrite done
             if (biomes) {
-                elementBits = paletteSize <= 2 ? paletteSize : MathHelper.log2DeBruijn(ChunkDataTranslator.current().getRegistryManager().get(Registry.BIOME_KEY).size());
+                elementBits = paletteSize <= 2 ? paletteSize : MathHelper.ceilLog2(ChunkDataTranslator.current().getRegistryManager().get(Registry.BIOME_KEY).size());
             } else {
-                elementBits = paletteSize <= 8 ? Math.max(4, paletteSize) : MathHelper.log2DeBruijn(Block.STATE_IDS.size());
+                elementBits = paletteSize <= 8 ? Math.max(4, paletteSize) : MathHelper.ceilLog2(Block.STATE_IDS.size());
             }
         }
         int elementsPerLong = 64 / elementBits;

@@ -48,7 +48,7 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
     public static final Key<BitSet> VERTICAL_STRIP_BITMASK = Key.create("verticalStripBitmask");
     private static final Key<int[]> BIOMES = Key.create("biomes");
-    private static final int WIDTH_BITS = MathHelper.log2DeBruijn(16) - 2;
+    private static final int WIDTH_BITS = MathHelper.ceilLog2(16) - 2;
     public static final int MAX_BIOME_LENGTH = 1 << (WIDTH_BITS + WIDTH_BITS + BlockPos.SIZE_BITS_Y - 2);
 
     private static final Int2ObjectMap<RegistryKey<Biome>> OLD_BIOME_IDS = new Int2ObjectOpenHashMap<>();
@@ -233,7 +233,7 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
                     if (biomePalette.isEmpty()) {
                         continue;
                     }
-                    int bitsPerBiome = MathHelper.log2DeBruijn(biomePalette.size());
+                    int bitsPerBiome = MathHelper.ceilLog2(biomePalette.size());
                     buf.pendingRead(Byte.class, (byte) bitsPerBiome);
                     if (bitsPerBiome <= 2) {
                         if (bitsPerBiome == 0) {
@@ -246,7 +246,7 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
                             }
                         }
                     } else {
-                        bitsPerBiome = MathHelper.log2DeBruijn(biomeRegistry.size());
+                        bitsPerBiome = MathHelper.ceilLog2(biomeRegistry.size());
                     }
                     int biomesPerLong = 64 / bitsPerBiome;
                     long[] result = new long[(64 + biomesPerLong - 1) / biomesPerLong];
@@ -310,5 +310,6 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
         registry.unregister(SoundEvents.ITEM_BUNDLE_DROP_CONTENTS);
         registry.unregister(SoundEvents.ITEM_BUNDLE_INSERT);
         registry.unregister(SoundEvents.ITEM_BUNDLE_REMOVE_ONE);
+        registry.unregister(SoundEvents.BLOCK_GROWING_PLANT_CROP);
     }
 }

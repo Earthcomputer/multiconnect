@@ -26,7 +26,7 @@ public class DefaultRegistries<T> {
 
     private static final Map<Block, Item> DEFAULT_BLOCK_ITEMS = new HashMap<>();
     private static final Map<EntityType<?>, SpawnEggItem> DEFAULT_SPAWN_EGG_ITEMS = new IdentityHashMap<>();
-    private static final Int2ObjectBiMap<TrackedDataHandler<?>> DEFAULT_TRACKED_DATA_HANDLERS = Int2ObjectBiMap.method_37913(16);
+    private static final Int2ObjectBiMap<TrackedDataHandler<?>> DEFAULT_TRACKED_DATA_HANDLERS = Int2ObjectBiMap.create(16);
 
     public final ObjectList<T> defaultRawIdToEntry = new ObjectArrayList<>(256);
     public final Object2IntMap<T> defaultEntryToRawId = new Object2IntOpenCustomHashMap<>(Util.identityHashStrategy());

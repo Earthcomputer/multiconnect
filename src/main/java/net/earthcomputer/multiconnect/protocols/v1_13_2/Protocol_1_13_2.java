@@ -461,8 +461,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 }
             }
         }
-        packet.method_38598().method_38594().putLongArray("WORLD_SURFACE", worldSurface.getStorage());
-        packet.method_38598().method_38594().putLongArray("MOTION_BLOCKING", motionBlocking.getStorage());
+        packet.method_38598().method_38594().putLongArray("WORLD_SURFACE", worldSurface.getData());
+        packet.method_38598().method_38594().putLongArray("MOTION_BLOCKING", motionBlocking.getData());
 
         super.postTranslateChunk(translator, data);
     }
