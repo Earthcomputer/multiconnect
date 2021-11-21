@@ -55,11 +55,33 @@ public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHol
     }
 
     public byte[] toByteArray() {
+        Registry<Biome> biomeRegistry = ChunkDataTranslator.current().getRegistryManager().get(Registry.BIOME_KEY);
+
+        ChunkSection[] sections = this.sections.clone();
+        for (int ourSectionY = 0; ourSectionY < sections.length; ourSectionY++) {
+            if (sections[ourSectionY] == null) {
+                ChunkSection section = new ChunkSection(ourSectionY, biomeRegistry);
+                int max = Math.max(ourSectionY, sections.length - 1 - ourSectionY);
+                for (int copyFromSectionY = 1; copyFromSectionY < max; copyFromSectionY = copyFromSectionY > 0 ? -copyFromSectionY : -copyFromSectionY + 1) {
+                    if (ourSectionY + copyFromSectionY >= 0 && ourSectionY + copyFromSectionY < sections.length && this.sections[ourSectionY + copyFromSectionY] != null) {
+                        // copy biomes from that section
+                        int copyFromY = copyFromSectionY < ourSectionY ? 3 : 0;
+                        for (int z = 0; z < 4; z++) {
+                            for (int x = 0; x < 4; x++) {
+                                for (int y = 0; y < 4; y++) {
+                                    section.method_38294().set(x, y, z, this.sections[ourSectionY + copyFromSectionY].method_38294().get(x, copyFromY, z));
+                                }
+                            }
+                        }
+                    }
+                }
+                sections[ourSectionY] = section;
+            }
+        }
+
         int size = 0;
         for (ChunkSection section : sections) {
-            if (section != null) {
-                size += section.getPacketSize();
-            }
+            size += section.getPacketSize();
         }
         byte[] buffer = new byte[size];
         ByteBuf rawBuf = Unpooled.wrappedBuffer(buffer);
@@ -67,9 +89,7 @@ public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHol
         PacketByteBuf buf = new PacketByteBuf(rawBuf);
 
         for (ChunkSection section : sections) {
-            if (section != null) {
-                section.toPacket(buf);
-            }
+            section.toPacket(buf);
         }
 
         return buffer;

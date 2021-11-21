@@ -10,7 +10,7 @@
     "LivingEntityAccessor",
     "MixinClientPlayNetworkHandler",
     "MixinEntity",
-    "MixinWorld",
+    "MixinClientWorld",
     "MixinWorldChunk",
     "TrackerUpdatePacketAccessor",
     "TridentEntityAccessor",

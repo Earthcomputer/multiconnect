@@ -11,6 +11,7 @@ plugins {
 	id 'com.modrinth.minotaur' version '1.2.1'
 	id 'com.github.breadmoirai.github-release' version '2.2.12'
 	id 'io.codearte.nexus-staging' version '0.30.0'
+	id 'io.github.juuxel.loom-quiltflower-mini' version '1.1.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_16
@@ -127,6 +128,10 @@ jar {
 
 loom {
 	accessWidenerPath = file('src/main/resources/multiconnect.accesswidener')
+}
+
+quiltflower {
+	addToRuntimeClasspath = true
 }
 
 subprojects {

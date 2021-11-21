@@ -10,6 +10,7 @@ import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.EmptyByteBuf;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
@@ -19,6 +20,7 @@ import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.DimensionTypeAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.InboundTranslator;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
@@ -544,6 +546,9 @@ public class Utils {
         Biome[] biomes = new Biome[256];
         Arrays.fill(biomes, plainsBiome);
         iPacket.multiconnect_setUserData(Protocol_1_14_4.BIOME_DATA_KEY, biomes);
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_17_1) {
+            iPacket.multiconnect_setUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK, new BitSet());
+        }
         return packet;
     }
 }
