@@ -19,7 +19,6 @@ import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.class_6603;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -131,8 +130,15 @@ public class MixinClientPlayNetworkHandler {
     }
 
     @Redirect(method = "method_38539", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientChunkManager;loadChunkFromPacket(IILnet/minecraft/network/PacketByteBuf;Lnet/minecraft/nbt/NbtCompound;Ljava/util/function/Consumer;)Lnet/minecraft/world/chunk/WorldChunk;"))
-    private WorldChunk fixChunk(ClientChunkManager instance, int x, int z, PacketByteBuf buf, NbtCompound nbt, Consumer<class_6603.class_6605> blockEntityProcessor) {
-        WorldChunk chunk = instance.loadChunkFromPacket(x, z, buf, nbt, blockEntityProcessor);
+    private WorldChunk fixChunk(
+            ClientChunkManager instance,
+            int x,
+            int z,
+            PacketByteBuf buf,
+            NbtCompound nbt,
+            Consumer<net.minecraft.network.packet.s2c.play.ChunkData.BlockEntityVisitor> blockEntityVisitor
+    ) {
+        WorldChunk chunk = instance.loadChunkFromPacket(x, z, buf, nbt, blockEntityVisitor);
         if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()) {
             if (chunk != null && !Utils.isChunkEmpty(chunk)) {
                 var blocksNeedingUpdate = ((IUserDataHolder) currentChunkPacket).multiconnect_getUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY);

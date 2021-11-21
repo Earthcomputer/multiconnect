@@ -7,7 +7,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.TimeoutException;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
-import net.earthcomputer.multiconnect.mixin.bridge.ChunkDataPacketDataAccessor;
+import net.earthcomputer.multiconnect.mixin.bridge.ChunkDataAccessor;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.mixin.connect.DecoderHandlerAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
@@ -256,7 +256,7 @@ public class DebugUtils {
         DynamicRegistryManager registryManager = networkHandler.getRegistryManager();
         ChunkDataS2CPacket packet = Utils.createEmptyChunkDataPacket(x, z, world, registryManager);
         ((IUserDataHolder) packet).multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, false);
-        ((ChunkDataPacketDataAccessor) packet.method_38598()).setData(data);
+        ((ChunkDataAccessor) packet.method_38598()).setSectionsData(data);
         if (verticalStripBitmask != null) {
             ((IUserDataHolder) packet).multiconnect_setUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK, verticalStripBitmask);
         }

@@ -285,7 +285,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
     @ThreadSafe(withGameThread = false)
     public void postTranslateChunk(ChunkDataTranslator translator, ChunkData data) {
         // Replace chest block entities with trapped chests depending on the block
-        translator.getPacket().method_38598().method_38587(translator.getPacket().getX(), translator.getPacket().getZ())
+        translator.getPacket().method_38598().getBlockEntities(translator.getPacket().getX(), translator.getPacket().getZ())
                 .accept((pos, type, blockEntityTag) -> {
             if (blockEntityTag != null && "Chest".equals(blockEntityTag.getString("id"))) {
                 if (data.getBlockState(pos).getBlock() == Blocks.TRAPPED_CHEST) {

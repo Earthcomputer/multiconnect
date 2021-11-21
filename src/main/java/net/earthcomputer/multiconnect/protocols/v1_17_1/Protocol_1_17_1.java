@@ -20,7 +20,6 @@ import net.earthcomputer.multiconnect.protocols.v1_18.Protocol_1_18;
 import net.earthcomputer.multiconnect.protocols.v1_9_2.mixin.ChunkDataBlockEntityAccessor;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.class_6603;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.PacketByteBuf;
@@ -156,7 +155,7 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
             buf.readBytesSingleAlloc(dataLength); // data
             buf.disablePassthroughMode();
             List<NbtCompound> blockEntities = buf.readList(PacketByteBuf::readNbt);
-            List<class_6603.class_6604> newBlockEntities = new ArrayList<>(blockEntities.size());
+            var newBlockEntities = new ArrayList<net.minecraft.network.packet.s2c.play.ChunkData.BlockEntityData>(blockEntities.size());
             for (NbtCompound blockEntity : blockEntities) {
                 if (!blockEntity.contains("x", NbtElement.INT_TYPE)
                         || !blockEntity.contains("y", NbtElement.INT_TYPE)
@@ -179,7 +178,7 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
                 if (type == null) {
                     continue;
                 }
-                class_6603.class_6604 newBlockEntity = ChunkDataBlockEntityAccessor.createChunkDataBlockEntity(
+                var newBlockEntity = ChunkDataBlockEntityAccessor.createChunkDataBlockEntity(
                         (ChunkSectionPos.getLocalCoord(x) << 4) | ChunkSectionPos.getLocalCoord(z),
                         y,
                         type,
@@ -188,7 +187,11 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
                 newBlockEntities.add(newBlockEntity);
             }
             //noinspection unchecked
-            buf.pendingReadCollection((Class<List<class_6603.class_6604>>) (Class<?>) List.class, class_6603.class_6604.class, newBlockEntities);
+            buf.pendingReadCollection(
+                    (Class<List<net.minecraft.network.packet.s2c.play.ChunkData.BlockEntityData>>) (Class<?>) List.class,
+                    net.minecraft.network.packet.s2c.play.ChunkData.BlockEntityData.class,
+                    newBlockEntities
+            );
 
             buf.pendingRead(Boolean.class, true); // trust edges
             buf.pendingRead(BitSet.class, new BitSet()); // skylight mask
