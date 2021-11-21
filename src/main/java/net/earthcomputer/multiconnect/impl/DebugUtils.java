@@ -256,7 +256,7 @@ public class DebugUtils {
         DynamicRegistryManager registryManager = networkHandler.getRegistryManager();
         ChunkDataS2CPacket packet = Utils.createEmptyChunkDataPacket(x, z, world, registryManager);
         ((IUserDataHolder) packet).multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, false);
-        ((ChunkDataAccessor) packet.method_38598()).setSectionsData(data);
+        ((ChunkDataAccessor) packet.getChunkData()).setSectionsData(data);
         if (verticalStripBitmask != null) {
             ((IUserDataHolder) packet).multiconnect_setUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK, verticalStripBitmask);
         }

@@ -117,7 +117,7 @@ public class ChunkDataTranslator {
             try {
                 CURRENT_TRANSLATOR.set(translator);
 
-                TransformerByteBuf buf = new TransformerByteBuf(packet.method_38598().getSectionsDataBuf(), null);
+                TransformerByteBuf buf = new TransformerByteBuf(packet.getChunkData().getSectionsDataBuf(), null);
                 TypedMap userData = ((IUserDataHolder) packet).multiconnect_getUserData();
                 buf.readTopLevelType(ChunkData.class, userData);
                 ChunkData chunkData = ChunkData.read(dimension.getMinimumY(), dimension.getMinimumY() + dimension.getHeight() - 1, userData, buf);
@@ -163,7 +163,7 @@ public class ChunkDataTranslator {
                 ((IUserDataHolder) packet).multiconnect_setUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY, blocksNeedingConnectionUpdate);
 
                 ConnectionInfo.protocol.postTranslateChunk(translator, chunkData);
-                ((ChunkDataAccessor) packet.method_38598()).setSectionsData(chunkData.toByteArray());
+                ((ChunkDataAccessor) packet.getChunkData()).setSectionsData(chunkData.toByteArray());
 
                 CURRENT_TRANSLATOR.set(null);
 
@@ -191,7 +191,7 @@ public class ChunkDataTranslator {
                     extraLines.add("Dimension has sky light: " + userDataHolder.multiconnect_getUserData(DIMENSION_KEY).hasSkyLight());
                     extraLines.add("Full chunk: " + userDataHolder.multiconnect_getUserData(Protocol_1_16_5.FULL_CHUNK_KEY));
                     DebugUtils.logPacketDisconnectError(
-                            DebugUtils.getData(packet.method_38598().getSectionsDataBuf()),
+                            DebugUtils.getData(packet.getChunkData().getSectionsDataBuf()),
                             extraLines.toArray(new String[0])
                     );
                 }

@@ -88,7 +88,7 @@ public class Protocol_1_9_2 extends Protocol_1_9_4 {
                                     pos.getY(),
                                     blockEntityType,
                                     nbt);
-                            ((ChunkDataAccessor) translator.getPacket().method_38598()).getBlockEntities().add(blockEntity);
+                            ((ChunkDataAccessor) translator.getPacket().getChunkData()).getBlockEntities().add(blockEntity);
                         }
                     }
                 }

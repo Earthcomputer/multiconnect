@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_17_1;
 
+import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -7,12 +8,14 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.Key;
+import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.BlockEntities_1_12_2;
@@ -25,12 +28,15 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
+import net.minecraft.network.packet.s2c.play.SimulationDistanceS2CPacket;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
@@ -55,7 +61,7 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
         OLD_BIOME_IDS.put(0, BiomeKeys.OCEAN);
         OLD_BIOME_IDS.put(1, BiomeKeys.PLAINS);
         OLD_BIOME_IDS.put(2, BiomeKeys.DESERT);
-        OLD_BIOME_IDS.put(3, BiomeKeys.MOUNTAINS);
+        OLD_BIOME_IDS.put(3, BiomeKeys.WINDSWEPT_HILLS);
         OLD_BIOME_IDS.put(4, BiomeKeys.FOREST);
         OLD_BIOME_IDS.put(5, BiomeKeys.TAIGA);
         OLD_BIOME_IDS.put(6, BiomeKeys.SWAMP);
@@ -64,34 +70,34 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
         OLD_BIOME_IDS.put(9, BiomeKeys.THE_END);
         OLD_BIOME_IDS.put(10, BiomeKeys.FROZEN_OCEAN);
         OLD_BIOME_IDS.put(11, BiomeKeys.FROZEN_RIVER);
-        OLD_BIOME_IDS.put(12, BiomeKeys.SNOWY_TUNDRA);
-        OLD_BIOME_IDS.put(13, BiomeKeys.SNOWY_MOUNTAINS);
+        OLD_BIOME_IDS.put(12, BiomeKeys.SNOWY_PLAINS);
+        OLD_BIOME_IDS.put(13, Biomes_1_17_1.SNOWY_MOUNTAINS);
         OLD_BIOME_IDS.put(14, BiomeKeys.MUSHROOM_FIELDS);
-        OLD_BIOME_IDS.put(15, BiomeKeys.MUSHROOM_FIELD_SHORE);
+        OLD_BIOME_IDS.put(15, Biomes_1_17_1.MUSHROOM_FIELD_SHORE);
         OLD_BIOME_IDS.put(16, BiomeKeys.BEACH);
-        OLD_BIOME_IDS.put(17, BiomeKeys.DESERT_HILLS);
-        OLD_BIOME_IDS.put(18, BiomeKeys.WOODED_HILLS);
-        OLD_BIOME_IDS.put(19, BiomeKeys.TAIGA_HILLS);
-        OLD_BIOME_IDS.put(20, BiomeKeys.MOUNTAIN_EDGE);
+        OLD_BIOME_IDS.put(17, Biomes_1_17_1.DESERT_HILLS);
+        OLD_BIOME_IDS.put(18, Biomes_1_17_1.WOODED_HILLS);
+        OLD_BIOME_IDS.put(19, Biomes_1_17_1.TAIGA_HILLS);
+        OLD_BIOME_IDS.put(20, Biomes_1_17_1.MOUNTAIN_EDGE);
         OLD_BIOME_IDS.put(21, BiomeKeys.JUNGLE);
-        OLD_BIOME_IDS.put(22, BiomeKeys.JUNGLE_HILLS);
-        OLD_BIOME_IDS.put(23, BiomeKeys.JUNGLE_EDGE);
+        OLD_BIOME_IDS.put(22, Biomes_1_17_1.JUNGLE_HILLS);
+        OLD_BIOME_IDS.put(23, BiomeKeys.SPARSE_JUNGLE);
         OLD_BIOME_IDS.put(24, BiomeKeys.DEEP_OCEAN);
-        OLD_BIOME_IDS.put(25, BiomeKeys.STONE_SHORE);
+        OLD_BIOME_IDS.put(25, BiomeKeys.STONY_SHORE);
         OLD_BIOME_IDS.put(26, BiomeKeys.SNOWY_BEACH);
         OLD_BIOME_IDS.put(27, BiomeKeys.BIRCH_FOREST);
-        OLD_BIOME_IDS.put(28, BiomeKeys.BIRCH_FOREST_HILLS);
+        OLD_BIOME_IDS.put(28, Biomes_1_17_1.BIRCH_FOREST_HILLS);
         OLD_BIOME_IDS.put(29, BiomeKeys.DARK_FOREST);
         OLD_BIOME_IDS.put(30, BiomeKeys.SNOWY_TAIGA);
-        OLD_BIOME_IDS.put(31, BiomeKeys.SNOWY_TAIGA_HILLS);
-        OLD_BIOME_IDS.put(32, BiomeKeys.GIANT_TREE_TAIGA);
-        OLD_BIOME_IDS.put(33, BiomeKeys.GIANT_TREE_TAIGA_HILLS);
-        OLD_BIOME_IDS.put(34, BiomeKeys.WOODED_MOUNTAINS);
+        OLD_BIOME_IDS.put(31, Biomes_1_17_1.SNOWY_TAIGA_HILLS);
+        OLD_BIOME_IDS.put(32, BiomeKeys.OLD_GROWTH_PINE_TAIGA);
+        OLD_BIOME_IDS.put(33, Biomes_1_17_1.GIANT_TREE_TAIGA_HILLS);
+        OLD_BIOME_IDS.put(34, BiomeKeys.WINDSWEPT_FOREST);
         OLD_BIOME_IDS.put(35, BiomeKeys.SAVANNA);
         OLD_BIOME_IDS.put(36, BiomeKeys.SAVANNA_PLATEAU);
         OLD_BIOME_IDS.put(37, BiomeKeys.BADLANDS);
-        OLD_BIOME_IDS.put(38, BiomeKeys.WOODED_BADLANDS_PLATEAU);
-        OLD_BIOME_IDS.put(39, BiomeKeys.BADLANDS_PLATEAU);
+        OLD_BIOME_IDS.put(38, BiomeKeys.WOODED_BADLANDS);
+        OLD_BIOME_IDS.put(39, Biomes_1_17_1.BADLANDS_PLATEAU);
         OLD_BIOME_IDS.put(40, BiomeKeys.SMALL_END_ISLANDS);
         OLD_BIOME_IDS.put(41, BiomeKeys.END_MIDLANDS);
         OLD_BIOME_IDS.put(42, BiomeKeys.END_HIGHLANDS);
@@ -104,28 +110,28 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
         OLD_BIOME_IDS.put(49, BiomeKeys.DEEP_COLD_OCEAN);
         OLD_BIOME_IDS.put(50, BiomeKeys.DEEP_FROZEN_OCEAN);
         OLD_BIOME_IDS.put(129, BiomeKeys.SUNFLOWER_PLAINS);
-        OLD_BIOME_IDS.put(130, BiomeKeys.DESERT_LAKES);
-        OLD_BIOME_IDS.put(131, BiomeKeys.GRAVELLY_MOUNTAINS);
+        OLD_BIOME_IDS.put(130, Biomes_1_17_1.DESERT_LAKES);
+        OLD_BIOME_IDS.put(131, BiomeKeys.WINDSWEPT_GRAVELLY_HILLS);
         OLD_BIOME_IDS.put(132, BiomeKeys.FLOWER_FOREST);
-        OLD_BIOME_IDS.put(133, BiomeKeys.TAIGA_MOUNTAINS);
-        OLD_BIOME_IDS.put(134, BiomeKeys.SWAMP_HILLS);
+        OLD_BIOME_IDS.put(133, Biomes_1_17_1.TAIGA_MOUNTAINS);
+        OLD_BIOME_IDS.put(134, Biomes_1_17_1.SWAMP_HILLS);
         OLD_BIOME_IDS.put(140, BiomeKeys.ICE_SPIKES);
-        OLD_BIOME_IDS.put(149, BiomeKeys.MODIFIED_JUNGLE);
-        OLD_BIOME_IDS.put(151, BiomeKeys.MODIFIED_JUNGLE_EDGE);
-        OLD_BIOME_IDS.put(155, BiomeKeys.TALL_BIRCH_FOREST);
-        OLD_BIOME_IDS.put(156, BiomeKeys.TALL_BIRCH_HILLS);
-        OLD_BIOME_IDS.put(157, BiomeKeys.DARK_FOREST_HILLS);
-        OLD_BIOME_IDS.put(158, BiomeKeys.SNOWY_TAIGA_MOUNTAINS);
-        OLD_BIOME_IDS.put(160, BiomeKeys.GIANT_SPRUCE_TAIGA);
-        OLD_BIOME_IDS.put(161, BiomeKeys.GIANT_SPRUCE_TAIGA_HILLS);
-        OLD_BIOME_IDS.put(162, BiomeKeys.MODIFIED_GRAVELLY_MOUNTAINS);
-        OLD_BIOME_IDS.put(163, BiomeKeys.SHATTERED_SAVANNA);
-        OLD_BIOME_IDS.put(164, BiomeKeys.SHATTERED_SAVANNA_PLATEAU);
+        OLD_BIOME_IDS.put(149, Biomes_1_17_1.MODIFIED_JUNGLE);
+        OLD_BIOME_IDS.put(151, Biomes_1_17_1.MODIFIED_JUNGLE_EDGE);
+        OLD_BIOME_IDS.put(155, BiomeKeys.OLD_GROWTH_BIRCH_FOREST);
+        OLD_BIOME_IDS.put(156, Biomes_1_17_1.TALL_BIRCH_HILLS);
+        OLD_BIOME_IDS.put(157, Biomes_1_17_1.DARK_FOREST_HILLS);
+        OLD_BIOME_IDS.put(158, Biomes_1_17_1.SNOWY_TAIGA_MOUNTAINS);
+        OLD_BIOME_IDS.put(160, BiomeKeys.OLD_GROWTH_SPRUCE_TAIGA);
+        OLD_BIOME_IDS.put(161, Biomes_1_17_1.GIANT_SPRUCE_TAIGA_HILLS);
+        OLD_BIOME_IDS.put(162, Biomes_1_17_1.MODIFIED_GRAVELLY_MOUNTAINS);
+        OLD_BIOME_IDS.put(163, BiomeKeys.WINDSWEPT_SAVANNA);
+        OLD_BIOME_IDS.put(164, Biomes_1_17_1.SHATTERED_SAVANNA_PLATEAU);
         OLD_BIOME_IDS.put(165, BiomeKeys.ERODED_BADLANDS);
-        OLD_BIOME_IDS.put(166, BiomeKeys.MODIFIED_WOODED_BADLANDS_PLATEAU);
-        OLD_BIOME_IDS.put(167, BiomeKeys.MODIFIED_BADLANDS_PLATEAU);
+        OLD_BIOME_IDS.put(166, Biomes_1_17_1.MODIFIED_WOODED_BADLANDS_PLATEAU);
+        OLD_BIOME_IDS.put(167, Biomes_1_17_1.MODIFIED_BADLANDS_PLATEAU);
         OLD_BIOME_IDS.put(168, BiomeKeys.BAMBOO_JUNGLE);
-        OLD_BIOME_IDS.put(169, BiomeKeys.BAMBOO_JUNGLE_HILLS);
+        OLD_BIOME_IDS.put(169, Biomes_1_17_1.BAMBOO_JUNGLE_HILLS);
         OLD_BIOME_IDS.put(170, BiomeKeys.SOUL_SAND_VALLEY);
         OLD_BIOME_IDS.put(171, BiomeKeys.CRIMSON_FOREST);
         OLD_BIOME_IDS.put(172, BiomeKeys.WARPED_FOREST);
@@ -268,6 +274,23 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
             }
             buf.applyPendingReads();
         });
+        ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
+            buf.enablePassthroughMode();
+            buf.readVarInt(); // player id
+            buf.readBoolean(); // hardcore
+            buf.readByte(); // gamemode
+            buf.readByte(); // previous gamemode
+            buf.readCollection(Sets::newHashSetWithExpectedSize, PacketByteBuf::readIdentifier); // worlds
+            buf.decode(DynamicRegistryManager.Impl.CODEC); // registry manager
+            buf.decode(DimensionType.REGISTRY_CODEC); // dimension type
+            buf.readIdentifier(); // dimension id
+            buf.readLong(); // seed
+            buf.readVarInt(); // max players
+            int chunkRadius = buf.readVarInt();
+            buf.disablePassthroughMode();
+            buf.pendingRead(VarInt.class, new VarInt(chunkRadius)); // simulation distance
+            buf.applyPendingReads();
+        });
         ProtocolRegistry.registerInboundTranslator(BlockEntityUpdateS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
             buf.readBlockPos(); // pos
@@ -304,6 +327,37 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
     }
 
     @Override
+    public List<PacketInfo<?>> getClientboundPackets() {
+        List<PacketInfo<?>> packets = super.getClientboundPackets();
+        remove(packets, SimulationDistanceS2CPacket.class);
+        return packets;
+    }
+
+    @Override
+    @ThreadSafe(withGameThread = false)
+    public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
+        super.mutateDynamicRegistries(mutator, registries);
+        addRegistry(registries, Registry.DIMENSION_TYPE_KEY);
+        addRegistry(registries, Registry.BIOME_KEY);
+        mutator.mutate(Protocols.V1_17_1, registries.get(Registry.BIOME_KEY), this::mutateBiomeRegistry);
+    }
+
+    private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
+        rename(registry, BiomeKeys.WINDSWEPT_HILLS, "mountains");
+        rename(registry, BiomeKeys.SNOWY_PLAINS, "snowy_tundra");
+        rename(registry, BiomeKeys.SPARSE_JUNGLE, "jungle_edge");
+        rename(registry, BiomeKeys.STONY_SHORE, "stone_shore");
+        rename(registry, BiomeKeys.OLD_GROWTH_PINE_TAIGA, "giant_tree_taiga");
+        rename(registry, BiomeKeys.WINDSWEPT_FOREST, "wooded_mountains");
+        rename(registry, BiomeKeys.WOODED_BADLANDS, "wooded_badlands_plateau");
+        rename(registry, BiomeKeys.WINDSWEPT_GRAVELLY_HILLS, "gravelly_mountains");
+        rename(registry, BiomeKeys.OLD_GROWTH_BIRCH_FOREST, "tall_birch_forest");
+        rename(registry, BiomeKeys.OLD_GROWTH_SPRUCE_TAIGA, "giant_spruce_taiga");
+        rename(registry, BiomeKeys.WINDSWEPT_SAVANNA, "shattered_savanna");
+    }
+
+    @Override
+    @ThreadSafe(withGameThread = false)
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
         mutator.mutate(Protocols.V1_17_1, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);

@@ -30,6 +30,7 @@ import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_
 import net.earthcomputer.multiconnect.protocols.v1_16_5.EntityS2CPacket_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.MapUpdateS2CPacket_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Biomes_1_17_1;
 import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.earthcomputer.multiconnect.transformer.InboundTranslator;
@@ -520,8 +521,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
                 }
             }
         }
-        packet.method_38598().getHeightmap().putLongArray("WORLD_SURFACE", worldSurface.getData());
-        packet.method_38598().getHeightmap().putLongArray("MOTION_BLOCKING", motionBlocking.getData());
+        packet.getChunkData().getHeightmap().putLongArray("WORLD_SURFACE", worldSurface.getData());
+        packet.getChunkData().getHeightmap().putLongArray("MOTION_BLOCKING", motionBlocking.getData());
 
         super.postTranslateChunk(translator, data);
     }
@@ -862,7 +863,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
 
     private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
         registry.unregister(BiomeKeys.BAMBOO_JUNGLE);
-        registry.unregister(BiomeKeys.BAMBOO_JUNGLE_HILLS);
+        registry.unregister(Biomes_1_17_1.BAMBOO_JUNGLE_HILLS);
     }
 
     private void mutateStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {
