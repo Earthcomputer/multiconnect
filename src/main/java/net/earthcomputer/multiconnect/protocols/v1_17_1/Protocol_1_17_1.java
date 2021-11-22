@@ -276,7 +276,7 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
         });
         ProtocolRegistry.registerInboundTranslator(GameJoinS2CPacket.class, buf -> {
             buf.enablePassthroughMode();
-            buf.readVarInt(); // player id
+            buf.readInt(); // player id
             buf.readBoolean(); // hardcore
             buf.readByte(); // gamemode
             buf.readByte(); // previous gamemode
