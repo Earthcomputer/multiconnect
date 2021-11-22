@@ -73,14 +73,14 @@ public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHol
                         for (int z = 0; z < 4; z++) {
                             for (int x = 0; x < 4; x++) {
                                 for (int y = 0; y < 4; y++) {
-                                    Biome biome = this.sections[ourSectionY + copyFromSectionY].method_38294().get(x, copyFromY, z);
+                                    Biome biome = this.sections[ourSectionY + copyFromSectionY].getBiomeContainer().get(x, copyFromY, z);
                                     if (biomes.add(biome)) {
                                         // check if biomes.size() was *previously* a power of 2 (or 0)
                                         if (((biomes.size() - 1) & (biomes.size() - 2)) == 0) {
-                                            section.method_38294().onResize(MathHelper.ceilLog2(biomes.size()), biome);
+                                            section.getBiomeContainer().onResize(MathHelper.ceilLog2(biomes.size()), biome);
                                         }
                                     }
-                                    section.method_38294().set(x, y, z, biome);
+                                    section.getBiomeContainer().set(x, y, z, biome);
                                 }
                             }
                         }
