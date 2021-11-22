@@ -23,6 +23,7 @@ import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.ShulkerEntityAcces
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.TagGroupSerializedAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_17.EntityDestroyS2CPacket_1_17;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Particles_1_17_1;
 import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.earthcomputer.multiconnect.transformer.VarInt;
@@ -930,7 +931,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
     }
 
     private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
-        registry.unregister(ParticleTypes.LIGHT);
+        registry.unregister(Particles_1_17_1.LIGHT);
         registry.unregister(ParticleTypes.SMALL_FLAME);
         registry.unregister(ParticleTypes.SNOWFLAKE);
         registry.unregister(ParticleTypes.DRIPPING_DRIPSTONE_LAVA);

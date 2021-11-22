@@ -6,8 +6,10 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.earthcomputer.multiconnect.protocols.generic.IParticleManager;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.MyParticleType;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.CrackParticleAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.SuspendParticleAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_17_1.Particles_1_17_1;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -71,7 +73,7 @@ public class Particles_1_12_2 {
         OLD_NAMES.put(SNOW_SHOVEL, "snowshovel");
         OLD_NAMES.put(ITEM_SLIME, "slime");
         OLD_NAMES.put(HEART, "heart");
-        OLD_NAMES.put(BARRIER, "barrier");
+        OLD_NAMES.put(Particles_1_17_1.BARRIER, "barrier");
         OLD_NAMES.put(ITEM, "iconcrack");
         OLD_NAMES.put(BLOCK, "blockcrack");
         OLD_NAMES.put(BLOCK_DUST, "blockdust");
@@ -129,7 +131,7 @@ public class Particles_1_12_2 {
         register(registry, SNOW_SHOVEL, 32, "snow_shovel");
         register(registry, ITEM_SLIME, 33, "item_slime");
         register(registry, HEART, 34, "heart");
-        register(registry, BARRIER, 35, "barrier");
+        register(registry, Particles_1_17_1.BARRIER, 35, "barrier");
         register(registry, ITEM, 36, "item");
         register(registry, BLOCK, 37, "block");
         register(registry, BLOCK_DUST, 38, "block_dust");

@@ -29,6 +29,7 @@ public class TestingExtension implements BeforeAllCallback, Function<Class<?>, C
         }
         System.setProperty("fabric.development", "true");
         System.setProperty("fabric.loader.entrypoint", "net.earthcomputer.multiconnect.TestingDummyMain");
+        System.setProperty("multiconnect.unitTestMode", "true");
         Knot knot = new Knot(EnvType.CLIENT, null);
         knot.init(new String[0]);
         knotClassLoader = knot.getClassLoader();

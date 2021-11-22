@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_12_2;
+package net.earthcomputer.multiconnect.protocols.generic;
 
 import net.minecraft.particle.DefaultParticleType;
 

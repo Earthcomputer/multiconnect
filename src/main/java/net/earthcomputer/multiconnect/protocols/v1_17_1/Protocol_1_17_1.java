@@ -23,6 +23,8 @@ import net.earthcomputer.multiconnect.protocols.v1_18.Protocol_1_18;
 import net.earthcomputer.multiconnect.protocols.v1_9_2.mixin.ChunkDataBlockEntityAccessor;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.PacketByteBuf;
@@ -360,7 +362,13 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
     @ThreadSafe(withGameThread = false)
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
+        mutator.mutate(Protocols.V1_17_1, Registry.ITEM, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_17_1, Registry.PARTICLE_TYPE, Particles_1_17_1::mutateParticleTypeRegistry);
         mutator.mutate(Protocols.V1_17_1, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+    }
+
+    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
+        registry.unregister(Items.MUSIC_DISC_OTHERSIDE);
     }
 
     private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
@@ -368,5 +376,16 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
         registry.unregister(SoundEvents.ITEM_BUNDLE_INSERT);
         registry.unregister(SoundEvents.ITEM_BUNDLE_REMOVE_ONE);
         registry.unregister(SoundEvents.BLOCK_GROWING_PLANT_CROP);
+        registry.unregister(SoundEvents.MUSIC_DISC_OTHERSIDE);
+        registry.unregister(SoundEvents.MUSIC_NETHER_CRIMSON_FOREST);
+        registry.unregister(SoundEvents.MUSIC_OVERWORLD_DRIPSTONE_CAVES);
+        registry.unregister(SoundEvents.MUSIC_OVERWORLD_GROVE);
+        registry.unregister(SoundEvents.MUSIC_OVERWORLD_JAGGED_PEAKS);
+        registry.unregister(SoundEvents.MUSIC_OVERWORLD_LUSH_CAVES);
+        registry.unregister(SoundEvents.MUSIC_OVERWORLD_MEADOW);
+        registry.unregister(SoundEvents.MUSIC_OVERWORLD_FROZEN_PEAKS);
+        registry.unregister(SoundEvents.MUSIC_OVERWORLD_SNOWY_SLOPES);
+        registry.unregister(SoundEvents.MUSIC_OVERWORLD_STONY_PEAKS);
+        insertAfter(registry, SoundEvents.MUSIC_NETHER_SOUL_SAND_VALLEY, SoundEvents.MUSIC_NETHER_CRIMSON_FOREST, "music.nether.crimson_forest");
     }
 }

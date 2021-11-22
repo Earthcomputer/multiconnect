@@ -75,6 +75,7 @@ public class DebugUtils {
     private static int rareBugIdThatOccurred = 0;
     private static long timeThatRareBugOccurred;
     public static String lastServerBrand = ClientBrandRetriever.VANILLA;
+    public static final boolean UNIT_TEST_MODE = Boolean.getBoolean("multiconnect.unitTestMode");
 
     @SuppressWarnings("unchecked")
     public static void dumpBlockStates() {
