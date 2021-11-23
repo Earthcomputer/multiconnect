@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 import com.google.common.collect.Iterators;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.earthcomputer.multiconnect.protocols.generic.IIdList;
 import net.minecraft.util.collection.IdList;
 import org.jetbrains.annotations.Nullable;
@@ -24,7 +25,7 @@ import java.util.stream.Stream;
 public class MixinIdList<T> implements IIdList<T> {
 
     @Shadow private int nextId;
-    @Shadow @Final private IdentityHashMap<T, Integer> idMap;
+    @Shadow @Final private Object2IntMap<T> idMap;
     @Shadow @Final private List<T> list;
 
     @Unique private int minHighIds = Integer.MAX_VALUE;
@@ -32,9 +33,9 @@ public class MixinIdList<T> implements IIdList<T> {
 
     @Unique private final ThreadLocal<T> defaultValue = new ThreadLocal<>();
 
-    @Redirect(method = "set", at = @At(value = "INVOKE", target = "Ljava/util/IdentityHashMap;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", remap = false))
-    private Object redirectSetPut(IdentityHashMap<T, Integer> idMap, T key, Object value) {
-        return idMap.putIfAbsent(key, (Integer) value);
+    @Redirect(method = "set", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/objects/Object2IntMap;put(Ljava/lang/Object;I)I", remap = false))
+    private int redirectSetPut(Object2IntMap<T> instance, T key, int value) {
+        return instance.putIfAbsent(key, value);
     }
 
     @Inject(method = "set", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", remap = false), cancellable = true)
