@@ -818,8 +818,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, ChunkDataS2CPacket.class);
         remove(packets, WorldEventS2CPacket.class);
         remove(packets, ParticleS2CPacket.class);
-        //noinspection unchecked
-        remove(packets, (Class<? extends Packet<?>>) (Class<?>) GameJoinS2CPacket.class);
+        remove(packets, GameJoinS2CPacket.class);
         remove(packets, EntityS2CPacket.MoveRelative.class);
         remove(packets, EntityS2CPacket.RotateAndMoveRelative.class);
         remove(packets, EntityS2CPacket.Rotate.class);
@@ -857,8 +856,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         remove(packets, EntityStatusEffectS2CPacket.class);
         packets.add(0, PacketInfo.of(KeepAliveS2CPacket.class, KeepAliveS2CPacket::new));
         insertAfter(packets, KeepAliveS2CPacket.class, PacketInfo.of(GameJoinS2CPacket.class, GameJoinS2CPacket::new));
-        //noinspection unchecked
-        insertAfter(packets, (Class<? extends Packet<?>>) (Class<?>) GameJoinS2CPacket.class, PacketInfo.of(GameMessageS2CPacket.class, GameMessageS2CPacket::new));
+        insertAfter(packets, GameJoinS2CPacket.class, PacketInfo.of(GameMessageS2CPacket.class, GameMessageS2CPacket::new));
         insertAfter(packets, GameMessageS2CPacket.class, PacketInfo.of(WorldTimeUpdateS2CPacket.class, WorldTimeUpdateS2CPacket::new));
         insertAfter(packets, WorldTimeUpdateS2CPacket.class, PacketInfo.of(EntityEquipmentUpdateS2CPacket.class, EntityEquipmentUpdateS2CPacket::new));
         insertAfter(packets, EntityEquipmentUpdateS2CPacket.class, PacketInfo.of(PlayerSpawnPositionS2CPacket.class, PlayerSpawnPositionS2CPacket::new));
