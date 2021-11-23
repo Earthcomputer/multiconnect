@@ -23,17 +23,20 @@ import net.earthcomputer.multiconnect.protocols.v1_18.Protocol_1_18;
 import net.earthcomputer.multiconnect.protocols.v1_9_2.mixin.ChunkDataBlockEntityAccessor;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.client.option.ChatVisibility;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.c2s.play.ClientSettingsC2SPacket;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.SimulationDistanceS2CPacket;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Arm;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
@@ -325,6 +328,17 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
             };
             buf.pendingRead(VarInt.class, new VarInt(Registry.BLOCK_ENTITY_TYPE.getRawId(actualType)));
             buf.applyPendingReads();
+        });
+
+        ProtocolRegistry.registerOutboundTranslator(ClientSettingsC2SPacket.class, buf -> {
+            buf.passthroughWrite(String.class); // language
+            buf.passthroughWrite(Byte.class); // view distance
+            buf.passthroughWrite(ChatVisibility.class); // chat visibility
+            buf.passthroughWrite(Boolean.class); // chat colors
+            buf.passthroughWrite(Byte.class); // player model bitmask
+            buf.passthroughWrite(Arm.class); // main arm
+            buf.passthroughWrite(Boolean.class); // filter text
+            buf.skipWrite(Boolean.class); // allows listing
         });
     }
 
