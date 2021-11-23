@@ -41,7 +41,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow public abstract void onSetTradeOffers(SetTradeOffersS2CPacket packet);
 
-    @Shadow public abstract void onVelocityUpdate(EntityVelocityUpdateS2CPacket entityVelocityUpdateS2CPacket_1);
+    @Shadow public abstract void onEntityVelocityUpdate(EntityVelocityUpdateS2CPacket entityVelocityUpdateS2CPacket_1);
 
     @Shadow public abstract void onChunkLoadDistance(ChunkLoadDistanceS2CPacket packet);
 
@@ -177,7 +177,7 @@ public abstract class MixinClientPlayNetworkHandler {
                     || packet.getEntityTypeId() == EntityType.ARROW
                     || packet.getEntityTypeId() == EntityType.SPECTRAL_ARROW
                     || packet.getEntityTypeId() == EntityType.TRIDENT) {
-                onVelocityUpdate(new EntityVelocityUpdateS2CPacket(packet.getId(),
+                onEntityVelocityUpdate(new EntityVelocityUpdateS2CPacket(packet.getId(),
                         new Vec3d(packet.getVelocityX(), packet.getVelocityY(), packet.getVelocityZ())));
             }
         }

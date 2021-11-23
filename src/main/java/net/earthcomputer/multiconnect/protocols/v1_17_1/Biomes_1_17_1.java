@@ -33,6 +33,7 @@ public final class Biomes_1_17_1 {
     public static final RegistryKey<Biome> MODIFIED_WOODED_BADLANDS_PLATEAU = create("modified_wooded_badlands_plateau");
     public static final RegistryKey<Biome> MODIFIED_BADLANDS_PLATEAU = create("modified_badlands_plateau");
     public static final RegistryKey<Biome> BAMBOO_JUNGLE_HILLS = create("bamboo_jungle_hills");
+    public static final RegistryKey<Biome> DEEP_WARM_OCEAN = create("deep_warm_ocean");
 
     private static RegistryKey<Biome> create(String id) {
         return RegistryKey.of(Registry.BIOME_KEY, new Identifier(id));

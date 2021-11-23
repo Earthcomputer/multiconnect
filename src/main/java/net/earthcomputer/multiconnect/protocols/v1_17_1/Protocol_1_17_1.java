@@ -107,7 +107,7 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
         OLD_BIOME_IDS.put(44, BiomeKeys.WARM_OCEAN);
         OLD_BIOME_IDS.put(45, BiomeKeys.LUKEWARM_OCEAN);
         OLD_BIOME_IDS.put(46, BiomeKeys.COLD_OCEAN);
-        OLD_BIOME_IDS.put(47, BiomeKeys.DEEP_WARM_OCEAN);
+        OLD_BIOME_IDS.put(47, Biomes_1_17_1.DEEP_WARM_OCEAN);
         OLD_BIOME_IDS.put(48, BiomeKeys.DEEP_LUKEWARM_OCEAN);
         OLD_BIOME_IDS.put(49, BiomeKeys.DEEP_COLD_OCEAN);
         OLD_BIOME_IDS.put(50, BiomeKeys.DEEP_FROZEN_OCEAN);

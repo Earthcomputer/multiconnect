@@ -1715,9 +1715,8 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         registry.unregister(BiomeKeys.WARM_OCEAN);
         registry.unregister(BiomeKeys.LUKEWARM_OCEAN);
         registry.unregister(BiomeKeys.COLD_OCEAN);
-        registry.unregister(BiomeKeys.DEEP_WARM_OCEAN);
+        registry.unregister(Biomes_1_17_1.DEEP_WARM_OCEAN);
         registry.unregister(BiomeKeys.DEEP_LUKEWARM_OCEAN);
-        registry.unregister(BiomeKeys.DEEP_WARM_OCEAN);
         registry.unregister(BiomeKeys.DEEP_LUKEWARM_OCEAN);
         registry.unregister(BiomeKeys.DEEP_COLD_OCEAN);
         registry.unregister(BiomeKeys.DEEP_FROZEN_OCEAN);
