@@ -10,6 +10,7 @@ import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.*;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
@@ -26,6 +27,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -81,6 +83,14 @@ public abstract class MixinClientPlayNetworkHandler {
     private void onOnChunkLoadDistance(ChunkLoadDistanceS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             viewDistance = packet.getDistance();
+        }
+    }
+
+    @Redirect(method = "onChunkLoadDistance", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/GameOptions;setServerViewDistance(I)V"))
+    private void undoMc54545Fix(GameOptions instance, int viewDistance) {
+        // this fix causes rebuilds of all chunks every time we increment the view distance, wasn't a prevalent problem beforehand
+        if (ConnectionInfo.protocolVersion > Protocols.V1_13_2) {
+            instance.setServerViewDistance(viewDistance);
         }
     }
 
