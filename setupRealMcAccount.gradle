@@ -38,16 +38,16 @@ task setupRealMcAccount {
         App.workingDir = file('.gradle/loom-cache/atlauncher').toPath()
         file('.gradle/loom-cache/atlauncher/configs').mkdirs()
         App.launcher = new Launcher() {
-            @Override
+            //@Override
             void refreshFeaturedPacksPanel() {
             }
-            @Override
+            //@Override
             void refreshPacksPanel() {
             }
-            @Override
+            //@Override
             void reloadInstancesPanel() {
             }
-            @Override
+            //@Override
             void reloadServersPanel() {
             }
         }
