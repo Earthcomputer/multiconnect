@@ -17,11 +17,14 @@ import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
+import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.BlockEntities_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_18.Protocol_1_18;
 import net.earthcomputer.multiconnect.protocols.v1_9_2.mixin.ChunkDataBlockEntityAccessor;
 import net.earthcomputer.multiconnect.transformer.VarInt;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.option.ChatVisibility;
 import net.minecraft.item.Item;
@@ -36,6 +39,8 @@ import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.SimulationDistanceS2CPacket;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.tag.BlockTags;
+import net.minecraft.tag.ItemTags;
 import net.minecraft.util.Arm;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -401,5 +406,51 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
         registry.unregister(SoundEvents.MUSIC_OVERWORLD_SNOWY_SLOPES);
         registry.unregister(SoundEvents.MUSIC_OVERWORLD_STONY_PEAKS);
         insertAfter(registry, SoundEvents.MUSIC_NETHER_SOUL_SAND_VALLEY, SoundEvents.MUSIC_NETHER_CRIMSON_FOREST, "music.nether.crimson_forest");
+    }
+
+    @Override
+    public void addExtraBlockTags(TagRegistry<Block> tags) {
+        tags.add(BlockTags.ANIMALS_SPAWNABLE_ON, Blocks.GRASS_BLOCK);
+        tags.add(BlockTags.AXOLOTLS_SPAWNABLE_ON, Blocks.CLAY);
+        tags.add(BlockTags.TERRACOTTA, Blocks.TERRACOTTA, Blocks.WHITE_TERRACOTTA, Blocks.ORANGE_TERRACOTTA, Blocks.MAGENTA_TERRACOTTA,
+                Blocks.LIGHT_BLUE_TERRACOTTA, Blocks.YELLOW_TERRACOTTA, Blocks.LIME_TERRACOTTA, Blocks.PINK_TERRACOTTA,
+                Blocks.GRAY_TERRACOTTA, Blocks.LIGHT_GRAY_TERRACOTTA, Blocks.CYAN_TERRACOTTA, Blocks.PURPLE_TERRACOTTA,
+                Blocks.BLUE_TERRACOTTA, Blocks.BROWN_TERRACOTTA, Blocks.GREEN_TERRACOTTA, Blocks.RED_TERRACOTTA,
+                Blocks.BLACK_TERRACOTTA);
+        tags.addTag(BlockTags.AZALEA_GROWS_ON, BlockTags.DIRT);
+        tags.addTag(BlockTags.AZALEA_GROWS_ON, BlockTags.SAND);
+        tags.addTag(BlockTags.AZALEA_GROWS_ON, BlockTags.TERRACOTTA);
+        tags.add(BlockTags.AZALEA_GROWS_ON, Blocks.SNOW_BLOCK, Blocks.POWDER_SNOW);
+        tags.addTag(BlockTags.AZALEA_ROOT_REPLACEABLE, BlockTags.LUSH_GROUND_REPLACEABLE);
+        tags.addTag(BlockTags.AZALEA_ROOT_REPLACEABLE, BlockTags.TERRACOTTA);
+        tags.add(BlockTags.AZALEA_ROOT_REPLACEABLE, Blocks.RED_SAND);
+        tags.addTag(BlockTags.BIG_DRIPLEAF_PLACEABLE, BlockTags.SMALL_DRIPLEAF_PLACEABLE);
+        tags.addTag(BlockTags.BIG_DRIPLEAF_PLACEABLE, BlockTags.DIRT);
+        tags.add(BlockTags.BIG_DRIPLEAF_PLACEABLE, Blocks.FARMLAND);
+        tags.add(BlockTags.FOXES_SPAWNABLE_ON, Blocks.GRASS_BLOCK, Blocks.SNOW, Blocks.SNOW_BLOCK, Blocks.PODZOL,
+                Blocks.COARSE_DIRT);
+        tags.add(BlockTags.GOATS_SPAWNABLE_ON, Blocks.STONE, Blocks.SNOW, Blocks.POWDER_SNOW, Blocks.SNOW_BLOCK,
+                Blocks.PACKED_ICE, Blocks.GRAVEL);
+        tags.add(BlockTags.MOOSHROOMS_SPAWNABLE_ON, Blocks.MYCELIUM);
+        tags.add(BlockTags.PARROTS_SPAWNABLE_ON, Blocks.GRASS_BLOCK, Blocks.AIR);
+        tags.addTag(BlockTags.PARROTS_SPAWNABLE_ON, BlockTags.LEAVES);
+        tags.addTag(BlockTags.PARROTS_SPAWNABLE_ON, BlockTags.LOGS);
+        tags.add(BlockTags.POLAR_BEARS_SPAWNABLE_ON_IN_FROZEN_OCEAN, Blocks.ICE);
+        tags.add(BlockTags.RABBITS_SPAWNABLE_ON, Blocks.GRASS_BLOCK, Blocks.SNOW, Blocks.SNOW_BLOCK, Blocks.SAND);
+        tags.add(BlockTags.REPLACEABLE_PLANTS, Blocks.GRASS, Blocks.FERN, Blocks.DEAD_BUSH, Blocks.VINE,
+                Blocks.GLOW_LICHEN, Blocks.SUNFLOWER, Blocks.LILAC, Blocks.ROSE_BUSH,
+                Blocks.PEONY, Blocks.TALL_GRASS, Blocks.LARGE_FERN, Blocks.HANGING_ROOTS);
+        tags.add(BlockTags.WOLVES_SPAWNABLE_ON, Blocks.GRASS_BLOCK, Blocks.SNOW, Blocks.SNOW_BLOCK);
+        tags.addTag(BlockTags.LAVA_POOL_STONE_CANNOT_REPLACE, BlockTags.FEATURES_CANNOT_REPLACE);
+        tags.addTag(BlockTags.LAVA_POOL_STONE_CANNOT_REPLACE, BlockTags.LEAVES);
+        tags.addTag(BlockTags.LAVA_POOL_STONE_CANNOT_REPLACE, BlockTags.LOGS);
+        super.addExtraBlockTags(tags);
+    }
+
+    @Override
+    public void addExtraItemTags(TagRegistry<Item> tags, TagRegistry<Block> blockTags) {
+        copyBlocks(tags, blockTags, ItemTags.DIRT, BlockTags.DIRT);
+        copyBlocks(tags, blockTags, ItemTags.TERRACOTTA, BlockTags.TERRACOTTA);
+        super.addExtraItemTags(tags, blockTags);
     }
 }
