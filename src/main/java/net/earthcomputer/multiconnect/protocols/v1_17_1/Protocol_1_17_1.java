@@ -10,6 +10,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
@@ -27,6 +28,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.client.option.ChatVisibility;
+import net.minecraft.datafixer.TypeReferences;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
@@ -194,6 +196,7 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
                 if (type == null) {
                     continue;
                 }
+                blockEntity = Utils.datafix(TypeReferences.BLOCK_ENTITY, blockEntity);
                 var newBlockEntity = ChunkDataBlockEntityAccessor.createChunkDataBlockEntity(
                         (ChunkSectionPos.getLocalCoord(x) << 4) | ChunkSectionPos.getLocalCoord(z),
                         y,
