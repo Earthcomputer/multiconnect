@@ -6,10 +6,15 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.PressableWidget;
+import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +24,7 @@ import java.util.function.Function;
 public class DropDownWidget<T> extends PressableWidget {
 
     private static final int DROP_DOWN_ELEMENT_HEIGHT = 20;
+    private static final int SCROLL_BAR_WIDTH = 6;
     private static final Text EXPAND_DOWN_TEXT = new LiteralText("v");
     private static final Text EXPAND_RIGHT_TEXT = new LiteralText(">");
 
@@ -32,6 +38,9 @@ public class DropDownWidget<T> extends PressableWidget {
     private int hoveredCategory = -1;
     private int hoveredSubcategory = -1;
     private boolean expanded = false;
+    private int scrollPos = 0;
+    private float fractionalScroll = 0;
+    private float scrollBarGrabPos = -1;
 
     public DropDownWidget(int x, int y, int width, int height, T initialValue, Function<T, Text> labelExtractor) {
         super(x, y, width, height, labelExtractor.apply(initialValue));
@@ -85,6 +94,37 @@ public class DropDownWidget<T> extends PressableWidget {
     }
 
     private void onExpandedMouseClicked(int mouseX, int mouseY) {
+        int trackHeight = numShownCategories() * DROP_DOWN_ELEMENT_HEIGHT;
+        if (needsScrollBar()
+                && mouseX >= x + width - SCROLL_BAR_WIDTH
+                && mouseX < x + width
+                && mouseY >= y + height
+                && mouseY < y + height + trackHeight
+        ) {
+            // clicked on scroll bar
+            int scrollBarY = scrollBarY();
+            int scrollBarHeight = scrollBarHeight();
+            if (mouseY >= y + height + scrollBarY && mouseY < y + height + scrollBarY + scrollBarHeight) {
+                // clicked on scroll bar itself
+                int scrollBarTop = y + height + scrollBarY;
+                scrollBarGrabPos = (mouseY - scrollBarTop) / (float) scrollBarHeight;
+            } else {
+                // clicked on scroll bar track
+                int scrollBarTop = mouseY - scrollBarHeight / 2 - y - height;
+                int maxScrollBarTop = trackHeight - scrollBarHeight;
+                if (maxScrollBarTop > 0) {
+                    float percentage = MathHelper.clamp((float) scrollBarTop / maxScrollBarTop, 0, 1);
+                    fractionalScroll = percentage * (categories.size() - numShownCategories());
+                    scrollPos = MathHelper.floor(fractionalScroll);
+                    fractionalScroll -= scrollPos;
+                }
+                scrollBarGrabPos = 0.5f;
+            }
+            hoveredCategory = -1;
+            hoveredSubcategory = -1;
+            return;
+        }
+
         if (hoveredSubcategory != -1) {
             setValue(categories.get(hoveredCategory).children.get(hoveredSubcategory));
             playDownSound(MinecraftClient.getInstance().getSoundManager());
@@ -118,23 +158,102 @@ public class DropDownWidget<T> extends PressableWidget {
     }
 
     @Override
+    protected void onDrag(double mouseX, double mouseY, double deltaX, double deltaY) {
+        if (scrollBarGrabPos == -1) {
+            return;
+        }
+        int trackHeight = numShownCategories() * DROP_DOWN_ELEMENT_HEIGHT;
+        int scrollBarTop = (int) (mouseY - scrollBarGrabPos * scrollBarHeight()) - y - height;
+        int maxScrollBarTop = trackHeight - scrollBarHeight();
+        if (maxScrollBarTop > 0) {
+            float percentage = MathHelper.clamp((float) scrollBarTop / maxScrollBarTop, 0, 1);
+            fractionalScroll = percentage * (categories.size() - numShownCategories());
+            scrollPos = MathHelper.floor(fractionalScroll);
+            fractionalScroll -= scrollPos;
+        }
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (isValidClickButton(button)) {
+            scrollBarGrabPos = -1;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        if (!active || !visible || !expanded || !needsScrollBar() || !isMouseInMainMenuPart((int) mouseX, (int) mouseY)) {
+            return false;
+        }
+        fractionalScroll -= amount;
+        int amountToScroll = MathHelper.floor(fractionalScroll);
+        scrollPos = MathHelper.clamp(scrollPos + amountToScroll, 0, categories.size() - numShownCategories());
+        fractionalScroll -= amountToScroll;
+        return true;
+    }
+
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        updateHover((int) mouseX, (int) mouseY);
+        return active && visible && (super.isMouseOver(mouseX, mouseY) || hoveredCategory != -1 || scrollBarGrabPos != -1);
+    }
+
+    @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
         if (visible && expanded) {
+            if (scrollPos > categories.size() - numShownCategories()) {
+                scrollPos = categories.size() - numShownCategories();
+            }
             updateHover(mouseX, mouseY);
 
+            // scroll bar
+            if (needsScrollBar()) {
+                int scrollBarX = x + dropDownElementWidth();
+                int scrollBarTop = y + height;
+                int scrollBarY = scrollBarTop + scrollBarY();
+                int scrollBarHeight = scrollBarHeight();
+                int scrollBarBottom = scrollBarTop + numShownCategories() * DROP_DOWN_ELEMENT_HEIGHT;
+
+                RenderSystem.disableTexture();
+                RenderSystem.setShader(GameRenderer::getPositionColorShader);
+                Tessellator tessellator = Tessellator.getInstance();
+                BufferBuilder buffer = tessellator.getBuffer();
+                buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+
+                // track of the bar
+                buffer.vertex(scrollBarX, scrollBarBottom, 0).color(0, 0, 0, 255).next();
+                buffer.vertex(scrollBarX + SCROLL_BAR_WIDTH, scrollBarBottom, 0).color(0, 0, 0, 255).next();
+                buffer.vertex(scrollBarX + SCROLL_BAR_WIDTH, scrollBarTop, 0).color(0, 0, 0, 255).next();
+                buffer.vertex(scrollBarX, scrollBarTop, 0).color(0, 0, 0, 255).next();
+                // scroll bar shadow
+                buffer.vertex(scrollBarX, scrollBarY + scrollBarHeight, 0).color(128, 128, 128, 255).next();
+                buffer.vertex(scrollBarX + SCROLL_BAR_WIDTH, scrollBarY + scrollBarHeight, 0).color(128, 128, 128, 255).next();
+                buffer.vertex(scrollBarX + SCROLL_BAR_WIDTH, scrollBarY, 0).color(128, 128, 128, 255).next();
+                buffer.vertex(scrollBarX, scrollBarY, 0).color(128, 128, 128, 255).next();
+                // scroll bar
+                buffer.vertex(scrollBarX, scrollBarY + scrollBarHeight - 1, 0).color(192, 192, 192, 255).next();
+                buffer.vertex(scrollBarX + SCROLL_BAR_WIDTH - 1, scrollBarY + scrollBarHeight - 1, 0).color(192, 192, 192, 255).next();
+                buffer.vertex(scrollBarX + SCROLL_BAR_WIDTH - 1, scrollBarY, 0).color(192, 192, 192, 255).next();
+                buffer.vertex(scrollBarX, scrollBarY, 0).color(192, 192, 192, 255).next();
+
+                tessellator.draw();
+                RenderSystem.enableTexture();
+            }
+
             // main list
-            for (int categoryIndex = 0; categoryIndex < categories.size(); categoryIndex++) {
+            for (int categoryIndex = scrollPos, ctgyIdxEnd = scrollPos + numShownCategories(); categoryIndex < ctgyIdxEnd; categoryIndex++) {
                 Category category = categories.get(categoryIndex);
 
-                int categoryY = this.y + height + DROP_DOWN_ELEMENT_HEIGHT * categoryIndex;
-                renderButtonBackground(matrices, x, categoryY, categoryIndex == hoveredCategory);
+                int categoryY = this.y + height + DROP_DOWN_ELEMENT_HEIGHT * (categoryIndex - scrollPos);
+                renderButtonBackground(matrices, x, categoryY, dropDownElementWidth(), categoryIndex == hoveredCategory);
 
                 TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
                 int textY = categoryY + (height - 8) / 2;
-                drawCenteredText(matrices, textRenderer, categoryLabelExtractor.apply(category.value), x + width / 2, textY, 0xffffff);
+                drawCenteredText(matrices, textRenderer, categoryLabelExtractor.apply(category.value), x + dropDownElementWidth() / 2, textY, 0xffffff);
                 if (category.hasChildren()) {
-                    drawTextWithShadow(matrices, textRenderer, EXPAND_RIGHT_TEXT, x + width - 5 - textRenderer.getWidth(EXPAND_RIGHT_TEXT), textY, 0xc0c0c0);
+                    drawTextWithShadow(matrices, textRenderer, EXPAND_RIGHT_TEXT, x + dropDownElementWidth() - 5 - textRenderer.getWidth(EXPAND_RIGHT_TEXT), textY, 0xc0c0c0);
                 }
             }
 
@@ -143,14 +262,14 @@ public class DropDownWidget<T> extends PressableWidget {
                 Category category = categories.get(hoveredCategory);
                 if (category.hasChildren()) {
                     int subcategoriesX = shouldExpandSubcategoriesLeft() ? x - width : x + width;
-                    int subcategoriesY = y + height + DROP_DOWN_ELEMENT_HEIGHT * hoveredCategory;
-                    if (shouldExpendSubcategoriesUp()) {
+                    int subcategoriesY = y + height + DROP_DOWN_ELEMENT_HEIGHT * (hoveredCategory - scrollPos);
+                    if (shouldExpandSubcategoriesUp()) {
                         subcategoriesY -= DROP_DOWN_ELEMENT_HEIGHT * (category.children.size() - 1);
                     }
 
                     for (int subcategoryIndex = 0; subcategoryIndex < category.children.size(); subcategoryIndex++) {
                         int subcategoryY = subcategoriesY + DROP_DOWN_ELEMENT_HEIGHT * subcategoryIndex;
-                        renderButtonBackground(matrices, subcategoriesX, subcategoryY, subcategoryIndex == hoveredSubcategory);
+                        renderButtonBackground(matrices, subcategoriesX, subcategoryY, width, subcategoryIndex == hoveredSubcategory);
 
                         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
                         drawCenteredText(matrices, textRenderer, labelExtractor.apply(category.children.get(subcategoryIndex)), subcategoriesX + width / 2, subcategoryY + (height - 8) / 2, 0xffffff);
@@ -166,7 +285,7 @@ public class DropDownWidget<T> extends PressableWidget {
         }
     }
 
-    private void renderButtonBackground(MatrixStack matrices, int x, int y, boolean hovered) {
+    private void renderButtonBackground(MatrixStack matrices, int x, int y, int width, boolean hovered) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, WIDGETS_TEXTURE);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
@@ -195,8 +314,8 @@ public class DropDownWidget<T> extends PressableWidget {
             List<T> children = categories.get(hoveredCategory).children;
 
             int subcategoriesX = shouldExpandSubcategoriesLeft() ? x - width : x + width;
-            int subcategoriesY = y + height + DROP_DOWN_ELEMENT_HEIGHT * hoveredCategory;
-            if (shouldExpendSubcategoriesUp()) {
+            int subcategoriesY = y + height + DROP_DOWN_ELEMENT_HEIGHT * (hoveredCategory - scrollPos);
+            if (shouldExpandSubcategoriesUp()) {
                 subcategoriesY -= DROP_DOWN_ELEMENT_HEIGHT * (children.size() - 1);
             }
 
@@ -214,7 +333,7 @@ public class DropDownWidget<T> extends PressableWidget {
 
         // update hovered category
         if (isMouseInMainMenuPart(mouseX, mouseY)) {
-            hoveredCategory = (mouseY - y - height) / DROP_DOWN_ELEMENT_HEIGHT;
+            hoveredCategory = (mouseY - y - height) / DROP_DOWN_ELEMENT_HEIGHT + scrollPos;
         } else {
             // if the mouse is not currently over a category, keep it hovered if the category actually has children, otherwise un-hover it
             if (hoveredCategory != -1 && hoveredCategory < categories.size() && !categories.get(hoveredCategory).hasChildren()) {
@@ -223,8 +342,12 @@ public class DropDownWidget<T> extends PressableWidget {
         }
     }
 
+    private int dropDownElementWidth() {
+        return needsScrollBar() ? width - SCROLL_BAR_WIDTH : width;
+    }
+
     private boolean isMouseInMainMenuPart(int mouseX, int mouseY) {
-        return mouseX >= x && mouseX < x + width && mouseY >= y + height && mouseY < y + height + DROP_DOWN_ELEMENT_HEIGHT * categories.size();
+        return mouseX >= x && mouseX < x + dropDownElementWidth() && mouseY >= y + height && mouseY < y + height + DROP_DOWN_ELEMENT_HEIGHT * numShownCategories();
     }
 
     private boolean shouldExpandSubcategoriesLeft() {
@@ -233,10 +356,36 @@ public class DropDownWidget<T> extends PressableWidget {
         return x + width + width > currentScreen.width;
     }
 
-    private boolean shouldExpendSubcategoriesUp() {
+    private boolean shouldExpandSubcategoriesUp() {
         Screen currentScreen = MinecraftClient.getInstance().currentScreen;
         assert currentScreen != null;
         return y + height + DROP_DOWN_ELEMENT_HEIGHT * hoveredCategory + DROP_DOWN_ELEMENT_HEIGHT * categories.get(hoveredCategory).children.size() > currentScreen.height;
+    }
+
+    private boolean needsScrollBar() {
+        Screen currentScreen = MinecraftClient.getInstance().currentScreen;
+        assert currentScreen != null;
+        return y + height + DROP_DOWN_ELEMENT_HEIGHT * categories.size() > currentScreen.height;
+    }
+
+    private int numShownCategories() {
+        if (needsScrollBar()) {
+            Screen currentScreen = MinecraftClient.getInstance().currentScreen;
+            assert currentScreen != null;
+            return Math.max(1, (currentScreen.height - y - height) / DROP_DOWN_ELEMENT_HEIGHT);
+        }
+        return categories.size();
+    }
+
+    private int scrollBarY() {
+        int maxScrollBarY = numShownCategories() * DROP_DOWN_ELEMENT_HEIGHT - scrollBarHeight();
+        int maxScrollPos = categories.size() - numShownCategories();
+        return (int) (maxScrollBarY * MathHelper.clamp((scrollPos + fractionalScroll) / maxScrollPos, 0, 1));
+    }
+
+    private int scrollBarHeight() {
+        int numShownCategories = numShownCategories();
+        return numShownCategories * numShownCategories * DROP_DOWN_ELEMENT_HEIGHT / Math.max(1, categories.size());
     }
 
     @Override
