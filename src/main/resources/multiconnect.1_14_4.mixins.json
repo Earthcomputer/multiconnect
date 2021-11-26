@@ -8,9 +8,11 @@
   "client": [
     "EndermanEntityAccessor",
     "LivingEntityAccessor",
+    "MixinClientPlayerEntity",
     "MixinClientPlayNetworkHandler",
     "MixinEntity",
     "MixinClientWorld",
+    "MixinKeyboardInput",
     "MixinWorldChunk",
     "TrackerUpdatePacketAccessor",
     "TridentEntityAccessor",
