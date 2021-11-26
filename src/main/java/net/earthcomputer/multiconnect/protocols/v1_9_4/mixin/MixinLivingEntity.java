@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_9_4.mixin;
 
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
@@ -14,8 +16,9 @@ public class MixinLivingEntity {
 
     @Inject(method = "getPreferredEquipmentSlot", at = @At("HEAD"), cancellable = true)
     private static void removeShieldSlotPreference(ItemStack stack, CallbackInfoReturnable<EquipmentSlot> cir) {
-        if(stack.isOf(Items.SHIELD))
+        if(ConnectionInfo.protocolVersion <= Protocols.V1_9_4 && stack.isOf(Items.SHIELD)) {
             cir.setReturnValue(EquipmentSlot.MAINHAND);
+        }
     }
 
 }
