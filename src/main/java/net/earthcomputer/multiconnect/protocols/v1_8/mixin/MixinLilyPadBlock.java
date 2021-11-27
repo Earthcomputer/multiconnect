@@ -17,12 +17,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LilyPadBlock.class)
 public class MixinLilyPadBlock {
 
-    private static final VoxelShape SHAPE = Block.createCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 0.015625D /* 1 / 64 */ * 16, 16.0D);
+    private static final VoxelShape SHAPE_1_8 = Block.createCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 0.015625D /* 1 / 64 */ * 16, 16.0D);
 
     @Inject(method = "getOutlineShape", at = @At("HEAD"), cancellable = true)
     public void changeBoundingBox(BlockState state, BlockView world, BlockPos pos, ShapeContext context, CallbackInfoReturnable<VoxelShape> cir) {
         if(ConnectionInfo.protocolVersion <= Protocols.V1_8) {
-            cir.setReturnValue(SHAPE);
+            cir.setReturnValue(SHAPE_1_8);
         }
     }
 
