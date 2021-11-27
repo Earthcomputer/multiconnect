@@ -1008,6 +1008,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
     protected void markChangedCollisionBoxes() {
         super.markChangedCollisionBoxes();
         markCollisionBoxChanged(Blocks.LADDER);
+        markCollisionBoxChanged(Blocks.LILY_PAD);
     }
 
     @Override
