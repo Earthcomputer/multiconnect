@@ -171,14 +171,6 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
         mutator.mutate(Protocols.V1_16_1, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
     }
 
-    @Override
-    @ThreadSafe(withGameThread = false)
-    public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
-        super.mutateDynamicRegistries(mutator, registries);
-        addRegistry(registries, Registry.DIMENSION_TYPE_KEY);
-        addRegistry(registries, Registry.BIOME_KEY);
-    }
-
     private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
         registry.unregister(Items.IRON_SHOVEL);
         registry.unregister(Items.IRON_PICKAXE);

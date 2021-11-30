@@ -8,6 +8,7 @@ import net.minecraft.world.biome.Biome;
 public final class Biomes_1_17_1 {
     private Biomes_1_17_1() {}
 
+
     public static final RegistryKey<Biome> SNOWY_MOUNTAINS = create("snowy_mountains");
     public static final RegistryKey<Biome> MUSHROOM_FIELD_SHORE = create("mushroom_field_shore");
     public static final RegistryKey<Biome> DESERT_HILLS = create("desert_hills");
@@ -34,6 +35,17 @@ public final class Biomes_1_17_1 {
     public static final RegistryKey<Biome> MODIFIED_BADLANDS_PLATEAU = create("modified_badlands_plateau");
     public static final RegistryKey<Biome> BAMBOO_JUNGLE_HILLS = create("bamboo_jungle_hills");
     public static final RegistryKey<Biome> DEEP_WARM_OCEAN = create("deep_warm_ocean");
+    public static final RegistryKey<Biome> MOUNTAINS = create("mountains");
+    public static final RegistryKey<Biome> SNOWY_TUNDRA = create("snowy_tundra");
+    public static final RegistryKey<Biome> JUNGLE_EDGE = create("jungle_edge");
+    public static final RegistryKey<Biome> STONE_SHORE = create("stone_shore");
+    public static final RegistryKey<Biome> GIANT_TREE_TAIGA = create("giant_tree_taiga");
+    public static final RegistryKey<Biome> WOODED_MOUNTAINS = create("wooded_mountains");
+    public static final RegistryKey<Biome> WOODED_BADLANDS_PLATEAU = create("wooded_badlands_plateau");
+    public static final RegistryKey<Biome> GRAVELLY_MOUNTAINS = create("gravelly_mountains");
+    public static final RegistryKey<Biome> TALL_BIRCH_FOREST = create("tall_birch_forest");
+    public static final RegistryKey<Biome> GIANT_SPRUCE_TAIGA = create("giant_spruce_taiga");
+    public static final RegistryKey<Biome> SHATTERED_SAVANNA = create("shattered_savanna");
 
     private static RegistryKey<Biome> create(String id) {
         return RegistryKey.of(Registry.BIOME_KEY, new Identifier(id));

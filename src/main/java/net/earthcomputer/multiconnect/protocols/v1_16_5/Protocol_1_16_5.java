@@ -64,7 +64,6 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.GameMode;
@@ -559,14 +558,6 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         mutator.mutate(Protocols.V1_16_5, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
         mutator.mutate(Protocols.V1_16_5, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
         mutator.mutate(Protocols.V1_16_5, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
-    }
-
-    @Override
-    @ThreadSafe(withGameThread = false)
-    public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
-        super.mutateDynamicRegistries(mutator, registries);
-        addRegistry(registries, Registry.DIMENSION_TYPE_KEY);
-        addRegistry(registries, Registry.BIOME_KEY);
     }
 
     private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {

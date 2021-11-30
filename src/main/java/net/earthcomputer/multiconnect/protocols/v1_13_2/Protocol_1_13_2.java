@@ -30,7 +30,6 @@ import net.earthcomputer.multiconnect.protocols.v1_16_1.RecipeBookDataC2SPacket_
 import net.earthcomputer.multiconnect.protocols.v1_16_5.EntityS2CPacket_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.MapUpdateS2CPacket_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
-import net.earthcomputer.multiconnect.protocols.v1_17_1.Biomes_1_17_1;
 import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
 import net.earthcomputer.multiconnect.transformer.InboundTranslator;
@@ -121,7 +120,6 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.registry.SimpleRegistry;
@@ -129,8 +127,6 @@ import net.minecraft.village.VillagerData;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.Heightmap;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.chunk.ChunkSection;
 
 import java.util.BitSet;
@@ -685,12 +681,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         mutator.mutate(Protocols.V1_13_2, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
     }
 
-    @Override
-    public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
-        super.mutateDynamicRegistries(mutator, registries);
-        mutator.mutate(Protocols.V1_13_2, registries.get(Registry.BIOME_KEY), this::mutateBiomeRegistry);
-    }
-
     @ThreadSafe(withGameThread = false)
     private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
         registry.unregister(Blocks.BAMBOO);
@@ -859,11 +849,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.unregister(EntityType.TRIDENT);
         insertAfter(registry, EntityType.FISHING_BOBBER, EntityType.TRIDENT, "trident");
         ENTITY_REGISTRY_1_13 = registry.copy();
-    }
-
-    private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
-        registry.unregister(BiomeKeys.BAMBOO_JUNGLE);
-        registry.unregister(Biomes_1_17_1.BAMBOO_JUNGLE_HILLS);
     }
 
     private void mutateStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {

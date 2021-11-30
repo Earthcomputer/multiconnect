@@ -71,6 +71,9 @@ public abstract class AbstractProtocol implements IUtils {
 
     public void doRegistryMutation(boolean reAddMissingValues) {
         DefaultRegistries.restoreAll();
+        for (DefaultDynamicRegistries<?> defaultDynamicRegistry : DefaultDynamicRegistries.getInstances()) {
+            defaultDynamicRegistry.clear();
+        }
         RegistryMutator mutator = new RegistryMutator();
         mutateRegistries(mutator);
         mutator.runMutations(DefaultRegistries.DEFAULT_REGISTRIES.keySet());
@@ -185,7 +188,7 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     @ThreadSafe(withGameThread = false)
-    public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
+    public void mutateDynamicRegistries(DynamicRegistryManager.Impl registries) {
     }
 
     public boolean acceptBlockState(BlockState state) {

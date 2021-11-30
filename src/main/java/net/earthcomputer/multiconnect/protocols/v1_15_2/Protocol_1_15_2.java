@@ -7,6 +7,7 @@ import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.DataTrackerManager;
+import net.earthcomputer.multiconnect.protocols.generic.DefaultDynamicRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
@@ -408,10 +409,9 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
 
     @Override
     @ThreadSafe(withGameThread = false)
-    public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
-        super.mutateDynamicRegistries(mutator, registries);
-        addRegistry(registries, Registry.DIMENSION_TYPE_KEY);
-        mutator.mutate(Protocols.V1_15_2, registries.get(Registry.BIOME_KEY), this::mutateBiomeRegistry);
+    public void mutateDynamicRegistries(DynamicRegistryManager.Impl registries) {
+        super.mutateDynamicRegistries(registries);
+        mutateBiomeRegistry(DefaultDynamicRegistries.getInstance(Registry.BIOME_KEY));
     }
 
     @Override
@@ -591,12 +591,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     }
 
     @ThreadSafe(withGameThread = false)
-    private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
-        rename(registry, BiomeKeys.NETHER_WASTES, "nether");
-        registry.unregister(BiomeKeys.SOUL_SAND_VALLEY);
-        registry.unregister(BiomeKeys.CRIMSON_FOREST);
-        registry.unregister(BiomeKeys.WARPED_FOREST);
-        registry.unregister(BiomeKeys.BASALT_DELTAS);
+    private void mutateBiomeRegistry(DefaultDynamicRegistries<Biome> registry) {
+        registry.add("nether", BiomeKeys.NETHER_WASTES);
     }
 
     private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {

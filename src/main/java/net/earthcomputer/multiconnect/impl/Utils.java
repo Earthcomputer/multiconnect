@@ -246,7 +246,7 @@ public class Utils {
         var registryManagerAccessor = (DynamicRegistryManagerImplAccessor) (Object) registryManager;
         registryManagerAccessor.setRegistries(new HashMap<>()); // make them mutable
         RegistryMutator mutator = new RegistryMutator();
-        ConnectionInfo.protocol.mutateDynamicRegistries(mutator, registryManager);
+        ConnectionInfo.protocol.mutateDynamicRegistries(registryManager);
         // mutator.runMutations(registryManagerAccessor.getRegistries().values()); // TODO: just rewrite this whole registry system my fucking god
         return registryManager;
     }

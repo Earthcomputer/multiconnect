@@ -12,6 +12,7 @@ import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
 import net.earthcomputer.multiconnect.protocols.generic.DataTrackerManager;
+import net.earthcomputer.multiconnect.protocols.generic.DefaultDynamicRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.IIdList;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
@@ -1669,9 +1670,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
     @Override
     @ThreadSafe(withGameThread = false)
-    public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
-        super.mutateDynamicRegistries(mutator, registries);
-        mutator.mutate(Protocols.V1_12_2, registries.get(Registry.BIOME_KEY), this::mutateBiomeRegistry);
+    public void mutateDynamicRegistries(DynamicRegistryManager.Impl registries) {
+        super.mutateDynamicRegistries(registries);
+        mutateBiomeRegistry(DefaultDynamicRegistries.getInstance(Registry.BIOME_KEY));
     }
 
     private void mutatePotionRegistry(ISimpleRegistry<Potion> registry) {
@@ -1684,64 +1685,52 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     }
 
     @ThreadSafe(withGameThread = false)
-    private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
-        rename(registry, BiomeKeys.WINDSWEPT_HILLS, "extreme_hills");
-        rename(registry, BiomeKeys.SWAMP, "swampland");
-        rename(registry, BiomeKeys.NETHER_WASTES, "hell");
-        rename(registry, BiomeKeys.THE_END, "sky");
-        rename(registry, BiomeKeys.SNOWY_PLAINS, "ice_flats");
-        rename(registry, Biomes_1_17_1.SNOWY_MOUNTAINS, "ice_mountains");
-        rename(registry, BiomeKeys.MUSHROOM_FIELDS, "mushroom_island");
-        rename(registry, Biomes_1_17_1.MUSHROOM_FIELD_SHORE, "mushroom_island_shore");
-        rename(registry, BiomeKeys.BEACH, "beaches");
-        rename(registry, Biomes_1_17_1.WOODED_HILLS, "forest_hills");
-        rename(registry, Biomes_1_17_1.MOUNTAIN_EDGE, "smaller_extreme_hills");
-        rename(registry, BiomeKeys.STONY_SHORE, "stone_beach");
-        rename(registry, BiomeKeys.SNOWY_BEACH, "cold_beach");
-        rename(registry, BiomeKeys.DARK_FOREST, "roofed_forest");
-        rename(registry, BiomeKeys.SNOWY_TAIGA, "taiga_cold");
-        rename(registry, Biomes_1_17_1.SNOWY_TAIGA_HILLS, "taiga_cold_hills");
-        rename(registry, BiomeKeys.OLD_GROWTH_PINE_TAIGA, "redwood_taiga");
-        rename(registry, Biomes_1_17_1.GIANT_TREE_TAIGA_HILLS, "redwood_taiga_hills");
-        rename(registry, BiomeKeys.WINDSWEPT_FOREST, "extreme_hills_with_trees");
-        rename(registry, BiomeKeys.SAVANNA_PLATEAU, "savanna_rock");
-        rename(registry, BiomeKeys.BADLANDS, "mesa");
-        rename(registry, BiomeKeys.WOODED_BADLANDS, "mesa_rock");
-        rename(registry, Biomes_1_17_1.BADLANDS_PLATEAU, "mesa_clear_rock");
-        registry.unregister(BiomeKeys.SMALL_END_ISLANDS);
-        registry.unregister(BiomeKeys.END_MIDLANDS);
-        registry.unregister(BiomeKeys.END_HIGHLANDS);
-        registry.unregister(BiomeKeys.END_BARRENS);
-        registry.unregister(BiomeKeys.WARM_OCEAN);
-        registry.unregister(BiomeKeys.LUKEWARM_OCEAN);
-        registry.unregister(BiomeKeys.COLD_OCEAN);
-        registry.unregister(Biomes_1_17_1.DEEP_WARM_OCEAN);
-        registry.unregister(BiomeKeys.DEEP_LUKEWARM_OCEAN);
-        registry.unregister(BiomeKeys.DEEP_LUKEWARM_OCEAN);
-        registry.unregister(BiomeKeys.DEEP_COLD_OCEAN);
-        registry.unregister(BiomeKeys.DEEP_FROZEN_OCEAN);
-        rename(registry, BiomeKeys.THE_VOID, "void");
-        rename(registry, BiomeKeys.SUNFLOWER_PLAINS, "mutated_plains");
-        rename(registry, Biomes_1_17_1.DESERT_LAKES, "mutated_desert");
-        rename(registry, BiomeKeys.WINDSWEPT_GRAVELLY_HILLS, "mutated_extreme_hills");
-        rename(registry, BiomeKeys.FLOWER_FOREST, "mutated_forest");
-        rename(registry, Biomes_1_17_1.TAIGA_MOUNTAINS, "mutated_taiga");
-        rename(registry, Biomes_1_17_1.SWAMP_HILLS, "mutated_swampland");
-        rename(registry, BiomeKeys.ICE_SPIKES, "mutated_ice_flats");
-        rename(registry, Biomes_1_17_1.MODIFIED_JUNGLE, "mutated_jungle");
-        rename(registry, Biomes_1_17_1.MODIFIED_JUNGLE_EDGE, "mutated_jungle_edge");
-        rename(registry, BiomeKeys.OLD_GROWTH_BIRCH_FOREST, "mutated_birch_forest");
-        rename(registry, Biomes_1_17_1.TALL_BIRCH_HILLS, "mutated_birch_forest_hills");
-        rename(registry, Biomes_1_17_1.DARK_FOREST_HILLS, "mutated_roofed_forest_hills");
-        rename(registry, Biomes_1_17_1.SNOWY_TAIGA_MOUNTAINS, "mutated_taiga_cold");
-        rename(registry, BiomeKeys.OLD_GROWTH_SPRUCE_TAIGA, "mutated_redwood_taiga");
-        rename(registry, Biomes_1_17_1.GIANT_SPRUCE_TAIGA_HILLS, "mutated_redwood_taiga_hills");
-        rename(registry, Biomes_1_17_1.MODIFIED_GRAVELLY_MOUNTAINS, "mutated_extreme_hills_with_trees");
-        rename(registry, BiomeKeys.WINDSWEPT_SAVANNA, "mutated_savanna");
-        rename(registry, Biomes_1_17_1.SHATTERED_SAVANNA_PLATEAU, "mutated_savanna_rock");
-        rename(registry, BiomeKeys.ERODED_BADLANDS, "mutated_mesa");
-        rename(registry, Biomes_1_17_1.MODIFIED_WOODED_BADLANDS_PLATEAU, "mutated_mesa_rock");
-        rename(registry, Biomes_1_17_1.MODIFIED_BADLANDS_PLATEAU, "mutated_mesa_clear_rock");
+    private void mutateBiomeRegistry(DefaultDynamicRegistries<Biome> registry) {
+        registry.add("extreme_hills", BiomeKeys.WINDSWEPT_HILLS);
+        registry.add("swampland", BiomeKeys.SWAMP);
+        registry.add("hell", BiomeKeys.NETHER_WASTES);
+        registry.add("sky", BiomeKeys.THE_END);
+        registry.add("ice_flats", BiomeKeys.SNOWY_PLAINS);
+        registry.add("ice_mountains", Biomes_1_17_1.SNOWY_MOUNTAINS);
+        registry.add("mushroom_island", BiomeKeys.MUSHROOM_FIELDS);
+        registry.add("mushroom_island_shore", Biomes_1_17_1.MUSHROOM_FIELD_SHORE);
+        registry.add("beaches", BiomeKeys.BEACH);
+        registry.add("forest_hills", Biomes_1_17_1.WOODED_HILLS);
+        registry.add("smaller_extreme_hills", Biomes_1_17_1.MOUNTAIN_EDGE);
+        registry.add("stone_beach", BiomeKeys.STONY_SHORE);
+        registry.add("cold_beach", BiomeKeys.SNOWY_BEACH);
+        registry.add("roofed_forest", BiomeKeys.DARK_FOREST);
+        registry.add("taiga_cold", BiomeKeys.SNOWY_TAIGA);
+        registry.add("taiga_cold_hills", Biomes_1_17_1.SNOWY_TAIGA_HILLS);
+        registry.add("redwood_taiga", BiomeKeys.OLD_GROWTH_PINE_TAIGA);
+        registry.add("redwood_taiga_hills", Biomes_1_17_1.GIANT_TREE_TAIGA_HILLS);
+        registry.add("extreme_hills_with_trees", BiomeKeys.WINDSWEPT_FOREST);
+        registry.add("savanna_rock", BiomeKeys.SAVANNA_PLATEAU);
+        registry.add("mesa", BiomeKeys.BADLANDS);
+        registry.add("mesa_rock", BiomeKeys.WOODED_BADLANDS);
+        registry.add("mesa_clear_rock", Biomes_1_17_1.BADLANDS_PLATEAU);
+        registry.add("void", BiomeKeys.THE_VOID);
+        registry.add("mutated_plains", BiomeKeys.SUNFLOWER_PLAINS);
+        registry.add("mutated_desert", Biomes_1_17_1.DESERT_LAKES);
+        registry.add("mutated_extreme_hills", BiomeKeys.WINDSWEPT_GRAVELLY_HILLS);
+        registry.add("mutated_forest", BiomeKeys.FLOWER_FOREST);
+        registry.add("mutated_taiga", Biomes_1_17_1.TAIGA_MOUNTAINS);
+        registry.add("mutated_swampland", Biomes_1_17_1.SWAMP_HILLS);
+        registry.add("mutated_ice_flats", BiomeKeys.ICE_SPIKES);
+        registry.add("mutated_jungle", Biomes_1_17_1.MODIFIED_JUNGLE);
+        registry.add("mutated_jungle_edge", Biomes_1_17_1.MODIFIED_JUNGLE_EDGE);
+        registry.add("mutated_birch_forest", BiomeKeys.OLD_GROWTH_BIRCH_FOREST);
+        registry.add("mutated_birch_forest_hills", Biomes_1_17_1.TALL_BIRCH_HILLS);
+        registry.add("mutated_roofed_forest_hills", Biomes_1_17_1.DARK_FOREST_HILLS);
+        registry.add("mutated_taiga_cold", Biomes_1_17_1.SNOWY_TAIGA_MOUNTAINS);
+        registry.add("mutated_redwood_taiga", BiomeKeys.OLD_GROWTH_SPRUCE_TAIGA);
+        registry.add("mutated_redwood_taiga_hills", Biomes_1_17_1.GIANT_SPRUCE_TAIGA_HILLS);
+        registry.add("mutated_extreme_hills_with_trees", Biomes_1_17_1.MODIFIED_GRAVELLY_MOUNTAINS);
+        registry.add("mutated_savanna", BiomeKeys.WINDSWEPT_SAVANNA);
+        registry.add("mutated_savanna_rock", Biomes_1_17_1.SHATTERED_SAVANNA_PLATEAU);
+        registry.add("mutated_mesa", BiomeKeys.ERODED_BADLANDS);
+        registry.add("mutated_mesa_rock", Biomes_1_17_1.MODIFIED_WOODED_BADLANDS_PLATEAU);
+        registry.add("mutated_mesa_clear_rock", Biomes_1_17_1.MODIFIED_BADLANDS_PLATEAU);
     }
 
     private void mutateStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {

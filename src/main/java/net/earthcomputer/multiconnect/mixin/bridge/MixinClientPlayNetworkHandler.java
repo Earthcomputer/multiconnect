@@ -222,8 +222,9 @@ public class MixinClientPlayNetworkHandler {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
-    private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
+    private <T, R extends Registry<T>> void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
         var registries = (DynamicRegistryManager.Impl) packet.registryManager();
         assert registries != null;
         //noinspection ConstantConditions
@@ -231,6 +232,9 @@ public class MixinClientPlayNetworkHandler {
         registriesAccessor.setRegistries(new HashMap<>(registriesAccessor.getRegistries())); // make registries mutable
 
         for (var registryKey : DynamicRegistryManagerAccessor.getInfos().keySet()) {
+            if (!registriesAccessor.getRegistries().containsKey(registryKey)) {
+                Utils.addRegistry(registries, (RegistryKey<R>) registryKey);
+            }
             if (registryKey != Registry.DIMENSION_TYPE_KEY && DynamicRegistryManagerAccessor.getInfos().get(registryKey).isSynced()) {
                 addMissingValues(getBuiltinRegistry(registryKey), registries);
             }

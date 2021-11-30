@@ -14,6 +14,7 @@ import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
+import net.earthcomputer.multiconnect.protocols.generic.DefaultDynamicRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
@@ -153,7 +154,16 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
     }
 
     private static int mapBiomeId(int oldId, Registry<Biome> biomeRegistry) {
-        return biomeRegistry.getRawId(biomeRegistry.get(OLD_BIOME_IDS.get(oldId)));
+        RegistryKey<Biome> newKey = OLD_BIOME_IDS.get(oldId);
+        if (newKey == null) {
+            return oldId;
+        }
+        RegistryKey<Biome> oldKey = DefaultDynamicRegistries.getInstance(Registry.BIOME_KEY).getOld(newKey);
+        Biome biome = biomeRegistry.get(oldKey);
+        if (biome == null) {
+            return oldId;
+        }
+        return biomeRegistry.getRawId(biome);
     }
 
     public static void registerTranslators() {
@@ -359,25 +369,23 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
 
     @Override
     @ThreadSafe(withGameThread = false)
-    public void mutateDynamicRegistries(RegistryMutator mutator, DynamicRegistryManager.Impl registries) {
-        super.mutateDynamicRegistries(mutator, registries);
-        addRegistry(registries, Registry.DIMENSION_TYPE_KEY);
-        addRegistry(registries, Registry.BIOME_KEY);
-        mutator.mutate(Protocols.V1_17_1, registries.get(Registry.BIOME_KEY), this::mutateBiomeRegistry);
+    public void mutateDynamicRegistries(DynamicRegistryManager.Impl registries) {
+        super.mutateDynamicRegistries(registries);
+        mutateBiomeRegistry(DefaultDynamicRegistries.getInstance(Registry.BIOME_KEY));
     }
 
-    private void mutateBiomeRegistry(ISimpleRegistry<Biome> registry) {
-        rename(registry, BiomeKeys.WINDSWEPT_HILLS, "mountains");
-        rename(registry, BiomeKeys.SNOWY_PLAINS, "snowy_tundra");
-        rename(registry, BiomeKeys.SPARSE_JUNGLE, "jungle_edge");
-        rename(registry, BiomeKeys.STONY_SHORE, "stone_shore");
-        rename(registry, BiomeKeys.OLD_GROWTH_PINE_TAIGA, "giant_tree_taiga");
-        rename(registry, BiomeKeys.WINDSWEPT_FOREST, "wooded_mountains");
-        rename(registry, BiomeKeys.WOODED_BADLANDS, "wooded_badlands_plateau");
-        rename(registry, BiomeKeys.WINDSWEPT_GRAVELLY_HILLS, "gravelly_mountains");
-        rename(registry, BiomeKeys.OLD_GROWTH_BIRCH_FOREST, "tall_birch_forest");
-        rename(registry, BiomeKeys.OLD_GROWTH_SPRUCE_TAIGA, "giant_spruce_taiga");
-        rename(registry, BiomeKeys.WINDSWEPT_SAVANNA, "shattered_savanna");
+    private void mutateBiomeRegistry(DefaultDynamicRegistries<Biome> registry) {
+        registry.add(Biomes_1_17_1.MOUNTAINS, BiomeKeys.WINDSWEPT_HILLS);
+        registry.add(Biomes_1_17_1.SNOWY_TUNDRA, BiomeKeys.SNOWY_PLAINS);
+        registry.add(Biomes_1_17_1.JUNGLE_EDGE, BiomeKeys.SPARSE_JUNGLE);
+        registry.add(Biomes_1_17_1.STONE_SHORE, BiomeKeys.STONY_SHORE);
+        registry.add(Biomes_1_17_1.GIANT_TREE_TAIGA, BiomeKeys.OLD_GROWTH_PINE_TAIGA);
+        registry.add(Biomes_1_17_1.WOODED_MOUNTAINS, BiomeKeys.WINDSWEPT_FOREST);
+        registry.add(Biomes_1_17_1.WOODED_BADLANDS_PLATEAU, BiomeKeys.WOODED_BADLANDS);
+        registry.add(Biomes_1_17_1.GRAVELLY_MOUNTAINS, BiomeKeys.WINDSWEPT_GRAVELLY_HILLS);
+        registry.add(Biomes_1_17_1.TALL_BIRCH_FOREST, BiomeKeys.OLD_GROWTH_BIRCH_FOREST);
+        registry.add(Biomes_1_17_1.GIANT_SPRUCE_TAIGA, BiomeKeys.OLD_GROWTH_SPRUCE_TAIGA);
+        registry.add(Biomes_1_17_1.SHATTERED_SAVANNA, BiomeKeys.WINDSWEPT_SAVANNA);
     }
 
     @Override

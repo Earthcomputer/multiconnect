@@ -13,7 +13,6 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import org.jetbrains.annotations.Contract;
@@ -84,10 +83,6 @@ public interface IUtils {
 
     default <T> void reregister(ISimpleRegistry<T> registry, T value, boolean inPlace) {
         Utils.reregister(registry, value, inPlace);
-    }
-
-    default <T, R extends Registry<T>> void addRegistry(DynamicRegistryManager.Impl registries, RegistryKey<R> registryKey) {
-        Utils.addRegistry(registries, registryKey);
     }
 
     default void dumpBlockStates() {
