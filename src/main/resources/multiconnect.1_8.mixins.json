@@ -33,6 +33,7 @@
     "MixinItemCooldownManager",
     "MixinItemStack",
     "MixinLadderBlock",
+    "MixinLilyPadBlock",
     "MixinLivingEntity",
     "MixinMinecraftClient",
     "MixinPlayerEntity",
