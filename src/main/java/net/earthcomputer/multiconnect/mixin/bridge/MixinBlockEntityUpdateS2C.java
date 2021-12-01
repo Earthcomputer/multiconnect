@@ -11,6 +11,7 @@ import net.minecraft.datafixer.TypeReferences;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.util.registry.Registry;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -24,7 +25,8 @@ public class MixinBlockEntityUpdateS2C {
 
     @Shadow @Final private BlockEntityType<?> blockEntityType;
 
-    @Shadow @Final @Mutable private NbtCompound nbt;
+    @Shadow @Final @Mutable @Nullable
+    private NbtCompound nbt;
 
     @Inject(method = "<init>(Lnet/minecraft/network/PacketByteBuf;)V", at = @At("RETURN"))
     private void onRead(CallbackInfo ci) {
@@ -33,8 +35,10 @@ public class MixinBlockEntityUpdateS2C {
             return;
         }
 
-        nbt.putString("id", ConnectionInfo.protocolVersion <= Protocols.V1_10 ? Protocol_1_10.getBlockEntityId(blockEntityType) : String.valueOf(Registry.BLOCK_ENTITY_TYPE.getId(blockEntityType)));
-        nbt = Utils.datafix(TypeReferences.BLOCK_ENTITY, nbt);
+        if (nbt != null) {
+            nbt.putString("id", ConnectionInfo.protocolVersion <= Protocols.V1_10 ? Protocol_1_10.getBlockEntityId(blockEntityType) : String.valueOf(Registry.BLOCK_ENTITY_TYPE.getId(blockEntityType)));
+            nbt = Utils.datafix(TypeReferences.BLOCK_ENTITY, nbt);
+        }
     }
 
 }
