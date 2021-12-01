@@ -1,0 +1,9 @@
+{
+  "multiconnect.betaWarning.line1": "%s est supporté en bêta par multiconnect.",
+  "multiconnect.betaWarning.line2": "Attendez-vous à des bugs, mais signalez les sur le tracker d'issues !",
+  "multiconnect.changeForcedProtocol": "Version",
+  "multiconnect.rareBug": "Un bug rare vient de survenir au sein de multiconnect. Merci d'envoyer vos logs au %s pour le régler.",
+  "multiconnect.rareBug.link": "tracker d'issues",
+  "multiconnect.rareBug.screen": "Un bug rare vient de survenir au sein de multiconnect. Voulez-vous envoyer vos logs sur le tracker d'issues pour aider à le régler ?",
+  "multiconnect.unsupportedExperimentalCodec": "Ce serveur utilise des fonctionnalités expérimentales ou des fonctionnalités qui sont expérimentales sur la version du serveur. Multiconnect est incapable de traduire les données expérimentales et ne peut donc se connecter au serveur."
+}
