@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.earthcomputer.multiconnect.api.MultiConnectAPI;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
@@ -15,6 +16,7 @@ import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.DefaultDynamicRegistries;
+import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
@@ -206,7 +208,10 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
                 if (type == null) {
                     continue;
                 }
-                blockEntity = Utils.datafix(TypeReferences.BLOCK_ENTITY, blockEntity);
+                if (MultiConnectAPI.instance().doesServerKnow(Registry.BLOCK_ENTITY_TYPE, type)
+                        && DefaultRegistries.DEFAULT_REGISTRIES.get(Registry.BLOCK_ENTITY_TYPE).defaultEntryToRawId.containsKey(type)) {
+                    blockEntity = Utils.datafix(TypeReferences.BLOCK_ENTITY, blockEntity);
+                }
                 var newBlockEntity = ChunkDataBlockEntityAccessor.createChunkDataBlockEntity(
                         (ChunkSectionPos.getLocalCoord(x) << 4) | ChunkSectionPos.getLocalCoord(z),
                         y,

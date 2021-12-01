@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
+import net.earthcomputer.multiconnect.api.MultiConnectAPI;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Utils;
@@ -32,7 +33,10 @@ public abstract class MixinChunkDataBlockEntity {
                 } else {
                     fixed.putString("id", String.valueOf(Registry.BLOCK_ENTITY_TYPE.getId(type)));
                 }
-                fixed = Utils.datafix(TypeReferences.BLOCK_ENTITY, fixed);
+                if (MultiConnectAPI.instance().doesServerKnow(Registry.BLOCK_ENTITY_TYPE, type)
+                        && DefaultRegistries.DEFAULT_REGISTRIES.get(Registry.BLOCK_ENTITY_TYPE).defaultEntryToRawId.containsKey(type)) {
+                    fixed = Utils.datafix(TypeReferences.BLOCK_ENTITY, fixed);
+                }
                 nbt = fixed;
             }
         }

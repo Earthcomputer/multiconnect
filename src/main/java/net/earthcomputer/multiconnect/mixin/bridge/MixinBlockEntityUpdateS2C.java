@@ -4,6 +4,7 @@ import net.earthcomputer.multiconnect.api.MultiConnectAPI;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Utils;
+import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.datafixer.TypeReferences;
@@ -27,7 +28,10 @@ public class MixinBlockEntityUpdateS2C {
 
     @Inject(method = "<init>(Lnet/minecraft/network/PacketByteBuf;)V", at = @At("RETURN"))
     private void onRead(CallbackInfo ci) {
-        if (!MultiConnectAPI.instance().doesServerKnow(Registry.BLOCK_ENTITY_TYPE, blockEntityType)) return;
+        if (!MultiConnectAPI.instance().doesServerKnow(Registry.BLOCK_ENTITY_TYPE, blockEntityType)
+                || !DefaultRegistries.DEFAULT_REGISTRIES.get(Registry.BLOCK_ENTITY_TYPE).defaultEntryToRawId.containsKey(blockEntityType)) {
+            return;
+        }
 
         nbt.putString("id", ConnectionInfo.protocolVersion <= Protocols.V1_10 ? Protocol_1_10.getBlockEntityId(blockEntityType) : String.valueOf(Registry.BLOCK_ENTITY_TYPE.getId(blockEntityType)));
         nbt = Utils.datafix(TypeReferences.BLOCK_ENTITY, nbt);
