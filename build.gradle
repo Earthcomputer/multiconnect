@@ -47,12 +47,12 @@ if (snapshotMatcher.matches()) {
 processResources {
 	duplicatesStrategy = DuplicatesStrategy.WARN
 	inputs.property "version", project.version
-	inputs.property "mcversion", normalizedVersion
+	inputs.property "mcversion", project.supported_versions ?: normalizedVersion
 
 	from(sourceSets.main.resources.srcDirs) {
 		include "fabric.mod.json"
 		expand "version": project.version,
-				"mcversion": normalizedVersion
+				"mcversion": project.supported_versions ?: normalizedVersion
 	}
 
 	from(sourceSets.main.resources.srcDirs) {
