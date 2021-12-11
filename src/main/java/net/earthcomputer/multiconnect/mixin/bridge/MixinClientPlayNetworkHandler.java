@@ -79,7 +79,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
-public class MixinClientPlayNetworkHandler {
+public class MixinClientPlayNetworkHandler implements IClientPlayNetworkHandler {
     @Unique private static final Logger MULTICONNECT_LOGGER = LogManager.getLogger("multiconnect");
 
     @Shadow private ClientWorld world;
@@ -117,8 +117,8 @@ public class MixinClientPlayNetworkHandler {
         }
     }
 
-    @Inject(method = "onChunkData", at = @At("TAIL"))
-    private void afterOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
+    @Override
+    public void multiconnect_onAfterChunkData(ChunkDataS2CPacket packet) {
         currentChunkPacket = null;
         ChunkPos pos = new ChunkPos(packet.getX(), packet.getZ());
         List<Packet<ClientPlayPacketListener>> packets = afterChunkLoadPackets.asMap().remove(pos);

@@ -20,6 +20,7 @@
     "bridge.MixinClientConnection",
     "bridge.MixinClientPlayerInteractionManager",
     "bridge.MixinClientPlayNetworkHandler",
+    "bridge.MixinClientPlayNetworkHandlerHighPriority",
     "bridge.MixinClientWorld",
     "bridge.MixinCreativeInventoryActionC2SPacket",
     "bridge.MixinCustomPayloadC2S",
