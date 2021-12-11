@@ -36,6 +36,7 @@ public class UpdateSignS2CPacket implements Packet<ClientPlayPacketListener> {
             buf.pendingRead(BlockPos.class, pos);
             buf.pendingRead(Byte.class, (byte) 9); // sign type
             buf.pendingRead(NbtCompound.class, signNbt);
+            buf.applyPendingReads();
         }));
     }
 }
