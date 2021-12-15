@@ -36,6 +36,7 @@
     "MixinLivingEntity",
     "MixinNoteBlock",
     "MixinSkullBlockEntity",
+    "MixinTeam",
     "StatsCounterFixAccessor",
     "SuspendParticleAccessor",
     "WolfEntityAccessor"
