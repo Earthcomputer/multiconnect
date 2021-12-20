@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_9_2;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.Utils;
+import net.earthcomputer.multiconnect.transformer.UnsignedByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
@@ -34,7 +35,7 @@ public class UpdateSignS2CPacket implements Packet<ClientPlayPacketListener> {
         }
         listener.onBlockEntityUpdate(Utils.createPacket(BlockEntityUpdateS2CPacket.class, BlockEntityUpdateS2CPacket::new, Protocols.V1_9_2, buf -> {
             buf.pendingRead(BlockPos.class, pos);
-            buf.pendingRead(Byte.class, (byte) 9); // sign type
+            buf.pendingRead(UnsignedByte.class, new UnsignedByte((short) 9)); // sign type
             buf.pendingRead(NbtCompound.class, signNbt);
             buf.applyPendingReads();
         }));
