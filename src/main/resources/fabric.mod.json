@@ -51,6 +51,10 @@
     "optifabric": "*"
   },
 
+  "breaks": {
+    "fabric": "<0.45.1"
+  },
+
   "custom": {
     "lithium:options": {
       "mixin.entity.data_tracker": false
