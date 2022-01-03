@@ -24,7 +24,9 @@ public class MixinRegistrySyncManager {
     private static final Logger MULTICONNECT_LOGGER = LogManager.getLogger("multiconnect");
 
     @Dynamic
-    @Inject(method = "sendPacket(Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/fabricmc/fabric/impl/registry/sync/packet/RegistryPacketHandler;)V", at = @At("HEAD"), cancellable = true)
+    @Inject(method = {"sendPacket(Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/fabricmc/fabric/impl/registry/sync/packet/RegistryPacketHandler;)V", "sendPacket(Lnet/minecraft/class_3222;Lnet/fabricmc/fabric/impl/registry/sync/packet/RegistryPacketHandler;)V"},
+            at = @At("HEAD"),
+            cancellable = true)
     private static void onCreatePacket(CallbackInfo ci) {
         // don't try to sync other clients in LAN mode, or for whatever reason to the singleplayer owner
         MULTICONNECT_LOGGER.info("Cancelling Fabric API registry sync packet server-side");
