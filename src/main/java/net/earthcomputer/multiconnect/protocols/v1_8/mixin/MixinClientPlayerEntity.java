@@ -31,6 +31,7 @@ public class MixinClientPlayerEntity extends AbstractClientPlayerEntity implemen
         if (ConnectionInfo.protocolVersion <= Protocols.V1_8 && areSwingsCanceledThisTick) {
             // the first tick of hand swinging, we may have sent the hand swing earlier in 1.8
             ci.cancel();
+            areSwingsCanceledThisTick = false;
         }
     }
 
