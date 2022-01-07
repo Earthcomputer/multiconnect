@@ -23,11 +23,4 @@ public class MixinClientPlayerInteractionManager {
             ((IClientPlayer) player).multiconnect_cancelSwingsThisTick();
         }
     }
-
-    @Inject(method = "hasLimitedAttackSpeed", at = @At("HEAD"), cancellable = true)
-    private void onHasLimitedAttackSpeed(CallbackInfoReturnable<Boolean> ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
-            ci.setReturnValue(false);
-        }
-    }
 }
