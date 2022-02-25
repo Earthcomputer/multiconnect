@@ -11,7 +11,7 @@ plugins {
 	id 'com.modrinth.minotaur' version '1.2.1'
 	id 'com.github.breadmoirai.github-release' version '2.2.12'
 	id 'io.codearte.nexus-staging' version '0.30.0'
-	id 'io.github.juuxel.loom-quiltflower-mini' version '1.1.0'
+	id 'io.github.juuxel.loom-quiltflower-mini' version '1.2.1'
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
@@ -34,7 +34,7 @@ def normalizedVersion = project.minecraft_version
 def snapshotMatcher = snapshotPattern.matcher(project.minecraft_version)
 def prereleaseMatcher = prereleasePattern.matcher(project.minecraft_version)
 if (snapshotMatcher.matches()) {
-    normalizedVersion = project.target_release + '-alpha.' + snapshotMatcher.group(1) + '.' + snapshotMatcher.group(2) + '.' + snapshotMatcher.group(3)
+    normalizedVersion = project.target_release + '-alpha.' + snapshotMatcher.group(1) + '.' + (snapshotMatcher.group(2) as Integer) + '.' + snapshotMatcher.group(3)
 } else if (prereleaseMatcher.matches()) {
 	def type = prereleaseMatcher.group(1)
 	if (type == 'pre') {
@@ -164,13 +164,13 @@ dependencies {
 	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 
 	if (true) {
-		modCompileOnly("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
+		modCompileOnly(fabricApi.module('fabric-resource-loader-v0', project.fabric_api_version)) {
 			transitive = false // to stop it using its own fabric-loader
 		}
-		modRuntimeOnly("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
+		modRuntimeOnly(fabricApi.module('fabric-resource-loader-v0', project.fabric_api_version)) {
 			transitive = false // to stop it using its own fabric-loader
 		}
-		include "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
+		include fabricApi.module('fabric-resource-loader-v0', project.fabric_api_version)
 	} else {
 		modCompileOnly("net.fabricmc.fabric-api:fabric-api:0.45.1+1.18") {
 			exclude group: 'net.fabricmc', module: 'fabric-loader'
