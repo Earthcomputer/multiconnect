@@ -7,7 +7,7 @@ public class Protocols {
 
     // 1.18.x
     public static final int V1_18 = 757;
-    public static final int V1_18_2 = 1073741889;
+    public static final int V1_18_2 = 1073741890;
 
     // 1.17.x
     public static final int V1_17_1 = 756;
