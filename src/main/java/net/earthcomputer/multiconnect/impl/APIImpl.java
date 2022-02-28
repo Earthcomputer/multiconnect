@@ -106,10 +106,10 @@ public class APIImpl extends MultiConnectAPI {
     @SuppressWarnings("unchecked")
     @Override
     public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
-        if (!DefaultRegistries.DEFAULT_REGISTRIES.containsKey(registry)) {
+        if (DefaultRegistries.getDefaultRegistry(registry.getKey()) == null) {
             return super.doesServerKnow(registry, key);
         }
-        return ((ISimpleRegistry<T>) registry).getRealEntries().contains(key);
+        return ((ISimpleRegistry<T>) registry).multiconnect_getRealEntries().contains(key);
     }
 
     //region deprecated stuff

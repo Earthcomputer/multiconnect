@@ -1,7 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
-import net.earthcomputer.multiconnect.impl.Utils;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryBuilder;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
 
@@ -33,10 +32,10 @@ public class BlockEntities_1_12_2 {
             Blocks.POTTED_CACTUS
     ).build(null);
 
-    public static void registerBlockEntities(ISimpleRegistry<BlockEntityType<?>> registry) {
+    public static void registerBlockEntities(RegistryBuilder<BlockEntityType<?>> registry) {
         registry.unregister(BlockEntityType.CONDUIT);
-        Utils.insertAfter(registry, BlockEntityType.MOB_SPAWNER, NOTE_BLOCK, "noteblock");
-        Utils.insertAfter(registry, BlockEntityType.COMPARATOR, FLOWER_POT, "flower_pot");
+        registry.insertAfter(BlockEntityType.MOB_SPAWNER, NOTE_BLOCK, "noteblock");
+        registry.insertAfter(BlockEntityType.COMPARATOR, FLOWER_POT, "flower_pot");
     }
 
 }

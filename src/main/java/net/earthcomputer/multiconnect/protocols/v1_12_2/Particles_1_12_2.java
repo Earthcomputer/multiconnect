@@ -5,8 +5,8 @@ import com.google.common.collect.HashBiMap;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.earthcomputer.multiconnect.protocols.generic.IParticleManager;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.MyParticleType;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryBuilder;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.CrackParticleAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.SuspendParticleAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_17_1.Particles_1_17_1;
@@ -23,7 +23,6 @@ import net.minecraft.particle.ParticleType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.RegistryKey;
 
 import static net.minecraft.particle.ParticleTypes.*;
 
@@ -89,62 +88,59 @@ public class Particles_1_12_2 {
         OLD_NAMES.put(SPIT, "spit");
     }
 
-    private static void register(ISimpleRegistry<ParticleType<?>> registry, ParticleType<?> particle, int id, String name) {
-        var key = RegistryKey.of(registry.getRegistryKey(), new Identifier(name));
-        registry.register(particle, id, key, false);
-    }
-
-    public static void registerParticles(ISimpleRegistry<ParticleType<?>> registry) {
-        registry.clear(false);
-        register(registry, POOF, 0, "poof");
-        register(registry, EXPLOSION, 1, "explosion");
-        register(registry, EXPLOSION_EMITTER, 2, "explosion_emitter");
-        register(registry, FIREWORK, 3, "firework");
-        register(registry, BUBBLE, 4, "bubble");
-        register(registry, SPLASH, 5, "splash");
-        register(registry, FISHING, 6, "fishing");
-        register(registry, UNDERWATER, 7, "underwater");
-        register(registry, DEPTH_SUSPEND, 8, "depth_suspend");
-        register(registry, CRIT, 9, "crit");
-        register(registry, ENCHANTED_HIT, 10, "enchanted_hit");
-        register(registry, SMOKE, 11, "smoke");
-        register(registry, LARGE_SMOKE, 12, "large_smoke");
-        register(registry, EFFECT, 13, "effect");
-        register(registry, INSTANT_EFFECT, 14, "instant_effect");
-        register(registry, ENTITY_EFFECT, 15, "entity_effect");
-        register(registry, AMBIENT_ENTITY_EFFECT, 16, "ambient_entity_effect");
-        register(registry, WITCH, 17, "witch");
-        register(registry, DRIPPING_WATER, 18, "dripping_water");
-        register(registry, DRIPPING_LAVA, 19, "dripping_lava");
-        register(registry, ANGRY_VILLAGER, 20, "angry_villager");
-        register(registry, HAPPY_VILLAGER, 21, "happy_villager");
-        register(registry, MYCELIUM, 22, "mycelium");
-        register(registry, NOTE, 23, "note");
-        register(registry, PORTAL, 24, "portal");
-        register(registry, ENCHANT, 25, "enchant");
-        register(registry, FLAME, 26, "flame");
-        register(registry, LAVA, 27, "lava");
-        register(registry, FOOTSTEP, 28, "footstep");
-        register(registry, CLOUD, 29, "cloud");
-        register(registry, DUST, 30, "dust");
-        register(registry, ITEM_SNOWBALL, 31, "item_snowball");
-        register(registry, SNOW_SHOVEL, 32, "snow_shovel");
-        register(registry, ITEM_SLIME, 33, "item_slime");
-        register(registry, HEART, 34, "heart");
-        register(registry, Particles_1_17_1.BARRIER, 35, "barrier");
-        register(registry, ITEM, 36, "item");
-        register(registry, BLOCK, 37, "block");
-        register(registry, BLOCK_DUST, 38, "block_dust");
-        register(registry, RAIN, 39, "rain");
-        register(registry, TAKE, 40, "take"); // this particle was added in 1.8 and never had any factory
-        register(registry, ELDER_GUARDIAN, 41, "elder_guardian");
-        register(registry, DRAGON_BREATH, 42, "dragon_breath");
-        register(registry, END_ROD, 43, "end_rod");
-        register(registry, DAMAGE_INDICATOR, 44, "damage_indicator");
-        register(registry, SWEEP_ATTACK, 45, "sweep_attack");
-        register(registry, FALLING_DUST, 46, "falling_dust");
-        register(registry, TOTEM_OF_UNDYING, 47, "totem_of_undying");
-        register(registry, SPIT, 48, "spit");
+    public static void registerParticles(RegistryBuilder<ParticleType<?>> registry) {
+        registry.disableSideEffects();
+        registry.clear();
+        registry.registerInPlace(0, POOF, "poof");
+        registry.registerInPlace(1, EXPLOSION, "explosion");
+        registry.registerInPlace(2, EXPLOSION_EMITTER, "explosion_emitter");
+        registry.registerInPlace(3, FIREWORK, "firework");
+        registry.registerInPlace(4, BUBBLE, "bubble");
+        registry.registerInPlace(5, SPLASH, "splash");
+        registry.registerInPlace(6, FISHING, "fishing");
+        registry.registerInPlace(7, UNDERWATER, "underwater");
+        registry.registerInPlace(8, DEPTH_SUSPEND, "depth_suspend");
+        registry.registerInPlace(9, CRIT, "crit");
+        registry.registerInPlace(10, ENCHANTED_HIT, "enchanted_hit");
+        registry.registerInPlace(11, SMOKE, "smoke");
+        registry.registerInPlace(12, LARGE_SMOKE, "large_smoke");
+        registry.registerInPlace(13, EFFECT, "effect");
+        registry.registerInPlace(14, INSTANT_EFFECT, "instant_effect");
+        registry.registerInPlace(15, ENTITY_EFFECT, "entity_effect");
+        registry.registerInPlace(16, AMBIENT_ENTITY_EFFECT, "ambient_entity_effect");
+        registry.registerInPlace(17, WITCH, "witch");
+        registry.registerInPlace(18, DRIPPING_WATER, "dripping_water");
+        registry.registerInPlace(19, DRIPPING_LAVA, "dripping_lava");
+        registry.registerInPlace(20, ANGRY_VILLAGER, "angry_villager");
+        registry.registerInPlace(21, HAPPY_VILLAGER, "happy_villager");
+        registry.registerInPlace(22, MYCELIUM, "mycelium");
+        registry.registerInPlace(23, NOTE, "note");
+        registry.registerInPlace(24, PORTAL, "portal");
+        registry.registerInPlace(25, ENCHANT, "enchant");
+        registry.registerInPlace(26, FLAME, "flame");
+        registry.registerInPlace(27, LAVA, "lava");
+        registry.registerInPlace(28, FOOTSTEP, "footstep");
+        registry.registerInPlace(29, CLOUD, "cloud");
+        registry.registerInPlace(30, DUST, "dust");
+        registry.registerInPlace(31, ITEM_SNOWBALL, "item_snowball");
+        registry.registerInPlace(32, SNOW_SHOVEL, "snow_shovel");
+        registry.registerInPlace(33, ITEM_SLIME, "item_slime");
+        registry.registerInPlace(34, HEART, "heart");
+        registry.registerInPlace(35, Particles_1_17_1.BARRIER, "barrier");
+        registry.registerInPlace(36, ITEM, "item");
+        registry.registerInPlace(37, BLOCK, "block");
+        registry.registerInPlace(38, BLOCK_DUST, "block_dust");
+        registry.registerInPlace(39, RAIN, "rain");
+        registry.registerInPlace(40, TAKE, "take"); // this particle was added in 1.8 and never had any factory
+        registry.registerInPlace(41, ELDER_GUARDIAN, "elder_guardian");
+        registry.registerInPlace(42, DRAGON_BREATH, "dragon_breath");
+        registry.registerInPlace(43, END_ROD, "end_rod");
+        registry.registerInPlace(44, DAMAGE_INDICATOR, "damage_indicator");
+        registry.registerInPlace(45, SWEEP_ATTACK, "sweep_attack");
+        registry.registerInPlace(46, FALLING_DUST, "falling_dust");
+        registry.registerInPlace(47, TOTEM_OF_UNDYING, "totem_of_undying");
+        registry.registerInPlace(48, SPIT, "spit");
+        registry.enableSideEffects();
 
         registerParticleFactories((IParticleManager) MinecraftClient.getInstance().particleManager);
     }

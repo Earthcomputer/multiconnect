@@ -9,8 +9,7 @@
     "MapStateAccessor",
     "MixinClientPlayerInteractionManager",
     "MixinSquidEntity",
-    "ShulkerEntityAccessor",
-    "TagGroupSerializedAccessor"
+    "ShulkerEntityAccessor"
   ],
   "client": [
   ],

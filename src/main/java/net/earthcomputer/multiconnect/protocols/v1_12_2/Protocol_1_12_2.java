@@ -14,9 +14,9 @@ import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
 import net.earthcomputer.multiconnect.protocols.generic.DataTrackerManager;
 import net.earthcomputer.multiconnect.protocols.generic.DefaultDynamicRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.IIdList;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryBuilder;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11;
@@ -148,7 +148,6 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -1657,25 +1656,25 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
         // just fucking nuke them all, it's the flattening after all
-        mutator.mutate(Protocols.V1_12_2, Registry.BLOCK, Blocks_1_12_2::registerBlocks);
-        mutator.mutate(Protocols.V1_12_2, Registry.ITEM, Items_1_12_2::registerItems);
-        mutator.mutate(Protocols.V1_12_2, Registry.ENTITY_TYPE, Entities_1_12_2::registerEntities);
-        mutator.mutate(Protocols.V1_12_2, Registry.ENCHANTMENT, Enchantments_1_12_2::registerEnchantments);
-        mutator.mutate(Protocols.V1_12_2, Registry.POTION, this::mutatePotionRegistry);
-        mutator.mutate(Protocols.V1_12_2, Registry.PARTICLE_TYPE, Particles_1_12_2::registerParticles);
-        mutator.mutate(Protocols.V1_12_2, Registry.BLOCK_ENTITY_TYPE, BlockEntities_1_12_2::registerBlockEntities);
-        mutator.mutate(Protocols.V1_12_2, Registry.STATUS_EFFECT, this::mutateStatusEffectRegistry);
-        mutator.mutate(Protocols.V1_12_2, Registry.SOUND_EVENT, this::mutateSoundRegistry);
+        mutator.mutate(Protocols.V1_12_2, Registry.BLOCK_KEY, Blocks_1_12_2::registerBlocks);
+        mutator.mutate(Protocols.V1_12_2, Registry.ITEM_KEY, Items_1_12_2::registerItems);
+        mutator.mutate(Protocols.V1_12_2, Registry.ENTITY_TYPE_KEY, Entities_1_12_2::registerEntities);
+        mutator.mutate(Protocols.V1_12_2, Registry.ENCHANTMENT_KEY, Enchantments_1_12_2::registerEnchantments);
+        mutator.mutate(Protocols.V1_12_2, Registry.POTION_KEY, this::mutatePotionRegistry);
+        mutator.mutate(Protocols.V1_12_2, Registry.PARTICLE_TYPE_KEY, Particles_1_12_2::registerParticles);
+        mutator.mutate(Protocols.V1_12_2, Registry.BLOCK_ENTITY_TYPE_KEY, BlockEntities_1_12_2::registerBlockEntities);
+        mutator.mutate(Protocols.V1_12_2, Registry.MOB_EFFECT_KEY, this::mutateStatusEffectRegistry);
+        mutator.mutate(Protocols.V1_12_2, Registry.SOUND_EVENT_KEY, this::mutateSoundRegistry);
     }
 
     @Override
     @ThreadSafe(withGameThread = false)
-    public void mutateDynamicRegistries(DynamicRegistryManager.Impl registries) {
-        super.mutateDynamicRegistries(registries);
+    public void mutateDynamicRegistries() {
+        super.mutateDynamicRegistries();
         mutateBiomeRegistry(DefaultDynamicRegistries.getInstance(Registry.BIOME_KEY));
     }
 
-    private void mutatePotionRegistry(ISimpleRegistry<Potion> registry) {
+    private void mutatePotionRegistry(RegistryBuilder<Potion> registry) {
         registry.unregister(Potions.STRONG_SLOWNESS);
         registry.unregister(Potions.TURTLE_MASTER);
         registry.unregister(Potions.LONG_TURTLE_MASTER);
@@ -1733,13 +1732,13 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         registry.add("mutated_mesa_clear_rock", Biomes_1_17_1.MODIFIED_BADLANDS_PLATEAU);
     }
 
-    private void mutateStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {
+    private void mutateStatusEffectRegistry(RegistryBuilder<StatusEffect> registry) {
         registry.unregister(StatusEffects.SLOW_FALLING);
         registry.unregister(StatusEffects.CONDUIT_POWER);
         registry.unregister(StatusEffects.DOLPHINS_GRACE);
     }
 
-    private void mutateSoundRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundRegistry(RegistryBuilder<SoundEvent> registry) {
         registry.unregister(SoundEvents.AMBIENT_UNDERWATER_ENTER);
         registry.unregister(SoundEvents.AMBIENT_UNDERWATER_EXIT);
         registry.unregister(SoundEvents.AMBIENT_UNDERWATER_LOOP);

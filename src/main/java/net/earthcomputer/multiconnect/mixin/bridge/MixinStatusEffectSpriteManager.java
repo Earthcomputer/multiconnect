@@ -15,8 +15,8 @@ public class MixinStatusEffectSpriteManager {
 
     @Redirect(method = "getSprites", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/Registry;getIds()Ljava/util/Set;"))
     private Set<Identifier> redirectGetIds(Registry<?> registry) {
-        DefaultRegistries<?> defaultRegistry = DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
-        return defaultRegistry != null ? defaultRegistry.defaultIdToEntry.keySet() : registry.getIds();
+        Registry<?> defaultRegistry = DefaultRegistries.getDefaultRegistry(registry.getKey());
+        return defaultRegistry != null ? defaultRegistry.getIds() : registry.getIds();
     }
 
 }

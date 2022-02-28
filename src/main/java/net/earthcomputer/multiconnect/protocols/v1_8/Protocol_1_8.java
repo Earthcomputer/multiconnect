@@ -10,8 +10,8 @@ import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryBuilder;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.ClientStatusC2SPacket_1_11_2;
@@ -1031,17 +1031,17 @@ public class Protocol_1_8 extends Protocol_1_9 {
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
-        mutator.mutate(Protocols.V1_8, Registry.BLOCK, this::mutateBlockRegistry);
-        mutator.mutate(Protocols.V1_8, Registry.ITEM, this::mutateItemRegistry);
-        mutator.mutate(Protocols.V1_8, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
-        mutator.mutate(Protocols.V1_8, Registry.ENCHANTMENT, this::mutateEnchantmentRegistry);
-        mutator.mutate(Protocols.V1_8, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
-        mutator.mutate(Protocols.V1_8, Registry.BLOCK_ENTITY_TYPE, this::mutateBlockEntityTypeRegistry);
-        mutator.mutate(Protocols.V1_8, Registry.STATUS_EFFECT, this::mutateStatusEffectRegistry);
-        mutator.mutate(Protocols.V1_8, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
+        mutator.mutate(Protocols.V1_8, Registry.BLOCK_KEY, this::mutateBlockRegistry);
+        mutator.mutate(Protocols.V1_8, Registry.ITEM_KEY, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_8, Registry.ENTITY_TYPE_KEY, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_8, Registry.ENCHANTMENT_KEY, this::mutateEnchantmentRegistry);
+        mutator.mutate(Protocols.V1_8, Registry.PARTICLE_TYPE_KEY, this::mutateParticleTypeRegistry);
+        mutator.mutate(Protocols.V1_8, Registry.BLOCK_ENTITY_TYPE_KEY, this::mutateBlockEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_8, Registry.MOB_EFFECT_KEY, this::mutateStatusEffectRegistry);
+        mutator.mutate(Protocols.V1_8, Registry.CUSTOM_STAT_KEY, this::mutateCustomStatRegistry);
     }
 
-    private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
+    private void mutateBlockRegistry(RegistryBuilder<Block> registry) {
         registry.purge(Blocks.END_ROD);
         registry.purge(Blocks.CHORUS_PLANT);
         registry.purge(Blocks.CHORUS_FLOWER);
@@ -1060,7 +1060,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         registry.purge(Blocks.STRUCTURE_BLOCK);
     }
 
-    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
+    private void mutateItemRegistry(RegistryBuilder<Item> registry) {
         registry.purge(Items.SPECTRAL_ARROW);
         registry.purge(Items.TIPPED_ARROW);
         registry.purge(Items.SPRUCE_BOAT);
@@ -1081,7 +1081,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         registry.purge(Items.BEETROOT_SOUP);
     }
 
-    private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
+    private void mutateEntityTypeRegistry(RegistryBuilder<EntityType<?>> registry) {
         registry.purge(EntityType.AREA_EFFECT_CLOUD);
         registry.purge(EntityType.SPECTRAL_ARROW);
         registry.purge(EntityType.SHULKER_BULLET);
@@ -1089,34 +1089,34 @@ public class Protocol_1_8 extends Protocol_1_9 {
         registry.purge(EntityType.SHULKER);
     }
 
-    private void mutateEnchantmentRegistry(ISimpleRegistry<Enchantment> registry) {
+    private void mutateEnchantmentRegistry(RegistryBuilder<Enchantment> registry) {
         registry.purge(Enchantments.FROST_WALKER);
         registry.purge(Enchantments.MENDING);
     }
 
-    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
-        rename(registry, ParticleTypes.ITEM, "iconcrack_");
-        rename(registry, ParticleTypes.BLOCK, "blockcrack_");
-        rename(registry, Particles_1_12_2.BLOCK_DUST, "blockdust_");
+    private void mutateParticleTypeRegistry(RegistryBuilder<ParticleType<?>> registry) {
+        registry.rename(ParticleTypes.ITEM, "iconcrack_");
+        registry.rename(ParticleTypes.BLOCK, "blockcrack_");
+        registry.rename(Particles_1_12_2.BLOCK_DUST, "blockdust_");
         registry.purge(ParticleTypes.DRAGON_BREATH);
         registry.purge(ParticleTypes.END_ROD);
         registry.purge(ParticleTypes.DAMAGE_INDICATOR);
         registry.purge(ParticleTypes.SWEEP_ATTACK);
     }
 
-    private void mutateBlockEntityTypeRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
+    private void mutateBlockEntityTypeRegistry(RegistryBuilder<BlockEntityType<?>> registry) {
         registry.purge(BlockEntityType.STRUCTURE_BLOCK);
         registry.purge(BlockEntityType.END_GATEWAY);
     }
 
-    private void mutateStatusEffectRegistry(ISimpleRegistry<StatusEffect> registry) {
+    private void mutateStatusEffectRegistry(RegistryBuilder<StatusEffect> registry) {
         registry.purge(StatusEffects.GLOWING);
         registry.purge(StatusEffects.LEVITATION);
         registry.purge(StatusEffects.LUCK);
         registry.purge(StatusEffects.UNLUCK);
     }
 
-    private void mutateCustomStatRegistry(ISimpleRegistry<Identifier> registry) {
+    private void mutateCustomStatRegistry(RegistryBuilder<Identifier> registry) {
         registry.unregister(Stats.SLEEP_IN_BED);
         registry.unregister(Stats.SNEAK_TIME);
         registry.unregister(Stats.AVIATE_ONE_CM);

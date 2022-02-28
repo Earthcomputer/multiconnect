@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.v1_13;
 
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryBuilder;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
@@ -26,10 +26,10 @@ public class Protocol_1_13 extends Protocol_1_13_1 {
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
-        mutator.mutate(Protocols.V1_13, Registry.BLOCK, this::modifyBlockRegistry);
+        mutator.mutate(Protocols.V1_13, Registry.BLOCK_KEY, this::modifyBlockRegistry);
     }
 
-    private void modifyBlockRegistry(ISimpleRegistry<Block> registry) {
+    private void modifyBlockRegistry(RegistryBuilder<Block> registry) {
         registry.unregister(Blocks.DEAD_TUBE_CORAL);
         registry.unregister(Blocks.DEAD_BRAIN_CORAL);
         registry.unregister(Blocks.DEAD_HORN_CORAL);

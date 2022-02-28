@@ -173,31 +173,31 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
-        mutator.mutate(Protocols.V1_14_4, Registry.BLOCK, this::mutateBlockRegistry);
-        mutator.mutate(Protocols.V1_14_4, Registry.ITEM, this::mutateItemRegistry);
-        mutator.mutate(Protocols.V1_14_4, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
-        mutator.mutate(Protocols.V1_14_4, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
-        mutator.mutate(Protocols.V1_14_4, Registry.BLOCK_ENTITY_TYPE, this::mutateBlockEntityTypeRegistry);
-        mutator.mutate(Protocols.V1_14_4, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
+        mutator.mutate(Protocols.V1_14_4, Registry.BLOCK_KEY, this::mutateBlockRegistry);
+        mutator.mutate(Protocols.V1_14_4, Registry.ITEM_KEY, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_14_4, Registry.ENTITY_TYPE_KEY, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_14_4, Registry.SOUND_EVENT_KEY, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_14_4, Registry.BLOCK_ENTITY_TYPE_KEY, this::mutateBlockEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_14_4, Registry.PARTICLE_TYPE_KEY, this::mutateParticleTypeRegistry);
     }
 
-    private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
+    private void mutateBlockRegistry(RegistryBuilder<Block> registry) {
         registry.unregister(Blocks.BEE_NEST);
         registry.unregister(Blocks.BEEHIVE);
         registry.unregister(Blocks.HONEY_BLOCK);
         registry.unregister(Blocks.HONEYCOMB_BLOCK);
     }
 
-    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
+    private void mutateItemRegistry(RegistryBuilder<Item> registry) {
         registry.unregister(Items.HONEYCOMB);
         registry.unregister(Items.HONEY_BOTTLE);
     }
 
-    private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
+    private void mutateEntityTypeRegistry(RegistryBuilder<EntityType<?>> registry) {
         registry.unregister(EntityType.BEE);
     }
 
-    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundEventRegistry(RegistryBuilder<SoundEvent> registry) {
         registry.unregister(SoundEvents.ENTITY_BEE_DEATH);
         registry.unregister(SoundEvents.ENTITY_BEE_HURT);
         registry.unregister(SoundEvents.ENTITY_BEE_LOOP_AGGRESSIVE);
@@ -219,18 +219,18 @@ public class Protocol_1_14_4 extends Protocol_1_15 {
         registry.unregister(SoundEvents.ENTITY_IRON_GOLEM_DAMAGE);
         registry.unregister(SoundEvents.ENTITY_IRON_GOLEM_REPAIR);
 
-        insertAfter(registry, SoundEvents.ENTITY_PARROT_IMITATE_ENDER_DRAGON, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_ENDERMAN, "entity.parrot.imitate.enderman");
-        insertAfter(registry, SoundEvents.ENTITY_PARROT_IMITATE_MAGMA_CUBE, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_PANDA, "entity.parrot.imitate.panda");
-        insertAfter(registry, SoundEvents.ENTITY_PARROT_IMITATE_PILLAGER, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_POLAR_BEAR, "entity.parrot.imitate.polar_bear");
-        insertAfter(registry, SoundEvents.ENTITY_PARROT_IMITATE_WITHER_SKELETON, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_WOLF, "entity.parrot.imitate.wolf");
-        insertAfter(registry, SoundEvents.ENTITY_PARROT_IMITATE_ZOMBIE, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_ZOMBIE_PIGMAN, "entity.parrot.imitate.zombie_pigman");
+        registry.insertAfter(SoundEvents.ENTITY_PARROT_IMITATE_ENDER_DRAGON, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_ENDERMAN, "entity.parrot.imitate.enderman");
+        registry.insertAfter(SoundEvents.ENTITY_PARROT_IMITATE_MAGMA_CUBE, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_PANDA, "entity.parrot.imitate.panda");
+        registry.insertAfter(SoundEvents.ENTITY_PARROT_IMITATE_PILLAGER, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_POLAR_BEAR, "entity.parrot.imitate.polar_bear");
+        registry.insertAfter(SoundEvents.ENTITY_PARROT_IMITATE_WITHER_SKELETON, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_WOLF, "entity.parrot.imitate.wolf");
+        registry.insertAfter(SoundEvents.ENTITY_PARROT_IMITATE_ZOMBIE, SoundEvents_1_14_4.ENTITY_PARROT_IMITATE_ZOMBIE_PIGMAN, "entity.parrot.imitate.zombie_pigman");
     }
 
-    private void mutateBlockEntityTypeRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
+    private void mutateBlockEntityTypeRegistry(RegistryBuilder<BlockEntityType<?>> registry) {
         registry.unregister(BlockEntityType.BEEHIVE);
     }
 
-    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
+    private void mutateParticleTypeRegistry(RegistryBuilder<ParticleType<?>> registry) {
         registry.unregister(ParticleTypes.DRIPPING_HONEY);
         registry.unregister(ParticleTypes.FALLING_HONEY);
         registry.unregister(ParticleTypes.LANDING_HONEY);

@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_9;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryBuilder;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.v1_9_1.Protocol_1_9_1;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
@@ -26,10 +26,10 @@ public class Protocol_1_9 extends Protocol_1_9_1 {
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
-        mutator.mutate(Protocols.V1_9, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_9, Registry.SOUND_EVENT_KEY, this::mutateSoundEventRegistry);
     }
 
-    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundEventRegistry(RegistryBuilder<SoundEvent> registry) {
         registry.unregister(SoundEvents.ITEM_ELYTRA_FLYING);
     }
 }

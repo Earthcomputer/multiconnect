@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.impl;
 
 import com.mojang.datafixers.DSL;
 import com.mojang.serialization.DynamicOps;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
 import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.minecraft.block.Block;
@@ -11,10 +10,9 @@ import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
-import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,18 +39,6 @@ public interface IUtils {
         Utils.insertAfter(list, element, toInsert);
     }
 
-    default <T> void insertAfter(List<T> list, T element, T toInsert) {
-        Utils.insertAfter(list, element, toInsert);
-    }
-
-    default <T> void insertAfter(ISimpleRegistry<T> registry, T element, T toInsert, String id) {
-        Utils.insertAfter(registry, element, toInsert, id);
-    }
-
-    default <T> void insertAfter(ISimpleRegistry<T> registry, T element, T toInsert, String id, boolean inPlace) {
-        Utils.insertAfter(registry, element, toInsert, id, inPlace);
-    }
-
     default void remove(List<PacketInfo<?>> list, Class<? extends Packet<?>> element) {
         Utils.remove(list, element);
     }
@@ -61,7 +47,7 @@ public interface IUtils {
         Utils.removeTrackedDataHandler(handler);
     }
 
-    default void copyBlocks(TagRegistry<Item> tags, TagRegistry<Block> blockTags, Tag.Identified<Item> tag, Tag.Identified<Block> blockTag) {
+    default void copyBlocks(TagRegistry<Item> tags, TagRegistry<Block> blockTags, TagKey<Item> tag, TagKey<Block> blockTag) {
         Utils.copyBlocks(tags, blockTags, tag, blockTag);
     }
 
@@ -71,18 +57,6 @@ public interface IUtils {
 
     default <T> Identifier getUnmodifiedName(Registry<T> registry, T value) {
         return Utils.getUnmodifiedName(registry, value);
-    }
-
-    default <T> void rename(ISimpleRegistry<T> registry, T value, String newName) {
-        Utils.rename(registry, value, newName);
-    }
-
-    default <T> void rename(ISimpleRegistry<T> registry, RegistryKey<T> from, String newName) {
-        Utils.rename(registry, from, newName);
-    }
-
-    default <T> void reregister(ISimpleRegistry<T> registry, T value, boolean inPlace) {
-        Utils.reregister(registry, value, inPlace);
     }
 
     default void dumpBlockStates() {

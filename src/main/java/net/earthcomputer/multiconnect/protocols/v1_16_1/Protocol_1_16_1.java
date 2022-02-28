@@ -1,11 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_16_1;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.Codec;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
-import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_16_1.mixin.AbstractPiglinEntityAccessor;
@@ -37,6 +34,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.dimension.DimensionType;
 
 import java.util.*;
@@ -60,19 +58,16 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
                 buf.readIdentifier(); // dimension id
             }
             buf.disablePassthroughMode();
-            Codec<Set<Identifier>> dimensionSetCodec = Codec.list(Utils.singletonKeyCodec("name", Identifier.CODEC))
-                    .xmap(ImmutableSet::copyOf, ImmutableList::copyOf);
-            Utils.translateDynamicRegistries(
-                    buf,
-                    Utils.singletonKeyCodec("dimension", dimensionSetCodec),
-                    ImmutableSet.of(new Identifier("overworld"), new Identifier("the_nether"), new Identifier("the_end"), new Identifier("overworld_caves"))::equals
-            );
+            buf.decode(Codec.unit(null)); // dynamic registry manager
+            DynamicRegistryManager.Mutable registryManager = DynamicRegistryManager.createAndLoad();
+            //noinspection unchecked
+            buf.pendingRead((Class<Codecked<DynamicRegistryManager>>) (Class<?>) Codecked.class, new Codecked<>(DynamicRegistryManager.CODEC, registryManager));
             Identifier dimTypeId = buf.readIdentifier();
-            DynamicRegistryManager defaultRegistryManager = DynamicRegistryManager.create();
-            DimensionType dimType = defaultRegistryManager.get(Registry.DIMENSION_TYPE_KEY).get(dimTypeId);
-            if (dimType == null) dimType = defaultRegistryManager.get(Registry.DIMENSION_TYPE_KEY).get(DimensionType.OVERWORLD_REGISTRY_KEY);
-            DimensionType dimType_f = dimType;
-            buf.pendingRead(Codecked.class, new Codecked<>(DimensionType.REGISTRY_CODEC, () -> dimType_f));
+            Registry<DimensionType> dimTypeRegistry = registryManager.get(Registry.DIMENSION_TYPE_KEY);
+            //noinspection OptionalGetWithoutIsPresent
+            var dimEntry = dimTypeRegistry.getEntry(RegistryKey.of(Registry.DIMENSION_TYPE_KEY, dimTypeId))
+                    .orElseGet(() -> dimTypeRegistry.getEntry(DimensionType.OVERWORLD_REGISTRY_KEY).get());
+            buf.pendingRead(Codecked.class, new Codecked<>(DimensionType.REGISTRY_CODEC, dimEntry));
             buf.enablePassthroughMode();
             buf.readIdentifier(); // dimension
             buf.readLong(); // seed
@@ -81,12 +76,13 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
-            DynamicRegistryManager defaultRegistryManager = DynamicRegistryManager.create();
+            DynamicRegistryManager.Mutable registryManager = DynamicRegistryManager.createAndLoad();
             Identifier dimTypeId = buf.readIdentifier();
-            DimensionType dimType = defaultRegistryManager.get(Registry.DIMENSION_TYPE_KEY).get(dimTypeId);
-            if (dimType == null) dimType = defaultRegistryManager.get(Registry.DIMENSION_TYPE_KEY).get(DimensionType.OVERWORLD_REGISTRY_KEY);
-            DimensionType dimType_f = dimType;
-            buf.pendingRead(Codecked.class, new Codecked<>(DimensionType.REGISTRY_CODEC, () -> dimType_f));
+            Registry<DimensionType> dimTypeRegistry = registryManager.get(Registry.DIMENSION_TYPE_KEY);
+            //noinspection OptionalGetWithoutIsPresent
+            var dimEntry = dimTypeRegistry.getEntry(RegistryKey.of(Registry.DIMENSION_TYPE_KEY, dimTypeId))
+                    .orElseGet(() -> dimTypeRegistry.getEntry(DimensionType.OVERWORLD_REGISTRY_KEY).get());
+            buf.pendingRead(Codecked.class, new Codecked<>(DimensionType.REGISTRY_CODEC, dimEntry));
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
@@ -166,20 +162,20 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
-        mutator.mutate(Protocols.V1_16_1, Registry.ITEM, this::mutateItemRegistry);
-        mutator.mutate(Protocols.V1_16_1, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
-        mutator.mutate(Protocols.V1_16_1, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_16_1, Registry.ITEM_KEY, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_16_1, Registry.ENTITY_TYPE_KEY, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_16_1, Registry.SOUND_EVENT_KEY, this::mutateSoundEventRegistry);
     }
 
-    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
+    private void mutateItemRegistry(RegistryBuilder<Item> registry) {
         registry.unregister(Items.IRON_SHOVEL);
         registry.unregister(Items.IRON_PICKAXE);
         registry.unregister(Items.IRON_AXE);
-        insertAfter(registry, Items.SCUTE, Items.IRON_SHOVEL, "iron_shovel");
-        insertAfter(registry, Items.IRON_SHOVEL, Items.IRON_PICKAXE, "iron_pickaxe");
-        insertAfter(registry, Items.IRON_PICKAXE, Items.IRON_AXE, "iron_axe");
+        registry.insertAfter(Items.SCUTE, Items.IRON_SHOVEL, "iron_shovel");
+        registry.insertAfter(Items.IRON_SHOVEL, Items.IRON_PICKAXE, "iron_pickaxe");
+        registry.insertAfter(Items.IRON_PICKAXE, Items.IRON_AXE, "iron_axe");
         registry.unregister(Items.IRON_SWORD);
-        insertAfter(registry, Items.NETHERITE_SCRAP, Items.IRON_SWORD, "iron_sword");
+        registry.insertAfter(Items.NETHERITE_SCRAP, Items.IRON_SWORD, "iron_sword");
         registry.unregister(Items.DIAMOND_SWORD);
         registry.unregister(Items.DIAMOND_SHOVEL);
         registry.unregister(Items.DIAMOND_PICKAXE);
@@ -187,29 +183,29 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
         registry.unregister(Items.STICK);
         registry.unregister(Items.BOWL);
         registry.unregister(Items.MUSHROOM_STEW);
-        insertAfter(registry, Items.STONE_AXE, Items.DIAMOND_SWORD, "diamond_sword");
-        insertAfter(registry, Items.DIAMOND_SWORD, Items.DIAMOND_SHOVEL, "diamond_shovel");
-        insertAfter(registry, Items.DIAMOND_SHOVEL, Items.DIAMOND_PICKAXE, "diamond_pickaxe");
-        insertAfter(registry, Items.DIAMOND_PICKAXE, Items.DIAMOND_AXE, "diamond_axe");
-        insertAfter(registry, Items.DIAMOND_AXE, Items.STICK, "stick");
-        insertAfter(registry, Items.STICK, Items.BOWL, "bowl");
-        insertAfter(registry, Items.BOWL, Items.MUSHROOM_STEW, "mushroom_stew");
+        registry.insertAfter(Items.STONE_AXE, Items.DIAMOND_SWORD, "diamond_sword");
+        registry.insertAfter(Items.DIAMOND_SWORD, Items.DIAMOND_SHOVEL, "diamond_shovel");
+        registry.insertAfter(Items.DIAMOND_SHOVEL, Items.DIAMOND_PICKAXE, "diamond_pickaxe");
+        registry.insertAfter(Items.DIAMOND_PICKAXE, Items.DIAMOND_AXE, "diamond_axe");
+        registry.insertAfter(Items.DIAMOND_AXE, Items.STICK, "stick");
+        registry.insertAfter(Items.STICK, Items.BOWL, "bowl");
+        registry.insertAfter(Items.BOWL, Items.MUSHROOM_STEW, "mushroom_stew");
         registry.unregister(Items.WOODEN_HOE);
         registry.unregister(Items.STONE_HOE);
         registry.unregister(Items.IRON_HOE);
         registry.unregister(Items.DIAMOND_HOE);
         registry.unregister(Items.GOLDEN_HOE);
         registry.unregister(Items.NETHERITE_HOE);
-        insertAfter(registry, Items.GUNPOWDER, Items.WOODEN_HOE, "wooden_hoe");
-        insertAfter(registry, Items.WOODEN_HOE, Items.STONE_HOE, "stone_hoe");
-        insertAfter(registry, Items.STONE_HOE, Items.IRON_HOE, "iron_hoe");
-        insertAfter(registry, Items.IRON_HOE, Items.DIAMOND_HOE, "diamond_hoe");
-        insertAfter(registry, Items.DIAMOND_HOE, Items.GOLDEN_HOE, "golden_hoe");
-        insertAfter(registry, Items.GOLDEN_HOE, Items.NETHERITE_HOE, "netherite_hoe");
+        registry.insertAfter(Items.GUNPOWDER, Items.WOODEN_HOE, "wooden_hoe");
+        registry.insertAfter(Items.WOODEN_HOE, Items.STONE_HOE, "stone_hoe");
+        registry.insertAfter(Items.STONE_HOE, Items.IRON_HOE, "iron_hoe");
+        registry.insertAfter(Items.IRON_HOE, Items.DIAMOND_HOE, "diamond_hoe");
+        registry.insertAfter(Items.DIAMOND_HOE, Items.GOLDEN_HOE, "golden_hoe");
+        registry.insertAfter(Items.GOLDEN_HOE, Items.NETHERITE_HOE, "netherite_hoe");
         registry.unregister(Items.RED_DYE);
         registry.unregister(Items.GREEN_DYE);
-        insertAfter(registry, Items.INK_SAC, Items.RED_DYE, "red_dye");
-        insertAfter(registry, Items.RED_DYE, Items.GREEN_DYE, "green_dye");
+        registry.insertAfter(Items.INK_SAC, Items.RED_DYE, "red_dye");
+        registry.insertAfter(Items.RED_DYE, Items.GREEN_DYE, "green_dye");
         registry.unregister(Items.PURPLE_DYE);
         registry.unregister(Items.CYAN_DYE);
         registry.unregister(Items.LIGHT_GRAY_DYE);
@@ -219,26 +215,26 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
         registry.unregister(Items.YELLOW_DYE);
         registry.unregister(Items.LIGHT_BLUE_DYE);
         registry.unregister(Items.MAGENTA_DYE);
-        insertAfter(registry, Items.LAPIS_LAZULI, Items.PURPLE_DYE, "purple_dye");
-        insertAfter(registry, Items.PURPLE_DYE, Items.CYAN_DYE, "cyan_dye");
-        insertAfter(registry, Items.CYAN_DYE, Items.LIGHT_GRAY_DYE, "light_gray_dye");
-        insertAfter(registry, Items.LIGHT_GRAY_DYE, Items.GRAY_DYE, "gray_dye");
-        insertAfter(registry, Items.GRAY_DYE, Items.PINK_DYE, "pink_dye");
-        insertAfter(registry, Items.PINK_DYE, Items.LIME_DYE, "lime_dye");
-        insertAfter(registry, Items.LIME_DYE, Items.YELLOW_DYE, "yellow_dye");
-        insertAfter(registry, Items.YELLOW_DYE, Items.LIGHT_BLUE_DYE, "light_blue_dye");
-        insertAfter(registry, Items.LIGHT_BLUE_DYE, Items.MAGENTA_DYE, "magenta_dye");
+        registry.insertAfter(Items.LAPIS_LAZULI, Items.PURPLE_DYE, "purple_dye");
+        registry.insertAfter(Items.PURPLE_DYE, Items.CYAN_DYE, "cyan_dye");
+        registry.insertAfter(Items.CYAN_DYE, Items.LIGHT_GRAY_DYE, "light_gray_dye");
+        registry.insertAfter(Items.LIGHT_GRAY_DYE, Items.GRAY_DYE, "gray_dye");
+        registry.insertAfter(Items.GRAY_DYE, Items.PINK_DYE, "pink_dye");
+        registry.insertAfter(Items.PINK_DYE, Items.LIME_DYE, "lime_dye");
+        registry.insertAfter(Items.LIME_DYE, Items.YELLOW_DYE, "yellow_dye");
+        registry.insertAfter(Items.YELLOW_DYE, Items.LIGHT_BLUE_DYE, "light_blue_dye");
+        registry.insertAfter(Items.LIGHT_BLUE_DYE, Items.MAGENTA_DYE, "magenta_dye");
         registry.unregister(Items.BONE_MEAL);
-        insertAfter(registry, Items.ORANGE_DYE, Items.BONE_MEAL, "bone_meal");
+        registry.insertAfter(Items.ORANGE_DYE, Items.BONE_MEAL, "bone_meal");
         registry.unregister(Items.WHITE_DYE);
-        insertAfter(registry, Items.BLACK_DYE, Items.WHITE_DYE, "white_dye");
+        registry.insertAfter(Items.BLACK_DYE, Items.WHITE_DYE, "white_dye");
     }
 
-    private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
+    private void mutateEntityTypeRegistry(RegistryBuilder<EntityType<?>> registry) {
         registry.unregister(EntityType.PIGLIN_BRUTE);
     }
 
-    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundEventRegistry(RegistryBuilder<SoundEvent> registry) {
         registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_PIGLIN_BRUTE);
         registry.unregister(SoundEvents.ENTITY_PIGLIN_BRUTE_AMBIENT);
         registry.unregister(SoundEvents.ENTITY_PIGLIN_BRUTE_ANGRY);

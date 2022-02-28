@@ -12,6 +12,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkSection;
 
@@ -60,7 +61,7 @@ public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHol
         Registry<Biome> biomeRegistry = ChunkDataTranslator.current().getRegistryManager().get(Registry.BIOME_KEY);
 
         ChunkSection[] sections = this.sections.clone();
-        Set<Biome> biomes = new HashSet<>();
+        Set<RegistryEntry<Biome>> biomes = new HashSet<>();
         for (int ourSectionY = 0; ourSectionY < sections.length; ourSectionY++) {
             if (sections[ourSectionY] == null) {
                 ChunkSection section = new ChunkSection(ourSectionY, biomeRegistry);
@@ -73,7 +74,7 @@ public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHol
                         for (int z = 0; z < 4; z++) {
                             for (int x = 0; x < 4; x++) {
                                 for (int y = 0; y < 4; y++) {
-                                    Biome biome = this.sections[ourSectionY + copyFromSectionY].getBiomeContainer().get(x, copyFromY, z);
+                                    RegistryEntry<Biome> biome = this.sections[ourSectionY + copyFromSectionY].getBiomeContainer().get(x, copyFromY, z);
                                     if (biomes.add(biome)) {
                                         // check if biomes.size() was *previously* a power of 2 (or 0)
                                         if (((biomes.size() - 1) & (biomes.size() - 2)) == 0) {

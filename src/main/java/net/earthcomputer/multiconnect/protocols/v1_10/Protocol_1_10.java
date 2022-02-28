@@ -8,7 +8,7 @@ import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.DataTrackerManager;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryBuilder;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_10.mixin.*;
@@ -299,16 +299,16 @@ public class Protocol_1_10 extends Protocol_1_11 {
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
-        mutator.mutate(Protocols.V1_10, Registry.BLOCK, this::mutateBlockRegistry);
-        mutator.mutate(Protocols.V1_10, Registry.ITEM, this::mutateItemRegistry);
-        mutator.mutate(Protocols.V1_10, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
-        mutator.mutate(Protocols.V1_10, Registry.BLOCK_ENTITY_TYPE, this::mutateBlockEntityTypeRegistry);
-        mutator.mutate(Protocols.V1_10, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
-        mutator.mutate(Protocols.V1_10, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
-        mutator.mutate(Protocols.V1_10, Registry.ENCHANTMENT, this::mutateEnchantmentRegistry);
+        mutator.mutate(Protocols.V1_10, Registry.BLOCK_KEY, this::mutateBlockRegistry);
+        mutator.mutate(Protocols.V1_10, Registry.ITEM_KEY, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_10, Registry.ENTITY_TYPE_KEY, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_10, Registry.BLOCK_ENTITY_TYPE_KEY, this::mutateBlockEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_10, Registry.SOUND_EVENT_KEY, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_10, Registry.PARTICLE_TYPE_KEY, this::mutateParticleTypeRegistry);
+        mutator.mutate(Protocols.V1_10, Registry.ENCHANTMENT_KEY, this::mutateEnchantmentRegistry);
     }
 
-    private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
+    private void mutateBlockRegistry(RegistryBuilder<Block> registry) {
         registry.purge(Blocks.OBSERVER);
         registry.purge(Blocks.WHITE_SHULKER_BOX);
         registry.purge(Blocks.ORANGE_SHULKER_BOX);
@@ -328,12 +328,12 @@ public class Protocol_1_10 extends Protocol_1_11 {
         registry.purge(Blocks.BLACK_SHULKER_BOX);
     }
 
-    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
+    private void mutateItemRegistry(RegistryBuilder<Item> registry) {
         registry.purge(Items.TOTEM_OF_UNDYING);
         registry.purge(Items.SHULKER_SHELL);
     }
 
-    private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
+    private void mutateEntityTypeRegistry(RegistryBuilder<EntityType<?>> registry) {
         //registry.purge(EntityType.ELDER_GUARDIAN);
         //registry.purge(EntityType.WITHER_SKELETON);
         //registry.purge(EntityType.STRAY);
@@ -351,11 +351,11 @@ public class Protocol_1_10 extends Protocol_1_11 {
         registry.purge(EntityType.LLAMA_SPIT);
     }
 
-    private void mutateBlockEntityTypeRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
+    private void mutateBlockEntityTypeRegistry(RegistryBuilder<BlockEntityType<?>> registry) {
         registry.unregister(BlockEntityType.SHULKER_BOX);
     }
 
-    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundEventRegistry(RegistryBuilder<SoundEvent> registry) {
         registry.unregister(SoundEvents.BLOCK_SHULKER_BOX_CLOSE);
         registry.unregister(SoundEvents.BLOCK_SHULKER_BOX_OPEN);
         registry.unregister(SoundEvents.ENTITY_ELDER_GUARDIAN_FLOP);
@@ -388,15 +388,15 @@ public class Protocol_1_10 extends Protocol_1_11 {
         registry.unregister(SoundEvents.ITEM_BOTTLE_EMPTY);
         registry.unregister(SoundEvents.ITEM_TOTEM_USE);
 
-        insertAfter(registry, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundEvents_1_10.ENTITY_EXPERIENCE_ORB_TOUCH, "entity.experience_orb.touch");
+        registry.insertAfter(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundEvents_1_10.ENTITY_EXPERIENCE_ORB_TOUCH, "entity.experience_orb.touch");
     }
 
-    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
+    private void mutateParticleTypeRegistry(RegistryBuilder<ParticleType<?>> registry) {
         registry.purge(ParticleTypes.SPIT);
         registry.purge(ParticleTypes.TOTEM_OF_UNDYING);
     }
 
-    private void mutateEnchantmentRegistry(ISimpleRegistry<Enchantment> registry) {
+    private void mutateEnchantmentRegistry(RegistryBuilder<Enchantment> registry) {
         registry.purge(Enchantments.BINDING_CURSE);
         registry.purge(Enchantments.VANISHING_CURSE);
     }

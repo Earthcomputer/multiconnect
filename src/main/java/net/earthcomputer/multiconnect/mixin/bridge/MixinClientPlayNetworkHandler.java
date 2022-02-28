@@ -3,9 +3,8 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Constants;
@@ -24,9 +23,6 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.EntityType;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.NetworkThreadUtils;
@@ -55,14 +51,16 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.util.registry.SimpleRegistry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
-import net.minecraft.world.event.GameEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -73,6 +71,8 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -81,9 +81,12 @@ import java.util.stream.Collectors;
 @Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
 public class MixinClientPlayNetworkHandler implements IClientPlayNetworkHandler {
     @Unique private static final Logger MULTICONNECT_LOGGER = LogManager.getLogger("multiconnect");
+    @Unique private static final boolean MULTICONNECT_CHECK_REQUIRED_TAGS = Boolean.getBoolean("multiconnect.checkRequiredTags");
 
     @Shadow private ClientWorld world;
     @Shadow @Final private MinecraftClient client;
+    @Shadow private DynamicRegistryManager.Immutable registryManager;
+
     @Unique private ChunkDataS2CPacket currentChunkPacket;
 
     @Unique private final Cache<ChunkPos, List<Packet<ClientPlayPacketListener>>> afterChunkLoadPackets = CacheBuilder.newBuilder()
@@ -223,24 +226,30 @@ public class MixinClientPlayNetworkHandler implements IClientPlayNetworkHandler 
     }
 
     @SuppressWarnings("unchecked")
-    @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
-    private <T, R extends Registry<T>> void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
-        var registries = (DynamicRegistryManager.Impl) packet.registryManager();
-        assert registries != null;
-        //noinspection ConstantConditions
-        var registriesAccessor = (DynamicRegistryManagerImplAccessor) (Object) registries;
-        registriesAccessor.setRegistries(new HashMap<>(registriesAccessor.getRegistries())); // make registries mutable
-
-        for (var registryKey : DynamicRegistryManagerAccessor.getInfos().keySet()) {
-            if (!registriesAccessor.getRegistries().containsKey(registryKey)) {
-                Utils.addRegistry(registries, (RegistryKey<R>) registryKey);
-            }
-            if (registryKey != Registry.DIMENSION_TYPE_KEY && DynamicRegistryManagerAccessor.getInfos().get(registryKey).isSynced()) {
-                addMissingValues(getBuiltinRegistry(registryKey), registries);
-            }
+    @Unique
+    private static <T> void copyValues(Registry<T> from, SimpleRegistry<?> to) {
+        RegistryBuilder<T> builder = new RegistryBuilder<>((SimpleRegistry<T>) to);
+        builder.clear();
+        for (T value : from) {
+            builder.registerInPlace(from.getRawId(value), value, from.getId(value));
         }
+        builder.apply();
+    }
 
-        registriesAccessor.setRegistries(ImmutableMap.copyOf(registriesAccessor.getRegistries())); // make immutable again (faster)
+    @Inject(method = "onGameJoin", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;registryManager:Lnet/minecraft/util/registry/DynamicRegistryManager$Immutable;", shift = At.Shift.AFTER, ordinal = 0))
+    private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
+        var registries = packet.registryManager();
+        assert registries != null;
+        var mutableRegistries = DynamicRegistryManager.createAndLoad();
+        registries.streamAllRegistries().forEach(registry -> {
+            copyValues(registry.value(), (SimpleRegistry<?>) mutableRegistries.getMutable(registry.key()));
+        });
+
+        mutableRegistries.streamSyncedRegistries().forEach(registry -> {
+            addMissingValues(getBuiltinRegistry(registry.key()), registry.value());
+        });
+
+        this.registryManager = mutableRegistries.toImmutable();
     }
 
     @SuppressWarnings("unchecked")
@@ -251,14 +260,14 @@ public class MixinClientPlayNetworkHandler implements IClientPlayNetworkHandler 
 
     @SuppressWarnings("unchecked")
     @Unique
-    private static <T> void addMissingValues(Registry<T> builtinRegistry, DynamicRegistryManager.Impl registries) {
-        Registry<T> dynamicRegistry =  registries.get(builtinRegistry.getKey());
+    private static <T> void addMissingValues(Registry<T> builtinRegistry, Registry<?> _dynamicRegistry) {
+        Registry<T> dynamicRegistry = (Registry<T>) _dynamicRegistry;
         ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) dynamicRegistry;
-        iregistry.lockRealEntries();
+        iregistry.multiconnect_lockRealEntries();
         for (T val : builtinRegistry) {
             builtinRegistry.getKey(val).ifPresent(key -> {
                 if (dynamicRegistry.getOrEmpty(key).isEmpty()) {
-                    iregistry.register(val, iregistry.getNextId(), key, false);
+                    Registry.register(dynamicRegistry, key, val);
                 }
             });
         }
@@ -266,57 +275,77 @@ public class MixinClientPlayNetworkHandler implements IClientPlayNetworkHandler 
 
     @Inject(method = "onSynchronizeTags", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
     private void onOnSynchronizeTags(SynchronizeTagsS2CPacket packet, CallbackInfo ci) {
-        var requiredTags = new HashMap<RegistryKey<? extends Registry<?>>, List<Identifier>>();
-        RequiredTagListRegistry.forEach(requiredTagList -> {
-            var tagWrappers = ((RequiredTagListAccessor<?>) requiredTagList).getTags();
-            List<Identifier> tagIds =
-                    tagWrappers.stream().map(RequiredTagList.TagWrapper::getId).collect(Collectors.toList());
-            requiredTags.put(requiredTagList.getRegistryKey(), tagIds);
-        });
         TagRegistry<Block> blockTagRegistry = new TagRegistry<>(Registry.BLOCK);
-        TagGroup<Block> blockTags = setExtraTags("block", packet, blockTagRegistry,
-                requiredTags.get(Registry.BLOCK_KEY), ConnectionInfo.protocol::addExtraBlockTags);
-        TagGroup<Item> itemTags = setExtraTags("item", packet, new TagRegistry<>(Registry.ITEM),
-                requiredTags.get(Registry.ITEM_KEY),
+        var blockTags = setExtraTags("block", packet, blockTagRegistry,
+                BlockTags.class, ConnectionInfo.protocol::addExtraBlockTags);
+        var itemTags = setExtraTags("item", packet, new TagRegistry<>(Registry.ITEM),
+                ItemTags.class,
                 itemTagRegistry -> ConnectionInfo.protocol.addExtraItemTags(itemTagRegistry, blockTagRegistry));
-        TagGroup<Fluid> fluidTags = setExtraTags("fluid", packet, new TagRegistry<>(Registry.FLUID),
-                requiredTags.get(Registry.FLUID_KEY), ConnectionInfo.protocol::addExtraFluidTags);
-        TagGroup<EntityType<?>> entityTypeTags = setExtraTags("entity type", packet,
-                new TagRegistry<>(Registry.ENTITY_TYPE), requiredTags.get(Registry.ENTITY_TYPE_KEY),
+        var fluidTags = setExtraTags("fluid", packet, new TagRegistry<>(Registry.FLUID),
+                FluidTags.class, ConnectionInfo.protocol::addExtraFluidTags);
+        var entityTypeTags = setExtraTags("entity type", packet,
+                new TagRegistry<>(Registry.ENTITY_TYPE), EntityTypeTags.class,
                 ConnectionInfo.protocol::addExtraEntityTags);
-        TagGroup<GameEvent> gameEventTags = setExtraTags("game event", packet, new TagRegistry<>(Registry.GAME_EVENT),
-                requiredTags.get(Registry.GAME_EVENT_KEY), ConnectionInfo.protocol::addExtraGameEventTags);
-        packet.getGroups().put(Registry.BLOCK_KEY, blockTags.serialize(Registry.BLOCK));
-        packet.getGroups().put(Registry.ITEM_KEY, itemTags.serialize(Registry.ITEM));
-        packet.getGroups().put(Registry.FLUID_KEY, fluidTags.serialize(Registry.FLUID));
-        packet.getGroups().put(Registry.ENTITY_TYPE_KEY, entityTypeTags.serialize(Registry.ENTITY_TYPE));
-        packet.getGroups().put(Registry.GAME_EVENT_KEY, gameEventTags.serialize(Registry.GAME_EVENT));
+        var gameEventTags = setExtraTags("game event", packet, new TagRegistry<>(Registry.GAME_EVENT),
+                GameEventTags.class, ConnectionInfo.protocol::addExtraGameEventTags);
+        packet.getGroups().put(Registry.BLOCK_KEY, blockTags);
+        packet.getGroups().put(Registry.ITEM_KEY, itemTags);
+        packet.getGroups().put(Registry.FLUID_KEY, fluidTags);
+        packet.getGroups().put(Registry.ENTITY_TYPE_KEY, entityTypeTags);
+        packet.getGroups().put(Registry.GAME_EVENT_KEY, gameEventTags);
     }
 
     @Unique
-    private static <T> TagGroup<T> setExtraTags(String type, SynchronizeTagsS2CPacket packet, TagRegistry<T> tagRegistry, List<Identifier> requiredTags, Consumer<TagRegistry<T>> tagsAdder) {
+    private static <T> TagPacketSerializer.Serialized setExtraTags(String type, SynchronizeTagsS2CPacket packet, TagRegistry<T> tagRegistry, Class<?> requiredTagsClass, Consumer<TagRegistry<T>> tagsAdder) {
         Registry<T> registry = tagRegistry.getRegistry();
-        if (packet.getGroups().containsKey(registry.getKey())) {
-            TagGroup<T> group = TagGroup.deserialize(packet.getGroups().get(registry.getKey()), registry);
-            group.getTags().forEach((id, tag) -> tagRegistry.put(id, new HashSet<>(tag.values())));
+        TagPacketSerializer.Serialized existingTags = packet.getGroups().get(registry.getKey());
+        if (existingTags != null) {
+            TagPacketSerializer.loadTags(
+                    registry.getKey(),
+                    registry,
+                    existingTags,
+                    (k, v) -> tagRegistry.put(k, v.stream().map(RegistryEntry::value).collect(Collectors.toCollection(HashSet::new)))
+            );
         }
         tagsAdder.accept(tagRegistry);
-        BiMap<Identifier, Tag<T>> tagBiMap = HashBiMap.create(tagRegistry.size());
-        tagRegistry.forEach((id, set) -> tagBiMap.put(id, Tag.of(set)));
+        if (MULTICONNECT_CHECK_REQUIRED_TAGS) {
+            checkMissingTags(type, tagRegistry.keySet(), requiredTagsClass);
+        }
 
-        // ViaVersion doesn't send all required tags to older clients because they didn't check them. We have to add empty ones to substitute.
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_16_1) {
-            List<Identifier> missingTagIds = new ArrayList<>(requiredTags);
-            missingTagIds.removeAll(tagBiMap.keySet());
-            if (!missingTagIds.isEmpty()) {
-                MULTICONNECT_LOGGER.warn("Server didn't send required {} tags, adding empty substitutes for {}", type, missingTagIds);
-                for (Identifier missingTagId : missingTagIds) {
-                    tagBiMap.put(missingTagId, SetTag.empty());
+        Map<Identifier, IntList> serialized = new HashMap<>(tagRegistry.size());
+        tagRegistry.forEach((key, values) -> {
+            IntList ids = new IntArrayList(values.size());
+            for (T value : values) {
+                ids.add(registry.getRawId(value));
+            }
+            serialized.put(key.id(), ids);
+        });
+        return TagPacketSerializerSerializedAccessor.createSerialized(serialized);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Unique
+    private static <T> void checkMissingTags(String type, Set<TagKey<T>> existingTags, Class<?> requiredTagsClass) {
+        final int publicStaticFinal = Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL;
+        List<TagKey<T>> missingTags = new ArrayList<>(0);
+        for (Field field : requiredTagsClass.getFields()) {
+            if ((field.getModifiers() & publicStaticFinal) == publicStaticFinal && field.getType() == TagKey.class) {
+                TagKey<T> tagKey;
+                try {
+                    tagKey = (TagKey<T>) field.get(null);
+                } catch (ReflectiveOperationException e) {
+                    MULTICONNECT_LOGGER.error("Error occurred getting tag key", e);
+                    continue;
+                }
+                if (tagKey != null && !existingTags.contains(tagKey)) {
+                    missingTags.add(tagKey);
                 }
             }
         }
 
-        return TagGroup.create(tagBiMap);
+        if (!missingTags.isEmpty()) {
+            MULTICONNECT_LOGGER.error("Found missing {} tags: {}", type, missingTags);
+        }
     }
 
     @Inject(method = "onCustomPayload", at = @At("HEAD"), cancellable = true)

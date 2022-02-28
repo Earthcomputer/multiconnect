@@ -49,7 +49,7 @@ public class MixinParticleManager implements IParticleManager {
 
     @Redirect(method = "reload", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/Registry;getIds()Ljava/util/Set;"))
     private Set<Identifier> redirectGetIds(Registry<ParticleType<?>> registry) {
-        return DefaultRegistries.DEFAULT_REGISTRIES.get(registry).defaultIdToEntry.keySet();
+        return DefaultRegistries.getDefaultRegistry(registry.getKey()).getIds();
     }
 
     @Override

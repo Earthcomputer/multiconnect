@@ -3,8 +3,8 @@ package net.earthcomputer.multiconnect.protocols.v1_11_2;
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryBuilder;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.mixin.PlayerEntityAccessor;
@@ -134,13 +134,13 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
-        mutator.mutate(Protocols.V1_11_2, Registry.BLOCK, this::mutateBlockRegistry);
-        mutator.mutate(Protocols.V1_11_2, Registry.ITEM, this::mutateItemRegistry);
-        mutator.mutate(Protocols.V1_11_2, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
-        mutator.mutate(Protocols.V1_11_2, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_11_2, Registry.BLOCK_KEY, this::mutateBlockRegistry);
+        mutator.mutate(Protocols.V1_11_2, Registry.ITEM_KEY, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_11_2, Registry.ENTITY_TYPE_KEY, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_11_2, Registry.SOUND_EVENT_KEY, this::mutateSoundEventRegistry);
     }
 
-    private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
+    private void mutateBlockRegistry(RegistryBuilder<Block> registry) {
         registry.purge(Blocks.WHITE_GLAZED_TERRACOTTA);
         registry.purge(Blocks.ORANGE_GLAZED_TERRACOTTA);
         registry.purge(Blocks.MAGENTA_GLAZED_TERRACOTTA);
@@ -161,16 +161,16 @@ public class Protocol_1_11_2 extends Protocol_1_12 {
         registry.purge(Blocks.WHITE_CONCRETE_POWDER);
     }
 
-    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
+    private void mutateItemRegistry(RegistryBuilder<Item> registry) {
         registry.purge(Items.KNOWLEDGE_BOOK);
     }
 
-    private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
+    private void mutateEntityTypeRegistry(RegistryBuilder<EntityType<?>> registry) {
         registry.purge(EntityType.ILLUSIONER);
         registry.purge(EntityType.PARROT);
     }
 
-    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundEventRegistry(RegistryBuilder<SoundEvent> registry) {
         registry.unregister(SoundEvents.ENTITY_BOAT_PADDLE_LAND);
         registry.unregister(SoundEvents.ENTITY_BOAT_PADDLE_WATER);
         registry.unregister(SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE);

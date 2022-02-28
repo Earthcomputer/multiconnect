@@ -1,7 +1,5 @@
 package net.earthcomputer.multiconnect.protocols.v1_16_5;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.brigadier.context.StringRange;
@@ -13,18 +11,17 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
-import net.earthcomputer.multiconnect.impl.Utils;
+import net.earthcomputer.multiconnect.mixin.bridge.TagPacketSerializerSerializedAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.CommandTreeS2CAccessor;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.DimensionTypeAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.EntityAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.ShulkerEntityAccessor;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.TagGroupSerializedAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_17.EntityDestroyS2CPacket_1_17;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
 import net.earthcomputer.multiconnect.protocols.v1_17_1.Particles_1_17_1;
 import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
+import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.advancement.Advancement;
@@ -64,15 +61,14 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.event.GameEvent;
 
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class Protocol_1_16_5 extends Protocol_1_17 {
@@ -98,18 +94,9 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             }
             //noinspection unchecked
             buf.pendingReadCollection((Class<Collection<RegistryKey<World>>>) (Class<?>) Collection.class, (Class<RegistryKey<World>>) (Class<?>) RegistryKey.class, dimensionIds);
-            Codec<Set<Identifier>> dimensionSetCodec = Codec.list(Utils.singletonKeyCodec("name", Identifier.CODEC))
-                    .xmap(ImmutableSet::copyOf, ImmutableList::copyOf);
-            Utils.translateDynamicRegistries(
-                    buf,
-                    Utils.singletonKeyCodec("minecraft:dimension_type", Utils.singletonKeyCodec("value", dimensionSetCodec)),
-                    ImmutableSet.of(new Identifier("overworld"), new Identifier("the_nether"), new Identifier("the_end"), new Identifier("overworld_caves"))::equals
-            );
-            translateDimensionType(buf);
-            buf.applyPendingReads();
-        });
-        ProtocolRegistry.registerInboundTranslator(PlayerRespawnS2CPacket.class, buf -> {
-            translateDimensionType(buf);
+            buf.decode(Codec.unit(null)); // dynamic registry manager
+            //noinspection unchecked
+            buf.pendingRead((Class<Codecked<DynamicRegistryManager>>) (Class<?>) Codecked.class, new Codecked<>(DynamicRegistryManager.CODEC, DynamicRegistryManager.createAndLoad()));
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(ChunkDataS2CPacket.class, buf -> {
@@ -171,14 +158,14 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(SynchronizeTagsS2CPacket.class, buf -> {
-            var tags = new HashMap<RegistryKey<? extends Registry<?>>, TagGroup.Serialized>(5);
-            tags.put(RegistryKey.ofRegistry(new Identifier("block")), readTagGroupNetworkData(buf));
-            tags.put(RegistryKey.ofRegistry(new Identifier("item")), readTagGroupNetworkData(buf));
-            tags.put(RegistryKey.ofRegistry(new Identifier("fluid")), readTagGroupNetworkData(buf));
-            tags.put(RegistryKey.ofRegistry(new Identifier("entity_type")), readTagGroupNetworkData(buf));
+            var tags = new HashMap<RegistryKey<? extends Registry<?>>, TagPacketSerializer.Serialized>(5);
+            tags.put(RegistryKey.ofRegistry(new Identifier("block")), readTagPacketSerialized(buf));
+            tags.put(RegistryKey.ofRegistry(new Identifier("item")), readTagPacketSerialized(buf));
+            tags.put(RegistryKey.ofRegistry(new Identifier("fluid")), readTagPacketSerialized(buf));
+            tags.put(RegistryKey.ofRegistry(new Identifier("entity_type")), readTagPacketSerialized(buf));
             tags.put(RegistryKey.ofRegistry(new Identifier("game_event")),
-                    TagGroupSerializedAccessor.createTagGroupSerialized(new HashMap<>()));
-            buf.pendingReadMapUnchecked(Identifier.class, TagGroup.Serialized.class, tags);
+                    TagPacketSerializerSerializedAccessor.createSerialized(new HashMap<>()));
+            buf.pendingReadMapUnchecked(Identifier.class, TagPacketSerializer.Serialized.class, tags);
             buf.applyPendingReads();
         });
         ProtocolRegistry.registerInboundTranslator(PlayerPositionLookS2CPacket.class, buf -> {
@@ -407,11 +394,11 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             buf.readBoolean(); // clear current
             buf.disablePassthroughMode();
             int numToEarn = buf.readVarInt();
-            var toEarn = new HashMap<Identifier, Advancement.Task>(numToEarn);
+            var toEarn = new HashMap<Identifier, Advancement.Builder>(numToEarn);
             for (int i = 0; i < numToEarn; i++) {
-                toEarn.put(buf.readIdentifier(), Advancement.Task.fromPacket(buf));
+                toEarn.put(buf.readIdentifier(), Advancement.Builder.fromPacket(buf));
             }
-            buf.pendingReadMap(Identifier.class, Advancement.Task.class, toEarn);
+            buf.pendingReadMap(Identifier.class, Advancement.Builder.class, toEarn);
             int numToRemove = buf.readVarInt();
             Set<Identifier> toRemove = new LinkedHashSet<>(numToRemove);
             for (int i = 0; i < numToRemove; i++) {
@@ -449,7 +436,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         });
     }
 
-    public static TagGroup.Serialized readTagGroupNetworkData(TransformerByteBuf buf) {
+    public static TagPacketSerializer.Serialized readTagPacketSerialized(TransformerByteBuf buf) {
         int numTags = buf.readVarInt();
         Map<Identifier, IntList> tags = new HashMap<>();
         for (int i = 0; i < numTags; i++) {
@@ -461,28 +448,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             }
             tags.put(tagId, entries);
         }
-        return TagGroupSerializedAccessor.createTagGroupSerialized(tags);
-    }
-
-    private static void translateDimensionType(TransformerByteBuf buf) {
-        // TODO: move between the 1.17 and 1.18 protocol when 1.18 changes the world height
-        var dimensionTypeCodecked = Utils.translateDimensionType(buf);
-        if (dimensionTypeCodecked != null) {
-            Supplier<DimensionType> oldSupplier = dimensionTypeCodecked.getValue();
-            dimensionTypeCodecked.setValue(() -> {
-                DimensionType oldDimensionType = oldSupplier.get();
-                if (oldDimensionType.getMinimumY() == 0 && oldDimensionType.getHeight() == 256) {
-                    // nothing to change
-                    return oldDimensionType;
-                }
-                DimensionType newDimensionType = Utils.clone(DimensionType.CODEC, oldDimensionType);
-                DimensionTypeAccessor accessor = (DimensionTypeAccessor) newDimensionType;
-                accessor.setMinimumY(0);
-                accessor.setLogicalHeight(256);
-                accessor.setHeight(256);
-                return newDimensionType;
-            });
-        }
+        return TagPacketSerializerSerializedAccessor.createSerialized(tags);
     }
 
     public static short getLastScreenActionId() {
@@ -551,20 +517,22 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
-        mutator.mutate(Protocols.V1_16_5, Registry.BLOCK, this::mutateBlockRegistry);
-        mutator.mutate(Protocols.V1_16_5, Registry.ITEM, this::mutateItemRegistry);
-        mutator.mutate(Protocols.V1_16_5, Registry.ENTITY_TYPE, this::mutateEntityRegistry);
-        mutator.mutate(Protocols.V1_16_5, Registry.BLOCK_ENTITY_TYPE, this::mutateBlockEntityRegistry);
-        mutator.mutate(Protocols.V1_16_5, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
-        mutator.mutate(Protocols.V1_16_5, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
-        mutator.mutate(Protocols.V1_16_5, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.BLOCK_KEY, this::mutateBlockRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.ITEM_KEY, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.ENTITY_TYPE_KEY, this::mutateEntityRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.BLOCK_ENTITY_TYPE_KEY, this::mutateBlockEntityRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.PARTICLE_TYPE_KEY, this::mutateParticleTypeRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.SOUND_EVENT_KEY, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_16_5, Registry.CUSTOM_STAT_KEY, this::mutateCustomStatRegistry);
     }
 
-    private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
-        registry.unregister(Blocks.WATER_CAULDRON, false);
-        registry.unregister(Blocks.LAVA_CAULDRON, false);
-        registry.unregister(Blocks.POWDER_SNOW_CAULDRON, false);
-        rename(registry, Blocks.DIRT_PATH, "grass_path");
+    private void mutateBlockRegistry(RegistryBuilder<Block> registry) {
+        registry.disableSideEffects();
+        registry.unregister(Blocks.WATER_CAULDRON);
+        registry.unregister(Blocks.LAVA_CAULDRON);
+        registry.unregister(Blocks.POWDER_SNOW_CAULDRON);
+        registry.enableSideEffects();
+        registry.rename(Blocks.DIRT_PATH, "grass_path");
         registry.unregister(Blocks.CANDLE);
         registry.unregister(Blocks.WHITE_CANDLE);
         registry.unregister(Blocks.ORANGE_CANDLE);
@@ -699,10 +667,10 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(Blocks.POTTED_FLOWERING_AZALEA_BUSH);
     }
 
-    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
-        rename(registry, Items.DIRT_PATH, "grass_path");
+    private void mutateItemRegistry(RegistryBuilder<Item> registry) {
+        registry.rename(Items.DIRT_PATH, "grass_path");
         registry.unregister(Items.JACK_O_LANTERN);
-        insertAfter(registry, Items.GLOWSTONE, Items.JACK_O_LANTERN, "jack_o_lantern");
+        registry.insertAfter(Items.GLOWSTONE, Items.JACK_O_LANTERN, "jack_o_lantern");
         registry.unregister(Items.COPPER_INGOT);
         registry.unregister(Items.BUNDLE);
         registry.unregister(Items.AMETHYST_SHARD);
@@ -811,105 +779,105 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(Items.JUNGLE_BOAT);
         registry.unregister(Items.ACACIA_BOAT);
         registry.unregister(Items.DARK_OAK_BOAT);
-        insertAfter(registry, Items.CUT_SANDSTONE, Items.POWERED_RAIL, "powered_rail");
-        insertAfter(registry, Items.POWERED_RAIL, Items.DETECTOR_RAIL, "detector_rail");
-        insertAfter(registry, Items.LADDER, Items.RAIL, "rail");
-        insertAfter(registry, Items.QUARTZ_STAIRS, Items.ACTIVATOR_RAIL, "activator_rail");
-        insertAfter(registry, Items.LAVA_BUCKET, Items.MINECART, "minecart");
-        insertAfter(registry, Items.MINECART, Items.SADDLE, "saddle");
-        insertAfter(registry, Items.SNOWBALL, Items.OAK_BOAT, "oak_boat");
-        insertAfter(registry, Items.SLIME_BALL, Items.CHEST_MINECART, "chest_minecart");
-        insertAfter(registry, Items.CHEST_MINECART, Items.FURNACE_MINECART, "furnace_minecart");
-        insertAfter(registry, Items.DRAGON_HEAD, Items.CARROT_ON_A_STICK, "carrot_on_a_stick");
-        insertAfter(registry, Items.CARROT_ON_A_STICK, Items.WARPED_FUNGUS_ON_A_STICK, "warped_fungus_on_a_stick");
-        insertAfter(registry, Items.NETHER_BRICK, Items.TNT_MINECART, "tnt_minecart");
-        insertAfter(registry, Items.TNT_MINECART, Items.HOPPER_MINECART, "hopper_minecart");
-        insertAfter(registry, Items.SHIELD, Items.ELYTRA, "elytra");
-        insertAfter(registry, Items.ELYTRA, Items.SPRUCE_BOAT, "spruce_boat");
-        insertAfter(registry, Items.SPRUCE_BOAT, Items.BIRCH_BOAT, "birch_boat");
-        insertAfter(registry, Items.BIRCH_BOAT, Items.JUNGLE_BOAT, "jungle_boat");
-        insertAfter(registry, Items.JUNGLE_BOAT, Items.ACACIA_BOAT, "acacia_boat");
-        insertAfter(registry, Items.ACACIA_BOAT, Items.DARK_OAK_BOAT, "dark_oak_boat");
-        insertAfter(registry, Items.LAPIS_BLOCK, Items.DISPENSER, "dispenser");
-        insertAfter(registry, Items.CUT_SANDSTONE, Items.NOTE_BLOCK, "note_block");
-        insertAfter(registry, Items.DETECTOR_RAIL, Items.STICKY_PISTON, "sticky_piston");
-        insertAfter(registry, Items.SEA_PICKLE, Items.PISTON, "piston");
-        insertAfter(registry, Items.BRICKS, Items.TNT, "tnt");
-        insertAfter(registry, Items.COBBLESTONE_STAIRS, Items.LEVER, "lever");
-        insertAfter(registry, Items.LEVER, Items.STONE_PRESSURE_PLATE, "stone_pressure_plate");
-        insertAfter(registry, Items.STONE_PRESSURE_PLATE, Items.OAK_PRESSURE_PLATE, "oak_pressure_plate");
-        insertAfter(registry, Items.OAK_PRESSURE_PLATE, Items.SPRUCE_PRESSURE_PLATE, "spruce_pressure_plate");
-        insertAfter(registry, Items.SPRUCE_PRESSURE_PLATE, Items.BIRCH_PRESSURE_PLATE, "birch_pressure_plate");
-        insertAfter(registry, Items.BIRCH_PRESSURE_PLATE, Items.JUNGLE_PRESSURE_PLATE, "jungle_pressure_plate");
-        insertAfter(registry, Items.JUNGLE_PRESSURE_PLATE, Items.ACACIA_PRESSURE_PLATE, "acacia_pressure_plate");
-        insertAfter(registry, Items.ACACIA_PRESSURE_PLATE, Items.DARK_OAK_PRESSURE_PLATE, "dark_oak_pressure_plate");
-        insertAfter(registry, Items.DARK_OAK_PRESSURE_PLATE, Items.CRIMSON_PRESSURE_PLATE, "crimson_pressure_plate");
-        insertAfter(registry, Items.CRIMSON_PRESSURE_PLATE, Items.WARPED_PRESSURE_PLATE, "warped_pressure_plate");
-        insertAfter(registry, Items.WARPED_PRESSURE_PLATE, Items.POLISHED_BLACKSTONE_PRESSURE_PLATE, "polished_blackstone_pressure_plate");
-        insertAfter(registry, Items.POLISHED_BLACKSTONE_PRESSURE_PLATE, Items.REDSTONE_ORE, "redstone_ore");
-        insertAfter(registry, Items.REDSTONE_ORE, Items.REDSTONE_TORCH, "redstone_torch");
-        insertAfter(registry, Items.JACK_O_LANTERN, Items.OAK_TRAPDOOR, "oak_trapdoor");
-        insertAfter(registry, Items.OAK_TRAPDOOR, Items.SPRUCE_TRAPDOOR, "spruce_trapdoor");
-        insertAfter(registry, Items.SPRUCE_TRAPDOOR, Items.BIRCH_TRAPDOOR, "birch_trapdoor");
-        insertAfter(registry, Items.BIRCH_TRAPDOOR, Items.JUNGLE_TRAPDOOR, "jungle_trapdoor");
-        insertAfter(registry, Items.JUNGLE_TRAPDOOR, Items.ACACIA_TRAPDOOR, "acacia_trapdoor");
-        insertAfter(registry, Items.ACACIA_TRAPDOOR, Items.DARK_OAK_TRAPDOOR, "dark_oak_trapdoor");
-        insertAfter(registry, Items.DARK_OAK_TRAPDOOR, Items.CRIMSON_TRAPDOOR, "crimson_trapdoor");
-        insertAfter(registry, Items.CRIMSON_TRAPDOOR, Items.WARPED_TRAPDOOR, "warped_trapdoor");
-        insertAfter(registry, Items.VINE, Items.OAK_FENCE_GATE, "oak_fence_gate");
-        insertAfter(registry, Items.OAK_FENCE_GATE, Items.SPRUCE_FENCE_GATE, "spruce_fence_gate");
-        insertAfter(registry, Items.SPRUCE_FENCE_GATE, Items.BIRCH_FENCE_GATE, "birch_fence_gate");
-        insertAfter(registry, Items.BIRCH_FENCE_GATE, Items.JUNGLE_FENCE_GATE, "jungle_fence_gate");
-        insertAfter(registry, Items.JUNGLE_FENCE_GATE, Items.ACACIA_FENCE_GATE, "acacia_fence_gate");
-        insertAfter(registry, Items.ACACIA_FENCE_GATE, Items.DARK_OAK_FENCE_GATE, "dark_oak_fence_gate");
-        insertAfter(registry, Items.DARK_OAK_FENCE_GATE, Items.CRIMSON_FENCE_GATE, "crimson_fence_gate");
-        insertAfter(registry, Items.CRIMSON_FENCE_GATE, Items.WARPED_FENCE_GATE, "warped_fence_gate");
-        insertAfter(registry, Items.DRAGON_EGG, Items.REDSTONE_LAMP, "redstone_lamp");
-        insertAfter(registry, Items.ENDER_CHEST, Items.TRIPWIRE_HOOK, "tripwire_hook");
-        insertAfter(registry, Items.POLISHED_BLACKSTONE_BRICK_WALL, Items.STONE_BUTTON, "stone_button");
-        insertAfter(registry, Items.STONE_BUTTON, Items.OAK_BUTTON, "oak_button");
-        insertAfter(registry, Items.OAK_BUTTON, Items.SPRUCE_BUTTON, "spruce_button");
-        insertAfter(registry, Items.SPRUCE_BUTTON, Items.BIRCH_BUTTON, "birch_button");
-        insertAfter(registry, Items.BIRCH_BUTTON, Items.JUNGLE_BUTTON, "jungle_button");
-        insertAfter(registry, Items.JUNGLE_BUTTON, Items.ACACIA_BUTTON, "acacia_button");
-        insertAfter(registry, Items.ACACIA_BUTTON, Items.DARK_OAK_BUTTON, "dark_oak_button");
-        insertAfter(registry, Items.DARK_OAK_BUTTON, Items.CRIMSON_BUTTON, "crimson_button");
-        insertAfter(registry, Items.CRIMSON_BUTTON, Items.WARPED_BUTTON, "warped_button");
-        insertAfter(registry, Items.WARPED_BUTTON, Items.POLISHED_BLACKSTONE_BUTTON, "polished_blackstone_button");
-        insertAfter(registry, Items.DAMAGED_ANVIL, Items.TRAPPED_CHEST, "trapped_chest");
-        insertAfter(registry, Items.TRAPPED_CHEST, Items.LIGHT_WEIGHTED_PRESSURE_PLATE, "light_weighted_pressure_plate");
-        insertAfter(registry, Items.LIGHT_WEIGHTED_PRESSURE_PLATE, Items.HEAVY_WEIGHTED_PRESSURE_PLATE, "heavy_weighted_pressure_plate");
-        insertAfter(registry, Items.HEAVY_WEIGHTED_PRESSURE_PLATE, Items.DAYLIGHT_DETECTOR, "daylight_detector");
-        insertAfter(registry, Items.DAYLIGHT_DETECTOR, Items.REDSTONE_BLOCK, "redstone_block");
-        insertAfter(registry, Items.REDSTONE_BLOCK, Items.NETHER_QUARTZ_ORE, "nether_quartz_ore");
-        insertAfter(registry, Items.NETHER_QUARTZ_ORE, Items.HOPPER, "hopper");
-        insertAfter(registry, Items.ACTIVATOR_RAIL, Items.DROPPER, "dropper");
-        insertAfter(registry, Items.BARRIER, Items.IRON_TRAPDOOR, "iron_trapdoor");
-        insertAfter(registry, Items.STRUCTURE_VOID, Items.OBSERVER, "observer");
-        insertAfter(registry, Items.WARPED_DOOR, Items.REPEATER, "repeater");
-        insertAfter(registry, Items.REPEATER, Items.COMPARATOR, "comparator");
-        insertAfter(registry, Items.SADDLE, Items.REDSTONE, "redstone");
-        insertAfter(registry, Items.GRINDSTONE, Items.LECTERN, "lectern");
-        insertAfter(registry, Items.LODESTONE, Items.NETHERITE_BLOCK, "netherite_block");
-        insertAfter(registry, Items.NETHERITE_BLOCK, Items.ANCIENT_DEBRIS, "ancient_debris");
-        insertAfter(registry, Items.ANCIENT_DEBRIS, Items.TARGET, "target");
-        insertAfter(registry, Items.DARK_OAK_STAIRS, Items.SLIME_BLOCK, "slime_block");
-        insertAfter(registry, Items.HONEY_BOTTLE, Items.HONEY_BLOCK, "honey_block");
-        insertAfter(registry, Items.GRAVEL, Items.GOLD_ORE, "gold_ore");
-        insertAfter(registry, Items.IRON_ORE, Items.COAL_ORE, "coal_ore");
-        insertAfter(registry, Items.GLASS, Items.LAPIS_ORE, "lapis_ore");
-        insertAfter(registry, Items.BAMBOO, Items.GOLD_BLOCK, "gold_block");
-        insertAfter(registry, Items.GOLD_BLOCK, Items.IRON_BLOCK, "iron_block");
-        insertAfter(registry, Items.CHEST, Items.DIAMOND_ORE, "diamond_ore");
-        insertAfter(registry, Items.DIAMOND_ORE, Items.DIAMOND_BLOCK, "diamond_block");
-        insertAfter(registry, Items.SANDSTONE_STAIRS, Items.EMERALD_ORE, "emerald_ore");
-        insertAfter(registry, Items.TERRACOTTA, Items.COAL_BLOCK, "coal_block");
-        insertAfter(registry, Items.COCOA_BEANS, Items.LAPIS_LAZULI, "lapis_lazuli");
-        insertAfter(registry, Items.WRITTEN_BOOK, Items.EMERALD, "emerald");
-        insertAfter(registry, Items.NETHER_BRICK, Items.QUARTZ, "quartz");
+        registry.insertAfter(Items.CUT_SANDSTONE, Items.POWERED_RAIL, "powered_rail");
+        registry.insertAfter(Items.POWERED_RAIL, Items.DETECTOR_RAIL, "detector_rail");
+        registry.insertAfter(Items.LADDER, Items.RAIL, "rail");
+        registry.insertAfter(Items.QUARTZ_STAIRS, Items.ACTIVATOR_RAIL, "activator_rail");
+        registry.insertAfter(Items.LAVA_BUCKET, Items.MINECART, "minecart");
+        registry.insertAfter(Items.MINECART, Items.SADDLE, "saddle");
+        registry.insertAfter(Items.SNOWBALL, Items.OAK_BOAT, "oak_boat");
+        registry.insertAfter(Items.SLIME_BALL, Items.CHEST_MINECART, "chest_minecart");
+        registry.insertAfter(Items.CHEST_MINECART, Items.FURNACE_MINECART, "furnace_minecart");
+        registry.insertAfter(Items.DRAGON_HEAD, Items.CARROT_ON_A_STICK, "carrot_on_a_stick");
+        registry.insertAfter(Items.CARROT_ON_A_STICK, Items.WARPED_FUNGUS_ON_A_STICK, "warped_fungus_on_a_stick");
+        registry.insertAfter(Items.NETHER_BRICK, Items.TNT_MINECART, "tnt_minecart");
+        registry.insertAfter(Items.TNT_MINECART, Items.HOPPER_MINECART, "hopper_minecart");
+        registry.insertAfter(Items.SHIELD, Items.ELYTRA, "elytra");
+        registry.insertAfter(Items.ELYTRA, Items.SPRUCE_BOAT, "spruce_boat");
+        registry.insertAfter(Items.SPRUCE_BOAT, Items.BIRCH_BOAT, "birch_boat");
+        registry.insertAfter(Items.BIRCH_BOAT, Items.JUNGLE_BOAT, "jungle_boat");
+        registry.insertAfter(Items.JUNGLE_BOAT, Items.ACACIA_BOAT, "acacia_boat");
+        registry.insertAfter(Items.ACACIA_BOAT, Items.DARK_OAK_BOAT, "dark_oak_boat");
+        registry.insertAfter(Items.LAPIS_BLOCK, Items.DISPENSER, "dispenser");
+        registry.insertAfter(Items.CUT_SANDSTONE, Items.NOTE_BLOCK, "note_block");
+        registry.insertAfter(Items.DETECTOR_RAIL, Items.STICKY_PISTON, "sticky_piston");
+        registry.insertAfter(Items.SEA_PICKLE, Items.PISTON, "piston");
+        registry.insertAfter(Items.BRICKS, Items.TNT, "tnt");
+        registry.insertAfter(Items.COBBLESTONE_STAIRS, Items.LEVER, "lever");
+        registry.insertAfter(Items.LEVER, Items.STONE_PRESSURE_PLATE, "stone_pressure_plate");
+        registry.insertAfter(Items.STONE_PRESSURE_PLATE, Items.OAK_PRESSURE_PLATE, "oak_pressure_plate");
+        registry.insertAfter(Items.OAK_PRESSURE_PLATE, Items.SPRUCE_PRESSURE_PLATE, "spruce_pressure_plate");
+        registry.insertAfter(Items.SPRUCE_PRESSURE_PLATE, Items.BIRCH_PRESSURE_PLATE, "birch_pressure_plate");
+        registry.insertAfter(Items.BIRCH_PRESSURE_PLATE, Items.JUNGLE_PRESSURE_PLATE, "jungle_pressure_plate");
+        registry.insertAfter(Items.JUNGLE_PRESSURE_PLATE, Items.ACACIA_PRESSURE_PLATE, "acacia_pressure_plate");
+        registry.insertAfter(Items.ACACIA_PRESSURE_PLATE, Items.DARK_OAK_PRESSURE_PLATE, "dark_oak_pressure_plate");
+        registry.insertAfter(Items.DARK_OAK_PRESSURE_PLATE, Items.CRIMSON_PRESSURE_PLATE, "crimson_pressure_plate");
+        registry.insertAfter(Items.CRIMSON_PRESSURE_PLATE, Items.WARPED_PRESSURE_PLATE, "warped_pressure_plate");
+        registry.insertAfter(Items.WARPED_PRESSURE_PLATE, Items.POLISHED_BLACKSTONE_PRESSURE_PLATE, "polished_blackstone_pressure_plate");
+        registry.insertAfter(Items.POLISHED_BLACKSTONE_PRESSURE_PLATE, Items.REDSTONE_ORE, "redstone_ore");
+        registry.insertAfter(Items.REDSTONE_ORE, Items.REDSTONE_TORCH, "redstone_torch");
+        registry.insertAfter(Items.JACK_O_LANTERN, Items.OAK_TRAPDOOR, "oak_trapdoor");
+        registry.insertAfter(Items.OAK_TRAPDOOR, Items.SPRUCE_TRAPDOOR, "spruce_trapdoor");
+        registry.insertAfter(Items.SPRUCE_TRAPDOOR, Items.BIRCH_TRAPDOOR, "birch_trapdoor");
+        registry.insertAfter(Items.BIRCH_TRAPDOOR, Items.JUNGLE_TRAPDOOR, "jungle_trapdoor");
+        registry.insertAfter(Items.JUNGLE_TRAPDOOR, Items.ACACIA_TRAPDOOR, "acacia_trapdoor");
+        registry.insertAfter(Items.ACACIA_TRAPDOOR, Items.DARK_OAK_TRAPDOOR, "dark_oak_trapdoor");
+        registry.insertAfter(Items.DARK_OAK_TRAPDOOR, Items.CRIMSON_TRAPDOOR, "crimson_trapdoor");
+        registry.insertAfter(Items.CRIMSON_TRAPDOOR, Items.WARPED_TRAPDOOR, "warped_trapdoor");
+        registry.insertAfter(Items.VINE, Items.OAK_FENCE_GATE, "oak_fence_gate");
+        registry.insertAfter(Items.OAK_FENCE_GATE, Items.SPRUCE_FENCE_GATE, "spruce_fence_gate");
+        registry.insertAfter(Items.SPRUCE_FENCE_GATE, Items.BIRCH_FENCE_GATE, "birch_fence_gate");
+        registry.insertAfter(Items.BIRCH_FENCE_GATE, Items.JUNGLE_FENCE_GATE, "jungle_fence_gate");
+        registry.insertAfter(Items.JUNGLE_FENCE_GATE, Items.ACACIA_FENCE_GATE, "acacia_fence_gate");
+        registry.insertAfter(Items.ACACIA_FENCE_GATE, Items.DARK_OAK_FENCE_GATE, "dark_oak_fence_gate");
+        registry.insertAfter(Items.DARK_OAK_FENCE_GATE, Items.CRIMSON_FENCE_GATE, "crimson_fence_gate");
+        registry.insertAfter(Items.CRIMSON_FENCE_GATE, Items.WARPED_FENCE_GATE, "warped_fence_gate");
+        registry.insertAfter(Items.DRAGON_EGG, Items.REDSTONE_LAMP, "redstone_lamp");
+        registry.insertAfter(Items.ENDER_CHEST, Items.TRIPWIRE_HOOK, "tripwire_hook");
+        registry.insertAfter(Items.POLISHED_BLACKSTONE_BRICK_WALL, Items.STONE_BUTTON, "stone_button");
+        registry.insertAfter(Items.STONE_BUTTON, Items.OAK_BUTTON, "oak_button");
+        registry.insertAfter(Items.OAK_BUTTON, Items.SPRUCE_BUTTON, "spruce_button");
+        registry.insertAfter(Items.SPRUCE_BUTTON, Items.BIRCH_BUTTON, "birch_button");
+        registry.insertAfter(Items.BIRCH_BUTTON, Items.JUNGLE_BUTTON, "jungle_button");
+        registry.insertAfter(Items.JUNGLE_BUTTON, Items.ACACIA_BUTTON, "acacia_button");
+        registry.insertAfter(Items.ACACIA_BUTTON, Items.DARK_OAK_BUTTON, "dark_oak_button");
+        registry.insertAfter(Items.DARK_OAK_BUTTON, Items.CRIMSON_BUTTON, "crimson_button");
+        registry.insertAfter(Items.CRIMSON_BUTTON, Items.WARPED_BUTTON, "warped_button");
+        registry.insertAfter(Items.WARPED_BUTTON, Items.POLISHED_BLACKSTONE_BUTTON, "polished_blackstone_button");
+        registry.insertAfter(Items.DAMAGED_ANVIL, Items.TRAPPED_CHEST, "trapped_chest");
+        registry.insertAfter(Items.TRAPPED_CHEST, Items.LIGHT_WEIGHTED_PRESSURE_PLATE, "light_weighted_pressure_plate");
+        registry.insertAfter(Items.LIGHT_WEIGHTED_PRESSURE_PLATE, Items.HEAVY_WEIGHTED_PRESSURE_PLATE, "heavy_weighted_pressure_plate");
+        registry.insertAfter(Items.HEAVY_WEIGHTED_PRESSURE_PLATE, Items.DAYLIGHT_DETECTOR, "daylight_detector");
+        registry.insertAfter(Items.DAYLIGHT_DETECTOR, Items.REDSTONE_BLOCK, "redstone_block");
+        registry.insertAfter(Items.REDSTONE_BLOCK, Items.NETHER_QUARTZ_ORE, "nether_quartz_ore");
+        registry.insertAfter(Items.NETHER_QUARTZ_ORE, Items.HOPPER, "hopper");
+        registry.insertAfter(Items.ACTIVATOR_RAIL, Items.DROPPER, "dropper");
+        registry.insertAfter(Items.BARRIER, Items.IRON_TRAPDOOR, "iron_trapdoor");
+        registry.insertAfter(Items.STRUCTURE_VOID, Items.OBSERVER, "observer");
+        registry.insertAfter(Items.WARPED_DOOR, Items.REPEATER, "repeater");
+        registry.insertAfter(Items.REPEATER, Items.COMPARATOR, "comparator");
+        registry.insertAfter(Items.SADDLE, Items.REDSTONE, "redstone");
+        registry.insertAfter(Items.GRINDSTONE, Items.LECTERN, "lectern");
+        registry.insertAfter(Items.LODESTONE, Items.NETHERITE_BLOCK, "netherite_block");
+        registry.insertAfter(Items.NETHERITE_BLOCK, Items.ANCIENT_DEBRIS, "ancient_debris");
+        registry.insertAfter(Items.ANCIENT_DEBRIS, Items.TARGET, "target");
+        registry.insertAfter(Items.DARK_OAK_STAIRS, Items.SLIME_BLOCK, "slime_block");
+        registry.insertAfter(Items.HONEY_BOTTLE, Items.HONEY_BLOCK, "honey_block");
+        registry.insertAfter(Items.GRAVEL, Items.GOLD_ORE, "gold_ore");
+        registry.insertAfter(Items.IRON_ORE, Items.COAL_ORE, "coal_ore");
+        registry.insertAfter(Items.GLASS, Items.LAPIS_ORE, "lapis_ore");
+        registry.insertAfter(Items.BAMBOO, Items.GOLD_BLOCK, "gold_block");
+        registry.insertAfter(Items.GOLD_BLOCK, Items.IRON_BLOCK, "iron_block");
+        registry.insertAfter(Items.CHEST, Items.DIAMOND_ORE, "diamond_ore");
+        registry.insertAfter(Items.DIAMOND_ORE, Items.DIAMOND_BLOCK, "diamond_block");
+        registry.insertAfter(Items.SANDSTONE_STAIRS, Items.EMERALD_ORE, "emerald_ore");
+        registry.insertAfter(Items.TERRACOTTA, Items.COAL_BLOCK, "coal_block");
+        registry.insertAfter(Items.COCOA_BEANS, Items.LAPIS_LAZULI, "lapis_lazuli");
+        registry.insertAfter(Items.WRITTEN_BOOK, Items.EMERALD, "emerald");
+        registry.insertAfter(Items.NETHER_BRICK, Items.QUARTZ, "quartz");
     }
 
-    private void mutateEntityRegistry(ISimpleRegistry<EntityType<?>> registry) {
+    private void mutateEntityRegistry(RegistryBuilder<EntityType<?>> registry) {
         registry.unregister(EntityType.AXOLOTL);
         registry.unregister(EntityType.GLOW_ITEM_FRAME);
         registry.unregister(EntityType.GLOW_SQUID);
@@ -917,11 +885,11 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(EntityType.MARKER);
     }
 
-    private void mutateBlockEntityRegistry(ISimpleRegistry<BlockEntityType<?>> registry) {
+    private void mutateBlockEntityRegistry(RegistryBuilder<BlockEntityType<?>> registry) {
         registry.unregister(BlockEntityType.SCULK_SENSOR);
     }
 
-    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
+    private void mutateParticleTypeRegistry(RegistryBuilder<ParticleType<?>> registry) {
         registry.unregister(Particles_1_17_1.LIGHT);
         registry.unregister(ParticleTypes.SMALL_FLAME);
         registry.unregister(ParticleTypes.SNOWFLAKE);
@@ -941,8 +909,8 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(ParticleTypes.SCRAPE);
     }
 
-    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
-        rename(registry, SoundEvents.BLOCK_SWEET_BERRY_BUSH_PICK_BERRIES, "item.sweet_berries.pick_from_bush");
+    private void mutateSoundEventRegistry(RegistryBuilder<SoundEvent> registry) {
+        registry.rename(SoundEvents.BLOCK_SWEET_BERRY_BUSH_PICK_BERRIES, "item.sweet_berries.pick_from_bush");
         registry.unregister(SoundEvents.BLOCK_AMETHYST_BLOCK_BREAK);
         registry.unregister(SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME);
         registry.unregister(SoundEvents.BLOCK_AMETHYST_BLOCK_FALL);
@@ -1143,8 +1111,8 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
         registry.unregister(SoundEvents.ITEM_BONE_MEAL_USE);
     }
 
-    private void mutateCustomStatRegistry(ISimpleRegistry<Identifier> registry) {
-        rename(registry, Stats.PLAY_TIME, "play_one_minute");
+    private void mutateCustomStatRegistry(RegistryBuilder<Identifier> registry) {
+        registry.rename(Stats.PLAY_TIME, "play_one_minute");
         registry.unregister(Stats.TOTAL_WORLD_TIME);
     }
 

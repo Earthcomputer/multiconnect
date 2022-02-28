@@ -17,9 +17,9 @@ import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.DefaultDynamicRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryBuilder;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
@@ -209,7 +209,7 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
                     continue;
                 }
                 if (MultiConnectAPI.instance().doesServerKnow(Registry.BLOCK_ENTITY_TYPE, type)
-                        && DefaultRegistries.DEFAULT_REGISTRIES.get(Registry.BLOCK_ENTITY_TYPE).defaultEntryToRawId.containsKey(type)) {
+                        && DefaultRegistries.getDefaultRegistry(Registry.BLOCK_ENTITY_TYPE_KEY).getKey(type).isPresent()) {
                     blockEntity = Utils.datafix(TypeReferences.BLOCK_ENTITY, blockEntity);
                 }
                 var newBlockEntity = ChunkDataBlockEntityAccessor.createChunkDataBlockEntity(
@@ -309,7 +309,7 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
             buf.readByte(); // gamemode
             buf.readByte(); // previous gamemode
             buf.readCollection(Sets::newHashSetWithExpectedSize, PacketByteBuf::readIdentifier); // worlds
-            buf.decode(DynamicRegistryManager.Impl.CODEC); // registry manager
+            buf.decode(DynamicRegistryManager.Immutable.CODEC); // registry manager
             buf.decode(DimensionType.REGISTRY_CODEC); // dimension type
             buf.readIdentifier(); // dimension id
             buf.readLong(); // seed
@@ -374,8 +374,8 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
 
     @Override
     @ThreadSafe(withGameThread = false)
-    public void mutateDynamicRegistries(DynamicRegistryManager.Impl registries) {
-        super.mutateDynamicRegistries(registries);
+    public void mutateDynamicRegistries() {
+        super.mutateDynamicRegistries();
         mutateBiomeRegistry(DefaultDynamicRegistries.getInstance(Registry.BIOME_KEY));
     }
 
@@ -397,16 +397,16 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
     @ThreadSafe(withGameThread = false)
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
-        mutator.mutate(Protocols.V1_17_1, Registry.ITEM, this::mutateItemRegistry);
-        mutator.mutate(Protocols.V1_17_1, Registry.PARTICLE_TYPE, Particles_1_17_1::mutateParticleTypeRegistry);
-        mutator.mutate(Protocols.V1_17_1, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_17_1, Registry.ITEM_KEY, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_17_1, Registry.PARTICLE_TYPE_KEY, Particles_1_17_1::mutateParticleTypeRegistry);
+        mutator.mutate(Protocols.V1_17_1, Registry.SOUND_EVENT_KEY, this::mutateSoundEventRegistry);
     }
 
-    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
+    private void mutateItemRegistry(RegistryBuilder<Item> registry) {
         registry.unregister(Items.MUSIC_DISC_OTHERSIDE);
     }
 
-    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundEventRegistry(RegistryBuilder<SoundEvent> registry) {
         registry.unregister(SoundEvents.ITEM_BUNDLE_DROP_CONTENTS);
         registry.unregister(SoundEvents.ITEM_BUNDLE_INSERT);
         registry.unregister(SoundEvents.ITEM_BUNDLE_REMOVE_ONE);
@@ -421,7 +421,7 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
         registry.unregister(SoundEvents.MUSIC_OVERWORLD_FROZEN_PEAKS);
         registry.unregister(SoundEvents.MUSIC_OVERWORLD_SNOWY_SLOPES);
         registry.unregister(SoundEvents.MUSIC_OVERWORLD_STONY_PEAKS);
-        insertAfter(registry, SoundEvents.MUSIC_NETHER_SOUL_SAND_VALLEY, SoundEvents.MUSIC_NETHER_CRIMSON_FOREST, "music.nether.crimson_forest");
+        registry.insertAfter(SoundEvents.MUSIC_NETHER_SOUL_SAND_VALLEY, SoundEvents.MUSIC_NETHER_CRIMSON_FOREST, "music.nether.crimson_forest");
     }
 
     @Override

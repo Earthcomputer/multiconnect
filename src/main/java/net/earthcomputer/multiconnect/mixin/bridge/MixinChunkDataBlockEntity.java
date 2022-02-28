@@ -24,9 +24,9 @@ public abstract class MixinChunkDataBlockEntity {
 
     @Inject(method = "<init>(Lnet/minecraft/network/PacketByteBuf;)V", at = @At("RETURN"))
     private void onRead(CallbackInfo ci) {
-        DefaultRegistries<?> defaultBlockEntities = DefaultRegistries.DEFAULT_REGISTRIES.get(Registry.BLOCK_ENTITY_TYPE);
+        Registry<BlockEntityType<?>> defaultBlockEntities = DefaultRegistries.getDefaultRegistry(Registry.BLOCK_ENTITY_TYPE_KEY);
         if (nbt != null) {
-            if (defaultBlockEntities.defaultEntryToRawId.containsKey(type)) {
+            if (defaultBlockEntities.getKey(type).isPresent()) {
                 NbtCompound fixed = nbt;
                 if (ConnectionInfo.protocolVersion <= Protocols.V1_10) {
                     fixed.putString("id", Protocol_1_10.getBlockEntityId(type));
@@ -34,7 +34,7 @@ public abstract class MixinChunkDataBlockEntity {
                     fixed.putString("id", String.valueOf(Registry.BLOCK_ENTITY_TYPE.getId(type)));
                 }
                 if (MultiConnectAPI.instance().doesServerKnow(Registry.BLOCK_ENTITY_TYPE, type)
-                        && DefaultRegistries.DEFAULT_REGISTRIES.get(Registry.BLOCK_ENTITY_TYPE).defaultEntryToRawId.containsKey(type)) {
+                        && DefaultRegistries.getDefaultRegistry(Registry.BLOCK_ENTITY_TYPE_KEY).getKey(type).isPresent()) {
                     fixed = Utils.datafix(TypeReferences.BLOCK_ENTITY, fixed);
                 }
                 nbt = fixed;

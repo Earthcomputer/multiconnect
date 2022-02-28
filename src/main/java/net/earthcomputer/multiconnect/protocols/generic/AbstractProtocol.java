@@ -22,7 +22,6 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.screen.ScreenHandler;
-import net.minecraft.tag.RequiredTagListRegistry;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -69,15 +68,21 @@ public abstract class AbstractProtocol implements IUtils {
     public void disable() {
     }
 
+    @SuppressWarnings("unchecked")
+    private static <T> SimpleRegistry<T> getRegistry(RegistryKey<? extends Registry<?>> key) {
+        return ((Registry<SimpleRegistry<T>>) Registry.REGISTRIES).get((RegistryKey<SimpleRegistry<T>>) key);
+    }
+
     public void doRegistryMutation(boolean reAddMissingValues) {
         DefaultRegistries.restoreAll();
         for (DefaultDynamicRegistries<?> defaultDynamicRegistry : DefaultDynamicRegistries.getInstances()) {
             defaultDynamicRegistry.clear();
         }
+        mutateDynamicRegistries();
         RegistryMutator mutator = new RegistryMutator();
         mutateRegistries(mutator);
-        mutator.runMutations(DefaultRegistries.DEFAULT_REGISTRIES.keySet());
-        DefaultRegistries.DEFAULT_REGISTRIES.keySet().forEach((registry -> postMutateRegistry(registry, reAddMissingValues)));
+        mutator.runMutations(DefaultRegistries.getDefaultRegistries().stream().map(defaultReg -> getRegistry(defaultReg.getKey())).toList());
+        DefaultRegistries.getDefaultRegistries().forEach((registry -> postMutateRegistry(registry, reAddMissingValues)));
         recomputeBlockStates();
     }
 
@@ -155,15 +160,14 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void postMutateRegistry(Registry<T> registry, boolean reAddMissingValues) {
-        if (!(registry instanceof SimpleRegistry)) return;
+    private <T> void postMutateRegistry(SimpleRegistry<T> registry, boolean reAddMissingValues) {
         ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
-        iregistry.lockRealEntries();
+        iregistry.multiconnect_lockRealEntries();
         if (!reAddMissingValues) {
             return;
         }
-        DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
-        if (defaultRegistries == null) return;
+        Registry<T> defaultRegistry = DefaultRegistries.getDefaultRegistry(registry.getKey());
+        if (defaultRegistry == null) return;
 
         Identifier defaultId;
         T defaultValue;
@@ -175,20 +179,21 @@ public abstract class AbstractProtocol implements IUtils {
             defaultValue = null;
         }
 
-        for (Map.Entry<Identifier, T> entry : defaultRegistries.defaultIdToEntry.entrySet()) {
-            if (Objects.equals(registry.getId(entry.getValue()), defaultId) && entry.getValue() != defaultValue) {
-                Identifier id = entry.getKey();
+        for (T value : defaultRegistry) {
+            if (Objects.equals(registry.getId(value), defaultId) && value != defaultValue) {
+                Identifier id = defaultRegistry.getId(value);
+                assert id != null;
+                Identifier originalId = id;
                 for (int suffix = 1; registry.containsId(id); suffix++) {
-                    id = new Identifier(entry.getKey().getNamespace(), entry.getKey().getPath() + suffix);
+                    id = new Identifier(originalId.getNamespace(), originalId.getPath() + suffix);
                 }
-                RegistryKey<T> key = RegistryKey.of(iregistry.getRegistryKey(), id);
-                iregistry.register(entry.getValue(), iregistry.getNextId(), key, false);
+                Registry.register(registry, id, value);
             }
         }
     }
 
     @ThreadSafe(withGameThread = false)
-    public void mutateDynamicRegistries(DynamicRegistryManager.Impl registries) {
+    public void mutateDynamicRegistries() {
     }
 
     public boolean acceptBlockState(BlockState state) {
@@ -206,10 +211,6 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     private void revertCollisionBoxes() {
-        if (!collisionBoxesToRevert.isEmpty()) {
-            // Lithium compat: make sure tags have been initialized before initializing shape cache
-            RequiredTagListRegistry.clearAllTags();
-        }
         for (Block block : collisionBoxesToRevert) {
             for (BlockState state : block.getStateManager().getStates()) {
                 state.initShapeCache();
@@ -219,10 +220,6 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     protected void markCollisionBoxChanged(Block block) {
-        if (collisionBoxesToRevert.isEmpty()) {
-            // Lithium compat: make sure tags have been initialized before initializing shape cache
-            RequiredTagListRegistry.clearAllTags();
-        }
         for (BlockState state : block.getStateManager().getStates()) {
             state.initShapeCache();
         }

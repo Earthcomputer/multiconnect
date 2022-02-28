@@ -2,14 +2,13 @@ package net.earthcomputer.multiconnect.protocols.v1_15_2;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
-import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.DataTrackerManager;
 import net.earthcomputer.multiconnect.protocols.generic.DefaultDynamicRegistries;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryBuilder;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.generic.TagRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
@@ -180,8 +179,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
             int dimensionId = buf.readInt();
             Identifier dimensionName = dimensionIdToName(dimensionId);
 
-            var registries = Utils.createMutableDynamicRegistryManager();
-            buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.Impl.CODEC, registries));
+            var registries = DynamicRegistryManager.createAndLoad();
+            buf.pendingRead(Codecked.class, new Codecked<>(DynamicRegistryManager.CODEC, registries));
             buf.pendingRead(Identifier.class, dimensionName); // dimension type
             buf.pendingRead(Identifier.class, dimensionName); // dimension
             buf.enablePassthroughMode();
@@ -396,21 +395,21 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
-        mutator.mutate(Protocols.V1_15_2, Registry.BLOCK, this::mutateBlockRegistry);
-        mutator.mutate(Protocols.V1_15_2, Registry.ITEM, this::mutateItemRegistry);
-        mutator.mutate(Protocols.V1_15_2, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
-        mutator.mutate(Protocols.V1_15_2, Registry.ENCHANTMENT, this::mutateEnchantmentRegistry);
-        mutator.mutate(Protocols.V1_15_2, Registry.PARTICLE_TYPE, this::mutateParticleTypeRegistry);
-        mutator.mutate(Protocols.V1_15_2, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
-        mutator.mutate(Protocols.V1_15_2, Registry.SCREEN_HANDLER, this::mutateScreenHandlerRegistry);
-        mutator.mutate(Protocols.V1_15_2, Registry.RECIPE_SERIALIZER, this::mutateRecipeSerializerRegistry);
-        mutator.mutate(Protocols.V1_15_2, Registry.CUSTOM_STAT, this::mutateCustomStatRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.BLOCK_KEY, this::mutateBlockRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.ITEM_KEY, this::mutateItemRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.ENTITY_TYPE_KEY, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.ENCHANTMENT_KEY, this::mutateEnchantmentRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.PARTICLE_TYPE_KEY, this::mutateParticleTypeRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.SOUND_EVENT_KEY, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.MENU_KEY, this::mutateScreenHandlerRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.RECIPE_SERIALIZER_KEY, this::mutateRecipeSerializerRegistry);
+        mutator.mutate(Protocols.V1_15_2, Registry.CUSTOM_STAT_KEY, this::mutateCustomStatRegistry);
     }
 
     @Override
     @ThreadSafe(withGameThread = false)
-    public void mutateDynamicRegistries(DynamicRegistryManager.Impl registries) {
-        super.mutateDynamicRegistries(registries);
+    public void mutateDynamicRegistries() {
+        super.mutateDynamicRegistries();
         mutateBiomeRegistry(DefaultDynamicRegistries.getInstance(Registry.BIOME_KEY));
     }
 
@@ -439,7 +438,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         return super.onSendPacket(packet);
     }
 
-    private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
+    private void mutateBlockRegistry(RegistryBuilder<Block> registry) {
         registry.unregister(Blocks.ANCIENT_DEBRIS);
         registry.unregister(Blocks.BASALT);
         registry.unregister(Blocks.CRIMSON_BUTTON);
@@ -525,17 +524,17 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Blocks.QUARTZ_BRICKS);
     }
 
-    private void mutateItemRegistry(ISimpleRegistry<Item> registry) {
+    private void mutateItemRegistry(RegistryBuilder<Item> registry) {
         registry.unregister(Items.SUGAR_CANE);
         registry.unregister(Items.KELP);
         registry.unregister(Items.BAMBOO);
-        insertAfter(registry, Items.CLAY_BALL, Items.SUGAR_CANE, "sugar_cane");
-        insertAfter(registry, Items.SUGAR_CANE, Items.KELP, "kelp");
-        insertAfter(registry, Items.DRIED_KELP_BLOCK, Items.BAMBOO, "bamboo");
+        registry.insertAfter(Items.CLAY_BALL, Items.SUGAR_CANE, "sugar_cane");
+        registry.insertAfter(Items.SUGAR_CANE, Items.KELP, "kelp");
+        registry.insertAfter(Items.DRIED_KELP_BLOCK, Items.BAMBOO, "bamboo");
         registry.unregister(Items.STONE_BUTTON);
-        insertAfter(registry, Items.REDSTONE_TORCH, Items.STONE_BUTTON, "stone_button");
+        registry.insertAfter(Items.REDSTONE_TORCH, Items.STONE_BUTTON, "stone_button");
         registry.unregister(Items.COMPOSTER);
-        insertAfter(registry, Items.JIGSAW, Items.COMPOSTER, "composter");
+        registry.insertAfter(Items.JIGSAW, Items.COMPOSTER, "composter");
         registry.unregister(Items.NETHERITE_SCRAP);
         registry.unregister(Items.NETHERITE_INGOT);
         registry.unregister(Items.NETHERITE_HELMET);
@@ -551,34 +550,34 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Items.MUSIC_DISC_PIGSTEP);
         registry.unregister(Items.PIGLIN_BANNER_PATTERN);
         registry.unregister(Items.ZOMBIFIED_PIGLIN_SPAWN_EGG);
-        insertAfter(registry, Items.ZOMBIE_HORSE_SPAWN_EGG, Items.ZOMBIFIED_PIGLIN_SPAWN_EGG, "zombie_pigman_spawn_egg");
+        registry.insertAfter(Items.ZOMBIE_HORSE_SPAWN_EGG, Items.ZOMBIFIED_PIGLIN_SPAWN_EGG, "zombie_pigman_spawn_egg");
     }
 
-    private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
+    private void mutateEntityTypeRegistry(RegistryBuilder<EntityType<?>> registry) {
         registry.unregister(EntityType.DONKEY);
-        insertAfter(registry, EntityType.CREEPER, EntityType.DONKEY, "donkey");
+        registry.insertAfter(EntityType.CREEPER, EntityType.DONKEY, "donkey");
         registry.unregister(EntityType.EVOKER);
-        insertAfter(registry, EntityType.EVOKER_FANGS, EntityType.EVOKER, "evoker");
+        registry.insertAfter(EntityType.EVOKER_FANGS, EntityType.EVOKER, "evoker");
         registry.unregister(EntityType.IRON_GOLEM);
-        insertAfter(registry, EntityType.VILLAGER, EntityType.IRON_GOLEM, "iron_golem");
+        registry.insertAfter(EntityType.VILLAGER, EntityType.IRON_GOLEM, "iron_golem");
         registry.unregister(EntityType.PHANTOM);
-        insertAfter(registry, EntityType.ZOMBIE_VILLAGER, EntityType.PHANTOM, "phantom");
+        registry.insertAfter(EntityType.ZOMBIE_VILLAGER, EntityType.PHANTOM, "phantom");
         registry.unregister(EntityType.PILLAGER);
-        insertAfter(registry, EntityType.VINDICATOR, EntityType.PILLAGER, "pillager");
+        registry.insertAfter(EntityType.VINDICATOR, EntityType.PILLAGER, "pillager");
         registry.unregister(EntityType.PUFFERFISH);
-        insertAfter(registry, EntityType.PIG, EntityType.PUFFERFISH, "pufferfish");
+        registry.insertAfter(EntityType.PIG, EntityType.PUFFERFISH, "pufferfish");
         registry.unregister(EntityType.RAVAGER);
-        insertAfter(registry, EntityType.PHANTOM, EntityType.RAVAGER, "ravager");
+        registry.insertAfter(EntityType.PHANTOM, EntityType.RAVAGER, "ravager");
         registry.unregister(EntityType.TRADER_LLAMA);
         registry.unregister(EntityType.TROPICAL_FISH);
         registry.unregister(EntityType.TURTLE);
-        insertAfter(registry, EntityType.STRAY, EntityType.TRADER_LLAMA, "trader_llama");
-        insertAfter(registry, EntityType.TRADER_LLAMA, EntityType.TROPICAL_FISH, "tropical_fish");
-        insertAfter(registry, EntityType.TROPICAL_FISH, EntityType.TURTLE, "turtle");
+        registry.insertAfter(EntityType.STRAY, EntityType.TRADER_LLAMA, "trader_llama");
+        registry.insertAfter(EntityType.TRADER_LLAMA, EntityType.TROPICAL_FISH, "tropical_fish");
+        registry.insertAfter(EntityType.TROPICAL_FISH, EntityType.TURTLE, "turtle");
         registry.unregister(EntityType.ZOMBIFIED_PIGLIN);
-        insertAfter(registry, EntityType.PUFFERFISH, EntityType.ZOMBIFIED_PIGLIN, "zombie_pigman");
+        registry.insertAfter(EntityType.PUFFERFISH, EntityType.ZOMBIFIED_PIGLIN, "zombie_pigman");
         registry.unregister(EntityType.LIGHTNING_BOLT);
-        insertAfter(registry, EntityType.RAVAGER, EntityType.LIGHTNING_BOLT, "lightning_bolt");
+        registry.insertAfter(EntityType.RAVAGER, EntityType.LIGHTNING_BOLT, "lightning_bolt");
 
         registry.unregister(EntityType.HOGLIN);
         registry.unregister(EntityType.PIGLIN);
@@ -586,7 +585,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(EntityType.ZOGLIN);
     }
 
-    private void mutateEnchantmentRegistry(ISimpleRegistry<Enchantment> registry) {
+    private void mutateEnchantmentRegistry(RegistryBuilder<Enchantment> registry) {
         registry.unregister(Enchantments.SOUL_SPEED);
     }
 
@@ -595,7 +594,7 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.add("nether", BiomeKeys.NETHER_WASTES);
     }
 
-    private void mutateParticleTypeRegistry(ISimpleRegistry<ParticleType<?>> registry) {
+    private void mutateParticleTypeRegistry(RegistryBuilder<ParticleType<?>> registry) {
         registry.unregister(ParticleTypes.ASH);
         registry.unregister(ParticleTypes.CRIMSON_SPORE);
         registry.unregister(ParticleTypes.SOUL_FIRE_FLAME);
@@ -608,95 +607,95 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(ParticleTypes.WHITE_ASH);
     }
 
-    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundEventRegistry(RegistryBuilder<SoundEvent> registry) {
         registry.unregister(SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE);
-        insertAfter(registry, SoundEvents.ITEM_BOOK_PUT, SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE, "entity.fishing_bobber.retrieve");
+        registry.insertAfter(SoundEvents.ITEM_BOOK_PUT, SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE, "entity.fishing_bobber.retrieve");
         registry.unregister(SoundEvents.ENTITY_FISHING_BOBBER_SPLASH);
-        insertAfter(registry, SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE, SoundEvents.ENTITY_FISHING_BOBBER_SPLASH, "entity.fishing_bobber.splash");
+        registry.insertAfter(SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE, SoundEvents.ENTITY_FISHING_BOBBER_SPLASH, "entity.fishing_bobber.splash");
         registry.unregister(SoundEvents.ENTITY_FISHING_BOBBER_THROW);
-        insertAfter(registry, SoundEvents.ENTITY_FISHING_BOBBER_SPLASH, SoundEvents.ENTITY_FISHING_BOBBER_THROW, "entity.fishing_bobber.throw");
+        registry.insertAfter(SoundEvents.ENTITY_FISHING_BOBBER_SPLASH, SoundEvents.ENTITY_FISHING_BOBBER_THROW, "entity.fishing_bobber.throw");
 
         registry.unregister(SoundEvents.BLOCK_WOOL_BREAK);
-        insertAfter(registry, SoundEvents.ITEM_CHORUS_FRUIT_TELEPORT, SoundEvents.BLOCK_WOOL_BREAK, "block.wool.break");
+        registry.insertAfter(SoundEvents.ITEM_CHORUS_FRUIT_TELEPORT, SoundEvents.BLOCK_WOOL_BREAK, "block.wool.break");
         registry.unregister(SoundEvents.BLOCK_WOOL_FALL);
-        insertAfter(registry, SoundEvents.BLOCK_WOOL_BREAK, SoundEvents.BLOCK_WOOL_FALL, "block.wool.fall");
+        registry.insertAfter(SoundEvents.BLOCK_WOOL_BREAK, SoundEvents.BLOCK_WOOL_FALL, "block.wool.fall");
         registry.unregister(SoundEvents.BLOCK_WOOL_HIT);
-        insertAfter(registry, SoundEvents.BLOCK_WOOL_FALL, SoundEvents.BLOCK_WOOL_HIT, "block.wool.hit");
+        registry.insertAfter(SoundEvents.BLOCK_WOOL_FALL, SoundEvents.BLOCK_WOOL_HIT, "block.wool.hit");
         registry.unregister(SoundEvents.BLOCK_WOOL_PLACE);
-        insertAfter(registry, SoundEvents.BLOCK_WOOL_HIT, SoundEvents.BLOCK_WOOL_PLACE, "block.wool.place");
+        registry.insertAfter(SoundEvents.BLOCK_WOOL_HIT, SoundEvents.BLOCK_WOOL_PLACE, "block.wool.place");
         registry.unregister(SoundEvents.BLOCK_WOOL_STEP);
-        insertAfter(registry, SoundEvents.BLOCK_WOOL_PLACE, SoundEvents.BLOCK_WOOL_STEP, "block.wool.step");
+        registry.insertAfter(SoundEvents.BLOCK_WOOL_PLACE, SoundEvents.BLOCK_WOOL_STEP, "block.wool.step");
 
         registry.unregister(SoundEvents.BLOCK_WET_GRASS_BREAK);
-        insertAfter(registry, SoundEvents.BLOCK_GRASS_STEP, SoundEvents.BLOCK_WET_GRASS_BREAK, "block.wet_grass.break");
+        registry.insertAfter(SoundEvents.BLOCK_GRASS_STEP, SoundEvents.BLOCK_WET_GRASS_BREAK, "block.wet_grass.break");
         registry.unregister(SoundEvents.BLOCK_WET_GRASS_FALL);
-        insertAfter(registry, SoundEvents.BLOCK_WET_GRASS_BREAK, SoundEvents.BLOCK_WET_GRASS_FALL, "block.wet_grass.fall");
+        registry.insertAfter(SoundEvents.BLOCK_WET_GRASS_BREAK, SoundEvents.BLOCK_WET_GRASS_FALL, "block.wet_grass.fall");
         registry.unregister(SoundEvents.BLOCK_WET_GRASS_HIT);
-        insertAfter(registry, SoundEvents.BLOCK_WET_GRASS_FALL, SoundEvents.BLOCK_WET_GRASS_HIT, "block.wet_grass.hit");
+        registry.insertAfter(SoundEvents.BLOCK_WET_GRASS_FALL, SoundEvents.BLOCK_WET_GRASS_HIT, "block.wet_grass.hit");
         registry.unregister(SoundEvents.BLOCK_WET_GRASS_PLACE);
-        insertAfter(registry, SoundEvents.BLOCK_WET_GRASS_HIT, SoundEvents.BLOCK_WET_GRASS_PLACE, "block.wet_grass.place");
+        registry.insertAfter(SoundEvents.BLOCK_WET_GRASS_HIT, SoundEvents.BLOCK_WET_GRASS_PLACE, "block.wet_grass.place");
         registry.unregister(SoundEvents.BLOCK_WET_GRASS_STEP);
-        insertAfter(registry, SoundEvents.BLOCK_WET_GRASS_PLACE, SoundEvents.BLOCK_WET_GRASS_STEP, "block.wet_grass.step");
+        registry.insertAfter(SoundEvents.BLOCK_WET_GRASS_PLACE, SoundEvents.BLOCK_WET_GRASS_STEP, "block.wet_grass.step");
 
         registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_BREAK);
-        insertAfter(registry, SoundEvents.BLOCK_WET_GRASS_STEP, SoundEvents.BLOCK_CORAL_BLOCK_BREAK, "block.coral_block.break");
+        registry.insertAfter(SoundEvents.BLOCK_WET_GRASS_STEP, SoundEvents.BLOCK_CORAL_BLOCK_BREAK, "block.coral_block.break");
         registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_FALL);
-        insertAfter(registry, SoundEvents.BLOCK_CORAL_BLOCK_BREAK, SoundEvents.BLOCK_CORAL_BLOCK_FALL, "block.coral_block.fall");
+        registry.insertAfter(SoundEvents.BLOCK_CORAL_BLOCK_BREAK, SoundEvents.BLOCK_CORAL_BLOCK_FALL, "block.coral_block.fall");
         registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_HIT);
-        insertAfter(registry, SoundEvents.BLOCK_CORAL_BLOCK_FALL, SoundEvents.BLOCK_CORAL_BLOCK_HIT, "block.coral_block.hit");
+        registry.insertAfter(SoundEvents.BLOCK_CORAL_BLOCK_FALL, SoundEvents.BLOCK_CORAL_BLOCK_HIT, "block.coral_block.hit");
         registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_PLACE);
-        insertAfter(registry, SoundEvents.BLOCK_CORAL_BLOCK_HIT, SoundEvents.BLOCK_CORAL_BLOCK_PLACE, "block.coral_block.place");
+        registry.insertAfter(SoundEvents.BLOCK_CORAL_BLOCK_HIT, SoundEvents.BLOCK_CORAL_BLOCK_PLACE, "block.coral_block.place");
         registry.unregister(SoundEvents.BLOCK_CORAL_BLOCK_STEP);
-        insertAfter(registry, SoundEvents.BLOCK_CORAL_BLOCK_PLACE, SoundEvents.BLOCK_CORAL_BLOCK_STEP, "block.coral_block.step");
+        registry.insertAfter(SoundEvents.BLOCK_CORAL_BLOCK_PLACE, SoundEvents.BLOCK_CORAL_BLOCK_STEP, "block.coral_block.step");
 
         registry.unregister(SoundEvents.ENTITY_RAVAGER_AMBIENT);
-        insertAfter(registry, SoundEvents.ENTITY_HUSK_STEP, SoundEvents.ENTITY_RAVAGER_AMBIENT, "entity.ravager.ambient");
+        registry.insertAfter(SoundEvents.ENTITY_HUSK_STEP, SoundEvents.ENTITY_RAVAGER_AMBIENT, "entity.ravager.ambient");
         registry.unregister(SoundEvents.ENTITY_RAVAGER_ATTACK);
-        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_AMBIENT, SoundEvents.ENTITY_RAVAGER_ATTACK, "entity.ravager.attack");
+        registry.insertAfter(SoundEvents.ENTITY_RAVAGER_AMBIENT, SoundEvents.ENTITY_RAVAGER_ATTACK, "entity.ravager.attack");
         registry.unregister(SoundEvents.ENTITY_RAVAGER_CELEBRATE);
-        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_ATTACK, SoundEvents.ENTITY_RAVAGER_CELEBRATE, "entity.ravager.celebrate");
+        registry.insertAfter(SoundEvents.ENTITY_RAVAGER_ATTACK, SoundEvents.ENTITY_RAVAGER_CELEBRATE, "entity.ravager.celebrate");
         registry.unregister(SoundEvents.ENTITY_RAVAGER_DEATH);
-        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_CELEBRATE, SoundEvents.ENTITY_RAVAGER_DEATH, "entity.ravager.death");
+        registry.insertAfter(SoundEvents.ENTITY_RAVAGER_CELEBRATE, SoundEvents.ENTITY_RAVAGER_DEATH, "entity.ravager.death");
         registry.unregister(SoundEvents.ENTITY_RAVAGER_HURT);
-        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_DEATH, SoundEvents.ENTITY_RAVAGER_HURT, "entity.ravager.hurt");
+        registry.insertAfter(SoundEvents.ENTITY_RAVAGER_DEATH, SoundEvents.ENTITY_RAVAGER_HURT, "entity.ravager.hurt");
         registry.unregister(SoundEvents.ENTITY_RAVAGER_STEP);
-        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_HURT, SoundEvents.ENTITY_RAVAGER_STEP, "entity.ravager.step");
+        registry.insertAfter(SoundEvents.ENTITY_RAVAGER_HURT, SoundEvents.ENTITY_RAVAGER_STEP, "entity.ravager.step");
         registry.unregister(SoundEvents.ENTITY_RAVAGER_STUNNED);
-        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_STEP, SoundEvents.ENTITY_RAVAGER_STUNNED, "entity.ravager.stunned");
+        registry.insertAfter(SoundEvents.ENTITY_RAVAGER_STEP, SoundEvents.ENTITY_RAVAGER_STUNNED, "entity.ravager.stunned");
         registry.unregister(SoundEvents.ENTITY_RAVAGER_ROAR);
-        insertAfter(registry, SoundEvents.ENTITY_RAVAGER_STUNNED, SoundEvents.ENTITY_RAVAGER_ROAR, "entity.ravager.roar");
+        registry.insertAfter(SoundEvents.ENTITY_RAVAGER_STUNNED, SoundEvents.ENTITY_RAVAGER_ROAR, "entity.ravager.roar");
 
         registry.unregister(SoundEvents.ENTITY_MAGMA_CUBE_DEATH_SMALL);
-        insertAfter(registry, SoundEvents.BLOCK_SLIME_BLOCK_STEP, SoundEvents.ENTITY_MAGMA_CUBE_DEATH_SMALL, "entity.magma_cube.death_small");
+        registry.insertAfter(SoundEvents.BLOCK_SLIME_BLOCK_STEP, SoundEvents.ENTITY_MAGMA_CUBE_DEATH_SMALL, "entity.magma_cube.death_small");
         registry.unregister(SoundEvents.ENTITY_MAGMA_CUBE_HURT_SMALL);
-        insertAfter(registry, SoundEvents.ENTITY_MAGMA_CUBE_DEATH_SMALL, SoundEvents.ENTITY_MAGMA_CUBE_HURT_SMALL, "entity.magma_cube.hurt_small");
+        registry.insertAfter(SoundEvents.ENTITY_MAGMA_CUBE_DEATH_SMALL, SoundEvents.ENTITY_MAGMA_CUBE_HURT_SMALL, "entity.magma_cube.hurt_small");
         registry.unregister(SoundEvents.ENTITY_MAGMA_CUBE_SQUISH_SMALL);
-        insertAfter(registry, SoundEvents.ENTITY_MAGMA_CUBE_HURT_SMALL, SoundEvents.ENTITY_MAGMA_CUBE_SQUISH_SMALL, "entity.magma_cube.squish_small");
+        registry.insertAfter(SoundEvents.ENTITY_MAGMA_CUBE_HURT_SMALL, SoundEvents.ENTITY_MAGMA_CUBE_SQUISH_SMALL, "entity.magma_cube.squish_small");
 
         registry.unregister(SoundEvents.MUSIC_DISC_11);
-        insertAfter(registry, SoundEvents.EVENT_RAID_HORN, SoundEvents.MUSIC_DISC_11, "music_disc.11");
+        registry.insertAfter(SoundEvents.EVENT_RAID_HORN, SoundEvents.MUSIC_DISC_11, "music_disc.11");
         registry.unregister(SoundEvents.MUSIC_DISC_13);
-        insertAfter(registry, SoundEvents.MUSIC_DISC_11, SoundEvents.MUSIC_DISC_13, "music_disc.13");
+        registry.insertAfter(SoundEvents.MUSIC_DISC_11, SoundEvents.MUSIC_DISC_13, "music_disc.13");
         registry.unregister(SoundEvents.MUSIC_DISC_BLOCKS);
-        insertAfter(registry, SoundEvents.MUSIC_DISC_13, SoundEvents.MUSIC_DISC_BLOCKS, "music_disc.blocks");
+        registry.insertAfter(SoundEvents.MUSIC_DISC_13, SoundEvents.MUSIC_DISC_BLOCKS, "music_disc.blocks");
         registry.unregister(SoundEvents.MUSIC_DISC_CAT);
-        insertAfter(registry, SoundEvents.MUSIC_DISC_BLOCKS, SoundEvents.MUSIC_DISC_CAT, "music_disc.cat");
+        registry.insertAfter(SoundEvents.MUSIC_DISC_BLOCKS, SoundEvents.MUSIC_DISC_CAT, "music_disc.cat");
         registry.unregister(SoundEvents.MUSIC_DISC_CHIRP);
-        insertAfter(registry, SoundEvents.MUSIC_DISC_CAT, SoundEvents.MUSIC_DISC_CHIRP, "music_disc.chirp");
+        registry.insertAfter(SoundEvents.MUSIC_DISC_CAT, SoundEvents.MUSIC_DISC_CHIRP, "music_disc.chirp");
         registry.unregister(SoundEvents.MUSIC_DISC_FAR);
-        insertAfter(registry, SoundEvents.MUSIC_DISC_CHIRP, SoundEvents.MUSIC_DISC_FAR, "music_disc.far");
+        registry.insertAfter(SoundEvents.MUSIC_DISC_CHIRP, SoundEvents.MUSIC_DISC_FAR, "music_disc.far");
         registry.unregister(SoundEvents.MUSIC_DISC_MALL);
-        insertAfter(registry, SoundEvents.MUSIC_DISC_FAR, SoundEvents.MUSIC_DISC_MALL, "music_disc.mall");
+        registry.insertAfter(SoundEvents.MUSIC_DISC_FAR, SoundEvents.MUSIC_DISC_MALL, "music_disc.mall");
         registry.unregister(SoundEvents.MUSIC_DISC_MELLOHI);
-        insertAfter(registry, SoundEvents.MUSIC_DISC_MALL, SoundEvents.MUSIC_DISC_MELLOHI, "music_disc.mellohi");
+        registry.insertAfter(SoundEvents.MUSIC_DISC_MALL, SoundEvents.MUSIC_DISC_MELLOHI, "music_disc.mellohi");
         registry.unregister(SoundEvents.MUSIC_DISC_STAL);
-        insertAfter(registry, SoundEvents.MUSIC_DISC_MELLOHI, SoundEvents.MUSIC_DISC_STAL, "music_disc.stal");
+        registry.insertAfter(SoundEvents.MUSIC_DISC_MELLOHI, SoundEvents.MUSIC_DISC_STAL, "music_disc.stal");
         registry.unregister(SoundEvents.MUSIC_DISC_STRAD);
-        insertAfter(registry, SoundEvents.MUSIC_DISC_STAL, SoundEvents.MUSIC_DISC_STRAD, "music_disc.strad");
+        registry.insertAfter(SoundEvents.MUSIC_DISC_STAL, SoundEvents.MUSIC_DISC_STRAD, "music_disc.strad");
         registry.unregister(SoundEvents.MUSIC_DISC_WAIT);
-        insertAfter(registry, SoundEvents.MUSIC_DISC_STRAD, SoundEvents.MUSIC_DISC_WAIT, "music_disc.wait");
+        registry.insertAfter(SoundEvents.MUSIC_DISC_STRAD, SoundEvents.MUSIC_DISC_WAIT, "music_disc.wait");
         registry.unregister(SoundEvents.MUSIC_DISC_WARD);
-        insertAfter(registry, SoundEvents.MUSIC_DISC_WAIT, SoundEvents.MUSIC_DISC_WARD, "music_disc.ward");
+        registry.insertAfter(SoundEvents.MUSIC_DISC_WAIT, SoundEvents.MUSIC_DISC_WARD, "music_disc.ward");
 
         registry.unregister(SoundEvents.BLOCK_ANCIENT_DEBRIS_BREAK);
         registry.unregister(SoundEvents.BLOCK_ANCIENT_DEBRIS_STEP);
@@ -885,25 +884,25 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_PIGLIN);
         registry.unregister(SoundEvents.ENTITY_PARROT_IMITATE_ZOGLIN);
 
-        insertAfter(registry, SoundEvents.MUSIC_MENU, SoundEvents.MUSIC_NETHER_NETHER_WASTES, "music.nether");
+        registry.insertAfter(SoundEvents.MUSIC_MENU, SoundEvents.MUSIC_NETHER_NETHER_WASTES, "music.nether");
 
         registry.unregister(SoundEvents.MUSIC_DISC_PIGSTEP);
 
-        rename(registry, SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_AMBIENT, "entity.zombie_pigman.ambient");
-        rename(registry, SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_ANGRY, "entity.zombie_pigman.angry");
-        rename(registry, SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_DEATH, "entity.zombie_pigman.death");
-        rename(registry, SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_HURT, "entity.zombie_pigman.hurt");
+        registry.rename(SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_AMBIENT, "entity.zombie_pigman.ambient");
+        registry.rename(SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_ANGRY, "entity.zombie_pigman.angry");
+        registry.rename(SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_DEATH, "entity.zombie_pigman.death");
+        registry.rename(SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_HURT, "entity.zombie_pigman.hurt");
     }
 
-    private void mutateScreenHandlerRegistry(ISimpleRegistry<ScreenHandlerType<?>> registry) {
+    private void mutateScreenHandlerRegistry(RegistryBuilder<ScreenHandlerType<?>> registry) {
         registry.unregister(ScreenHandlerType.SMITHING);
     }
 
-    private void mutateRecipeSerializerRegistry(ISimpleRegistry<RecipeSerializer<?>> registry) {
+    private void mutateRecipeSerializerRegistry(RegistryBuilder<RecipeSerializer<?>> registry) {
         registry.unregister(RecipeSerializer.SMITHING);
     }
 
-    private void mutateCustomStatRegistry(ISimpleRegistry<Identifier> registry) {
+    private void mutateCustomStatRegistry(RegistryBuilder<Identifier> registry) {
         registry.unregister(Stats.TARGET_HIT);
         registry.unregister(Stats.INTERACT_WITH_SMITHING_TABLE);
         registry.unregister(Stats.STRIDER_ONE_CM);
@@ -980,8 +979,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         tags.add(BlockTags.INFINIBURN_END, Blocks.BEDROCK);
         super.addExtraBlockTags(tags);
 
-        tags.get(BlockTags.HOE_MINEABLE.getId()).clear();
-        Set<Block> pickaxeMineableTag = tags.get(BlockTags.PICKAXE_MINEABLE.getId());
+        tags.get(BlockTags.HOE_MINEABLE).clear();
+        Set<Block> pickaxeMineableTag = tags.get(BlockTags.PICKAXE_MINEABLE);
         Arrays.asList(Blocks.PISTON, Blocks.STICKY_PISTON, Blocks.PISTON_HEAD).forEach(pickaxeMineableTag::remove);
     }
 

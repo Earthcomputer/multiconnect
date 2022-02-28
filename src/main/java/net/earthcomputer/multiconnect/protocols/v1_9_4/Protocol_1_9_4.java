@@ -5,8 +5,8 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.PacketInfo;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryBuilder;
 import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Protocol_1_12_2;
@@ -82,12 +82,12 @@ public class Protocol_1_9_4 extends Protocol_1_10 {
     @Override
     public void mutateRegistries(RegistryMutator mutator) {
         super.mutateRegistries(mutator);
-        mutator.mutate(Protocols.V1_9_4, Registry.BLOCK, this::mutateBlockRegistry);
-        mutator.mutate(Protocols.V1_9_4, Registry.ENTITY_TYPE, this::mutateEntityTypeRegistry);
-        mutator.mutate(Protocols.V1_9_4, Registry.SOUND_EVENT, this::mutateSoundEventRegistry);
+        mutator.mutate(Protocols.V1_9_4, Registry.BLOCK_KEY, this::mutateBlockRegistry);
+        mutator.mutate(Protocols.V1_9_4, Registry.ENTITY_TYPE_KEY, this::mutateEntityTypeRegistry);
+        mutator.mutate(Protocols.V1_9_4, Registry.SOUND_EVENT_KEY, this::mutateSoundEventRegistry);
     }
 
-    private void mutateBlockRegistry(ISimpleRegistry<Block> registry) {
+    private void mutateBlockRegistry(RegistryBuilder<Block> registry) {
         registry.purge(Blocks.MAGMA_BLOCK);
         registry.purge(Blocks.NETHER_WART_BLOCK);
         registry.purge(Blocks.RED_NETHER_BRICKS);
@@ -95,11 +95,11 @@ public class Protocol_1_9_4 extends Protocol_1_10 {
         registry.purge(Blocks.STRUCTURE_VOID);
     }
 
-    private void mutateEntityTypeRegistry(ISimpleRegistry<EntityType<?>> registry) {
+    private void mutateEntityTypeRegistry(RegistryBuilder<EntityType<?>> registry) {
         registry.purge(EntityType.POLAR_BEAR);
     }
 
-    private void mutateSoundEventRegistry(ISimpleRegistry<SoundEvent> registry) {
+    private void mutateSoundEventRegistry(RegistryBuilder<SoundEvent> registry) {
         registry.unregister(SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE);
         registry.unregister(SoundEvents.ENTITY_HUSK_AMBIENT);
         registry.unregister(SoundEvents.ENTITY_HUSK_DEATH);

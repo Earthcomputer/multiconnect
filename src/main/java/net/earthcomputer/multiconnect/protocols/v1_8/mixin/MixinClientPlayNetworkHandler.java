@@ -48,7 +48,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow public abstract void onChunkData(ChunkDataS2CPacket packet);
 
-    @Shadow private DynamicRegistryManager registryManager;
+    @Shadow private DynamicRegistryManager.Immutable registryManager;
 
     @Inject(method = {"onGameJoin", "onPlayerRespawn"}, at = @At("TAIL"))
     private void onOnGameJoinOrRespawn(CallbackInfo ci) {

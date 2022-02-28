@@ -1,19 +1,17 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryBuilder;
 import net.minecraft.entity.EntityType;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.RegistryKey;
 
 public class Entities_1_12_2 {
 
-    private static void register(ISimpleRegistry<EntityType<?>> registry, EntityType<?> entity, int id, String name, String oldName) {
-        var key = RegistryKey.of(registry.getRegistryKey(), new Identifier(name));
-        registry.register(entity, id, key, false);
+    private static void register(RegistryBuilder<EntityType<?>> registry, EntityType<?> entity, int id, String name, String oldName) {
+        registry.registerInPlace(id, entity, name);
     }
 
-    public static void registerEntities(ISimpleRegistry<EntityType<?>> registry) {
-        registry.clear(false);
+    public static void registerEntities(RegistryBuilder<EntityType<?>> registry) {
+        registry.disableSideEffects();
+        registry.clear();
 
         register(registry, EntityType.ITEM, 1, "item", "Item");
         register(registry, EntityType.EXPERIENCE_ORB, 2, "xp_orb", "XPOrb");
@@ -102,6 +100,8 @@ public class Entities_1_12_2 {
         register(registry, EntityType.FISHING_BOBBER, 201, "fishing_bobber", "FishingBobber");
         register(registry, EntityType.LIGHTNING_BOLT, 202, "lightning_bolt", "LightningBolt");
         register(registry, EntityType.PLAYER, 203, "player", "Player");
+
+        registry.enableSideEffects();
     }
 
 }

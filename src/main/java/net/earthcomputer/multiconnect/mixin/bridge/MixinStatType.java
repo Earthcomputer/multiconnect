@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 
 import net.earthcomputer.multiconnect.protocols.generic.IRegistryUpdateListener;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
+import net.earthcomputer.multiconnect.protocols.generic.RegistryMutator;
 import net.minecraft.stat.Stat;
 import net.minecraft.stat.StatType;
 import net.minecraft.util.registry.Registry;
@@ -27,14 +28,10 @@ public class MixinStatType<T> {
     private void onConstruct(Registry<T> registry, CallbackInfo ci) {
         if (registry instanceof ISimpleRegistry) {
             ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) registry;
-            // variable capture workaround for https://github.com/SpongePowered/Mixin/issues/495
-            final Map<T, Stat<T>> stats = this.stats;
-            final Map<T, Stat<T>> removedStats = this.removedStats;
 
-            //noinspection MixinInnerClass
-            iregistry.addRegisterListener((new IRegistryUpdateListener<>() {
+            iregistry.multiconnect_addRegisterListener((new IRegistryUpdateListener<>() {
                 @Override
-                public void onUpdate(T thing, boolean inPlace) {
+                public void onUpdate(T thing, boolean inPlace, RegistryMutator.RegistryBuilderSupplier builderSupplier) {
                     Stat<T> stat = removedStats.remove(thing);
                     if (stat != null) {
                         stats.put(thing, stat);
@@ -46,10 +43,9 @@ public class MixinStatType<T> {
                     return true;
                 }
             }));
-            //noinspection MixinInnerClass
-            iregistry.addUnregisterListener((new IRegistryUpdateListener<>() {
+            iregistry.multiconnect_addUnregisterListener((new IRegistryUpdateListener<>() {
                 @Override
-                public void onUpdate(T thing, boolean inPlace) {
+                public void onUpdate(T thing, boolean inPlace, RegistryMutator.RegistryBuilderSupplier builderSupplier) {
                     Stat<T> stat = stats.remove(thing);
                     if (stat != null) {
                         removedStats.put(thing, stat);

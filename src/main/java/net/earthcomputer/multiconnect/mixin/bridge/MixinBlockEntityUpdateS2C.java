@@ -31,7 +31,7 @@ public class MixinBlockEntityUpdateS2C {
     @Inject(method = "<init>(Lnet/minecraft/network/PacketByteBuf;)V", at = @At("RETURN"))
     private void onRead(CallbackInfo ci) {
         if (!MultiConnectAPI.instance().doesServerKnow(Registry.BLOCK_ENTITY_TYPE, blockEntityType)
-                || !DefaultRegistries.DEFAULT_REGISTRIES.get(Registry.BLOCK_ENTITY_TYPE).defaultEntryToRawId.containsKey(blockEntityType)) {
+                || DefaultRegistries.getDefaultRegistry(Registry.BLOCK_ENTITY_TYPE_KEY).getKey(blockEntityType).isEmpty()) {
             return;
         }
 
