@@ -34,7 +34,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     @Shadow @Final private Map<RegistryKey<T>, RegistryEntry.Reference<T>> keyToEntry;
     @Shadow @Final private Map<T, RegistryEntry.Reference<T>> valueToEntry;
     @Shadow @Final private Map<T, Lifecycle> entryToLifecycle;
-    @Shadow private List<RegistryEntry.Reference<T>> field_36634;
+    @Shadow private List<RegistryEntry.Reference<T>> cachedEntries;
     @Shadow private int nextId;
 
     @Shadow private boolean frozen;
@@ -83,7 +83,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
         keyToEntry.clear();
         valueToEntry.clear();
         entryToLifecycle.clear();
-        field_36634 = null;
+        cachedEntries = null;
         nextId = 0;
     }
 
