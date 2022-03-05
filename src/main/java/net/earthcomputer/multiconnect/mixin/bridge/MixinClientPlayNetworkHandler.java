@@ -15,6 +15,7 @@ import net.earthcomputer.multiconnect.protocols.generic.blockconnections.ChunkCo
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectableChunk;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.IBiomeStorage_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
+import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.DimensionTypeAccessor;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -58,6 +59,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.dimension.DimensionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;
@@ -258,6 +260,15 @@ public class MixinClientPlayNetworkHandler implements IClientPlayNetworkHandler 
                 addMissingValues(getBuiltinRegistry(registry.key()), registry.value());
             }
         });
+
+        // fix world height
+        DimensionTypeAccessor overworld = (DimensionTypeAccessor) mutableRegistries.getMutable(Registry.DIMENSION_TYPE_KEY).get(DimensionType.OVERWORLD_REGISTRY_KEY);
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_17_1) {
+            assert overworld != null;
+            overworld.setMinimumY(0);
+            overworld.setHeight(256);
+            overworld.setLogicalHeight(256);
+        }
 
         this.registryManager = mutableRegistries.toImmutable();
     }
