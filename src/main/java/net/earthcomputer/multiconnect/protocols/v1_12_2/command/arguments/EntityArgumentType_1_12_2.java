@@ -79,7 +79,6 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         if (!(context.getSource() instanceof CommandSource))
@@ -93,8 +92,7 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
             playerCompletions = Suggestions.empty();
         } else {
             playerCompletions =
-                    ((CommandSource) context.getSource()).getCompletions((CommandContext<CommandSource>) context,
-                            builder.restart());
+                    ((CommandSource) context.getSource()).getCompletions(context);
         }
 
         EntitySelectorParser parser = new EntitySelectorParser(reader, singleTarget, playersOnly);
