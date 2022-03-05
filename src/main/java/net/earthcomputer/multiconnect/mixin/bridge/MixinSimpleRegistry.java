@@ -81,6 +81,7 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
         entryToRawId.clear();
         idToEntry.clear();
         keyToEntry.clear();
+        valueToEntry.clear();
         entryToLifecycle.clear();
         randomEntries = null;
         nextId = 0;

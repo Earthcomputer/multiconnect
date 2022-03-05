@@ -1,6 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_17_1;
 
 import com.google.common.collect.Sets;
+import com.mojang.datafixers.util.Unit;
+import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -26,6 +28,7 @@ import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.BlockEntities_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_18.Protocol_1_18;
 import net.earthcomputer.multiconnect.protocols.v1_9_2.mixin.ChunkDataBlockEntityAccessor;
+import net.earthcomputer.multiconnect.transformer.Codecked;
 import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -53,6 +56,7 @@ import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
@@ -309,9 +313,24 @@ public class Protocol_1_17_1 extends Protocol_1_18 {
             buf.readByte(); // gamemode
             buf.readByte(); // previous gamemode
             buf.readCollection(Sets::newHashSetWithExpectedSize, PacketByteBuf::readIdentifier); // worlds
-            buf.decode(DynamicRegistryManager.Immutable.CODEC); // registry manager
-            buf.decode(DimensionType.REGISTRY_CODEC); // dimension type
-            buf.readIdentifier(); // dimension id
+            buf.disablePassthroughMode();
+            buf.decode(Codec.unit(() -> Unit.INSTANCE)); // registry manager
+            DynamicRegistryManager.Mutable registryManager = DynamicRegistryManager.createAndLoad();
+            //noinspection unchecked
+            buf.pendingRead((Class<Codecked<DynamicRegistryManager>>) (Class<?>) Codecked.class, new Codecked<>(DynamicRegistryManager.CODEC, registryManager));
+            buf.decode(Codec.unit(() -> Unit.INSTANCE)); // dimension type
+            Identifier dimensionId = buf.readIdentifier();
+            //noinspection unchecked
+            buf.pendingRead(
+                    (Class<Codecked<RegistryEntry<DimensionType>>>) (Class<?>) Codecked.class,
+                    new Codecked<>(
+                            DimensionType.REGISTRY_CODEC,
+                            registryManager.get(Registry.DIMENSION_TYPE_KEY)
+                                    .getOrCreateEntry(RegistryKey.of(Registry.DIMENSION_TYPE_KEY, dimensionId))
+                    )
+            );
+            buf.pendingRead(Identifier.class, dimensionId);
+            buf.enablePassthroughMode();
             buf.readLong(); // seed
             buf.readVarInt(); // max players
             int chunkRadius = buf.readVarInt();

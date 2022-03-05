@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.datafixers.util.Unit;
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -94,7 +95,7 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
             }
             //noinspection unchecked
             buf.pendingReadCollection((Class<Collection<RegistryKey<World>>>) (Class<?>) Collection.class, (Class<RegistryKey<World>>) (Class<?>) RegistryKey.class, dimensionIds);
-            buf.decode(Codec.unit(null)); // dynamic registry manager
+            buf.decode(Codec.unit(() -> Unit.INSTANCE)); // dynamic registry manager
             //noinspection unchecked
             buf.pendingRead((Class<Codecked<DynamicRegistryManager>>) (Class<?>) Codecked.class, new Codecked<>(DynamicRegistryManager.CODEC, DynamicRegistryManager.createAndLoad()));
             buf.applyPendingReads();

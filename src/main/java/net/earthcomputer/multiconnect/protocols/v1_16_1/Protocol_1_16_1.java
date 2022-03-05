@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_16_1;
 
+import com.mojang.datafixers.util.Unit;
 import com.mojang.serialization.Codec;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
@@ -58,7 +59,7 @@ public class Protocol_1_16_1 extends Protocol_1_16_2 {
                 buf.readIdentifier(); // dimension id
             }
             buf.disablePassthroughMode();
-            buf.decode(Codec.unit(null)); // dynamic registry manager
+            buf.decode(Codec.unit(() -> Unit.INSTANCE)); // dynamic registry manager
             DynamicRegistryManager.Mutable registryManager = DynamicRegistryManager.createAndLoad();
             //noinspection unchecked
             buf.pendingRead((Class<Codecked<DynamicRegistryManager>>) (Class<?>) Codecked.class, new Codecked<>(DynamicRegistryManager.CODEC, registryManager));

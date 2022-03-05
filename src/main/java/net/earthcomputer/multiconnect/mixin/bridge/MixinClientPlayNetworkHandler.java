@@ -227,11 +227,19 @@ public class MixinClientPlayNetworkHandler implements IClientPlayNetworkHandler 
 
     @SuppressWarnings("unchecked")
     @Unique
-    private static <T> void copyValues(Registry<T> from, SimpleRegistry<?> to) {
-        RegistryBuilder<T> builder = new RegistryBuilder<>((SimpleRegistry<T>) to);
+    private static <T> void copyValues(Registry<T> from, SimpleRegistry<?> _to) {
+        SimpleRegistry<T> to = (SimpleRegistry<T>) _to;
+        RegistryBuilder<T> builder = new RegistryBuilder<>(to);
         builder.clear();
         for (T value : from) {
             builder.registerInPlace(from.getRawId(value), value, from.getId(value));
+        }
+        if (to.getKey() == (RegistryKey<?>) Registry.DIMENSION_TYPE_KEY) {
+            for (T value : to) {
+                if (!builder.contains(value)) {
+                    builder.register(builder.getNextId(), value, to.getId(value));
+                }
+            }
         }
         builder.apply();
     }
@@ -241,12 +249,14 @@ public class MixinClientPlayNetworkHandler implements IClientPlayNetworkHandler 
         var registries = packet.registryManager();
         assert registries != null;
         var mutableRegistries = DynamicRegistryManager.createAndLoad();
-        registries.streamAllRegistries().forEach(registry -> {
+        registries.streamManagedRegistries().forEach(registry -> {
             copyValues(registry.value(), (SimpleRegistry<?>) mutableRegistries.getMutable(registry.key()));
         });
 
-        mutableRegistries.streamSyncedRegistries().forEach(registry -> {
-            addMissingValues(getBuiltinRegistry(registry.key()), registry.value());
+        mutableRegistries.streamManagedRegistries().forEach(registry -> {
+            if (registry.key() != Registry.DIMENSION_TYPE_KEY) {
+                addMissingValues(getBuiltinRegistry(registry.key()), registry.value());
+            }
         });
 
         this.registryManager = mutableRegistries.toImmutable();
@@ -255,7 +265,8 @@ public class MixinClientPlayNetworkHandler implements IClientPlayNetworkHandler 
     @SuppressWarnings("unchecked")
     @Unique
     private static <T, R extends Registry<T>> Registry<?> getBuiltinRegistry(RegistryKey<? extends Registry<?>> registryKey) {
-        return ((Registry<R>) BuiltinRegistries.REGISTRIES).get((RegistryKey<R>) registryKey);
+        return ((Registry<R>) BuiltinRegistries.REGISTRIES).getOrEmpty((RegistryKey<R>) registryKey)
+                .orElseGet(() -> ((Registry<R>) Registry.REGISTRIES).get((RegistryKey<R>) registryKey));
     }
 
     @SuppressWarnings("unchecked")
