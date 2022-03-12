@@ -152,6 +152,7 @@ repositories {
 	flatDir {
 		dirs file(remapApiJar.archivePath).parentFile
 	}
+    mavenCentral()
 }
 
 dependencies {
@@ -184,7 +185,7 @@ dependencies {
 	include name: file(remapApiJar.archivePath).name.with { it.endsWith('.jar') ? it.substring(0, it.length() - 4) : it }
 
 	sourceSets.test.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
 	testRuntimeOnly 'com.github.Earthcomputer.junit5:junit-jupiter-engine:8785ac4d'
 	testImplementation 'org.mockito:mockito-all:1.10.19'
 
