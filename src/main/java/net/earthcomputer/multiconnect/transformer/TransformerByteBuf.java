@@ -1072,7 +1072,6 @@ public final class TransformerByteBuf extends PacketByteBuf implements IUserData
         // TODO: Make the types here Object rather than class, so we can distinguish the types of Codec
         return read((Class<Codecked<T>>) (Class<?>) Codecked.class, () -> new Codecked<>(codec, super.decode(codec))).getValue();
     }
-
     // TODO: when non-class types get merged from the 1.8 branch, collections here will need a bit of a refactor.
     // Element type calculation has already been done (albeit not used). The rawtype collection class types will be replaced
     // with a wrapper type in each of these methods, so future transformers can target "collections of V" rather than just

@@ -522,9 +522,13 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         registry.unregister(Blocks.CHISELED_NETHER_BRICKS);
         registry.unregister(Blocks.CRACKED_NETHER_BRICKS);
         registry.unregister(Blocks.QUARTZ_BRICKS);
+
     }
 
     private void mutateItemRegistry(RegistryBuilder<Item> registry) {
+        //registry.unregister(Items.POWDER_SNOW_BUCKET);
+        //registry.unregister(Items.GLOW_BERRIES);
+        //registry.unregister(Items.GLOW_INK_SAC);
         registry.unregister(Items.SUGAR_CANE);
         registry.unregister(Items.KELP);
         registry.unregister(Items.BAMBOO);

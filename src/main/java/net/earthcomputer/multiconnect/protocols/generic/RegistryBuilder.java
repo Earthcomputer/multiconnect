@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.generic;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
+import net.minecraft.item.Items;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.registry.Registry;
@@ -328,6 +329,16 @@ public final class RegistryBuilder<T> {
 
     public void unregister(T value) {
         IdNode<T> node = valueToNode.get(value);
+        // debug purpose
+//        if (value == Items.POWDER_SNOW_BUCKET) {
+//            throw new IllegalArgumentException("Powdered Snow Bucket exists: 1" + value);
+//
+//        }
+        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
+        StackTraceElement e = stacktrace[3] ;//maybe this number needs to be corrected
+        String methodName = e.getMethodName();
+
+        System.out.println("A value has been unregistered! Value:" + value + ", StackTrace: " + methodName);
         if (node == null) {
             throw new IllegalArgumentException("Value not found: " + value);
         }
