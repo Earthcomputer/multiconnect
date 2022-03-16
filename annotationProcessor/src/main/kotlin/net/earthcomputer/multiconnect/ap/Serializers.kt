@@ -13,7 +13,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
@@ -163,14 +162,12 @@ val JSON = Json {
     explicitNulls = false
 
     serializersModule = SerializersModule {
-        polymorphic(TypeMirror::class) {
-            defaultSerializer { instance: TypeMirror ->
-                when {
-                    instance.kind.isPrimitive || instance.kind == TypeKind.VOID -> PrimitiveTypeMirrorSerializer
-                    instance.kind == TypeKind.ARRAY -> ArrayTypeMirrorSerializer
-                    instance.kind == TypeKind.DECLARED -> DeclaredTypeMirrorSerializer
-                    else -> null
-                }
+        polymorphicDefaultSerializer(TypeMirror::class) { instance ->
+            when {
+                instance.kind.isPrimitive || instance.kind == TypeKind.VOID -> PrimitiveTypeMirrorSerializer
+                instance.kind == TypeKind.ARRAY -> ArrayTypeMirrorSerializer
+                instance.kind == TypeKind.DECLARED -> DeclaredTypeMirrorSerializer
+                else -> null
             }
         }
 
