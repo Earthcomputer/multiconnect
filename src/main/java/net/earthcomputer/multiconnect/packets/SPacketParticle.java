@@ -1,14 +1,13 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Message;
-import net.earthcomputer.multiconnect.ap.Polymorphic;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.PolymorphicBy;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 
-@Message
+@MessageVariant
 public class SPacketParticle {
     @Registry(Registries.PARTICLE_TYPE)
     @Type(Types.INT)

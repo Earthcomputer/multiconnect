@@ -4,7 +4,7 @@ import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Handler;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
@@ -21,7 +21,7 @@ import net.minecraft.item.map.MapState;
 import java.util.List;
 import java.util.Optional;
 
-@Message
+@MessageVariant
 public class SPacketMapUpdate_1_16_5 {
     public int mapId;
     public byte scale;

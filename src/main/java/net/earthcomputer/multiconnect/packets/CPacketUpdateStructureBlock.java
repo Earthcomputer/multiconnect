@@ -1,9 +1,9 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 
-@Message
+@MessageVariant
 public class CPacketUpdateStructureBlock {
     public CommonTypes.BlockPos pos;
     public Action action;

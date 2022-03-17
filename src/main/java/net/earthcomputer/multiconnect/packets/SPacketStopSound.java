@@ -1,13 +1,13 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Argument;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
 import net.minecraft.util.Identifier;
 
-@Message
+@MessageVariant
 public class SPacketStopSound {
     public byte flags;
     @OnlyIf("hasCategory")

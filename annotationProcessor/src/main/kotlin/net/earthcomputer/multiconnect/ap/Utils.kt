@@ -33,6 +33,7 @@ const val MINECRAFT_NETWORK_HANDLER = "net.minecraft.client.network.ClientPlayNe
 const val MULTICONNECT_USER_DATA_HOLDER = "net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder"
 
 val messageName: String = Message::class.java.canonicalName
+val messageVariantName: String = MessageVariant::class.java.canonicalName
 val polymorphicName: String = Polymorphic::class.java.canonicalName
 val networkEnumName: String = NetworkEnum::class.java.canonicalName
 
@@ -57,6 +58,9 @@ val Element.isEnum: Boolean
 
 val Element.isMessage: Boolean
     get() = hasAnnotation(Message::class)
+
+val Element.isMessageVariant: Boolean
+    get() = hasAnnotation(MessageVariant::class)
 
 val Element.isPolymorphicRoot: Boolean
     get() {
@@ -94,7 +98,7 @@ val TypeElement.enumConstants: List<VariableElement>
 
 val TypeElement.handler: ExecutableElement?
     get() {
-        if (!isMessage) return null
+        if (!isMessageVariant) return null
         return (enclosedElements.singleOrNull { it.hasAnnotation(Handler::class) } as? ExecutableElement)?.takeIf { it.kind == ElementKind.METHOD }
 }
 
@@ -103,7 +107,7 @@ fun TypeElement.getPartialHandlers(
     errorConsumer: ErrorConsumer? = null,
     errorElement: Element? = null
 ): List<MulticonnectFunction> {
-    if (!isMessage) return emptyList()
+    if (!isMessageVariant) return emptyList()
     return enclosedElements
         .filter { it.hasAnnotation(PartialHandler::class) && it.kind == ElementKind.METHOD }
         .mapNotNull { it as? ExecutableElement }
@@ -251,6 +255,9 @@ val TypeMirror.isEnum: Boolean
 
 val TypeMirror.isMessage: Boolean
     get() = asTypeElement()?.isMessage == true
+
+val TypeMirror.isMessageVariant: Boolean
+    get() = asTypeElement()?.isMessageVariant == true
 
 val TypeMirror.hasLength: Boolean
     get() {

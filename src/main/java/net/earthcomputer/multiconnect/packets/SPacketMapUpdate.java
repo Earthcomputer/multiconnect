@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Argument;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Type;
@@ -10,7 +10,7 @@ import net.earthcomputer.multiconnect.ap.Types;
 import java.util.List;
 import java.util.Optional;
 
-@Message
+@MessageVariant
 public class SPacketMapUpdate {
     public int mapId;
     public byte scale;
@@ -31,7 +31,7 @@ public class SPacketMapUpdate {
         return columns > 0;
     }
 
-    @Message
+    @MessageVariant
     public static class Icon {
         public Type type;
         public byte x;

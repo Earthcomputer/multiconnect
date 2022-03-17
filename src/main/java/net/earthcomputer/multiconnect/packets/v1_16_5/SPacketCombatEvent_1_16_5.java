@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.packets.v1_16_5;
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Handler;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Type;
@@ -13,7 +13,7 @@ import net.earthcomputer.multiconnect.packets.SPacketDeathMessage;
 import net.earthcomputer.multiconnect.packets.SPacketEndCombat;
 import net.earthcomputer.multiconnect.packets.SPacketEnterCombat;
 
-@Message
+@MessageVariant
 @Polymorphic
 public abstract class SPacketCombatEvent_1_16_5 {
     public Mode mode;
@@ -24,7 +24,7 @@ public abstract class SPacketCombatEvent_1_16_5 {
     }
 
     @Polymorphic(stringValue = "ENTER_COMBAT")
-    @Message
+    @MessageVariant
     public static class EnterCombat extends SPacketCombatEvent_1_16_5 {
         @Handler
         public static SPacketEnterCombat handle(@DefaultConstruct SPacketEnterCombat packet) {
@@ -33,7 +33,7 @@ public abstract class SPacketCombatEvent_1_16_5 {
     }
 
     @Polymorphic(stringValue = "END_COMBAT")
-    @Message
+    @MessageVariant
     public static class EndCombat extends SPacketCombatEvent_1_16_5 {
         public int duration;
         @Type(Types.INT)
@@ -52,7 +52,7 @@ public abstract class SPacketCombatEvent_1_16_5 {
     }
 
     @Polymorphic(stringValue = "ENTITY_DIED")
-    @Message
+    @MessageVariant
     public static class EntityDied extends SPacketCombatEvent_1_16_5 {
         public int playerId;
         @Type(Types.INT)

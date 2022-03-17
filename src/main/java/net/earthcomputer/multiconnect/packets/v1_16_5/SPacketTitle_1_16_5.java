@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.packets.v1_16_5;
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Handler;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Type;
@@ -15,13 +15,13 @@ import net.earthcomputer.multiconnect.packets.SPacketSubtitle;
 import net.earthcomputer.multiconnect.packets.SPacketTitle;
 import net.earthcomputer.multiconnect.packets.SPacketTitleFade;
 
-@Message
+@MessageVariant
 @Polymorphic
 public abstract class SPacketTitle_1_16_5 {
     public Mode mode;
 
     @Polymorphic(stringValue = "TITLE")
-    @Message
+    @MessageVariant
     public static class Title extends SPacketTitle_1_16_5 {
         public CommonTypes.Text text;
 
@@ -36,7 +36,7 @@ public abstract class SPacketTitle_1_16_5 {
     }
 
     @Polymorphic(stringValue = "SUBTITLE")
-    @Message
+    @MessageVariant
     public static class Subtitle extends SPacketTitle_1_16_5 {
         public CommonTypes.Text text;
 
@@ -51,7 +51,7 @@ public abstract class SPacketTitle_1_16_5 {
     }
 
     @Polymorphic(stringValue = "ACTIONBAR")
-    @Message
+    @MessageVariant
     public static class ActionBar extends SPacketTitle_1_16_5 {
         public CommonTypes.Text text;
 
@@ -66,7 +66,7 @@ public abstract class SPacketTitle_1_16_5 {
     }
 
     @Polymorphic(stringValue = "TIMES")
-    @Message
+    @MessageVariant
     public static class Times extends SPacketTitle_1_16_5 {
         @Type(Types.INT)
         public int fadeInTime;
@@ -90,7 +90,7 @@ public abstract class SPacketTitle_1_16_5 {
     }
 
     @Polymorphic(stringValue = {"CLEAR", "RESET"})
-    @Message
+    @MessageVariant
     public static class Clear extends SPacketTitle_1_16_5 {
         @Handler
         public static SPacketClearTitle handle(

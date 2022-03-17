@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.packets.v1_16_5;
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Handler;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.packets.SPacketWorldBorderCenterChanged;
@@ -13,13 +13,13 @@ import net.earthcomputer.multiconnect.packets.SPacketWorldBorderSizeChanged;
 import net.earthcomputer.multiconnect.packets.SPacketWorldBorderWarningBlocksChanged;
 import net.earthcomputer.multiconnect.packets.SPacketWorldBorderWarningTimeChanged;
 
-@Message
+@MessageVariant
 @Polymorphic
 public abstract class SPacketWorldBorder_1_16_5 {
     public Mode mode;
 
     @Polymorphic(stringValue = "SET_SIZE")
-    @Message
+    @MessageVariant
     public static class SetSize extends SPacketWorldBorder_1_16_5 {
         public double newSize;
 
@@ -34,7 +34,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
     }
 
     @Polymorphic(stringValue = "LERP_SIZE")
-    @Message
+    @MessageVariant
     public static class LerpSize extends SPacketWorldBorder_1_16_5 {
         public double oldSize;
         public double newSize;
@@ -55,7 +55,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
     }
 
     @Polymorphic(stringValue = "SET_CENTER")
-    @Message
+    @MessageVariant
     public static class SetCenter extends SPacketWorldBorder_1_16_5 {
         public double x;
         public double z;
@@ -73,7 +73,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
     }
 
     @Polymorphic(stringValue = "SET_WARNING_BLOCKS")
-    @Message
+    @MessageVariant
     public static class SetWarningBlocks extends SPacketWorldBorder_1_16_5 {
         public int warningBlocks;
 
@@ -88,7 +88,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
     }
 
     @Polymorphic(stringValue = "SET_WARNING_TIME")
-    @Message
+    @MessageVariant
     public static class SetWarningTime extends SPacketWorldBorder_1_16_5 {
         public int warningTime;
 
@@ -103,7 +103,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
     }
 
     @Polymorphic(stringValue = "INITIALIZE")
-    @Message
+    @MessageVariant
     public static class Initialize extends SPacketWorldBorder_1_16_5 {
         public double x;
         public double z;

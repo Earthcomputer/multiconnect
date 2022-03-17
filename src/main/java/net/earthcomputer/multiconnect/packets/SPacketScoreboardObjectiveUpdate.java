@@ -1,16 +1,16 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 
-@Message
+@MessageVariant
 public class SPacketScoreboardObjectiveUpdate {
     public String name;
     public Action action;
 
     @Polymorphic
-    @Message
+    @MessageVariant
     public static abstract class Action {
         public Mode mode;
 
@@ -21,14 +21,14 @@ public class SPacketScoreboardObjectiveUpdate {
     }
 
     @Polymorphic(stringValue = {"CREATE", "UPDATE"})
-    @Message
+    @MessageVariant
     public static class AdditiveAction extends Action {
         public CommonTypes.Text value;
         public ObjectiveType type;
     }
 
     @Polymorphic(stringValue = "REMOVE")
-    @Message
+    @MessageVariant
     public static class RemoveAction extends Action {
     }
 

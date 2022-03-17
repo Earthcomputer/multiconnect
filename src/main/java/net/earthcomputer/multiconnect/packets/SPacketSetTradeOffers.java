@@ -1,14 +1,14 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Length;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 
 import java.util.List;
 import java.util.Optional;
 
-@Message
+@MessageVariant
 public class SPacketSetTradeOffers {
     public int syncId;
     @Length(type = Types.UNSIGNED_BYTE)
@@ -18,7 +18,7 @@ public class SPacketSetTradeOffers {
     public boolean isRegularVillager;
     public boolean canRestock;
 
-    @Message
+    @MessageVariant
     public static class Trade {
         public CommonTypes.ItemStack input1;
         public CommonTypes.ItemStack output;

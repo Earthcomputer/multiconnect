@@ -5,7 +5,7 @@ import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Datafix;
 import net.earthcomputer.multiconnect.ap.DatafixTypes;
 import net.earthcomputer.multiconnect.ap.FilledArgument;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.PartialHandler;
 import net.earthcomputer.multiconnect.ap.Type;
@@ -18,8 +18,8 @@ import net.minecraft.nbt.NbtCompound;
 
 import java.util.List;
 
-@Message(variantOf = SPacketChunkData.class, maxVersion = Protocols.V1_16_5)
-public class SPacketChunkData_1_16_5 {
+@MessageVariant(maxVersion = Protocols.V1_16_5)
+public class SPacketChunkData_1_16_5 implements SPacketChunkData {
     @Type(Types.INT)
     public int x;
     @Type(Types.INT)

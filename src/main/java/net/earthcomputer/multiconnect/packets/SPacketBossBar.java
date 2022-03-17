@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Type;
@@ -8,19 +8,19 @@ import net.earthcomputer.multiconnect.ap.Types;
 
 import java.util.UUID;
 
-@Message
+@MessageVariant
 public class SPacketBossBar {
     public UUID uuid;
     public Action action;
 
     @Polymorphic
-    @Message
+    @MessageVariant
     public static abstract class Action {
         public int action;
     }
 
     @Polymorphic(intValue = 0)
-    @Message
+    @MessageVariant
     public static class AddAction extends Action {
         public CommonTypes.Text title;
         public float health;
@@ -31,30 +31,30 @@ public class SPacketBossBar {
     }
 
     @Polymorphic(intValue = 1)
-    @Message
+    @MessageVariant
     public static class RemoveAction extends Action {}
 
     @Polymorphic(intValue = 2)
-    @Message
+    @MessageVariant
     public static class UpdateHealthAction extends Action {
         public float health;
     }
 
     @Polymorphic(intValue = 3)
-    @Message
+    @MessageVariant
     public static class UpdateTitleAction extends Action {
         public CommonTypes.Text title;
     }
 
     @Polymorphic(intValue = 4)
-    @Message
+    @MessageVariant
     public static class UpdateStyle extends Action {
         public Color color;
         public Division division;
     }
 
     @Polymorphic(intValue = 5)
-    @Message
+    @MessageVariant
     public static class UpdateFlags extends Action {
         @Type(Types.UNSIGNED_BYTE)
         public int flags;

@@ -1,11 +1,11 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.minecraft.util.Identifier;
 
-@Message
+@MessageVariant
 @Polymorphic
 public abstract class CPacketAdvancementTab {
     public Action action;
@@ -16,13 +16,13 @@ public abstract class CPacketAdvancementTab {
     }
 
     @Polymorphic(stringValue = "OPENED")
-    @Message
+    @MessageVariant
     public static class Opened extends CPacketAdvancementTab {
         public Identifier tabId;
     }
 
     @Polymorphic(stringValue = "CLOSED")
-    @Message
+    @MessageVariant
     public static class Closed extends CPacketAdvancementTab {
     }
 }

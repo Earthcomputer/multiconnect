@@ -15,26 +15,26 @@ fun checkMessages() {
         val used = mutableSetOf<String>()
         fun processUsed(message: String) {
             if (used.add(message)) {
-                val info = getClassInfo(message) as MessageInfo
+                val info = getClassInfo(message) as MessageVariantInfo
                 if ((info.minVersion != null && protocol.id < info.minVersion) || (info.maxVersion != null && protocol.id > info.maxVersion)) {
                     throw IllegalStateException("Protocol $protocol uses message variant $message, but is not supported by that message variant")
                 }
                 for (field in info.fields) {
                     val type = field.type.realType.deepComponentType()
-                    if (type is McType.DeclaredType && getClassInfoOrNull(type.name) is MessageInfo) {
+                    if (type is McType.DeclaredType && getClassInfoOrNull(type.name) is MessageVariantInfo) {
                         processUsed(type.name)
                     }
                 }
             }
         }
         for (packet in readCsv<PacketType>(FileLocations.dataDir.resolve(protocol.name).resolve("cpackets.csv"))) {
-            if (getClassInfo(packet.clazz) !is MessageInfo) {
+            if (getClassInfo(packet.clazz) !is MessageVariantInfo) {
                 throw IllegalStateException("Packet class ${packet.clazz} is not a message")
             }
             processUsed(packet.clazz)
         }
         for (packet in readCsv<PacketType>(FileLocations.dataDir.resolve(protocol.name).resolve("spackets.csv"))) {
-            if (getClassInfo(packet.clazz) !is MessageInfo) {
+            if (getClassInfo(packet.clazz) !is MessageVariantInfo) {
                 throw IllegalStateException("Packet class ${packet.clazz} is not a message")
             }
             processUsed(packet.clazz)
@@ -43,9 +43,9 @@ fun checkMessages() {
     }
 
     for (group in groups.values) {
-        var lastMaxVersion = (getClassInfo(group[0]) as MessageInfo).maxVersion
+        var lastMaxVersion = (getClassInfo(group[0]) as MessageVariantInfo).maxVersion
         for (message in group) {
-            val info = getClassInfo(message) as MessageInfo
+            val info = getClassInfo(message) as MessageVariantInfo
             if (lastMaxVersion == null || info.minVersion == null || info.minVersion <= lastMaxVersion) {
                 throw IllegalStateException("Message $message has a lower min version than the max version of the previous message in the variant group")
             }
@@ -134,11 +134,11 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
         packetClass: String,
         clientbound: Boolean
     ): Boolean {
-        val messageInfo = getClassInfo(packetClass) as MessageInfo
+        val messageVariantInfo = getClassInfo(packetClass) as MessageVariantInfo
         val function = emitter.addMember(functionName) ?: return true
         function.append("private static ").appendClassName(BYTE_BUF).append(" ").append(functionName).append("(")
             .appendClassName(BYTE_BUF).append(" buf) {").indent().appendNewLine()
-        generatePacketGraph(messageInfo, clientbound).optimize().emit(emitter, Precedence.COMMA)
+        generatePacketGraph(messageVariantInfo, clientbound).optimize().emit(emitter, Precedence.COMMA)
         function.dedent().appendNewLine().append("}")
         return true
     }
@@ -153,17 +153,17 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
         }
     }
 
-    private fun generatePacketGraph(messageInfo: MessageInfo, clientbound: Boolean): McNode {
+    private fun generatePacketGraph(messageVariantInfo: MessageVariantInfo, clientbound: Boolean): McNode {
         // figure out what's going to handle it
-        val group = groups[messageInfo.variantOf ?: messageInfo.className]!!
+        val group = groups[messageVariantInfo.variantOf ?: messageVariantInfo.className]!!
         val packetChain = if (clientbound)
-            group.asSequence().dropWhile { it != messageInfo.className }
+            group.asSequence().dropWhile { it != messageVariantInfo.className }
         else
-            (group.asReversed().asSequence().takeWhile { it != messageInfo.className } + sequenceOf(messageInfo.className))
+            (group.asReversed().asSequence().takeWhile { it != messageVariantInfo.className } + sequenceOf(messageVariantInfo.className))
         var handler: McFunction? = null
         val partialHandlers = mutableMapOf<String, List<McFunction>>()
         for (variant in packetChain) {
-            val info = getClassInfo(variant) as MessageInfo
+            val info = getClassInfo(variant) as MessageVariantInfo
             partialHandlers[info.className] = info.partialHandlers.map { info.findFunction(it) }
             val handlerAllowed = info.handlerProtocol == null || if (clientbound) protocolId >= info.handlerProtocol else protocolId <= info.handlerProtocol
             if (handlerAllowed) {
@@ -183,7 +183,7 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
                 dataDir.resolve("cpackets.csv")
             })
             if (packets.byName(latestPacket.className) == null) {
-                throw CompileException("Packet ${messageInfo.className} translates into ${latestPacket.className} which cannot be received on the target protocol")
+                throw CompileException("Packet ${messageVariantInfo.className} translates into ${latestPacket.className} which cannot be received on the target protocol")
             }
             latestPacket.fields.associateTo(mutableMapOf()) { it.name to DataFlowNode(it.name, false) }
         } else {
@@ -192,7 +192,7 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
 
         val dataFlowLayers = mutableListOf(dataFlowNodes)
         for ((reversedIndex, packet) in packetChain.asReversed().withIndex()) {
-            val packetInfo = getClassInfo(packet) as MessageInfo
+            val packetInfo = getClassInfo(packet) as MessageVariantInfo
             val dataFlowLayer = dataFlowLayers.last()
 
             // check partial handlers
@@ -224,7 +224,7 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
 
             if (reversedIndex == packetChain.lastIndex) break // no previous packet
 
-            val prevPacketInfo = getClassInfo(packetChain[packetChain.lastIndex - reversedIndex - 1]) as MessageInfo
+            val prevPacketInfo = getClassInfo(packetChain[packetChain.lastIndex - reversedIndex - 1]) as MessageVariantInfo
             val prevDataFlowLayer = mutableMapOf<String, DataFlowNode>()
             for ((fieldName, dfNode) in dataFlowLayer) {
                 val field = packetInfo.findField(fieldName).type

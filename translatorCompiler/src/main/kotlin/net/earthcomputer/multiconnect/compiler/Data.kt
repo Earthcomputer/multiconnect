@@ -31,7 +31,7 @@ fun fillIndexes() {
         .map { it.toRelativeString(FileLocations.jsonDir).substringBeforeLast('.').replace(File.separator, ".") }
     ) {
         val classInfo = getClassInfo(className)
-        if (classInfo !is MessageInfo) continue
+        if (classInfo !is MessageVariantInfo) continue
         val group = classInfo.variantOf ?: className
         groups.computeIfAbsent(group) { mutableListOf() } += className
         if (classInfo.polymorphicParent != null) {
@@ -39,7 +39,7 @@ fun fillIndexes() {
         }
     }
     for (group in groups.values) {
-        group.sortBy { (getClassInfo(it) as MessageInfo).minVersion ?: -1 }
+        group.sortBy { (getClassInfo(it) as MessageVariantInfo).minVersion ?: -1 }
     }
 }
 
@@ -60,12 +60,16 @@ sealed class ClassInfo {
 }
 
 @Serializable
+@SerialName("message")
+class MessageInfo : ClassInfo()
+
+@Serializable
 @SerialName("enum")
 data class EnumInfo(val values: List<String>) : ClassInfo()
 
 @Serializable
-@SerialName("message")
-data class MessageInfo(
+@SerialName("messageVariant")
+data class MessageVariantInfo(
     val fields: List<McField>,
     val functions: List<McFunction>,
     val polymorphicParent: String?,
@@ -300,7 +304,7 @@ fun getClassInfoOrNull(typeName: String): ClassInfo? {
         Json { explicitNulls = false }.decodeFromStream<ClassInfo>(it)
     }.also {
         it.className = typeName
-        if (it is MessageInfo) {
+        if (it is MessageVariantInfo) {
             for (function in it.functions) {
                 function.owner = typeName
             }

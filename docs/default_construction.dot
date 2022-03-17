@@ -4,9 +4,9 @@ digraph {
         IsAnnotatedField [label="Is it in a field\nannotated with @DefaultConstruct?"]
         WhatType [label="What type is it?"]
         FieldHasComputeFunction [label="Is there a\ncompute function?"]
-        FieldIsMessageType [label="Is it a\nmessage type?"]
+        FieldIsMessageType [label="Is it a message\nvariant type?"]
 
-        IsInTailrec [label="Is it in a field\nreferencing a message type\nby tail recursion**?"]
+        IsInTailrec [label="Is it in a field\nreferencing a message variant type\nby tail recursion**?"]
         IsPolymorphicParent [label="Is it a\npolymorphic base?"]
         PolymorphicParentHasDefaultConstruct [label="Is the message annotated\nwith @DefaultConstruct?"]
         IsPolymorphicChild [label="Is it a\npolymorphic child?"]
@@ -24,7 +24,7 @@ digraph {
         DefaultConstructPolymorphicTypeField [label="Default construct\npolymorphic type\nfield"]
         PolymorphicTypeFieldConstant [label="Use first specified\nconstant value* for\npolymorphic type\nfield"]
         DefaultConstructOtherParentFields [label="Default construct\nother parent fields"]
-        DefaultConstructFields [label="Default construct all\nfields in message class"]
+        DefaultConstructFields [label="Default construct all\nfields in message variant class"]
     }
 
     subgraph {
@@ -42,7 +42,7 @@ digraph {
 
     IsAnnotatedField -> WhatType [label="No"]
 
-    WhatType -> IsInTailrec [label="Message"]
+    WhatType -> IsInTailrec [label="Message Variant"]
     IsInTailrec -> Null2 [label="Yes"]
     IsInTailrec -> IsPolymorphicParent [label="No"]
     IsPolymorphicParent -> PolymorphicParentHasDefaultConstruct [label="Yes"]
@@ -57,7 +57,14 @@ digraph {
     DefaultConstructOtherParentFields -> DefaultConstructFields
     IsPolymorphicChild -> DefaultConstructFields [label="No"]
 
-    WhatType -> UseFirstEnumValueAttach [dir=none]
+    WhatType -> UseMessageAttach [dir=none]
+    subgraph {
+        rank = same
+        UseMessageAttach [shape=point]
+        UseMessage [shape=box,label="Use message variant\nfor this version"]
+        UseMessageAttach -> UseMessage [label="Message"]
+    }
+    UseMessageAttach -> UseFirstEnumValueAttach [dir=none]
     subgraph {
         rank = same
         UseFirstEnumValueAttach [shape=point]

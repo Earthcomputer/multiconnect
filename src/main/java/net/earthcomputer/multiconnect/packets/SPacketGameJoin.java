@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Datafix;
 import net.earthcomputer.multiconnect.ap.DatafixTypes;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.minecraft.nbt.NbtCompound;
@@ -10,7 +10,7 @@ import net.minecraft.util.Identifier;
 
 import java.util.List;
 
-@Message
+@MessageVariant
 public class SPacketGameJoin {
     @Type(Types.INT)
     public int entityId;

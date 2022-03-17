@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Length;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
@@ -10,12 +10,12 @@ import net.minecraft.util.Identifier;
 
 import java.util.List;
 
-@Message
+@MessageVariant
 public class SPacketSynchronizeRecipes {
     public List<Recipe> recipes;
 
     @Polymorphic
-    @Message
+    @MessageVariant
     public static abstract class Recipe {
         @Registry(Registries.RECIPE_SERIALIZER)
         public Identifier type;
@@ -23,7 +23,7 @@ public class SPacketSynchronizeRecipes {
     }
 
     @Polymorphic(stringValue = "crafting_shapeless")
-    @Message
+    @MessageVariant
     public static class CraftingShapeless extends Recipe {
         public String group;
         public List<Ingredient> ingredients;
@@ -31,7 +31,7 @@ public class SPacketSynchronizeRecipes {
     }
 
     @Polymorphic(stringValue = "crafting_shaped")
-    @Message
+    @MessageVariant
     public static class CraftingShaped extends Recipe {
         public int width;
         public int height;
@@ -46,7 +46,7 @@ public class SPacketSynchronizeRecipes {
     }
 
     @Polymorphic(stringValue = {"smelting", "blasting", "smoking", "campfire_cooking"})
-    @Message
+    @MessageVariant
     public static class Smelting extends Recipe {
         public String group;
         public Ingredient ingredient;
@@ -56,7 +56,7 @@ public class SPacketSynchronizeRecipes {
     }
 
     @Polymorphic(stringValue = "stonecutting")
-    @Message
+    @MessageVariant
     public static class Stonecutting extends Recipe {
         public String group;
         public Ingredient ingredient;
@@ -64,7 +64,7 @@ public class SPacketSynchronizeRecipes {
     }
 
     @Polymorphic(stringValue = "smithing")
-    @Message
+    @MessageVariant
     public static class Smithing extends Recipe {
         public Ingredient base;
         public Ingredient addition;
@@ -72,11 +72,11 @@ public class SPacketSynchronizeRecipes {
     }
 
     @Polymorphic(otherwise = true)
-    @Message
+    @MessageVariant
     public static class Special extends Recipe {
     }
 
-    @Message
+    @MessageVariant
     public static class Ingredient {
         public List<CommonTypes.ItemStack> options;
     }

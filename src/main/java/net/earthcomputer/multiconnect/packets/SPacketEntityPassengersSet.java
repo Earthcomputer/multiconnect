@@ -1,9 +1,9 @@
 package net.earthcomputer.multiconnect.packets;
 
 import it.unimi.dsi.fastutil.ints.IntList;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 
-@Message
+@MessageVariant
 public class SPacketEntityPassengersSet {
     public int vehicleId;
     public IntList passengerIds;

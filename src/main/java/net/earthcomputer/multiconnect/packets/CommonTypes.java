@@ -6,7 +6,7 @@ import io.netty.buffer.ByteBufOutputStream;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Registries;
@@ -26,19 +26,19 @@ import java.util.OptionalInt;
 import java.util.UUID;
 
 public class CommonTypes {
-    @Message
+    @MessageVariant
     public static class Text {
         public String json;
     }
 
-    @Message
+    @MessageVariant
     public static class BlockPos {
         @Type(Types.LONG)
         public long packedData;
     }
 
     @Polymorphic
-    @Message
+    @MessageVariant
     @DefaultConstruct(subType = EmptyItemStack.class)
     public static abstract class ItemStack {
         public boolean present;
@@ -58,12 +58,12 @@ public class CommonTypes {
     }
 
     @Polymorphic(booleanValue = false)
-    @Message
+    @MessageVariant
     public static class EmptyItemStack extends ItemStack {
     }
 
     @Polymorphic(booleanValue = true)
-    @Message
+    @MessageVariant
     public static class NonEmptyItemStack extends ItemStack {
         @Registry(Registries.ITEM)
         public int itemId;
@@ -73,78 +73,78 @@ public class CommonTypes {
     }
 
     @Polymorphic
-    @Message(tailrec = true)
+    @MessageVariant(tailrec = true)
     public static abstract class EntityTrackerEntry {
         @Type(Types.UNSIGNED_BYTE)
         public int field;
 
         @Polymorphic(intValue = 255)
-        @Message
+        @MessageVariant
         public static class Empty extends EntityTrackerEntry {
         }
 
         @Polymorphic(otherwise = true)
-        @Message
+        @MessageVariant
         public static class Other extends EntityTrackerEntry {
             public TrackedData trackedData;
             public EntityTrackerEntry next;
         }
 
         @Polymorphic
-        @Message
+        @MessageVariant
         public static abstract class TrackedData {
             public Handler handler;
 
             @Polymorphic(stringValue = "BYTE")
-            @Message
+            @MessageVariant
             public static class Byte extends TrackedData {
                 public byte value;
             }
 
             @Polymorphic(stringValue = "VAR_INT")
-            @Message
+            @MessageVariant
             public static class VarInt extends TrackedData {
                 public int value;
             }
 
             @Polymorphic(stringValue = "FLOAT")
-            @Message
+            @MessageVariant
             public static class Float extends TrackedData {
                 public float value;
             }
 
             @Polymorphic(stringValue = "STRING")
-            @Message
+            @MessageVariant
             public static class String extends TrackedData {
                 public java.lang.String value;
             }
 
             @Polymorphic(stringValue = "TEXT")
-            @Message
+            @MessageVariant
             public static class Text extends TrackedData {
                 public CommonTypes.Text value;
             }
 
             @Polymorphic(stringValue = "OPTIONAL_TEXT")
-            @Message
+            @MessageVariant
             public static class OptionalText extends TrackedData {
                 public Optional<CommonTypes.Text> value;
             }
 
             @Polymorphic(stringValue = "ITEM_STACK")
-            @Message
+            @MessageVariant
             public static class ItemStack extends TrackedData {
                 public CommonTypes.ItemStack value;
             }
 
             @Polymorphic(stringValue = "BOOLEAN")
-            @Message
+            @MessageVariant
             public static class Boolean extends TrackedData {
                 public boolean value;
             }
 
             @Polymorphic(stringValue = "ROTATION")
-            @Message
+            @MessageVariant
             public static class Rotation extends TrackedData {
                 public float x;
                 public float y;
@@ -152,50 +152,50 @@ public class CommonTypes {
             }
 
             @Polymorphic(stringValue = "BLOCK_POS")
-            @Message
+            @MessageVariant
             public static class BlockPos extends TrackedData {
                 public CommonTypes.BlockPos value;
             }
 
             @Polymorphic(stringValue = "OPTIONAL_BLOCK_POS")
-            @Message
+            @MessageVariant
             public static class OptionalBlockPos extends TrackedData {
                 public Optional<CommonTypes.BlockPos> value;
             }
 
             @Polymorphic(stringValue = "DIRECTION")
-            @Message
+            @MessageVariant
             public static class Direction extends TrackedData {
                 public CommonTypes.Direction value;
             }
 
             @Polymorphic(stringValue = "OPTIONAL_UUID")
-            @Message
+            @MessageVariant
             public static class OptionalUuid extends TrackedData {
                 public Optional<UUID> value;
             }
 
             @Polymorphic(stringValue = "OPTIONAL_BLOCK_STATE")
-            @Message
+            @MessageVariant
             public static class OptionalBlockState extends TrackedData {
                 @Registry(Registries.BLOCK_STATE)
                 public OptionalInt value;
             }
 
             @Polymorphic(stringValue = "NBT")
-            @Message
+            @MessageVariant
             public static class Nbt extends TrackedData {
                 public NbtCompound value;
             }
 
             @Polymorphic(stringValue = "PARTICLE")
-            @Message
+            @MessageVariant
             public static class Particle extends TrackedData {
                 public CommonTypes.Particle value;
             }
 
             @Polymorphic(stringValue = "VILLAGER_DATA")
-            @Message
+            @MessageVariant
             public static class VillagerData extends TrackedData {
                 @Registry(Registries.VILLAGER_TYPE)
                 public int villagerType;
@@ -205,13 +205,13 @@ public class CommonTypes {
             }
 
             @Polymorphic(stringValue = "OPTIONAL_VAR_INT")
-            @Message
+            @MessageVariant
             public static class OptionalVarInt extends TrackedData {
                 public OptionalInt value;
             }
 
             @Polymorphic(stringValue = "POSE")
-            @Message
+            @MessageVariant
             public static class Pose extends TrackedData {
                 public CommonTypes.Pose value;
             }
@@ -288,27 +288,27 @@ public class CommonTypes {
     }
 
     @Polymorphic
-    @Message
+    @MessageVariant
     public static abstract class Particle {
         @Registry(Registries.PARTICLE_TYPE)
         @Type(Types.INT)
         public int particleId;
 
         @Polymorphic(stringValue = {"block", "falling_dust"})
-        @Message
+        @MessageVariant
         public static class BlockStateParticlePacket extends Particle {
             @Registry(Registries.BLOCK_STATE)
             public int blockStateId;
         }
 
         @Polymorphic(stringValue = "item")
-        @Message
+        @MessageVariant
         public static class ItemParticlePacket extends Particle {
             public CommonTypes.ItemStack stack;
         }
 
         @Polymorphic(stringValue = "dust")
-        @Message
+        @MessageVariant
         public static class DustParticlePacket extends Particle {
             public float red;
             public float green;
@@ -317,7 +317,7 @@ public class CommonTypes {
         }
 
         @Polymorphic(stringValue = "dust_color_transition")
-        @Message
+        @MessageVariant
         public static class DustColorTransitionPacket extends Particle {
             public float fromRed;
             public float fromGreen;
@@ -329,7 +329,7 @@ public class CommonTypes {
         }
 
         @Polymorphic(stringValue = "vibration")
-        @Message
+        @MessageVariant
         public static class VibrationPacket extends Particle {
             public double originX;
             public double originY;
@@ -342,7 +342,7 @@ public class CommonTypes {
         }
 
         @Polymorphic(otherwise = true)
-        @Message
+        @MessageVariant
         public static class SimpleParticlePacket extends Particle {
         }
     }

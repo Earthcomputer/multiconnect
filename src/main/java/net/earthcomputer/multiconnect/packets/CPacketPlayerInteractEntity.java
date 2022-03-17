@@ -1,17 +1,17 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 
-@Message
+@MessageVariant
 public class CPacketPlayerInteractEntity {
     public int entityId;
     public Action action;
     public boolean sneaking;
 
     @Polymorphic
-    @Message
+    @MessageVariant
     public static abstract class Action {
         public Type type;
 
@@ -22,18 +22,18 @@ public class CPacketPlayerInteractEntity {
     }
 
     @Polymorphic(stringValue = "INTERACT")
-    @Message
+    @MessageVariant
     public static class InteractAction extends Action {
         public CommonTypes.Hand hand;
     }
 
     @Polymorphic(stringValue = "ATTACK")
-    @Message
+    @MessageVariant
     public static class AttackAction extends Action {
     }
 
     @Polymorphic(stringValue = "INTERACT_AT")
-    @Message
+    @MessageVariant
     public static class InteractAtAction extends Action {
         public float x;
         public float y;

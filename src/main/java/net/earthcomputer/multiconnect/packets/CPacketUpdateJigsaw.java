@@ -1,9 +1,9 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.minecraft.util.Identifier;
 
-@Message
+@MessageVariant
 public class CPacketUpdateJigsaw {
     public CommonTypes.BlockPos pos;
     public Identifier name;

@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.packets;
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Datafix;
 import net.earthcomputer.multiconnect.ap.DatafixTypes;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.api.MultiConnectAPI;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
@@ -12,7 +12,7 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.registry.Registry;
 
-@Message
+@MessageVariant
 public class SPacketBlockEntityUpdate {
     public CommonTypes.BlockPos pos;
     public byte blockEntityType; // not from the block entity registry

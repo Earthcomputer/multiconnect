@@ -1,10 +1,10 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 
 import java.util.UUID;
 
-@Message
+@MessageVariant
 public class SPacketGameMessage {
     public CommonTypes.Text text;
     public byte position;

@@ -9,7 +9,7 @@ import javax.lang.model.type.TypeKind
 object PolymorphicProcessor {
     fun process(type: Element, errorConsumer: ErrorConsumer, processingEnv: ProcessingEnvironment) {
         if (type !is TypeElement) return
-        if (!type.hasAnnotation(Message::class)) {
+        if (!type.hasAnnotation(MessageVariant::class)) {
             errorConsumer.report("@Polymorphic class must be annotation with @Message", type)
             return
         }

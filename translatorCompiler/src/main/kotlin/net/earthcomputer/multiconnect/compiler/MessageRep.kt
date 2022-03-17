@@ -2,45 +2,45 @@ package net.earthcomputer.multiconnect.compiler
 
 import net.earthcomputer.multiconnect.ap.Types
 
-abstract class MessageRep(val messageInfo: MessageInfo, val parentRep: MessageRep?) {
+abstract class MessageRep(val messageVariantInfo: MessageVariantInfo, val parentRep: MessageRep?) {
     abstract fun loadField(name: String): McNode
-    abstract fun loadMessageField(name: String, fieldType: MessageInfo): MessageRep
+    abstract fun loadMessageField(name: String, fieldType: MessageVariantInfo): MessageRep
     abstract fun storeField(name: String, value: McNode): McNode
-    abstract fun cast(subType: MessageInfo): MessageRep
+    abstract fun cast(subType: MessageVariantInfo): MessageRep
 }
 
-abstract class DelegatingMessageRep(messageInfo: MessageInfo, parentRep: MessageRep?, val source: MessageRep) : MessageRep(messageInfo, parentRep) {
+abstract class DelegatingMessageRep(messageVariantInfo: MessageVariantInfo, parentRep: MessageRep?, val source: MessageRep) : MessageRep(messageVariantInfo, parentRep) {
 }
 
 class BoxedMessageRep(
-    messageInfo: MessageInfo,
+    messageVariantInfo: MessageVariantInfo,
     parentRep: MessageRep?,
     private val instance: McNode
-) : MessageRep(messageInfo, parentRep) {
+) : MessageRep(messageVariantInfo, parentRep) {
     override fun loadField(name: String): McNode {
-        val variableType = McType.DeclaredType(messageInfo.className)
+        val variableType = McType.DeclaredType(messageVariantInfo.className)
         return McNode(
-            LoadFieldOp(variableType, name, messageInfo.findField(name).type.realType),
+            LoadFieldOp(variableType, name, messageVariantInfo.findField(name).type.realType),
             instance
         )
     }
 
-    override fun loadMessageField(name: String, fieldType: MessageInfo): MessageRep {
+    override fun loadMessageField(name: String, fieldType: MessageVariantInfo): MessageRep {
         return BoxedMessageRep(fieldType, null, loadField(name))
     }
 
     override fun storeField(name: String, value: McNode): McNode {
-        val variableType = McType.DeclaredType(messageInfo.className)
+        val variableType = McType.DeclaredType(messageVariantInfo.className)
         return McNode(
-            StoreFieldStmtOp(variableType, name, messageInfo.findField(name).type.realType),
+            StoreFieldStmtOp(variableType, name, messageVariantInfo.findField(name).type.realType),
             instance,
             value
         )
     }
 
-    override fun cast(subType: MessageInfo): MessageRep {
+    override fun cast(subType: MessageVariantInfo): MessageRep {
         val castedInstance = McNode(
-            CastOp(McType.DeclaredType(messageInfo.className), McType.DeclaredType(subType.className)),
+            CastOp(McType.DeclaredType(messageVariantInfo.className), McType.DeclaredType(subType.className)),
             instance
         )
         return BoxedMessageRep(subType, this, castedInstance)
@@ -48,10 +48,10 @@ class BoxedMessageRep(
 }
 
 class ReadBufferMessageRep(
-    messageInfo: MessageInfo,
+    messageVariantInfo: MessageVariantInfo,
     parentRep: MessageRep?,
     private val bufferVariable: VariableId,
-) : MessageRep(messageInfo, parentRep) {
+) : MessageRep(messageVariantInfo, parentRep) {
     class CopyInfo {
         var currentBlock: CopyBlock? = null
         var constantSize: Int = 0
@@ -80,10 +80,10 @@ class ReadBufferMessageRep(
 
     override fun loadField(name: String): McNode {
         val variable = interpretedFields.computeIfAbsent(name) { VariableId.create() }
-        return McNode(LoadVariableOp(variable, messageInfo.findField(name).type.realType))
+        return McNode(LoadVariableOp(variable, messageVariantInfo.findField(name).type.realType))
     }
 
-    override fun loadMessageField(name: String, fieldType: MessageInfo): ReadBufferMessageRep {
+    override fun loadMessageField(name: String, fieldType: MessageVariantInfo): ReadBufferMessageRep {
         return loadedMessageFields.computeIfAbsent(name) { ReadBufferMessageRep(fieldType, null, bufferVariable) }
     }
 
@@ -105,7 +105,7 @@ class ReadBufferMessageRep(
         }
 
         val statements = mutableListOf<McNode>()
-        for (field in messageInfo.fields) {
+        for (field in messageVariantInfo.fields) {
             var startConstantSize = copyInfo.constantSize
             copyInfo.depth++
             val innerStatements: MutableList<McNode> = if (field.type.wireType == Types.MESSAGE) {
@@ -113,7 +113,7 @@ class ReadBufferMessageRep(
                  if (messageRep != null) {
                     mutableListOf(messageRep.getInitializer(copyInfo))
                 } else {
-                    val subInfo = getClassInfo((field.type.realType.deepComponentType() as McType.DeclaredType).name) as MessageInfo
+                    val subInfo = getClassInfo((field.type.realType.deepComponentType() as McType.DeclaredType).name) as MessageVariantInfo
                     if (copyBlocks[field.name] != null) {
                         mutableListOf(loadMessageField(field.name, subInfo).readToCopyBlock(copyInfo))
                     } else {
@@ -165,7 +165,7 @@ class ReadBufferMessageRep(
                 shouldApplyConstantSizeAtStart = true
                 statement = McNode(
                     IfStmtOp,
-                    generateFunctionCallGraph(messageInfo.findFunction(field.type.onlyIf), fieldVariables),
+                    generateFunctionCallGraph(messageVariantInfo.findFunction(field.type.onlyIf), fieldVariables),
                     statement
                 )
             }
@@ -181,7 +181,7 @@ class ReadBufferMessageRep(
 
     }
 
-    override fun cast(subType: MessageInfo): MessageRep {
+    override fun cast(subType: MessageVariantInfo): MessageRep {
         return ReadBufferMessageRep(subType, this, bufferVariable)
     }
 }

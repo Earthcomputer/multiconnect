@@ -4,7 +4,7 @@ import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Handler;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
@@ -18,7 +18,7 @@ import net.minecraft.screen.ScreenHandler;
 
 import java.util.function.Supplier;
 
-@Message
+@MessageVariant
 public class SPacketAckScreenAction_1_16_5 {
     @Type(Types.UNSIGNED_BYTE)
     public int syncId;

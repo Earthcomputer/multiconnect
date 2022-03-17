@@ -1,11 +1,11 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
 
-@Message
+@MessageVariant
 public class SPacketPlayerActionResponse {
     public CommonTypes.BlockPos pos;
     @Registry(Registries.BLOCK_STATE)

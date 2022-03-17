@@ -1,32 +1,32 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
 import net.minecraft.util.Identifier;
 
-@Message
+@MessageVariant
 public class SPacketVibration {
     public CommonTypes.BlockPos pos;
     public PositionSource positionSource;
     public int arrivalTicks;
 
     @Polymorphic
-    @Message
+    @MessageVariant
     public static abstract class PositionSource {
         @Registry(Registries.POSITION_SOURCE_TYPE)
         public Identifier type;
     }
 
     @Polymorphic(stringValue = "block")
-    @Message
+    @MessageVariant
     public static class BlockPositionSource extends PositionSource {
         public CommonTypes.BlockPos pos;
     }
 
     @Polymorphic(stringValue = "entity")
-    @Message
+    @MessageVariant
     public static class EntityPositionSource extends PositionSource {
         public int entityId;
     }

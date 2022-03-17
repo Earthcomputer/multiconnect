@@ -1,11 +1,11 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Length;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 
 import java.util.List;
 
-@Message
+@MessageVariant
 public class CPacketUpdateSign {
     public CommonTypes.BlockPos pos;
     @Length(constant = 4)

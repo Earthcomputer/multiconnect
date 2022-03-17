@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Argument;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Type;
@@ -12,14 +12,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 
-@Message
+@MessageVariant
 public class SPacketAdvancementUpdate {
     public boolean clearCurrent;
     public List<Task> toAdd;
     public List<Identifier> toRemove;
     public List<Progress> toSetProgress;
 
-    @Message
+    @MessageVariant
     public static class Task {
         public Identifier id;
         public Optional<Identifier> parentId;
@@ -27,7 +27,7 @@ public class SPacketAdvancementUpdate {
         public List<Identifier> criteria;
         public List<List<String>> requirements;
 
-        @Message
+        @MessageVariant
         public static class Display {
             public CommonTypes.Text title;
             public CommonTypes.Text description;
@@ -51,11 +51,11 @@ public class SPacketAdvancementUpdate {
         }
     }
 
-    @Message
+    @MessageVariant
     public static class Progress {
         public List<Entry> entries;
 
-        @Message
+        @MessageVariant
         public static class Entry {
             public Identifier criterion;
             public OptionalLong time;

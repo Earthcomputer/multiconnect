@@ -1,13 +1,13 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.minecraft.util.Identifier;
 
 import java.util.List;
 
-@Message
+@MessageVariant
 @Polymorphic
 public abstract class SPacketUnlockRecipes {
     public Mode mode;
@@ -22,13 +22,13 @@ public abstract class SPacketUnlockRecipes {
     public List<Identifier> recipeIdsToChange;
 
     @Polymorphic(stringValue = "INIT")
-    @Message
+    @MessageVariant
     public static class Init extends SPacketUnlockRecipes {
         public List<Identifier> recipeIdsToInit;
     }
 
     @Polymorphic(otherwise = true)
-    @Message
+    @MessageVariant
     public static class Other extends SPacketUnlockRecipes {
     }
 

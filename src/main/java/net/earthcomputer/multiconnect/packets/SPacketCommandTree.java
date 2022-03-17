@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.packets;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.ap.Argument;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
@@ -12,12 +12,12 @@ import net.minecraft.util.Identifier;
 
 import java.util.List;
 
-@Message
+@MessageVariant
 public class SPacketCommandTree {
     public List<Node> nodes;
     public int rootIndex;
 
-    @Message
+    @MessageVariant
     public static class Node {
         public int flags;
         public IntList children;
@@ -49,13 +49,13 @@ public class SPacketCommandTree {
     }
 
     @Polymorphic
-    @Message
+    @MessageVariant
     public static abstract class BrigadierArgument {
         public Identifier parser;
     }
 
     @Polymorphic(stringValue = "brigadier:double")
-    @Message
+    @MessageVariant
     public static class DoubleArgument extends BrigadierArgument {
         public byte flags;
         @OnlyIf("hasMin")
@@ -73,7 +73,7 @@ public class SPacketCommandTree {
     }
 
     @Polymorphic(stringValue = "brigadier:float")
-    @Message
+    @MessageVariant
     public static class FloatArgument extends BrigadierArgument {
         public byte flags;
         @OnlyIf("hasMin")
@@ -91,7 +91,7 @@ public class SPacketCommandTree {
     }
 
     @Polymorphic(stringValue = "brigadier:integer")
-    @Message
+    @MessageVariant
     public static class IntArgument extends BrigadierArgument {
         public byte flags;
         @OnlyIf("hasMin")
@@ -111,7 +111,7 @@ public class SPacketCommandTree {
     }
 
     @Polymorphic(stringValue = "brigadier:long")
-    @Message
+    @MessageVariant
     public static class LongArgument extends BrigadierArgument {
         public byte flags;
         @OnlyIf("hasMin")
@@ -131,7 +131,7 @@ public class SPacketCommandTree {
     }
 
     @Polymorphic(stringValue = "brigadier:string")
-    @Message
+    @MessageVariant
     public static class StringArgument extends BrigadierArgument {
         public Type type;
         @NetworkEnum
@@ -141,25 +141,25 @@ public class SPacketCommandTree {
     }
 
     @Polymorphic(stringValue = "minecraft:entity")
-    @Message
+    @MessageVariant
     public static class EntityArgument extends BrigadierArgument {
         public byte flags;
     }
 
     @Polymorphic(stringValue = "minecraft:score_holder")
-    @Message
+    @MessageVariant
     public static class ScoreHolderArgument extends BrigadierArgument {
         public byte flags;
     }
 
     @Polymorphic(stringValue = "minecraft:range")
-    @Message
+    @MessageVariant
     public static class RangeArgument extends BrigadierArgument {
         public boolean decimals;
     }
 
     @Polymorphic(otherwise = true)
-    @Message
+    @MessageVariant
     public static class ConstantArgument extends BrigadierArgument {
     }
 }

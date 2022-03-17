@@ -1,18 +1,18 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 
 import java.util.List;
 
-@Message
+@MessageVariant
 public class SPacketTeam {
     public String name;
     public Action action;
 
     @Polymorphic
-    @Message
+    @MessageVariant
     public static abstract class Action {
         public Mode mode;
 
@@ -23,7 +23,7 @@ public class SPacketTeam {
     }
 
     @Polymorphic(stringValue = "CREATE")
-    @Message
+    @MessageVariant
     public static class CreateAction extends Action {
         public CommonTypes.Text displayName;
         public byte friendlyFlags;
@@ -36,12 +36,12 @@ public class SPacketTeam {
     }
 
     @Polymorphic(stringValue = "REMOVE")
-    @Message
+    @MessageVariant
     public static class RemoveAction extends Action {
     }
 
     @Polymorphic(stringValue = "UPDATE_INFO")
-    @Message
+    @MessageVariant
     public static class UpdateInfoAction extends Action {
         public CommonTypes.Text displayName;
         public byte friendlyFlags;
@@ -53,7 +53,7 @@ public class SPacketTeam {
     }
 
     @Polymorphic(stringValue = {"ADD_ENTITIES", "REMOVE_ENTITIES"})
-    @Message
+    @MessageVariant
     public static class EntitiesAction extends Action {
         public List<String> entities;
     }

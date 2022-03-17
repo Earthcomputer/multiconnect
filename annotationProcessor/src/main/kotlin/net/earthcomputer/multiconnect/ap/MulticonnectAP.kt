@@ -18,6 +18,11 @@ class MulticonnectAP : AbstractProcessor(), ErrorConsumer {
                 MessageProcessor.process(element, this, processingEnv)
             }
         }
+        if (annotations.any { it.qualifiedName.contentEquals(messageVariantName) }) {
+            for (element in roundEnv.getElementsAnnotatedWith(MessageVariant::class.java)) {
+                MessageVariantProcessor.process(element, this, processingEnv)
+            }
+        }
         if (annotations.any { it.qualifiedName.contentEquals(polymorphicName) }) {
             for (element in roundEnv.getElementsAnnotatedWith(Polymorphic::class.java)) {
                 PolymorphicProcessor.process(element, this, processingEnv)

@@ -2,13 +2,13 @@ package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Datafix;
 import net.earthcomputer.multiconnect.ap.DatafixTypes;
-import net.earthcomputer.multiconnect.ap.Message;
+import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
 
-@Message
+@MessageVariant
 public class SPacketPlayerRespawn {
     @Datafix(DatafixTypes.DIMENSION)
     public NbtCompound dimension;
