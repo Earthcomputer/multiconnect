@@ -36,9 +36,9 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
     @Shadow @Final private Map<T, Lifecycle> entryToLifecycle;
     @Shadow private List<RegistryEntry.Reference<T>> cachedEntries;
     @Shadow private int nextId;
+    @Shadow private @Nullable Map<T, RegistryEntry.Reference<T>> unfrozenValueToEntry;
 
     @Shadow private boolean frozen;
-    @Shadow private @Nullable Map<T, RegistryEntry.Reference<T>> unfrozenValueToEntry;
 
     @Unique private final Set<RegistryKey<T>> multiconnect_realEntries = new ObjectOpenCustomHashSet<>(Util.identityHashStrategy());
 
@@ -83,6 +83,9 @@ public abstract class MixinSimpleRegistry<T> extends MutableRegistry<T> implemen
         keyToEntry.clear();
         valueToEntry.clear();
         entryToLifecycle.clear();
+        if (unfrozenValueToEntry != null) {
+            unfrozenValueToEntry.clear();
+        }
         cachedEntries = null;
         nextId = 0;
     }
