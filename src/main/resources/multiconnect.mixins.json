@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "net.earthcomputer.multiconnect.mixin",
-  "compatibilityLevel": "JAVA_16",
+  "compatibilityLevel": "JAVA_17",
   "mixins": [
     "bridge.ChunkDataAccessor",
     "bridge.ChunkDeltaUpdateS2CAccessor",
