@@ -340,7 +340,7 @@ public final class RegistryBuilder<T> {
 
         System.out.println("A value has been unregistered! Value:" + value + ", StackTrace: " + methodName);
         if (node == null) {
-            throw new IllegalArgumentException("Value not found: " + value);
+            return;
         }
         unregister(node);
     }
@@ -594,6 +594,15 @@ public final class RegistryBuilder<T> {
         boolean wasFrozen = registry.multiconnect_isFrozen();
         registry.multiconnect_unfreeze();
         registry.multiconnect_clear();
+
+        // print idLists
+//        for (IdList<T> list : this.idLists) {
+//            int id = list.id;
+//            for (IdNode<T> node = list.head; node != null; node = node.next) {
+//                System.out.println(id + ": " + node.id.getValue());
+//                id++;
+//            }
+//        }
 
         for (IdList<T> list : this.idLists) {
             int rawId = list.id;

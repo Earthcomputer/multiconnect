@@ -41,6 +41,7 @@
     "bridge.MixinNetworkState",
     "bridge.MixinPacketHandler",
     "bridge.MixinParticleManager",
+    "bridge.MixinRegistryEntryReference",
     "bridge.MixinSchemas",
     "bridge.MixinSimpleRegistry",
     "bridge.MixinStatType",
