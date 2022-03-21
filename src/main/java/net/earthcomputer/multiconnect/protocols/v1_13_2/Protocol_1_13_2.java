@@ -827,7 +827,7 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
         registry.rename(Items.RED_DYE, "rose_red");
         registry.rename(Items.GREEN_DYE, "cactus_green");
         registry.rename(Items.YELLOW_DYE, "dandelion_yellow");
-        registry.rename(Items.SMOOTH_STONE_SLAB, "stone_slab");
+        //registry.rename(Items.SMOOTH_STONE_SLAB, "stone_slab");
 
         registry.unregister(Items.CAT_SPAWN_EGG);
         registry.insertAfter(Items.MULE_SPAWN_EGG, Items.CAT_SPAWN_EGG, "ocelot_spawn_egg");
