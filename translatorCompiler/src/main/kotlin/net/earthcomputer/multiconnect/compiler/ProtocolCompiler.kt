@@ -296,13 +296,16 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
         }
 
         fun <T: Comparable<T>> makeCases(): McNode {
-            val (results, cases) = children.zip(
+            val (results, cases) =
                 children
                     .asSequence()
-                    .map { it.polymorphic }
-                    .filterIsInstance<Polymorphic.Constant<T>>()
-                    .map { group ->
-                        when {
+                    .filter { it.polymorphic is Polymorphic.Constant<*> }
+                    .map {
+                        @Suppress("UNCHECKED_CAST")
+                        it to (it.polymorphic as Polymorphic.Constant<T>)
+                    }
+                    .map { (child, group) ->
+                        child to when {
                             type.realType.hasName(IDENTIFIER) ->
                                 group.value.map { (it as String).normalizeIdentifier() }
                             type.realType.isIntegral && type.registry != null ->
@@ -316,13 +319,13 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
                             else -> group.value.map { it.downcastConstant(type.realType) }
                         }
                     }
-                    .filter { it.isNotEmpty() }
-                    .map { lst ->
+                    .filter { it.second.isNotEmpty() }
+                    .map { (child, lst) ->
                         @Suppress("UNCHECKED_CAST")
-                        SwitchOp.GroupCase((lst as List<T>).toSortedSet())
+                        child to SwitchOp.GroupCase((lst as List<T>).toSortedSet())
                     }
-                    .toList()
-            ).sortedBy { (_, case) -> case }.unzip()
+                    .sortedBy { (_, case) -> case }
+                    .unzip()
             return McNode(SwitchOp(
                 cases.toSortedSet(),
                 true,
