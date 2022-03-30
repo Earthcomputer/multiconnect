@@ -12,7 +12,7 @@ object IoOps {
             Types.VAR_INT, Types.VAR_LONG, Types.NBT_COMPOUND -> McNode(PopStmtOp, readType(bufVar, type))
             Types.STRING, Types.BITSET -> {
                 var readLength = McNode(
-                    FunctionCallOp(CommonClassNames.COMMON_TYPES, "readVarInt", listOf(McType.BYTE_BUF), McType.INT, true),
+                    FunctionCallOp(CommonClassNames.PACKET_INTRINSICS, "readVarInt", listOf(McType.BYTE_BUF), McType.INT, true),
                     McNode(LoadVariableOp(bufVar, McType.BYTE_BUF))
                 )
                 if (type == Types.BITSET) {
@@ -48,7 +48,7 @@ object IoOps {
         }
         fun commonTypes(name: String, returnType: McType): McNode {
             return McNode(
-                FunctionCallOp(CommonClassNames.COMMON_TYPES, name, listOf(McType.BYTE_BUF), returnType, true),
+                FunctionCallOp(CommonClassNames.PACKET_INTRINSICS, name, listOf(McType.BYTE_BUF), returnType, true),
                 McNode(LoadVariableOp(bufVar, McType.BYTE_BUF))
             )
         }
@@ -82,7 +82,7 @@ object IoOps {
         }
         fun commonTypes(name: String, type: McType, value: McNode): McNode {
             return McNode(
-                FunctionCallOp(CommonClassNames.COMMON_TYPES, name, listOf(McType.BYTE_BUF, type), McType.VOID, true),
+                FunctionCallOp(CommonClassNames.PACKET_INTRINSICS, name, listOf(McType.BYTE_BUF, type), McType.VOID, true),
                 McNode(LoadVariableOp(bufVar, McType.BYTE_BUF)),
                 value.castIfNecessary(type)
             )

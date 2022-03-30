@@ -27,4 +27,5 @@ tasks.create<JavaExec>("compileTranslator") {
         rootProject.file("data").absolutePath,
         rootProject.sourceSets.getByName("generated").java.srcDirs.iterator().next().absolutePath
     )
+    debug = true
 }

@@ -4,7 +4,7 @@ id clazz
 2 net.earthcomputer.multiconnect.packets.CPacketUpdateDifficulty
 3 net.earthcomputer.multiconnect.packets.CPacketChatMessage
 4 net.earthcomputer.multiconnect.packets.CPacketClientStatus
-5 net.earthcomputer.multiconnect.packets.CPacketClientSettings_Latest
+5 net.earthcomputer.multiconnect.packets.latest.CPacketClientSettings_Latest
 6 net.earthcomputer.multiconnect.packets.CPacketRequestCommandCompletions
 7 net.earthcomputer.multiconnect.packets.CPacketButtonClick
 8 net.earthcomputer.multiconnect.packets.v1_17.CPacketClickSlot_1_17

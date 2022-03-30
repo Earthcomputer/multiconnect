@@ -1,14 +1,19 @@
 package net.earthcomputer.multiconnect.compiler
 
+import java.util.TreeMap
+import java.util.TreeSet
+
 fun McNode.optimize(): McNode {
-    Optimizer(this).optimize()
-    return this
+    val optimizer = Optimizer(this)
+    optimizer.optimize()
+    return optimizer.rootNode
 }
 
-private class Optimizer(private val rootNode: McNode) {
+private class Optimizer(var rootNode: McNode) {
     fun optimize() {
         extractCommonNodes()
         extractStatementsInExpressions()
+        addTryCatchIfNecessary()
         nameVariables()
     }
 
@@ -137,6 +142,18 @@ private class Optimizer(private val rootNode: McNode) {
         }
     }
 
+    private fun addTryCatchIfNecessary() {
+        var needsTryCatch = false
+        forEachNode {
+            if (it.op.throwsException) {
+                needsTryCatch = true
+            }
+        }
+        if (needsTryCatch) {
+            rootNode = McNode(TryCatchStmtOp, rootNode)
+        }
+    }
+
     // parent-first
     private inline fun forEachNode(func: (McNode) -> Unit) {
         val visited = mutableSetOf<McNode>()
@@ -157,5 +174,11 @@ private class Optimizer(private val rootNode: McNode) {
                 }
             }
         }
+    }
+
+    private fun McNode.convertToString(): String {
+        val emitter = Emitter("foo.Bar", TreeSet(), TreeMap(), StringBuilder())
+        emit(emitter.addMember("foo")!!, Precedence.COMMA)
+        return emitter.createClassText()
     }
 }

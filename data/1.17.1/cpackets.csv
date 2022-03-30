@@ -4,13 +4,13 @@ id clazz
 2 net.earthcomputer.multiconnect.packets.CPacketUpdateDifficulty
 3 net.earthcomputer.multiconnect.packets.CPacketChatMessage
 4 net.earthcomputer.multiconnect.packets.CPacketClientStatus
-5 net.earthcomputer.multiconnect.packets.CPacketClientSettings_Latest
+5 net.earthcomputer.multiconnect.packets.latest.CPacketClientSettings_Latest
 6 net.earthcomputer.multiconnect.packets.CPacketRequestCommandCompletions
 7 net.earthcomputer.multiconnect.packets.CPacketButtonClick
-8 net.earthcomputer.multiconnect.packets.CPacketClickSlot_Latest
+8 net.earthcomputer.multiconnect.packets.latest.CPacketClickSlot_Latest
 9 net.earthcomputer.multiconnect.packets.CPacketCloseHandledScreen
 10 net.earthcomputer.multiconnect.packets.CPacketCustomPayload
-11 net.earthcomputer.multiconnect.packets.CPacketBookUpdate_Latest
+11 net.earthcomputer.multiconnect.packets.latest.CPacketBookUpdate_Latest
 12 net.earthcomputer.multiconnect.packets.CPacketQueryEntityNbt
 13 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractEntity
 14 net.earthcomputer.multiconnect.packets.CPacketJigsawGenerating

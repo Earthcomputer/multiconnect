@@ -217,6 +217,7 @@ object MessageVariantProcessor {
                     errorConsumer.report("@OnlyIf computation cannot depend on later fields", field)
                     continue
                 }
+                multiconnectFunctions += multiconnectFunction
             }
 
             if (multiconnectType.datafixType != null) {

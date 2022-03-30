@@ -10,7 +10,7 @@ import net.earthcomputer.multiconnect.packets.latest.CPacketClickSlot_Latest;
 
 import java.util.List;
 
-@MessageVariant(maxVersion = Protocols.V1_17)
+@MessageVariant(minVersion = Protocols.V1_17, maxVersion = Protocols.V1_17)
 public class CPacketClickSlot_1_17 implements CPacketClickSlot {
     @Type(Types.UNSIGNED_BYTE)
     public int syncId;

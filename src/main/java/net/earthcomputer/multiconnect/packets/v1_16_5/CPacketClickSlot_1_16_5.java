@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets.v1_16_5;
 
 import net.earthcomputer.multiconnect.ap.MessageVariant;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.CPacketClickSlot;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
@@ -9,7 +10,7 @@ import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
 
-@MessageVariant
+@MessageVariant(maxVersion = Protocols.V1_16_5)
 public class CPacketClickSlot_1_16_5 implements CPacketClickSlot {
     public byte syncId;
     public short slotId;

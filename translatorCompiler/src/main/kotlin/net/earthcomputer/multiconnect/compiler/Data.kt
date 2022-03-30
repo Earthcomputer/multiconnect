@@ -30,8 +30,7 @@ fun fillIndexes() {
         .filter { it.name.endsWith(".json") }
         .map { it.toRelativeString(FileLocations.jsonDir).substringBeforeLast('.').replace(File.separator, ".") }
     ) {
-        val classInfo = getClassInfo(className)
-        if (classInfo !is MessageVariantInfo) continue
+        val classInfo = getClassInfo(className) as? MessageVariantInfo ?: continue
         val group = classInfo.variantOf ?: className
         groups.computeIfAbsent(group) { mutableListOf() } += className
         if (classInfo.polymorphicParent != null) {
@@ -39,7 +38,7 @@ fun fillIndexes() {
         }
     }
     for (group in groups.values) {
-        group.sortBy { (getClassInfo(it) as MessageVariantInfo).minVersion ?: -1 }
+        group.sortBy { getMessageVariantInfo(it).minVersion ?: -1 }
     }
 }
 
@@ -313,6 +312,10 @@ fun getClassInfoOrNull(typeName: String): ClassInfo? {
     }
 }
 
+fun getMessageVariantInfo(typeName: String): MessageVariantInfo {
+    return getClassInfo(typeName) as? MessageVariantInfo ?: throw CompileException("Message variant info not found for $typeName")
+}
+
 @PublishedApi
 internal val csvCache = mutableMapOf<File, SoftReference<List<*>>>()
 
@@ -351,6 +354,14 @@ fun List<RegistryEntry>.byId(id: Int): RegistryEntry? {
 
 fun List<RegistryEntry>.byName(name: String): RegistryEntry? {
     return nameToEntryCache.computeIfAbsent(this) { entry ->
-        entry.associateBy { it.name }
-    }[name]
+        entry.associateBy { it.name.normalizeIdentifier() }
+    }[name.normalizeIdentifier()]
+}
+
+fun String.normalizeIdentifier(): String {
+    return if (this.contains(':')) {
+        this
+    } else {
+        "minecraft:$this"
+    }
 }

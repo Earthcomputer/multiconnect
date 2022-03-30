@@ -6,19 +6,27 @@ import net.earthcomputer.multiconnect.ap.Types
 
 object CommonClassNames {
     const val BYTE_BUF = "io.netty.buffer.ByteBuf"
-    const val COMMON_TYPES = "net.earthcomputer.multiconnect.packets.CommonTypes"
+    const val CLASS = "java.lang.Class"
     const val OBJECT = "java.lang.Object"
     const val STRING = "java.lang.String"
+    const val THROWABLE = "java.lang.Throwable"
     const val LIST = "java.util.List"
+    const val ARRAY_LIST = "java.util.ArrayList"
     const val OPTIONAL = "java.util.Optional"
     const val OPTIONAL_INT = "java.util.OptionalInt"
     const val OPTIONAL_LONG = "java.util.OptionalLong"
     const val UUID = "java.util.UUID"
     const val BITSET = "java.util.BitSet"
     const val INT_LIST = "it.unimi.dsi.fastutil.ints.IntList"
-    const val LONG_LIST = "it.unimi.dsi.fastutil.ints.LongList"
+    const val INT_ARRAY_LIST = "it.unimi.dsi.fastutil.ints.IntArrayList"
+    const val LONG_LIST = "it.unimi.dsi.fastutil.longs.LongList"
+    const val LONG_ARRAY_LIST = "it.unimi.dsi.fastutil.longs.LongArrayList"
     const val NBT_COMPOUND = "net.minecraft.nbt.NbtCompound"
     const val IDENTIFIER = "net.minecraft.util.Identifier"
+    const val PACKET_INTRINSICS = "net.earthcomputer.multiconnect.impl.PacketIntrinsics"
+    const val METHOD_HANDLE = "java.lang.invoke.MethodHandle"
+    const val METHOD_HANDLES = "java.lang.invoke.MethodHandles"
+    const val METHOD_HANDLES_LOOKUP = "java.lang.invoke.MethodHandles.Lookup"
 }
 
 @Serializable
@@ -57,6 +65,31 @@ sealed class McType {
                 PrimitiveTypeKind.LONG -> McNode(CstLongOp(0))
                 PrimitiveTypeKind.FLOAT -> McNode(CstFloatOp(0f))
                 PrimitiveTypeKind.DOUBLE -> McNode(CstDoubleOp(0.0))
+            }
+        }
+
+        fun cast(node: McNode): McNode {
+            val inputType = node.op.returnType as? PrimitiveType ?: throw CompileException("Cannot cast ${node.op.returnType} to $this")
+            if (inputType == this) {
+                return node
+            }
+            if (this == DOUBLE && inputType == FLOAT) {
+                return McNode(ImplicitCastOp(inputType, this), node)
+            }
+            if (this == FLOAT && inputType == DOUBLE) {
+                return McNode(CastOp(inputType, this), node)
+            }
+            if (this == VOID || this == BOOLEAN || this == FLOAT || this == DOUBLE
+                || inputType == VOID || inputType == BOOLEAN || inputType == FLOAT || inputType == DOUBLE) {
+                throw CompileException("Cannot cast $inputType to $this")
+            }
+            val implicit = this == LONG || (inputType != LONG
+                    && (this == INT || (inputType != INT
+                        && (this == SHORT || inputType != SHORT))))
+            return if (implicit) {
+                McNode(ImplicitCastOp(inputType, this), node)
+            } else {
+                McNode(CastOp(inputType, this), node)
             }
         }
     }
@@ -152,12 +185,54 @@ val McType.hasComponentType get() = componentTypeOrNull() != null
 val McType.dimensions: Int
     get() = generateSequence(this) { it.componentTypeOrNull() }.count() - 1
 
+val McType.isGeneric: Boolean
+    get() {
+        var type = this
+        while (true) {
+            when (type) {
+                is McType.ArrayType -> type = type.elementType
+                is McType.DeclaredType -> return type.typeArguments.isNotEmpty()
+                else -> return false
+            }
+        }
+    }
+
+val McType.rawType: McType
+    get() {
+        var arrayDimensions = 0
+        var type = this
+        while (type is McType.ArrayType) {
+            arrayDimensions++
+            type = type.elementType
+        }
+        if (type is McType.DeclaredType) {
+            type = McType.DeclaredType(type.name)
+        }
+        repeat(arrayDimensions) {
+            type = McType.ArrayType(type)
+        }
+        return type
+    }
+
 val McType.isOptional get() = this is McType.DeclaredType
         && (this.name == CommonClassNames.OPTIONAL || this.name == CommonClassNames.OPTIONAL_INT || this.name == CommonClassNames.OPTIONAL_LONG || this.name == CommonClassNames.OPTIONAL_INT)
 
+val McType.isIntegral get() = this is McType.PrimitiveType && when (this.kind) {
+    PrimitiveTypeKind.BYTE, PrimitiveTypeKind.INT, PrimitiveTypeKind.LONG, PrimitiveTypeKind.SHORT -> true
+    else -> false
+}
+
+fun McType.hasName(name: String) = (this as? McType.DeclaredType)?.name == name
+
+val McType.classInfo get() = if (this is McType.DeclaredType) getClassInfo(name) else throw CompileException("Class info not found for $this")
+
+val McType.classInfoOrNull get() = (this as? McType.DeclaredType)?.name?.let(::getClassInfoOrNull)
+
+val McType.messageVariantInfo get() = if (this is McType.DeclaredType) getMessageVariantInfo(name) else throw CompileException("Message variant info not found for $this")
+
 val Types.isIntegral
     get() = when (this) {
-        Types.BOOLEAN, Types.BYTE, Types.INT, Types.LONG, Types.SHORT, Types.VAR_INT, Types.VAR_LONG, Types.UNSIGNED_BYTE -> true
+        Types.BYTE, Types.INT, Types.LONG, Types.SHORT, Types.VAR_INT, Types.VAR_LONG, Types.UNSIGNED_BYTE -> true
         else -> false
     }
 

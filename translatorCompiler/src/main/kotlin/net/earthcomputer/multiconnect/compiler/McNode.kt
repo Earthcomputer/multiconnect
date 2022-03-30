@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.compiler
 
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.THROWABLE
 import java.util.Collections
 import java.util.SortedSet
 
@@ -86,7 +88,7 @@ class McNode(op: McNodeOp, inputs: MutableList<McNode>) {
         }
         addExceptions(other)
 
-        for (usage in usages) {
+        for (usage in usages.toList()) {
             if (usage in exceptions) continue
             for ((index, input) in usage.inputs.withIndex()) {
                 if (input == this) {
@@ -186,6 +188,7 @@ interface McNodeOp {
     val precedence: Precedence
     val hasSideEffects: Boolean get() = false
     val declaredVariables: List<VariableId> get() = emptyList()
+    val throwsException: Boolean get() = false
     fun emit(node: McNode, emitter: Emitter)
 }
 
@@ -299,9 +302,7 @@ fun createCstOp(value: Any): CstOp {
     }
 }
 
-class LoadVariableOp(val variable: VariableId, type: McType) : McNodeOp {
-    constructor(variable: String, type: McType) : this(VariableId.immediate(variable), type)
-
+class LoadVariableOp(private val variable: VariableId, type: McType) : McNodeOp {
     override val paramTypes = listOf<McType>()
     override val returnType = type
     override val isExpensive = false
@@ -311,14 +312,57 @@ class LoadVariableOp(val variable: VariableId, type: McType) : McNodeOp {
     }
 }
 
-class LoadFieldOp(ownerType: McType, private val fieldName: String, fieldType: McType) : McNodeOp {
-    override val paramTypes = listOf(ownerType)
+class LoadFieldOp(
+    private val ownerType: McType,
+    private val fieldName: String,
+    fieldType: McType,
+    private val isStatic: Boolean = false
+) : McNodeOp {
+    override val paramTypes = if (isStatic) { listOf() } else { listOf(ownerType) }
     override val returnType = fieldType
     override val isExpensive = false
     override val precedence = Precedence.PARENTHESES
     override fun emit(node: McNode, emitter: Emitter) {
-        node.inputs[0].emit(emitter, Precedence.PARENTHESES)
+        if (isStatic) {
+            ownerType.emit(emitter)
+        } else {
+            node.inputs[0].emit(emitter, Precedence.PARENTHESES)
+        }
         emitter.append(".").append(fieldName)
+    }
+}
+
+class LoadArrayOp(componentType: McType) : McNodeOp {
+    override val paramTypes = listOf(componentType.arrayOf(), McType.INT)
+    override val returnType = componentType
+    override val isExpensive = false
+    override val precedence = Precedence.PARENTHESES
+    override fun emit(node: McNode, emitter: Emitter) {
+        node.inputs[0].emit(emitter, Precedence.PARENTHESES)
+        emitter.append("[")
+        node.inputs[1].emit(emitter, Precedence.COMMA)
+        emitter.append("]")
+    }
+}
+
+class UnaryExpressionOp(private val operator: String, type: McType) : McNodeOp {
+    init {
+        when (operator) {
+            "!" -> if (type != McType.BOOLEAN) throw CompileException("The ! operator only supports boolean")
+            "~" -> if (!type.isIntegral) throw CompileException("The ~ operator only supports integral types")
+            "+", "-" -> if (!type.isIntegral && type != McType.FLOAT && type != McType.DOUBLE) throw CompileException("The $operator operator only supports numeric types")
+            else -> throw CompileException("Unknown unary operator $operator")
+        }
+    }
+
+    override val paramTypes = listOf(type)
+    override val returnType = type
+    override val isExpensive = true
+    override val precedence = Precedence.UNARY
+
+    override fun emit(node: McNode, emitter: Emitter) {
+        emitter.append(operator)
+        node.inputs[0].emit(emitter, Precedence.UNARY)
     }
 }
 
@@ -382,7 +426,8 @@ class FunctionCallOp(
     override val paramTypes: List<McType>,
     override val returnType: McType,
     override val hasSideEffects: Boolean,
-    private val isStatic: Boolean = true
+    private val isStatic: Boolean = true,
+    override val throwsException: Boolean = false,
 ) : McNodeOp {
     override val isExpensive = true
     override val precedence = Precedence.PARENTHESES
@@ -425,6 +470,27 @@ class NewOp(private val typeName: String, override val paramTypes: List<McType>)
     }
 }
 
+class NewArrayOp(private val componentType: McType) : McNodeOp {
+    override val returnType = componentType.arrayOf()
+    override val isExpensive = true
+    override val precedence = Precedence.CAST
+    override val hasSideEffects = true
+    override val paramTypes = listOf(McType.INT)
+
+    override fun emit(node: McNode, emitter: Emitter) {
+        if (componentType.isGeneric) {
+            emitter.append("(")
+            componentType.arrayOf().emit(emitter)
+            emitter.append(") ")
+        }
+        emitter.append("new ")
+        componentType.rawType.emit(emitter)
+        emitter.append("[")
+        node.inputs[0].emit(emitter, Precedence.COMMA)
+        emitter.append("]")
+    }
+}
+
 class SwitchOp<T: Any>(
     private val cases: SortedSet<T>,
     private val hasDefault: Boolean,
@@ -446,7 +512,7 @@ class SwitchOp<T: Any>(
         }
         for ((key, handler) in cases.asSequence().zip(node.inputs.asSequence().drop(1))) {
             emitter.appendNewLine().append("case ")
-            McNode(createCstOp(key), mutableListOf()).emit(emitter, Precedence.COMMA)
+            emitCase(key, emitter)
             emitter.append(" -> ")
             if (handler.op.isExpression) {
                 handler.emit(emitter, Precedence.COMMA)
@@ -473,6 +539,52 @@ class SwitchOp<T: Any>(
             }
         }
         emitter.dedent().appendNewLine().append("}")
+    }
+
+    private fun emitCase(case: Any, emitter: Emitter) {
+        when (case) {
+            is EnumCase -> emitter.append(case.name)
+            is GroupCase<*> -> {
+                for ((index, subCase) in case.cases.withIndex()) {
+                    if (index != 0) {
+                        emitter.append(", ")
+                    }
+                    emitCase(subCase, emitter)
+                }
+            }
+            else -> McNode(createCstOp(case)).emit(emitter, Precedence.COMMA)
+        }
+    }
+
+    data class EnumCase(val name: String): Comparable<EnumCase> {
+        override fun compareTo(other: EnumCase) = name.compareTo(other.name)
+    }
+    data class GroupCase<T: Comparable<T>>(val cases: SortedSet<T>): Comparable<GroupCase<T>> {
+        init {
+            if (cases.isEmpty()) {
+                throw IllegalArgumentException("Cases must not be empty")
+            }
+        }
+
+        override fun compareTo(other: GroupCase<T>): Int {
+            return cases.zip(other.cases)
+                .firstOrNull { (first, second) -> first != second }
+                ?.let { (first, second) -> first.compareTo(second) }
+                ?: cases.size.compareTo(other.cases.size)
+        }
+    }
+}
+
+internal object TryCatchStmtOp : McStmtOp() {
+    override val paramTypes = listOf(McType.VOID)
+
+    override fun emit(node: McNode, emitter: Emitter) {
+        emitter.append("try {").indent().appendNewLine()
+        node.inputs[0].emit(emitter, Precedence.COMMA)
+        emitter.dedent().appendNewLine()
+        emitter.append("} catch (").appendClassName(THROWABLE).append(" ex) {").indent().appendNewLine()
+        emitter.append("throw ").appendClassName(PACKET_INTRINSICS).append(".sneakyThrow(ex);").dedent().appendNewLine()
+        emitter.append("}")
     }
 }
 
@@ -541,13 +653,11 @@ class ReturnStmtOp(retType: McType) : McStmtOp() {
 }
 
 class StoreVariableStmtOp(
-    val variable: VariableId,
+    private val variable: VariableId,
     private val type: McType,
-    val declare: Boolean,
+    private val declare: Boolean,
     private val operator: String = "="
 ) : McStmtOp() {
-    constructor(variable: String, type: McType, declare: Boolean, operator: String = "=") : this(VariableId.immediate(variable), type, declare, operator)
-
     init {
         if (declare && operator != "=") {
             throw CompileException("Operator type for declare assignment must be =")
@@ -587,9 +697,22 @@ class StoreFieldStmtOp(ownerType: McType, private val fieldName: String, fieldTy
     }
 }
 
-class DeclareVariableOnlyStmtOp(private val variable: VariableId, private val type: McType) : McStmtOp() {
-    constructor(variable: String, type: McType) : this(VariableId.immediate(variable), type)
+class StoreArrayStmtOp(componentType: McType) : McStmtOp() {
+    override val paramTypes = listOf(componentType.arrayOf(), McType.INT, componentType)
+    override val hasSideEffects = true
 
+    override fun emit(node: McNode, emitter: Emitter) {
+        node.inputs[0].emit(emitter, Precedence.PARENTHESES)
+        emitter.append("[")
+        node.inputs[1].emit(emitter, Precedence.COMMA)
+        emitter.append("] = ")
+        node.inputs[2].emit(emitter, Precedence.ASSIGNMENT)
+        emitter.append(";")
+    }
+}
+
+class DeclareVariableOnlyStmtOp(private val variable: VariableId, private val type: McType) : McStmtOp() {
+    override val declaredVariables = listOf(variable)
     override val paramTypes = emptyList<McType>()
     override val hasSideEffects = true
 
