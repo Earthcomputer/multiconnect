@@ -161,6 +161,44 @@ enum class PrimitiveTypeKind {
     BOOLEAN, BYTE, CHAR, DOUBLE, FLOAT, INT, LONG, SHORT, VOID
 }
 
+fun Any.downcastConstant(targetType: McType): Any {
+    if (targetType == McType.FLOAT && this is Double) {
+        return toFloat()
+    }
+    if (this is Long && targetType is McType.PrimitiveType) {
+        return when (targetType.kind) {
+            PrimitiveTypeKind.BYTE -> toByte()
+            PrimitiveTypeKind.CHAR -> toInt().toChar()
+            PrimitiveTypeKind.SHORT -> toShort()
+            PrimitiveTypeKind.INT -> toInt()
+            else -> this
+        }
+    }
+    if (this is Int && targetType is McType.PrimitiveType) {
+        return when (targetType.kind) {
+            PrimitiveTypeKind.BYTE -> toByte()
+            PrimitiveTypeKind.CHAR -> toChar()
+            PrimitiveTypeKind.SHORT -> toShort()
+            else -> this
+        }
+    }
+    if (this is Short && targetType is McType.PrimitiveType) {
+        return when (targetType.kind) {
+            PrimitiveTypeKind.BYTE -> toByte()
+            PrimitiveTypeKind.CHAR -> toInt().toChar()
+            else -> this
+        }
+    }
+    if (this is Char && targetType is McType.PrimitiveType) {
+        return when (targetType.kind) {
+            PrimitiveTypeKind.BYTE -> code.toByte()
+            PrimitiveTypeKind.SHORT -> code.toShort()
+            else -> this
+        }
+    }
+    return this
+}
+
 fun McType.componentTypeOrNull(): McType? {
     return when (this) {
         is McType.ArrayType -> this.elementType

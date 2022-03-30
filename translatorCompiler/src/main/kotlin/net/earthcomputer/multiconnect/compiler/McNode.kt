@@ -484,10 +484,17 @@ class NewArrayOp(private val componentType: McType) : McNodeOp {
             emitter.append(") ")
         }
         emitter.append("new ")
-        componentType.rawType.emit(emitter)
+        var nonArrayType = componentType
+        var extraDims = 0
+        while (nonArrayType is McType.ArrayType) {
+            nonArrayType = nonArrayType.elementType
+            extraDims++
+        }
+        nonArrayType.rawType.emit(emitter)
         emitter.append("[")
         node.inputs[0].emit(emitter, Precedence.COMMA)
         emitter.append("]")
+        emitter.append("[]".repeat(extraDims))
     }
 }
 

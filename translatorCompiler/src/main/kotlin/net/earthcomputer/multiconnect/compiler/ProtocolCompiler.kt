@@ -196,7 +196,12 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
         else
             (group.asReversed().asSequence().takeWhile { it != messageVariantInfo.className } + sequenceOf(messageVariantInfo.className)).toList()
 
-        return generateMessageReadGraph(getMessageVariantInfo(packetChain.first()))
+        return McNode(StmtListOp,
+            McNode(StoreVariableStmtOp(VariableId.immediate("result"), McType.DeclaredType(messageVariantInfo.className), true),
+                generateMessageReadGraph(getMessageVariantInfo(packetChain.first()))
+            ),
+            McNode(ReturnStmtOp(McType.BYTE_BUF), McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF)))
+        )
     }
 
     private fun generatePolymorphicInstantiationGraph(
@@ -258,20 +263,25 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
                     when (val polymorphic = childMessage?.polymorphic) {
                         is Polymorphic.Constant<*> -> McNode(IfStmtOp,
                             polymorphic.value.map {
+                                val actualValue = if (type.realType == McType.FLOAT) {
+                                    (it as? Double)?.toFloat() ?: it
+                                } else {
+                                    it
+                                }
                                 McNode(BinaryExpressionOp("==", type.realType, type.realType),
                                     loadTypeField,
-                                    McNode(createCstOp(it))
+                                    McNode(createCstOp(actualValue))
                                 )
                             }.reduce { left, right ->
                                 McNode(BinaryExpressionOp("||", McType.BOOLEAN, McType.BOOLEAN), left, right)
                             },
-                            McNode(StmtListOp, McNode(ReturnStmtOp(type.realType), construct(childMessage)))
+                            McNode(StmtListOp, McNode(ReturnStmtOp(messageType), construct(childMessage)))
                         )
                         is Polymorphic.Condition -> McNode(IfStmtOp,
                             generateFunctionCallGraph(message.findFunction(polymorphic.value), loadTypeField, paramResolver = paramResolver),
-                            McNode(StmtListOp, McNode(ReturnStmtOp(type.realType), construct(childMessage)))
+                            McNode(StmtListOp, McNode(ReturnStmtOp(messageType), construct(childMessage)))
                         )
-                        is Polymorphic.Otherwise -> McNode(ReturnStmtOp(type.realType), construct(childMessage))
+                        is Polymorphic.Otherwise -> McNode(ReturnStmtOp(messageType), construct(childMessage))
                         null -> McNode(ThrowStmtOp,
                             McNode(NewOp("java.lang.IllegalArgumentException", listOf(McType.STRING)),
                                 McNode(createCstOp("Could not select polymorphic child of \"${splitPackageClass(message.className).second}\""))
@@ -298,12 +308,12 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
                             type.realType.isIntegral && type.registry != null ->
                                 group.value.filter { it !is String || type.registry.getRawId(it) != null }.map { case ->
                                     (case as? String)?.let {
-                                        type.registry.getRawId(it)!!
+                                        type.registry.getRawId(it)!!.downcastConstant(type.realType)
                                     } ?: case
                                 }
                             type.realType.classInfoOrNull is EnumInfo ->
                                 group.value.map { SwitchOp.EnumCase(it as String) }
-                            else -> group.value
+                            else -> group.value.map { it.downcastConstant(type.realType) }
                         }
                     }
                     .filter { it.isNotEmpty() }
@@ -325,21 +335,14 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
                     )
                 } else {
                     loadTypeField
-                }) + results.map {
-                    McNode(ImplicitCastOp(McType.DeclaredType(it.className), messageType),
-                        McNode(NewOp(it.className, listOf()))
-                    )
-                } + listOf(defaultBranch)).toMutableList()
+                }) + results.map(::construct) + listOf(defaultBranch)).toMutableList()
             )
         }
         return makeCases<String>() // use String as placeholder type argument
     }
 
     private fun generateMessageReadGraph(message: MessageVariantInfo, polymorphicBy: McNode? = null): McNode {
-        val parentInfo = message.polymorphicParent?.let(::getMessageVariantInfo)
-        return if ((message.tailrec && message.fields.lastOrNull()?.type?.realType?.hasName(message.className) == true)
-            || (parentInfo != null && parentInfo.tailrec && message.fields.lastOrNull()?.type?.realType?.hasName(parentInfo.className) == true)
-        ) {
+        return if (message.tailrec) {
             val messageType = McType.DeclaredType(message.className)
             val nodes = mutableListOf<McNode>()
             val returnVar = VariableId.create()
@@ -379,10 +382,12 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
                         McNode(StoreVariableStmtOp(lastMethodHandle, methodHandleType, true), McNode(LoadVariableOp(currentMethodHandle, methodHandleType))),
                         McNode(StoreVariableStmtOp(lastMessageVar, messageType, true), McNode(LoadVariableOp(currentMessageVar, messageType))),
                         McNode(StoreVariableStmtOp(currentMessageVar, messageType, false), generateMessageReadGraphInner(message, null, null, currentMethodHandle)),
-                        McNode(FunctionCallOp(METHOD_HANDLE, "invoke", listOf(methodHandleType, messageType, messageType), McType.VOID, true, isStatic = false, throwsException = true),
-                            McNode(LoadVariableOp(lastMethodHandle, methodHandleType)),
-                            McNode(LoadVariableOp(lastMessageVar, messageType)),
-                            McNode(LoadVariableOp(currentMessageVar, messageType))
+                        McNode(PopStmtOp,
+                            McNode(FunctionCallOp(METHOD_HANDLE, "invoke", listOf(methodHandleType, messageType, messageType), McType.VOID, true, isStatic = false, throwsException = true),
+                                McNode(LoadVariableOp(lastMethodHandle, methodHandleType)),
+                                McNode(LoadVariableOp(lastMessageVar, messageType)),
+                                McNode(LoadVariableOp(currentMessageVar, messageType))
+                            )
                         )
                     )
                 )
@@ -447,7 +452,7 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
                         vars[field.name] = childFieldVarId
                         childNodes += McNode(StoreVariableStmtOp(childFieldVarId, field.type.realType, true),
                             generateFieldReadGraph(
-                                message,
+                                childMessage,
                                 field,
                                 index == childMessage.fields.lastIndex && (
                                     (message.tailrec && field.type.realType.hasName(message.className))
@@ -483,6 +488,11 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
                                 }
                             )
                         }
+                    }
+                    if (recursivePolymorphicMethodHandle != null && childMessage.fields.isEmpty()) {
+                        childNodes += McNode(StoreVariableStmtOp(recursivePolymorphicMethodHandle, McType.DeclaredType(METHOD_HANDLE), false),
+                            McNode(CstNullOp(McType.DeclaredType(METHOD_HANDLE)))
+                        )
                     }
                     McNode(StmtListOp, childNodes)
                 }
@@ -541,6 +551,28 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
     private fun generateTypeReadGraph(contextMessage: MessageVariantInfo, realType: McType, wireType: Types, lengthInfo: LengthInfo?, paramResolver: (String, McType) -> McNode): McNode {
         // deal with arrays, lists, etc
         if (realType.hasComponentType) {
+            if (realType.isOptional) {
+                val varId = VariableId.create()
+                val componentType = realType.componentType()
+                return McNode(StmtListOp,
+                    McNode(DeclareVariableOnlyStmtOp(varId, realType)),
+                    McNode(IfElseStmtOp,
+                        IoOps.readType(VariableId.immediate("buf"), Types.BOOLEAN),
+                        McNode(StmtListOp,
+                            McNode(StoreVariableStmtOp(varId, realType, false),
+                                McNode(FunctionCallOp((realType as McType.DeclaredType).name, "of", listOf(componentType), realType, false),
+                                    generateTypeReadGraph(contextMessage, componentType, wireType, lengthInfo, paramResolver)
+                                )
+                            )
+                        ),
+                        McNode(StmtListOp, McNode(StoreVariableStmtOp(varId, realType, false),
+                            generateDefaultConstructGraph(realType)
+                        ))
+                    ),
+                    McNode(ReturnStmtOp(realType), McNode(LoadVariableOp(varId, realType)))
+                )
+            }
+
             val varId = VariableId.create()
             val lengthVar = VariableId.create()
             val lengthNode = when (lengthInfo?.computeInfo) {
@@ -805,7 +837,7 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
     private fun generateConstantGraph(targetType: McType, value: Any, registry: Registries? = null): McNode {
         return if (targetType.isIntegral && registry != null && value is String) {
             val rawId = registry.getRawId(value) ?: throw CompileException("Unknown value \"$value\" in registry $registry")
-            McNode(createCstOp(rawId))
+            McNode(createCstOp(rawId.downcastConstant(targetType)))
         } else if (targetType.hasName(IDENTIFIER)) {
             val (namespace, name) = (value as String).normalizeIdentifier().split(':', limit = 2)
             McNode(NewOp(IDENTIFIER, listOf(McType.STRING, McType.STRING)),
@@ -817,7 +849,7 @@ class ProtocolCompiler(private val protocolName: String, private val protocolId:
             if (enumInfo != null) {
                 McNode(LoadFieldOp(targetType, value as String, targetType, isStatic = true))
             } else {
-                McNode(createCstOp(value))
+                McNode(createCstOp(value.downcastConstant(targetType)))
             }
         }
     }

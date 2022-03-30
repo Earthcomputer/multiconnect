@@ -150,6 +150,10 @@ fun TypeElement.findMulticonnectFunction(
         errorConsumer?.report("Multiconnect method must be static", method)
         return null
     }
+    if (!method.hasModifier(Modifier.PUBLIC)) {
+        errorConsumer?.report("Multiconnect method must be public", method)
+        return null
+    }
     if (!method.isThrowSafe(processingEnv)) {
         errorConsumer?.report("Multiconnect methods must be throw safe", method)
         return null

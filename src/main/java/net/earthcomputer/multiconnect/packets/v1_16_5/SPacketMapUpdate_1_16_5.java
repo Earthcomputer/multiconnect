@@ -39,7 +39,7 @@ public class SPacketMapUpdate_1_16_5 {
     @OnlyIf("hasColumns")
     public byte[] data;
 
-    private static boolean hasColumns(@Argument("columns") int columns) {
+    public static boolean hasColumns(@Argument("columns") int columns) {
         return columns > 0;
     }
 
