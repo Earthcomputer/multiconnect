@@ -86,11 +86,14 @@ private class Optimizer(var rootNode: McNode) {
                     return@forEachNode
                 }
                 val usage = node.usages.single()
-                if (!usage.op.isExpression || usage.op is LambdaOp) {
+                if (usage.op is StmtListOp || usage.op is LambdaOp || (usage.op is SwitchOp<*> && node != usage.inputs[0])) {
+                    return@forEachNode
+                }
+                val varType = usage.op.paramTypes[usage.inputs.indexOf(node)]
+                if (varType == McType.VOID) {
                     return@forEachNode
                 }
                 val variable = VariableId.create()
-                val varType = usage.op.paramTypes[usage.inputs.indexOf(node)]
                 node.replace(McNode(LoadVariableOp(variable, varType), mutableListOf()))
                 val parentStmt = generateSequence(usage) { it.usages.firstOrNull() }.firstOrNull { !it.op.isExpression } ?: return@forEachNode
                 parentStmt.replace(McNode(StmtListOp, mutableListOf(
