@@ -1,10 +1,5 @@
 package net.earthcomputer.multiconnect.packets;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.ByteBufOutputStream;
-import io.netty.handler.codec.DecoderException;
-import io.netty.handler.codec.EncoderException;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
@@ -14,13 +9,7 @@ import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtTagSizeTracker;
-import net.minecraft.network.PacketByteBuf;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.BitSet;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.UUID;

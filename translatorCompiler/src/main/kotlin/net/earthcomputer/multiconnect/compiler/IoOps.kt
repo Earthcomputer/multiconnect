@@ -1,6 +1,15 @@
 package net.earthcomputer.multiconnect.compiler
 
 import net.earthcomputer.multiconnect.ap.Types
+import net.earthcomputer.multiconnect.compiler.node.BinaryExpressionOp
+import net.earthcomputer.multiconnect.compiler.node.CstIntOp
+import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
+import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
+import net.earthcomputer.multiconnect.compiler.node.McNode
+import net.earthcomputer.multiconnect.compiler.node.NewOp
+import net.earthcomputer.multiconnect.compiler.node.PopStmtOp
+import net.earthcomputer.multiconnect.compiler.node.StmtListOp
+import net.earthcomputer.multiconnect.compiler.node.VariableId
 
 object IoOps {
     fun skipOver(bufVar: VariableId, type: Types): McNode {

@@ -1,0 +1,73 @@
+package net.earthcomputer.multiconnect.compiler.opto
+
+import net.earthcomputer.multiconnect.compiler.McType
+import net.earthcomputer.multiconnect.compiler.node.IfElseStmtOp
+import net.earthcomputer.multiconnect.compiler.node.IfStmtOp
+import net.earthcomputer.multiconnect.compiler.node.LambdaOp
+import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
+import net.earthcomputer.multiconnect.compiler.node.McNode
+import net.earthcomputer.multiconnect.compiler.node.ReturnAsVariableBlockOp
+import net.earthcomputer.multiconnect.compiler.node.ReturnStmtOp
+import net.earthcomputer.multiconnect.compiler.node.StmtListOp
+import net.earthcomputer.multiconnect.compiler.node.SwitchOp
+import net.earthcomputer.multiconnect.compiler.node.VariableId
+
+internal fun Optimizer.extractStatementsInExpressions() {
+    var changed = true
+    while (changed) {
+        changed = false
+        forEachNode { node ->
+            // search for statements within expressions
+            if (node == rootNode || node.op.isExpression) {
+                return@forEachNode
+            }
+            val usage = node.usages.single()
+            if (usage.op is StmtListOp || usage.op is LambdaOp || (usage.op is SwitchOp<*> && node != usage.inputs[0])) {
+                return@forEachNode
+            }
+            val varType = usage.op.paramTypes[usage.inputs.indexOf(node)]
+            if (varType == McType.VOID) {
+                return@forEachNode
+            }
+            val variable = VariableId.create()
+            node.replace(McNode(LoadVariableOp(variable, varType), mutableListOf()))
+            val parentStmt = generateSequence(usage) { it.usages.firstOrNull() }.firstOrNull { !it.op.isExpression } ?: return@forEachNode
+            parentStmt.replace(
+                McNode(
+                    StmtListOp, mutableListOf(
+                convertReturnToVariableDeclaration(node, variable, varType),
+                parentStmt
+            ))
+            )
+            changed = true
+        }
+    }
+}
+
+private fun convertReturnToVariableDeclaration(stmtList: McNode, variable: VariableId, varType: McType): McNode {
+    var hasEarlyReturnStatements = false
+    fun findEarlyReturnStatements(n: McNode, isEarly: Boolean) {
+        if (hasEarlyReturnStatements) return
+        if (isEarly && n.op is ReturnStmtOp) {
+            hasEarlyReturnStatements = true
+            return
+        }
+        for ((index, input) in n.inputs.withIndex()) {
+            val childIsEarly = isEarly || when (n.op) {
+                is StmtListOp -> index != n.inputs.lastIndex
+                is IfStmtOp, is IfElseStmtOp -> index == 0
+                is ReturnStmtOp -> false
+                else -> true
+            }
+            findEarlyReturnStatements(input, childIsEarly)
+        }
+    }
+
+    findEarlyReturnStatements(stmtList, false)
+
+    return if (hasEarlyReturnStatements) {
+        McNode(ReturnAsVariableBlockOp(VariableId.create(), variable, varType), mutableListOf(stmtList))
+    } else {
+        McNode(ReturnAsVariableBlockOp(null, variable, varType), mutableListOf(stmtList))
+    }
+}

@@ -3,6 +3,15 @@ package net.earthcomputer.multiconnect.compiler
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.earthcomputer.multiconnect.ap.Types
+import net.earthcomputer.multiconnect.compiler.node.CastOp
+import net.earthcomputer.multiconnect.compiler.node.CstBoolOp
+import net.earthcomputer.multiconnect.compiler.node.CstDoubleOp
+import net.earthcomputer.multiconnect.compiler.node.CstFloatOp
+import net.earthcomputer.multiconnect.compiler.node.CstIntOp
+import net.earthcomputer.multiconnect.compiler.node.CstLongOp
+import net.earthcomputer.multiconnect.compiler.node.CstNullOp
+import net.earthcomputer.multiconnect.compiler.node.ImplicitCastOp
+import net.earthcomputer.multiconnect.compiler.node.McNode
 
 object CommonClassNames {
     const val BYTE_BUF = "io.netty.buffer.ByteBuf"

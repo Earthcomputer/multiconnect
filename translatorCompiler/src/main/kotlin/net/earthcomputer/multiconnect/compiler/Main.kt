@@ -2,6 +2,8 @@
 
 package net.earthcomputer.multiconnect.compiler
 
+import net.earthcomputer.multiconnect.compiler.gen.ProtocolCompiler
+import net.earthcomputer.multiconnect.compiler.gen.checkMessages
 import java.io.File
 
 object FileLocations {
