@@ -13,34 +13,30 @@ import net.earthcomputer.multiconnect.compiler.node.SwitchOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
 
 internal fun Optimizer.extractStatementsInExpressions() {
-    var changed = true
-    while (changed) {
-        changed = false
-        forEachNode { node ->
-            // search for statements within expressions
-            if (node == rootNode || node.op.isExpression) {
-                return@forEachNode
-            }
-            val usage = node.usages.single()
-            if (usage.op is StmtListOp || usage.op is LambdaOp || (usage.op is SwitchOp<*> && node != usage.inputs[0])) {
-                return@forEachNode
-            }
-            val varType = usage.op.paramTypes[usage.inputs.indexOf(node)]
-            if (varType == McType.VOID) {
-                return@forEachNode
-            }
-            val variable = VariableId.create()
-            node.replace(McNode(LoadVariableOp(variable, varType), mutableListOf()))
-            val parentStmt = generateSequence(usage) { it.usages.firstOrNull() }.firstOrNull { !it.op.isExpression } ?: return@forEachNode
-            parentStmt.replace(
-                McNode(
-                    StmtListOp, mutableListOf(
-                convertReturnToVariableDeclaration(node, variable, varType),
-                parentStmt
-            ))
-            )
-            changed = true
+    forEachNodeDepthFirstUnsafe { node ->
+        // search for statements within expressions
+        if (node == rootNode || node.op.isExpression) {
+            return@forEachNodeDepthFirstUnsafe
         }
+        val usage = node.usages.single()
+        if (usage.op is StmtListOp || usage.op is LambdaOp || (usage.op is SwitchOp<*> && node != usage.inputs[0])) {
+            return@forEachNodeDepthFirstUnsafe
+        }
+        val varType = usage.op.paramTypes[usage.inputs.indexOf(node)]
+        if (varType == McType.VOID) {
+            return@forEachNodeDepthFirstUnsafe
+        }
+        val variable = VariableId.create()
+        node.replace(McNode(LoadVariableOp(variable, varType), mutableListOf()))
+        val parentStmt = generateSequence(usage) { it.usages.firstOrNull() }.firstOrNull { !it.op.isExpression } ?: return@forEachNodeDepthFirstUnsafe
+        parentStmt.replace(
+            McNode(
+                StmtListOp, mutableListOf(
+                    convertReturnToVariableDeclaration(node, variable, varType),
+                    parentStmt
+                ))
+        )
+        markChanged()
     }
 }
 
@@ -53,6 +49,11 @@ private fun convertReturnToVariableDeclaration(stmtList: McNode, variable: Varia
             return
         }
         for ((index, input) in n.inputs.withIndex()) {
+            when (n.op) {
+                is SwitchOp<*> -> if (index != 0) break
+                is ReturnAsVariableBlockOp, is LambdaOp -> break
+            }
+
             val childIsEarly = isEarly || when (n.op) {
                 is StmtListOp -> index != n.inputs.lastIndex
                 is IfStmtOp, is IfElseStmtOp -> index == 0

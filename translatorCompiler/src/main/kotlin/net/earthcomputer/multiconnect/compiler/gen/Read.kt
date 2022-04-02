@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.compiler.gen
 
 import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.BYTE_BUF
 import net.earthcomputer.multiconnect.compiler.EnumInfo
 import net.earthcomputer.multiconnect.compiler.IoOps
 import net.earthcomputer.multiconnect.compiler.LengthInfo
@@ -294,11 +295,28 @@ private fun ProtocolCompiler.generateTypeReadGraph(contextMessage: MessageVarian
         val lengthNode = when (lengthInfo?.computeInfo) {
             is LengthInfo.ComputeInfo.Constant -> McNode(createCstOp(lengthInfo.computeInfo.value))
             is LengthInfo.ComputeInfo.Compute -> generateFunctionCallGraph(contextMessage.findFunction(lengthInfo.computeInfo.value), paramResolver = paramResolver)
-            is LengthInfo.ComputeInfo.RemainingBytes -> McNode(FunctionCallOp(CommonClassNames.BYTE_BUF, "readableBytes", listOf(McType.BYTE_BUF), McType.INT, true, isStatic = false),
+            is LengthInfo.ComputeInfo.RemainingBytes -> McNode(FunctionCallOp(BYTE_BUF, "readableBytes", listOf(McType.BYTE_BUF), McType.INT, true, isStatic = false),
                 McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF))
             )
             null -> McType.INT.cast(IoOps.readType(VariableId.immediate("buf"), lengthInfo?.type ?: Types.VAR_INT))
         }
+
+        // byte array optimization: can read directly to it
+        if (realType == McType.BYTE.arrayOf()) {
+            return McNode(StmtListOp,
+                McNode(StoreVariableStmtOp(varId, realType, true),
+                    McNode(NewArrayOp(McType.BYTE), lengthNode)
+                ),
+                McNode(PopStmtOp,
+                    McNode(FunctionCallOp(BYTE_BUF, "readBytes", listOf(McType.BYTE_BUF, realType), McType.BYTE_BUF, true, isStatic = false),
+                        McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF)),
+                        McNode(LoadVariableOp(varId, realType))
+                    )
+                ),
+                McNode(ReturnStmtOp(realType), McNode(LoadVariableOp(varId, realType)))
+            )
+        }
+
         val arrayType = when (realType) {
             is McType.ArrayType -> realType
             is McType.DeclaredType -> when (realType.name) {

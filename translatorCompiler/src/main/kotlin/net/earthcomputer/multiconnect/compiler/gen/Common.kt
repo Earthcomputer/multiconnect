@@ -24,7 +24,9 @@ import net.earthcomputer.multiconnect.compiler.hasName
 import net.earthcomputer.multiconnect.compiler.isIntegral
 import net.earthcomputer.multiconnect.compiler.messageVariantInfo
 import net.earthcomputer.multiconnect.compiler.node.BinaryExpressionOp
+import net.earthcomputer.multiconnect.compiler.node.DeclareVariableOnlyStmtOp
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
+import net.earthcomputer.multiconnect.compiler.node.IfElseStmtOp
 import net.earthcomputer.multiconnect.compiler.node.IfStmtOp
 import net.earthcomputer.multiconnect.compiler.node.ImplicitCastOp
 import net.earthcomputer.multiconnect.compiler.node.LambdaOp
@@ -80,6 +82,29 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
     }
 
     val children = polymorphicChildren[message.className]?.map { getMessageVariantInfo(it) } ?: emptyList()
+
+    if (type.realType == McType.BOOLEAN && children.size == 2
+        && (children.all { it.polymorphic is Polymorphic.Constant<*> }
+            || (children.any { it.polymorphic is Polymorphic.Constant<*> } && children.any { it.polymorphic is Polymorphic.Otherwise })
+    )) {
+        val trueChild = children.firstOrNull { (it.polymorphic as? Polymorphic.Constant<*>)?.value?.contains(true) == true }
+            ?: children.firstOrNull { it.polymorphic is Polymorphic.Otherwise }
+        val falseChild = children.firstOrNull { (it.polymorphic as? Polymorphic.Constant<*>)?.value?.contains(false) == true }
+            ?: children.firstOrNull { it.polymorphic is Polymorphic.Otherwise }
+        if (trueChild != null && falseChild != null && trueChild.className != falseChild.className) {
+            val varId = VariableId.create()
+            return McNode(StmtListOp,
+                McNode(DeclareVariableOnlyStmtOp(varId, messageType)),
+                McNode(IfElseStmtOp,
+                    loadTypeField,
+                    McNode(StmtListOp, McNode(StoreVariableStmtOp(varId, messageType, false), construct(trueChild))),
+                    McNode(StmtListOp, McNode(StoreVariableStmtOp(varId, messageType, false), construct(falseChild)))
+                ),
+                McNode(ReturnStmtOp(messageType), McNode(LoadVariableOp(varId, messageType)))
+            )
+        }
+    }
+
     val useSwitchExpression = type.realType != McType.BOOLEAN
             && type.realType != McType.FLOAT
             && type.realType != McType.DOUBLE
