@@ -18,6 +18,8 @@ import net.earthcomputer.multiconnect.compiler.MessageInfo
 import net.earthcomputer.multiconnect.compiler.MessageVariantInfo
 import net.earthcomputer.multiconnect.compiler.classInfoOrNull
 import net.earthcomputer.multiconnect.compiler.componentType
+import net.earthcomputer.multiconnect.compiler.componentTypeOrNull
+import net.earthcomputer.multiconnect.compiler.deepComponentType
 import net.earthcomputer.multiconnect.compiler.getClassInfo
 import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
 import net.earthcomputer.multiconnect.compiler.hasName
@@ -66,7 +68,7 @@ private fun MessageInfo.needsTranslation(versionA: Int, versionB: Int): Boolean 
 
 private fun MessageVariantInfo.needsTranslation(versionA: Int, versionB: Int): Boolean {
     fun fieldNeedsTranslation(field: McField): Boolean {
-        val type = field.type.realType.classInfoOrNull
+        val type = field.type.realType.deepComponentType().classInfoOrNull
         if (type is MessageInfo) {
             return type.needsTranslation(versionA, versionB)
         } else if (type is MessageVariantInfo) {
@@ -238,6 +240,102 @@ internal fun ProtocolCompiler.translate(message: MessageVariantInfo, fromVersion
     }
 }
 
+private fun ProtocolCompiler.wrapContainerTranslation(type: McType, varId: VariableId, innerTranslator: (VariableId) -> McNode): McNode {
+    val componentType = type.componentTypeOrNull() ?: return innerTranslator(varId)
+
+    if (type.hasName(OPTIONAL)) {
+        val functionType = McType.DeclaredType("java.util.function.Function")
+        val lambdaParam = VariableId.create()
+        return McNode(FunctionCallOp(OPTIONAL, "map", listOf(type, functionType), type, false, isStatic = false),
+            McNode(LoadVariableOp(varId, type)),
+            McNode(LambdaOp(functionType, componentType, listOf(componentType), listOf(lambdaParam)),
+                wrapContainerTranslation(componentType, lambdaParam, innerTranslator)
+            )
+        )
+    } else if (type.hasName(LIST)) {
+        val resultVar = VariableId.create()
+        val lengthVar = VariableId.create()
+        val indexVar = VariableId.create()
+        val innerVar = VariableId.create()
+        return McNode(StmtListOp,
+            McNode(StoreVariableStmtOp(lengthVar, McType.INT, true),
+                McNode(FunctionCallOp(LIST, "size", listOf(type), McType.INT, false, isStatic = false),
+                    McNode(LoadVariableOp(varId, type))
+                )
+            ),
+            McNode(StoreVariableStmtOp(resultVar, type, true),
+                McNode(ImplicitCastOp(McType.DeclaredType(ARRAY_LIST), type),
+                    McNode(NewOp(ARRAY_LIST, listOf(McType.INT)),
+                        McNode(LoadVariableOp(lengthVar, McType.INT))
+                    )
+                )
+            ),
+            McNode(StoreVariableStmtOp(indexVar, McType.INT, true), McNode(CstIntOp(0))),
+            McNode(WhileStmtOp,
+                McNode(BinaryExpressionOp("<", McType.INT, McType.INT),
+                    McNode(LoadVariableOp(indexVar, McType.INT)),
+                    McNode(LoadVariableOp(lengthVar, McType.INT))
+                ),
+                McNode(StmtListOp,
+                    McNode(StoreVariableStmtOp(innerVar, componentType, true),
+                        McNode(FunctionCallOp(LIST, "get", listOf(type, McType.INT), componentType, false, isStatic = false),
+                            McNode(LoadVariableOp(varId, type)),
+                            McNode(LoadVariableOp(indexVar, McType.INT))
+                        )
+                    ),
+                    McNode(PopStmtOp,
+                        McNode(FunctionCallOp(LIST, "add", listOf(type, componentType), McType.VOID, true, isStatic = false),
+                            McNode(LoadVariableOp(resultVar, type)),
+                            wrapContainerTranslation(componentType, innerVar, innerTranslator)
+                        )
+                    ),
+                    McNode(StoreVariableStmtOp(indexVar, McType.INT, false, "+="), McNode(CstIntOp(1)))
+                )
+            ),
+            McNode(ReturnStmtOp(type), McNode(LoadVariableOp(resultVar, type)))
+        )
+    } else if (type is McType.ArrayType) {
+        val resultVar = VariableId.create()
+        val lengthVar = VariableId.create()
+        val indexVar = VariableId.create()
+        val innerVar = VariableId.create()
+        return McNode(StmtListOp,
+            McNode(StoreVariableStmtOp(lengthVar, McType.INT, true),
+                McNode(LoadFieldOp(type, "length", McType.INT),
+                    McNode(LoadVariableOp(varId, type))
+                )
+            ),
+            McNode(StoreVariableStmtOp(resultVar, type, true),
+                McNode(NewArrayOp(componentType), McNode(LoadVariableOp(lengthVar, McType.INT)))
+            ),
+            McNode(StoreVariableStmtOp(indexVar, McType.INT, true), McNode(CstIntOp(0))),
+            McNode(WhileStmtOp,
+                McNode(BinaryExpressionOp("<", McType.INT, McType.INT),
+                    McNode(LoadVariableOp(indexVar, McType.INT)),
+                    McNode(LoadVariableOp(lengthVar, McType.INT))
+                ),
+                McNode(StmtListOp,
+                    McNode(StoreVariableStmtOp(innerVar, componentType, true),
+                        McNode(LoadArrayOp(componentType),
+                            McNode(LoadVariableOp(varId, type)),
+                            McNode(LoadVariableOp(indexVar, McType.INT))
+                        )
+                    ),
+                    McNode(StoreArrayStmtOp(componentType),
+                        McNode(LoadVariableOp(resultVar, type)),
+                        McNode(LoadVariableOp(indexVar, McType.INT)),
+                        wrapContainerTranslation(componentType, innerVar, innerTranslator)
+                    ),
+                    McNode(StoreVariableStmtOp(indexVar, McType.INT, false, "+="), McNode(CstIntOp(1)))
+                )
+            ),
+            McNode(ReturnStmtOp(type), McNode(LoadVariableOp(resultVar, type)))
+        )
+    }
+
+    return innerTranslator(varId)
+}
+
 private fun ProtocolCompiler.translateInner(
     message: MessageVariantInfo,
     fromVersion: Int,
@@ -258,9 +356,9 @@ private fun ProtocolCompiler.translateInner(
                 McNode(LoadVariableOp(fromVarId, messageType))
             )
         )
-        val translateNode = when (val fieldTypeInfo = field.type.realType.classInfoOrNull) {
-            is MessageInfo -> translate(fieldTypeInfo, fromVersion, toVersion, fromFieldVarId)
-            is MessageVariantInfo -> translate(fieldTypeInfo, fromVersion, toVersion, fromFieldVarId)
+        val translateNode = when (val fieldTypeInfo = field.type.realType.deepComponentType().classInfoOrNull) {
+            is MessageInfo -> wrapContainerTranslation(field.type.realType, fromFieldVarId) { varId -> translate(fieldTypeInfo, fromVersion, toVersion, varId) }
+            is MessageVariantInfo -> wrapContainerTranslation(field.type.realType, fromFieldVarId) { varId -> translate(fieldTypeInfo, fromVersion, toVersion, varId) }
             else -> McNode(LoadVariableOp(fromFieldVarId, field.type.realType))
         }
         nodes += McNode(StoreVariableStmtOp(toFieldVarId, field.type.realType, true), translateNode)
@@ -306,9 +404,9 @@ private fun ProtocolCompiler.translateInner(
                             McNode(LoadVariableOp(childFromVarId, childType))
                         )
                     )
-                    val translateNode = when (val fieldTypeInfo = field.type.realType.classInfoOrNull) {
-                        is MessageInfo -> translate(fieldTypeInfo, fromVersion, toVersion, fromFieldVarId)
-                        is MessageVariantInfo -> translate(fieldTypeInfo, fromVersion, toVersion, fromFieldVarId)
+                    val translateNode = when (val fieldTypeInfo = field.type.realType.deepComponentType().classInfoOrNull) {
+                        is MessageInfo -> wrapContainerTranslation(field.type.realType, fromFieldVarId) { varId -> translate(fieldTypeInfo, fromVersion, toVersion, varId) }
+                        is MessageVariantInfo -> wrapContainerTranslation(field.type.realType, fromFieldVarId) { varId -> translate(fieldTypeInfo, fromVersion, toVersion, varId) }
                         else -> McNode(LoadVariableOp(fromFieldVarId, field.type.realType))
                     }
                     childNodes += McNode(StoreFieldStmtOp(childType, field.name, field.type.realType), translateNode)
