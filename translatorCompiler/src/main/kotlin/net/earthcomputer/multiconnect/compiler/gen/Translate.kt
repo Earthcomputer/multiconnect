@@ -456,7 +456,150 @@ internal fun ProtocolCompiler.translate(message: MessageInfo, fromVersion: Int, 
         return McNode(LoadVariableOp(fromVarId, messageType))
     }
 
-    // TODO: recursion
+    val fromVariant = message.getVariant(fromVersion)!!
+    val fromVariantType = fromVariant.toMcType()
+    val toVariant = message.getVariant(toVersion)!!
+    val toVariantType = toVariant.toMcType()
+
+    return if (toVariant.tailrec) {
+        if (!fromVariant.tailrec) {
+            throw CompileException("Cannot translate to tail recursive variant ${toVariant.className} from non-tail-recursive variant ${fromVariant.className}")
+        }
+        val nodes = mutableListOf<McNode>()
+        val toVarId = VariableId.create()
+        val curFromVarId = VariableId.create()
+        val curToVarId = VariableId.create()
+        val nextToVarId = VariableId.create()
+        if (toVariant.fields.last().type.realType.hasName(toVariant.className)) {
+            // the onlyIf variant of recursion
+            if (!fromVariant.fields.last().type.realType.hasName(fromVariant.className)) {
+                throw CompileException("Cannot translate to @OnlyIf tail recursive variant ${toVariant.className} from tail recursive non-@OnlyIf variant ${fromVariant.className}")
+            }
+            if (fromVariant.fields.last().name != toVariant.fields.last().name) {
+                throw CompileException("Tail recursive field names do not match between ${fromVariant.className} and ${toVariant.className}")
+            }
+
+            nodes += McNode(StoreVariableStmtOp(toVarId, toVariantType, true),
+                translateInner(message, fromVersion, toVersion, fromVarId, null)
+            )
+            nodes += McNode(StoreVariableStmtOp(curFromVarId, fromVariantType, true),
+                McNode(LoadVariableOp(fromVarId, fromVariantType))
+            )
+            nodes += McNode(StoreVariableStmtOp(curToVarId, toVariantType, true),
+                McNode(LoadVariableOp(toVarId, toVariantType))
+            )
+            nodes += McNode(WhileStmtOp,
+                McNode(BinaryExpressionOp("!=", fromVariantType, fromVariantType),
+                    McNode(LoadFieldOp(fromVariantType, fromVariant.fields.last().name, fromVariantType),
+                        McNode(LoadVariableOp(curFromVarId, fromVariantType))
+                    ),
+                    McNode(CstNullOp(fromVariantType))
+                ),
+                McNode(StmtListOp,
+                    McNode(StoreVariableStmtOp(curFromVarId, fromVariantType, false),
+                        McNode(LoadFieldOp(fromVariantType, fromVariant.fields.last().name, fromVariantType),
+                            McNode(LoadVariableOp(curFromVarId, fromVariantType))
+                        ),
+                    ),
+                    McNode(StoreVariableStmtOp(nextToVarId, toVariantType, true),
+                        translateInner(message, fromVersion, toVersion, curFromVarId, null)
+                    ),
+                    McNode(StoreFieldStmtOp(toVariantType, toVariant.fields.last().name, toVariantType),
+                        McNode(LoadVariableOp(curToVarId, toVariantType)),
+                        McNode(LoadVariableOp(nextToVarId, toVariantType))
+                    ),
+                    McNode(StoreVariableStmtOp(curToVarId, toVariantType, false),
+                        McNode(LoadVariableOp(nextToVarId, toVariantType))
+                    )
+                )
+            )
+        } else {
+            // the polymorphic variant of tail recursion
+            val methodHandleType = McType.DeclaredType(CommonClassNames.METHOD_HANDLE)
+            val currentMethodHandle = VariableId.create()
+            val nextMethodHandle = VariableId.create()
+            val nextFromVarId = VariableId.create()
+
+            fun handleSubtype(fromSubtype: MessageVariantInfo, toSubtype: MessageVariantInfo, subtypeFromVarId: VariableId): McNode {
+                return if (toSubtype.fields.lastOrNull()?.type?.realType?.hasName(toVariant.className) == true) {
+                    if (fromSubtype.fields.lastOrNull()?.type?.realType?.hasName(fromVariant.className) != true) {
+                        throw CompileException("Polymorphic tail recursive child ${fromSubtype.className} is not recursive, but is required to be by ${toSubtype.className}")
+                    }
+                    if (fromSubtype.fields.last().name != toSubtype.fields.last().name) {
+                        throw CompileException("Polymorphic tail recursive child ${fromSubtype.className} does not have the same recursive field name as ${toSubtype.className}")
+                    }
+
+                    val fromSubtypeType = fromSubtype.toMcType()
+                    val tailRecurseField = createTailRecurseField(toSubtype.className, toSubtype.fields.last().name, toVariant.className)
+                    McNode(StmtListOp,
+                        McNode(StoreVariableStmtOp(nextFromVarId, fromVariantType, false),
+                            McNode(LoadFieldOp(fromSubtypeType, fromSubtype.fields.last().name, fromVariantType),
+                                McNode(LoadVariableOp(subtypeFromVarId, fromSubtypeType))
+                            )
+                        ),
+                        McNode(StoreVariableStmtOp(nextMethodHandle, methodHandleType, false),
+                            McNode(LoadFieldOp(McType.DeclaredType(className), tailRecurseField, methodHandleType, isStatic = true))
+                        )
+                    )
+                } else {
+                    McNode(StmtListOp,
+                        McNode(StoreVariableStmtOp(nextFromVarId, fromVariantType, false),
+                            McNode(CstNullOp(fromVariantType))
+                        )
+                    )
+                }
+            }
+
+            nodes += McNode(StoreVariableStmtOp(nextMethodHandle, methodHandleType, true),
+                McNode(CstNullOp(methodHandleType))
+            )
+            nodes += McNode(DeclareVariableOnlyStmtOp(nextFromVarId, fromVariantType))
+            nodes += McNode(StoreVariableStmtOp(toVarId, toVariantType, true),
+                translateInner(message, fromVersion, toVersion, fromVarId, ::handleSubtype)
+            )
+            nodes += McNode(StoreVariableStmtOp(curToVarId, toVariantType, true),
+                McNode(LoadVariableOp(toVarId, toVariantType))
+            )
+            nodes += McNode(WhileStmtOp,
+                McNode(BinaryExpressionOp("!=", fromVariantType, fromVariantType),
+                    McNode(LoadVariableOp(nextFromVarId, fromVariantType)),
+                    McNode(CstNullOp(fromVariantType))
+                ),
+                McNode(StmtListOp,
+                    McNode(StoreVariableStmtOp(curFromVarId, fromVariantType, true),
+                        McNode(LoadVariableOp(nextFromVarId, fromVariantType))
+                    ),
+                    McNode(StoreVariableStmtOp(currentMethodHandle, methodHandleType, true),
+                        McNode(LoadVariableOp(nextMethodHandle, methodHandleType))
+                    ),
+                    McNode(StoreVariableStmtOp(nextToVarId, toVariantType, true),
+                        translateInner(message, fromVersion, toVersion, curFromVarId, ::handleSubtype)
+                    ),
+                    McNode(PopStmtOp,
+                        McNode(FunctionCallOp(CommonClassNames.METHOD_HANDLE, "invoke", listOf(methodHandleType, toVariantType, toVariantType), McType.VOID, true, isStatic = false, throwsException = true),
+                            McNode(LoadVariableOp(currentMethodHandle, methodHandleType)),
+                            McNode(LoadVariableOp(curToVarId, toVariantType)),
+                            McNode(LoadVariableOp(nextToVarId, toVariantType))
+                        )
+                    )
+                )
+            )
+        }
+        nodes += McNode(ReturnStmtOp(toVariantType), McNode(LoadVariableOp(toVarId, toVariantType)))
+        McNode(StmtListOp, nodes)
+    } else {
+        translateInner(message, fromVersion, toVersion, fromVarId, null)
+    }
+}
+
+private fun ProtocolCompiler.translateInner(
+    message: MessageInfo,
+    fromVersion: Int,
+    toVersion: Int,
+    fromVarId: VariableId,
+    extraSubtypeInstructions: ((MessageVariantInfo, MessageVariantInfo, VariableId) -> McNode)?
+): McNode {
+    val messageType = message.toMcType()
 
     val clientbound = toVersion > fromVersion
     val fromVariant = message.getVariant(fromVersion)!!
@@ -558,6 +701,10 @@ internal fun ProtocolCompiler.translate(message: MessageInfo, fromVersion: Int, 
                     McNode(LoadVariableOp(childVarId, childVariant.toMcType())),
                     McNode(LoadVariableOp(fieldVarId, field.type.realType))
                 )
+            }
+
+            if (extraSubtypeInstructions != null) {
+                childNodes += extraSubtypeInstructions(fromChildVariant, childVariant, castedFromChildVarId)
             }
 
             McNode(StmtListOp, childNodes)
