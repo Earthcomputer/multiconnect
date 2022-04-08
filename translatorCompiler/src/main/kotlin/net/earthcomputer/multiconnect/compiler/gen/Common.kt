@@ -19,11 +19,11 @@ import net.earthcomputer.multiconnect.compiler.SuppliedDefaultConstructedParamet
 import net.earthcomputer.multiconnect.compiler.classInfoOrNull
 import net.earthcomputer.multiconnect.compiler.downcastConstant
 import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
-import net.earthcomputer.multiconnect.compiler.groups
 import net.earthcomputer.multiconnect.compiler.hasName
 import net.earthcomputer.multiconnect.compiler.isIntegral
 import net.earthcomputer.multiconnect.compiler.messageVariantInfo
 import net.earthcomputer.multiconnect.compiler.node.BinaryExpressionOp
+import net.earthcomputer.multiconnect.compiler.node.CstIntOp
 import net.earthcomputer.multiconnect.compiler.node.DeclareVariableOnlyStmtOp
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
 import net.earthcomputer.multiconnect.compiler.node.IfElseStmtOp
@@ -42,7 +42,7 @@ import net.earthcomputer.multiconnect.compiler.node.StoreVariableStmtOp
 import net.earthcomputer.multiconnect.compiler.node.SwitchOp
 import net.earthcomputer.multiconnect.compiler.node.ThrowStmtOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
-import net.earthcomputer.multiconnect.compiler.node.createCstOp
+import net.earthcomputer.multiconnect.compiler.node.createCstNode
 import net.earthcomputer.multiconnect.compiler.normalizeIdentifier
 import net.earthcomputer.multiconnect.compiler.polymorphicChildren
 import net.earthcomputer.multiconnect.compiler.splitPackageClass
@@ -55,10 +55,10 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
     postConstruct: ((MessageVariantInfo, VariableId) -> McNode)?
 ): McNode {
     message.polymorphic!!
-    val messageType = McType.DeclaredType(message.className)
+    val messageType = message.toMcType()
 
     fun construct(childMessage: MessageVariantInfo): McNode {
-        val childType = McType.DeclaredType(childMessage.className)
+        val childType = childMessage.toMcType()
         return if (postConstruct == null) {
             McNode(
                 ImplicitCastOp(childType, messageType),
@@ -143,7 +143,7 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
                             McNode(
                                 BinaryExpressionOp("==", type.realType, type.realType),
                                 loadTypeField,
-                                McNode(createCstOp(actualValue))
+                                createCstNode(actualValue)
                             )
                         }.reduce { left, right ->
                             McNode(BinaryExpressionOp("||", McType.BOOLEAN, McType.BOOLEAN), left, right)
@@ -160,7 +160,7 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
                         ThrowStmtOp,
                         McNode(
                             NewOp("java.lang.IllegalArgumentException", listOf(McType.STRING)),
-                            McNode(createCstOp("Could not select polymorphic child of \"${splitPackageClass(message.className).second}\""))
+                            createCstNode("Could not select polymorphic child of \"${splitPackageClass(message.className).second}\"")
                         )
                     )
                 }
@@ -245,7 +245,7 @@ internal fun ProtocolCompiler.generateFunctionCallGraph(function: McFunction, va
 }
 
 internal fun ProtocolCompiler.generateDefaultConstructGraph(classInfo: MessageVariantInfo): McNode {
-    val type = McType.DeclaredType(classInfo.className)
+    val type = classInfo.toMcType()
 
     val varId = VariableId.create()
     val vars = mutableMapOf<String, VariableId>()
@@ -314,11 +314,9 @@ internal fun ProtocolCompiler.generateDefaultConstructGraph(type: McType): McNod
     return when (val classInfo = type.classInfoOrNull) {
         is MessageVariantInfo -> generateDefaultConstructGraph(classInfo)
         is MessageInfo -> {
-            val name = (type as McType.DeclaredType).name
-            val group = groups[name]!!
-            val index = group.binarySearch { (getMessageVariantInfo(it).minVersion ?: -1).compareTo(protocolId) }
-            McNode(ImplicitCastOp(McType.DeclaredType(group[index]), McType.DeclaredType(name)),
-                generateDefaultConstructGraph(getMessageVariantInfo(group[index]))
+            val variantInfo = classInfo.getVariant(protocolId)!!
+            McNode(ImplicitCastOp(variantInfo.toMcType(), type as McType.DeclaredType),
+                generateDefaultConstructGraph(variantInfo)
             )
         }
         is EnumInfo -> McNode(LoadFieldOp(type, classInfo.values.first(), type, isStatic = true))
@@ -341,7 +339,7 @@ internal fun ProtocolCompiler.generateDefaultConstructGraph(type: McType): McNod
             CommonClassNames.BITSET -> McNode(NewOp(type.name, listOf()))
             else -> {
                 if (type is McType.ArrayType) {
-                    McNode(NewArrayOp(type.elementType), McNode(createCstOp(0)))
+                    McNode(NewArrayOp(type.elementType), McNode(CstIntOp(0)))
                 } else {
                     type.defaultValue()
                 }
@@ -379,19 +377,19 @@ internal fun ProtocolCompiler.generateDefaultConstructGraph(
 internal fun ProtocolCompiler.generateConstantGraph(targetType: McType, value: Any, registry: Registries? = null): McNode {
     return if (targetType.isIntegral && registry != null && value is String) {
         val rawId = registry.getRawId(value) ?: throw CompileException("Unknown value \"$value\" in registry $registry")
-        McNode(createCstOp(rawId.downcastConstant(targetType)))
+        createCstNode(rawId.downcastConstant(targetType))
     } else if (targetType.hasName(CommonClassNames.IDENTIFIER)) {
         val (namespace, name) = (value as String).normalizeIdentifier().split(':', limit = 2)
         McNode(NewOp(CommonClassNames.IDENTIFIER, listOf(McType.STRING, McType.STRING)),
-            McNode(createCstOp(namespace)),
-            McNode(createCstOp(name))
+            createCstNode(namespace),
+            createCstNode(name)
         )
     } else {
         val enumInfo = targetType.classInfoOrNull as? EnumInfo
         if (enumInfo != null) {
             McNode(LoadFieldOp(targetType, value as String, targetType, isStatic = true))
         } else {
-            McNode(createCstOp(value.downcastConstant(targetType)))
+            createCstNode(value.downcastConstant(targetType))
         }
     }
 }
@@ -399,4 +397,14 @@ internal fun ProtocolCompiler.generateConstantGraph(targetType: McType, value: A
 internal fun ProtocolCompiler.generateFilledConstructGraph(type: McType, fromRegistry: FilledFromRegistry?): McNode {
     // TODO: filled construct
     return type.defaultValue()
+}
+
+internal fun ProtocolCompiler.createTailRecurseField(ownerClass: String, fieldName: String, fieldType: String): String {
+    val handleFieldName = "MH_${ownerClass.replace('.', '_').uppercase()}_TAIL_RECURSE"
+    cacheMembers[handleFieldName] = { emitter ->
+        emitter.append("private static final ").appendClassName(CommonClassNames.METHOD_HANDLE).append(" ").append(handleFieldName)
+            .append(" = ").appendClassName(CommonClassNames.PACKET_INTRINSICS).append(".findSetterHandle(")
+            .appendClassName(ownerClass).append(".class, \"").append(fieldName).append("\", ").appendClassName(fieldType).append(".class);")
+    }
+    return handleFieldName
 }

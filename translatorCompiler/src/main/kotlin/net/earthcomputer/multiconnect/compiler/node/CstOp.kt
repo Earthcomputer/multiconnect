@@ -79,14 +79,16 @@ class CstNullOp(override val returnType: McType) : CstOp() {
     }
 }
 
-fun createCstOp(value: Any): CstOp {
+fun createCstNode(value: Any): McNode {
     return when (value) {
-        is Boolean -> CstBoolOp(value)
-        is Int -> CstIntOp(value)
-        is Long -> CstLongOp(value)
-        is Float -> CstFloatOp(value)
-        is Double -> CstDoubleOp(value)
-        is String -> CstStringOp(value)
-        else -> throw CompileException("Invalid constant $value")
+        is Boolean -> McNode(CstBoolOp(value))
+        is Byte -> McNode(CastOp(McType.INT, McType.BYTE), McNode(CstIntOp(value.toInt())))
+        is Short -> McNode(CastOp(McType.INT, McType.SHORT), McNode(CstIntOp(value.toInt())))
+        is Int -> McNode(CstIntOp(value))
+        is Long -> McNode(CstLongOp(value))
+        is Float -> McNode(CstFloatOp(value))
+        is Double -> McNode(CstDoubleOp(value))
+        is String -> McNode(CstStringOp(value))
+        else -> throw CompileException("Invalid constant $value of type ${value.javaClass.name}")
     }
 }

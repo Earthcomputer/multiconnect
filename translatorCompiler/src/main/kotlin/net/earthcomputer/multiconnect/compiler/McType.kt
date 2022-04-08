@@ -12,6 +12,8 @@ import net.earthcomputer.multiconnect.compiler.node.CstLongOp
 import net.earthcomputer.multiconnect.compiler.node.CstNullOp
 import net.earthcomputer.multiconnect.compiler.node.ImplicitCastOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 object CommonClassNames {
     const val BYTE_BUF = "io.netty.buffer.ByteBuf"
@@ -261,6 +263,9 @@ val McType.rawType: McType
         return type
     }
 
+val McType.isList get() = this is McType.DeclaredType
+        && (this.name == CommonClassNames.LIST || this.name == CommonClassNames.INT_LIST || this.name == CommonClassNames.LONG_LIST)
+
 val McType.isOptional get() = this is McType.DeclaredType
         && (this.name == CommonClassNames.OPTIONAL || this.name == CommonClassNames.OPTIONAL_INT || this.name == CommonClassNames.OPTIONAL_LONG || this.name == CommonClassNames.OPTIONAL_INT)
 
@@ -269,7 +274,13 @@ val McType.isIntegral get() = this is McType.PrimitiveType && when (this.kind) {
     else -> false
 }
 
-fun McType.hasName(name: String) = (this as? McType.DeclaredType)?.name == name
+@OptIn(ExperimentalContracts::class)
+fun McType.hasName(name: String): Boolean {
+    contract {
+        returns(true) implies (this@hasName is McType.DeclaredType)
+    }
+    return (this as? McType.DeclaredType)?.name == name
+}
 
 val McType.classInfo get() = if (this is McType.DeclaredType) getClassInfo(name) else throw CompileException("Class info not found for $this")
 

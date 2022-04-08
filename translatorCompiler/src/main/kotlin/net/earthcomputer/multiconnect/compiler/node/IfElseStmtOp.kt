@@ -8,8 +8,14 @@ object IfElseStmtOp : McStmtOp() {
 
     override fun emit(node: McNode, emitter: Emitter) {
         IfStmtOp.emit(node, emitter)
-        emitter.append(" else {").indent().appendNewLine()
-        node.inputs[2].emit(emitter, Precedence.COMMA)
-        emitter.dedent().appendNewLine().append("}")
+        emitter.append(" else ")
+        if (node.inputs[2].op is IfStmtOp || node.inputs[2].op is IfElseStmtOp) {
+            // give special formatting to else-if (same line, no extra braces)
+            node.inputs[2].emit(emitter, Precedence.COMMA)
+        } else {
+            emitter.append("{").indent().appendNewLine()
+            node.inputs[2].emit(emitter, Precedence.COMMA)
+            emitter.dedent().appendNewLine().append("}")
+        }
     }
 }

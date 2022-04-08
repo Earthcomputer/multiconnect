@@ -56,11 +56,34 @@ data class PacketType(val id: Int, val clazz: String)
 sealed class ClassInfo {
     @Transient
     lateinit var className: String
+
+    fun toMcType(): McType.DeclaredType {
+        return McType.DeclaredType(className)
+    }
 }
 
 @Serializable
 @SerialName("message")
-class MessageInfo : ClassInfo()
+class MessageInfo : ClassInfo() {
+    val group: List<String> get() = groups[className] ?: emptyList()
+
+    fun getVariant(protocol: Int): MessageVariantInfo? {
+        val group = this.group
+        var index = group.binarySearch { (getMessageVariantInfo(it).minVersion ?: -1).compareTo(protocol) }
+        if (index < 0) {
+            index = -index - 2
+            if (index < 0 || index >= group.size) {
+               return null
+            }
+        }
+        val variant = getMessageVariantInfo(group[index])
+        if (variant.maxVersion != null && protocol > variant.maxVersion) {
+            return null
+        }
+
+        return variant
+    }
+}
 
 @Serializable
 @SerialName("enum")
@@ -82,12 +105,13 @@ data class MessageVariantInfo(
     val maxVersion: Int?,
     val tailrec: Boolean = false
 ) : ClassInfo() {
-    fun findFieldOrNull(name: String): McField? {
+    fun findFieldOrNull(name: String, includeParent: Boolean = true): McField? {
         return fields.firstOrNull { it.name == name }
+            ?: polymorphicParent?.let { getMessageVariantInfo(it).findFieldOrNull(name, false) }
     }
 
-    fun findField(name: String): McField {
-        return fields.first { it.name == name }
+    fun findField(name: String, includeParent: Boolean = true): McField {
+        return findFieldOrNull(name, includeParent) ?: throw NoSuchElementException()
     }
 
     fun findFunctionOrNull(name: String): McFunction? {
@@ -112,8 +136,14 @@ data class FieldType(
     val onlyIf: String?,
     val datafixType: DatafixTypes?,
     val polymorphicBy: String?,
-    val introduce: List<IntroduceInfo>
-)
+    private val introduce: List<IntroduceInfo>
+) {
+    fun getIntroduceInfo(clientbound: Boolean): IntroduceInfo? {
+        val direction = if (clientbound) Introduce.Direction.FROM_OLDER else Introduce.Direction.FROM_NEWER
+        // TODO: @Introduce validation
+        return introduce.firstOrNull { it.direction == Introduce.Direction.AUTO || it.direction == direction }
+    }
+}
 
 @Serializable
 data class McFunction(

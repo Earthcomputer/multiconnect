@@ -11,7 +11,6 @@ import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
 import net.earthcomputer.multiconnect.compiler.groups
 import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.readCsv
-import kotlin.math.min
 
 fun checkMessages() {
     val usedByProtocol = mutableMapOf<Int, Set<String>>()
@@ -26,13 +25,8 @@ fun checkMessages() {
                 for (field in info.fields) {
                     val type = field.type.realType.deepComponentType()
                     if (type is McType.DeclaredType) {
-                        when (getClassInfoOrNull(type.name)) {
-                            is MessageInfo -> groups[type.name]?.let { group ->
-                                val index = group.binarySearch {
-                                    (getMessageVariantInfo(it).minVersion ?: -1).compareTo(protocol.id)
-                                }
-                                processUsed(group[if (index < 0) min(-index-1, group.lastIndex) else index])
-                            }
+                        when (val classInfo = getClassInfoOrNull(type.name)) {
+                            is MessageInfo -> classInfo.getVariant(protocol.id)?.let { processUsed(it.className) }
                             is MessageVariantInfo -> processUsed(type.name)
                             else -> {}
                         }

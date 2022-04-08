@@ -3,17 +3,19 @@ package net.earthcomputer.multiconnect.compiler.gen
 import net.earthcomputer.multiconnect.ap.Registries
 import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.BYTE_BUF
+import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.Emitter
 import net.earthcomputer.multiconnect.compiler.FileLocations
 import net.earthcomputer.multiconnect.compiler.IoOps
 import net.earthcomputer.multiconnect.compiler.McType
+import net.earthcomputer.multiconnect.compiler.MessageInfo
 import net.earthcomputer.multiconnect.compiler.MessageVariantInfo
 import net.earthcomputer.multiconnect.compiler.PacketType
 import net.earthcomputer.multiconnect.compiler.RegistryEntry
 import net.earthcomputer.multiconnect.compiler.byId
 import net.earthcomputer.multiconnect.compiler.byName
+import net.earthcomputer.multiconnect.compiler.getClassInfo
 import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
-import net.earthcomputer.multiconnect.compiler.groups
 import net.earthcomputer.multiconnect.compiler.isIntegral
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
 import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
@@ -105,18 +107,37 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
     }
 
     private fun generatePacketGraph(messageVariantInfo: MessageVariantInfo, clientbound: Boolean): McNode {
-        val group = groups[messageVariantInfo.variantOf ?: messageVariantInfo.className]!!
-        val packetChain = if (clientbound)
-            group.asSequence().dropWhile { it != messageVariantInfo.className }.toList()
-        else
-            (group.asReversed().asSequence().takeWhile { it != messageVariantInfo.className } + sequenceOf(messageVariantInfo.className)).toList()
+        val group = getClassInfo(messageVariantInfo.variantOf ?: messageVariantInfo.className) as? MessageInfo
+        fun getPacket(protocol: Int): MessageVariantInfo {
+            if (group == null) {
+                return messageVariantInfo
+            }
+            return group.getVariant(protocol) ?: throw CompileException("No variant of packet \"${group.className}\" found for protocol $protocol")
+        }
 
-        return McNode(StmtListOp,
-            McNode(StoreVariableStmtOp(VariableId.immediate("result"), McType.DeclaredType(messageVariantInfo.className), true),
-                generateMessageReadGraph(getMessageVariantInfo(packetChain.first()))
-            ),
-            McNode(ReturnStmtOp(McType.BYTE_BUF), McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF)))
+        var protocolsSubset = protocols.takeWhile { it.id >= protocolId }
+        if (clientbound) {
+            protocolsSubset = protocolsSubset.reversed()
+        }
+
+        val nodes = mutableListOf<McNode>()
+        nodes += McNode(StoreVariableStmtOp(VariableId.immediate("protocol_${protocolsSubset.first().id}"), messageVariantInfo.toMcType(), true),
+            generateMessageReadGraph(getPacket(protocolsSubset.first().id))
         )
+
+        for (index in protocolsSubset.indices.drop(1)) {
+            nodes += McNode(StoreVariableStmtOp(VariableId.immediate("protocol_${protocolsSubset[index].id}"), group?.toMcType() ?: messageVariantInfo.toMcType(), true),
+                if (group != null) {
+                    translate(group, protocolsSubset[index - 1].id, protocolsSubset[index].id, VariableId.immediate("protocol_${protocolsSubset[index - 1].id}"))
+                } else {
+                    translate(messageVariantInfo, protocolsSubset[index - 1].id, protocolsSubset[index].id, VariableId.immediate("protocol_${protocolsSubset[index - 1].id}"))
+                }
+            )
+        }
+
+        nodes += McNode(ReturnStmtOp(McType.BYTE_BUF), McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF)))
+
+        return McNode(StmtListOp, nodes)
     }
 
     internal fun Registries.hasChanged(wireType: Types): Boolean {

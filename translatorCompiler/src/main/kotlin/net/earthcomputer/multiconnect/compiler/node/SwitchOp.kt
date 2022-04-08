@@ -67,7 +67,7 @@ class SwitchOp<T: Any>(
                     emitCase(subCase, emitter)
                 }
             }
-            else -> McNode(createCstOp(case)).emit(emitter, Precedence.COMMA)
+            else -> createCstNode(case).emit(emitter, Precedence.COMMA)
         }
     }
 
