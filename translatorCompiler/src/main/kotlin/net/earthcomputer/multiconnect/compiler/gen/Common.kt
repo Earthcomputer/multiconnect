@@ -6,6 +6,7 @@ import net.earthcomputer.multiconnect.compiler.CommonClassNames
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.DefaultConstruct
 import net.earthcomputer.multiconnect.compiler.DefaultConstructedParameter
+import net.earthcomputer.multiconnect.compiler.Either
 import net.earthcomputer.multiconnect.compiler.EnumInfo
 import net.earthcomputer.multiconnect.compiler.FieldType
 import net.earthcomputer.multiconnect.compiler.FilledFromRegistry
@@ -107,12 +108,31 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
         }
     }
 
+    fun hasRealConstant(polymorphic: Polymorphic?): Boolean {
+        if (polymorphic !is Polymorphic.Constant<*>) {
+            return false
+        }
+        if (type.registry == null || !type.realType.isIntegral) {
+            return true
+        }
+        return polymorphic.value.any { it !is String || type.registry.getRawId(it) !is Either.Right }
+    }
+    fun hasNonConstant(polymorphic: Polymorphic?): Boolean {
+        if (polymorphic !is Polymorphic.Constant<*>) {
+            return true
+        }
+        if (type.registry == null || !type.realType.isIntegral) {
+            return false
+        }
+        return polymorphic.value.any { it is String && type.registry.getRawId(it) is Either.Right }
+    }
+
     val useSwitchExpression = type.realType != McType.BOOLEAN
             && type.realType != McType.FLOAT
             && type.realType != McType.DOUBLE
-            && children.any { it.polymorphic is Polymorphic.Constant<*> }
+            && children.any { hasRealConstant(it.polymorphic) }
     val nonSwitchChildren: MutableList<MessageVariantInfo?> = if (useSwitchExpression) {
-        children.filterTo(mutableListOf()) { it.polymorphic !is Polymorphic.Constant<*> }
+        children.filterTo(mutableListOf()) { hasNonConstant(it.polymorphic) }
     } else {
         children.toMutableList()
     }
@@ -134,24 +154,32 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
                 }
             }.mapTo(mutableListOf()) { childMessage ->
                 when (val polymorphic = childMessage?.polymorphic) {
-                    is Polymorphic.Constant<*> -> McNode(
-                        IfStmtOp,
-                        polymorphic.value.map {
-                            val actualValue = if (type.realType == McType.FLOAT) {
-                                (it as? Double)?.toFloat() ?: it
-                            } else {
-                                it
-                            }
-                            McNode(
-                                BinaryExpressionOp("==", type.realType, type.realType),
-                                loadTypeField,
+                    is Polymorphic.Constant<*> -> {
+                        val constantNodes = if (type.registry != null) {
+                            polymorphic.value.asSequence()
+                                .filterIsInstance<String>()
+                                .mapNotNull { type.registry.getRawId(it)?.rightOrNull() }
+                                .map { (type.realType as McType.PrimitiveType).cast(it) }
+                        } else {
+                            polymorphic.value.asSequence().map {
+                                val actualValue = if (type.realType == McType.FLOAT) {
+                                    (it as? Double)?.toFloat() ?: it
+                                } else {
+                                    it
+                                }
                                 createCstNode(actualValue)
-                            )
-                        }.reduce { left, right ->
-                            McNode(BinaryExpressionOp("||", McType.BOOLEAN, McType.BOOLEAN), left, right)
-                        },
-                        McNode(StmtListOp, McNode(ReturnStmtOp(messageType), construct(childMessage)))
-                    )
+                            }
+                        }
+                        McNode(IfStmtOp,
+                            constantNodes.map {
+                                McNode(BinaryExpressionOp("==", type.realType, type.realType), loadTypeField, it)
+                            }
+                            .reduce { left, right ->
+                                McNode(BinaryExpressionOp("||", McType.BOOLEAN, McType.BOOLEAN), left, right)
+                            },
+                            McNode(StmtListOp, McNode(ReturnStmtOp(messageType), construct(childMessage)))
+                        )
+                    }
                     is Polymorphic.Condition -> McNode(
                         IfStmtOp,
                         generateFunctionCallGraph(message.findFunction(polymorphic.value), loadTypeField, paramResolver = paramResolver),
@@ -187,9 +215,9 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
                         type.realType.hasName(CommonClassNames.IDENTIFIER) ->
                             group.value.map { (it as String).normalizeIdentifier() }
                         type.realType.isIntegral && type.registry != null ->
-                            group.value.filter { it !is String || type.registry.getRawId(it) != null }.map { case ->
+                            group.value.filter { it !is String || type.registry.getRawId(it) is Either.Left }.map { case ->
                                 (case as? String)?.let {
-                                    type.registry.getRawId(it)!!.downcastConstant(type.realType)
+                                    type.registry.getRawId(it)!!.left().downcastConstant(type.realType)
                                 } ?: case
                             }
                         type.realType.classInfoOrNull is EnumInfo ->
@@ -378,8 +406,12 @@ internal fun ProtocolCompiler.generateDefaultConstructGraph(
 
 internal fun ProtocolCompiler.generateConstantGraph(targetType: McType, value: Any, registry: Registries? = null): McNode {
     return if (targetType.isIntegral && registry != null && value is String) {
+        targetType as McType.PrimitiveType
         val rawId = registry.getRawId(value) ?: throw CompileException("Unknown value \"$value\" in registry $registry")
-        createCstNode(rawId.downcastConstant(targetType))
+        when (rawId) {
+            is Either.Left -> createCstNode(rawId.left.downcastConstant(targetType))
+            is Either.Right -> targetType.cast(rawId.right)
+        }
     } else if (targetType.hasName(CommonClassNames.IDENTIFIER)) {
         val (namespace, name) = (value as String).normalizeIdentifier().split(':', limit = 2)
         McNode(NewOp(CommonClassNames.IDENTIFIER, listOf(McType.STRING, McType.STRING)),
@@ -421,6 +453,22 @@ internal fun ProtocolCompiler.createIdentifierConstantField(constant: String): S
         emitter.append(", ")
         McNode(CstStringOp(name)).emit(emitter, Precedence.COMMA)
         emitter.append(");")
+    }
+    return fieldName
+}
+
+internal fun ProtocolCompiler.createRegistryKeyField(registry: Registries, id: String): String {
+    val (namespace, name) = id.normalizeIdentifier().split(':', limit = 2)
+    val fieldName = "RK_${registry.name}_${namespace.uppercase()}_${name.uppercase().replace('/', '_').replace('.', '_')}"
+    cacheMembers[fieldName] = { emitter ->
+        emitter.append("private static final ").appendClassName(CommonClassNames.REGISTRY_KEY).append(" ").append(fieldName)
+            .append(" = ").appendClassName(CommonClassNames.REGISTRY_KEY).append(".of(")
+            .appendClassName(CommonClassNames.REGISTRY).append(".").append(registry.registryKeyFieldName).append(", new ")
+            .appendClassName(CommonClassNames.IDENTIFIER).append("(")
+        McNode(CstStringOp(namespace)).emit(emitter, Precedence.COMMA)
+        emitter.append(", ")
+        McNode(CstStringOp(name)).emit(emitter, Precedence.COMMA)
+        emitter.append("));")
     }
     return fieldName
 }

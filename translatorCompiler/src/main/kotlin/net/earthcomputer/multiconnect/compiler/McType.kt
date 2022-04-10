@@ -38,6 +38,8 @@ object CommonClassNames {
     const val METHOD_HANDLE = "java.lang.invoke.MethodHandle"
     const val METHOD_HANDLES = "java.lang.invoke.MethodHandles"
     const val METHOD_HANDLES_LOOKUP = "java.lang.invoke.MethodHandles.Lookup"
+    const val REGISTRY = "net.minecraft.util.registry.Registry"
+    const val REGISTRY_KEY = "net.minecraft.util.registry.RegistryKey"
 }
 
 @Serializable

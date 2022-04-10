@@ -3,7 +3,10 @@ package net.earthcomputer.multiconnect.compiler.gen
 import net.earthcomputer.multiconnect.ap.Registries
 import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.BYTE_BUF
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY_KEY
 import net.earthcomputer.multiconnect.compiler.CompileException
+import net.earthcomputer.multiconnect.compiler.Either
 import net.earthcomputer.multiconnect.compiler.Emitter
 import net.earthcomputer.multiconnect.compiler.FileLocations
 import net.earthcomputer.multiconnect.compiler.IoOps
@@ -16,6 +19,7 @@ import net.earthcomputer.multiconnect.compiler.byName
 import net.earthcomputer.multiconnect.compiler.getClassInfo
 import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
+import net.earthcomputer.multiconnect.compiler.node.LoadFieldOp
 import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
 import net.earthcomputer.multiconnect.compiler.node.Precedence
@@ -165,9 +169,27 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         return McNode(StmtListOp, nodes)
     }
 
-    internal fun Registries.getRawId(value: String): Int? {
+    internal fun Registries.getRawId(value: String): Either<Int, McNode>? {
         val registryDir = if (useLatestRegistries) latestDataDir else dataDir
         val entries = readCsv<RegistryEntry>(registryDir.resolve("${this.name.lowercase()}.csv"))
-        return entries.byName(value)?.id
+        val entry = entries.byName(value)
+
+        // load id dynamically if necessary
+        if (entry == null && useLatestRegistries && value.startsWith("multiconnect:")) {
+            val registryType = McType.DeclaredType(REGISTRY)
+            val registryKeyType = McType.DeclaredType(REGISTRY_KEY)
+            val registryElementType = McType.DeclaredType("RegistryElement")
+            return Either.Right(
+                McNode(FunctionCallOp(REGISTRY, "getRawId", listOf(registryType, registryElementType), McType.INT, false, isStatic = false),
+                    McNode(LoadFieldOp(registryType, this.name, registryType, isStatic = true)),
+                    McNode(FunctionCallOp(REGISTRY, "get", listOf(registryType, registryKeyType), registryElementType, false, isStatic = false),
+                        McNode(LoadFieldOp(registryType, this.name, registryType, isStatic = true)),
+                        McNode(LoadFieldOp(McType.DeclaredType(className), createRegistryKeyField(this, value), registryKeyType, isStatic = true))
+                    )
+                )
+            )
+        }
+
+        return entry?.id?.let { Either.Left(it) }
     }
 }

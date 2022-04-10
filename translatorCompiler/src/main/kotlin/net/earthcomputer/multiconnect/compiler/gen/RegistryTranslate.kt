@@ -305,8 +305,10 @@ private fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientboun
         val shifts = mutableListOf<Pair<Int, Int?>>()
 
         for (fromEntry in fromEntries) {
-            // TODO: better error checking?
             val newId = toEntries.byName(fromEntry.name)?.id
+            if (newId == null && clientbound) {
+                throw CompileException("No value for ${fromEntry.name} in latest ${registry.name} registry")
+            }
             shifts += fromEntry.id to newId?.let { it - fromEntry.id }
         }
 
@@ -344,8 +346,11 @@ private fun ProtocolCompiler.createStringRemapFunc(registry: Registries, clientb
         val resultToInputs = mutableMapOf<String, MutableList<String>>()
 
         for (fromEntry in fromEntries) {
-            // TODO: better error checking?
-            val newEntry = toEntries.byName(fromEntry.name) ?: toEntries.first()
+            val newEntry = toEntries.byName(fromEntry.name) ?: if (clientbound) {
+                throw CompileException("No value for ${fromEntry.name} in latest ${registry.name} registry")
+            } else {
+                toEntries.first()
+            }
             if (newEntry.oldName != fromEntry.oldName) {
                 resultToInputs.computeIfAbsent(newEntry.oldName.normalizeIdentifier()) { mutableListOf() } += fromEntry.oldName.normalizeIdentifier()
             }
@@ -356,7 +361,7 @@ private fun ProtocolCompiler.createStringRemapFunc(registry: Registries, clientb
             .sortedBy { it.second }
             .unzip()
 
-        val resultNodes = results.map { McNode(LoadFieldOp(McType.DeclaredType(className), createIdentifierConstantField(it as String), identifierType, isStatic = true)) }
+        val resultNodes = results.map { McNode(LoadFieldOp(McType.DeclaredType(className), createIdentifierConstantField(it), identifierType, isStatic = true)) }
 
         val inputNode = McNode(FunctionCallOp(IDENTIFIER, "toString", listOf(identifierType), McType.STRING, false, isStatic = false),
             McNode(LoadVariableOp(VariableId.immediate("value"), identifierType))
