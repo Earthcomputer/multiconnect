@@ -797,7 +797,13 @@ private fun ProtocolCompiler.autoTransfer(node: McNode, type: McType, fromProtoc
                 McNode(LoadVariableOp(indexVar, McType.INT))
             )
         } else {
-            McNode(FunctionCallOp((oldType as McType.DeclaredType).name, "get", listOf(oldType, McType.INT), oldType.componentType(), false, isStatic = false),
+            val getName = when ((oldType as McType.DeclaredType).name) {
+                LIST -> "get"
+                INT_LIST -> "getInt"
+                LONG_LIST -> "getLong"
+                else -> throw CompileException("Invalid list")
+            }
+            McNode(FunctionCallOp(oldType.name, getName, listOf(oldType, McType.INT), oldType.componentType(), false, isStatic = false),
                 node,
                 McNode(LoadVariableOp(indexVar, McType.INT))
             )

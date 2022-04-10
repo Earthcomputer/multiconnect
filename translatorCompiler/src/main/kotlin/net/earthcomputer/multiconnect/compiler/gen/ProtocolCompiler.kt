@@ -12,11 +12,9 @@ import net.earthcomputer.multiconnect.compiler.MessageInfo
 import net.earthcomputer.multiconnect.compiler.MessageVariantInfo
 import net.earthcomputer.multiconnect.compiler.PacketType
 import net.earthcomputer.multiconnect.compiler.RegistryEntry
-import net.earthcomputer.multiconnect.compiler.byId
 import net.earthcomputer.multiconnect.compiler.byName
 import net.earthcomputer.multiconnect.compiler.getClassInfo
 import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
-import net.earthcomputer.multiconnect.compiler.isIntegral
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
 import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
@@ -39,6 +37,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
     internal val dataDir = FileLocations.dataDir.resolve(protocolName)
     internal val latestDataDir = FileLocations.dataDir.resolve(protocols[0].name)
     internal val cacheMembers = mutableMapOf<String, (Emitter) -> Unit>()
+    internal var useLatestRegistries = false
 
     fun compile() {
         val emitter = Emitter(className, TreeSet(), TreeMap(), StringBuilder())
@@ -46,8 +45,14 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         emitPacketTranslators(emitter, "translateSPacket", dataDir.resolve("spackets.csv"), true)
         emitPacketTranslators(emitter, "translateCPacket", latestDataDir.resolve("cpackets.csv"), false)
 
-        for ((memberName, cacheMember) in cacheMembers) {
-            emitter.addMember(memberName)?.let(cacheMember)
+        val emittedMembers = mutableSetOf<String>()
+        while (cacheMembers.size != emittedMembers.size) {
+            for ((memberName, cacheMember) in cacheMembers.toMap()) {
+                if (memberName !in emittedMembers) {
+                    emittedMembers += memberName
+                    emitter.addMember(memberName)?.let(cacheMember)
+                }
+            }
         }
 
         val outputFile = FileLocations.outputDir.resolve(className.replace('.', '/') + ".java")
@@ -121,9 +126,21 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         }
 
         val nodes = mutableListOf<McNode>()
+        if (!clientbound) {
+            useLatestRegistries = true
+        }
         nodes += McNode(StoreVariableStmtOp(VariableId.immediate("protocol_${protocolsSubset.first().id}"), messageVariantInfo.toMcType(), true),
             generateMessageReadGraph(getPacket(protocolsSubset.first().id))
         )
+        if (!clientbound) {
+            useLatestRegistries = false
+
+            nodes += if (group != null) {
+                fixRegistries(group, VariableId.immediate("protocol_${protocolsSubset.first().id}"), false)
+            } else {
+                fixRegistries(messageVariantInfo, VariableId.immediate("protocol_${protocolsSubset.first().id}"), false)
+            }
+        }
 
         for (index in protocolsSubset.indices.drop(1)) {
             nodes += McNode(StoreVariableStmtOp(VariableId.immediate("protocol_${protocolsSubset[index].id}"), group?.toMcType() ?: messageVariantInfo.toMcType(), true),
@@ -135,23 +152,22 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             )
         }
 
+        if (clientbound) {
+            nodes += if (group != null) {
+                fixRegistries(group, VariableId.immediate("protocol_${protocolsSubset.last().id}"), true)
+            } else {
+                fixRegistries(messageVariantInfo, VariableId.immediate("protocol_${protocolsSubset.last().id}"), true)
+            }
+        }
+
         nodes += McNode(ReturnStmtOp(McType.BYTE_BUF), McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF)))
 
         return McNode(StmtListOp, nodes)
     }
 
-    internal fun Registries.hasChanged(wireType: Types): Boolean {
-        val oldEntries = readCsv<RegistryEntry>(dataDir.resolve("${this.name.lowercase()}.csv"))
-        val newEntries = readCsv<RegistryEntry>(latestDataDir.resolve("${this.name.lowercase()}.csv"))
-        return if (wireType.isIntegral) {
-            oldEntries.any { newEntries.byId(it.id)?.name != it.name }
-        } else {
-            oldEntries.any { it.name != it.oldName }
-        }
-    }
-
     internal fun Registries.getRawId(value: String): Int? {
-        val entries = readCsv<RegistryEntry>(dataDir.resolve("${this.name.lowercase()}.csv"))
+        val registryDir = if (useLatestRegistries) latestDataDir else dataDir
+        val entries = readCsv<RegistryEntry>(registryDir.resolve("${this.name.lowercase()}.csv"))
         return entries.byName(value)?.id
     }
 }

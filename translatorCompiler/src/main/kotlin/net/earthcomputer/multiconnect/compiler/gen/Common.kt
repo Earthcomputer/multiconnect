@@ -24,6 +24,7 @@ import net.earthcomputer.multiconnect.compiler.isIntegral
 import net.earthcomputer.multiconnect.compiler.messageVariantInfo
 import net.earthcomputer.multiconnect.compiler.node.BinaryExpressionOp
 import net.earthcomputer.multiconnect.compiler.node.CstIntOp
+import net.earthcomputer.multiconnect.compiler.node.CstStringOp
 import net.earthcomputer.multiconnect.compiler.node.DeclareVariableOnlyStmtOp
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
 import net.earthcomputer.multiconnect.compiler.node.IfElseStmtOp
@@ -35,6 +36,7 @@ import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
 import net.earthcomputer.multiconnect.compiler.node.NewArrayOp
 import net.earthcomputer.multiconnect.compiler.node.NewOp
+import net.earthcomputer.multiconnect.compiler.node.Precedence
 import net.earthcomputer.multiconnect.compiler.node.ReturnStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StmtListOp
 import net.earthcomputer.multiconnect.compiler.node.StoreFieldStmtOp
@@ -407,4 +409,18 @@ internal fun ProtocolCompiler.createTailRecurseField(ownerClass: String, fieldNa
             .appendClassName(ownerClass).append(".class, \"").append(fieldName).append("\", ").appendClassName(fieldType).append(".class);")
     }
     return handleFieldName
+}
+
+internal fun ProtocolCompiler.createIdentifierConstantField(constant: String): String {
+    val (namespace, name) = constant.normalizeIdentifier().split(':', limit = 2)
+    val fieldName = "IDENTIFIER_${namespace.uppercase()}_${name.uppercase().replace('/', '_').replace('.', '_')}"
+    cacheMembers[fieldName] = { emitter ->
+        emitter.append("private static final ").appendClassName(CommonClassNames.IDENTIFIER).append(" ").append(fieldName)
+            .append(" = new ").appendClassName(CommonClassNames.IDENTIFIER).append("(")
+        McNode(CstStringOp(namespace)).emit(emitter, Precedence.COMMA)
+        emitter.append(", ")
+        McNode(CstStringOp(name)).emit(emitter, Precedence.COMMA)
+        emitter.append(");")
+    }
+    return fieldName
 }

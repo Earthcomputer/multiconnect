@@ -347,10 +347,10 @@ fun getMessageVariantInfo(typeName: String): MessageVariantInfo {
 }
 
 @PublishedApi
-internal val csvCache = mutableMapOf<File, SoftReference<List<*>>>()
+internal val csvCache = mutableMapOf<String, SoftReference<List<*>>>()
 
 inline fun <reified T> readCsv(file: File): List<T> {
-    csvCache[file.absoluteFile]?.get()?.let {
+    csvCache[file.absolutePath]?.get()?.let {
         @Suppress("UNCHECKED_CAST")
         return it as List<T>
     }
@@ -369,7 +369,7 @@ inline fun <reified T> readCsv(file: File): List<T> {
                 )
             }
             .toList()
-            .also { csvCache[file.absoluteFile] = SoftReference(it) }
+            .also { csvCache[file.absolutePath] = SoftReference(it) }
     }
 }
 

@@ -15,6 +15,10 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
+import java.util.function.IntUnaryOperator;
+import java.util.function.LongUnaryOperator;
 
 public final class PacketIntrinsics {
     private PacketIntrinsics() {}
@@ -29,6 +33,22 @@ public final class PacketIntrinsics {
             return MethodHandles.lookup().findSetter(ownerClass, fieldName, fieldType);
         } catch (ReflectiveOperationException e) {
             throw new AssertionError("Could not find setter method handle, this indicates a compiler bug!", e);
+        }
+    }
+
+    public static OptionalInt map(OptionalInt value, IntUnaryOperator mapper) {
+        if (value.isPresent()) {
+            return OptionalInt.of(mapper.applyAsInt(value.getAsInt()));
+        } else {
+            return OptionalInt.empty();
+        }
+    }
+
+    public static OptionalLong map(OptionalLong value, LongUnaryOperator mapper) {
+        if (value.isPresent()) {
+            return OptionalLong.of(mapper.applyAsLong(value.getAsLong()));
+        } else {
+            return OptionalLong.empty();
         }
     }
 
