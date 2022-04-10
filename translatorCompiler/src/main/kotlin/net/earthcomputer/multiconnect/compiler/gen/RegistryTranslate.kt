@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.compiler.gen
 
 import net.earthcomputer.multiconnect.ap.Registries
 import net.earthcomputer.multiconnect.ap.Types
+import net.earthcomputer.multiconnect.compiler.CommonClassNames
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.IDENTIFIER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.INT_LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.LIST
@@ -9,6 +10,7 @@ import net.earthcomputer.multiconnect.compiler.CommonClassNames.LONG_LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.OPTIONAL
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
 import net.earthcomputer.multiconnect.compiler.CompileException
+import net.earthcomputer.multiconnect.compiler.Either
 import net.earthcomputer.multiconnect.compiler.FieldType
 import net.earthcomputer.multiconnect.compiler.McField
 import net.earthcomputer.multiconnect.compiler.McType
@@ -251,16 +253,16 @@ private fun ProtocolCompiler.fixRegistriesWithType(
 }
 
 private fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbound: Boolean): String {
-    fun selectShift(shifts: List<Pair<Int, Int?>>, default: Int): McNode {
+    fun selectShift(shifts: List<Pair<Int, Either<Int?, McNode>>>, default: Int): McNode {
         val middleIndex = shifts.size / 2
-        val middleShift = shifts[middleIndex].second
+        val middleValue = shifts[middleIndex].second
         var delta = 0
         val maxDelta = max(middleIndex, shifts.size - middleIndex)
         while (delta < maxDelta) {
             val index = middleIndex + delta
             if (index >= 0 && index < shifts.size) {
-                val (id, shift) = shifts[index]
-                if (shift != middleShift) {
+                val (id, value) = shifts[index]
+                if (value != middleValue) {
                     return McNode(StmtListOp, McNode(IfElseStmtOp,
                         McNode(BinaryExpressionOp(if (delta < 0) "<=" else "<", McType.INT, McType.INT),
                             McNode(LoadVariableOp(VariableId.immediate("value"), McType.INT)),
@@ -273,22 +275,25 @@ private fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientboun
             }
             delta = if (delta > 0) -delta else -delta + 1
         }
-        return when (middleShift) {
-            null -> {
-                McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT), McNode(CstIntOp(default))))
-            }
-            0 -> {
-                McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT),
-                    McNode(LoadVariableOp(VariableId.immediate("value"), McType.INT))
-                ))
-            }
-            else -> {
-                McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT),
-                    McNode(BinaryExpressionOp(if (middleShift < 0) "-" else "+", McType.INT, McType.INT),
-                        McNode(LoadVariableOp(VariableId.immediate("value"), McType.INT)),
-                        McNode(CstIntOp(abs(middleShift)))
-                    )
-                ))
+        return when (middleValue) {
+            is Either.Right -> McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT), middleValue.right))
+            is Either.Left -> when (middleValue.left) {
+                null -> {
+                    McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT), McNode(CstIntOp(default))))
+                }
+                0 -> {
+                    McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT),
+                        McNode(LoadVariableOp(VariableId.immediate("value"), McType.INT))
+                    ))
+                }
+                else -> {
+                    McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT),
+                        McNode(BinaryExpressionOp(if (middleValue.left < 0) "-" else "+", McType.INT, McType.INT),
+                            McNode(LoadVariableOp(VariableId.immediate("value"), McType.INT)),
+                            McNode(CstIntOp(abs(middleValue.left)))
+                        )
+                    ))
+                }
             }
         }
     }
@@ -302,14 +307,29 @@ private fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientboun
             Pair(newEntries, oldEntries)
         }
 
-        val shifts = mutableListOf<Pair<Int, Int?>>()
+        val shifts = mutableListOf<Pair<Int, Either<Int?, McNode>>>()
 
         for (fromEntry in fromEntries) {
             val newId = toEntries.byName(fromEntry.name)?.id
             if (newId == null && clientbound) {
+                if (fromEntry.name.startsWith("multiconnect:")) {
+                    val registryType = McType.DeclaredType(CommonClassNames.REGISTRY)
+                    val registryKeyType = McType.DeclaredType(CommonClassNames.REGISTRY_KEY)
+                    val registryElementType = McType.DeclaredType("RegistryElement")
+                    shifts += fromEntry.id to Either.Right(
+                        McNode(FunctionCallOp(CommonClassNames.REGISTRY, "getRawId", listOf(registryType, registryElementType), McType.INT, false, isStatic = false),
+                            McNode(LoadFieldOp(registryType, registry.name, registryType, isStatic = true)),
+                            McNode(FunctionCallOp(CommonClassNames.REGISTRY, "get", listOf(registryType, registryKeyType), registryElementType, false, isStatic = false),
+                                McNode(LoadFieldOp(registryType, registry.name, registryType, isStatic = true)),
+                                McNode(LoadFieldOp(McType.DeclaredType(className), createRegistryKeyField(registry, fromEntry.name), registryKeyType, isStatic = true))
+                            )
+                        )
+                    )
+                    continue
+                }
                 throw CompileException("No value for ${fromEntry.name} in latest ${registry.name} registry")
             }
-            shifts += fromEntry.id to newId?.let { it - fromEntry.id }
+            shifts += fromEntry.id to Either.Left(newId?.let { it - fromEntry.id })
         }
 
         shifts.sortBy { it.first }
@@ -346,10 +366,12 @@ private fun ProtocolCompiler.createStringRemapFunc(registry: Registries, clientb
         val resultToInputs = mutableMapOf<String, MutableList<String>>()
 
         for (fromEntry in fromEntries) {
-            val newEntry = toEntries.byName(fromEntry.name) ?: if (clientbound) {
-                throw CompileException("No value for ${fromEntry.name} in latest ${registry.name} registry")
-            } else {
+            val newEntry = toEntries.byName(fromEntry.name) ?: if (!clientbound) {
                 toEntries.first()
+            } else if (fromEntry.name.startsWith("multiconnect:")) {
+                continue
+            } else {
+                throw CompileException("No value for ${fromEntry.name} in latest ${registry.name} registry")
             }
             if (newEntry.oldName != fromEntry.oldName) {
                 resultToInputs.computeIfAbsent(newEntry.oldName.normalizeIdentifier()) { mutableListOf() } += fromEntry.oldName.normalizeIdentifier()
