@@ -317,6 +317,55 @@ sealed class IntroduceInfo {
     data class Compute(override val direction: Introduce.Direction, val value: String) : IntroduceInfo()
 }
 
+private typealias MulticonnectBlockStatesSurrogate = Map<String, Map<String, List<String>>>
+@Serializable(with = MulticonnectBlockStates.Serializer::class)
+class MulticonnectBlockStates(val states: List<State>) {
+    object Serializer : KSerializer<MulticonnectBlockStates> {
+        override val descriptor = serializer<MulticonnectBlockStatesSurrogate>().descriptor
+
+        override fun deserialize(decoder: Decoder): MulticonnectBlockStates {
+            val surrogate = serializer<MulticonnectBlockStatesSurrogate>().deserialize(decoder)
+            return MulticonnectBlockStates(
+                surrogate.map { (name, properties) ->
+                    State(name, properties.map { (propName, validValues) ->
+                        propName to Property(validValues)
+                    }.toMap())
+                }.toList()
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: MulticonnectBlockStates) {
+            throw UnsupportedOperationException()
+        }
+    }
+
+    class State(val name: String, val properties: Map<String, Property>) {
+        val validStates: List<Map<String, String>>
+            get() {
+                var states = mutableListOf<Map<String, String>>()
+                for (property in properties.keys.sorted()) {
+                    val newStates = mutableListOf<Map<String, String>>()
+                    val validValues = properties[property]!!.validValues
+                    for (state in states) {
+                        for (value in validValues) {
+                            val newState = state.toMutableMap()
+                            newState[property] = value
+                            newStates += newState
+                        }
+                    }
+                    states = newStates
+                }
+                return states
+            }
+    }
+
+    class Property(val validValues: List<String>)
+}
+
+fun getMulticonnectBlockStates(): MulticonnectBlockStates {
+    return readJson(FileLocations.dataDir.resolve("multiconnectBlockStates.json"))
+}
+
 private val classInfoCache = mutableMapOf<String, SoftReference<ClassInfo>>()
 
 fun getClassInfo(typeName: String): ClassInfo {
@@ -344,6 +393,18 @@ fun getClassInfoOrNull(typeName: String): ClassInfo? {
 
 fun getMessageVariantInfo(typeName: String): MessageVariantInfo {
     return getClassInfo(typeName) as? MessageVariantInfo ?: throw CompileException("Message variant info not found for $typeName")
+}
+
+@PublishedApi
+internal val jsonCache = mutableMapOf<String, SoftReference<*>>()
+
+@OptIn(ExperimentalSerializationApi::class)
+inline fun <reified T> readJson(file: File): T {
+    jsonCache[file.absolutePath]?.get()?.let {
+        return it as T
+    }
+    return file.inputStream().use { Json.decodeFromStream<T>(it) }
+        .also { jsonCache[file.absolutePath] = SoftReference(it) }
 }
 
 @PublishedApi

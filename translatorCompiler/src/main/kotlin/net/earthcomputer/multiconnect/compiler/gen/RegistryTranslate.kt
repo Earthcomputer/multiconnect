@@ -10,7 +10,6 @@ import net.earthcomputer.multiconnect.compiler.CommonClassNames.LONG_LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.OPTIONAL
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
 import net.earthcomputer.multiconnect.compiler.CompileException
-import net.earthcomputer.multiconnect.compiler.Either
 import net.earthcomputer.multiconnect.compiler.FieldType
 import net.earthcomputer.multiconnect.compiler.McField
 import net.earthcomputer.multiconnect.compiler.McType
@@ -23,6 +22,7 @@ import net.earthcomputer.multiconnect.compiler.classInfoOrNull
 import net.earthcomputer.multiconnect.compiler.componentType
 import net.earthcomputer.multiconnect.compiler.deepComponentType
 import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
+import net.earthcomputer.multiconnect.compiler.getMulticonnectBlockStates
 import net.earthcomputer.multiconnect.compiler.hasName
 import net.earthcomputer.multiconnect.compiler.isIntegral
 import net.earthcomputer.multiconnect.compiler.isList
@@ -252,8 +252,15 @@ private fun ProtocolCompiler.fixRegistriesWithType(
     throw CompileException("Don't know how to fix registries for type $type")
 }
 
+private sealed class IntRemapValue {
+    data class Relative(val shift: Int) : IntRemapValue()
+    data class Absolute(val value: Int) : IntRemapValue()
+    data class FromName(val name: String) : IntRemapValue()
+    data class FromStateId(val blockName: String, val offset: Int) : IntRemapValue()
+}
+
 private fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbound: Boolean): String {
-    fun selectShift(shifts: List<Pair<Int, Either<Int?, McNode>>>, default: Int): McNode {
+    fun selectShift(shifts: List<Pair<Int, IntRemapValue>>): McNode {
         val middleIndex = shifts.size / 2
         val middleValue = shifts[middleIndex].second
         var delta = 0
@@ -268,32 +275,51 @@ private fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientboun
                             McNode(LoadVariableOp(VariableId.immediate("value"), McType.INT)),
                             McNode(CstIntOp(id))
                         ),
-                        selectShift(shifts.subList(0, if (delta < 0) index + 1 else index), default),
-                        selectShift(shifts.subList(if (delta < 0) index + 1 else index, shifts.size), default)
+                        selectShift(shifts.subList(0, if (delta < 0) index + 1 else index)),
+                        selectShift(shifts.subList(if (delta < 0) index + 1 else index, shifts.size))
                     ))
                 }
             }
             delta = if (delta > 0) -delta else -delta + 1
         }
         return when (middleValue) {
-            is Either.Right -> McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT), middleValue.right))
-            is Either.Left -> when (middleValue.left) {
-                null -> {
-                    McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT), McNode(CstIntOp(default))))
-                }
-                0 -> {
+            is IntRemapValue.Absolute -> McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT), McNode(CstIntOp(middleValue.value))))
+            is IntRemapValue.Relative -> {
+                if (middleValue.shift == 0) {
                     McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT),
                         McNode(LoadVariableOp(VariableId.immediate("value"), McType.INT))
                     ))
-                }
-                else -> {
+                } else {
                     McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT),
-                        McNode(BinaryExpressionOp(if (middleValue.left < 0) "-" else "+", McType.INT, McType.INT),
+                        McNode(BinaryExpressionOp(if (middleValue.shift < 0) "-" else "+", McType.INT, McType.INT),
                             McNode(LoadVariableOp(VariableId.immediate("value"), McType.INT)),
-                            McNode(CstIntOp(abs(middleValue.left)))
+                            McNode(CstIntOp(abs(middleValue.shift)))
                         )
                     ))
                 }
+            }
+            is IntRemapValue.FromName -> {
+                val registryType = McType.DeclaredType(CommonClassNames.REGISTRY)
+                val registryKeyType = McType.DeclaredType(CommonClassNames.REGISTRY_KEY)
+                val registryElementType = McType.DeclaredType("RegistryElement")
+                McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT),
+                    McNode(FunctionCallOp(CommonClassNames.REGISTRY, "getRawId", listOf(registryType, registryElementType), McType.INT, false, isStatic = false),
+                        McNode(LoadFieldOp(registryType, registry.name, registryType, isStatic = true)),
+                        McNode(FunctionCallOp(CommonClassNames.REGISTRY, "get", listOf(registryType, registryKeyType), registryElementType, false, isStatic = false),
+                            McNode(LoadFieldOp(registryType, registry.name, registryType, isStatic = true)),
+                            McNode(LoadFieldOp(McType.DeclaredType(className), createRegistryKeyField(registry, middleValue.name), registryKeyType, isStatic = true))
+                        )
+                    )
+                ))
+            }
+            is IntRemapValue.FromStateId -> {
+                val registryKeyType = McType.DeclaredType(CommonClassNames.REGISTRY_KEY)
+                McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT)),
+                    McNode(FunctionCallOp(PACKET_INTRINSICS, "getStateId", listOf(registryKeyType, McType.INT), McType.INT, false),
+                        McNode(LoadFieldOp(McType.DeclaredType(className), createRegistryKeyField(Registries.BLOCK, middleValue.blockName), registryKeyType, isStatic = true)),
+                        McNode(CstIntOp(middleValue.offset))
+                    )
+                )
             }
         }
     }
@@ -307,34 +333,44 @@ private fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientboun
             Pair(newEntries, oldEntries)
         }
 
-        val shifts = mutableListOf<Pair<Int, Either<Int?, McNode>>>()
+        val shifts = mutableListOf<Pair<Int, IntRemapValue>>()
 
         for (fromEntry in fromEntries) {
             val newId = toEntries.byName(fromEntry.name)?.id
-            if (newId == null && clientbound) {
-                if (fromEntry.name.startsWith("multiconnect:")) {
-                    val registryType = McType.DeclaredType(CommonClassNames.REGISTRY)
-                    val registryKeyType = McType.DeclaredType(CommonClassNames.REGISTRY_KEY)
-                    val registryElementType = McType.DeclaredType("RegistryElement")
-                    shifts += fromEntry.id to Either.Right(
-                        McNode(FunctionCallOp(CommonClassNames.REGISTRY, "getRawId", listOf(registryType, registryElementType), McType.INT, false, isStatic = false),
-                            McNode(LoadFieldOp(registryType, registry.name, registryType, isStatic = true)),
-                            McNode(FunctionCallOp(CommonClassNames.REGISTRY, "get", listOf(registryType, registryKeyType), registryElementType, false, isStatic = false),
-                                McNode(LoadFieldOp(registryType, registry.name, registryType, isStatic = true)),
-                                McNode(LoadFieldOp(McType.DeclaredType(className), createRegistryKeyField(registry, fromEntry.name), registryKeyType, isStatic = true))
+            val value = when {
+                newId != null -> IntRemapValue.Relative(newId - fromEntry.id)
+                clientbound -> {
+                    if (fromEntry.name.startsWith("multiconnect:")) {
+                        if (registry == Registries.BLOCK_STATE) {
+                            val (blockName, properties) = if (fromEntry.name.contains("[")) {
+                                fromEntry.name.substringBefore('[') to
+                                        fromEntry.name.substringAfter('[').substringBeforeLast(']').split(',')
+                                            .associate {
+                                                val (propName, value) = it.split('=', limit = 2)
+                                                propName to value
+                                            }
+                            } else {
+                                fromEntry.name to mapOf()
+                            }
+                            IntRemapValue.FromStateId(
+                                blockName,
+                                getMulticonnectBlockStates().states.first { it.name == blockName }.validStates.indexOf(properties)
                             )
-                        )
-                    )
-                    continue
+                        } else {
+                            IntRemapValue.FromName(fromEntry.name)
+                        }
+                    } else {
+                        throw CompileException("No value for ${fromEntry.name} in latest ${registry.name} registry")
+                    }
                 }
-                throw CompileException("No value for ${fromEntry.name} in latest ${registry.name} registry")
+                else -> IntRemapValue.Absolute(toEntries[0].id)
             }
-            shifts += fromEntry.id to Either.Left(newId?.let { it - fromEntry.id })
+            shifts += fromEntry.id to value
         }
 
         shifts.sortBy { it.first }
 
-        return selectShift(shifts, toEntries[0].id)
+        return selectShift(shifts)
     }
 
     val methodName = "remap%sInt%s".format(Locale.ROOT,

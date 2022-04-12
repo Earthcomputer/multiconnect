@@ -5,10 +5,14 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtTagSizeTracker;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
@@ -50,6 +54,13 @@ public final class PacketIntrinsics {
         } else {
             return OptionalLong.empty();
         }
+    }
+
+    public static int getStateId(RegistryKey<Block> blockKey, int offset) {
+        Block block = Registry.BLOCK.get(blockKey);
+        assert block != null;
+        BlockState firstState = block.getStateManager().getStates().get(0);
+        return Block.getRawIdFromState(firstState) + offset;
     }
 
     public static int readVarInt(ByteBuf buf) {
