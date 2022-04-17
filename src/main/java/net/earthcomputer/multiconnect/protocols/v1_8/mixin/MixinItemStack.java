@@ -37,7 +37,7 @@ public abstract class MixinItemStack {
 
     @ModifyVariable(method = "getAttributeModifiers",
             ordinal = 0,
-            //slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;getAttributeModifiers(Lnet/minecraft/entity/EquipmentSlot;)Lcom/google/common/collect/Multimap;")), TODO: when SpongePowered/Mixin#429 is fixed, uncomment this and fix the ordinal below
+            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/item/Item;getAttributeModifiers(Lnet/minecraft/entity/EquipmentSlot;)Lcom/google/common/collect/Multimap;")),
             at = @At(value = "STORE", ordinal = 1))
     private Multimap<EntityAttribute, EntityAttributeModifier> modifyAttributeModifiers(Multimap<EntityAttribute, EntityAttributeModifier> modifiers) {
         if (ConnectionInfo.protocolVersion > Protocols.V1_8) {
