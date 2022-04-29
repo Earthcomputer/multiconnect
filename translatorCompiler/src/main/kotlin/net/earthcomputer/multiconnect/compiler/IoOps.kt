@@ -55,7 +55,7 @@ object IoOps {
                 McNode(LoadVariableOp(bufVar, McType.BYTE_BUF))
             )
         }
-        fun commonTypes(name: String, returnType: McType): McNode {
+        fun intrinsic(name: String, returnType: McType): McNode {
             return McNode(
                 FunctionCallOp(CommonClassNames.PACKET_INTRINSICS, name, listOf(McType.BYTE_BUF), returnType, true),
                 McNode(LoadVariableOp(bufVar, McType.BYTE_BUF))
@@ -67,33 +67,35 @@ object IoOps {
             Types.FLOAT -> byteBuf("readFloat", McType.FLOAT)
             Types.LONG -> byteBuf("readLong", McType.LONG)
             Types.UNSIGNED_BYTE -> byteBuf("readUnsignedByte", McType.SHORT)
-            Types.VAR_LONG -> commonTypes("readVarLong", McType.LONG)
-            Types.VAR_INT -> commonTypes("readVarInt", McType.INT)
+            Types.VAR_LONG -> intrinsic("readVarLong", McType.LONG)
+            Types.VAR_INT -> intrinsic("readVarInt", McType.INT)
             Types.BOOLEAN -> byteBuf("readBoolean", McType.BOOLEAN)
             Types.BYTE -> byteBuf("readByte", McType.BYTE)
             Types.INT -> byteBuf("readInt", McType.INT)
             Types.SHORT -> byteBuf("readShort", McType.SHORT)
-            Types.NBT_COMPOUND -> commonTypes("readNbtCompound", McType.DeclaredType(CommonClassNames.NBT_COMPOUND))
-            Types.IDENTIFIER -> McNode(NewOp(CommonClassNames.IDENTIFIER, listOf(McType.STRING, McType.STRING)), commonTypes("readString", McType.STRING), commonTypes("readString", McType.STRING))
-            Types.STRING -> commonTypes("readString", McType.STRING)
+            Types.NBT_COMPOUND -> intrinsic("readNbtCompound", McType.DeclaredType(CommonClassNames.NBT_COMPOUND))
+            Types.IDENTIFIER -> McNode(NewOp(CommonClassNames.IDENTIFIER, listOf(McType.STRING, McType.STRING)), intrinsic("readString", McType.STRING), intrinsic("readString", McType.STRING))
+            Types.STRING -> intrinsic("readString", McType.STRING)
             Types.UUID -> McNode(NewOp(CommonClassNames.UUID, listOf(McType.LONG, McType.LONG)), byteBuf("readLong", McType.LONG), byteBuf("readLong", McType.LONG))
-            Types.BITSET -> commonTypes("readBitSet", McType.DeclaredType(CommonClassNames.BITSET))
+            Types.BITSET -> intrinsic("readBitSet", McType.DeclaredType(CommonClassNames.BITSET))
         }
     }
 
     fun writeType(bufVar: VariableId, type: Types, value: McNode): McNode {
         fun byteBuf(name: String, type: McType, value: McNode): McNode {
-            return McNode(
-                FunctionCallOp(CommonClassNames.BYTE_BUF, name, listOf(McType.BYTE_BUF, type), McType.VOID, true, isStatic = false),
-                McNode(LoadVariableOp(bufVar, McType.BYTE_BUF)),
-                value.castIfNecessary(type)
+            return McNode(PopStmtOp,
+                McNode(FunctionCallOp(CommonClassNames.BYTE_BUF, name, listOf(McType.BYTE_BUF, type), McType.VOID, true, isStatic = false),
+                    McNode(LoadVariableOp(bufVar, McType.BYTE_BUF)),
+                    value.castIfNecessary(type)
+                )
             )
         }
-        fun commonTypes(name: String, type: McType, value: McNode): McNode {
-            return McNode(
-                FunctionCallOp(CommonClassNames.PACKET_INTRINSICS, name, listOf(McType.BYTE_BUF, type), McType.VOID, true),
-                McNode(LoadVariableOp(bufVar, McType.BYTE_BUF)),
-                value.castIfNecessary(type)
+        fun intrinsic(name: String, type: McType, value: McNode): McNode {
+            return McNode(PopStmtOp,
+                McNode(FunctionCallOp(CommonClassNames.PACKET_INTRINSICS, name, listOf(McType.BYTE_BUF, type), McType.VOID, true),
+                    McNode(LoadVariableOp(bufVar, McType.BYTE_BUF)),
+                    value.castIfNecessary(type)
+                )
             )
         }
         return when (type) {
@@ -102,25 +104,25 @@ object IoOps {
             Types.FLOAT -> byteBuf("writeFloat", McType.FLOAT, value)
             Types.LONG -> byteBuf("writeLong", McType.LONG, value)
             Types.UNSIGNED_BYTE -> byteBuf("writeByte", McType.INT, value)
-            Types.VAR_LONG -> commonTypes("writeVarLong", McType.LONG, value)
-            Types.VAR_INT -> commonTypes("writeVarInt", McType.INT, value)
+            Types.VAR_LONG -> intrinsic("writeVarLong", McType.LONG, value)
+            Types.VAR_INT -> intrinsic("writeVarInt", McType.INT, value)
             Types.BOOLEAN -> byteBuf("writeBoolean", McType.BOOLEAN, value)
             Types.BYTE -> byteBuf("writeByte", McType.INT, value)
             Types.INT -> byteBuf("writeInt", McType.INT, value)
             Types.SHORT -> byteBuf("writeShort", McType.INT, value)
-            Types.NBT_COMPOUND -> commonTypes("writeNbtCompound", McType.DeclaredType(CommonClassNames.NBT_COMPOUND), value)
+            Types.NBT_COMPOUND -> intrinsic("writeNbtCompound", McType.DeclaredType(CommonClassNames.NBT_COMPOUND), value)
             Types.IDENTIFIER -> McNode(
                 StmtListOp,
-                commonTypes("writeString", McType.STRING, McNode(
+                intrinsic("writeString", McType.STRING, McNode(
                     FunctionCallOp(CommonClassNames.IDENTIFIER, "getNamespace", listOf(McType.DeclaredType(CommonClassNames.IDENTIFIER)), McType.STRING, false, isStatic = false),
                     value
                 )),
-                commonTypes("writeString", McType.STRING, McNode(
+                intrinsic("writeString", McType.STRING, McNode(
                     FunctionCallOp(CommonClassNames.IDENTIFIER, "getPath", listOf(McType.DeclaredType(CommonClassNames.IDENTIFIER)), McType.STRING, false, isStatic = false),
                     value
                 ))
             )
-            Types.STRING -> commonTypes("writeString", McType.STRING, value)
+            Types.STRING -> intrinsic("writeString", McType.STRING, value)
             Types.UUID -> McNode(
                 StmtListOp,
                 byteBuf("writeLong", McType.LONG, McNode(
@@ -132,7 +134,7 @@ object IoOps {
                     value
                 ))
             )
-            Types.BITSET -> commonTypes("writeBitSet", McType.DeclaredType(CommonClassNames.BITSET), value)
+            Types.BITSET -> intrinsic("writeBitSet", McType.DeclaredType(CommonClassNames.BITSET), value)
         }
     }
 }

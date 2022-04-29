@@ -17,6 +17,7 @@ import kotlin.contracts.contract
 
 object CommonClassNames {
     const val BYTE_BUF = "io.netty.buffer.ByteBuf"
+    const val UNPOOLED = "io.netty.buffer.Unpooled"
     const val CLASS = "java.lang.Class"
     const val OBJECT = "java.lang.Object"
     const val STRING = "java.lang.String"

@@ -23,8 +23,8 @@ internal fun Optimizer.extractCommonNodes() {
                 return@forEachNode
             }
             val variable = VariableId.create()
-            node.replace(McNode(LoadVariableOp(variable, node.op.returnType), mutableListOf()))
             val extractionNode = findExtractionNode(node)
+            node.replace(McNode(LoadVariableOp(variable, node.op.returnType), mutableListOf()))
             val stmtListUsage = extractionNode.usages.singleOrNull()?.takeIf { it.op == StmtListOp }
             val storeVariable = McNode(StoreVariableStmtOp(variable, node.op.returnType, true), mutableListOf(node))
             if (stmtListUsage != null) {

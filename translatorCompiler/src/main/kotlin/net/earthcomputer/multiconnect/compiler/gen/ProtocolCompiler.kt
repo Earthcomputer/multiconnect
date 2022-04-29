@@ -3,8 +3,10 @@ package net.earthcomputer.multiconnect.compiler.gen
 import net.earthcomputer.multiconnect.ap.Registries
 import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.BYTE_BUF
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY_KEY
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.UNPOOLED
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.Either
 import net.earthcomputer.multiconnect.compiler.Emitter
@@ -22,8 +24,8 @@ import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
 import net.earthcomputer.multiconnect.compiler.node.LoadFieldOp
 import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
+import net.earthcomputer.multiconnect.compiler.node.PopStmtOp
 import net.earthcomputer.multiconnect.compiler.node.Precedence
-import net.earthcomputer.multiconnect.compiler.node.ReturnStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StmtListOp
 import net.earthcomputer.multiconnect.compiler.node.StoreVariableStmtOp
 import net.earthcomputer.multiconnect.compiler.node.SwitchOp
@@ -67,8 +69,9 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
 
     private fun emitPacketTranslators(emitter: Emitter, functionName: String, packetsFile: File, clientbound: Boolean) {
         val function = emitter.addMember(functionName) ?: return
-        function.append("public static ").appendClassName(BYTE_BUF).append(" ").append(functionName).append("(")
-            .appendClassName(BYTE_BUF).append(" buf) {").indent().appendNewLine()
+        function.append("public static void ").append(functionName).append("(")
+            .appendClassName(BYTE_BUF).append(" buf, ").appendClassName(LIST)
+            .append("<").appendClassName(BYTE_BUF).append("> outBufs) {").indent().appendNewLine()
         val packets = TreeMap<Int, McNode>()
         for ((id, clazz) in readCsv<PacketType>(packetsFile)) {
             val packetFunctionName = "translate${clazz.substringAfterLast('.')}"
@@ -77,24 +80,21 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                     FunctionCallOp(
                         emitter.currentClass,
                         packetFunctionName,
-                        listOf(McType.BYTE_BUF),
-                        McType.BYTE_BUF,
+                        listOf(McType.BYTE_BUF, McType.BYTE_BUF.listOf()),
+                        McType.VOID,
                         true
                     ),
-                    McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF))
+                    McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF)),
+                    McNode(LoadVariableOp(VariableId.immediate("outBufs"), McType.BYTE_BUF.listOf()))
                 )
             }
         }
         val stmt = McNode(
-            ReturnStmtOp(McType.BYTE_BUF),
-            McNode(
-                SwitchOp(packets.keys as SortedSet<Int>, true, McType.INT, McType.BYTE_BUF),
-                mutableListOf<McNode>().apply {
-                    add(IoOps.readType(VariableId.immediate("buf"), Types.VAR_INT))
-                    addAll(packets.values)
-                    add(McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF), mutableListOf()))
-                }
-            )
+            SwitchOp(packets.keys as SortedSet<Int>, false, McType.INT, McType.VOID),
+            mutableListOf<McNode>().apply {
+                add(IoOps.readType(VariableId.immediate("buf"), Types.VAR_INT))
+                addAll(packets.values)
+            }
         ).optimize()
         stmt.emit(function, Precedence.COMMA)
         function.dedent().appendNewLine().append("}")
@@ -108,8 +108,9 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
     ): Boolean {
         val messageVariantInfo = getMessageVariantInfo(packetClass)
         val function = emitter.addMember(functionName) ?: return true
-        function.append("private static ").appendClassName(BYTE_BUF).append(" ").append(functionName).append("(")
-            .appendClassName(BYTE_BUF).append(" buf) {").indent().appendNewLine()
+        function.append("private static void ").append(functionName).append("(")
+            .appendClassName(BYTE_BUF).append(" buf, ").appendClassName(LIST)
+            .append("<").appendClassName(BYTE_BUF).append("> outBufs) {").indent().appendNewLine()
         generatePacketGraph(messageVariantInfo, clientbound).optimize().emit(function, Precedence.COMMA)
         function.dedent().appendNewLine().append("}")
         return true
@@ -164,7 +165,22 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             }
         }
 
-        nodes += McNode(ReturnStmtOp(McType.BYTE_BUF), McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF)))
+        // TODO: this isn't necessarily how we want to handle packets
+        val resultBufVar = VariableId.create()
+        nodes += McNode(StoreVariableStmtOp(resultBufVar, McType.BYTE_BUF, true),
+            McNode(FunctionCallOp(UNPOOLED, "buffer", listOf(), McType.BYTE_BUF, true))
+        )
+        nodes += if (group != null) {
+            generateWriteGraph(group, VariableId.immediate("protocol_${protocolsSubset.last().id}"), resultBufVar)
+        } else {
+            generateWriteGraph(messageVariantInfo, VariableId.immediate("protocol_${protocolsSubset.last().id}"), resultBufVar)
+        }
+        nodes += McNode(PopStmtOp,
+            McNode(FunctionCallOp(LIST, "add", listOf(McType.BYTE_BUF.listOf(), McType.BYTE_BUF), McType.VOID, true, isStatic = false),
+                McNode(LoadVariableOp(VariableId.immediate("outBufs"), McType.BYTE_BUF.listOf())),
+                McNode(LoadVariableOp(resultBufVar, McType.BYTE_BUF))
+            )
+        )
 
         return McNode(StmtListOp, nodes)
     }
