@@ -226,7 +226,19 @@ fun TypeElement.findMulticonnectFunction(
         }
     }
 
-    return MulticonnectFunction(name, method.returnType, positionalParameters, parameters)
+    val possibleReturnTypes = method.getAnnotationsByType(ReturnType::class.java).mapTo(mutableSetOf()) {
+        toTypeMirror { it.value }
+    }
+    if (possibleReturnTypes.isNotEmpty()) {
+        if (!method.returnType.hasQualifiedName(JAVA_UTIL_LIST)
+            || !method.returnType.componentType(processingEnv).hasQualifiedName(JAVA_LANG_OBJECT)
+        ) {
+            errorConsumer?.report("@ReturnType is only allowed on methods that return List<Object>", method)
+            return null
+        }
+    }
+
+    return MulticonnectFunction(name, method.returnType, positionalParameters, parameters, possibleReturnTypes.toList())
 }
 
 inline fun toTypeMirror(func: () -> KClass<*>): TypeMirror {

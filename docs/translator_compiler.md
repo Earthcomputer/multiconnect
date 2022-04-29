@@ -58,7 +58,9 @@ Multiconnect functions are public static methods in the same class from which th
 
 Multiconnect functions have a *context message variant*, which unless otherwise specified by the documentation for the place the function is referenced, is the message variant the function is referenced from.
 
-The return type of multiconnect functions can vary, and requirements depend on where the function is used. Multiconnect functions may have the following types of parameters:
+The return type of multiconnect functions can vary, and requirements depend on where the function is used. In some situations, you may be required to return a list of objects (e.g. packets) which may not all have the same type, but the types must be known at compile time. If all the objects are known to be of type `MyType`, then you may simply return `List<MyType>`. Otherwise, you can return a `List<Object>` and annotate the method with the repeatable `@ReturnType` annotation to specify the possible return types.
+
+Multiconnect functions may have the following types of parameters:
 
 - Positional parameters: parameters without a multiconnect annotation, before any other parameters. Unless otherwise specified by the documentation for the place the function is referenced, multiconnect functions do not allow any positional parameters.
 - Context parameters: parameters annotated with `@Argument`. Passes the value of a field from the context message variant. The annotation specifies the name of the record field to pull from.
@@ -159,7 +161,7 @@ The list of packets for each version is defined in `data/<version>/cpackets.csv`
 Every packet must have some way of being handled. There are two ways that a packet can be handled.
 
 - Fallthrough - the packet is translated into the target version and serialized into the ByteBuf (if it was even deserialized in the first place). This type of handling is implicit and requires no explicit markers.
-- Explicit handlers - a [multiconnect function](#multiconnect-functions) annotated with `@Handler` in any packet class along the chain will be called instead of the packet being translated past the version the handler is declared in. The handler may return `void` for no further processing, or it may return a packet type from the next version in the chain and continue translating from there, or finally it may return a list of such packets, which will be translated and handled in order. The handler may also be marked with a protocol. This specifies the minimum server version (for spackets) or maximum server version (for cpackets) that this handler is applied on. Otherwise it is ignored.
+- Explicit handlers - a [multiconnect function](#multiconnect-functions) annotated with `@Handler` in any packet class along the chain will be called instead of the packet being translated past the version the handler is declared in. The handler may return `void` for no further processing, or it may return a packet type from the next version in the chain and continue translating from there, or finally it may return a list of such packets, which will be translated and handled in order (the possible return types must be known at compile time, see [multiconnect functions](#multiconnect-functions) for how to do this for multiple types). The handler may also be marked with a protocol. This specifies the minimum server version (for spackets) or maximum server version (for cpackets) that this handler is applied on. Otherwise it is ignored.
 
 ### Partial Packet Handlers
 In addition to handlers, packets may also have partial handlers which don't stop further translation of the packet. Partial handlers are [multiconnect functions](#multiconnect-functions) annotated with `@PartialHandler` in the packet classes. They are called as the packet is translated past the version they are defined for.

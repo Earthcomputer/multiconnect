@@ -10,7 +10,8 @@ data class MulticonnectFunction(
     val name: String,
     val returnType: TypeMirror,
     val positionalParameters: List<TypeMirror>,
-    val parameters: List<MulticonnectParameter>
+    val parameters: List<MulticonnectParameter>,
+    val possibleReturnTypes: List<TypeMirror>?,
 )
 
 @Serializable

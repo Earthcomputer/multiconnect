@@ -158,7 +158,8 @@ data class McFunction(
     val name: String,
     val returnType: McType,
     val positionalParameters: List<McType>,
-    val parameters: List<McParameter>
+    val parameters: List<McParameter>,
+    val possibleReturnTypes: List<McType>?,
 ) {
     @Transient
     lateinit var owner: String
