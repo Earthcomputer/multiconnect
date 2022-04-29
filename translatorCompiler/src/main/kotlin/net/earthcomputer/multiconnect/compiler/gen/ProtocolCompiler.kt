@@ -31,6 +31,7 @@ import net.earthcomputer.multiconnect.compiler.node.StoreVariableStmtOp
 import net.earthcomputer.multiconnect.compiler.node.SwitchOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
 import net.earthcomputer.multiconnect.compiler.opto.optimize
+import net.earthcomputer.multiconnect.compiler.protocolNamesById
 import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.readCsv
 import java.io.File
@@ -43,7 +44,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
     internal val dataDir = FileLocations.dataDir.resolve(protocolName)
     internal val latestDataDir = FileLocations.dataDir.resolve(protocols[0].name)
     internal val cacheMembers = mutableMapOf<String, (Emitter) -> Unit>()
-    internal var useLatestRegistries = false
+    internal var currentProtocolId: Int = protocolId
 
     fun compile() {
         val emitter = Emitter(className, TreeSet(), TreeMap(), StringBuilder())
@@ -132,18 +133,31 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
 
         val nodes = mutableListOf<McNode>()
         if (!clientbound) {
-            useLatestRegistries = true
+            currentProtocolId = protocols[0].id
         }
         nodes += McNode(StoreVariableStmtOp(VariableId.immediate("protocol_${protocolsSubset.first().id}"), messageVariantInfo.toMcType(), true),
             generateMessageReadGraph(getPacket(protocolsSubset.first().id))
         )
         if (!clientbound) {
-            useLatestRegistries = false
+            currentProtocolId = protocolId
 
             nodes += if (group != null) {
                 fixRegistries(group, VariableId.immediate("protocol_${protocolsSubset.first().id}"), false)
             } else {
                 fixRegistries(messageVariantInfo, VariableId.immediate("protocol_${protocolsSubset.first().id}"), false)
+            }
+        }
+
+        if (protocolsSubset.size == 1 || getPacket(protocolsSubset[0].id).className != getPacket(protocolsSubset[1].id).className) {
+            val packet = getPacket(protocolsSubset[0].id)
+            for (partialHandler in packet.partialHandlers) {
+                nodes += McNode(PopStmtOp,
+                    generateFunctionCallGraph(packet.findFunction(partialHandler)) { name, type ->
+                        McNode(LoadFieldOp(packet.toMcType(), name, type),
+                            McNode(LoadVariableOp(VariableId.immediate("protocol_${protocolsSubset[0].id}"), packet.toMcType()))
+                        )
+                    }
+                )
             }
         }
 
@@ -155,6 +169,18 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                     translate(messageVariantInfo, protocolsSubset[index - 1].id, protocolsSubset[index].id, VariableId.immediate("protocol_${protocolsSubset[index - 1].id}"))
                 }
             )
+            val packet = getPacket(protocolsSubset[index].id)
+            if (index == protocolsSubset.lastIndex || packet.className != getPacket(protocolsSubset[index + 1].id).className) {
+                for (partialHandler in packet.partialHandlers) {
+                    nodes += McNode(PopStmtOp,
+                        generateFunctionCallGraph(packet.findFunction(partialHandler)) { name, type ->
+                            McNode(LoadFieldOp(packet.toMcType(), name, type),
+                                McNode(LoadVariableOp(VariableId.immediate("protocol_${protocolsSubset[index].id}"), packet.toMcType()))
+                            )
+                        }
+                    )
+                }
+            }
         }
 
         if (clientbound) {
@@ -170,10 +196,16 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         nodes += McNode(StoreVariableStmtOp(resultBufVar, McType.BYTE_BUF, true),
             McNode(FunctionCallOp(UNPOOLED, "buffer", listOf(), McType.BYTE_BUF, true))
         )
+        if (clientbound) {
+            currentProtocolId = protocols[0].id
+        }
         nodes += if (group != null) {
             generateWriteGraph(group, VariableId.immediate("protocol_${protocolsSubset.last().id}"), resultBufVar)
         } else {
             generateWriteGraph(messageVariantInfo, VariableId.immediate("protocol_${protocolsSubset.last().id}"), resultBufVar)
+        }
+        if (clientbound) {
+            currentProtocolId = protocolId
         }
         nodes += McNode(PopStmtOp,
             McNode(FunctionCallOp(LIST, "add", listOf(McType.BYTE_BUF.listOf(), McType.BYTE_BUF), McType.VOID, true, isStatic = false),
@@ -186,12 +218,12 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
     }
 
     internal fun Registries.getRawId(value: String): Either<Int, McNode>? {
-        val registryDir = if (useLatestRegistries) latestDataDir else dataDir
+        val registryDir = FileLocations.dataDir.resolve(protocolNamesById[currentProtocolId]!!)
         val entries = readCsv<RegistryEntry>(registryDir.resolve("${this.name.lowercase()}.csv"))
         val entry = entries.byName(value)
 
         // load id dynamically if necessary
-        if (entry == null && useLatestRegistries && value.startsWith("multiconnect:")) {
+        if (entry == null && currentProtocolId != protocolId && value.startsWith("multiconnect:")) {
             val registryType = McType.DeclaredType(REGISTRY)
             val registryKeyType = McType.DeclaredType(REGISTRY_KEY)
             val registryElementType = McType.DeclaredType("RegistryElement")

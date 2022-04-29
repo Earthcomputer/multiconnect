@@ -411,7 +411,7 @@ private fun ProtocolCompiler.generateTypeReadGraph(contextMessage: MessageVarian
     if (wireType == Types.MESSAGE) {
         return when (val classInfo = realType.classInfo) {
             is MessageVariantInfo -> generateMessageReadGraph(classInfo)
-            is MessageInfo -> generateMessageReadGraph(classInfo.getVariant(protocolId)!!)
+            is MessageInfo -> generateMessageReadGraph(classInfo.getVariant(currentProtocolId)!!)
             else -> throw IllegalStateException("Invalid real type for message type")
         }
     }

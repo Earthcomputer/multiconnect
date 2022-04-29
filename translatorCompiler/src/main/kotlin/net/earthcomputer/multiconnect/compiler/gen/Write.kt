@@ -47,7 +47,7 @@ internal fun ProtocolCompiler.generateWriteGraph(
     messageVar: VariableId,
     bufVar: VariableId
 ): McNode {
-    val variant = messageInfo.getVariant(protocolId)!!
+    val variant = messageInfo.getVariant(currentProtocolId)!!
     val newVar = VariableId.create()
     return McNode(StmtListOp,
         McNode(StoreVariableStmtOp(newVar, variant.toMcType(), true),
