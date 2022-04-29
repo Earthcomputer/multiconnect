@@ -69,6 +69,7 @@ Multiconnect functions may have the following types of parameters:
   - `ClientPlayNetworkHandler` - passes the current network handler.
   - `IUserDataHolder` - passes a user data holder that's valid from when the packet was sent/received until it is handled. This holder remains valid for the packets returned from a packet's handler, if any.
   - `Identifier` and integral types - if the `@Filled` annotation has a `fromRegistry` attribute, then the parameter is filled with the string or numeric identifier for the registry entry specified.
+  - `DelayedPacketSender<T>` - passes a function appropriate for sending a packet of type `T` (either to the client or to the server) from within a multiconnect function. Multiconnect functions should *not* send packets through alternative means such as `PacketSystem.sendToClient`. This is because registry IDs are *untranslated* inside multiconnect functions, but `PacketSystem.sendTo*` assumes that IDs have already been translated. Note that the preferred way to send packets from a `@Handler` in the same direction as the incoming packet is to return the packet(s) from the function. 
 
 ### Network Enums
 Network enums are simply enums annotated with the `@NetworkEnum` annotation. They must have at least one value. Record fields with a network enum type are serialized as if they were ints.

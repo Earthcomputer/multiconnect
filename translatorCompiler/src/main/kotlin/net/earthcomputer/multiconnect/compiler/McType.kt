@@ -37,6 +37,7 @@ object CommonClassNames {
     const val IDENTIFIER = "net.minecraft.util.Identifier"
     const val PACKET_INTRINSICS = "net.earthcomputer.multiconnect.impl.PacketIntrinsics"
     const val MULTICONNECT_DFU = "net.earthcomputer.multiconnect.protocols.generic.MulticonnectDFU"
+    const val DELAYED_PACKET_SENDER = "net.earthcomputer.multiconnect.impl.DelayedPacketSender"
     const val METHOD_HANDLE = "java.lang.invoke.MethodHandle"
     const val METHOD_HANDLES = "java.lang.invoke.MethodHandles"
     const val METHOD_HANDLES_LOOKUP = "java.lang.invoke.MethodHandles.Lookup"

@@ -330,6 +330,7 @@ object MessageVariantProcessor {
             variantOf?.asTypeElement()?.qualifiedName?.toString(),
             minVersion,
             maxVersion,
+            type.hasAnnotation(Sendable::class),
             messageVariant.tailrec
         )
         jsonFile.openWriter().use { writer ->

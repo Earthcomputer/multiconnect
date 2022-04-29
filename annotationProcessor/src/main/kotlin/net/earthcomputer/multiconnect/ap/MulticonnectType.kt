@@ -80,6 +80,7 @@ data class MulticonnectType(
         fun canAutoFill(realType: TypeMirror): Boolean {
             return realType.hasQualifiedName(MINECRAFT_NETWORK_HANDLER)
                     || realType.hasQualifiedName(MULTICONNECT_USER_DATA_HOLDER)
+                    || realType.hasQualifiedName(MULTICONNECT_DELAYED_PACKET_SENDER)
         }
     }
 }

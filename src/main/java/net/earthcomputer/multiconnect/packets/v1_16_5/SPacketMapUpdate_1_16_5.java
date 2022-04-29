@@ -8,12 +8,10 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
-import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.impl.PacketSystem;
+import net.earthcomputer.multiconnect.impl.DelayedPacketSender;
 import net.earthcomputer.multiconnect.packets.SPacketMapUpdate;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.MapStateAccessor;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.FilledMapItem;
 import net.minecraft.item.map.MapState;
@@ -56,7 +54,7 @@ public class SPacketMapUpdate_1_16_5 {
             @Argument("z") byte z,
             @Argument("data") byte[] data,
             @DefaultConstruct SPacketMapUpdate newPacket,
-            @FilledArgument ClientPlayNetworkHandler networkHandler
+            @FilledArgument DelayedPacketSender<SPacketMapUpdate> mapPacketSender
     ) {
         MinecraftClient.getInstance().execute(() -> {
             ClientWorld world = MinecraftClient.getInstance().world;
@@ -70,7 +68,7 @@ public class SPacketMapUpdate_1_16_5 {
                 newPacket.x = x;
                 newPacket.z = z;
                 newPacket.data = data;
-                PacketSystem.sendToClient(networkHandler, Protocols.V1_17, newPacket);
+                mapPacketSender.send(newPacket);
                 String mapName = FilledMapItem.getMapName(mapId);
                 MapState mapState = world.getMapState(mapName);
                 if (mapState != null) {

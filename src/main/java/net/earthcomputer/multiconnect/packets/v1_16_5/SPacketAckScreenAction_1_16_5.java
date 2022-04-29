@@ -9,10 +9,9 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.impl.PacketSystem;
+import net.earthcomputer.multiconnect.impl.DelayedPacketSender;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.IScreenHandler;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.screen.ScreenHandler;
 
@@ -31,7 +30,7 @@ public class SPacketAckScreenAction_1_16_5 {
             @Argument("actionId") short actionId,
             @Argument("accepted") boolean accepted,
             @DefaultConstruct Supplier<CPacketAckScreenAction_1_16_5> responsePacketCreator,
-            @FilledArgument ClientPlayNetworkHandler networkHandler
+            @FilledArgument DelayedPacketSender<CPacketAckScreenAction_1_16_5> responseSender
     ) {
         MinecraftClient.getInstance().execute(() -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
@@ -51,7 +50,7 @@ public class SPacketAckScreenAction_1_16_5 {
                         response.syncId = syncId;
                         response.actionId = actionId;
                         response.accepted = true;
-                        PacketSystem.sendToServer(networkHandler, Protocols.V1_16_5, response);
+                        responseSender.send(response);
                     }
                 }
             }

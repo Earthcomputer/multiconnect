@@ -18,6 +18,7 @@ class MessageVariantType @OptIn(ExperimentalSerializationApi::class) constructor
     val variantOf: String?,
     val minVersion: Int?,
     val maxVersion: Int?,
+    val sendable: Boolean,
     val tailrec: Boolean = false,
     @EncodeDefault(EncodeDefault.Mode.ALWAYS) val type: String = "messageVariant"
 )
