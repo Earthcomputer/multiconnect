@@ -22,6 +22,7 @@ fun main(args: Array<String>) {
 
     protocols = readCsv(File(FileLocations.dataDir, "protocols.csv"))
     protocolNamesById = protocols.associate { it.id to it.name }
+    protocolDatafixVersionsById = protocols.associate { it.id to it.datafixVersion }
     fillIndexes()
     checkMessages()
 

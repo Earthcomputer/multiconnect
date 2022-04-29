@@ -3,12 +3,18 @@ package net.earthcomputer.multiconnect.compiler.gen
 import net.earthcomputer.multiconnect.ap.Registries
 import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.DATA_FIXER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.IDENTIFIER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.INT_LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.LONG_LIST
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.MULTICONNECT_DFU
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.NBT_COMPOUND
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.OPTIONAL
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.SCHEMAS
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPE_REFERENCE
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPE_REFERENCES
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.FieldType
 import net.earthcomputer.multiconnect.compiler.McField
@@ -54,6 +60,7 @@ import net.earthcomputer.multiconnect.compiler.node.WhileStmtOp
 import net.earthcomputer.multiconnect.compiler.normalizeIdentifier
 import net.earthcomputer.multiconnect.compiler.opto.optimize
 import net.earthcomputer.multiconnect.compiler.polymorphicChildren
+import net.earthcomputer.multiconnect.compiler.protocolDatafixVersionsById
 import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.readCsv
 import java.util.Locale
@@ -71,6 +78,9 @@ private fun ProtocolCompiler.hasChanged(registry: Registries, wireType: Types): 
 }
 
 private fun ProtocolCompiler.needsTranslating(field: FieldType): Boolean {
+    if (field.datafixType != null) {
+        return true
+    }
     if (field.registry != null) {
         if (hasChanged(field.registry, field.wireType)) {
             return true
@@ -246,6 +256,28 @@ private fun ProtocolCompiler.fixRegistriesWithType(
         val registry = field.registry ?: throw CompileException("Should not have thought registries need fixing for Identifier type without a registry")
         return McNode(FunctionCallOp(className, createStringRemapFunc(registry, clientbound), listOf(type), type, false),
             McNode(LoadVariableOp(varId, type))
+        )
+    }
+
+    if (field.datafixType != null && type.hasName(NBT_COMPOUND)) {
+        val fixerType = McType.DeclaredType(DATA_FIXER)
+        val fixer = if (field.datafixType.isMulticonnect) {
+            McNode(LoadFieldOp(McType.DeclaredType(MULTICONNECT_DFU), "FIXER", fixerType, isStatic = true))
+        } else {
+            McNode(FunctionCallOp(SCHEMAS, "getFixer", listOf(), fixerType, false))
+        }
+        val typesClass = if (field.datafixType.isMulticonnect) {
+            MULTICONNECT_DFU
+        } else {
+            TYPE_REFERENCES
+        }
+        val typeReferenceType = McType.DeclaredType(TYPE_REFERENCE)
+        val typeReference = McNode(LoadFieldOp(McType.DeclaredType(typesClass), field.datafixType.name, typeReferenceType, isStatic = true))
+        return McNode(FunctionCallOp(PACKET_INTRINSICS, "datafix", listOf(type, fixerType, typeReferenceType, McType.INT), type, false),
+            McNode(LoadVariableOp(varId, type)),
+            fixer,
+            typeReference,
+            McNode(CstIntOp(protocolDatafixVersionsById[protocolId]!!))
         )
     }
 

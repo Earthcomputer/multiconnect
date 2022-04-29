@@ -21,8 +21,9 @@ import net.earthcomputer.multiconnect.ap.Types
 import java.io.File
 import java.lang.ref.SoftReference
 
-lateinit var protocols: List<RegistryEntry>
+lateinit var protocols: List<ProtocolEntry>
 lateinit var protocolNamesById: Map<Int, String>
+lateinit var protocolDatafixVersionsById: Map<Int, Int>
 val groups = mutableMapOf<String, MutableList<String>>()
 val polymorphicChildren = mutableMapOf<String, MutableList<String>>()
 fun fillIndexes() {
@@ -39,6 +40,13 @@ fun fillIndexes() {
     }
     for (group in groups.values) {
         group.sortBy { getMessageVariantInfo(it).minVersion ?: -1 }
+    }
+}
+
+@Serializable
+data class ProtocolEntry(val id: Int, val datafixVersion: Int, val name: String) {
+    override fun toString(): String {
+        return "$name (ID $id, datafix $datafixVersion)"
     }
 }
 

@@ -1,14 +1,19 @@
 package net.earthcomputer.multiconnect.impl;
 
+import com.mojang.datafixers.DSL;
+import com.mojang.datafixers.DataFixer;
+import com.mojang.serialization.Dynamic;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
+import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.NbtTagSizeTracker;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.registry.Registry;
@@ -38,6 +43,15 @@ public final class PacketIntrinsics {
         } catch (ReflectiveOperationException e) {
             throw new AssertionError("Could not find setter method handle, this indicates a compiler bug!", e);
         }
+    }
+
+    public static NbtCompound datafix(NbtCompound data, DataFixer fixer, DSL.TypeReference type, int fromVersion) {
+        return (NbtCompound) fixer.update(
+                type,
+                new Dynamic<>(NbtOps.INSTANCE, data),
+                fromVersion,
+                SharedConstants.getGameVersion().getWorldVersion()
+        ).getValue();
     }
 
     public static OptionalInt map(OptionalInt value, IntUnaryOperator mapper) {
