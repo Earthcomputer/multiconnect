@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.compiler.opto
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
+import net.earthcomputer.multiconnect.compiler.node.ReturnStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StmtListOp
 import net.earthcomputer.multiconnect.compiler.node.StoreVariableStmtOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
@@ -24,20 +25,22 @@ internal fun Optimizer.extractCommonNodes() {
             }
             val variable = VariableId.create()
             val extractionNode = findExtractionNode(node)
-            node.replace(McNode(LoadVariableOp(variable, node.op.returnType), mutableListOf()))
+            node.replace(McNode(LoadVariableOp(variable, node.op.returnType)))
             val stmtListUsage = extractionNode.usages.singleOrNull()?.takeIf { it.op == StmtListOp }
-            val storeVariable = McNode(StoreVariableStmtOp(variable, node.op.returnType, true), mutableListOf(node))
+            val storeVariable = McNode(StoreVariableStmtOp(variable, node.op.returnType, true), node)
             if (stmtListUsage != null) {
                 val index = stmtListUsage.inputs.indexOf(extractionNode)
                 stmtListUsage.insertInput(index, storeVariable)
             } else {
-                extractionNode.replace(
-                    McNode(
-                        StmtListOp, mutableListOf(
-                    storeVariable,
+                val returnNode = if (extractionNode.op.isExpression) {
+                    McNode(ReturnStmtOp(extractionNode.op.returnType), extractionNode)
+                } else {
                     extractionNode
+                }
+                extractionNode.replace(McNode(StmtListOp,
+                    storeVariable,
+                    returnNode
                 ))
-                )
             }
             changed = true
         }

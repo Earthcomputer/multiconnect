@@ -111,11 +111,15 @@ data class MessageVariantInfo(
     val variantOf: String?,
     val minVersion: Int?,
     val maxVersion: Int?,
+    val sendable: Boolean,
     val tailrec: Boolean = false
 ) : ClassInfo() {
     fun findFieldOrNull(name: String, includeParent: Boolean = true): McField? {
-        return fields.firstOrNull { it.name == name }
-            ?: polymorphicParent?.let { getMessageVariantInfo(it).findFieldOrNull(name, false) }
+        val field = fields.firstOrNull { it.name == name }
+        if (field == null && includeParent) {
+            return polymorphicParent?.let { getMessageVariantInfo(it).findFieldOrNull(name, false) }
+        }
+        return field
     }
 
     fun findField(name: String, includeParent: Boolean = true): McField {

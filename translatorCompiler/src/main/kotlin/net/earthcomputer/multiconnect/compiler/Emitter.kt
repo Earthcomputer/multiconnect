@@ -11,6 +11,8 @@ class Emitter(
 ) {
     private var indent = ""
 
+    val length: Int get() = text.length
+
     private val returnHandlers = mutableListOf<ReturnHandler>({ func ->
         append("return ")
         func()

@@ -16,28 +16,64 @@ import net.earthcomputer.multiconnect.compiler.McType
 import net.earthcomputer.multiconnect.compiler.MessageInfo
 import net.earthcomputer.multiconnect.compiler.MessageVariantInfo
 import net.earthcomputer.multiconnect.compiler.PacketType
+import net.earthcomputer.multiconnect.compiler.ProtocolEntry
 import net.earthcomputer.multiconnect.compiler.RegistryEntry
 import net.earthcomputer.multiconnect.compiler.byName
+import net.earthcomputer.multiconnect.compiler.classInfoOrNull
+import net.earthcomputer.multiconnect.compiler.componentType
+import net.earthcomputer.multiconnect.compiler.deepComponentType
 import net.earthcomputer.multiconnect.compiler.getClassInfo
 import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
+import net.earthcomputer.multiconnect.compiler.hasName
+import net.earthcomputer.multiconnect.compiler.messageVariantInfo
+import net.earthcomputer.multiconnect.compiler.node.BinaryExpressionOp
+import net.earthcomputer.multiconnect.compiler.node.CastOp
+import net.earthcomputer.multiconnect.compiler.node.CstIntOp
+import net.earthcomputer.multiconnect.compiler.node.CstStringOp
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
+import net.earthcomputer.multiconnect.compiler.node.IfElseStmtOp
+import net.earthcomputer.multiconnect.compiler.node.IfStmtOp
+import net.earthcomputer.multiconnect.compiler.node.InstanceOfOp
 import net.earthcomputer.multiconnect.compiler.node.LoadFieldOp
 import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
+import net.earthcomputer.multiconnect.compiler.node.NewOp
 import net.earthcomputer.multiconnect.compiler.node.PopStmtOp
 import net.earthcomputer.multiconnect.compiler.node.Precedence
+import net.earthcomputer.multiconnect.compiler.node.ReturnVoidStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StmtListOp
 import net.earthcomputer.multiconnect.compiler.node.StoreVariableStmtOp
 import net.earthcomputer.multiconnect.compiler.node.SwitchOp
+import net.earthcomputer.multiconnect.compiler.node.ThrowStmtOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
+import net.earthcomputer.multiconnect.compiler.node.WhileStmtOp
 import net.earthcomputer.multiconnect.compiler.opto.optimize
+import net.earthcomputer.multiconnect.compiler.polymorphicChildren
 import net.earthcomputer.multiconnect.compiler.protocolNamesById
 import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.readCsv
+import net.earthcomputer.multiconnect.compiler.splitPackageClass
 import java.io.File
 import java.util.SortedSet
 import java.util.TreeMap
 import java.util.TreeSet
+
+enum class PacketDirection {
+    SERVERBOUND, CLIENTBOUND, INVALID
+}
+
+private fun getPacketDirection(protocolId: Int, className: String): PacketDirection {
+    val protocolName = protocolNamesById[protocolId]!!
+    for ((dir, fileName) in listOf(
+        PacketDirection.CLIENTBOUND to "spackets.csv",
+        PacketDirection.SERVERBOUND to "cpackets.csv"
+    )) {
+        if (readCsv<PacketType>(FileLocations.dataDir.resolve(protocolName).resolve(fileName)).any { it.clazz == className }) {
+            return dir
+        }
+    }
+    return PacketDirection.INVALID
+}
 
 class ProtocolCompiler(internal val protocolName: String, internal val protocolId: Int) {
     internal val className = "net.earthcomputer.multiconnect.generated.Protocol_${protocolName.replace('.', '_')}"
@@ -148,17 +184,11 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             }
         }
 
-        if (protocolsSubset.size == 1 || getPacket(protocolsSubset[0].id).className != getPacket(protocolsSubset[1].id).className) {
-            val packet = getPacket(protocolsSubset[0].id)
-            for (partialHandler in packet.partialHandlers) {
-                nodes += McNode(PopStmtOp,
-                    generateFunctionCallGraph(packet.findFunction(partialHandler)) { name, type ->
-                        McNode(LoadFieldOp(packet.toMcType(), name, type),
-                            McNode(LoadVariableOp(VariableId.immediate("protocol_${protocolsSubset[0].id}"), packet.toMcType()))
-                        )
-                    }
-                )
-            }
+        nodes += generatePartialHandlers(protocolsSubset, 0, ::getPacket)
+        val (handler0, handled0) = generateHandler(VariableId.immediate("protocol_${protocolsSubset.first().id}"), protocolsSubset.getOrNull(1)?.id, getPacket(protocolsSubset[0].id), clientbound)
+        nodes += handler0
+        if (handled0) {
+            return McNode(StmtListOp, nodes)
         }
 
         for (index in protocolsSubset.indices.drop(1)) {
@@ -169,17 +199,11 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                     translate(messageVariantInfo, protocolsSubset[index - 1].id, protocolsSubset[index].id, VariableId.immediate("protocol_${protocolsSubset[index - 1].id}"))
                 }
             )
-            val packet = getPacket(protocolsSubset[index].id)
-            if (index == protocolsSubset.lastIndex || packet.className != getPacket(protocolsSubset[index + 1].id).className) {
-                for (partialHandler in packet.partialHandlers) {
-                    nodes += McNode(PopStmtOp,
-                        generateFunctionCallGraph(packet.findFunction(partialHandler)) { name, type ->
-                            McNode(LoadFieldOp(packet.toMcType(), name, type),
-                                McNode(LoadVariableOp(VariableId.immediate("protocol_${protocolsSubset[index].id}"), packet.toMcType()))
-                            )
-                        }
-                    )
-                }
+            nodes += generatePartialHandlers(protocolsSubset, index, ::getPacket)
+            val (handler, handled) = generateHandler(VariableId.immediate("protocol_${protocolsSubset[index].id}"), protocolsSubset.getOrNull(index + 1)?.id, getPacket(protocolsSubset[index].id), clientbound)
+            nodes += handler
+            if (handled) {
+                return McNode(StmtListOp, nodes)
             }
         }
 
@@ -191,7 +215,6 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             }
         }
 
-        // TODO: this isn't necessarily how we want to handle packets
         val resultBufVar = VariableId.create()
         nodes += McNode(StoreVariableStmtOp(resultBufVar, McType.BYTE_BUF, true),
             McNode(FunctionCallOp(UNPOOLED, "buffer", listOf(), McType.BYTE_BUF, true))
@@ -215,6 +238,236 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         )
 
         return McNode(StmtListOp, nodes)
+    }
+
+    private inline fun generatePartialHandlers(
+        protocolsSubset: List<ProtocolEntry>,
+        index: Int,
+        getPacket: (Int) -> MessageVariantInfo
+    ): McNode {
+        val nodes = mutableListOf<McNode>()
+        val packet = getPacket(protocolsSubset[index].id)
+        if (index == protocolsSubset.lastIndex || packet.className != getPacket(protocolsSubset[index + 1].id).className) {
+            for (partialHandler in packet.partialHandlers) {
+                nodes += McNode(PopStmtOp,
+                    generateFunctionCallGraph(packet.findFunction(partialHandler)) { name, type ->
+                        McNode(LoadFieldOp(packet.toMcType(), name, type),
+                            McNode(LoadVariableOp(VariableId.immediate("protocol_${protocolsSubset[index].id}"), packet.toMcType()))
+                        )
+                    }
+                )
+            }
+
+            if (packet.polymorphic != null && packet.polymorphicParent == null) {
+                var ifElseChain: McNode? = null
+                for (childName in polymorphicChildren[packet.className]!!) {
+                    val childMessage = getMessageVariantInfo(packet.className)
+                    if (childMessage.partialHandlers.isNotEmpty()) {
+                        val ifBlock = mutableListOf<McNode>()
+                        val castedChild = McNode(CastOp(packet.toMcType(), childMessage.toMcType()),
+                            McNode(LoadVariableOp(VariableId.immediate("protocol_${protocolsSubset[index].id}"), packet.toMcType()))
+                        )
+                        for (partialHandler in childMessage.partialHandlers.asReversed()) {
+                            ifBlock += McNode(PopStmtOp,
+                                generateFunctionCallGraph(childMessage.findFunction(partialHandler)) { name, type ->
+                                    McNode(LoadFieldOp(childMessage.toMcType(), name, type), castedChild)
+                                }
+                            )
+                        }
+                        val condition = McNode(InstanceOfOp(packet.toMcType(), childMessage.toMcType()),
+                            McNode(LoadVariableOp(VariableId.immediate("protocol_${protocolsSubset[index].id}"), packet.toMcType()))
+                        )
+                        ifElseChain = if (ifElseChain == null) {
+                            McNode(IfStmtOp, condition, McNode(StmtListOp, ifBlock))
+                        } else {
+                            McNode(IfElseStmtOp, condition, McNode(StmtListOp, ifBlock), ifElseChain)
+                        }
+                    }
+                }
+
+                if (ifElseChain != null) {
+                    nodes += ifElseChain
+                }
+            }
+        }
+        return McNode(StmtListOp, nodes)
+    }
+
+    private fun generateHandler(varId: VariableId, nextProtocolId: Int?, packet: MessageVariantInfo, clientbound: Boolean): Pair<McNode, Boolean> {
+        if (packet.handler != null) {
+            return generateHandlerInner(McNode(LoadVariableOp(varId, packet.toMcType())), nextProtocolId, packet, packet.handler, clientbound) to true
+        }
+        if (packet.polymorphic != null && packet.polymorphicParent == null) {
+            val alwaysHandled = polymorphicChildren[packet.className]!!.all { getMessageVariantInfo(it).handler != null }
+            var ifElseChain = if (alwaysHandled) {
+                McNode(ThrowStmtOp,
+                    McNode(NewOp("java.lang.IllegalStateException", listOf(McType.STRING)),
+                        McNode(CstStringOp("Polymorphic subclass of \"${splitPackageClass(packet.className).second}\" has instance of illegal type"))
+                    )
+                )
+            } else {
+                null
+            }
+            for (childName in polymorphicChildren[packet.className]!!.asReversed()) {
+                val childMessage = getMessageVariantInfo(childName)
+                if (childMessage.handler != null) {
+                    val condition = McNode(InstanceOfOp(packet.toMcType(), childMessage.toMcType()),
+                        McNode(LoadVariableOp(varId, packet.toMcType()))
+                    )
+                    var ifBlock = generateHandlerInner(
+                        McNode(CastOp(packet.toMcType(), childMessage.toMcType()),
+                            McNode(LoadVariableOp(varId, packet.toMcType()))
+                        ),
+                        nextProtocolId,
+                        childMessage,
+                        childMessage.handler,
+                        clientbound
+                    )
+                    if (!alwaysHandled) {
+                        ifBlock = McNode(StmtListOp,
+                            ifBlock,
+                            McNode(ReturnVoidStmtOp)
+                        )
+                    }
+                    ifElseChain = if (ifElseChain != null) {
+                        McNode(IfElseStmtOp,
+                            condition,
+                            ifBlock,
+                            McNode(StmtListOp, ifElseChain)
+                        )
+                    } else {
+                        McNode(IfStmtOp,
+                            condition,
+                            ifBlock
+                        )
+                    }
+                }
+            }
+
+            if (ifElseChain != null) {
+                return ifElseChain to alwaysHandled
+            }
+        }
+
+        return McNode(StmtListOp) to false
+    }
+
+    private fun generateHandlerInner(packetNode: McNode, nextProtocolId: Int?, packet: MessageVariantInfo, handlerName: String, clientbound: Boolean): McNode {
+        val handlerFunc = packet.findFunction(handlerName)
+        val functionCall = generateFunctionCallGraph(handlerFunc) { name, type ->
+            McNode(LoadFieldOp(packet.toMcType(), name, type), packetNode)
+        }
+        if (handlerFunc.returnType == McType.VOID) {
+            return McNode(PopStmtOp, functionCall)
+        }
+
+        if (nextProtocolId == null) {
+            throw CompileException("@Handler ${splitPackageClass(packet.className).second}.$handlerName cannot return more packets as it is the last packet in the chain for protocol $protocolName")
+        }
+
+        val varId = VariableId.create()
+        val nodes = mutableListOf<McNode>()
+
+        nodes += McNode(StoreVariableStmtOp(varId, handlerFunc.returnType, true), functionCall)
+
+        val possibleTypes = handlerFunc.possibleReturnTypes ?: if (handlerFunc.returnType.hasName(LIST)) {
+            listOf(handlerFunc.returnType.componentType())
+        } else {
+            listOf(handlerFunc.returnType)
+        }
+
+        for (type in possibleTypes) {
+            val info = type.classInfoOrNull as? MessageVariantInfo
+            val isValid = info?.let {
+                getPacketDirection(nextProtocolId, it.className) == (
+                    if (clientbound) PacketDirection.CLIENTBOUND else PacketDirection.SERVERBOUND
+                )
+            } ?: false
+            if (!isValid) {
+                throw CompileException("Returning invalid type $type from packet @Handler")
+            }
+        }
+
+        val elementVar = if (handlerFunc.returnType.hasName(LIST)) VariableId.create() else varId
+
+        val handlerBody = if (handlerFunc.possibleReturnTypes.isNullOrEmpty()) {
+            generateExplicitSender(handlerFunc.returnType.deepComponentType().messageVariantInfo, nextProtocolId, elementVar)
+        } else {
+            var ifElseChain = McNode(ThrowStmtOp,
+                McNode(NewOp("java.lang.IllegalArgumentException", listOf(McType.STRING)),
+                    McNode(CstStringOp("Packet @Handler \"${splitPackageClass(packet.className).second}.$handlerName\" returned invalid type. Expected one of $possibleTypes"))
+                )
+            )
+            for (returnType in handlerFunc.possibleReturnTypes.asReversed()) {
+                val instanceVarId = VariableId.create()
+                ifElseChain = McNode(IfElseStmtOp,
+                    McNode(InstanceOfOp(handlerFunc.returnType.deepComponentType(), returnType),
+                        McNode(LoadVariableOp(elementVar, handlerFunc.returnType.deepComponentType()))
+                    ),
+                    McNode(StmtListOp,
+                        McNode(StoreVariableStmtOp(instanceVarId, returnType, true),
+                            McNode(CastOp(handlerFunc.returnType.deepComponentType(), returnType),
+                                McNode(LoadVariableOp(elementVar, handlerFunc.returnType.deepComponentType()))
+                            )
+                        ),
+                        generateExplicitSender(returnType.messageVariantInfo, nextProtocolId, instanceVarId)
+                    ),
+                    McNode(StmtListOp, ifElseChain)
+                )
+            }
+            ifElseChain
+        }
+
+        if (handlerFunc.returnType.hasName(LIST)) {
+            val indexVar = VariableId.create()
+            val sizeVar = VariableId.create()
+            nodes += McNode(StoreVariableStmtOp(indexVar, McType.INT, true), McNode(CstIntOp(0)))
+            nodes += McNode(StoreVariableStmtOp(sizeVar, McType.INT, true),
+                McNode(FunctionCallOp(LIST, "size", listOf(handlerFunc.returnType), McType.INT, false, isStatic = false),
+                    McNode(LoadVariableOp(varId, handlerFunc.returnType))
+                )
+            )
+            nodes += McNode(WhileStmtOp,
+                McNode(BinaryExpressionOp("<", McType.INT, McType.INT),
+                    McNode(LoadVariableOp(indexVar, McType.INT)),
+                    McNode(LoadVariableOp(sizeVar, McType.INT))
+                ),
+                McNode(StmtListOp,
+                    McNode(StoreVariableStmtOp(elementVar, handlerFunc.returnType.deepComponentType(), true),
+                        McNode(FunctionCallOp(LIST, "get", listOf(handlerFunc.returnType, McType.INT), handlerFunc.returnType.deepComponentType(), false, isStatic = false),
+                            McNode(LoadVariableOp(varId, handlerFunc.returnType)),
+                            McNode(LoadVariableOp(indexVar, McType.INT))
+                        )
+                    ),
+                    handlerBody,
+                    McNode(StoreVariableStmtOp(indexVar, McType.INT, false, "+="), McNode(CstIntOp(1)))
+                )
+            )
+        } else {
+            nodes += handlerBody
+        }
+
+        return McNode(StmtListOp, nodes)
+    }
+
+    private fun generateExplicitSender(packet: MessageVariantInfo, protocolId: Int, packetVar: VariableId): McNode {
+        val functionName = "translateExplicit${splitPackageClass(packet.className).second.replace('.', '_')}$protocolId"
+
+        cacheMembers[functionName] = { emitter ->
+            emitter.append("private static void ").append(functionName).append("(")
+            packet.toMcType().emit(emitter)
+            emitter.append(" packet, ").appendClassName(LIST).append("<").appendClassName(BYTE_BUF).append("> outBufs) {")
+                .indent().appendNewLine()
+            // TODO
+            emitter.dedent().appendNewLine().append("}")
+        }
+
+        return McNode(PopStmtOp,
+            McNode(FunctionCallOp(className, functionName, listOf(packet.toMcType(), McType.BYTE_BUF.listOf()), McType.VOID, true),
+                McNode(LoadVariableOp(packetVar, packet.toMcType())),
+                McNode(LoadVariableOp(VariableId.immediate("outBufs"), McType.BYTE_BUF.listOf()))
+            )
+        )
     }
 
     internal fun Registries.getRawId(value: String): Either<Int, McNode>? {
