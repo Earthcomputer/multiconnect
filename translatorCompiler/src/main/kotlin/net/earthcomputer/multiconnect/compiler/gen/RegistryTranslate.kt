@@ -88,7 +88,7 @@ private fun ProtocolCompiler.needsTranslating(field: FieldType): Boolean {
     }
     val messageInfo = when (val classInfo = field.realType.deepComponentType().classInfoOrNull) {
         is MessageVariantInfo -> classInfo
-        is MessageInfo -> classInfo.getVariant(protocols[0].id) ?: throw CompileException("Message ${classInfo.className} does not have variant for latest version")
+        is MessageInfo -> classInfo.getVariant(fixRegistriesProtocolOverride ?: protocols[0].id) ?: throw CompileException("Message ${classInfo.className} does not have variant for latest version")
         else -> return false
     }
 
@@ -635,7 +635,7 @@ private fun ProtocolCompiler.fixRegistriesInner(
 }
 
 internal fun ProtocolCompiler.fixRegistries(messageInfo: MessageInfo, messageVar: VariableId, clientbound: Boolean): McNode {
-    val variant = messageInfo.getVariant(protocols[0].id)
+    val variant = messageInfo.getVariant(fixRegistriesProtocolOverride ?: protocols[0].id)
         ?: throw CompileException("No latest variant of ${messageInfo.className}")
     if (!needsTranslating(variant)) {
         return McNode(StmtListOp)

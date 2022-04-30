@@ -13,7 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
 
 @MessageVariant(maxVersion = Protocols.V1_16_5)
-@Sendable
+@Sendable(from = Protocols.V1_16_5)
 public class CPacketClickSlot_1_16_5 implements CPacketClickSlot {
     public byte syncId;
     public short slot;

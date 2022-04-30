@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.impl;
 
+import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.serialization.Dynamic;
@@ -24,6 +25,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
+import java.util.Map;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
 import java.util.function.IntUnaryOperator;
@@ -68,6 +70,15 @@ public final class PacketIntrinsics {
         } else {
             return OptionalLong.empty();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <K, V> Map<K, V> makeMap(Object... kvs) {
+        var builder = ImmutableMap.<K, V>builder();
+        for (int i = 0; i < kvs.length; i += 2) {
+            builder.put((K) kvs[i], (V) kvs[i + 1]);
+        }
+        return builder.build();
     }
 
     public static int getStateId(RegistryKey<Block> blockKey, int offset) {

@@ -24,6 +24,7 @@ import java.lang.ref.SoftReference
 lateinit var protocols: List<ProtocolEntry>
 lateinit var protocolNamesById: Map<Int, String>
 lateinit var protocolDatafixVersionsById: Map<Int, Int>
+lateinit var allPackets: Set<String>
 val groups = mutableMapOf<String, MutableList<String>>()
 val polymorphicChildren = mutableMapOf<String, MutableList<String>>()
 fun fillIndexes() {
@@ -111,7 +112,7 @@ data class MessageVariantInfo(
     val variantOf: String?,
     val minVersion: Int?,
     val maxVersion: Int?,
-    val sendable: Boolean,
+    val sendableFrom: List<Int>?,
     val tailrec: Boolean = false
 ) : ClassInfo() {
     fun findFieldOrNull(name: String, includeParent: Boolean = true): McField? {

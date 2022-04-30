@@ -71,7 +71,32 @@ internal fun ProtocolCompiler.generateByteBufHandler(packet: MessageVariantInfo,
     return McNode(StmtListOp, nodes)
 }
 
-private fun ProtocolCompiler.generateExplicitSender(packet: MessageVariantInfo, protocolId: Int, packetVar: VariableId, clientbound: Boolean): McNode {
+internal fun ProtocolCompiler.generateExplicitSenderClientRegistries(packet: MessageVariantInfo, protocolId: Int, clientbound: Boolean): McNode {
+    val group = getClassInfo(packet.variantOf ?: packet.className) as? MessageInfo
+
+    val protocolsSubset = if (clientbound) {
+        protocols.takeWhile { it.id >= protocolId }.reversed()
+    } else {
+        protocols.asSequence().dropWhile { it.id > protocolId }.takeWhile { it.id >= this.protocolId }.toList()
+    }
+
+    val nodes = mutableListOf<McNode>()
+    if (!clientbound) {
+        fixRegistriesProtocolOverride = protocolId
+        nodes += generateFixRegistries(group, packet, protocolsSubset, false)
+        fixRegistriesProtocolOverride = null
+    }
+    val (translator, handled) = generateTranslate(group, packet, protocolsSubset, clientbound)
+    nodes += translator
+    if (handled) {
+        return McNode(StmtListOp, nodes)
+    }
+    nodes += generateWrite(group, packet, protocolsSubset, clientbound)
+
+    return McNode(StmtListOp, nodes)
+}
+
+private fun ProtocolCompiler.generateExplicitSenderServerRegistries(packet: MessageVariantInfo, protocolId: Int, packetVar: VariableId, clientbound: Boolean): McNode {
     val functionName = "translateExplicit${splitPackageClass(packet.className).second.replace('.', '_')}$protocolId"
 
     cacheMembers[functionName] = { emitter ->
@@ -316,9 +341,7 @@ private fun ProtocolCompiler.generateHandlerInner(packetNode: McNode, nextProtoc
     for (type in possibleTypes) {
         val info = type.classInfoOrNull as? MessageVariantInfo
         val isValid = info?.let {
-            getPacketDirection(nextProtocolId, it.className) == (
-                if (clientbound) PacketDirection.CLIENTBOUND else PacketDirection.SERVERBOUND
-            )
+            getPacketDirection(nextProtocolId, it.className) == PacketDirection.fromClientbound(clientbound)
         } ?: false
         if (!isValid) {
             throw CompileException("Returning invalid type $type from packet @Handler")
@@ -328,7 +351,7 @@ private fun ProtocolCompiler.generateHandlerInner(packetNode: McNode, nextProtoc
     val elementVar = if (handlerFunc.returnType.hasName(CommonClassNames.LIST)) VariableId.create() else varId
 
     val handlerBody = if (handlerFunc.possibleReturnTypes.isNullOrEmpty()) {
-        generateExplicitSender(handlerFunc.returnType.deepComponentType().messageVariantInfo, nextProtocolId, elementVar, clientbound)
+        generateExplicitSenderServerRegistries(handlerFunc.returnType.deepComponentType().messageVariantInfo, nextProtocolId, elementVar, clientbound)
     } else {
         var ifElseChain = McNode(
             ThrowStmtOp,
@@ -352,7 +375,7 @@ private fun ProtocolCompiler.generateHandlerInner(packetNode: McNode, nextProtoc
                             McNode(LoadVariableOp(elementVar, handlerFunc.returnType.deepComponentType()))
                         )
                     ),
-                    generateExplicitSender(returnType.messageVariantInfo, nextProtocolId, instanceVarId, clientbound)
+                    generateExplicitSenderServerRegistries(returnType.messageVariantInfo, nextProtocolId, instanceVarId, clientbound)
                 ),
                 McNode(StmtListOp, ifElseChain)
             )
@@ -439,11 +462,21 @@ private fun getVariant(group: MessageInfo?, protocol: Int, dflt: MessageVariantI
     return group.getVariant(protocol) ?: throw CompileException("No variant of packet \"${group.className}\" found for protocol $protocol")
 }
 
-enum class PacketDirection {
-    SERVERBOUND, CLIENTBOUND, INVALID
+internal enum class PacketDirection {
+    SERVERBOUND, CLIENTBOUND, INVALID;
+
+    companion object {
+        fun fromClientbound(clientbound: Boolean): PacketDirection {
+            return if (clientbound) {
+                CLIENTBOUND
+            } else {
+                SERVERBOUND
+            }
+        }
+    }
 }
 
-private fun getPacketDirection(protocolId: Int, className: String): PacketDirection {
+internal fun getPacketDirection(protocolId: Int, className: String): PacketDirection {
     val protocolName = protocolNamesById[protocolId]!!
     for ((dir, fileName) in listOf(
         PacketDirection.CLIENTBOUND to "spackets.csv",

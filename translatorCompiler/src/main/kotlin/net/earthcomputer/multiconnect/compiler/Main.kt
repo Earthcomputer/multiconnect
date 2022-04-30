@@ -23,6 +23,11 @@ fun main(args: Array<String>) {
     protocols = readCsv(File(FileLocations.dataDir, "protocols.csv"))
     protocolNamesById = protocols.associate { it.id to it.name }
     protocolDatafixVersionsById = protocols.associate { it.id to it.datafixVersion }
+    allPackets = protocols.flatMap {  protocol ->
+        listOf("spackets.csv", "cpackets.csv").flatMap { fileName ->
+            readCsv<PacketType>(FileLocations.dataDir.resolve(protocol.name).resolve(fileName)).map { it.clazz }
+        }
+    }.toSet()
     fillIndexes()
     checkMessages()
 

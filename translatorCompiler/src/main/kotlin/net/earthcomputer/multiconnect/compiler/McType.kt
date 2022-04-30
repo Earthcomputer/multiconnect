@@ -23,12 +23,14 @@ object CommonClassNames {
     const val STRING = "java.lang.String"
     const val THROWABLE = "java.lang.Throwable"
     const val LIST = "java.util.List"
+    const val MAP = "java.util.Map"
     const val ARRAY_LIST = "java.util.ArrayList"
     const val OPTIONAL = "java.util.Optional"
     const val OPTIONAL_INT = "java.util.OptionalInt"
     const val OPTIONAL_LONG = "java.util.OptionalLong"
     const val UUID = "java.util.UUID"
     const val BITSET = "java.util.BitSet"
+    const val BI_CONSUMER = "java.util.function.BiConsumer"
     const val INT_LIST = "it.unimi.dsi.fastutil.ints.IntList"
     const val INT_ARRAY_LIST = "it.unimi.dsi.fastutil.ints.IntArrayList"
     const val LONG_LIST = "it.unimi.dsi.fastutil.longs.LongList"
@@ -47,6 +49,7 @@ object CommonClassNames {
     const val TYPE_REFERENCES = "net.minecraft.datafixer.TypeReferences"
     const val TYPE_REFERENCE = "com.mojang.datafixers.DSL.TypeReference"
     const val DATA_FIXER = "com.mojang.datafixers.DataFixer"
+    const val PAIR = "org.apache.commons.lang3.tuple.Pair"
 }
 
 @Serializable
