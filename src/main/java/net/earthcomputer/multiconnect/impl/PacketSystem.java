@@ -1,9 +1,11 @@
 package net.earthcomputer.multiconnect.impl;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
+import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.Packet;
 import net.minecraft.util.Util;
@@ -53,13 +55,36 @@ public class PacketSystem {
     public static void sendToServer(ClientPlayNetworkHandler networkHandler, int protocol, Object packet) {
         List<ByteBuf> bufs = new ArrayList<>(1);
         protocolClasses.get(ConnectionInfo.protocolVersion).sendToServer(packet, protocol, bufs);
-        // TODO: send
+
+        if (bufs.isEmpty()) {
+            return;
+        }
+
+        ChannelHandlerContext context = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel()
+                .pipeline()
+                .context("encoder");
+
+        for (ByteBuf buf : bufs) {
+            context.write(buf);
+        }
+        context.flush();
     }
 
     public static void sendToClient(ClientPlayNetworkHandler networkHandler, int protocol, Object packet) {
         List<ByteBuf> bufs = new ArrayList<>(1);
         protocolClasses.get(protocol).sendToClient(packet, bufs);
-        // TODO: send
+
+        if (bufs.isEmpty()) {
+            return;
+        }
+
+        ChannelHandlerContext context = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel()
+                .pipeline()
+                .context("decoder");
+
+        for (ByteBuf buf : bufs) {
+            context.fireChannelRead(buf);
+        }
     }
 
     public static void translateSPacket(int protocol, ByteBuf buf, List<ByteBuf> outBufs) {
