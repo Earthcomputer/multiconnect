@@ -331,6 +331,7 @@ object MessageVariantProcessor {
             minVersion,
             maxVersion,
             type.getAnnotation(Sendable::class)?.from?.toList(),
+            type.hasAnnotation(ExplicitConstructible::class),
             messageVariant.tailrec
         )
         jsonFile.openWriter().use { writer ->

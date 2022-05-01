@@ -31,6 +31,7 @@ object CommonClassNames {
     const val UUID = "java.util.UUID"
     const val BITSET = "java.util.BitSet"
     const val BI_CONSUMER = "java.util.function.BiConsumer"
+    const val SUPPLIER = "java.util.function.Supplier"
     const val INT_LIST = "it.unimi.dsi.fastutil.ints.IntList"
     const val INT_ARRAY_LIST = "it.unimi.dsi.fastutil.ints.IntArrayList"
     const val LONG_LIST = "it.unimi.dsi.fastutil.longs.LongList"

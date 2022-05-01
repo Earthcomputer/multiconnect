@@ -7,11 +7,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.Packet;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Contract;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -40,16 +39,24 @@ public class PacketSystem {
         }
     });
 
-    @NotNull
-    public static <T> T defaultConstruct(Class<T> type) {
-        // TODO
-        return null;
-    }
+    private static final MethodHandle defaultConstructor = Util.make(() -> {
+        Class<?> clazz;
+        try {
+            clazz = Class.forName("net.earthcomputer.multiconnect.generated.DefaultConstructors");
+        } catch (ClassNotFoundException e) {
+            throw new AssertionError("Could not find DefaultConstructors class", e);
+        }
+        return findMethodHandle(clazz, "construct", Object.class, Class.class);
+    });
 
-    @NotNull
-    public static Packet<?> asPacket(int protocol, Object packet) {
-        // TODO
-        return null;
+    @SuppressWarnings("unchecked")
+    @Contract("_ -> new")
+    public static <T> T defaultConstruct(Class<T> type) {
+        try {
+            return (T) defaultConstructor.invoke(type);
+        } catch (Throwable e) {
+            throw PacketIntrinsics.sneakyThrow(e);
+        }
     }
 
     public static void sendToServer(ClientPlayNetworkHandler networkHandler, int protocol, Object packet) {
@@ -95,6 +102,14 @@ public class PacketSystem {
         protocolClasses.get(protocol).translateCPacket(buf, outBufs);
     }
 
+    private static MethodHandle findMethodHandle(Class<?> clazz, String methodName, Class<?> returnType, Class<?>... paramTypes) {
+        try {
+            return MethodHandles.lookup().findStatic(clazz, methodName, MethodType.methodType(returnType, paramTypes));
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("Class " + clazz.getName() + " is missing required method " + returnType.getName() + " " + methodName + " " + Arrays.stream(paramTypes).map(Class::getName).collect(Collectors.joining(", ", "(", ")")));
+        }
+    }
+
     private static class ProtocolClassProxy {
         private final MethodHandle translateSPacket;
         private final MethodHandle translateCPacket;
@@ -106,14 +121,6 @@ public class PacketSystem {
             this.translateCPacket = findMethodHandle(clazz, "translateCPacket", void.class, ByteBuf.class, List.class);
             this.sendToClient = findMethodHandle(clazz, "sendToClient", void.class, Object.class, List.class);
             this.sendToServer = findMethodHandle(clazz, "sendToServer", void.class, Object.class, int.class, List.class);
-        }
-
-        private static MethodHandle findMethodHandle(Class<?> clazz, String methodName, Class<?> returnType, Class<?>... paramTypes) {
-            try {
-                return MethodHandles.lookup().findStatic(clazz, methodName, MethodType.methodType(returnType, paramTypes));
-            } catch (ReflectiveOperationException e) {
-                throw new AssertionError("Class " + clazz.getName() + " is missing required method " + returnType.getName() + " " + methodName + " " + Arrays.stream(paramTypes).map(Class::getName).collect(Collectors.joining(", ", "(", ")")));
-            }
         }
 
         void translateSPacket(ByteBuf buf, List<ByteBuf> outBufs) {

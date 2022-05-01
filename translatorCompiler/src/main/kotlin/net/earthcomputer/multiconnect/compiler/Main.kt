@@ -34,6 +34,8 @@ fun main(args: Array<String>) {
     for (protocol in protocols) {
         ProtocolCompiler(protocol.name, protocol.id).compile()
     }
+
+    ProtocolCompiler(protocols[0].name, protocols[0].id).compileDefaultConstructors()
 }
 
 private val packageClassSplitRegex = "(.+?)\\.([A-Z].*)".toRegex()

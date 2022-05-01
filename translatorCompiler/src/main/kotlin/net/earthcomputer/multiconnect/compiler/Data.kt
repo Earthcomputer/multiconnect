@@ -27,12 +27,16 @@ lateinit var protocolDatafixVersionsById: Map<Int, Int>
 lateinit var allPackets: Set<String>
 val groups = mutableMapOf<String, MutableList<String>>()
 val polymorphicChildren = mutableMapOf<String, MutableList<String>>()
+val explicitConstructibleMessages = mutableListOf<String>()
 fun fillIndexes() {
     for (className in FileLocations.jsonDir.walk()
         .filter { it.name.endsWith(".json") }
         .map { it.toRelativeString(FileLocations.jsonDir).substringBeforeLast('.').replace(File.separator, ".") }
     ) {
         val classInfo = getClassInfo(className) as? MessageVariantInfo ?: continue
+        if (classInfo.explicitConstructible) {
+            explicitConstructibleMessages += className
+        }
         val group = classInfo.variantOf ?: className
         groups.computeIfAbsent(group) { mutableListOf() } += className
         if (classInfo.polymorphicParent != null) {
@@ -113,6 +117,7 @@ data class MessageVariantInfo(
     val minVersion: Int?,
     val maxVersion: Int?,
     val sendableFrom: List<Int>?,
+    val explicitConstructible: Boolean,
     val tailrec: Boolean = false
 ) : ClassInfo() {
     fun findFieldOrNull(name: String, includeParent: Boolean = true): McField? {

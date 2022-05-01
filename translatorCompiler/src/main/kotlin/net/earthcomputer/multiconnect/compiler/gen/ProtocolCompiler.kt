@@ -12,6 +12,8 @@ import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSIC
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PAIR
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY_KEY
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.SUPPLIER
+import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.Either
 import net.earthcomputer.multiconnect.compiler.Emitter
 import net.earthcomputer.multiconnect.compiler.FileLocations
@@ -21,12 +23,15 @@ import net.earthcomputer.multiconnect.compiler.PacketType
 import net.earthcomputer.multiconnect.compiler.RegistryEntry
 import net.earthcomputer.multiconnect.compiler.allPackets
 import net.earthcomputer.multiconnect.compiler.byName
+import net.earthcomputer.multiconnect.compiler.explicitConstructibleMessages
 import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
 import net.earthcomputer.multiconnect.compiler.node.LoadFieldOp
 import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
 import net.earthcomputer.multiconnect.compiler.node.Precedence
+import net.earthcomputer.multiconnect.compiler.node.ReturnStmtOp
+import net.earthcomputer.multiconnect.compiler.node.StmtListOp
 import net.earthcomputer.multiconnect.compiler.node.SwitchOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
 import net.earthcomputer.multiconnect.compiler.opto.optimize
@@ -227,6 +232,49 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         function.append(");").dedent().appendNewLine().append("}").appendNewLine()
         function.append("function.accept(packet, outBufs);")
             .dedent().appendNewLine().append("}")
+    }
+
+    fun compileDefaultConstructors() {
+        val emitter = Emitter("net.earthcomputer.multiconnect.generated.DefaultConstructors", TreeSet(), TreeMap(), StringBuilder())
+
+        emitter.addMember("DEFAULT_CONSTRUCT_METHODS")?.let { field ->
+            field.append("private static final ").appendClassName(MAP)
+                .append("<").appendClassName(CLASS).append("<?>, ").appendClassName(SUPPLIER)
+                .append("<").appendClassName(OBJECT).append(">> DEFAULT_CONSTRUCT_METHODS = ")
+                .appendClassName(PACKET_INTRINSICS).append(".makeMap(").indent()
+            for ((index, className) in explicitConstructibleMessages.withIndex()) {
+                val methodName = "construct${splitPackageClass(className).second.replace('.', '_')}"
+
+                if (index != 0) {
+                    field.append(",")
+                }
+                field.appendNewLine().appendClassName(className).append(".class, (").appendClassName(SUPPLIER)
+                    .append("<").appendClassName(OBJECT).append(">) ").appendClassName(emitter.currentClass)
+                    .append("::").append(methodName)
+
+                val method = emitter.addMember(methodName) ?: throw CompileException("Default constructible classes must have a unique simple name")
+                method.append("private static ").appendClassName(className).append(" ").append(methodName).append("() {").indent().appendNewLine()
+                McNode(StmtListOp, McNode(ReturnStmtOp(McType.DeclaredType(className)), generateDefaultConstructGraph(getMessageVariantInfo(className))))
+                    .optimize().emit(method, Precedence.COMMA)
+                method.dedent().appendNewLine()
+                method.append("}")
+            }
+            field.dedent().appendNewLine().append(");")
+        }
+
+        val method = emitter.addMember("construct")!!
+        method.append("public static ").appendClassName(OBJECT).append(" construct(").appendClassName(CLASS).append("<?> type) {").indent().appendNewLine()
+        method.appendClassName(SUPPLIER).append("<").appendClassName(OBJECT).append("> constructor = DEFAULT_CONSTRUCT_METHODS.get(type);").appendNewLine()
+        method.append("if (constructor == null) {").indent().appendNewLine()
+        method.append("throw new ").appendClassName("java.lang.IllegalArgumentException").append("(\"Cannot explicitly default construct class \" + type.getName());").dedent().appendNewLine()
+        method.append("}").appendNewLine()
+        method.append("return constructor.get();").dedent().appendNewLine()
+        method.append("}")
+
+        val outputFile = FileLocations.outputDir.resolve(emitter.currentClass.replace('.', '/') + ".java")
+        val parentFile = outputFile.parentFile
+        if (!parentFile.exists()) parentFile.mkdirs()
+        outputFile.writeText(emitter.createClassText())
     }
 
     internal fun Registries.getRawId(value: String): Either<Int, McNode>? {
