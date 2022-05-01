@@ -16,13 +16,13 @@ import java.util.List;
 
 public class MulticonnectServerboundTranslator extends ChannelOutboundHandlerAdapter {
     @Override
-    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
         if (!(msg instanceof ByteBuf untranslated)) {
             return;
         }
 
         try {
-            ClientConnection clientConnection = (ClientConnection) ctx.pipeline().context("packet_handler");
+            ClientConnection clientConnection = (ClientConnection) ctx.pipeline().context("packet_handler").handler();
             PacketListener packetListener = clientConnection.getPacketListener();
             ClientPlayNetworkHandler networkHandler;
             if (packetListener instanceof ClientPlayNetworkHandler) {

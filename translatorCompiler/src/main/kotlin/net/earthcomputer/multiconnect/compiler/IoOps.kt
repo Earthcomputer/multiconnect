@@ -43,7 +43,7 @@ object IoOps {
                     )
                 )
             }
-            Types.IDENTIFIER -> McNode(StmtListOp, skipOver(bufVar, Types.STRING), skipOver(bufVar, Types.STRING))
+            Types.IDENTIFIER -> skipOver(bufVar, Types.STRING)
             else -> throw AssertionError()
         }
     }
@@ -74,7 +74,7 @@ object IoOps {
             Types.INT -> byteBuf("readInt", McType.INT)
             Types.SHORT -> byteBuf("readShort", McType.SHORT)
             Types.NBT_COMPOUND -> intrinsic("readNbtCompound", McType.DeclaredType(CommonClassNames.NBT_COMPOUND))
-            Types.IDENTIFIER -> McNode(NewOp(CommonClassNames.IDENTIFIER, listOf(McType.STRING, McType.STRING)), intrinsic("readString", McType.STRING), intrinsic("readString", McType.STRING))
+            Types.IDENTIFIER -> McNode(NewOp(CommonClassNames.IDENTIFIER, listOf(McType.STRING)), intrinsic("readString", McType.STRING))
             Types.STRING -> intrinsic("readString", McType.STRING)
             Types.UUID -> McNode(NewOp(CommonClassNames.UUID, listOf(McType.LONG, McType.LONG)), byteBuf("readLong", McType.LONG), byteBuf("readLong", McType.LONG))
             Types.BITSET -> intrinsic("readBitSet", McType.DeclaredType(CommonClassNames.BITSET))
@@ -111,17 +111,10 @@ object IoOps {
             Types.INT -> byteBuf("writeInt", McType.INT, value)
             Types.SHORT -> byteBuf("writeShort", McType.INT, value)
             Types.NBT_COMPOUND -> intrinsic("writeNbtCompound", McType.DeclaredType(CommonClassNames.NBT_COMPOUND), value)
-            Types.IDENTIFIER -> McNode(
-                StmtListOp,
-                intrinsic("writeString", McType.STRING, McNode(
-                    FunctionCallOp(CommonClassNames.IDENTIFIER, "getNamespace", listOf(McType.DeclaredType(CommonClassNames.IDENTIFIER)), McType.STRING, false, isStatic = false),
-                    value
-                )),
-                intrinsic("writeString", McType.STRING, McNode(
-                    FunctionCallOp(CommonClassNames.IDENTIFIER, "getPath", listOf(McType.DeclaredType(CommonClassNames.IDENTIFIER)), McType.STRING, false, isStatic = false),
-                    value
-                ))
-            )
+            Types.IDENTIFIER -> intrinsic("writeString", McType.STRING, McNode(
+                FunctionCallOp(CommonClassNames.IDENTIFIER, "toString", listOf(McType.DeclaredType(CommonClassNames.IDENTIFIER)), McType.STRING, false, isStatic = false),
+                value
+            ))
             Types.STRING -> intrinsic("writeString", McType.STRING, value)
             Types.UUID -> McNode(
                 StmtListOp,

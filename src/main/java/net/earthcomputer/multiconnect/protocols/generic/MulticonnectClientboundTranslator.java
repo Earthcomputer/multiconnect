@@ -15,7 +15,7 @@ public class MulticonnectClientboundTranslator extends ByteToMessageDecoder {
     @SuppressWarnings("unchecked")
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-        ClientConnection clientConnection = (ClientConnection) ctx.pipeline().context("packet_handler");
+        ClientConnection clientConnection = (ClientConnection) ctx.pipeline().context("packet_handler").handler();
         PacketListener packetListener = clientConnection.getPacketListener();
         ClientPlayNetworkHandler networkHandler;
         if (packetListener instanceof ClientPlayNetworkHandler) {

@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.impl;
 import net.earthcomputer.multiconnect.api.*;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
-import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -94,19 +93,20 @@ public class APIImpl extends MultiConnectAPI {
         CustomPayloadHandler.removeServerboundStringCustomPayloadListener(listener);
     }
 
-    @Override
-    public <T> boolean doesServerKnow(Registry<T> registry, T value) {
-        return registry.getKey(value).map(key -> doesServerKnow(registry, key)).orElse(false);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
-        if (!DefaultRegistries.DEFAULT_REGISTRIES.containsKey(registry)) {
-            return super.doesServerKnow(registry, key);
-        }
-        return ((ISimpleRegistry<T>) registry).getRealEntries().contains(key);
-    }
+    // TODO: rewrite
+//    @Override
+//    public <T> boolean doesServerKnow(Registry<T> registry, T value) {
+//        return registry.getKey(value).map(key -> doesServerKnow(registry, key)).orElse(false);
+//    }
+//
+//    @SuppressWarnings("unchecked")
+//    @Override
+//    public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
+//        if (!DefaultRegistries.DEFAULT_REGISTRIES.containsKey(registry)) {
+//            return super.doesServerKnow(registry, key);
+//        }
+//        return ((ISimpleRegistry<T>) registry).getRealEntries().contains(key);
+//    }
 
     //region deprecated stuff
 

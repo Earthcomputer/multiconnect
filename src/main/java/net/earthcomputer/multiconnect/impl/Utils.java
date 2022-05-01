@@ -1,39 +1,26 @@
 package net.earthcomputer.multiconnect.impl;
 
-import com.google.common.base.Equivalence;
 import com.google.common.cache.Cache;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.mojang.datafixers.DSL;
-import com.mojang.datafixers.DataFixer;
-import com.mojang.serialization.*;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
-import net.earthcomputer.multiconnect.mixin.bridge.DynamicRegistryManagerImplAccessor;
 import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
-import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.item.Item;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.tag.Tag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.*;
@@ -43,9 +30,6 @@ import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
-import net.minecraft.world.dimension.DimensionType;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
@@ -55,24 +39,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 public class Utils {
-    public static NbtCompound datafix(DSL.TypeReference type, NbtCompound old) {
-        return (NbtCompound) datafix(type, NbtOps.INSTANCE, old);
-    }
-
-    public static <T> T datafix(DSL.TypeReference type, DynamicOps<T> ops, T old) {
-        int oldVersion = ConnectionMode.byValue(ConnectionInfo.protocolVersion).getDataVersion();
-        int currentVersion = SharedConstants.getGameVersion().getWorldVersion();
-        if (oldVersion == currentVersion) {
-            return old;
-        }
-        DataFixer fixer = MinecraftClient.getInstance().getDataFixer();
-        Dynamic<T> translated = fixer.update(type, new Dynamic<>(ops, old), oldVersion, currentVersion);
-        return translated.getValue();
-    }
-
     public static boolean isChunkEmpty(WorldChunk chunk) {
         if (chunk.isEmpty()) {
             return true;
@@ -83,50 +51,6 @@ public class Utils {
             }
         }
         return true;
-    }
-
-    @SafeVarargs
-    public static <T, U> Comparator<T> orderBy(Function<T, U> mapper, U... order) {
-        var indexBuilder = ImmutableMap.<U, Integer>builder();
-        for (int i = 0; i < order.length; i++) {
-            indexBuilder.put(order[i], i);
-        }
-        ImmutableMap<U, Integer> indexes = indexBuilder.build();
-        Integer absent = indexes.size();
-        return Comparator.comparing(val -> indexes.getOrDefault(mapper.apply(val), absent));
-    }
-
-    public static void insertAfter(List<PacketInfo<?>> list, Class<? extends Packet<?>> element, PacketInfo<?> toInsert) {
-        for (int i = 0; i < list.size(); i++) {
-            if (list.get(i).getPacketClass() == element) {
-                list.add(i + 1, toInsert);
-                return;
-            }
-        }
-        list.add(0, toInsert);
-    }
-
-    public static <T> void insertAfter(List<T> list, T element, T toInsert) {
-        list.add(list.indexOf(element) + 1, toInsert);
-    }
-
-    public static <T> void insertAfter(ISimpleRegistry<T> registry, T element, T toInsert, String id) {
-        insertAfter(registry, element, toInsert, id, false);
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T> void insertAfter(ISimpleRegistry<T> registry, T element, T toInsert, String id, boolean inPlace) {
-        RegistryKey<T> key = RegistryKey.of(registry.getRegistryKey(), new Identifier(id));
-        int numericalId = ((SimpleRegistry<T>) registry).getRawId(element) + 1;
-        if (inPlace) {
-            registry.registerInPlace(toInsert, numericalId, key);
-        } else {
-            registry.register(toInsert, numericalId, key);
-        }
-    }
-
-    public static void remove(List<PacketInfo<?>> list, Class<? extends Packet<?>> element) {
-        list.removeIf(it -> it.getPacketClass() == element);
     }
 
     public static void removeTrackedDataHandler(TrackedDataHandler<?> handler) {
@@ -144,80 +68,6 @@ public class Utils {
 
     public static void copyBlocks(TagRegistry<Item> tags, TagRegistry<Block> blockTags, Tag.Identified<Item> tag, Tag.Identified<Block> blockTag) {
         tags.add(tag, Collections2.transform(blockTags.get(blockTag.getId()), Block::asItem));
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T> int getUnmodifiedId(Registry<T> registry, T value) {
-        DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
-        if (defaultRegistries == null) return registry.getRawId(value);
-        return defaultRegistries.defaultEntryToRawId.getInt(value);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Nullable
-    public static <T> Identifier getUnmodifiedName(Registry<T> registry, T value) {
-        DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
-        if (defaultRegistries == null) return registry.getId(value);
-        return defaultRegistries.defaultIdToEntry.inverse().get(Equivalence.identity().wrap(value));
-    }
-
-    @SuppressWarnings("unchecked")
-    @ThreadSafe
-    public static <T> void rename(ISimpleRegistry<T> registry, T value, String newName) {
-        int id = ((SimpleRegistry<T>) registry).getRawId(value);
-        registry.purge(value);
-        RegistryKey<T> key = RegistryKey.of(registry.getRegistryKey(), new Identifier(newName));
-        registry.registerInPlace(value, id, key);
-    }
-
-    @SuppressWarnings("unchecked")
-    @ThreadSafe
-    public static <T> void rename(ISimpleRegistry<T> registry, RegistryKey<T> from, String newName) {
-        rename(registry, ((SimpleRegistry<T>) registry).get(from), newName);
-    }
-
-    @SuppressWarnings("unchecked")
-    @ThreadSafe
-    public static <T> void reregister(ISimpleRegistry<T> registry, T value, boolean inPlace) {
-        if (registry.getIdToEntry().containsValue(value))
-            return;
-
-        //noinspection SuspiciousMethodCalls
-        DefaultRegistries<T> defaultRegistries = (DefaultRegistries<T>) DefaultRegistries.DEFAULT_REGISTRIES.get(registry);
-        T prevValue = null;
-        for (int id = defaultRegistries.defaultEntryToRawId.getInt(value) - 1; id >= 0; id--) {
-            T val = defaultRegistries.defaultRawIdToEntry.get(id);
-            if (registry.getIdToEntry().containsValue(val)) {
-                prevValue = val;
-                break;
-            }
-        }
-
-        insertAfter(registry, prevValue, value, defaultRegistries.defaultIdToEntry.inverse().get(Equivalence.identity().wrap(value)).toString(), inPlace);
-    }
-
-    @SuppressWarnings("unchecked")
-    @ThreadSafe
-    public static <T, R extends Registry<T>> void addRegistry(DynamicRegistryManager.Impl registries, RegistryKey<R> registryKey) {
-        //noinspection ConstantConditions
-        var registryMap = (Map<RegistryKey<? extends Registry<?>>, SimpleRegistry<?>>) ((DynamicRegistryManagerImplAccessor) (Object) registries).getRegistries();
-
-        if (registryMap.containsKey(registryKey)) {
-            return;
-        }
-        SimpleRegistry<T> registry = new SimpleRegistry<>(registryKey, Lifecycle.stable());
-        registryMap.putIfAbsent(registryKey, registry);
-        if (registryKey == Registry.DIMENSION_TYPE_KEY) {
-            DimensionType.addRegistryDefaults(registries);
-        } else {
-            SimpleRegistry<T> builtinRegistry =
-                    (SimpleRegistry<T>) ((Registry<R>) BuiltinRegistries.REGISTRIES).get(registryKey);
-            assert builtinRegistry != null;
-            for (var entry : builtinRegistry.getEntries()) {
-                registry.set(builtinRegistry.getRawId(entry.getValue()), entry.getKey(), entry.getValue(),
-                        builtinRegistry.getEntryLifecycle(entry.getValue()));
-            }
-        }
     }
 
     public static DropDownWidget<ConnectionMode> createVersionDropdown(Screen screen, ConnectionMode initialMode) {
@@ -401,14 +251,6 @@ public class Utils {
             k = parent;
         }
         list.set(k, x);
-    }
-
-    @ThreadSafe
-    @Contract("null -> fail")
-    public static void checkConnectionValid(@Nullable ClientPlayNetworkHandler networkHandler) {
-        if (networkHandler == null) {
-            throw new ConnectionEndedException();
-        }
     }
 
     public static ChunkDataS2CPacket createEmptyChunkDataPacket(int x, int z, World world, DynamicRegistryManager registryManager) {

@@ -8,6 +8,7 @@ import net.earthcomputer.multiconnect.impl.TestingAPI;
 import net.earthcomputer.multiconnect.protocols.generic.MulticonnectClientboundTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.MulticonnectServerboundTranslator;
 import net.minecraft.network.ClientConnection;
+import net.minecraft.network.NetworkState;
 import org.apache.logging.log4j.LogManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,10 +21,19 @@ public abstract class MixinClientConnection {
 
     @Shadow private Channel channel;
 
-    @Inject(method = "channelActive", at = @At("HEAD"))
-    private static void onConnect(ChannelHandlerContext ctx, CallbackInfo ci) {
-        ctx.pipeline().addBefore("encoder", "multiconnect_serverbound_translator", new MulticonnectServerboundTranslator());
-        ctx.pipeline().addBefore("decoder", "multiconnect_clientbound_translator", new MulticonnectClientboundTranslator());
+    @Inject(method = "setState", at = @At("HEAD"))
+    private void onSetState(NetworkState state, CallbackInfo ci) {
+        if (state == NetworkState.PLAY) {
+            channel.pipeline().addBefore("encoder", "multiconnect_serverbound_translator", new MulticonnectServerboundTranslator());
+            channel.pipeline().addBefore("decoder", "multiconnect_clientbound_translator", new MulticonnectClientboundTranslator());
+        } else {
+            if (channel.pipeline().context("multiconnect_serverbound_translator") != null) {
+                channel.pipeline().remove("multiconnect_serverbound_translator");
+            }
+            if (channel.pipeline().context("multiconnect_clientbound_translator") != null) {
+                channel.pipeline().remove("multiconnect_clientbound_translator");
+            }
+        }
     }
 
     @Inject(method = "exceptionCaught", at = @At("HEAD"))
