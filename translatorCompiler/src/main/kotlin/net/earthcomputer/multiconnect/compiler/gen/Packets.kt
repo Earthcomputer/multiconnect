@@ -1,8 +1,10 @@
 package net.earthcomputer.multiconnect.compiler.gen
 
+import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.FileLocations
+import net.earthcomputer.multiconnect.compiler.IoOps
 import net.earthcomputer.multiconnect.compiler.McType
 import net.earthcomputer.multiconnect.compiler.MessageInfo
 import net.earthcomputer.multiconnect.compiler.MessageVariantInfo
@@ -427,6 +429,14 @@ private fun ProtocolCompiler.generateWrite(group: MessageInfo?, packet: MessageV
     if (clientbound) {
         currentProtocolId = protocols[0].id
     }
+    // write the packet id
+    val packetId = readCsv<PacketType>(
+        FileLocations.dataDir
+            .resolve(protocolNamesById[currentProtocolId]!!)
+            .resolve(if (clientbound) "spackets.csv" else "cpackets.csv")
+    ).firstOrNull { it.clazz == getVariant(group, currentProtocolId, packet).className }?.id
+        ?: throw CompileException("Packet ${splitPackageClass(getVariant(group, currentProtocolId, packet).className).second} not present in protocol ${protocolNamesById[currentProtocolId]!!}")
+    nodes += IoOps.writeType(resultBufVar, Types.VAR_INT, McNode(CstIntOp(packetId)))
     nodes += if (group != null) {
         generateWriteGraph(group, protocolVariable(protocolsSubset.last().id), resultBufVar)
     } else {
