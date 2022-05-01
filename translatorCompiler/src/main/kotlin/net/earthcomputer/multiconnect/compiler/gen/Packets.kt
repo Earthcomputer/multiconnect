@@ -165,7 +165,7 @@ private fun ProtocolCompiler.generateRead(group: MessageInfo?, packet: MessageVa
     }
     val ret = McNode(
         StoreVariableStmtOp(protocolVariable(protocolsSubset.first().id), packet.toMcType(), true),
-        generateMessageReadGraph(getVariant(group, protocolsSubset.first().id, packet))
+        generateMessageReadGraph(getVariant(group, protocolsSubset.first().id, packet), null)
     )
     if (!clientbound) {
         currentProtocolId = protocolId
@@ -196,9 +196,9 @@ private fun ProtocolCompiler.generateTranslate(group: MessageInfo?, packet: Mess
         nodes += McNode(
             StoreVariableStmtOp(protocolVariable(protocolsSubset[index].id), group?.toMcType() ?: packet.toMcType(), true),
             if (group != null) {
-                translate(group, protocolsSubset[index - 1].id, protocolsSubset[index].id, protocolVariable(protocolsSubset[index - 1].id))
+                translate(group, protocolsSubset[index - 1].id, protocolsSubset[index].id, protocolVariable(protocolsSubset[index - 1].id), null)
             } else {
-                translate(packet, protocolsSubset[index - 1].id, protocolsSubset[index].id, protocolVariable(protocolsSubset[index - 1].id))
+                translate(packet, protocolsSubset[index - 1].id, protocolsSubset[index].id, protocolVariable(protocolsSubset[index - 1].id), null)
             }
         )
         nodes += generatePartialHandlers(protocolsSubset, index) { getVariant(group, it, packet) }
@@ -455,9 +455,9 @@ private fun ProtocolCompiler.generateWrite(group: MessageInfo?, packet: MessageV
         ?: throw CompileException("Packet ${splitPackageClass(getVariant(group, currentProtocolId, packet).className).second} not present in protocol ${protocolNamesById[currentProtocolId]!!}")
     nodes += IoOps.writeType(resultBufVar, Types.VAR_INT, McNode(CstIntOp(packetId)))
     nodes += if (group != null) {
-        generateWriteGraph(group, protocolVariable(protocolsSubset.last().id), resultBufVar)
+        generateWriteGraph(group, protocolVariable(protocolsSubset.last().id), resultBufVar, null)
     } else {
-        generateWriteGraph(packet, protocolVariable(protocolsSubset.last().id), resultBufVar)
+        generateWriteGraph(packet, protocolVariable(protocolsSubset.last().id), resultBufVar, null)
     }
     if (clientbound) {
         currentProtocolId = protocolId

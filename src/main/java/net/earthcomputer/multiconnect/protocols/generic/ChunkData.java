@@ -31,22 +31,23 @@ public final class ChunkData implements IBlockConnectionsBlockView, IUserDataHol
     @ThreadSafe(withGameThread = false)
     public static ChunkData read(int minY, int maxY, TypedMap userData, PacketByteBuf buf) {
         ChunkData data = new ChunkData(new ChunkSection[(maxY + 1 - minY + 15) >> 4], minY, maxY, userData);
-        ChunkDataS2CPacket packet = ChunkDataTranslator.current().getPacket();
-        BitSet verticalStripBitmask = packet.getVerticalStripBitmask();
-
-        // treat unknown state ids as air (ViaBackwards sometimes sends these)
-        ((IIdList<BlockState>) Block.STATE_IDS).multiconnect_setDefaultValue(Blocks.AIR.getDefaultState());
-        try {
-            for (int sectionY = 0; sectionY < data.sections.length; sectionY++) {
-                if (verticalStripBitmask.get(sectionY)) {
-                    ChunkSection section = new ChunkSection(sectionY);
-                    section.fromPacket(buf);
-                    data.sections[sectionY] = section;
-                }
-            }
-        } finally {
-            ((IIdList<BlockState>) Block.STATE_IDS).multiconnect_setDefaultValue(null);
-        }
+        // TODO: rewrite
+//        ChunkDataS2CPacket packet = ChunkDataTranslator.current().getPacket();
+//        BitSet verticalStripBitmask = packet.getVerticalStripBitmask();
+//
+//        // treat unknown state ids as air (ViaBackwards sometimes sends these)
+//        ((IIdList<BlockState>) Block.STATE_IDS).multiconnect_setDefaultValue(Blocks.AIR.getDefaultState());
+//        try {
+//            for (int sectionY = 0; sectionY < data.sections.length; sectionY++) {
+//                if (verticalStripBitmask.get(sectionY)) {
+//                    ChunkSection section = new ChunkSection(sectionY);
+//                    section.fromPacket(buf);
+//                    data.sections[sectionY] = section;
+//                }
+//            }
+//        } finally {
+//            ((IIdList<BlockState>) Block.STATE_IDS).multiconnect_setDefaultValue(null);
+//        }
 
         return data;
     }

@@ -1,14 +1,10 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.impl.Constants;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
@@ -26,17 +22,10 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.NetworkThreadUtils;
-import net.minecraft.network.Packet;
-import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.BlockEventS2CPacket;
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
-import net.minecraft.network.packet.s2c.play.LightUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
 import net.minecraft.screen.ScreenHandler;
@@ -44,8 +33,6 @@ import net.minecraft.tag.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.DynamicRegistryManager;
@@ -67,7 +54,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -77,42 +63,6 @@ public class MixinClientPlayNetworkHandler {
 
     @Shadow private ClientWorld world;
     @Shadow @Final private MinecraftClient client;
-
-    @Unique private final Cache<ChunkPos, List<Packet<ClientPlayPacketListener>>> afterChunkLoadPackets = CacheBuilder.newBuilder()
-            .expireAfterWrite(Constants.PACKET_QUEUE_DROP_TIMEOUT, TimeUnit.SECONDS)
-            .removalListener((RemovalListener<ChunkPos, List<Packet<ClientPlayPacketListener>>>) notification -> {
-                if (notification.wasEvicted()) {
-                    MULTICONNECT_LOGGER.warn("{} packets for chunk {}, {} were dropped due to the chunk not being loaded", notification.getValue().size(), notification.getKey().x, notification.getKey().z);
-                }
-            })
-            .build();
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void onConstruct(CallbackInfo ci) {
-        Utils.autoCleanUp(afterChunkLoadPackets, Constants.PACKET_QUEUE_DROP_TIMEOUT, TimeUnit.SECONDS);
-    }
-
-    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
-    private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()) {
-            if (!((IUserDataHolder) packet).multiconnect_getUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY)) {
-                ChunkDataTranslator.submit(packet);
-                ci.cancel();
-            } else if (((IUserDataHolder) packet).multiconnect_getUserData(ChunkDataTranslator.DIMENSION_KEY) != world.getDimension()) {
-                ci.cancel();
-            }
-        }
-    }
-
-    @Inject(method = "onChunkData", at = @At("TAIL"))
-    private void afterOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
-        ChunkPos pos = new ChunkPos(packet.getX(), packet.getZ());
-        List<Packet<ClientPlayPacketListener>> packets = afterChunkLoadPackets.asMap().remove(pos);
-        if (packets != null) {
-            for (Packet<ClientPlayPacketListener> afterChunkLoadPacket : packets) {
-                afterChunkLoadPacket.apply((ClientPlayPacketListener) this);
-            }
-        }
-    }
 
     @ModifyVariable(method = "onChunkData", ordinal = 0, at = @At(value = "STORE", ordinal = 0))
     private WorldChunk fixChunk(WorldChunk chunk, ChunkDataS2CPacket packet) {
@@ -150,42 +100,6 @@ public class MixinClientPlayNetworkHandler {
             BlockState newState = ConnectionInfo.protocol.getActualState(world, pos, currentState);
             if (newState != currentState) {
                 world.setBlockState(pos, newState, Block.NOTIFY_ALL | Block.FORCE_STATE | Block.SKIP_LIGHTING_UPDATES);
-            }
-        }
-    }
-
-    @Inject(method = "onChunkDeltaUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
-    private void onOnChunkDeltaUpdate(ChunkDeltaUpdateS2CPacket packet, CallbackInfo ci) {
-        ChunkSectionPos sectionPos = ((ChunkDeltaUpdateS2CAccessor) packet).getSectionPos();
-        waitForLoadedChunk(packet, new ChunkPos(sectionPos.getX(), sectionPos.getZ()), ci);
-    }
-
-    @Inject(method = "onBlockUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
-    private void onOnBlockUpdate(BlockUpdateS2CPacket packet, CallbackInfo ci) {
-        waitForLoadedChunk(packet, new ChunkPos(packet.getPos()), ci);
-    }
-
-    @Inject(method = "onBlockEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
-    private void onOnBlockEvent(BlockEventS2CPacket packet, CallbackInfo ci) {
-        waitForLoadedChunk(packet, new ChunkPos(packet.getPos()), ci);
-    }
-
-    @Inject(method = "onBlockEntityUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
-    private void onOnBlockEntityUpdate(BlockEntityUpdateS2CPacket packet, CallbackInfo ci) {
-        waitForLoadedChunk(packet, new ChunkPos(packet.getPos()), ci);
-    }
-
-    @Inject(method = "onLightUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
-    private void onOnLightUpdate(LightUpdateS2CPacket packet, CallbackInfo ci) {
-        waitForLoadedChunk(packet, new ChunkPos(packet.getChunkX(), packet.getChunkZ()), ci);
-    }
-
-    @Unique
-    private void waitForLoadedChunk(Packet<ClientPlayPacketListener> packet, ChunkPos pos, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion != SharedConstants.getProtocolVersion()) {
-            if (world.getChunk(pos.x, pos.z, ChunkStatus.FULL, false) == null) {
-                afterChunkLoadPackets.asMap().computeIfAbsent(pos, k -> new ArrayList<>()).add(packet);
-                ci.cancel();
             }
         }
     }

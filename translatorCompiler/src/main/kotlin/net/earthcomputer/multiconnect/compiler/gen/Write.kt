@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.compiler.gen
 import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.BYTE_BUF
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.UNPOOLED
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.EnumInfo
 import net.earthcomputer.multiconnect.compiler.IoOps
@@ -45,7 +46,8 @@ import net.earthcomputer.multiconnect.compiler.splitPackageClass
 internal fun ProtocolCompiler.generateWriteGraph(
     messageInfo: MessageInfo,
     messageVar: VariableId,
-    bufVar: VariableId
+    bufVar: VariableId,
+    outerParamResolver: ParamResolver?,
 ): McNode {
     val variant = messageInfo.getVariant(currentProtocolId)!!
     val newVar = VariableId.create()
@@ -55,14 +57,15 @@ internal fun ProtocolCompiler.generateWriteGraph(
                 McNode(LoadVariableOp(messageVar, messageInfo.toMcType()))
             )
         ),
-        generateWriteGraph(variant, newVar, bufVar)
+        generateWriteGraph(variant, newVar, bufVar, outerParamResolver)
     )
 }
 
 internal fun ProtocolCompiler.generateWriteGraph(
     messageInfo: MessageVariantInfo,
     messageVar: VariableId,
-    bufVar: VariableId
+    bufVar: VariableId,
+    outerParamResolver: ParamResolver?,
 ): McNode {
     return if (messageInfo.tailrec) {
         val messageType = messageInfo.toMcType()
@@ -76,7 +79,7 @@ internal fun ProtocolCompiler.generateWriteGraph(
         val loopBody = if (messageInfo.fields.last().type.realType.hasName(messageInfo.className)) {
             // the onlyIf variant of recursion
             McNode(StmtListOp,
-                generateWriteGraphInner(messageInfo, currentMessageVar, bufVar, null),
+                generateWriteGraphInner(messageInfo, currentMessageVar, bufVar, null, outerParamResolver),
                 McNode(StoreVariableStmtOp(currentMessageVar, messageType, false),
                     McNode(LoadFieldOp(messageType, messageInfo.fields.last().name, messageType),
                         McNode(LoadVariableOp(messageVar, messageType))
@@ -86,7 +89,7 @@ internal fun ProtocolCompiler.generateWriteGraph(
         } else {
             // the polymorphic variant of recursion
             McNode(StmtListOp,
-                generateWriteGraphInner(messageInfo, currentMessageVar, bufVar, currentMessageVar)
+                generateWriteGraphInner(messageInfo, currentMessageVar, bufVar, currentMessageVar, outerParamResolver)
             )
         }
 
@@ -100,7 +103,7 @@ internal fun ProtocolCompiler.generateWriteGraph(
 
         McNode(StmtListOp, nodes)
     } else {
-        generateWriteGraphInner(messageInfo, messageVar, bufVar, null)
+        generateWriteGraphInner(messageInfo, messageVar, bufVar, null, outerParamResolver)
     }
 }
 
@@ -108,7 +111,8 @@ private fun ProtocolCompiler.generateWriteGraphInner(
     messageInfo: MessageVariantInfo,
     messageVar: VariableId,
     bufVar: VariableId,
-    outPolymorphicNext: VariableId?
+    outPolymorphicNext: VariableId?,
+    outerParamResolver: ParamResolver?,
 ): McNode {
     val type = messageInfo.toMcType()
     val vars = mutableMapOf<String, VariableId>()
@@ -124,7 +128,13 @@ private fun ProtocolCompiler.generateWriteGraphInner(
                     McNode(LoadVariableOp(messageVar, type))
                 )
             )
-            nodes += generateFieldWriteGraph(parentInfo, field, fieldVarId, bufVar, vars)
+            nodes += generateFieldWriteGraph(
+                parentInfo,
+                field,
+                fieldVarId,
+                bufVar,
+                combineParamResolvers(outerParamResolver) { name, type1 -> McNode(LoadVariableOp(vars[name]!!, type1)) }
+            )
         }
     }
 
@@ -139,7 +149,13 @@ private fun ProtocolCompiler.generateWriteGraphInner(
                 McNode(LoadVariableOp(messageVar, type))
             )
         )
-        nodes += generateFieldWriteGraph(messageInfo, field, fieldVarId, bufVar, vars)
+        nodes += generateFieldWriteGraph(
+            messageInfo,
+            field,
+            fieldVarId,
+            bufVar,
+            combineParamResolvers(outerParamResolver) { name, type1 -> McNode(LoadVariableOp(vars[name]!!, type1)) }
+        )
     }
 
     if (messageInfo.polymorphic != null && messageInfo.polymorphicParent == null) {
@@ -172,7 +188,13 @@ private fun ProtocolCompiler.generateWriteGraphInner(
                         McNode(LoadVariableOp(childVarId, childType))
                     )
                 )
-                ifBlock += generateFieldWriteGraph(childInfo, field, fieldVarId, bufVar, childVars)
+                ifBlock += generateFieldWriteGraph(
+                    childInfo,
+                    field,
+                    fieldVarId,
+                    bufVar,
+                    combineParamResolvers(outerParamResolver) { name, type1 -> McNode(LoadVariableOp(childVars[name]!!, type1)) }
+                )
             }
 
             if (messageInfo.tailrec && outPolymorphicNext != null) {
@@ -204,7 +226,33 @@ private fun ProtocolCompiler.generateWriteGraphInner(
     return McNode(StmtListOp, nodes)
 }
 
-private fun ProtocolCompiler.generateTypeWriteGraph(realType: McType, wireType: Types, lengthInfo: LengthInfo?, varId: VariableId, bufVar: VariableId): McNode {
+private fun ProtocolCompiler.generateTypeWriteGraph(
+    realType: McType,
+    wireType: Types,
+    lengthInfo: LengthInfo?,
+    varId: VariableId,
+    bufVar: VariableId,
+    outerParamResolver: ParamResolver?
+): McNode {
+    if (lengthInfo?.computeInfo is LengthInfo.ComputeInfo.Raw) {
+        val innerBufVar = VariableId.create()
+        return McNode(StmtListOp,
+            McNode(StoreVariableStmtOp(innerBufVar, McType.BYTE_BUF, true),
+                McNode(FunctionCallOp(UNPOOLED, "buffer", listOf(), McType.BYTE_BUF, false))
+            ),
+            generateTypeWriteGraph(realType, wireType, null, varId, innerBufVar, outerParamResolver),
+            IoOps.writeType(bufVar, lengthInfo.type, McNode(FunctionCallOp(BYTE_BUF, "writerIndex", listOf(McType.BYTE_BUF), McType.INT, false, isStatic = false),
+                McNode(LoadVariableOp(innerBufVar, McType.BYTE_BUF))
+            )),
+            McNode(PopStmtOp,
+                McNode(FunctionCallOp(BYTE_BUF, "writeBytes", listOf(McType.BYTE_BUF, McType.BYTE_BUF), McType.VOID, true, isStatic = false),
+                    McNode(LoadVariableOp(bufVar, McType.BYTE_BUF)),
+                    McNode(LoadVariableOp(innerBufVar, McType.BYTE_BUF))
+                )
+            )
+        )
+    }
+
     // deal with arrays, lists, etc
     if (realType.hasComponentType) {
         if (realType.isOptional) {
@@ -232,7 +280,7 @@ private fun ProtocolCompiler.generateTypeWriteGraph(realType: McType, wireType: 
                                 McNode(LoadVariableOp(varId, realType))
                             )
                         ),
-                        generateTypeWriteGraph(realType.componentType(), wireType, lengthInfo, elementVar, bufVar)
+                        generateTypeWriteGraph(realType.componentType(), wireType, lengthInfo, elementVar, bufVar, outerParamResolver)
                     )
                 )
             )
@@ -300,7 +348,7 @@ private fun ProtocolCompiler.generateTypeWriteGraph(realType: McType, wireType: 
                 ),
                 McNode(StmtListOp,
                     McNode(StoreVariableStmtOp(elementVar, realType.componentType(), true), getNode),
-                    generateTypeWriteGraph(realType.componentType(), wireType, null, elementVar, bufVar),
+                    generateTypeWriteGraph(realType.componentType(), wireType, null, elementVar, bufVar, outerParamResolver),
                     McNode(StoreVariableStmtOp(indexVar, McType.INT, false, "+="), McNode(CstIntOp(1)))
                 )
             )
@@ -310,8 +358,8 @@ private fun ProtocolCompiler.generateTypeWriteGraph(realType: McType, wireType: 
     // message types have special handling
     if (wireType == Types.MESSAGE) {
         return when (val classInfo = realType.classInfo) {
-            is MessageVariantInfo -> generateWriteGraph(classInfo, varId, bufVar)
-            is MessageInfo -> generateWriteGraph(classInfo, varId, bufVar)
+            is MessageVariantInfo -> generateWriteGraph(classInfo, varId, bufVar, outerParamResolver)
+            is MessageInfo -> generateWriteGraph(classInfo, varId, bufVar, outerParamResolver)
             else -> throw IllegalStateException("Invalid real type for message type")
         }
     }
@@ -331,15 +379,15 @@ private fun ProtocolCompiler.generateTypeWriteGraph(realType: McType, wireType: 
     return IoOps.writeType(bufVar, wireType, McNode(LoadVariableOp(varId, realType)))
 }
 
-private fun ProtocolCompiler.generateFieldWriteGraph(messageInfo: MessageVariantInfo, field: McField, fieldVar: VariableId, bufVar: VariableId, vars: Map<String, VariableId>): McNode {
+private fun ProtocolCompiler.generateFieldWriteGraph(messageInfo: MessageVariantInfo, field: McField, fieldVar: VariableId, bufVar: VariableId, paramResolver: ParamResolver): McNode {
     return if (field.type.onlyIf != null) {
         McNode(IfStmtOp,
-            generateFunctionCallGraph(messageInfo.findFunction(field.type.onlyIf)) { name, type -> McNode(LoadVariableOp(vars[name]!!, type)) },
+            generateFunctionCallGraph(messageInfo.findFunction(field.type.onlyIf), paramResolver = paramResolver),
             McNode(StmtListOp,
-                generateTypeWriteGraph(field.type.realType, field.type.wireType, field.type.lengthInfo, fieldVar, bufVar)
+                generateTypeWriteGraph(field.type.realType, field.type.wireType, field.type.lengthInfo, fieldVar, bufVar, paramResolver)
             )
         )
     } else {
-        generateTypeWriteGraph(field.type.realType, field.type.wireType, field.type.lengthInfo, fieldVar, bufVar)
+        generateTypeWriteGraph(field.type.realType, field.type.wireType, field.type.lengthInfo, fieldVar, bufVar, paramResolver)
     }
 }

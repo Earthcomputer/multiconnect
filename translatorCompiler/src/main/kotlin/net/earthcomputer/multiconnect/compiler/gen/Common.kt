@@ -59,11 +59,30 @@ import net.earthcomputer.multiconnect.compiler.protocolNamesById
 import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.splitPackageClass
 
+typealias ParamResolver = (String, McType) -> McNode
+
+internal fun combineParamResolvers(
+    outer: ParamResolver?,
+    inner: ParamResolver
+): ParamResolver {
+    if (outer == null) {
+        return inner
+    }
+
+    return { name, type ->
+        if (name.startsWith("outer.")) {
+            outer(name.substring(6), type)
+        } else {
+            inner(name, type)
+        }
+    }
+}
+
 internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
     message: MessageVariantInfo,
     type: FieldType,
     loadTypeField: McNode,
-    paramResolver: (String, McType) -> McNode,
+    paramResolver: ParamResolver,
     postConstruct: ((MessageVariantInfo, VariableId) -> McNode)?
 ): McNode {
     message.polymorphic!!
@@ -221,7 +240,7 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
                 }
                 .map { (child, group) ->
                     child to when {
-                        type.realType.hasName(CommonClassNames.IDENTIFIER) ->
+                        type.realType.hasName(IDENTIFIER) ->
                             group.value.map { (it as String).normalizeIdentifier() }
                         type.realType.isIntegral && type.registry != null ->
                             group.value.filter { it !is String || type.registry.getRawId(it) is Either.Left }.map { case ->
@@ -245,12 +264,12 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
             SwitchOp(
             cases.toSortedSet(),
             true,
-            if (type.realType.hasName(CommonClassNames.IDENTIFIER)) { McType.STRING } else { type.realType },
+            if (type.realType.hasName(IDENTIFIER)) { McType.STRING } else { type.realType },
             messageType
         ),
-            (listOf(if (type.realType.hasName(CommonClassNames.IDENTIFIER)) {
+            (listOf(if (type.realType.hasName(IDENTIFIER)) {
                 McNode(
-                    FunctionCallOp(CommonClassNames.IDENTIFIER, "toString", listOf(type.realType), McType.STRING, false, isStatic = false),
+                    FunctionCallOp(IDENTIFIER, "toString", listOf(type.realType), McType.STRING, false, isStatic = false),
                     loadTypeField
                 )
             } else {
@@ -263,14 +282,14 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
 
 
 
-internal fun ProtocolCompiler.generateFunctionCallGraph(function: McFunction, vararg positionalArguments: McNode, paramResolver: (String, McType) -> McNode): McNode {
+internal fun ProtocolCompiler.generateFunctionCallGraph(function: McFunction, vararg positionalArguments: McNode, paramResolver: ParamResolver): McNode {
     val loadParams = function.parameters.mapTo(mutableListOf()) { param ->
         when (param) {
             is ArgumentParameter -> paramResolver(param.name, param.paramType)
-            is DefaultConstructedParameter -> generateDefaultConstructGraph(param.paramType)
+            is DefaultConstructedParameter -> generateDefaultConstructGraph(param.paramType, null)
             is SuppliedDefaultConstructedParameter -> McNode(
                 LambdaOp(param.paramType, param.suppliedType, emptyList(), emptyList()),
-                generateDefaultConstructGraph(param.suppliedType)
+                generateDefaultConstructGraph(param.suppliedType, null)
             )
             is FilledParameter -> generateFilledConstructGraph(param.paramType, param.fromRegistry)
         }
@@ -283,7 +302,7 @@ internal fun ProtocolCompiler.generateFunctionCallGraph(function: McFunction, va
     )
 }
 
-internal fun ProtocolCompiler.generateDefaultConstructGraph(classInfo: MessageVariantInfo): McNode {
+internal fun ProtocolCompiler.generateDefaultConstructGraph(classInfo: MessageVariantInfo, outerResolver: ParamResolver?): McNode {
     val type = classInfo.toMcType()
 
     val varId = VariableId.create()
@@ -298,7 +317,7 @@ internal fun ProtocolCompiler.generateDefaultConstructGraph(classInfo: MessageVa
             return if (classInfo.defaultConstruct is DefaultConstruct.SubType) {
                 val subclassInfo = classInfo.defaultConstruct.value.messageVariantInfo
                 McNode(ImplicitCastOp(classInfo.defaultConstruct.value, type),
-                    generateDefaultConstructGraph(subclassInfo)
+                    generateDefaultConstructGraph(subclassInfo, outerResolver)
                 )
             } else {
                 type.defaultValue()
@@ -311,7 +330,8 @@ internal fun ProtocolCompiler.generateDefaultConstructGraph(classInfo: MessageVa
                 val valueNode = if (index == 0 && classInfo.polymorphic is Polymorphic.Constant<*>) {
                     generateConstantGraph(field.type.realType, classInfo.polymorphic.value.first(), field.type.registry)
                 } else {
-                    generateDefaultConstructGraph(parentInfo, field.type, false) { name, typ -> McNode(LoadVariableOp(vars[name]!!, typ)) }
+                    generateDefaultConstructGraph(parentInfo, field.type, false,
+                        combineParamResolvers(outerResolver) { name, typ -> McNode(LoadVariableOp(vars[name]!!, typ)) })
                 }
                 nodes += McNode(StoreVariableStmtOp(fieldVarId, field.type.realType, true), valueNode)
                 nodes += McNode(
@@ -335,7 +355,8 @@ internal fun ProtocolCompiler.generateDefaultConstructGraph(classInfo: MessageVa
 
         val fieldVarId = VariableId.create()
         vars[field.name] = fieldVarId
-        val valueNode = generateDefaultConstructGraph(classInfo, field.type, isTailRecursive) { name, typ -> McNode(LoadVariableOp(vars[name]!!, typ)) }
+        val valueNode = generateDefaultConstructGraph(classInfo, field.type, isTailRecursive,
+            combineParamResolvers(outerResolver) { name, typ -> McNode(LoadVariableOp(vars[name]!!, typ)) })
         nodes += McNode(StoreVariableStmtOp(fieldVarId, field.type.realType, true), valueNode)
         nodes += McNode(
             StoreFieldStmtOp(type, field.name, field.type.realType),
@@ -349,13 +370,13 @@ internal fun ProtocolCompiler.generateDefaultConstructGraph(classInfo: MessageVa
     return McNode(StmtListOp, nodes)
 }
 
-internal fun ProtocolCompiler.generateDefaultConstructGraph(type: McType): McNode {
+internal fun ProtocolCompiler.generateDefaultConstructGraph(type: McType, outerResolver: ParamResolver?): McNode {
     return when (val classInfo = type.classInfoOrNull) {
-        is MessageVariantInfo -> generateDefaultConstructGraph(classInfo)
+        is MessageVariantInfo -> generateDefaultConstructGraph(classInfo, outerResolver)
         is MessageInfo -> {
             val variantInfo = classInfo.getVariant(protocolId)!!
             McNode(ImplicitCastOp(variantInfo.toMcType(), type as McType.DeclaredType),
-                generateDefaultConstructGraph(variantInfo)
+                generateDefaultConstructGraph(variantInfo, outerResolver)
             )
         }
         is EnumInfo -> McNode(LoadFieldOp(type, classInfo.values.first(), type, isStatic = true))
@@ -364,8 +385,8 @@ internal fun ProtocolCompiler.generateDefaultConstructGraph(type: McType): McNod
                 McNode(FunctionCallOp(type.name, "empty", listOf(), type, false))
             }
             CommonClassNames.LIST -> {
-                McNode(ImplicitCastOp(McType.DeclaredType(CommonClassNames.ARRAY_LIST), type), McNode(NewOp(
-                    CommonClassNames.ARRAY_LIST, listOf())))
+                McNode(ImplicitCastOp(McType.DeclaredType(ARRAY_LIST), type), McNode(NewOp(
+                    ARRAY_LIST, listOf())))
             }
             CommonClassNames.INT_LIST -> {
                 McNode(ImplicitCastOp(McType.DeclaredType(CommonClassNames.INT_ARRAY_LIST), type), McNode(NewOp(
@@ -391,14 +412,14 @@ internal fun ProtocolCompiler.generateDefaultConstructGraph(
     message: MessageVariantInfo,
     type: FieldType,
     isTailRecursive: Boolean,
-    paramResolver: (String, McType) -> McNode
+    paramResolver: ParamResolver
 ): McNode {
     return when (type.defaultConstructInfo) {
         is DefaultConstruct.SubType -> {
             if (isTailRecursive) {
                 type.realType.defaultValue()
             } else {
-                McNode(ImplicitCastOp(type.defaultConstructInfo.value, type.realType), generateDefaultConstructGraph(type.defaultConstructInfo.value))
+                McNode(ImplicitCastOp(type.defaultConstructInfo.value, type.realType), generateDefaultConstructGraph(type.defaultConstructInfo.value, paramResolver))
             }
         }
         is DefaultConstruct.Constant<*> -> generateConstantGraph(type.realType, type.defaultConstructInfo.value, type.registry)
@@ -407,7 +428,7 @@ internal fun ProtocolCompiler.generateDefaultConstructGraph(
             if (isTailRecursive) {
                 type.realType.defaultValue()
             } else {
-                generateDefaultConstructGraph(type.realType)
+                generateDefaultConstructGraph(type.realType, paramResolver)
             }
         }
     }
@@ -421,9 +442,9 @@ internal fun ProtocolCompiler.generateConstantGraph(targetType: McType, value: A
             is Either.Left -> createCstNode(rawId.left.downcastConstant(targetType))
             is Either.Right -> targetType.cast(rawId.right)
         }
-    } else if (targetType.hasName(CommonClassNames.IDENTIFIER)) {
+    } else if (targetType.hasName(IDENTIFIER)) {
         val (namespace, name) = (value as String).normalizeIdentifier().split(':', limit = 2)
-        McNode(NewOp(CommonClassNames.IDENTIFIER, listOf(McType.STRING, McType.STRING)),
+        McNode(NewOp(IDENTIFIER, listOf(McType.STRING, McType.STRING)),
             createCstNode(namespace),
             createCstNode(name)
         )
@@ -499,7 +520,7 @@ internal fun ProtocolCompiler.createTailRecurseField(ownerClass: String, fieldNa
     val handleFieldName = "MH_${ownerClass.replace('.', '_').uppercase()}_TAIL_RECURSE"
     cacheMembers[handleFieldName] = { emitter ->
         emitter.append("private static final ").appendClassName(CommonClassNames.METHOD_HANDLE).append(" ").append(handleFieldName)
-            .append(" = ").appendClassName(CommonClassNames.PACKET_INTRINSICS).append(".findSetterHandle(")
+            .append(" = ").appendClassName(PACKET_INTRINSICS).append(".findSetterHandle(")
             .appendClassName(ownerClass).append(".class, \"").append(fieldName).append("\", ").appendClassName(fieldType).append(".class);")
     }
     return handleFieldName
@@ -509,8 +530,8 @@ internal fun ProtocolCompiler.createIdentifierConstantField(constant: String): S
     val (namespace, name) = constant.normalizeIdentifier().split(':', limit = 2)
     val fieldName = "IDENTIFIER_${namespace.uppercase()}_${name.uppercase().replace('/', '_').replace('.', '_')}"
     cacheMembers[fieldName] = { emitter ->
-        emitter.append("private static final ").appendClassName(CommonClassNames.IDENTIFIER).append(" ").append(fieldName)
-            .append(" = new ").appendClassName(CommonClassNames.IDENTIFIER).append("(")
+        emitter.append("private static final ").appendClassName(IDENTIFIER).append(" ").append(fieldName)
+            .append(" = new ").appendClassName(IDENTIFIER).append("(")
         McNode(CstStringOp(namespace)).emit(emitter, Precedence.COMMA)
         emitter.append(", ")
         McNode(CstStringOp(name)).emit(emitter, Precedence.COMMA)
@@ -526,7 +547,7 @@ internal fun ProtocolCompiler.createRegistryKeyField(registry: Registries, id: S
         emitter.append("private static final ").appendClassName(CommonClassNames.REGISTRY_KEY).append(" ").append(fieldName)
             .append(" = ").appendClassName(CommonClassNames.REGISTRY_KEY).append(".of(")
             .appendClassName(CommonClassNames.REGISTRY).append(".").append(registry.registryKeyFieldName).append(", new ")
-            .appendClassName(CommonClassNames.IDENTIFIER).append("(")
+            .appendClassName(IDENTIFIER).append("(")
         McNode(CstStringOp(namespace)).emit(emitter, Precedence.COMMA)
         emitter.append(", ")
         McNode(CstStringOp(name)).emit(emitter, Precedence.COMMA)

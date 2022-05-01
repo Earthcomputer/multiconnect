@@ -41,7 +41,7 @@ data class MulticonnectType(
             if (realType.isEnum) {
                 return Types.VAR_INT
             }
-            if (realType.isMessageVariant) {
+            if (realType.isMessage || realType.isMessageVariant) {
                 return Types.MESSAGE
             }
             return when (realType.kind) {

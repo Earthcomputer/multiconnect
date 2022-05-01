@@ -260,14 +260,15 @@ public class Utils {
         int biomeLength = (1 << (horizontalSectionCount + horizontalSectionCount)) * ((world.getHeight() + 3) / 4);
 
         ChunkDataS2CPacket packet = new ChunkDataS2CPacket(new WorldChunk(world, new ChunkPos(x, z), new BiomeArray(biomeRegistry, world, new int[biomeLength])));
-        //noinspection ConstantConditions
-        IUserDataHolder iPacket = (IUserDataHolder) packet;
-        iPacket.multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, true);
-        iPacket.multiconnect_setUserData(ChunkDataTranslator.DIMENSION_KEY, world.getDimension());
-        iPacket.multiconnect_setUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY, new EnumMap<>(EightWayDirection.class));
-        Biome[] biomes = new Biome[256];
-        Arrays.fill(biomes, plainsBiome);
-        iPacket.multiconnect_setUserData(Protocol_1_14_4.BIOME_DATA_KEY, biomes);
+        // TODO: rewrite
+//        //noinspection ConstantConditions
+//        IUserDataHolder iPacket = (IUserDataHolder) packet;
+//        iPacket.multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, true);
+//        iPacket.multiconnect_setUserData(ChunkDataTranslator.DIMENSION_KEY, world.getDimension());
+//        iPacket.multiconnect_setUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY, new EnumMap<>(EightWayDirection.class));
+//        Biome[] biomes = new Biome[256];
+//        Arrays.fill(biomes, plainsBiome);
+//        iPacket.multiconnect_setUserData(Protocol_1_14_4.BIOME_DATA_KEY, biomes);
         return packet;
     }
 }

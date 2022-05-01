@@ -11,7 +11,6 @@ import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.mixin.connect.DecoderHandlerAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
-import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.mixin.bridge.ChunkDataPacketAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.fabricmc.loader.api.FabricLoader;
@@ -220,14 +219,15 @@ public class DebugUtils {
             return;
         }
         LOGGER.info("Artificially handling chunk data of length {} at {}, {}", data.length, x, z);
-        ClientWorld world = networkHandler.getWorld();
-        DynamicRegistryManager registryManager = networkHandler.getRegistryManager();
-        ChunkDataS2CPacket packet = Utils.createEmptyChunkDataPacket(x, z, world, registryManager);
-        ChunkDataPacketAccessor accessor = (ChunkDataPacketAccessor) packet;
-        ((IUserDataHolder) accessor).multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, false);
-        accessor.setData(data);
-        accessor.setVerticalStripBitmask(verticalStripBitmask);
-        ChunkDataTranslator.submit(packet);
+        // TODO: rewrite
+//        ClientWorld world = networkHandler.getWorld();
+//        DynamicRegistryManager registryManager = networkHandler.getRegistryManager();
+//        ChunkDataS2CPacket packet = Utils.createEmptyChunkDataPacket(x, z, world, registryManager);
+//        ChunkDataPacketAccessor accessor = (ChunkDataPacketAccessor) packet;
+//        ((IUserDataHolder) accessor).multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, false);
+//        accessor.setData(data);
+//        accessor.setVerticalStripBitmask(verticalStripBitmask);
+//        ChunkDataTranslator.submit(packet);
     }
 
     private static byte @Nullable [] decode(String base64, boolean compressed) {

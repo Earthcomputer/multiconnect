@@ -5,12 +5,14 @@ import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Datafix;
 import net.earthcomputer.multiconnect.ap.DatafixTypes;
 import net.earthcomputer.multiconnect.ap.FilledArgument;
+import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.PartialHandler;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.packets.SPacketChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
@@ -29,7 +31,8 @@ public class SPacketChunkData_1_16_5 implements SPacketChunkData {
     public NbtCompound heightmaps;
     @OnlyIf("hasFullChunk")
     public IntList biomes;
-    public byte[] data;
+    @Length(raw = true)
+    public ChunkData data;
     @Datafix(DatafixTypes.BLOCK_ENTITY)
     public List<NbtCompound> blockEntities;
 

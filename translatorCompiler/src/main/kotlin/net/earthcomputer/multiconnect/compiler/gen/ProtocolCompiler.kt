@@ -266,7 +266,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
 
                 val method = emitter.addMember(methodName) ?: throw CompileException("Default constructible classes must have a unique simple name")
                 method.append("private static ").appendClassName(className).append(" ").append(methodName).append("() {").indent().appendNewLine()
-                McNode(StmtListOp, McNode(ReturnStmtOp(McType.DeclaredType(className)), generateDefaultConstructGraph(getMessageVariantInfo(className))))
+                McNode(StmtListOp, McNode(ReturnStmtOp(McType.DeclaredType(className)), generateDefaultConstructGraph(getMessageVariantInfo(className), null)))
                     .optimize().emit(method, Precedence.COMMA)
                 method.dedent().appendNewLine()
                 method.append("}")

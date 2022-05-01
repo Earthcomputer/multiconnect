@@ -177,7 +177,10 @@ fun TypeElement.findMulticonnectFunction(
             1 -> {
                 when {
                     argument != null -> {
-                        if (argumentResolveContext != null && !argumentResolveContext.allRecordFields.any { it.simpleName.contentEquals(argument.value) }) {
+                        if (argumentResolveContext != null
+                            && !argument.value.startsWith("outer.")
+                            && !argumentResolveContext.allRecordFields.any { it.simpleName.contentEquals(argument.value) }
+                        ) {
                             errorConsumer?.report("Could not resolve argument \"${argument.value}\"", parameter)
                             return null
                         }

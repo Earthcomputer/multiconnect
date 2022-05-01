@@ -269,7 +269,13 @@ sealed class DefaultConstruct {
 @Serializable(with = LengthInfo.Serializer::class)
 data class LengthInfo(val type: Types, val computeInfo: ComputeInfo?) {
     @Serializable
-    private class Surrogate(val type: Types, val constant: Int, val compute: String?, val remainingBytes: Boolean)
+    private class Surrogate(
+        val type: Types,
+        val constant: Int,
+        val compute: String?,
+        val remainingBytes: Boolean,
+        val raw: Boolean
+    )
     internal object Serializer : KSerializer<LengthInfo> {
         override val descriptor = serializer<Surrogate>().descriptor
 
@@ -277,6 +283,7 @@ data class LengthInfo(val type: Types, val computeInfo: ComputeInfo?) {
             val surrogate = serializer<Surrogate>().deserialize(decoder)
             val computeInfo = when {
                 surrogate.remainingBytes -> ComputeInfo.RemainingBytes
+                surrogate.raw -> ComputeInfo.Raw
                 !surrogate.compute.isNullOrEmpty() -> ComputeInfo.Compute(surrogate.compute)
                 surrogate.constant >= 0 -> ComputeInfo.Constant(surrogate.constant)
                 else -> null
@@ -293,6 +300,7 @@ data class LengthInfo(val type: Types, val computeInfo: ComputeInfo?) {
         data class Constant(val value: Int) : ComputeInfo()
         data class Compute(val value: String) : ComputeInfo()
         object RemainingBytes : ComputeInfo()
+        object Raw : ComputeInfo()
     }
 }
 

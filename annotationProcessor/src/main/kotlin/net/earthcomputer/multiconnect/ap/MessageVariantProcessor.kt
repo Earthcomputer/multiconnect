@@ -125,8 +125,8 @@ object MessageVariantProcessor {
             }
 
             if (multiconnectType.lengthInfo != null) {
-                if (!multiconnectType.realType.hasLength) {
-                    errorConsumer.report("@Length can only be used on fields with a length", field)
+                if (!multiconnectType.lengthInfo.raw && !multiconnectType.realType.hasLength) {
+                    errorConsumer.report("Non-raw @Length can only be used on fields with a length", field)
                     continue
                 }
                 if (!multiconnectType.lengthInfo.type.isIntegral) {
@@ -136,7 +136,8 @@ object MessageVariantProcessor {
                 if (count(
                         multiconnectType.lengthInfo.remainingBytes,
                         multiconnectType.lengthInfo.compute.isNotEmpty(),
-                        multiconnectType.lengthInfo.constant != -1
+                        multiconnectType.lengthInfo.constant != -1,
+                        multiconnectType.lengthInfo.raw
                     ) > 1) {
                     errorConsumer.report("@Length cannot have more than one way to compute the length", field)
                     continue
@@ -291,7 +292,6 @@ object MessageVariantProcessor {
             }
         }
 
-        println("Checking ${type.qualifiedName}")
         checkForRecursiveTypes(type, type, mutableSetOf(), mutableMapOf(), errorConsumer, processingEnv)
 
         val handler = type.handler

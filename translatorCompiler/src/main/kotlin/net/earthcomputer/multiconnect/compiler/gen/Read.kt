@@ -41,7 +41,7 @@ import net.earthcomputer.multiconnect.compiler.node.VariableId
 import net.earthcomputer.multiconnect.compiler.node.WhileStmtOp
 import net.earthcomputer.multiconnect.compiler.node.createCstNode
 
-internal fun ProtocolCompiler.generateMessageReadGraph(message: MessageVariantInfo, polymorphicBy: McNode? = null): McNode {
+internal fun ProtocolCompiler.generateMessageReadGraph(message: MessageVariantInfo, outerParamResolver: ParamResolver?, polymorphicBy: McNode? = null): McNode {
     return if (message.tailrec) {
         val messageType = message.toMcType()
         val nodes = mutableListOf<McNode>()
@@ -52,7 +52,7 @@ internal fun ProtocolCompiler.generateMessageReadGraph(message: MessageVariantIn
             // the onlyIf variant of recursion
             val tailRecursionContinueVar = VariableId.create()
             nodes += McNode(StoreVariableStmtOp(tailRecursionContinueVar, McType.BOOLEAN, true), McNode(CstBoolOp(true)))
-            nodes += McNode(StoreVariableStmtOp(returnVar, messageType, true), generateMessageReadGraphInner(message, polymorphicBy, tailRecursionContinueVar, null))
+            nodes += McNode(StoreVariableStmtOp(returnVar, messageType, true), generateMessageReadGraphInner(message, polymorphicBy, tailRecursionContinueVar, null, outerParamResolver))
             nodes += McNode(StoreVariableStmtOp(currentMessageVar, messageType, true), McNode(LoadVariableOp(returnVar, messageType)))
             nodes += McNode(
                 WhileStmtOp,
@@ -60,7 +60,7 @@ internal fun ProtocolCompiler.generateMessageReadGraph(message: MessageVariantIn
                 McNode(
                     StmtListOp,
                     McNode(StoreVariableStmtOp(lastMessageVar, messageType, true), McNode(LoadVariableOp(currentMessageVar, messageType))),
-                    McNode(StoreVariableStmtOp(currentMessageVar, messageType, false), generateMessageReadGraphInner(message, null, tailRecursionContinueVar, null)),
+                    McNode(StoreVariableStmtOp(currentMessageVar, messageType, false), generateMessageReadGraphInner(message, null, tailRecursionContinueVar, null, outerParamResolver)),
                     McNode(
                         StoreFieldStmtOp(messageType, message.fields.last().name, messageType),
                         McNode(LoadVariableOp(lastMessageVar, messageType)),
@@ -74,7 +74,7 @@ internal fun ProtocolCompiler.generateMessageReadGraph(message: MessageVariantIn
             val lastMethodHandle = VariableId.create()
             val currentMethodHandle = VariableId.create()
             nodes += McNode(DeclareVariableOnlyStmtOp(currentMethodHandle, methodHandleType))
-            nodes += McNode(StoreVariableStmtOp(returnVar, messageType, true), generateMessageReadGraphInner(message, polymorphicBy, null, currentMethodHandle))
+            nodes += McNode(StoreVariableStmtOp(returnVar, messageType, true), generateMessageReadGraphInner(message, polymorphicBy, null, currentMethodHandle, outerParamResolver))
             nodes += McNode(StoreVariableStmtOp(currentMessageVar, messageType, true), McNode(LoadVariableOp(returnVar, messageType)))
             nodes += McNode(
                 WhileStmtOp,
@@ -87,7 +87,7 @@ internal fun ProtocolCompiler.generateMessageReadGraph(message: MessageVariantIn
                     StmtListOp,
                     McNode(StoreVariableStmtOp(lastMethodHandle, methodHandleType, true), McNode(LoadVariableOp(currentMethodHandle, methodHandleType))),
                     McNode(StoreVariableStmtOp(lastMessageVar, messageType, true), McNode(LoadVariableOp(currentMessageVar, messageType))),
-                    McNode(StoreVariableStmtOp(currentMessageVar, messageType, false), generateMessageReadGraphInner(message, null, null, currentMethodHandle)),
+                    McNode(StoreVariableStmtOp(currentMessageVar, messageType, false), generateMessageReadGraphInner(message, null, null, currentMethodHandle, outerParamResolver)),
                     McNode(
                         PopStmtOp,
                         McNode(
@@ -103,7 +103,7 @@ internal fun ProtocolCompiler.generateMessageReadGraph(message: MessageVariantIn
         nodes += McNode(ReturnStmtOp(messageType), McNode(LoadVariableOp(returnVar, messageType)))
         McNode(StmtListOp, nodes)
     } else {
-        generateMessageReadGraphInner(message, polymorphicBy, null, null)
+        generateMessageReadGraphInner(message, polymorphicBy, null, null, outerParamResolver)
     }
 }
 
@@ -112,6 +112,7 @@ private fun ProtocolCompiler.generateMessageReadGraphInner(
     polymorphicBy: McNode?,
     tailRecursionContinueVar: VariableId?,
     recursivePolymorphicMethodHandle: VariableId?,
+    outerParamResolver: ParamResolver?,
 ): McNode {
     val type = message.toMcType()
     val varId = VariableId.create()
@@ -124,7 +125,9 @@ private fun ProtocolCompiler.generateMessageReadGraphInner(
             val fieldVarId = VariableId.create()
             vars[field.name] = fieldVarId
             nodes += McNode(StoreVariableStmtOp(fieldVarId, field.type.realType, true),
-                generateFieldReadGraph(parentInfo, field, false, null, vars)
+                generateFieldReadGraph(parentInfo, field, false, null, combineParamResolvers(outerParamResolver) { name, type1 ->
+                    McNode(LoadVariableOp(vars[name]!!, type1))
+                })
             )
         }
     }
@@ -148,7 +151,9 @@ private fun ProtocolCompiler.generateMessageReadGraphInner(
                                     )
                             ),
                     tailRecursionContinueVar,
-                    vars
+                    combineParamResolvers(outerParamResolver) { name, type1 ->
+                        McNode(LoadVariableOp(vars[name]!!, type1))
+                    }
                 )
             }
         )
@@ -162,7 +167,7 @@ private fun ProtocolCompiler.generateMessageReadGraphInner(
                 message,
                 typeField.type,
                 McNode(LoadVariableOp(fieldVarId, typeField.type.realType)),
-                { name, typ -> McNode(LoadVariableOp(vars[name]!!, typ)) }
+                combineParamResolvers(outerParamResolver) { name, typ -> McNode(LoadVariableOp(vars[name]!!, typ)) }
             ) { childMessage, childVarId ->
                 val childNodes = mutableListOf<McNode>()
                 val childVars = vars.toMutableMap()
@@ -179,7 +184,9 @@ private fun ProtocolCompiler.generateMessageReadGraphInner(
                                             || (childMessage.tailrec && field.type.realType.hasName(childMessage.className))
                                     ),
                             null,
-                            childVars
+                            combineParamResolvers(outerParamResolver) { name, type ->
+                                McNode(LoadVariableOp(childVars[name]!!, type))
+                            }
                         )
                     )
                     childNodes += McNode(StoreFieldStmtOp(childType, field.name, field.type.realType),
@@ -246,19 +253,19 @@ private fun ProtocolCompiler.generateFieldReadGraph(
     field: McField,
     isTailRecursive: Boolean,
     tailRecursionContinueVar: VariableId?,
-    vars: Map<String, VariableId>
+    paramResolver: ParamResolver
 ): McNode {
     val readNode = if (isTailRecursive) {
         McNode(CstNullOp(field.type.realType))
     } else {
-        generateTypeReadGraph(message, field.type.realType, field.type.wireType, field.type.lengthInfo) { name, type -> McNode(LoadVariableOp(vars[name]!!, type)) }
+        generateTypeReadGraph(message, field.type.realType, field.type.wireType, field.type.lengthInfo, paramResolver)
     }
 
     if (field.type.onlyIf != null) {
         val varId = VariableId.create()
         val elseBlock = mutableListOf<McNode>()
         elseBlock += McNode(StoreVariableStmtOp(varId, field.type.realType, false),
-            generateDefaultConstructGraph(message, field.type, isTailRecursive) { name, type -> McNode(LoadVariableOp(vars[name]!!, type)) }
+            generateDefaultConstructGraph(message, field.type, isTailRecursive, paramResolver)
         )
         if (isTailRecursive && tailRecursionContinueVar != null) {
             elseBlock += McNode(StoreVariableStmtOp(tailRecursionContinueVar, McType.BOOLEAN, false), McNode(CstBoolOp(false)))
@@ -267,7 +274,7 @@ private fun ProtocolCompiler.generateFieldReadGraph(
             McNode(DeclareVariableOnlyStmtOp(varId, field.type.realType)),
             McNode(
                 IfElseStmtOp,
-                generateFunctionCallGraph(message.findFunction(field.type.onlyIf)) { name, type -> McNode(LoadVariableOp(vars[name]!!, type)) },
+                generateFunctionCallGraph(message.findFunction(field.type.onlyIf), paramResolver = paramResolver),
                 McNode(StmtListOp, McNode(StoreVariableStmtOp(varId, field.type.realType, false), readNode)),
                 McNode(StmtListOp, elseBlock)
             ),
@@ -278,10 +285,10 @@ private fun ProtocolCompiler.generateFieldReadGraph(
     return readNode
 }
 
-private fun ProtocolCompiler.generateTypeReadGraph(contextMessage: MessageVariantInfo, realType: McType, wireType: Types, lengthInfo: LengthInfo?, paramResolver: (String, McType) -> McNode): McNode {
+private fun ProtocolCompiler.generateTypeReadGraph(contextMessage: MessageVariantInfo, realType: McType, wireType: Types, lengthInfo: LengthInfo?, paramResolver: ParamResolver): McNode {
     // deal with arrays, lists, etc
-    if (realType.hasComponentType) {
-        if (realType.isOptional) {
+    if (realType.hasComponentType || lengthInfo?.computeInfo is LengthInfo.ComputeInfo.Raw) {
+        if (realType.isOptional && lengthInfo?.computeInfo !is LengthInfo.ComputeInfo.Raw) {
             val varId = VariableId.create()
             val componentType = realType.componentType()
             return McNode(StmtListOp,
@@ -297,7 +304,7 @@ private fun ProtocolCompiler.generateTypeReadGraph(contextMessage: MessageVarian
                         )
                     ),
                     McNode(StmtListOp, McNode(StoreVariableStmtOp(varId, realType, false),
-                        generateDefaultConstructGraph(realType)
+                        generateDefaultConstructGraph(realType, paramResolver)
                     ))
                 ),
                 McNode(ReturnStmtOp(realType), McNode(LoadVariableOp(varId, realType)))
@@ -312,7 +319,31 @@ private fun ProtocolCompiler.generateTypeReadGraph(contextMessage: MessageVarian
             is LengthInfo.ComputeInfo.RemainingBytes -> McNode(FunctionCallOp(BYTE_BUF, "readableBytes", listOf(McType.BYTE_BUF), McType.INT, true, isStatic = false),
                 McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF))
             )
+            is LengthInfo.ComputeInfo.Raw,
             null -> McType.INT.cast(IoOps.readType(VariableId.immediate("buf"), lengthInfo?.type ?: Types.VAR_INT))
+        }
+
+        if (lengthInfo?.computeInfo is LengthInfo.ComputeInfo.Raw) {
+            // save the length offset and restore it after the read
+            val resultVar = VariableId.create()
+            return McNode(StmtListOp,
+                McNode(StoreVariableStmtOp(lengthVar, McType.INT, true), lengthNode),
+                McNode(StoreVariableStmtOp(lengthVar, McType.INT, false, "+="),
+                    McNode(FunctionCallOp(BYTE_BUF, "readerIndex", listOf(McType.BYTE_BUF), McType.INT, true, isStatic = false),
+                        McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF))
+                    )
+                ),
+                McNode(StoreVariableStmtOp(resultVar, realType, true),
+                    generateTypeReadGraph(contextMessage, realType, wireType, null, paramResolver)
+                ),
+                McNode(PopStmtOp,
+                    McNode(FunctionCallOp(BYTE_BUF, "readerIndex", listOf(McType.BYTE_BUF, McType.INT), McType.VOID, true, isStatic = false),
+                        McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF)),
+                        McNode(LoadVariableOp(lengthVar, McType.INT))
+                    )
+                ),
+                McNode(ReturnStmtOp(realType), McNode(LoadVariableOp(resultVar, realType)))
+            )
         }
 
         // byte array optimization: can read directly to it
@@ -410,8 +441,8 @@ private fun ProtocolCompiler.generateTypeReadGraph(contextMessage: MessageVarian
     // message types have special handling
     if (wireType == Types.MESSAGE) {
         return when (val classInfo = realType.classInfo) {
-            is MessageVariantInfo -> generateMessageReadGraph(classInfo)
-            is MessageInfo -> generateMessageReadGraph(classInfo.getVariant(currentProtocolId)!!)
+            is MessageVariantInfo -> generateMessageReadGraph(classInfo, paramResolver)
+            is MessageInfo -> generateMessageReadGraph(classInfo.getVariant(currentProtocolId)!!, paramResolver)
             else -> throw IllegalStateException("Invalid real type for message type")
         }
     }
