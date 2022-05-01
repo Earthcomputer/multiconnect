@@ -252,7 +252,7 @@ private inline fun ProtocolCompiler.generatePartialHandlers(
 }
 
 private fun ProtocolCompiler.generateHandler(varId: VariableId, nextProtocolId: Int?, packet: MessageVariantInfo, clientbound: Boolean): Pair<McNode, Boolean> {
-    if (packet.handler != null) {
+    if (packet.handler != null && (clientbound || this.protocolId <= (packet.handlerProtocol ?: throw CompileException("@Handler protocol is required for serverbound packets (${packet.className})")))) {
         return generateHandlerInner(McNode(LoadVariableOp(varId, packet.toMcType())), nextProtocolId, packet, packet.handler, clientbound) to true
     }
     if (packet.polymorphic != null && packet.polymorphicParent == null) {
@@ -270,7 +270,7 @@ private fun ProtocolCompiler.generateHandler(varId: VariableId, nextProtocolId: 
         }
         for (childName in polymorphicChildren[packet.className]!!.asReversed()) {
             val childMessage = getMessageVariantInfo(childName)
-            if (childMessage.handler != null) {
+            if (childMessage.handler != null && (clientbound || this.protocolId <= (childMessage.handlerProtocol ?: throw CompileException("@Handler protocol is required for serverbound packets ($childName)")))) {
                 val condition = McNode(
                     InstanceOfOp(packet.toMcType(), childMessage.toMcType()),
                     McNode(LoadVariableOp(varId, packet.toMcType()))
