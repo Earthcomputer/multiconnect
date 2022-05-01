@@ -6,8 +6,6 @@ import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.IBiomeStorage_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
-import net.earthcomputer.multiconnect.transformer.UnsignedByte;
-import net.earthcomputer.multiconnect.transformer.VarInt;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
@@ -58,17 +56,18 @@ public abstract class MixinClientPlayNetworkHandler {
     private void applyPendingEntityTrackerValues(int entityId, List<DataTracker.Entry<?>> entries) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_14_4) {
             if (entries != null) {
-                var packet = Utils.createPacket(EntityTrackerUpdateS2CPacket.class, EntityTrackerUpdateS2CPacket::new, Protocols.V1_15, buf -> {
-                    buf.pendingRead(VarInt.class, new VarInt(entityId));
-                    if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
-                        buf.pendingRead(Byte.class, (byte)127); // terminating byte
-                    } else {
-                        buf.pendingRead(UnsignedByte.class, new UnsignedByte((short) 255)); // terminating byte
-                    }
-                    buf.applyPendingReads();
-                });
-                ((TrackerUpdatePacketAccessor) packet).setTrackedValues(entries);
-                onEntityTrackerUpdate(packet);
+                // TODO: rewrite 1.14.4
+//                var packet = Utils.createPacket(EntityTrackerUpdateS2CPacket.class, EntityTrackerUpdateS2CPacket::new, Protocols.V1_15, buf -> {
+//                    buf.pendingRead(VarInt.class, new VarInt(entityId));
+//                    if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
+//                        buf.pendingRead(Byte.class, (byte)127); // terminating byte
+//                    } else {
+//                        buf.pendingRead(UnsignedByte.class, new UnsignedByte((short) 255)); // terminating byte
+//                    }
+//                    buf.applyPendingReads();
+//                });
+//                ((TrackerUpdatePacketAccessor) packet).setTrackedValues(entries);
+//                onEntityTrackerUpdate(packet);
             }
         }
     }

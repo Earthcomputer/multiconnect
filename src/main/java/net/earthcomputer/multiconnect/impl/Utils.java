@@ -8,9 +8,6 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.serialization.*;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.EmptyByteBuf;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
@@ -19,10 +16,6 @@ import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAcc
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.DimensionTypeAccessor;
-import net.earthcomputer.multiconnect.transformer.Codecked;
-import net.earthcomputer.multiconnect.transformer.InboundTranslator;
-import net.earthcomputer.multiconnect.transformer.TransformerByteBuf;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
@@ -32,11 +25,8 @@ import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.tag.Tag;
 import net.minecraft.text.LiteralText;
@@ -54,8 +44,6 @@ import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.dimension.DimensionType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -68,12 +56,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 public class Utils {
-    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
-
     public static NbtCompound datafix(DSL.TypeReference type, NbtCompound old) {
         return (NbtCompound) datafix(type, NbtOps.INSTANCE, old);
     }
@@ -236,102 +220,6 @@ public class Utils {
         }
     }
 
-    @ThreadSafe
-    public static <T> void translateDynamicRegistries(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate) {
-        translateExperimentalCodec(buf, oldCodec, allowablePredicate, DynamicRegistryManager.Impl.CODEC, thing -> createMutableDynamicRegistryManager());
-    }
-
-    @ThreadSafe
-    public static DynamicRegistryManager.Impl createMutableDynamicRegistryManager() {
-        var registryManager = DynamicRegistryManager.create();
-        //noinspection ConstantConditions
-        var registryManagerAccessor = (DynamicRegistryManagerImplAccessor) (Object) registryManager;
-        registryManagerAccessor.setRegistries(new HashMap<>()); // make them mutable
-        RegistryMutator mutator = new RegistryMutator();
-        ConnectionInfo.protocol.mutateDynamicRegistries(mutator, registryManager);
-        // mutator.runMutations(registryManagerAccessor.getRegistries().values()); // TODO: just rewrite this whole registry system my fucking god
-        return registryManager;
-    }
-
-    private static final Map<Identifier, DimensionType> DIMENSION_TYPES_BY_ID = ImmutableMap.of(
-            DimensionType.OVERWORLD_ID, DimensionTypeAccessor.getOverworld(),
-            DimensionType.THE_NETHER_ID, DimensionTypeAccessor.getTheNether(),
-            DimensionType.THE_END_ID, DimensionTypeAccessor.getTheEnd()
-    );
-
-    @Nullable
-    @ThreadSafe
-    public static Codecked<Supplier<DimensionType>> translateDimensionType(TransformerByteBuf buf) {
-        return translateExperimentalCodec(
-                buf,
-                Utils.singletonKeyCodec("effects", Identifier.CODEC),
-                DIMENSION_TYPES_BY_ID::containsKey,
-                DimensionType.REGISTRY_CODEC,
-                id -> () -> DIMENSION_TYPES_BY_ID.get(id)
-        );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Nullable
-    @ThreadSafe
-    private static <T, U> Codecked<U> translateExperimentalCodec(TransformerByteBuf buf, Codec<T> oldCodec, Predicate<T> allowablePredicate, Codec<U> thingCodec, Function<T, U> thingCreator) {
-        // TODO: support actual translation when this format stops being experimental
-        boolean[] hasDecoded = {false};
-        T oldThing = buf.decode(oldCodec.xmap(val -> {
-            hasDecoded[0] = true;
-            return val;
-        }, Function.identity()));
-        if (!hasDecoded[0]) {
-            // already valid
-            Codecked<U> codecked = new Codecked<>(thingCodec, (U) oldThing);
-            buf.pendingRead(Codecked.class, codecked);
-            return codecked;
-        }
-        if (!allowablePredicate.test(oldThing)) {
-            ClientConnection connection = buf.getConnection();
-            if (connection != null) {
-                connection.disconnect(new TranslatableText("multiconnect.unsupportedExperimentalCodec"));
-            }
-            return null;
-        }
-
-        U thing = thingCreator.apply(oldThing);
-        Codecked<U> codecked = new Codecked<>(thingCodec, thing);
-        buf.pendingRead(Codecked.class, codecked);
-        return codecked;
-    }
-
-    /**
-     * Creates a codec which recognizes an object {"key": value} from a codec which recognizes value.
-     * This returned codec extracts value from this object, ignoring all other information
-     */
-    @ThreadSafe
-    public static <T> Codec<T> singletonKeyCodec(String key, Codec<T> codec) {
-        return RecordCodecBuilder.<Optional<T>>create(inst -> inst.group(codec.fieldOf(key).forGetter(Optional::get)).apply(inst, Optional::of))
-                .xmap(Optional::get, Optional::of);
-    }
-
-    /**
-     * Clones an object with its codec by serializing and deserializing it
-     */
-    @ThreadSafe
-    public static <T> T clone(Codec<T> codec, T val) {
-        DataResult<NbtElement> nbtDataResult = codec.encodeStart(NbtOps.INSTANCE, val);
-        if (nbtDataResult.error().isPresent()) {
-            LOGGER.info("Failed to encode for cloning");
-            return val;
-        }
-        //noinspection OptionalGetWithoutIsPresent
-        DataResult<T> cloneDataResult = codec.parse(NbtOps.INSTANCE, nbtDataResult.result().get());
-        if (cloneDataResult.error().isPresent()) {
-            LOGGER.info("Failed to decode for cloning");
-            return val;
-        }
-
-        //noinspection OptionalGetWithoutIsPresent
-        return cloneDataResult.result().get();
-    }
-
     public static DropDownWidget<ConnectionMode> createVersionDropdown(Screen screen, ConnectionMode initialMode) {
         var versionDropDown = new DropDownWidget<>(screen.width - 80, 5, 75, 20, initialMode, mode -> {
             LiteralText text = new LiteralText(mode.getName());
@@ -395,18 +283,6 @@ public class Utils {
                 bitSet.clear(i);
             }
         }
-    }
-
-    @ThreadSafe
-    public static <T extends Packet<?>> T createPacket(Class<T> packetClass, Function<PacketByteBuf, T> constructor, int protocolVersion, InboundTranslator<T> creator) {
-        TypedMap userData = new TypedMap();
-        TransformerByteBuf buf = new TransformerByteBuf(new EmptyByteBuf(ByteBufAllocator.DEFAULT), null)
-                .readTopLevelType(packetClass, protocolVersion, creator, userData);
-        T packet = constructor.apply(buf);
-        if (packet instanceof IUserDataHolder holder) {
-            holder.multiconnect_getUserData().putAll(userData);
-        }
-        return packet;
     }
 
     private static final ScheduledExecutorService AUTO_CACHE_CLEAN_EXECUTOR = Executors.newScheduledThreadPool(1);

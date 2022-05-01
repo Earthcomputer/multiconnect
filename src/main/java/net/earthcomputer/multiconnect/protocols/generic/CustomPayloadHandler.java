@@ -5,7 +5,6 @@ import net.earthcomputer.multiconnect.api.ICustomPayloadListener;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.CustomPayloadEvent;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.PacketByteBuf;
@@ -65,17 +64,18 @@ public class CustomPayloadHandler {
         serverboundStringCustomPayloadListeners.remove(listener);
     }
 
-    @ThreadSafe
-    public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket packet) {
-        var event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
-        serverboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
-    }
-
-    @ThreadSafe
-    public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket_1_12_2 packet) {
-        var event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
-        serverboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
-    }
+    // TODO: rewrite
+//    @ThreadSafe
+//    public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket packet) {
+//        var event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
+//        serverboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
+//    }
+//
+//    @ThreadSafe
+//    public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket_1_12_2 packet) {
+//        var event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
+//        serverboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
+//    }
 
     @ThreadSafe
     public static void handleClientboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadS2CPacket packet) {
