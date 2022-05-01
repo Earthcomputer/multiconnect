@@ -56,6 +56,7 @@
     "connect.HandshakePacketAccessor",
     "connect.MixinAddServerScreen",
     "connect.MixinClientConnection1",
+    "connect.MixinClientLoginNetworkHandler",
     "connect.MixinClientPlayerEntity",
     "connect.MixinConnectScreen",
     "connect.MixinConnectScreen1",

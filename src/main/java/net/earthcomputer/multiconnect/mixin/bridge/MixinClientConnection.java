@@ -11,6 +11,8 @@ import net.earthcomputer.multiconnect.impl.DebugUtils;
 import net.earthcomputer.multiconnect.impl.TestingAPI;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
 import net.earthcomputer.multiconnect.protocols.generic.ICustomPayloadC2SPacket;
+import net.earthcomputer.multiconnect.protocols.generic.MulticonnectClientboundTranslator;
+import net.earthcomputer.multiconnect.protocols.generic.MulticonnectServerboundTranslator;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.CustomPayloadC2SPacket_1_12_2;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -30,6 +32,12 @@ public abstract class MixinClientConnection {
 
     @Shadow private Channel channel;
     @Shadow private PacketListener packetListener;
+
+    @Inject(method = "channelActive", at = @At("HEAD"))
+    private static void onConnect(ChannelHandlerContext ctx, CallbackInfo ci) {
+        ctx.pipeline().addBefore("encoder", "multiconnect_serverbound_translator", new MulticonnectServerboundTranslator());
+        ctx.pipeline().addBefore("decoder", "multiconnect_clientbound_translator", new MulticonnectClientboundTranslator());
+    }
 
     @Inject(method = "exceptionCaught", at = @At("HEAD"))
     @ThreadSafe

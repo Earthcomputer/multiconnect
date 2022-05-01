@@ -100,7 +100,7 @@ public final class PacketIntrinsics {
 
         ChannelHandlerContext context = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel()
                 .pipeline()
-                .context("encoder");
+                .context("multiconnect_serverbound_translator");
 
         for (ByteBuf buf : bufs) {
             // don't need to set the user data here, it's not accessed again
@@ -116,7 +116,7 @@ public final class PacketIntrinsics {
 
         ChannelHandlerContext context = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel()
                 .pipeline()
-                .context("decoder");
+                .context("multiconnect_clientbound_translator");
 
         for (ByteBuf buf : bufs) {
             PacketSystem.Internals.setUserData(buf, userData);
