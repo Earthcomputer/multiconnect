@@ -3,6 +3,12 @@ package net.earthcomputer.multiconnect.compiler.gen
 import net.earthcomputer.multiconnect.ap.Registries
 import net.earthcomputer.multiconnect.compiler.ArgumentParameter
 import net.earthcomputer.multiconnect.compiler.CommonClassNames
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.ARRAY_LIST
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.DELAYED_PACKET_SENDER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.IDENTIFIER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.NETWORK_HANDLER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPED_MAP
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.DefaultConstruct
 import net.earthcomputer.multiconnect.compiler.DefaultConstructedParameter
@@ -37,6 +43,7 @@ import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
 import net.earthcomputer.multiconnect.compiler.node.NewArrayOp
 import net.earthcomputer.multiconnect.compiler.node.NewOp
+import net.earthcomputer.multiconnect.compiler.node.PopStmtOp
 import net.earthcomputer.multiconnect.compiler.node.Precedence
 import net.earthcomputer.multiconnect.compiler.node.ReturnStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StmtListOp
@@ -48,6 +55,8 @@ import net.earthcomputer.multiconnect.compiler.node.VariableId
 import net.earthcomputer.multiconnect.compiler.node.createCstNode
 import net.earthcomputer.multiconnect.compiler.normalizeIdentifier
 import net.earthcomputer.multiconnect.compiler.polymorphicChildren
+import net.earthcomputer.multiconnect.compiler.protocolNamesById
+import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.splitPackageClass
 
 internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
@@ -429,8 +438,61 @@ internal fun ProtocolCompiler.generateConstantGraph(targetType: McType, value: A
 }
 
 internal fun ProtocolCompiler.generateFilledConstructGraph(type: McType, fromRegistry: FilledFromRegistry?): McNode {
-    // TODO: filled construct
-    return type.defaultValue()
+    if (fromRegistry != null) {
+        return if (type == McType.INT) {
+            when (val rawId = fromRegistry.registry.getRawId(fromRegistry.value)) {
+                is Either.Left -> McNode(CstIntOp(rawId.left))
+                is Either.Right -> rawId.right
+                else -> throw CompileException("Unknown registry value ${fromRegistry.value} in protocol ${protocolNamesById[currentProtocolId]}")
+            }
+        } else if (type.hasName(IDENTIFIER)) {
+            val oldName = fromRegistry.registry.getOldName(fromRegistry.value) ?: throw CompileException("Unknown registry value ${fromRegistry.value} in protocol ${protocolNamesById[currentProtocolId]}")
+            val identifierField = createIdentifierConstantField(oldName)
+            McNode(LoadFieldOp(McType.DeclaredType(className), identifierField, McType.DeclaredType(IDENTIFIER), isStatic = true))
+        } else {
+            throw CompileException("Invalid @Filled(fromRegistry) type $type")
+        }
+    }
+
+    return when ((type as? McType.DeclaredType)?.name) {
+        NETWORK_HANDLER -> McNode(LoadVariableOp(VariableId.immediate("networkHandler"), type))
+        TYPED_MAP -> McNode(LoadVariableOp(VariableId.immediate("userData"), type))
+        DELAYED_PACKET_SENDER -> {
+            val bodyParam = VariableId.create()
+            val bufsVar = VariableId.create()
+            val packetType = type.typeArguments.firstOrNull() as? McType.DeclaredType ?: throw CompileException("$type should have declared type argument")
+
+            val clientbound = (protocols.mapNotNull { protocol ->
+                getPacketDirection(protocol.id, packetType.name).takeIf { it != PacketDirection.INVALID }
+            }.distinct().singleOrNull() ?: throw CompileException("Packet $packetType has ambiguous direction")) == PacketDirection.CLIENTBOUND
+
+            val sendRaw = if (clientbound) {
+                McNode(FunctionCallOp(PACKET_INTRINSICS, "sendRawToClient", listOf(McType.DeclaredType(NETWORK_HANDLER), McType.DeclaredType(TYPED_MAP), McType.BYTE_BUF.listOf()), McType.VOID, true),
+                    McNode(LoadVariableOp(VariableId.immediate("networkHandler"), McType.DeclaredType(NETWORK_HANDLER))),
+                    McNode(LoadVariableOp(VariableId.immediate("userData"), McType.DeclaredType(TYPED_MAP))),
+                    McNode(LoadVariableOp(bufsVar, McType.BYTE_BUF.listOf()))
+                )
+            } else {
+                McNode(FunctionCallOp(PACKET_INTRINSICS, "sendRawToServer", listOf(McType.DeclaredType(NETWORK_HANDLER), McType.BYTE_BUF.listOf()), McType.VOID, true),
+                    McNode(LoadVariableOp(VariableId.immediate("networkHandler"), McType.DeclaredType(NETWORK_HANDLER))),
+                    McNode(LoadVariableOp(bufsVar, McType.BYTE_BUF.listOf()))
+                )
+            }
+
+            McNode(LambdaOp(type, McType.VOID, listOf(packetType), listOf(bodyParam)),
+                McNode(StmtListOp,
+                    McNode(StoreVariableStmtOp(bufsVar, McType.BYTE_BUF.listOf(), true),
+                        McNode(ImplicitCastOp(McType.DeclaredType(ARRAY_LIST), McType.BYTE_BUF.listOf()),
+                            McNode(NewOp(ARRAY_LIST, listOf(McType.INT)), McNode(CstIntOp(1)))
+                        )
+                    ),
+                    generateExplicitSenderServerRegistries(packetType.messageVariantInfo, currentProtocolId, bodyParam, clientbound, bufsVar),
+                    McNode(PopStmtOp, sendRaw)
+                )
+            )
+        }
+        else -> throw CompileException("Invalid @Filled argument type $type")
+    }
 }
 
 internal fun ProtocolCompiler.createTailRecurseField(ownerClass: String, fieldName: String, fieldType: String): String {

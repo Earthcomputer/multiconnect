@@ -2,17 +2,19 @@ package net.earthcomputer.multiconnect.compiler.gen
 
 import net.earthcomputer.multiconnect.ap.Registries
 import net.earthcomputer.multiconnect.ap.Types
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.BI_CONSUMER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.BYTE_BUF
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.CLASS
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.MAP
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.NETWORK_HANDLER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.OBJECT
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_SENDER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PAIR
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY_KEY
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.SUPPLIER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPED_MAP
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.Either
 import net.earthcomputer.multiconnect.compiler.Emitter
@@ -81,7 +83,9 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         val function = emitter.addMember(functionName) ?: return
         function.append("public static void ").append(functionName).append("(")
             .appendClassName(BYTE_BUF).append(" buf, ").appendClassName(LIST)
-            .append("<").appendClassName(BYTE_BUF).append("> outBufs) {").indent().appendNewLine()
+            .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
+            .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+            .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
         val packets = TreeMap<Int, McNode>()
         for ((id, clazz) in readCsv<PacketType>(packetsFile)) {
             val packetFunctionName = "translate${clazz.substringAfterLast('.')}"
@@ -90,12 +94,19 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                     FunctionCallOp(
                         emitter.currentClass,
                         packetFunctionName,
-                        listOf(McType.BYTE_BUF, McType.BYTE_BUF.listOf()),
+                        listOf(
+                            McType.BYTE_BUF,
+                            McType.BYTE_BUF.listOf(),
+                            McType.DeclaredType(NETWORK_HANDLER),
+                            McType.DeclaredType(TYPED_MAP),
+                        ),
                         McType.VOID,
                         true
                     ),
                     McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF)),
-                    McNode(LoadVariableOp(VariableId.immediate("outBufs"), McType.BYTE_BUF.listOf()))
+                    McNode(LoadVariableOp(VariableId.immediate("outBufs"), McType.BYTE_BUF.listOf())),
+                    McNode(LoadVariableOp(VariableId.immediate("networkHandler"), McType.DeclaredType(NETWORK_HANDLER))),
+                    McNode(LoadVariableOp(VariableId.immediate("userData"), McType.DeclaredType(TYPED_MAP))),
                 )
             }
         }
@@ -120,7 +131,9 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         val function = emitter.addMember(functionName) ?: return true
         function.append("private static void ").append(functionName).append("(")
             .appendClassName(BYTE_BUF).append(" buf, ").appendClassName(LIST)
-            .append("<").appendClassName(BYTE_BUF).append("> outBufs) {").indent().appendNewLine()
+            .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
+            .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+            .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
         generateByteBufHandler(messageVariantInfo, clientbound).optimize().emit(function, Precedence.COMMA)
         function.dedent().appendNewLine().append("}")
         return true
@@ -137,17 +150,12 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             }
         }
 
-        fun biConsumer(emitter: Emitter) {
-            emitter.appendClassName(BI_CONSUMER).append("<").appendClassName(OBJECT).append(", ")
-                .appendClassName(LIST).append("<").appendClassName(BYTE_BUF).append(">>")
-        }
-
         emitter.addMember("SENDERS_$functionName")?.let { field ->
             field.append("private static final ").appendClassName(MAP).append("<")
         keyType(field)
             field.append(", ")
-        biConsumer(field)
-            field.append("> SENDERS_").append(functionName).append(" = ").appendClassName(PACKET_INTRINSICS)
+        field.appendClassName(PACKET_SENDER)
+        field.append("> SENDERS_").append(functionName).append(" = ").appendClassName(PACKET_INTRINSICS)
             .append(".makeMap(").indent()
             var empty = true
             for (packet in allPackets) {
@@ -185,14 +193,16 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                         field.append(", ").append(protocolId.toString()).append(")")
                     }
                     field.append(", (")
-                    biConsumer(field)
-                    field.append(") (packet, outBufs) -> ").append(specializedFunctionName).append("((")
-                        .appendClassName(packet).append(") packet, outBufs)")
+                    field.appendClassName(PACKET_SENDER)
+                    field.append(") (packet, outBufs, networkHandler, userData) -> ").append(specializedFunctionName).append("((")
+                        .appendClassName(packet).append(") packet, outBufs, networkHandler, userData)")
 
                     emitter.addMember(specializedFunctionName)?.let { specializedFunction ->
                         specializedFunction.append("private static void ").append(specializedFunctionName)
                             .append("(").appendClassName(packet).append(" protocol_$protocolId, ").appendClassName(LIST)
-                            .append("<").appendClassName(BYTE_BUF).append("> outBufs) {").indent().appendNewLine()
+                            .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
+                            .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+                            .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
                         generateExplicitSenderClientRegistries(variantInfo, protocolId, clientbound)
                             .optimize().emit(specializedFunction, Precedence.COMMA)
                         specializedFunction.dedent().appendNewLine().append("}")
@@ -209,10 +219,12 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             function.append("int fromProtocol, ")
         }
         function.appendClassName(LIST)
-            .append("<").appendClassName(BYTE_BUF).append("> outBufs) {").indent().appendNewLine()
+            .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
+            .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+            .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
 
-        biConsumer(function)
-        function.append(" function = SENDERS_").append(functionName).append(".get(")
+        function.append(PACKET_SENDER)
+        function.append(" sender = SENDERS_").append(functionName).append(".get(")
         if (!clientbound) {
             function.appendClassName(PAIR).append(".of(")
         }
@@ -221,7 +233,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             function.append(", fromProtocol)")
         }
         function.append(");").appendNewLine()
-        function.append("if (function == null) {").indent().appendNewLine()
+        function.append("if (sender == null) {").indent().appendNewLine()
         function.append("throw new ").appendClassName("java.lang.IllegalArgumentException")
             .append("(\"Cannot send packet \" + packet.getClass().getSimpleName() + \" to protocol $protocolId")
         if (!clientbound) {
@@ -230,7 +242,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             function.append("\"")
         }
         function.append(");").dedent().appendNewLine().append("}").appendNewLine()
-        function.append("function.accept(packet, outBufs);")
+        function.append("sender.send(packet, outBufs, networkHandler, userData);")
             .dedent().appendNewLine().append("}")
     }
 
@@ -299,5 +311,17 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         }
 
         return entry?.id?.let { Either.Left(it) }
+    }
+
+    internal fun Registries.getOldName(value: String): String? {
+        val registryDir = FileLocations.dataDir.resolve(protocolNamesById[currentProtocolId]!!)
+        val entries = readCsv<RegistryEntry>(registryDir.resolve("${this.name.lowercase()}.csv"))
+        val entry = entries.byName(value)
+
+        if (entry == null && currentProtocolId != protocolId && value.startsWith("multiconnect:")) {
+            return value
+        }
+
+        return entry?.oldName
     }
 }

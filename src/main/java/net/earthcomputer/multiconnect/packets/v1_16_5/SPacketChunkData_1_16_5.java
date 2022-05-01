@@ -12,7 +12,7 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketChunkData;
-import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
+import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.minecraft.nbt.NbtCompound;
 
@@ -40,8 +40,8 @@ public class SPacketChunkData_1_16_5 implements SPacketChunkData {
     @PartialHandler
     public static void saveFullChunk(
             @Argument("fullChunk") boolean fullChunk,
-            @FilledArgument IUserDataHolder userData
+            @FilledArgument TypedMap userData
     ) {
-        userData.multiconnect_setUserData(Protocol_1_16_5.FULL_CHUNK_KEY, fullChunk);
+        userData.put(Protocol_1_16_5.FULL_CHUNK_KEY, fullChunk);
     }
 }

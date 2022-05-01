@@ -1,12 +1,16 @@
 package net.earthcomputer.multiconnect.impl;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
-import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
+import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
+import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.network.Packet;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,6 +53,12 @@ public class PacketSystem {
         return findMethodHandle(clazz, "construct", Object.class, Class.class);
     });
 
+    private static final LoadingCache<Packet<?>, TypedMap> packetUserData = CacheBuilder.newBuilder().weakKeys().build(CacheLoader.from(TypedMap::new));
+
+    public static TypedMap getUserData(Packet<?> packet) {
+        return packetUserData.getUnchecked(packet);
+    }
+
     @SuppressWarnings("unchecked")
     @Contract("_ -> new")
     public static <T> T defaultConstruct(Class<T> type) {
@@ -61,45 +71,44 @@ public class PacketSystem {
 
     public static void sendToServer(ClientPlayNetworkHandler networkHandler, int protocol, Object packet) {
         List<ByteBuf> bufs = new ArrayList<>(1);
-        protocolClasses.get(ConnectionInfo.protocolVersion).sendToServer(packet, protocol, bufs);
-
-        if (bufs.isEmpty()) {
-            return;
-        }
-
-        ChannelHandlerContext context = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel()
-                .pipeline()
-                .context("encoder");
-
-        for (ByteBuf buf : bufs) {
-            context.write(buf);
-        }
-        context.flush();
+        TypedMap userData = new TypedMap();
+        protocolClasses.get(ConnectionInfo.protocolVersion).sendToServer(packet, protocol, bufs, networkHandler, userData);
+        PacketIntrinsics.sendRawToServer(networkHandler, bufs);
     }
 
     public static void sendToClient(ClientPlayNetworkHandler networkHandler, int protocol, Object packet) {
         List<ByteBuf> bufs = new ArrayList<>(1);
-        protocolClasses.get(protocol).sendToClient(packet, bufs);
-
-        if (bufs.isEmpty()) {
-            return;
-        }
-
-        ChannelHandlerContext context = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel()
-                .pipeline()
-                .context("decoder");
-
-        for (ByteBuf buf : bufs) {
-            context.fireChannelRead(buf);
-        }
+        TypedMap userData = new TypedMap();
+        protocolClasses.get(protocol).sendToClient(packet, bufs, networkHandler, userData);
+        PacketIntrinsics.sendRawToClient(networkHandler, userData, bufs);
     }
 
-    public static void translateSPacket(int protocol, ByteBuf buf, List<ByteBuf> outBufs) {
-        protocolClasses.get(protocol).translateSPacket(buf, outBufs);
-    }
+    public static class Internals {
+        private static final LoadingCache<ByteBuf, TypedMap> bufUserData = CacheBuilder.newBuilder().weakKeys().build(CacheLoader.from(TypedMap::new));
 
-    public static void translateCPacket(int protocol, ByteBuf buf, List<ByteBuf> outBufs) {
-        protocolClasses.get(protocol).translateCPacket(buf, outBufs);
+        public static void translateSPacket(int protocol, ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
+            protocolClasses.get(protocol).translateSPacket(buf, outBufs, networkHandler, userData);
+        }
+
+        public static void translateCPacket(int protocol, ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
+            protocolClasses.get(protocol).translateCPacket(buf, outBufs, networkHandler, userData);
+        }
+
+        public static void setUserData(Packet<?> packet, TypedMap userData) {
+            if (packet instanceof IUserDataHolder) {
+                // migration helper
+                LOGGER.warn("Packet class {} still implements IUserDataHolder", packet.getClass().getSimpleName());
+            }
+            packetUserData.put(packet, userData);
+        }
+
+        public static TypedMap getUserData(ByteBuf buf) {
+            return bufUserData.getUnchecked(buf);
+        }
+
+        public static void setUserData(ByteBuf buf, TypedMap userData) {
+            bufUserData.put(buf, userData);
+        }
     }
 
     private static MethodHandle findMethodHandle(Class<?> clazz, String methodName, Class<?> returnType, Class<?>... paramTypes) {
@@ -117,39 +126,39 @@ public class PacketSystem {
         private final MethodHandle sendToServer;
 
         ProtocolClassProxy(Class<?> clazz, int protocol) {
-            this.translateSPacket = findMethodHandle(clazz, "translateSPacket", void.class, ByteBuf.class, List.class);
-            this.translateCPacket = findMethodHandle(clazz, "translateCPacket", void.class, ByteBuf.class, List.class);
-            this.sendToClient = findMethodHandle(clazz, "sendToClient", void.class, Object.class, List.class);
-            this.sendToServer = findMethodHandle(clazz, "sendToServer", void.class, Object.class, int.class, List.class);
+            this.translateSPacket = findMethodHandle(clazz, "translateSPacket", void.class, ByteBuf.class, List.class, ClientPlayNetworkHandler.class, TypedMap.class);
+            this.translateCPacket = findMethodHandle(clazz, "translateCPacket", void.class, ByteBuf.class, List.class, ClientPlayNetworkHandler.class, TypedMap.class);
+            this.sendToClient = findMethodHandle(clazz, "sendToClient", void.class, Object.class, List.class, ClientPlayNetworkHandler.class, TypedMap.class);
+            this.sendToServer = findMethodHandle(clazz, "sendToServer", void.class, Object.class, int.class, List.class, ClientPlayNetworkHandler.class, TypedMap.class);
         }
 
-        void translateSPacket(ByteBuf buf, List<ByteBuf> outBufs) {
+        void translateSPacket(ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
             try {
-                translateSPacket.invoke(buf, outBufs);
+                translateSPacket.invoke(buf, outBufs, networkHandler, userData);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }
         }
 
-        void translateCPacket(ByteBuf buf, List<ByteBuf> outBufs) {
+        void translateCPacket(ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
             try {
-                translateCPacket.invoke(buf, outBufs);
+                translateCPacket.invoke(buf, outBufs, networkHandler, userData);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }
         }
 
-        void sendToClient(Object packet, List<ByteBuf> outBufs) {
+        void sendToClient(Object packet, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
             try {
-                sendToClient.invoke(packet, outBufs);
+                sendToClient.invoke(packet, outBufs, networkHandler, userData);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }
         }
 
-        void sendToServer(Object packet, int fromProtocol, List<ByteBuf> outBufs) {
+        void sendToServer(Object packet, int fromProtocol, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
             try {
-                sendToServer.invoke(packet, fromProtocol, outBufs);
+                sendToServer.invoke(packet, fromProtocol, outBufs, networkHandler, userData);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }

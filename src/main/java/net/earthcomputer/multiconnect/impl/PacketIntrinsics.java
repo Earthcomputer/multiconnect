@@ -7,11 +7,15 @@ import com.mojang.serialization.Dynamic;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
+import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
+import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
@@ -25,6 +29,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
+import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
@@ -86,6 +91,37 @@ public final class PacketIntrinsics {
         assert block != null;
         BlockState firstState = block.getStateManager().getStates().get(0);
         return Block.getRawIdFromState(firstState) + offset;
+    }
+
+    public static void sendRawToServer(ClientPlayNetworkHandler networkHandler, List<ByteBuf> bufs) {
+        if (bufs.isEmpty()) {
+            return;
+        }
+
+        ChannelHandlerContext context = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel()
+                .pipeline()
+                .context("encoder");
+
+        for (ByteBuf buf : bufs) {
+            // don't need to set the user data here, it's not accessed again
+            context.write(buf);
+        }
+        context.flush();
+    }
+
+    public static void sendRawToClient(ClientPlayNetworkHandler networkHandler, TypedMap userData, List<ByteBuf> bufs) {
+        if (bufs.isEmpty()) {
+            return;
+        }
+
+        ChannelHandlerContext context = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel()
+                .pipeline()
+                .context("decoder");
+
+        for (ByteBuf buf : bufs) {
+            PacketSystem.Internals.setUserData(buf, userData);
+            context.fireChannelRead(buf);
+        }
     }
 
     public static int readVarInt(ByteBuf buf) {
@@ -199,5 +235,10 @@ public final class PacketIntrinsics {
         for (long element : longs) {
             buf.writeLong(element);
         }
+    }
+
+    @FunctionalInterface
+    public interface PacketSender {
+        void send(Object packet, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData);
     }
 }

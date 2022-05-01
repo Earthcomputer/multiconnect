@@ -2,6 +2,8 @@ package net.earthcomputer.multiconnect.compiler.gen
 
 import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.NETWORK_HANDLER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPED_MAP
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.FileLocations
 import net.earthcomputer.multiconnect.compiler.IoOps
@@ -98,14 +100,22 @@ internal fun ProtocolCompiler.generateExplicitSenderClientRegistries(packet: Mes
     return McNode(StmtListOp, nodes)
 }
 
-private fun ProtocolCompiler.generateExplicitSenderServerRegistries(packet: MessageVariantInfo, protocolId: Int, packetVar: VariableId, clientbound: Boolean): McNode {
+internal fun ProtocolCompiler.generateExplicitSenderServerRegistries(
+    packet: MessageVariantInfo,
+    protocolId: Int,
+    packetVar: VariableId,
+    clientbound: Boolean,
+    bufsVar: VariableId = VariableId.immediate("outBufs")
+): McNode {
     val functionName = "translateExplicit${splitPackageClass(packet.className).second.replace('.', '_')}$protocolId"
 
     cacheMembers[functionName] = { emitter ->
         emitter.append("private static void ").append(functionName).append("(")
         packet.toMcType().emit(emitter)
         emitter.append(" protocol_").append(protocolId.toString()).append(", ").appendClassName(CommonClassNames.LIST)
-            .append("<").appendClassName(CommonClassNames.BYTE_BUF).append("> outBufs) {").indent().appendNewLine()
+            .append("<").appendClassName(CommonClassNames.BYTE_BUF).append("> outBufs, ")
+            .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+            .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
 
         val group = getClassInfo(packet.variantOf ?: packet.className) as? MessageInfo
 
@@ -131,9 +141,16 @@ private fun ProtocolCompiler.generateExplicitSenderServerRegistries(packet: Mess
     }
 
     return McNode(PopStmtOp,
-        McNode(FunctionCallOp(className, functionName, listOf(packet.toMcType(), McType.BYTE_BUF.listOf()), McType.VOID, true),
+        McNode(FunctionCallOp(className, functionName, listOf(
+            packet.toMcType(),
+            McType.BYTE_BUF.listOf(),
+            McType.DeclaredType(NETWORK_HANDLER),
+            McType.DeclaredType(TYPED_MAP),
+        ), McType.VOID, true),
             McNode(LoadVariableOp(packetVar, packet.toMcType())),
-            McNode(LoadVariableOp(VariableId.immediate("outBufs"), McType.BYTE_BUF.listOf()))
+            McNode(LoadVariableOp(bufsVar, McType.BYTE_BUF.listOf())),
+            McNode(LoadVariableOp(VariableId.immediate("networkHandler"), McType.DeclaredType(NETWORK_HANDLER))),
+            McNode(LoadVariableOp(VariableId.immediate("userData"), McType.DeclaredType(TYPED_MAP))),
         )
     )
 }

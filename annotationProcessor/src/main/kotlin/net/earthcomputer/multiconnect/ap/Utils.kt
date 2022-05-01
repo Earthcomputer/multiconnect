@@ -30,7 +30,7 @@ const val FASTUTIL_LONG_LIST = "it.unimi.dsi.fastutil.longs.LongList"
 const val MINECRAFT_NBT_COMPOUND = "net.minecraft.nbt.NbtCompound"
 const val MINECRAFT_IDENTIFIER = "net.minecraft.util.Identifier"
 const val MINECRAFT_NETWORK_HANDLER = "net.minecraft.client.network.ClientPlayNetworkHandler"
-const val MULTICONNECT_USER_DATA_HOLDER = "net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder"
+const val MULTICONNECT_TYPED_MAP = "net.earthcomputer.multiconnect.protocols.generic.TypedMap"
 const val MULTICONNECT_DELAYED_PACKET_SENDER = "net.earthcomputer.multiconnect.impl.DelayedPacketSender"
 
 val messageName: String = Message::class.java.canonicalName

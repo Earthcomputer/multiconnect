@@ -8,8 +8,9 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
-import net.earthcomputer.multiconnect.impl.DelayedPacketSender;
 import net.earthcomputer.multiconnect.packets.SPacketMapUpdate;
+import net.earthcomputer.multiconnect.protocols.generic.Key;
+import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.MapStateAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
@@ -41,8 +42,10 @@ public class SPacketMapUpdate_1_16_5 {
         return columns > 0;
     }
 
+    public static final Key<Runnable> POST_HANDLE_MAP_PACKET = Key.create("postHandleMapPacket");
+
     @Handler
-    public static void handle(
+    public static SPacketMapUpdate handle(
             @Argument("mapId") int mapId,
             @Argument("scale") byte scale,
             @Argument("showIcons") boolean showIcons,
@@ -54,21 +57,20 @@ public class SPacketMapUpdate_1_16_5 {
             @Argument("z") byte z,
             @Argument("data") byte[] data,
             @DefaultConstruct SPacketMapUpdate newPacket,
-            @FilledArgument DelayedPacketSender<SPacketMapUpdate> mapPacketSender
+            @FilledArgument TypedMap userData
     ) {
-        MinecraftClient.getInstance().execute(() -> {
+        newPacket.mapId = mapId;
+        newPacket.scale = scale;
+        newPacket.locked = locked;
+        newPacket.icons = Optional.of(icons);
+        newPacket.columns = columns;
+        newPacket.rows = rows;
+        newPacket.x = x;
+        newPacket.z = z;
+        newPacket.data = data;
+        userData.put(POST_HANDLE_MAP_PACKET, () -> {
             ClientWorld world = MinecraftClient.getInstance().world;
             if (world != null) {
-                newPacket.mapId = mapId;
-                newPacket.scale = scale;
-                newPacket.locked = locked;
-                newPacket.icons = Optional.of(icons);
-                newPacket.columns = columns;
-                newPacket.rows = rows;
-                newPacket.x = x;
-                newPacket.z = z;
-                newPacket.data = data;
-                mapPacketSender.send(newPacket);
                 String mapName = FilledMapItem.getMapName(mapId);
                 MapState mapState = world.getMapState(mapName);
                 if (mapState != null) {
@@ -80,5 +82,6 @@ public class SPacketMapUpdate_1_16_5 {
                 }
             }
         });
+        return newPacket;
     }
 }
