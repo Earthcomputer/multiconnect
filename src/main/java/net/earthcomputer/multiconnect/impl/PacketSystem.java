@@ -7,7 +7,6 @@ import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
-import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.Packet;
@@ -95,10 +94,6 @@ public class PacketSystem {
         }
 
         public static void setUserData(Packet<?> packet, TypedMap userData) {
-            if (packet instanceof IUserDataHolder) {
-                // migration helper
-                LOGGER.warn("Packet class {} still implements IUserDataHolder", packet.getClass().getSimpleName());
-            }
             packetUserData.put(packet, userData);
         }
 

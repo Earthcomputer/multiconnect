@@ -33,7 +33,6 @@
     "bridge.MixinSimpleRegistry",
     "bridge.MixinStatType",
     "bridge.MixinTranslationStorage",
-    "bridge.MixinUserDataHolders",
     "bridge.MixinWorldChunk",
     "bridge.RequiredTagListAccessor",
     "bridge.SpawnEggItemAccessor",

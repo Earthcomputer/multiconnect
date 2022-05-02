@@ -6,8 +6,8 @@ import com.google.common.cache.RemovalListener;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.Constants;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.impl.Utils;
-import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.*;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.EntityType;
@@ -158,7 +158,7 @@ public abstract class MixinClientPlayNetworkHandler {
     @Inject(method = "onGameJoin", at = @At("TAIL"))
     private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            onDifficulty(new DifficultyS2CPacket(((IUserDataHolder) packet).multiconnect_getUserData(Protocol_1_13_2.DIFFICULTY_KEY), false));
+            onDifficulty(new DifficultyS2CPacket(PacketSystem.getUserData(packet).get(Protocol_1_13_2.DIFFICULTY_KEY), false));
         }
     }
 
@@ -166,7 +166,7 @@ public abstract class MixinClientPlayNetworkHandler {
     private void onOnPlayerRespawn(PlayerRespawnS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             hasReceivedServerPosition = false;
-            onDifficulty(new DifficultyS2CPacket(((IUserDataHolder) packet).multiconnect_getUserData(Protocol_1_13_2.DIFFICULTY_KEY), false));
+            onDifficulty(new DifficultyS2CPacket(PacketSystem.getUserData(packet).get(Protocol_1_13_2.DIFFICULTY_KEY), false));
         }
     }
 

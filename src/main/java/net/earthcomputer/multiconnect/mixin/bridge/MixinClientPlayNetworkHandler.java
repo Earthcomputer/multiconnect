@@ -5,6 +5,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
@@ -68,7 +69,7 @@ public class MixinClientPlayNetworkHandler {
     private WorldChunk fixChunk(WorldChunk chunk, ChunkDataS2CPacket packet) {
         if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()) {
             if (chunk != null && !Utils.isChunkEmpty(chunk)) {
-                var blocksNeedingUpdate = ((IUserDataHolder) packet).multiconnect_getUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY);
+                var blocksNeedingUpdate = PacketSystem.getUserData(packet).get(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY);
                 ChunkConnector chunkConnector = new ChunkConnector(chunk, ConnectionInfo.protocol.getBlockConnector(), blocksNeedingUpdate);
                 ((IBlockConnectableChunk) chunk).multiconnect_setChunkConnector(chunkConnector);
                 for (Direction side : Direction.Type.HORIZONTAL) {

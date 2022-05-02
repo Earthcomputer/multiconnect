@@ -1,15 +1,12 @@
 package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
-import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.IBlockConnector;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.ChunkSection;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -42,13 +39,13 @@ public class BlockConnector {
         }
     }
 
-    public void fixChunkData(ChunkData chunkData, EnumMap<EightWayDirection, IntSet> blocksNeedingUpdateOut) {
-        // early exit if no fixing ever needs to be done
-        if (connectors.isEmpty()) {
-            return;
-        }
-
-        // TODO: rewrite
+    // TODO: rewrite
+//    public void fixChunkData(ChunkData chunkData, EnumMap<EightWayDirection, IntSet> blocksNeedingUpdateOut) {
+//        // early exit if no fixing ever needs to be done
+//        if (connectors.isEmpty()) {
+//            return;
+//        }
+//
 //        int chunkX = ChunkDataTranslator.current().getPacket().getX();
 //        int chunkZ = ChunkDataTranslator.current().getPacket().getZ();
 //        ChunkSection[] sections = chunkData.getSections();
@@ -67,5 +64,5 @@ public class BlockConnector {
 //                }
 //            }
 //        }
-    }
+//    }
 }
