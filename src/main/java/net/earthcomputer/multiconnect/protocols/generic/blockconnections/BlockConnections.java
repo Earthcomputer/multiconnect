@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class BlockConnections {
-    public static final Key<EnumMap<EightWayDirection, IntSet>> BLOCKS_NEEDING_UPDATE_KEY = Key.create("blocksNeedingUpdate");
+    public static final Key<EnumMap<EightWayDirection, IntSet>> BLOCKS_NEEDING_UPDATE_KEY = Key.create("blocksNeedingUpdate", () -> new EnumMap<>(EightWayDirection.class));
 
     private static final NavigableMap<Integer, Map<Block, IBlockConnector>> connectors = new TreeMap<>();
 

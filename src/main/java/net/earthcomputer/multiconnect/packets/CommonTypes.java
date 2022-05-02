@@ -168,7 +168,7 @@ public class CommonTypes {
             @MessageVariant
             public static class OptionalBlockState extends TrackedData {
                 @Registry(Registries.BLOCK_STATE)
-                public OptionalInt value;
+                public int value;
             }
 
             @Polymorphic(stringValue = "NBT")

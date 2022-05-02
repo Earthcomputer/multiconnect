@@ -53,11 +53,13 @@ public class SPacketAdvancementUpdate {
 
     @MessageVariant
     public static class Progress {
+        public Identifier id;
         public List<Entry> entries;
 
         @MessageVariant
         public static class Entry {
-            public Identifier criterion;
+            public String criterion;
+            @Type(Types.LONG)
             public OptionalLong time;
         }
     }

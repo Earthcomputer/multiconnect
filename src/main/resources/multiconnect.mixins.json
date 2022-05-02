@@ -44,7 +44,6 @@
     "connect.DecoderHandlerAccessor",
     "connect.HandshakePacketAccessor",
     "connect.MixinAddServerScreen",
-    "connect.MixinClientConnection1",
     "connect.MixinClientPlayerEntity",
     "connect.MixinConnectScreen",
     "connect.MixinConnectScreen1",

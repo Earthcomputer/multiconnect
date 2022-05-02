@@ -4,15 +4,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandler;
 import io.netty.handler.timeout.TimeoutException;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
-import net.earthcomputer.multiconnect.mixin.connect.DecoderHandlerAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
-import net.earthcomputer.multiconnect.mixin.bridge.ChunkDataPacketAccessor;
-import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.ClientBrandRetriever;
@@ -20,14 +18,11 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
-import net.minecraft.network.DecoderHandler;
 import net.minecraft.network.PacketEncoderException;
-import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.text.BaseText;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
@@ -35,7 +30,6 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
-import net.minecraft.util.registry.DynamicRegistryManager;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,7 +45,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.BitSet;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -69,6 +62,7 @@ public class DebugUtils {
     private static int rareBugIdThatOccurred = 0;
     private static long timeThatRareBugOccurred;
     public static String lastServerBrand = ClientBrandRetriever.VANILLA;
+    public static final boolean IGNORE_ERRORS = Boolean.getBoolean("multiconnect.ignoreErrors");
 
     private static final Map<TrackedData<?>, String> TRACKED_DATA_NAMES = new IdentityHashMap<>();
     private static void computeTrackedDataNames() {
@@ -178,8 +172,19 @@ public class DebugUtils {
         return !(t instanceof PacketEncoderException) && !(t instanceof TimeoutException);
     }
 
-    public static void logPacketDisconnectError(byte[] data, String... extraLines) {
-        LOGGER.error("!!!!!!!! Unexpected disconnect, please upload this error to " + MULTICONNECT_ISSUES_BASE_URL + " !!!!!!!!");
+    public static void logPacketError(ByteBuf data, String... extraLines) {
+        if (data.hasArray()) {
+            logPacketError(data.array(), extraLines);
+        } else {
+            data.readerIndex(0);
+            byte[] array = new byte[data.readableBytes()];
+            data.readBytes(array);
+            logPacketError(array, extraLines);
+        }
+    }
+
+    public static void logPacketError(byte[] data, String... extraLines) {
+        LOGGER.error("!!!!!!!! Unexpected packet error, please upload this error to " + MULTICONNECT_ISSUES_BASE_URL + " !!!!!!!!");
         LOGGER.error("It may be helpful if you also provide the server IP, but you are not obliged to do this.");
         LOGGER.error("Minecraft version: {}", SharedConstants.getGameVersion().getName());
         FabricLoader.getInstance().getModContainer("multiconnect").ifPresent(modContainer -> {
@@ -210,24 +215,24 @@ public class DebugUtils {
         LOGGER.info("Artificially handling packet of length {}", bytes.length);
         Channel channel = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel();
         assert channel != null;
-        channel.pipeline().context("decoder").fireChannelRead(Unpooled.wrappedBuffer(bytes));
-    }
-
-    public static void handleChunkDataDump(ClientPlayNetworkHandler networkHandler, String base64, boolean compressed, int x, int z, BitSet verticalStripBitmask) {
-        byte[] data = decode(base64, compressed);
-        if (data == null) {
-            return;
+        ChannelHandlerContext context = channel.pipeline().context("multiconnect_clientbound_translator");
+        try {
+            ByteBuf buf = Unpooled.wrappedBuffer(bytes);
+            buf.readerIndex(0);
+            if (channel.eventLoop().inEventLoop()) {
+                ((ChannelInboundHandler) context.handler()).channelRead(context, buf);
+            } else {
+                channel.eventLoop().execute(() -> {
+                    try {
+                        ((ChannelInboundHandler) context.handler()).channelRead(context, buf);
+                    } catch (Exception e) {
+                        throw PacketIntrinsics.sneakyThrow(e);
+                    }
+                });
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
         }
-        LOGGER.info("Artificially handling chunk data of length {} at {}, {}", data.length, x, z);
-        // TODO: rewrite
-//        ClientWorld world = networkHandler.getWorld();
-//        DynamicRegistryManager registryManager = networkHandler.getRegistryManager();
-//        ChunkDataS2CPacket packet = Utils.createEmptyChunkDataPacket(x, z, world, registryManager);
-//        ChunkDataPacketAccessor accessor = (ChunkDataPacketAccessor) packet;
-//        ((IUserDataHolder) accessor).multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, false);
-//        accessor.setData(data);
-//        accessor.setVerticalStripBitmask(verticalStripBitmask);
-//        ChunkDataTranslator.submit(packet);
     }
 
     private static byte @Nullable [] decode(String base64, boolean compressed) {
@@ -246,30 +251,10 @@ public class DebugUtils {
     }
 
     public static void onDebugKey() {
-    }
-
-    public static class DebugDecoderHandler extends DecoderHandler {
-        private final DecoderHandlerAccessor delegate;
-
-        public DebugDecoderHandler(DecoderHandler delegate) {
-            this((DecoderHandlerAccessor) delegate);
-        }
-
-        private DebugDecoderHandler(DecoderHandlerAccessor delegate) {
-            super(delegate.getSide());
-            this.delegate = delegate;
-        }
-
-        @Override
-        protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-            try {
-                delegate.callDecode(ctx, in, out);
-            } catch (Throwable t) {
-                if (isUnexpectedDisconnect(t)) {
-                    logPacketDisconnectError(in.array());
-                }
-                throw t;
-            }
-        }
+        handlePacketDump(
+                MinecraftClient.getInstance().getNetworkHandler(),
+                "H4sIAAAAAAAA/1NhYGBgYTigcmraiys2Qg4BBxhA4IA7t6FxsDgbAxKwk5w5C0gZOQEA+YjcUTMAAAA=",
+                true
+        );
     }
 }
