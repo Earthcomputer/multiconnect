@@ -53,14 +53,12 @@ public final class PacketIntrinsics {
     }
 
     public static NbtCompound datafix(NbtCompound data, DataFixer fixer, DSL.TypeReference type, int fromVersion) {
-        return data;
-        // TODO: implement
-//        return (NbtCompound) fixer.update(
-//                type,
-//                new Dynamic<>(NbtOps.INSTANCE, data),
-//                fromVersion,
-//                SharedConstants.getGameVersion().getWorldVersion()
-//        ).getValue();
+        return (NbtCompound) fixer.update(
+                type,
+                new Dynamic<>(NbtOps.INSTANCE, data),
+                fromVersion,
+                SharedConstants.getGameVersion().getWorldVersion()
+        ).getValue();
     }
 
     public static OptionalInt map(OptionalInt value, IntUnaryOperator mapper) {
