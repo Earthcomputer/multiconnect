@@ -455,9 +455,9 @@ private fun ProtocolCompiler.generateWrite(group: MessageInfo?, packet: MessageV
         ?: throw CompileException("Packet ${splitPackageClass(getVariant(group, currentProtocolId, packet).className).second} not present in protocol ${protocolNamesById[currentProtocolId]!!}")
     nodes += IoOps.writeType(resultBufVar, Types.VAR_INT, McNode(CstIntOp(packetId)))
     nodes += if (group != null) {
-        generateWriteGraph(group, protocolVariable(protocolsSubset.last().id), resultBufVar, null)
+        generateWriteGraph(group, protocolVariable(protocolsSubset.last().id), false, resultBufVar, null)
     } else {
-        generateWriteGraph(packet, protocolVariable(protocolsSubset.last().id), resultBufVar, null)
+        generateWriteGraph(packet, protocolVariable(protocolsSubset.last().id), false, resultBufVar, null)
     }
     if (clientbound) {
         currentProtocolId = protocolId

@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.compiler.gen
 import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.BYTE_BUF
+import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.EnumInfo
 import net.earthcomputer.multiconnect.compiler.IoOps
 import net.earthcomputer.multiconnect.compiler.LengthInfo
@@ -258,7 +259,15 @@ private fun ProtocolCompiler.generateFieldReadGraph(
     val readNode = if (isTailRecursive) {
         McNode(CstNullOp(field.type.realType))
     } else {
-        generateTypeReadGraph(message, field.type.realType, field.type.wireType, field.type.lengthInfo, paramResolver)
+        val polymorphicBy = field.type.polymorphicBy?.let { polymorphicBy ->
+            val typeField = when (val classInfo = field.type.realType.classInfo) {
+                is MessageVariantInfo -> classInfo.fields.firstOrNull()
+                is MessageInfo -> classInfo.getVariant(currentProtocolId)?.fields?.firstOrNull()
+                else -> throw CompileException("Invalid polymorphicBy field type")
+            } ?: return@let null
+            paramResolver(polymorphicBy, typeField.type.realType)
+        }
+        generateTypeReadGraph(message, field.type.realType, field.type.wireType, field.type.lengthInfo, paramResolver, polymorphicBy)
     }
 
     if (field.type.onlyIf != null) {
@@ -285,7 +294,14 @@ private fun ProtocolCompiler.generateFieldReadGraph(
     return readNode
 }
 
-private fun ProtocolCompiler.generateTypeReadGraph(contextMessage: MessageVariantInfo, realType: McType, wireType: Types, lengthInfo: LengthInfo?, paramResolver: ParamResolver): McNode {
+private fun ProtocolCompiler.generateTypeReadGraph(
+    contextMessage: MessageVariantInfo,
+    realType: McType,
+    wireType: Types,
+    lengthInfo: LengthInfo?,
+    paramResolver: ParamResolver,
+    polymorphicBy: McNode? = null
+): McNode {
     // deal with arrays, lists, etc
     if (realType.hasComponentType || lengthInfo?.computeInfo is LengthInfo.ComputeInfo.Raw) {
         if (realType.isOptional && lengthInfo?.computeInfo !is LengthInfo.ComputeInfo.Raw) {
@@ -299,7 +315,7 @@ private fun ProtocolCompiler.generateTypeReadGraph(contextMessage: MessageVarian
                     McNode(StmtListOp,
                         McNode(StoreVariableStmtOp(varId, realType, false),
                             McNode(FunctionCallOp((realType as McType.DeclaredType).name, "of", listOf(componentType), realType, false),
-                                generateTypeReadGraph(contextMessage, componentType, wireType, lengthInfo, paramResolver)
+                                generateTypeReadGraph(contextMessage, componentType, wireType, lengthInfo, paramResolver, polymorphicBy)
                             )
                         )
                     ),
@@ -334,7 +350,7 @@ private fun ProtocolCompiler.generateTypeReadGraph(contextMessage: MessageVarian
                     )
                 ),
                 McNode(StoreVariableStmtOp(resultVar, realType, true),
-                    generateTypeReadGraph(contextMessage, realType, wireType, null, paramResolver)
+                    generateTypeReadGraph(contextMessage, realType, wireType, null, paramResolver, polymorphicBy)
                 ),
                 McNode(PopStmtOp,
                     McNode(FunctionCallOp(BYTE_BUF, "readerIndex", listOf(McType.BYTE_BUF, McType.INT), McType.VOID, true, isStatic = false),
@@ -441,8 +457,8 @@ private fun ProtocolCompiler.generateTypeReadGraph(contextMessage: MessageVarian
     // message types have special handling
     if (wireType == Types.MESSAGE) {
         return when (val classInfo = realType.classInfo) {
-            is MessageVariantInfo -> generateMessageReadGraph(classInfo, paramResolver)
-            is MessageInfo -> generateMessageReadGraph(classInfo.getVariant(currentProtocolId)!!, paramResolver)
+            is MessageVariantInfo -> generateMessageReadGraph(classInfo, paramResolver, polymorphicBy)
+            is MessageInfo -> generateMessageReadGraph(classInfo.getVariant(currentProtocolId)!!, paramResolver, polymorphicBy)
             else -> throw IllegalStateException("Invalid real type for message type")
         }
     }

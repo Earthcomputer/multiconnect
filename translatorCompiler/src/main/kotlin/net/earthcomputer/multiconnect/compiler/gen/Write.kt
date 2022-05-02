@@ -46,6 +46,7 @@ import net.earthcomputer.multiconnect.compiler.splitPackageClass
 internal fun ProtocolCompiler.generateWriteGraph(
     messageInfo: MessageInfo,
     messageVar: VariableId,
+    isPolymorphicBy: Boolean,
     bufVar: VariableId,
     outerParamResolver: ParamResolver?,
 ): McNode {
@@ -57,13 +58,14 @@ internal fun ProtocolCompiler.generateWriteGraph(
                 McNode(LoadVariableOp(messageVar, messageInfo.toMcType()))
             )
         ),
-        generateWriteGraph(variant, newVar, bufVar, outerParamResolver)
+        generateWriteGraph(variant, newVar, isPolymorphicBy, bufVar, outerParamResolver)
     )
 }
 
 internal fun ProtocolCompiler.generateWriteGraph(
     messageInfo: MessageVariantInfo,
     messageVar: VariableId,
+    isPolymorphicBy: Boolean,
     bufVar: VariableId,
     outerParamResolver: ParamResolver?,
 ): McNode {
@@ -79,7 +81,7 @@ internal fun ProtocolCompiler.generateWriteGraph(
         val loopBody = if (messageInfo.fields.last().type.realType.hasName(messageInfo.className)) {
             // the onlyIf variant of recursion
             McNode(StmtListOp,
-                generateWriteGraphInner(messageInfo, currentMessageVar, bufVar, null, outerParamResolver),
+                generateWriteGraphInner(messageInfo, currentMessageVar, bufVar, isPolymorphicBy, null, outerParamResolver),
                 McNode(StoreVariableStmtOp(currentMessageVar, messageType, false),
                     McNode(LoadFieldOp(messageType, messageInfo.fields.last().name, messageType),
                         McNode(LoadVariableOp(messageVar, messageType))
@@ -89,7 +91,7 @@ internal fun ProtocolCompiler.generateWriteGraph(
         } else {
             // the polymorphic variant of recursion
             McNode(StmtListOp,
-                generateWriteGraphInner(messageInfo, currentMessageVar, bufVar, currentMessageVar, outerParamResolver)
+                generateWriteGraphInner(messageInfo, currentMessageVar, bufVar, isPolymorphicBy, currentMessageVar, outerParamResolver)
             )
         }
 
@@ -103,7 +105,7 @@ internal fun ProtocolCompiler.generateWriteGraph(
 
         McNode(StmtListOp, nodes)
     } else {
-        generateWriteGraphInner(messageInfo, messageVar, bufVar, null, outerParamResolver)
+        generateWriteGraphInner(messageInfo, messageVar, bufVar, isPolymorphicBy, null, outerParamResolver)
     }
 }
 
@@ -111,6 +113,7 @@ private fun ProtocolCompiler.generateWriteGraphInner(
     messageInfo: MessageVariantInfo,
     messageVar: VariableId,
     bufVar: VariableId,
+    isPolymorphicBy: Boolean,
     outPolymorphicNext: VariableId?,
     outerParamResolver: ParamResolver?,
 ): McNode {
@@ -138,7 +141,10 @@ private fun ProtocolCompiler.generateWriteGraphInner(
         }
     }
 
-    for (field in messageInfo.fields) {
+    for ((index, field) in messageInfo.fields.withIndex()) {
+        if (isPolymorphicBy && index == 0) {
+            continue
+        }
         if (messageInfo.tailrec && field.type.realType.hasName(messageInfo.className)) {
             continue
         }
@@ -232,6 +238,7 @@ private fun ProtocolCompiler.generateTypeWriteGraph(
     lengthInfo: LengthInfo?,
     varId: VariableId,
     bufVar: VariableId,
+    isPolymorphicBy: Boolean,
     outerParamResolver: ParamResolver?
 ): McNode {
     if (lengthInfo?.computeInfo is LengthInfo.ComputeInfo.Raw) {
@@ -240,7 +247,7 @@ private fun ProtocolCompiler.generateTypeWriteGraph(
             McNode(StoreVariableStmtOp(innerBufVar, McType.BYTE_BUF, true),
                 McNode(FunctionCallOp(UNPOOLED, "buffer", listOf(), McType.BYTE_BUF, false))
             ),
-            generateTypeWriteGraph(realType, wireType, null, varId, innerBufVar, outerParamResolver),
+            generateTypeWriteGraph(realType, wireType, null, varId, innerBufVar, isPolymorphicBy, outerParamResolver),
             IoOps.writeType(bufVar, lengthInfo.type, McNode(FunctionCallOp(BYTE_BUF, "writerIndex", listOf(McType.BYTE_BUF), McType.INT, false, isStatic = false),
                 McNode(LoadVariableOp(innerBufVar, McType.BYTE_BUF))
             )),
@@ -280,7 +287,7 @@ private fun ProtocolCompiler.generateTypeWriteGraph(
                                 McNode(LoadVariableOp(varId, realType))
                             )
                         ),
-                        generateTypeWriteGraph(realType.componentType(), wireType, lengthInfo, elementVar, bufVar, outerParamResolver)
+                        generateTypeWriteGraph(realType.componentType(), wireType, lengthInfo, elementVar, bufVar, isPolymorphicBy, outerParamResolver)
                     )
                 )
             )
@@ -348,7 +355,7 @@ private fun ProtocolCompiler.generateTypeWriteGraph(
                 ),
                 McNode(StmtListOp,
                     McNode(StoreVariableStmtOp(elementVar, realType.componentType(), true), getNode),
-                    generateTypeWriteGraph(realType.componentType(), wireType, null, elementVar, bufVar, outerParamResolver),
+                    generateTypeWriteGraph(realType.componentType(), wireType, null, elementVar, bufVar, false, outerParamResolver),
                     McNode(StoreVariableStmtOp(indexVar, McType.INT, false, "+="), McNode(CstIntOp(1)))
                 )
             )
@@ -358,8 +365,8 @@ private fun ProtocolCompiler.generateTypeWriteGraph(
     // message types have special handling
     if (wireType == Types.MESSAGE) {
         return when (val classInfo = realType.classInfo) {
-            is MessageVariantInfo -> generateWriteGraph(classInfo, varId, bufVar, outerParamResolver)
-            is MessageInfo -> generateWriteGraph(classInfo, varId, bufVar, outerParamResolver)
+            is MessageVariantInfo -> generateWriteGraph(classInfo, varId, isPolymorphicBy, bufVar, outerParamResolver)
+            is MessageInfo -> generateWriteGraph(classInfo, varId, isPolymorphicBy, bufVar, outerParamResolver)
             else -> throw IllegalStateException("Invalid real type for message type")
         }
     }
@@ -380,14 +387,15 @@ private fun ProtocolCompiler.generateTypeWriteGraph(
 }
 
 private fun ProtocolCompiler.generateFieldWriteGraph(messageInfo: MessageVariantInfo, field: McField, fieldVar: VariableId, bufVar: VariableId, paramResolver: ParamResolver): McNode {
+    val isPolymorphicBy = field.type.polymorphicBy != null
     return if (field.type.onlyIf != null) {
         McNode(IfStmtOp,
             generateFunctionCallGraph(messageInfo.findFunction(field.type.onlyIf), paramResolver = paramResolver),
             McNode(StmtListOp,
-                generateTypeWriteGraph(field.type.realType, field.type.wireType, field.type.lengthInfo, fieldVar, bufVar, paramResolver)
+                generateTypeWriteGraph(field.type.realType, field.type.wireType, field.type.lengthInfo, fieldVar, bufVar, isPolymorphicBy, paramResolver)
             )
         )
     } else {
-        generateTypeWriteGraph(field.type.realType, field.type.wireType, field.type.lengthInfo, fieldVar, bufVar, paramResolver)
+        generateTypeWriteGraph(field.type.realType, field.type.wireType, field.type.lengthInfo, fieldVar, bufVar, isPolymorphicBy, paramResolver)
     }
 }
