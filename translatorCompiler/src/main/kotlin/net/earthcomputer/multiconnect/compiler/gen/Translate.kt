@@ -805,7 +805,16 @@ private fun ProtocolCompiler.autoTransfer(
 
     val oldType = node.op.returnType
     if (type == oldType) {
-        return node
+        var isSameType = true
+
+        val classInfo = type.classInfoOrNull
+        if (classInfo is MessageInfo) {
+            isSameType = classInfo.getVariant(fromProtocol)!!.className == classInfo.getVariant(toProtocol)!!.className
+        }
+
+        if (isSameType) {
+            return node
+        }
     }
 
     if (type.isOptional && oldType.isOptional) {

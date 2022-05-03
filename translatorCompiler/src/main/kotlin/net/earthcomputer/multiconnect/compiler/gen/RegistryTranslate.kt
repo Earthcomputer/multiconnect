@@ -224,7 +224,8 @@ private fun ProtocolCompiler.fixRegistriesWithType(
                         McNode(LoadVariableOp(varId, type)),
                         McNode(LoadVariableOp(indexVar, McType.INT)),
                         fixRegistriesWithType(field, type.elementType, elementVar, clientbound)
-                    )
+                    ),
+                    McNode(StoreVariableStmtOp(indexVar, McType.INT, false, "+="), McNode(CstIntOp(1))),
                 )
             ),
             McNode(ReturnStmtOp(type), McNode(LoadVariableOp(varId, type)))

@@ -21,10 +21,25 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
     public List<Group> groups;
 
     public static List<Group> computeGroups(
-            @Argument("groups") List<Group> oldGroups,
+            @Argument("blocks") List<BlockGroup.Tag> blocks,
+            @Argument("items") List<ItemGroup.Tag> items,
+            @Argument("fluids") List<FluidGroup.Tag> fluids,
+            @Argument("entities") List<EntityTypeGroup.Tag> entities,
+            @DefaultConstruct BlockGroup blockGroup,
+            @DefaultConstruct ItemGroup itemGroup,
+            @DefaultConstruct FluidGroup fluidGroup,
+            @DefaultConstruct EntityTypeGroup entityTypeGroup,
             @DefaultConstruct GameEventGroup gameEventGroup
     ) {
-        var ret = new ArrayList<>(oldGroups);
+        List<Group> ret = new ArrayList<>(5);
+        blockGroup.tags = blocks;
+        ret.add(blockGroup);
+        itemGroup.tags = items;
+        ret.add(itemGroup);
+        fluidGroup.tags = fluids;
+        ret.add(fluidGroup);
+        entityTypeGroup.tags = entities;
+        ret.add(entityTypeGroup);
         ret.add(gameEventGroup);
         return ret;
     }

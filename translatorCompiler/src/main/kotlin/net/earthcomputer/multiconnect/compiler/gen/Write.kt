@@ -84,7 +84,7 @@ internal fun ProtocolCompiler.generateWriteGraph(
                 generateWriteGraphInner(messageInfo, currentMessageVar, bufVar, isPolymorphicBy, null, outerParamResolver),
                 McNode(StoreVariableStmtOp(currentMessageVar, messageType, false),
                     McNode(LoadFieldOp(messageType, messageInfo.fields.last().name, messageType),
-                        McNode(LoadVariableOp(messageVar, messageType))
+                        McNode(LoadVariableOp(currentMessageVar, messageType))
                     )
                 )
             )
