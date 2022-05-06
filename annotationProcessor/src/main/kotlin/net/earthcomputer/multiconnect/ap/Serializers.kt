@@ -32,6 +32,7 @@ object LengthSerializer : AnnotationSerializer<Length>(Length::class)
 object DefaultConstructSerializer : AnnotationSerializer<DefaultConstruct>(DefaultConstruct::class)
 object IntroduceSerializer : AnnotationSerializer<Introduce>(Introduce::class)
 object PolymorphicSerializer : AnnotationSerializer<Polymorphic>(Polymorphic::class)
+object DatafixSerializer : AnnotationSerializer<Datafix>(Datafix::class)
 
 abstract class AnnotationSerializer<T: Annotation>(private val clazz: KClass<T>): KSerializer<T> {
     @OptIn(InternalSerializationApi::class)
@@ -178,5 +179,6 @@ val JSON = Json {
         contextual(DefaultConstruct::class, DefaultConstructSerializer)
         contextual(Introduce::class, IntroduceSerializer)
         contextual(Polymorphic::class, PolymorphicSerializer)
+        contextual(Datafix::class, DatafixSerializer)
     }
 }

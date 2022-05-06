@@ -152,7 +152,7 @@ data class FieldType(
     val lengthInfo: LengthInfo?,
     val defaultConstructInfo: DefaultConstruct?,
     val onlyIf: String?,
-    val datafixType: DatafixTypes?,
+    val datafixInfo: DatafixInfo?,
     val polymorphicBy: String?,
     private val introduce: List<IntroduceInfo>
 ) {
@@ -303,6 +303,9 @@ data class LengthInfo(val type: Types, val computeInfo: ComputeInfo?) {
         object Raw : ComputeInfo()
     }
 }
+
+@Serializable
+data class DatafixInfo(val value: DatafixTypes, val preprocess: String?)
 
 @Serializable(with = IntroduceInfo.Serializer::class)
 sealed class IntroduceInfo {

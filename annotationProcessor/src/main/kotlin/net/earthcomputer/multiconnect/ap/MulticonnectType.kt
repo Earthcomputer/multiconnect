@@ -14,7 +14,7 @@ data class MulticonnectType(
     @Contextual val lengthInfo: Length?,
     @Contextual val defaultConstructInfo: DefaultConstruct?,
     val onlyIf: String?,
-    val datafixType: DatafixTypes?,
+    @Contextual val datafixInfo: Datafix?,
     val polymorphicBy: String?,
     val introduce: List<@Contextual Introduce>
 ) {

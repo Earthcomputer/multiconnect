@@ -327,10 +327,10 @@ fun VariableElement.getMulticonnectType(processingEnv: ProcessingEnvironment): M
     val lengthInfo = getAnnotation(Length::class)
     val defaultConstructInfo = getAnnotation(DefaultConstruct::class)
     val onlyIf = getAnnotation(OnlyIf::class)?.value
-    val datafixType = getAnnotation(Datafix::class)?.value
+    val datafixInfo = getAnnotation(Datafix::class)
     val polymorphicBy = getAnnotation(PolymorphicBy::class)?.field
     val introduce = getAnnotationsByType(Introduce::class.java).toList()
-    return MulticonnectType(realType, wireType, registry, lengthInfo, defaultConstructInfo, onlyIf, datafixType, polymorphicBy, introduce)
+    return MulticonnectType(realType, wireType, registry, lengthInfo, defaultConstructInfo, onlyIf, datafixInfo, polymorphicBy, introduce)
 }
 
 fun ExecutableElement.isThrowSafe(processingEnv: ProcessingEnvironment, vararg allowedExceptions: TypeMirror): Boolean {

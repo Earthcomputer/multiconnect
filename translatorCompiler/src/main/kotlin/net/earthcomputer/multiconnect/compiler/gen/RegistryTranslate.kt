@@ -33,6 +33,7 @@ import net.earthcomputer.multiconnect.compiler.hasName
 import net.earthcomputer.multiconnect.compiler.isIntegral
 import net.earthcomputer.multiconnect.compiler.isList
 import net.earthcomputer.multiconnect.compiler.isOptional
+import net.earthcomputer.multiconnect.compiler.messageVariantInfo
 import net.earthcomputer.multiconnect.compiler.node.BinaryExpressionOp
 import net.earthcomputer.multiconnect.compiler.node.CastOp
 import net.earthcomputer.multiconnect.compiler.node.CstIntOp
@@ -78,7 +79,7 @@ private fun ProtocolCompiler.hasChanged(registry: Registries, wireType: Types): 
 }
 
 private fun ProtocolCompiler.needsTranslating(field: FieldType): Boolean {
-    if (field.datafixType != null) {
+    if (field.datafixInfo != null) {
         return true
     }
     if (field.registry != null) {
@@ -132,15 +133,23 @@ private fun ProtocolCompiler.needsTranslating(messageInfo: MessageVariantInfo): 
     return false
 }
 
-private fun ProtocolCompiler.fixRegistries(field: FieldType, fieldVar: VariableId, clientbound: Boolean): McNode {
-    return fixRegistriesWithType(field, field.realType, fieldVar, clientbound)
+private fun ProtocolCompiler.fixRegistries(
+    ownerType: McType,
+    field: FieldType,
+    fieldVar: VariableId,
+    clientbound: Boolean,
+    paramResolver: ParamResolver
+): McNode {
+    return fixRegistriesWithType(ownerType, field, field.realType, fieldVar, clientbound, paramResolver)
 }
 
 private fun ProtocolCompiler.fixRegistriesWithType(
+    ownerType: McType,
     field: FieldType,
     type: McType,
     varId: VariableId,
-    clientbound: Boolean
+    clientbound: Boolean,
+    paramResolver: ParamResolver,
 ): McNode {
     if (type.isOptional) {
         val functionType = McType.DeclaredType("java.util.function.Function")
@@ -149,7 +158,7 @@ private fun ProtocolCompiler.fixRegistriesWithType(
         return McNode(FunctionCallOp(if (isOptional) OPTIONAL else PACKET_INTRINSICS, "map", listOf(type, functionType), type, false, isStatic = !isOptional),
             McNode(LoadVariableOp(varId, type)),
             McNode(LambdaOp(functionType, type.componentType(), listOf(type.componentType()), listOf(innerVarId)),
-                fixRegistriesWithType(field, type.componentType(), innerVarId, clientbound)
+                fixRegistriesWithType(ownerType, field, type.componentType(), innerVarId, clientbound, paramResolver)
             )
         )
     }
@@ -187,7 +196,7 @@ private fun ProtocolCompiler.fixRegistriesWithType(
                         McNode(FunctionCallOp(type.name, "set", listOf(type, McType.INT, type.componentType()), McType.VOID, true, isStatic = false),
                             McNode(LoadVariableOp(varId, type)),
                             McNode(LoadVariableOp(indexVar, McType.INT)),
-                            fixRegistriesWithType(field, type.componentType(), elementVar, clientbound)
+                            fixRegistriesWithType(ownerType, field, type.componentType(), elementVar, clientbound, paramResolver)
                         )
                     ),
                     McNode(StoreVariableStmtOp(indexVar, McType.INT, false, "+="), McNode(CstIntOp(1))),
@@ -223,7 +232,7 @@ private fun ProtocolCompiler.fixRegistriesWithType(
                     McNode(StoreArrayStmtOp(type.elementType),
                         McNode(LoadVariableOp(varId, type)),
                         McNode(LoadVariableOp(indexVar, McType.INT)),
-                        fixRegistriesWithType(field, type.elementType, elementVar, clientbound)
+                        fixRegistriesWithType(ownerType, field, type.elementType, elementVar, clientbound, paramResolver)
                     ),
                     McNode(StoreVariableStmtOp(indexVar, McType.INT, false, "+="), McNode(CstIntOp(1))),
                 )
@@ -261,26 +270,38 @@ private fun ProtocolCompiler.fixRegistriesWithType(
         )
     }
 
-    if (field.datafixType != null && type.hasName(NBT_COMPOUND)) {
+    if (field.datafixInfo != null && type.hasName(NBT_COMPOUND)) {
         val fixerType = McType.DeclaredType(DATA_FIXER)
-        val fixer = if (field.datafixType.isMulticonnect) {
+        val fixer = if (field.datafixInfo.value.isMulticonnect) {
             McNode(LoadFieldOp(McType.DeclaredType(MULTICONNECT_DFU), "FIXER", fixerType, isStatic = true))
         } else {
             McNode(FunctionCallOp(SCHEMAS, "getFixer", listOf(), fixerType, false))
         }
-        val typesClass = if (field.datafixType.isMulticonnect) {
+        val typesClass = if (field.datafixInfo.value.isMulticonnect) {
             MULTICONNECT_DFU
         } else {
             TYPE_REFERENCES
         }
         val typeReferenceType = McType.DeclaredType(TYPE_REFERENCE)
-        val typeReference = McNode(LoadFieldOp(McType.DeclaredType(typesClass), field.datafixType.name, typeReferenceType, isStatic = true))
-        return McNode(FunctionCallOp(PACKET_INTRINSICS, "datafix", listOf(type, fixerType, typeReferenceType, McType.INT), type, false),
+        val typeReference = McNode(LoadFieldOp(McType.DeclaredType(typesClass), field.datafixInfo.value.name, typeReferenceType, isStatic = true))
+        val datafixNode = McNode(FunctionCallOp(PACKET_INTRINSICS, "datafix", listOf(type, fixerType, typeReferenceType, McType.INT), type, false),
             McNode(LoadVariableOp(varId, type)),
             fixer,
             typeReference,
             McNode(CstIntOp(protocolDatafixVersionsById[protocolId]!!))
         )
+        if (!field.datafixInfo.preprocess.isNullOrEmpty()) {
+            val preprocessNode = generateFunctionCallGraph(
+                ownerType.messageVariantInfo.findFunction(field.datafixInfo.preprocess),
+                McNode(LoadVariableOp(varId, type)),
+                paramResolver = paramResolver
+            )
+            return McNode(StmtListOp,
+                McNode(PopStmtOp, preprocessNode),
+                McNode(ReturnStmtOp(type), datafixNode)
+            )
+        }
+        return datafixNode
     }
 
     throw CompileException("Don't know how to fix registries for type $type")
@@ -562,7 +583,12 @@ private fun ProtocolCompiler.fixRegistriesInner(
         )
         outNodes += McNode(StoreFieldStmtOp(ownerType, field.name, field.type.realType),
             McNode(LoadVariableOp(ownerVar, ownerType)),
-            fixRegistries(field.type, fieldVar, clientbound)
+            fixRegistries(ownerType, field.type, fieldVar, clientbound) { name, type ->
+                // TODO: support for outer references?
+                McNode(LoadFieldOp(ownerType, name, type),
+                    McNode(LoadVariableOp(ownerVar, ownerType))
+                )
+            }
         )
     }
 

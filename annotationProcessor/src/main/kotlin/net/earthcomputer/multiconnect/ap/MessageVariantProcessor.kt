@@ -221,10 +221,31 @@ object MessageVariantProcessor {
                 multiconnectFunctions += multiconnectFunction
             }
 
-            if (multiconnectType.datafixType != null) {
+            if (multiconnectType.datafixInfo != null) {
                 if (!deepComponentType.hasQualifiedName(MINECRAFT_NBT_COMPOUND)) {
                     errorConsumer.report("@Datafix can only be used on fields of type NbtCompound", field)
                     continue
+                }
+                if (multiconnectType.datafixInfo.preprocess.isNotEmpty()) {
+                    val multiconnectFunction = type.findMulticonnectFunction(
+                        processingEnv,
+                        multiconnectType.datafixInfo.preprocess,
+                        errorConsumer = errorConsumer,
+                        errorElement = field
+                    ) ?: continue
+                    if (multiconnectFunction.positionalParameters.size != 1) {
+                        errorConsumer.report("@Datafix preprocess function must have exactly 1 positional parameter", field)
+                        continue
+                    }
+                    if (!multiconnectFunction.positionalParameters.first().hasQualifiedName(MINECRAFT_NBT_COMPOUND)) {
+                        errorConsumer.report("@Datafix preprocess function positional parameter must be of type NbtCompound", field)
+                        continue
+                    }
+                    if (!validateFunctionCaptures(multiconnectFunction, type, field)) {
+                        errorConsumer.report("@Datafix preprocess function cannot depend on later fields", field)
+                        continue
+                    }
+                    multiconnectFunctions += multiconnectFunction
                 }
             }
 
