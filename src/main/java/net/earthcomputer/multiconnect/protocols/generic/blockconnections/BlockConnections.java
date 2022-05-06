@@ -6,7 +6,7 @@ import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.CompoundConnector;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.IBlockConnector;
 import net.minecraft.block.Block;
-import net.minecraft.util.EightWayDirection;
+import net.minecraft.util.math.EightWayDirection;
 
 import java.util.*;
 import java.util.stream.Collectors;

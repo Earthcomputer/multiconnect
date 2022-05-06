@@ -1,20 +1,21 @@
 
 import com.modrinth.minotaur.TaskModrinthUpload
-import net.fabricmc.loader.impl.game.minecraft.McVersion
 import net.fabricmc.loom.task.RemapJarTask
+import java.util.regex.Pattern
 
 plugins {
-	id 'fabric-loom' version '0.8-SNAPSHOT'
+	id 'fabric-loom' version '0.10-SNAPSHOT'
 	id 'maven-publish'
 	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
 	id 'com.modrinth.minotaur' version '1.2.1'
 	id 'com.github.breadmoirai.github-release' version '2.2.12'
 	id 'io.codearte.nexus-staging' version '0.30.0'
+	id 'io.github.juuxel.loom-quiltflower-mini' version '1.2.1'
 }
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -33,17 +34,31 @@ sourceSets {
 
 compileApiJava.dependsOn processApiResources // wtf gradle
 
-def normalizedVersion = new McVersion.Builder().setNameAndRelease(project.minecraft_version).build().normalized
+def snapshotPattern = Pattern.compile('(\\d\\d)w(\\d\\d)([a-z])')
+def prereleasePattern = Pattern.compile('[\\d.]+-(pre|rc)(\\d+)')
+def normalizedVersion = project.minecraft_version
+def snapshotMatcher = snapshotPattern.matcher(project.minecraft_version)
+def prereleaseMatcher = prereleasePattern.matcher(project.minecraft_version)
+if (snapshotMatcher.matches()) {
+    normalizedVersion = project.target_release + '-alpha.' + snapshotMatcher.group(1) + '.' + (snapshotMatcher.group(2) as Integer) + '.' + snapshotMatcher.group(3)
+} else if (prereleaseMatcher.matches()) {
+	def type = prereleaseMatcher.group(1)
+	if (type == 'pre') {
+        normalizedVersion = project.target_release + '-beta.' + prereleaseMatcher.group(2)
+    } else if (type == 'rc') {
+        normalizedVersion = project.target_release + '-rc.' + prereleaseMatcher.group(2)
+    }
+}
 
 processResources {
 	duplicatesStrategy = DuplicatesStrategy.WARN
 	inputs.property "version", project.version
-	inputs.property "mcversion", normalizedVersion
+	inputs.property "mcversion", project.supported_versions ?: normalizedVersion
 
 	from(sourceSets.main.resources.srcDirs) {
 		include "fabric.mod.json"
 		expand "version": project.version,
-				"mcversion": normalizedVersion
+				"mcversion": project.supported_versions ?: normalizedVersion
 	}
 
 	from(sourceSets.main.resources.srcDirs) {
@@ -56,7 +71,7 @@ processResources {
 // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
 tasks.withType(JavaCompile) {
 	options.encoding = "UTF-8"
-	options.release = 16
+	options.release = 17
 }
 
 // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
@@ -128,8 +143,12 @@ jar {
 	from "LICENSE"
 }
 
-minecraft {
-	accessWidener 'src/main/resources/multiconnect.accesswidener'
+loom {
+	accessWidenerPath = file('src/main/resources/multiconnect.accesswidener')
+}
+
+quiltflower {
+	addToRuntimeClasspath = true
 }
 
 subprojects {
@@ -160,25 +179,25 @@ dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modCompileOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
-	modRuntime "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
+	modRuntimeOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	testImplementation "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 	sourceSets.generated.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 	generatedImplementation sourceSets.main.output
 
 	if (true) {
-		modCompileOnly("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
+		modCompileOnly(fabricApi.module('fabric-resource-loader-v0', project.fabric_api_version)) {
 			transitive = false // to stop it using its own fabric-loader
 		}
-		modRuntime("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
+		modRuntimeOnly(fabricApi.module('fabric-resource-loader-v0', project.fabric_api_version)) {
 			transitive = false // to stop it using its own fabric-loader
 		}
-		include "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
+		include fabricApi.module('fabric-resource-loader-v0', project.fabric_api_version)
 	} else {
-		modCompileOnly("net.fabricmc.fabric-api:fabric-api:0.20.2+build.402-1.16") {
+		modCompileOnly("net.fabricmc.fabric-api:fabric-api:0.45.1+1.18") {
 			exclude group: 'net.fabricmc', module: 'fabric-loader'
 		}
-		modRuntime("net.fabricmc.fabric-api:fabric-api:0.20.2+build.402-1.16") {
+		modRuntimeOnly("net.fabricmc.fabric-api:fabric-api:0.45.1+1.18") {
 			exclude group: 'net.fabricmc', module: 'fabric-loader'
 		}
 	}

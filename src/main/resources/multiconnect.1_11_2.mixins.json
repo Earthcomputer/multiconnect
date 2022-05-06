@@ -6,8 +6,10 @@
     "MixinClientPlayNetworkHandler",
     "MixinCraftingScreenHandler",
     "MixinMinecraftClient",
+    "MixinPlayerEntityRenderer",
     "MixinPlayerScreenHandler",
     "MixinScreenHandler",
+    "MixinBedBlock",
     "PlayerEntityAccessor"
   ],
   "client": [

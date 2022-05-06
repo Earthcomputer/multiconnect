@@ -7,37 +7,26 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.tag.FluidTags;
-import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class MixinLivingEntity extends Entity {
 
-    @Unique private float oldFallDistance;
-
     public MixinLivingEntity(EntityType<?> type, World world) {
         super(type, world);
     }
 
-    @Inject(method = "travel",
+    @Redirect(method = "travel",
             slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/entity/effect/StatusEffects;LEVITATION:Lnet/minecraft/entity/effect/StatusEffect;", ordinal = 0)),
-            at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;fallDistance:F", ordinal = 0))
-    private void captureFallDistance(Vec3d travelVec, CallbackInfo ci) {
-        oldFallDistance = fallDistance;
-    }
-
-    @Inject(method = "travel",
-            slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/entity/effect/StatusEffects;LEVITATION:Lnet/minecraft/entity/effect/StatusEffect;", ordinal = 0)),
-            at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;fallDistance:F", ordinal = 0, shift = At.Shift.AFTER))
-    private void dontResetLevitationFallDistance(Vec3d travelVec, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            fallDistance = oldFallDistance;
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;onLanding()V", ordinal = 0))
+    private void dontResetLevitationFallDistance(LivingEntity instance) {
+        if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
+            instance.onLanding(); // onLanding is badly named, should be resetFallDistance
         }
     }
 
@@ -58,8 +47,8 @@ public abstract class MixinLivingEntity extends Entity {
         }
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getFluidHeight(Lnet/minecraft/tag/Tag;)D"))
-    private double redirectFluidHeight(LivingEntity entity, Tag<Fluid> tag) {
+    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getFluidHeight(Lnet/minecraft/tag/TagKey;)D"))
+    private double redirectFluidHeight(LivingEntity entity, TagKey<Fluid> tag) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2 && tag == FluidTags.WATER) {
             // If you're in water, you're in water, even if you're almost at the surface
             if (entity.getFluidHeight(tag) > 0)

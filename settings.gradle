@@ -4,6 +4,10 @@ pluginManagement {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
         }
+        maven {
+            name = 'Cotton'
+            url = 'https://server.bbkr.space/artifactory/libs-release/'
+        }
         gradlePluginPortal()
     }
 }
@@ -24,5 +28,5 @@ buildscript {
 
 include 'annotationProcessor'
 include 'annotations'
-include 'integrationTest'
+//include 'integrationTest'
 include 'translatorCompiler'

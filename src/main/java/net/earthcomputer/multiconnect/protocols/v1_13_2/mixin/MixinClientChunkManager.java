@@ -14,7 +14,7 @@ import java.util.function.BooleanSupplier;
 public class MixinClientChunkManager {
 
     @Inject(method = "tick", at = @At("HEAD"))
-    private void onTick(BooleanSupplier fallingBehind, CallbackInfo ci) {
+    private void onTick(BooleanSupplier fallingBehind, boolean normalTick, CallbackInfo ci) {
         if (MinecraftClient.getInstance().getCameraEntity() != null
                 && MinecraftClient.getInstance().getCameraEntity() != MinecraftClient.getInstance().player
                 && MinecraftClient.getInstance().getCameraEntity().isAlive()) {

@@ -40,7 +40,7 @@ public class CommonTypes {
                 newStack.present = true;
                 newStack.itemId = net.minecraft.util.registry.Registry.ITEM.getRawId(stack.getItem());
                 newStack.count = (byte) stack.getCount();
-                newStack.tag = stack.getTag() != null ? stack.getTag().copy() : null;
+                newStack.tag = stack.getNbt() != null ? stack.getNbt().copy() : null;
                 return newStack;
             }
         }

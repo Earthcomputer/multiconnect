@@ -5,8 +5,8 @@ import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.IBlockConnector;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.EightWayDirection;
 
 import java.util.EnumMap;
 import java.util.Map;

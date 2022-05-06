@@ -7,8 +7,9 @@
 
 Connect to many different server versions from your Fabric client!
 
-## Discord
-https://discord.gg/Jg7Bun7
+## Social
+Discord: https://discord.gg/Jg7Bun7
+Patreon: https://www.patreon.com/earthcomputer
 
 ## Why another protocol translator?
 Multiconnect distinguishes itself from similar projects such as ViaVersion and ProtocolSupport in that it is
@@ -47,8 +48,8 @@ This section is for when you are developing your own mod and want to use the mul
    ```groovy
    dependencies {
       // ...
-      modImplementation 'net.earthcomputer.multiconnect:multiconnect-api:<version>'
-      include 'net.earthcomputer.multiconnect:multiconnect-api:<version>'
+      modImplementation('net.earthcomputer.multiconnect:multiconnect-api:<version>') { transitive = false }
+      include('net.earthcomputer.multiconnect:multiconnect-api:<version>') { transitive = false }
    }
    ```
    - Note: replace `<version>` with the version of multiconnect you want to depend on.
@@ -57,7 +58,7 @@ This section is for when you are developing your own mod and want to use the mul
    ```groovy
    dependencies {
       // ...
-      modRuntime 'net.earthcomputer.multiconnect:multiconnect-slim:<version>'
+      modRuntime('net.earthcomputer.multiconnect:multiconnect-slim:<version>') { transitive = false }
    }
    ```
    - Note: the previous step should also be done alongside this step.

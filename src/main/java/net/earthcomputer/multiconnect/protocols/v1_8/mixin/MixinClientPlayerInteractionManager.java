@@ -20,14 +20,7 @@ public class MixinClientPlayerInteractionManager {
         // The hand swing and attack packets are the other way around in 1.8. Fixes anti-cheat triggering
         if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
             player.swingHand(Hand.MAIN_HAND);
-            ((IClientPlayer) player).multiconnect_cancelSwingsThisTick();
-        }
-    }
-
-    @Inject(method = "hasLimitedAttackSpeed", at = @At("HEAD"), cancellable = true)
-    private void onHasLimitedAttackSpeed(CallbackInfoReturnable<Boolean> ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_8) {
-            ci.setReturnValue(false);
+            ((IClientPlayer) player).multiconnect_cancelSwingPacket();
         }
     }
 }

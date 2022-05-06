@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.mixin.connect;
 
-import com.mojang.bridge.game.GameVersion;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
+import net.minecraft.GameVersion;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerServerListWidget;
 import net.minecraft.client.network.ServerInfo;
 import org.spongepowered.asm.mixin.Final;
@@ -15,7 +15,7 @@ public class MixinServerListIcon {
 
     @Shadow @Final private ServerInfo server;
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/bridge/game/GameVersion;getProtocolVersion()I", remap = false))
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/GameVersion;getProtocolVersion()I"))
     public int redirectProtocolVersion(GameVersion version) {
         if (!ConnectionMode.isSupportedProtocol(server.protocolVersion))
             return version.getProtocolVersion();

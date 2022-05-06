@@ -61,8 +61,8 @@ public class Protocol_1_15_2 extends Protocol_1_16 {
         tags.add(BlockTags.INFINIBURN_END, Blocks.BEDROCK);
         super.addExtraBlockTags(tags);
 
-        tags.get(BlockTags.HOE_MINEABLE.getId()).clear();
-        Set<Block> pickaxeMineableTag = tags.get(BlockTags.PICKAXE_MINEABLE.getId());
+        tags.get(BlockTags.HOE_MINEABLE).clear();
+        Set<Block> pickaxeMineableTag = tags.get(BlockTags.PICKAXE_MINEABLE);
         Arrays.asList(Blocks.PISTON, Blocks.STICKY_PISTON, Blocks.PISTON_HEAD).forEach(pickaxeMineableTag::remove);
     }
 

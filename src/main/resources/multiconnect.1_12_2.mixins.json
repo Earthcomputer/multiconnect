@@ -22,6 +22,7 @@
     "EntityAccessor",
     "FlowerPotBlockAccessor",
     "MixinAreaEffectCloudEntity",
+    "MixinAxeItem",
     "MixinBannerBlockEntity",
     "MixinBedBlockEntity",
     "MixinBlockItem",
@@ -35,6 +36,7 @@
     "MixinLivingEntity",
     "MixinNoteBlock",
     "MixinSkullBlockEntity",
+    "MixinTeam",
     "StatsCounterFixAccessor",
     "SuspendParticleAccessor",
     "WolfEntityAccessor"

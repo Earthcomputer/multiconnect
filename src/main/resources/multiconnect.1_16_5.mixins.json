@@ -10,8 +10,7 @@
     "MixinClientPlayerInteractionManager",
     "MixinClientPlayNetworkHandler",
     "MixinSquidEntity",
-    "ShulkerEntityAccessor",
-    "TagGroupSerializedAccessor"
+    "ShulkerEntityAccessor"
   ],
   "client": [
   ],

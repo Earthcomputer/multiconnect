@@ -5,7 +5,6 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.*;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.command.CommandSource;
@@ -27,8 +26,6 @@ import java.util.List;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class MixinClientPlayNetworkHandler {
-
-    @Shadow @Final private MinecraftClient client;
 
     @Shadow public abstract void onSynchronizeTags(SynchronizeTagsS2CPacket packet);
 
@@ -77,17 +74,6 @@ public abstract class MixinClientPlayNetworkHandler {
                         packet.getRecipeIdsToChange().add(recipe.getId());
                     }
                 }
-            }
-        }
-    }
-
-    @Inject(method = "onBlockEntityUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/BlockEntityUpdateS2CPacket;getBlockEntityType()I"))
-    private void onOnBlockEntityUpdate(BlockEntityUpdateS2CPacket packet, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            assert client.world != null;
-            BlockEntity be = client.world.getBlockEntity(packet.getPos());
-            if (packet.getBlockEntityType() == 5 && be instanceof FlowerPotBlockEntity) {
-                be.readNbt(packet.getNbt());
             }
         }
     }

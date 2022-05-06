@@ -19,7 +19,6 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.screen.ScreenHandler;
-import net.minecraft.tag.RequiredTagListRegistry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -66,10 +65,6 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     private void revertCollisionBoxes() {
-        if (!collisionBoxesToRevert.isEmpty()) {
-            // Lithium compat: make sure tags have been initialized before initializing shape cache
-            RequiredTagListRegistry.clearAllTags();
-        }
         for (Block block : collisionBoxesToRevert) {
             for (BlockState state : block.getStateManager().getStates()) {
                 state.initShapeCache();
@@ -79,10 +74,6 @@ public abstract class AbstractProtocol implements IUtils {
     }
 
     protected void markCollisionBoxChanged(Block block) {
-        if (collisionBoxesToRevert.isEmpty()) {
-            // Lithium compat: make sure tags have been initialized before initializing shape cache
-            RequiredTagListRegistry.clearAllTags();
-        }
         for (BlockState state : block.getStateManager().getStates()) {
             state.initShapeCache();
         }

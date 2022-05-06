@@ -21,6 +21,7 @@
   "environment": "client",
   "mixins": [
     "multiconnect.mixins.json",
+    "multiconnect.1_17_1.mixins.json",
     "multiconnect.1_16_5.mixins.json",
     "multiconnect.1_16_1.mixins.json",
     "multiconnect.1_15_2.mixins.json",
@@ -35,6 +36,7 @@
     "multiconnect.1_11.mixins.json",
     "multiconnect.1_10.mixins.json",
     "multiconnect.1_9_4.mixins.json",
+    "multiconnect.1_9_2.mixins.json",
     "multiconnect.1_8.mixins.json"
   ],
   "accessWidener": "multiconnect.accesswidener",
@@ -47,6 +49,10 @@
   "conflicts": {
     "immersive_portals": "*",
     "optifabric": "*"
+  },
+
+  "breaks": {
+    "fabric": "<0.45.1"
   },
 
   "custom": {

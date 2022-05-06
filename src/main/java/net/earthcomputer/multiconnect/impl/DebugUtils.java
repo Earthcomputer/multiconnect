@@ -62,6 +62,7 @@ public class DebugUtils {
     private static int rareBugIdThatOccurred = 0;
     private static long timeThatRareBugOccurred;
     public static String lastServerBrand = ClientBrandRetriever.VANILLA;
+    public static final boolean UNIT_TEST_MODE = Boolean.getBoolean("multiconnect.unitTestMode");
     public static final boolean IGNORE_ERRORS = Boolean.getBoolean("multiconnect.ignoreErrors");
 
     private static final Map<TrackedData<?>, String> TRACKED_DATA_NAMES = new IdentityHashMap<>();
@@ -163,7 +164,7 @@ public class DebugUtils {
             if (result) {
                 Util.getOperatingSystem().open(url);
             }
-            MinecraftClient.getInstance().openScreen(parentScreen);
+            MinecraftClient.getInstance().setScreen(parentScreen);
         }, parentScreen.getTitle(), new TranslatableText("multiconnect.rareBug.screen"));
     }
 
@@ -176,9 +177,11 @@ public class DebugUtils {
         if (data.hasArray()) {
             logPacketError(data.array(), extraLines);
         } else {
+            int prevReaderIndex = data.readerIndex();
             data.readerIndex(0);
             byte[] array = new byte[data.readableBytes()];
             data.readBytes(array);
+            data.readerIndex(prevReaderIndex);
             logPacketError(array, extraLines);
         }
     }

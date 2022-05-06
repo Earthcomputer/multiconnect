@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_17_1.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "BlockMarkerParticleAccessor",
+    "MixinClientPlayNetworkHandler"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

@@ -1,8 +1,8 @@
 package net.earthcomputer.multiconnect;
 
 import net.fabricmc.api.EnvType;
-import net.fabricmc.loader.launch.knot.Knot;
-import net.fabricmc.loader.launch.knot.KnotClassLoaderInterface;
+import net.fabricmc.loader.impl.launch.knot.Knot;
+import net.fabricmc.loader.impl.launch.knot.KnotClassLoaderInterface;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -29,7 +29,8 @@ public class TestingExtension implements BeforeAllCallback, Function<Class<?>, C
         }
         System.setProperty("fabric.development", "true");
         System.setProperty("fabric.loader.entrypoint", "net.earthcomputer.multiconnect.TestingDummyMain");
-        Knot knot = new Knot(EnvType.CLIENT, null);
+        System.setProperty("multiconnect.unitTestMode", "true");
+        Knot knot = new Knot(EnvType.CLIENT);
         knot.init(new String[0]);
         knotClassLoader = knot.getClassLoader();
         ((KnotClassLoaderInterface) knotClassLoader).addClassLoaderExclusion("net.earthcomputer.multiconnect.TestingExtension");

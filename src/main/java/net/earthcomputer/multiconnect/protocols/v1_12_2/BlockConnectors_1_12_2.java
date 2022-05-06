@@ -91,7 +91,11 @@ public class BlockConnectors_1_12_2 {
         BlockConnections.registerConnector(Protocols.V1_12_2, new SimpleInPlaceConnector(Blocks.NOTE_BLOCK, (world, pos) -> {
             BlockState below = world.getBlockState(pos.down());
             Instrument instrument = Instrument.fromBlockState(below);
-            world.setBlockState(pos, Blocks.NOTE_BLOCK.getDefaultState().with(Properties.INSTRUMENT, instrument));
+            BlockState newState = Blocks.NOTE_BLOCK.getDefaultState().with(Properties.INSTRUMENT, instrument);
+            // TODO: rewrite 1.12.2
+//            if (ConnectionInfo.protocol.acceptBlockState(newState)) {
+                world.setBlockState(pos, newState);
+//            }
         }));
 
         // bed occupied

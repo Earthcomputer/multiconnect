@@ -44,7 +44,7 @@ public class MixinParticleManager implements IParticleManager {
     @Override
     public <T extends ParticleEffect> void multiconnect_registerSpriteAwareFactory(ParticleType<T> type,
                                                                                    Function<SpriteProvider, ParticleFactory<T>> spriteAwareFactory) {
-        SpriteProvider spriteProvider = ((ParticleManager)(Object)this).new SimpleSpriteProvider();
+        SpriteProvider spriteProvider = new ParticleManager.SimpleSpriteProvider();
 
         spriteAwareFactories.put(type, spriteProvider);
         customFactories.put(type, spriteAwareFactory.apply(spriteProvider));

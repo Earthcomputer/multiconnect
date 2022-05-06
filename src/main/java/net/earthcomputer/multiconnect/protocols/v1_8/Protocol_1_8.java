@@ -15,20 +15,58 @@ import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
 import net.minecraft.block.*;
 import net.minecraft.client.network.OtherClientPlayerEntity;
 import net.minecraft.command.CommandSource;
-import net.minecraft.entity.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityDimensions;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.decoration.ItemFrameEntity;
-import net.minecraft.entity.mob.*;
-import net.minecraft.entity.passive.*;
+import net.minecraft.entity.mob.AbstractSkeletonEntity;
+import net.minecraft.entity.mob.BlazeEntity;
+import net.minecraft.entity.mob.CreeperEntity;
+import net.minecraft.entity.mob.EndermanEntity;
+import net.minecraft.entity.mob.GhastEntity;
+import net.minecraft.entity.mob.GuardianEntity;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.SlimeEntity;
+import net.minecraft.entity.mob.SpiderEntity;
+import net.minecraft.entity.mob.WitchEntity;
+import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.passive.BatEntity;
+import net.minecraft.entity.passive.CatEntity;
+import net.minecraft.entity.passive.HorseBaseEntity;
+import net.minecraft.entity.passive.IronGolemEntity;
+import net.minecraft.entity.passive.PassiveEntity;
+import net.minecraft.entity.passive.PigEntity;
+import net.minecraft.entity.passive.RabbitEntity;
+import net.minecraft.entity.passive.SheepEntity;
+import net.minecraft.entity.passive.TameableEntity;
+import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.WitherSkullEntity;
-import net.minecraft.entity.vehicle.*;
-import net.minecraft.item.*;
+import net.minecraft.entity.vehicle.AbstractMinecartEntity;
+import net.minecraft.entity.vehicle.BoatEntity;
+import net.minecraft.entity.vehicle.CommandBlockMinecartEntity;
+import net.minecraft.entity.vehicle.FurnaceMinecartEntity;
+import net.minecraft.entity.vehicle.MinecartEntity;
+import net.minecraft.item.AxeItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.item.PickaxeItem;
+import net.minecraft.item.ShovelItem;
+import net.minecraft.item.SwordItem;
+import net.minecraft.item.ToolItem;
+import net.minecraft.item.ToolMaterial;
+import net.minecraft.item.ToolMaterials;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtShort;
 import net.minecraft.network.PacketByteBuf;
@@ -43,7 +81,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.EulerAngle;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+import java.util.OptionalDouble;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Protocol_1_8 extends Protocol_1_9 {
@@ -88,7 +131,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
             .build();
 
     public static ItemStack oldPotionItemToNew(ItemStack stack, int meta) {
-        stack.putSubTag("multiconnect:1.8/potionData", NbtShort.of((short) meta));
+        stack.setSubNbt("multiconnect:1.8/potionData", NbtShort.of((short) meta));
         boolean isSplash = (meta & 16384) != 0;
         Potion potion;
         if (meta == 0) {
@@ -106,7 +149,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
         }
         if (isSplash) {
             ItemStack newStack = new ItemStack(Items.SPLASH_POTION, stack.getCount());
-            newStack.setTag(stack.getTag());
+            newStack.setNbt(stack.getNbt());
             stack = newStack;
         }
         PotionUtil.setPotion(stack, potion);
@@ -115,7 +158,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
 
     public static Pair<ItemStack, Integer> newPotionItemToOld(ItemStack stack) {
         Potion potion = PotionUtil.getPotion(stack);
-        NbtCompound tag = stack.getTag();
+        NbtCompound tag = stack.getNbt();
         boolean hasForcedMeta = false;
         int forcedMeta = 0;
         if (tag != null) {
@@ -126,14 +169,14 @@ public class Protocol_1_8 extends Protocol_1_9 {
                 tag.remove("multiconnect:1.8/potionData");
             }
             if (tag.isEmpty()) {
-                stack.setTag(null);
+                stack.setNbt(null);
             }
         }
 
         boolean isSplash = stack.getItem() == Items.SPLASH_POTION;
         if (isSplash) {
             ItemStack newStack = new ItemStack(Items.POTION, stack.getCount());
-            newStack.setTag(stack.getTag());
+            newStack.setNbt(stack.getNbt());
             stack = newStack;
         }
 
@@ -178,6 +221,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
     protected void markChangedCollisionBoxes() {
         super.markChangedCollisionBoxes();
         markCollisionBoxChanged(Blocks.LADDER);
+        markCollisionBoxChanged(Blocks.LILY_PAD);
     }
 
     @Override

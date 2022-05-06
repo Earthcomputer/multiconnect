@@ -248,7 +248,7 @@ public abstract class MixinBoatEntity extends Entity implements IBoatEntity_1_8 
                 double deltaX = prevX - getX();
                 double deltaZ = prevZ - getZ();
                 if (deltaX * deltaX + deltaZ * deltaZ > 0.001) {
-                    setYaw(MathHelper.stepAngleTowards(getYaw(), (float)(MathHelper.atan2(deltaZ, deltaX) * 180 / Math.PI), 20));
+                    setYaw(MathHelper.clampAngle(getYaw(), (float)(MathHelper.atan2(deltaZ, deltaX) * 180 / Math.PI), 20));
                 }
 
             }

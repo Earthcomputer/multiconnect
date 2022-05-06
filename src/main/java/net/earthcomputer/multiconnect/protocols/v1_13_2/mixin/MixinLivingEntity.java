@@ -19,7 +19,7 @@ public abstract class MixinLivingEntity extends Entity {
         super(type, world);
     }
 
-    @Redirect(method = "method_26318", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;jumping:Z"))
+    @Redirect(method = "applyMovementInput", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;jumping:Z"))
     private boolean disableJumpOnLadder(LivingEntity self) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             return false;

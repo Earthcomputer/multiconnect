@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinClientPlayerEntity extends AbstractClientPlayerEntity implements IClientPlayer {
     @Shadow private boolean lastOnGround;
 
-    @Unique private boolean areSwingsCanceledThisTick = false;
+    @Unique private boolean cancelSwingPacket = false;
 
     public MixinClientPlayerEntity(ClientWorld world, GameProfile profile) {
         super(world, profile);
@@ -28,9 +28,9 @@ public class MixinClientPlayerEntity extends AbstractClientPlayerEntity implemen
 
     @Inject(method = "swingHand", at = @At("HEAD"), cancellable = true)
     private void checkSwingHandRate(CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_8 && areSwingsCanceledThisTick) {
-            // the first tick of hand swinging, we may have sent the hand swing earlier in 1.8
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_8 && cancelSwingPacket) {
             ci.cancel();
+            cancelSwingPacket = false;
         }
     }
 
@@ -44,12 +44,7 @@ public class MixinClientPlayerEntity extends AbstractClientPlayerEntity implemen
     }
 
     @Override
-    public void multiconnect_cancelSwingsThisTick() {
-        areSwingsCanceledThisTick = true;
-    }
-
-    @Override
-    public void multiconnect_uncancelSwings() {
-        areSwingsCanceledThisTick = false;
+    public void multiconnect_cancelSwingPacket() {
+        cancelSwingPacket = true;
     }
 }

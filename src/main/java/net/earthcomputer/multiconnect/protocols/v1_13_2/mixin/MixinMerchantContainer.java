@@ -76,7 +76,7 @@ public abstract class MixinMerchantContainer extends ScreenHandler {
         int slot;
         for (slot = 3; slot < 39; slot++) {
             ItemStack stack = slots.get(slot).getStack();
-            if (stack.getItem() == stackNeeded.getItem() && ItemStack.areTagsEqual(stack, stackNeeded)) {
+            if (stack.getItem() == stackNeeded.getItem() && ItemStack.areNbtEqual(stack, stackNeeded)) {
                 break;
             }
         }

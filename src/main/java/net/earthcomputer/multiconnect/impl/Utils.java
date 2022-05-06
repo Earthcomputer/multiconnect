@@ -11,17 +11,15 @@ import net.minecraft.block.Block;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.item.Item;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagKey;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.*;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
-import net.minecraft.world.biome.source.BiomeArray;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
 
@@ -40,15 +38,15 @@ public class Utils {
             return true;
         }
         for (ChunkSection section : chunk.getSectionArray()) {
-            if (!ChunkSection.isEmpty(section)) {
+            if (!section.isEmpty()) { // TODO: this was ChunkSection.isEmpty (static method), impl the same?
                 return false;
             }
         }
         return true;
     }
 
-    public static void copyBlocks(TagRegistry<Item> tags, TagRegistry<Block> blockTags, Tag.Identified<Item> tag, Tag.Identified<Block> blockTag) {
-        tags.add(tag, Collections2.transform(blockTags.get(blockTag.getId()), Block::asItem));
+    public static void copyBlocks(TagRegistry<Item> tags, TagRegistry<Block> blockTags, TagKey<Item> tag, TagKey<Block> blockTag) {
+        tags.add(tag, Collections2.transform(blockTags.get(blockTag.id()), Block::asItem));
     }
 
     public static DropDownWidget<ConnectionMode> createVersionDropdown(Screen screen, ConnectionMode initialMode) {
@@ -237,10 +235,8 @@ public class Utils {
     public static ChunkDataS2CPacket createEmptyChunkDataPacket(int x, int z, World world, DynamicRegistryManager registryManager) {
         Registry<Biome> biomeRegistry = registryManager.get(Registry.BIOME_KEY);
         Biome plainsBiome = biomeRegistry.get(BiomeKeys.PLAINS);
-        int horizontalSectionCount = MathHelper.log2DeBruijn(16) - 2;
-        int biomeLength = (1 << (horizontalSectionCount + horizontalSectionCount)) * ((world.getHeight() + 3) / 4);
 
-        ChunkDataS2CPacket packet = new ChunkDataS2CPacket(new WorldChunk(world, new ChunkPos(x, z), new BiomeArray(biomeRegistry, world, new int[biomeLength])));
+        ChunkDataS2CPacket packet = new ChunkDataS2CPacket(new WorldChunk(world, new ChunkPos(x, z)), world.getLightingProvider(), new BitSet(), new BitSet(), true);
         // TODO: rewrite
 //        //noinspection ConstantConditions
 //        IUserDataHolder iPacket = (IUserDataHolder) packet;
@@ -250,6 +246,9 @@ public class Utils {
 //        Biome[] biomes = new Biome[256];
 //        Arrays.fill(biomes, plainsBiome);
 //        iPacket.multiconnect_setUserData(Protocol_1_14_4.BIOME_DATA_KEY, biomes);
+//        if (ConnectionInfo.protocolVersion <= Protocols.V1_17_1) {
+//            iPacket.multiconnect_setUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK, new BitSet());
+//        }
         return packet;
     }
 }
