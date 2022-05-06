@@ -6,20 +6,14 @@ import com.google.common.collect.ImmutableList;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
-import net.earthcomputer.multiconnect.mixin.bridge.TrackedDataHandlerRegistryAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.*;
-import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
-import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.entity.data.TrackedDataHandler;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.item.Item;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.tag.Tag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.EightWayDirection;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
@@ -51,19 +45,6 @@ public class Utils {
             }
         }
         return true;
-    }
-
-    public static void removeTrackedDataHandler(TrackedDataHandler<?> handler) {
-        var biMap = TrackedDataHandlerRegistryAccessor.getDataHandlers();
-        //noinspection unchecked
-        var iBiMap = (IInt2ObjectBiMap<TrackedDataHandler<?>>) biMap;
-        int id = TrackedDataHandlerRegistry.getId(handler);
-        iBiMap.multiconnect_remove(handler);
-        for (; TrackedDataHandlerRegistry.get(id + 1) != null; id++) {
-            TrackedDataHandler<?> h = TrackedDataHandlerRegistry.get(id + 1);
-            iBiMap.multiconnect_remove(h);
-            biMap.put(h, id);
-        }
     }
 
     public static void copyBlocks(TagRegistry<Item> tags, TagRegistry<Block> blockTags, Tag.Identified<Item> tag, Tag.Identified<Block> blockTag) {

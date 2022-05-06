@@ -45,7 +45,6 @@ public abstract class AbstractProtocol implements IUtils {
             DataTrackerManager.onConnectToServer();
         }
         if (!resourceReload) {
-            removeTrackedDataHandlers();
             AssetDownloader.reloadLanguages();
         }
         markChangedCollisionBoxes();
@@ -99,9 +98,6 @@ public abstract class AbstractProtocol implements IUtils {
 
     public <T> T readTrackedData(TrackedDataHandler<T> handler, PacketByteBuf buf) {
         return handler.read(buf);
-    }
-
-    protected void removeTrackedDataHandlers() {
     }
 
     public void addExtraBlockTags(TagRegistry<Block> tags) {

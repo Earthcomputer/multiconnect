@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableMap;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
@@ -25,7 +24,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
-import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.SynchronizeTagsS2CPacket;
@@ -36,7 +34,6 @@ import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.BuiltinRegistries;
-import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.chunk.Chunk;
@@ -105,42 +102,10 @@ public class MixinClientPlayNetworkHandler {
         }
     }
 
-    @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
-    private void onOnGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
-        var registries = (DynamicRegistryManager.Impl) packet.getRegistryManager();
-        assert registries != null;
-        //noinspection ConstantConditions
-        var registriesAccessor = (DynamicRegistryManagerImplAccessor) (Object) registries;
-        registriesAccessor.setRegistries(new HashMap<>(registriesAccessor.getRegistries())); // make registries mutable
-
-        for (var registryKey : DynamicRegistryManagerAccessor.getInfos().keySet()) {
-            if (registryKey != Registry.DIMENSION_TYPE_KEY && DynamicRegistryManagerAccessor.getInfos().get(registryKey).isSynced()) {
-                addMissingValues(getBuiltinRegistry(registryKey), registries);
-            }
-        }
-
-        registriesAccessor.setRegistries(ImmutableMap.copyOf(registriesAccessor.getRegistries())); // make immutable again (faster)
-    }
-
     @SuppressWarnings("unchecked")
     @Unique
     private static <T, R extends Registry<T>> Registry<?> getBuiltinRegistry(RegistryKey<? extends Registry<?>> registryKey) {
         return ((Registry<R>) BuiltinRegistries.REGISTRIES).get((RegistryKey<R>) registryKey);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Unique
-    private static <T> void addMissingValues(Registry<T> builtinRegistry, DynamicRegistryManager.Impl registries) {
-        Registry<T> dynamicRegistry =  registries.get(builtinRegistry.getKey());
-        ISimpleRegistry<T> iregistry = (ISimpleRegistry<T>) dynamicRegistry;
-        iregistry.lockRealEntries();
-        for (T val : builtinRegistry) {
-            builtinRegistry.getKey(val).ifPresent(key -> {
-                if (dynamicRegistry.getOrEmpty(key).isEmpty()) {
-                    iregistry.register(val, iregistry.getNextId(), key, false);
-                }
-            });
-        }
     }
 
     @Inject(method = "onSynchronizeTags", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))

@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.impl;
 import net.earthcomputer.multiconnect.api.*;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
-import net.earthcomputer.multiconnect.protocols.generic.ISimpleRegistry;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
