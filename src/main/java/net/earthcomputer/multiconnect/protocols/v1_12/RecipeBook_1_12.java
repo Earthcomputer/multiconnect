@@ -39,148 +39,110 @@ public class RecipeBook_1_12<C extends Inventory> {
 
     // TODO: rewrite 1.12
     public void handleRecipeClicked(Recipe<C> recipe, RecipeResultCollection recipes) {
-//        assert mc.player != null;
-//        assert mc.getNetworkHandler() != null;
-//
-//        boolean craftable = recipes.isCraftable(recipe);
-//
-//        if (!craftable && iRecipeBookWidget.getGhostSlots().getRecipe() == recipe) {
-//            return;
-//        }
-//
-//        if (!canClearCraftMatrix() && !mc.player.isCreative()) {
-//            return;
-//        }
-//
-//        if (craftable) {
-//            tryPlaceRecipe(recipe, screenHandler.slots);
-//        } else {
-//            // clear craft matrix and show ghost recipe
-//            var transactionFromMatrix = clearCraftMatrix();
-//            recipeBookWidget.showGhostRecipe(recipe, screenHandler.slots);
-//
-//            if (!transactionFromMatrix.isEmpty()) {
-//                short transactionId = Protocol_1_16_5.nextScreenActionId();
-//                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(screenHandler.syncId, transactionId,
-//                        transactionFromMatrix, new ArrayList<>()));
-//
-//                if (iRecipeBookWidget.getRecipeBook().isFilteringCraftable(screenHandler)) {
-//                    mc.player.getInventory().markDirty();
-//                }
-//            }
-//        }
-//
-//        if (!iRecipeBookWidget.multiconnect_isWide()) {
-//            recipeBookWidget.toggleOpen();
-//        }
+        if(!mc.player) return;
+        if(!mc.getNetworkHandler()) return;
+        boolean itemCraftable = recipe.isCraftable(recipe);
+
+        if(!itemCraftable && iRecipeBookWidget.getGhostSlots().getRecipe() == recipe || !canClearCraftMatrix() && !mc.player.isCreative()) return;
+        tryPlaceRecipe(recipe,screenHandler.slots);
+        if (!iRecipeBookWidget.multiconnect_isWide()) recipeBookWidget.toggleOpen();
+
     }
-//
-//    private void tryPlaceRecipe(Recipe<C> recipe, List<Slot> slots) {
-//        assert mc.player != null;
-//        assert mc.getNetworkHandler() != null;
-//
-//        boolean alreadyPlaced = screenHandler.matches(recipe);
-//        int possibleCraftCount = iRecipeBookWidget.getRecipeFinder().countCrafts(recipe, null);
-//
-//        if (alreadyPlaced) {
-//            // check each item in the input to see if we're already at the max crafts possible
-//            boolean canPlaceMore = false;
-//
-//            for (int i = 0; i < screenHandler.getCraftingSlotCount(); i++) {
-//                if (!isPartOfCraftMatrix(i))
-//                    continue;
-//
-//                ItemStack stack = screenHandler.getSlot(i).getStack();
-//
-//                if (!stack.isEmpty() && stack.getCount() < possibleCraftCount) {
-//                    canPlaceMore = true;
-//                }
-//            }
-//
-//            if (!canPlaceMore) {
-//                return;
-//            }
-//        }
-//
-//        int craftCount = calcCraftCount(possibleCraftCount, alreadyPlaced);
-//
-//        IntList inputItemIds = new IntArrayList();
-//        if (iRecipeBookWidget.getRecipeFinder().match(recipe, inputItemIds, craftCount)) {
-//            // take into account max stack sizes now we've found the actual inputs
-//            int actualCount = craftCount;
-//
-//            for (int itemId : inputItemIds) {
-//                int maxCount = RecipeMatcher.getStackFromId(itemId).getMaxCount();
-//
-//                if (actualCount > maxCount) {
-//                    actualCount = maxCount;
-//                }
-//            }
-//
-//            if (iRecipeBookWidget.getRecipeFinder().match(recipe, inputItemIds, actualCount)) {
-//                // clear the craft matrix and place the recipe
-//                var transactionsFromMatrix = clearCraftMatrix();
-//                var transactionsToMatrix = new ArrayList<PlaceRecipeC2SPacket_1_12.Transaction>();
-//                placeRecipe(recipe, slots, actualCount, inputItemIds, transactionsToMatrix);
-//                short transactionId = Protocol_1_16_5.nextScreenActionId();
-//                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(screenHandler.syncId, transactionId,
-//                        transactionsFromMatrix, transactionsToMatrix));
-//                mc.player.getInventory().markDirty();
-//            }
-//        }
-//    }
-//
-//    private List<PlaceRecipeC2SPacket_1_12.Transaction> clearCraftMatrix() {
-//        assert mc.player != null;
-//
-//        iRecipeBookWidget.getGhostSlots().reset();
-//        PlayerInventory playerInv = mc.player.getInventory();
-//        var transactionsFromMatrix = new ArrayList<PlaceRecipeC2SPacket_1_12.Transaction>();
-//
-//        int serverSlot = 1;
-//        for (int i = 0; i < screenHandler.getCraftingSlotCount(); i++) {
-//            if (!isPartOfCraftMatrix(i)) continue;
-//
-//            ItemStack stack = screenHandler.getSlot(i).getStack();
-//
-//            if (!stack.isEmpty()) {
-//                while (stack.getCount() > 0) {
-//                    int destSlot = getOccupiedSlotWithRoomForStack(playerInv, stack);
-//
-//                    if (destSlot == -1) {
-//                        destSlot = playerInv.getEmptySlot();
-//                    }
-//
-//                    if (destSlot == -1) {
-//                        // Wtf, this happens?!
-//                        break;
-//                    }
-//
-//                    ItemStack originalStack = stack.copy();
-//                    ItemStack targetStack = stack.copy();
-//                    targetStack.setCount(1);
-//                    ItemStack placedOn = playerInv.getStack(destSlot).copy();
-//
-//                    if (playerInv.insertStack(destSlot, targetStack)) {
-//                        targetStack.increment(1);
-//                    } else {
-//                        // This shouldn't happen - condition already checked by canClearCraftMatrix
-//                        LogManager.getLogger().error("Can't find any space for item in inventory");
-//                    }
-//
-//                    screenHandler.getSlot(i).takeStack(1);
-//                    transactionsFromMatrix.add(new PlaceRecipeC2SPacket_1_12.Transaction(originalStack,
-//                            targetStack.copy(), placedOn, serverSlot, destSlot));
-//                }
-//            }
-//
-//            serverSlot++;
-//        }
-//
-//        screenHandler.clearCraftingSlots();
-//
-//        return transactionsFromMatrix;
-//    }
+    private void tryPlaceRecipe(Recipe<C> recipe, List<Slot> slots) {
+          if(mc.player == null || mc.getNetworkHandler() == null) return;
+          boolean alreadyPlaced = screenHandler.matches(recipe);
+          int possibleCraftCount = iRecipeBookWidget.getRecipeFinder().countCrafts(recipe, null);
+
+          if (alreadyPlaced) {
+            // check each item in the input to see if we're already at the max crafts possible
+            boolean canPlaceMore = false;
+
+            for (int i = 0; i < screenHandler.getCraftingSlotCount(); i++) {
+                if (!isPartOfCraftMatrix(i))
+                    continue;
+
+                ItemStack stack = screenHandler.getSlot(i).getStack();
+
+                if (!stack.isEmpty() && stack.getCount() < possibleCraftCount) {
+                    canPlaceMore = true;
+                }
+            }
+
+            if (!canPlaceMore) return;
+
+       }
+        int craftCount = calcCraftCount(possibleCraftCount, alreadyPlaced);
+        IntList inputItemIds = new IntArrayList();
+        if (!iRecipeBookWidget.getRecipeFinder().match(recipe, inputItemIds, craftCount)) return;
+            // take into account max stack sizes now we've found the actual inputs
+            int actualCount = craftCount;
+
+            for (int itemId : inputItemIds) {
+                int maxCount = RecipeMatcher.getStackFromId(itemId).getMaxCount();
+
+                if (actualCount > maxCount) {
+                    actualCount = maxCount;
+                }
+            }
+
+            if (!iRecipeBookWidget.getRecipeFinder().match(recipe, inputItemIds, actualCount)) return;
+                // clear the craft matrix and place the recipe
+                var transactionsFromMatrix = clearCraftMatrix();
+                var transactionsToMatrix = new ArrayList<PlaceRecipeC2SPacket_1_12.Transaction>();
+                placeRecipe(recipe, slots, actualCount, inputItemIds, transactionsToMatrix);
+                short transactionId = Protocol_1_16_5.nextScreenActionId();
+                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(screenHandler.syncId, transactionId,
+                        transactionsFromMatrix, transactionsToMatrix));
+                mc.player.getInventory().markDirty();
+
+
+    }
+
+    private List<PlaceRecipeC2SPacket_1_12.Transaction> clearCraftMatrix() {
+        if(mc.player == null) return;
+
+        iRecipeBookWidget.getGhostSlots().reset();
+        PlayerInventory playerInv = mc.player.getInventory();
+        var transactionsFromMatrix = new ArrayList<PlaceRecipeC2SPacket_1_12.Transaction>();
+
+        int serverSlot = 1;
+        for (int i = 0; i < screenHandler.getCraftingSlotCount(); i++) {
+            if (!isPartOfCraftMatrix(i)) continue;
+
+            ItemStack stack = screenHandler.getSlot(i).getStack();
+
+            if (!stack.isEmpty()) {
+                for (int i = stack.getCount(); i > 0; i-1) {
+                    int destSlot = getOccupiedSlotWithRoomForStack(playerInv, stack);
+
+                    if (destSlot == -1)
+                        destSlot = playerInv.getEmptySlot();
+
+
+                    if (destSlot == -1)  break;
+
+                    ItemStack originalStack = stack.copy();
+                    ItemStack targetStack = stack.copy();
+                    targetStack.setCount(1);
+                    ItemStack placedOn = playerInv.getStack(destSlot).copy();
+
+                    if (playerInv.insertStack(destSlot, targetStack)) {
+                        targetStack.increment(1);
+                    }
+
+                    screenHandler.getSlot(i).takeStack(1);
+                    transactionsFromMatrix.add(new PlaceRecipeC2SPacket_1_12.Transaction(originalStack,
+                            targetStack.copy(), placedOn, serverSlot, destSlot));
+                }
+            }
+
+            serverSlot++;
+        }
+
+        screenHandler.clearCraftingSlots();
+
+        return transactionsFromMatrix;
+    }
 //
 //    private int calcCraftCount(int possibleCraftCount, boolean alreadyPlaced) {
 //        int stackSize = 1;

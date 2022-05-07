@@ -38,9 +38,9 @@ public class Utils {
             return true;
         }
         for (ChunkSection section : chunk.getSectionArray()) {
-            if (!section.isEmpty()) { // TODO: this was ChunkSection.isEmpty (static method), impl the same?
+            if (!section.isEmpty())
                 return false;
-            }
+
         }
         return true;
     }

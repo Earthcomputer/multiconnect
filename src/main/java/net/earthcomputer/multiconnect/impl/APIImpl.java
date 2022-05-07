@@ -47,30 +47,24 @@ public class APIImpl extends MultiConnectAPI {
         CustomPayloadHandler.removeClientboundStringCustomPayloadListener(listener);
     }
 
-    // TODO: rewrite
-//    @Override
-//    public void forceSendCustomPayload(ClientPlayNetworkHandler networkHandler, Identifier channel, PacketByteBuf data) {
-//        if (networkHandler == null) {
-//            throw new IllegalStateException("Trying to send custom payload when not in-game");
-//        }
-//        CustomPayloadC2SPacket packet = new CustomPayloadC2SPacket(channel, data);
-//        //noinspection ConstantConditions
-//        ((ICustomPayloadC2SPacket) packet).multiconnect_unblock();
-//        networkHandler.sendPacket(packet);
-//    }
-//
-//    @Override
-//    public void forceSendStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
-//        if (networkHandler == null) {
-//            throw new IllegalStateException("Trying to send custom payload when not in-game");
-//        }
-//        if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
-//            throw new IllegalStateException("Trying to send string custom payload to " + ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName() + " server");
-//        }
-//        var packet = new CustomPayloadC2SPacket_1_12_2(channel, data);
-//        packet.unblock();
-//        networkHandler.sendPacket(packet);
-//    }
+
+    @Override
+    public void forceSendCustomPayload(ClientPlayNetworkHandler networkHandler, Identifier channel, PacketByteBuf data) {
+        if (networkHandler == null) throw new IllegalStateException("Trying to send custom payload when not in-game");
+        CustomPayloadC2SPacket packet = new CustomPayloadC2SPacket(channel, data);
+        ((ICustomPayloadC2SPacket) packet).multiconnect_unblock();
+        networkHandler.sendPacket(packet);
+    }
+    @Override
+    public void forceSendStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
+        if (networkHandler == null) throw new IllegalStateException("Trying to send custom payload when not in-game");
+
+        if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) throw new IllegalStateException("Trying to send string custom payload to " + ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName() + " server");
+
+        var packet = new CustomPayloadC2SPacket_1_12_2(channel, data);
+        packet.unblock();
+        networkHandler.sendPacket(packet);
+    }
 
     @Override
     public void addServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
@@ -92,20 +86,19 @@ public class APIImpl extends MultiConnectAPI {
         CustomPayloadHandler.removeServerboundStringCustomPayloadListener(listener);
     }
 
-    // TODO: rewrite
-//    @Override
-//    public <T> boolean doesServerKnow(Registry<T> registry, T value) {
-//        return registry.getKey(value).map(key -> doesServerKnow(registry, key)).orElse(false);
-//    }
-//
-//    @SuppressWarnings("unchecked")
-//    @Override
-//    public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
-//        if (DefaultRegistries.getDefaultRegistry(registry.getKey()) == null) {
-//            return super.doesServerKnow(registry, key);
-//        }
-//        return ((ISimpleRegistry<T>) registry).multiconnect_getRealEntries().contains(key);
-//    }
+
+    @Override
+    public <T> boolean doesServerKnow(Registry<T> registry, T value) {
+        return registry.getKey(value).map(key -> doesServerKnow(registry, key)).orElse(false);
+    }
+
+    @Override
+    public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
+        if (DefaultRegistries.getDefaultRegistry(registry.getKey()) == null)
+            return super.doesServerKnow(registry, key);
+
+        return ((ISimpleRegistry<T>) registry).multiconnect_getRealEntries().contains(key);
+    }
 
     //region deprecated stuff
 

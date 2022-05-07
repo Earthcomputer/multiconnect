@@ -33,11 +33,10 @@ public class PacketSystem {
             Class<?> clazz;
             try {
                 clazz = Class.forName("net.earthcomputer.multiconnect.generated.Protocol_" + protocol.getName().replace('.', '_'));
-            } catch (ClassNotFoundException e) {
-                // TODO: make this a hard error once the packet system is complete
-                LOGGER.warn("Protocol class not found for {}", protocol.getName());
-                continue;
-            }
+            } catch (ClassNotFoundException e)
+            throw new IllegalStateExpection(String.format("Protocol class not found for %s", protocol.getName()));
+
+
             map.put(protocol.getValue(), new ProtocolClassProxy(clazz, protocol.getValue()));
         }
     });
