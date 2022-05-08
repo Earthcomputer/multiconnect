@@ -51,14 +51,14 @@ public class APIImpl extends MultiConnectAPI {
         CustomPayloadHandler.removeClientboundStringCustomPayloadListener(listener);
     }
 
-
-    @Override
-    public void forceSendCustomPayload(ClientPlayNetworkHandler networkHandler, Identifier channel, PacketByteBuf data) {
-        if (networkHandler == null) throw new IllegalStateException("Trying to send custom payload when not in-game");
-        CustomPayloadC2SPacket packet = new CustomPayloadC2SPacket(channel, data);
-        ((ICustomPayloadC2SPacket) packet).multiconnect_unblock();
-        networkHandler.sendPacket(packet);
-    }
+    // TODO: Implement with new unblocking system
+//    @Override
+//    public void forceSendCustomPayload(ClientPlayNetworkHandler networkHandler, Identifier channel, PacketByteBuf data) {
+//        if (networkHandler == null) throw new IllegalStateException("Trying to send custom payload when not in-game");
+//        CustomPayloadC2SPacket packet = new CustomPayloadC2SPacket(channel, data);
+//        ((ICustomPayloadC2SPacket) packet).multiconnect_unblock();
+//        networkHandler.sendPacket(packet);
+//    }
 //    @Override
 //    public void forceSendStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
 //        if (networkHandler == null) throw new IllegalStateException("Trying to send custom payload when not in-game");
@@ -91,12 +91,13 @@ public class APIImpl extends MultiConnectAPI {
     }
 
 
-    @Override
-    public <T> boolean doesServerKnow(Registry<T> registry, T value) {
-        return registry.getKey(value).map(key -> doesServerKnow(registry, key)).orElse(false);
-    }
-
     // TODO: Rewrite
+//    @Override
+//    public <T> boolean doesServerKnow(Registry<T> registry, T value) {
+//        return registry.getKey(value).map(key -> doesServerKnow(registry, key)).orElse(false);
+//    }
+
+
 //    @Override
 //    public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
 //        if (DefaultRegistries.getDefaultRegistry(registry.getKey()) == null)
