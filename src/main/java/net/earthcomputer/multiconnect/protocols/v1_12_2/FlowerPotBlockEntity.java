@@ -30,8 +30,7 @@ public class FlowerPotBlockEntity extends BlockEntity {
         else
             flowerPotItem = Registry.ITEM.get(tag.getInt("Item"));
         int meta = tag.getInt("Data");
-        // TODO: rewrite 1.12.2
-//        setFlowerPotItemStack(Items_1_12_2.oldItemStackToNew(new ItemStack(flowerPotItem), meta));
+        setFlowerPotItemStack(Items_1_12_2.oldItemStackToNew(new ItemStack(flowerPotItem), meta));
     }
 
     public void setFlowerPotItemStack(ItemStack stack) {
