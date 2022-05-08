@@ -122,6 +122,11 @@ task remapApiJar(type: RemapJarTask, dependsOn: project.apiJar) {
 
 task generatedJar(type: Jar, dependsOn: generatedClasses) {
 	archiveClassifier = 'generated-dev'
+	from(sourceSets.generated.output)
+	from(rootProject.file('data/generated.mod.json')) {
+		expand 'version': project.version
+		rename 'generated\\.mod\\.json', 'fabric.mod.json'
+	}
 	from 'LICENSE'
 }
 
