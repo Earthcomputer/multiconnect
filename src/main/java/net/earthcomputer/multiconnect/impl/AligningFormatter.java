@@ -21,25 +21,17 @@ public class AligningFormatter {
         }
         rows.add(index, new IntArrayList());
     }
-    /**
-        Adds a row
-        @return The index of the added row
-    */
+  
     public int addRow() {
         int index = rows.size();
         insertRow(index);
         return index;
     }
-    /**
-        @return How many rows there are.
-    */
+
     public int rowCount() {
         return rows.size();
     }
-    /**
-        @param row The row to check the size of
-        @return The size of the given row
-     */
+
     public int rowSize(int row) {
         return rows.get(row).size();
     }

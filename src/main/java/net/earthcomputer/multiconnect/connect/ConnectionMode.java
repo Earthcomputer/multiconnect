@@ -118,16 +118,16 @@ public enum ConnectionMode implements IProtocol {
         return multiconnectBeta;
     }
     /**
-        Gets the name of the connection mode (Ex. 1.18)
-        @return The name
+     *  Gets the name of the connection mode (Ex. 1.18)
+     *  @return The name
     */
     @Override
     public String getName() {
         return name;
     }
     /**
-        Gets the data version for this connection mode
-        @return The data version
+     *   Gets the data version for this connection mode
+     *   @return The data version
     */
     @Override
     public int getDataVersion() {

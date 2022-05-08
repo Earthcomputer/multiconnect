@@ -58,9 +58,9 @@ public class ExperimentalDynamicRegistriesFix extends DataFix {
         );
     }
     /**
-        Updates the dimension type with the old dimension type,
-        @param oldDimensionType - The old dimension type
-        @return The updated dimension type
+      * Updates the dimension type with the old dimension type,
+      * @param oldDimensionType - The old dimension type
+      * @return The updated dimension type
     */
     private Dynamic<?> updateDimensionType(Dynamic<?> oldDimensionType, DynamicOps<?> ops) {
         String oldId = new Identifier(oldDimensionType.asString().result().orElseGet(() -> {

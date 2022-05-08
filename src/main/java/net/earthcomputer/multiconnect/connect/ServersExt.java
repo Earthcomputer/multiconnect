@@ -35,9 +35,7 @@ public final class ServersExt {
         }
         return instance;
     }
-    /**
-     Saves the extra server data to the config.
-    */
+  
     
     public static void save() {
         //noinspection ResultOfMethodCallIgnored
@@ -57,25 +55,16 @@ public final class ServersExt {
     private void normalize() {
         servers = servers.entrySet().stream().collect(Collectors.toMap(entry -> ConnectionHandler.normalizeAddress(entry.getKey()), Map.Entry::getValue, (a, b) -> a, HashMap::new));
     }
-    /**
-        @param adress Server adress
-        @return The forced protocol, if none, it will default to auto.
-    */
+
     public int getForcedProtocol(String address) {
         ServerExt server = servers.get(ConnectionHandler.normalizeAddress(address));
         return server == null ? ConnectionMode.AUTO.getValue() : server.forcedProtocol;
     }
-    /**
-        @param adress - Server adress
-        @return If the server has extra data already.
-    */
+  
     public boolean hasServer(String address) {
         return servers.containsKey(ConnectionHandler.normalizeAddress(address));
     }
-    /**
-        @param adress - Server adress
-        @return Gets the ServerExt object from the servers array.
-     */
+
     public ServerExt getServer(String address) {
         return servers.get(ConnectionHandler.normalizeAddress(address));
     }
