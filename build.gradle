@@ -133,16 +133,17 @@ task generatedJar(type: Jar, dependsOn: generatedClasses) {
 task remapGeneratedJar(type: RemapJarTask, dependsOn: project.generatedJar) {
 	input = generatedJar.archiveFile
 	classifier = 'generated'
-	addNestedDependencies = false
+	addDefaultNestedDependencies.set(false)
 }
 
 task remapSlimJar(type: RemapJarTask, dependsOn: jar) {
 	input = jar.archiveFile
 	classifier = 'slim'
-	addNestedDependencies = false
+	addDefaultNestedDependencies.set(false)
 }
 
 remapJar.dependsOn remapApiJar
+remapApiJar.dependsOn remapGeneratedJar
 
 jar {
 	from "LICENSE"

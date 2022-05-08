@@ -41,6 +41,14 @@ bridges.
 1. Download multiconnect from the [releases page](https://github.com/Earthcomputer/multiconnect/releases)
    and move it to the mods folder (`.minecraft/mods`).
 
+## Build Instructions
+1. Building requires JDK17.
+2. 
+   1. On Windows, run `gradlew build`
+   2. On Linux and MacOS, run `./gradlew build`
+   3. Note: sometimes, especially on development versions, the tests may fail. To skip the tests, use `./gradlew build -x test`
+3. The JAR file can be found in `build/libs` (it's the one with the shortest name).
+
 ## Installation for Mod Developers
 This section is for when you are developing your own mod and want to use the multiconnect API, or run multiconnect alongside your mod in the IDE. Aside from the first step, you ONLY need to follow the steps applicable to you and your mod.
 1. Explicitly setting a repository is not necessary, as multiconnect is hosted on Maven Central.
@@ -65,26 +73,4 @@ This section is for when you are developing your own mod and want to use the mul
    - Note: this step is only necessary if you want to run the full mod in the IDE. Otherwise you can skip this step.
 
 ## Contributing
-1. Clone the repository
-   ```
-   git clone https://github.com/Earthcomputer/multiconnect
-   cd multiconnect
-   ```
-1. Generate the Minecraft source code
-   ```
-   ./gradlew genSources
-   ```
-   - Note: on Windows, use `gradlew` rather than `./gradlew`.
-1. Import the project into your preferred IDE.
-   1. If you use IntelliJ (the preferred option), you can simply import the project as a Gradle project.
-   1. If you use Eclipse, you need to `./gradlew eclipse` before importing the project as an Eclipse project.
-1. Edit the code.
-1. After testing in the IDE, build a JAR to test whether it works outside the IDE too
-   ```
-   ./gradlew build
-   ```
-   The mod JAR may be found in the `build/libs` directory
-1. [Create a pull request](https://help.github.com/en/articles/creating-a-pull-request)
-   so that your changes can be integrated into multiconnect
-   - Note: for large contributions, create an issue before doing all that
-     work, to ask whether your pull request is likely to be accepted
+See [contributing.md](docs/contributing.md)

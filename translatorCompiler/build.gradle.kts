@@ -1,3 +1,6 @@
+@file:Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+
+import java.lang.Boolean as JavaBoolean
 
 plugins {
     kotlin("jvm") version "1.6.10"
@@ -21,11 +24,11 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>() {
 tasks.create<JavaExec>("compileTranslator") {
     group = "build"
     classpath(sourceSets.main.get().runtimeClasspath)
-    main = "net.earthcomputer.multiconnect.compiler.Main"
+    mainClass.set("net.earthcomputer.multiconnect.compiler.Main")
     args(
         "${rootProject.buildDir}/translatorJsons",
         rootProject.file("data").absolutePath,
         rootProject.sourceSets.getByName("generated").java.srcDirs.iterator().next().absolutePath
     )
-    debug = true
+    debug = JavaBoolean.getBoolean("multiconnect.debugCompiler")
 }
