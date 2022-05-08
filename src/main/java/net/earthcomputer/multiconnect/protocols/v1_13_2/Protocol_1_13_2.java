@@ -834,10 +834,11 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     }
 
     private void mutateEntityTypeRegistry(RegistryBuilder<EntityType<?>> registry) {
-        registry.unregister(EntityType.CAT);
-        int ocelotId = registry.getRawId(EntityType.OCELOT);
-        registry.purge(EntityType.OCELOT);
-        registry.register(ocelotId, EntityType.CAT, "ocelot");
+        /*registry.unregister(EntityType.CAT);
+        //int ocelotId = registry.getRawId(EntityType.OCELOT);
+        //registry.purge(EntityType.OCELOT);
+        //registry.register(ocelotId, EntityType.CAT, "ocelot"); */
+        registry.unregister(EntityType.OCELOT); // TODO: May be this needs to be removed? -Jaai
         registry.unregister(EntityType.FOX);
         registry.unregister(EntityType.PANDA);
         registry.unregister(EntityType.PILLAGER);
