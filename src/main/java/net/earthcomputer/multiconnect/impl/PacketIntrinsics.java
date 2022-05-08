@@ -47,7 +47,9 @@ public final class PacketIntrinsics {
     public static <T extends Throwable> RuntimeException sneakyThrow(Throwable ex) throws T {
         throw (T) ex;
     }
-
+    /**
+      * Finds the setter for a given field, if none errors
+    */
     public static MethodHandle findSetterHandle(Class<?> ownerClass, String fieldName, Class<?> fieldType) {
         try {
             return MethodHandles.lookup().findSetter(ownerClass, fieldName, fieldType);
@@ -55,7 +57,9 @@ public final class PacketIntrinsics {
             throw new AssertionError("Could not find setter method handle, this indicates a compiler bug!", e);
         }
     }
-
+    /**
+      * Fixes the data with the given old version.
+     */
     public static NbtCompound datafix(NbtCompound data, DataFixer fixer, DSL.TypeReference type, int fromVersion) {
         if (data == null) {
             return null;
