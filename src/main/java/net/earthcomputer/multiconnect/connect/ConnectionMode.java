@@ -117,12 +117,18 @@ public enum ConnectionMode implements IProtocol {
     public boolean isMulticonnectBeta() {
         return multiconnectBeta;
     }
-
+    /**
+        Gets the name of the connection mode (Ex. 1.18)
+        @return The name
+    */
     @Override
     public String getName() {
         return name;
     }
-
+    /**
+        Gets the data version for this connection mode
+        @return The data version
+    */
     @Override
     public int getDataVersion() {
         return dataVersion;
@@ -144,7 +150,11 @@ public enum ConnectionMode implements IProtocol {
     public static boolean isSupportedProtocol(int protocol) {
         return byValue(protocol) != AUTO;
     }
-
+    /*
+        Checks if version is supported by name.
+        @param name - The name of the version
+        @return - If its supported by multiconnect.
+    */
     public static boolean isSupportedVersionName(String name) {
         return VALID_NAMES.contains(name);
     }

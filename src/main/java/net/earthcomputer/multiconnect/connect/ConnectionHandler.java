@@ -27,6 +27,14 @@ public class ConnectionHandler {
 
     private static final Logger LOGGER = LogManager.getLogger("multiconnect");
 
+    /**
+        The function that runs before you connect to a server.
+
+        @param addr - The socket adress object for this server.
+        @param serverAddress - The server adress object for this server.
+        @param adressField
+        @return Returns if we can connect to the server.
+    */
     public static boolean preConnect(InetSocketAddress addr, ServerAddress serverAddress, String addressField) {
         // Hypixel has their own closed-source connection proxy and closed-source anti-cheat.
         // Users were getting banned for odd reasons. Their maps are designed to have fair play between clients on any
@@ -105,7 +113,11 @@ public class ConnectionHandler {
 
         return true;
     }
-
+    /**
+        This fires when we send the server handshake packet, this is not where we send it, but this triggers when we do.
+        @param connect
+        @param handshakePacket - The handshake packet sent
+    */
     public static void onSendHandshake(ClientConnection connect, Packet<?> handshakePacket) {
         if (ConnectionMode.isSupportedProtocol(ConnectionInfo.protocolVersion)) {
             ((HandshakePacketAccessor) handshakePacket).setProtocolVersion(ConnectionInfo.protocolVersion);
@@ -113,7 +125,10 @@ public class ConnectionHandler {
             ConnectionInfo.protocol.setup(false);
         }
     }
-
+    /**
+        Parses adress into normal minecraft adress format.
+        @param adressStr - The raw adress string
+    */
     public static String normalizeAddress(String addressStr) {
         String[] addressAndPort = addressStr.split(":");
 

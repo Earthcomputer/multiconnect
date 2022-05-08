@@ -17,7 +17,7 @@ public class GetProtocolPacketListener implements ClientQueryPacketListener {
     public GetProtocolPacketListener(ClientConnection connection) {
         this.connection = connection;
     }
-
+   
     @Override
     public void onResponse(QueryResponseS2CPacket packet) {
         protocol = packet.getServerMetadata().getVersion().getProtocolVersion();
@@ -41,11 +41,13 @@ public class GetProtocolPacketListener implements ClientQueryPacketListener {
     public ClientConnection getConnection() {
         return connection;
     }
-
+    /**
+        Get the protocol version
+        @return - The protocol version
+    */
     public int getProtocol() {
         return protocol;
     }
-
     public boolean hasCompleted() {
         return completed;
     }

@@ -62,7 +62,11 @@ public class ExperimentalDynamicRegistriesWithWorldHeightFix extends DataFix {
             )
         );
     }
-
+    /**
+        Copies dimension heights from one to another
+        @param fromDynamic - The dimension to copy from
+        @param toDynamic - The dimension to copy to
+    */
     private void copyDimensionHeights(Dynamic<?> fromDynamic, Dynamic<?> toDynamic) {
         Dynamic<?> fromDimTypes = fromDynamic.get("minecraft:dimension_type").orElseEmptyMap();
         Dynamic<?> toDimTypes = toDynamic.get("minecraft:dimension_type").orElseEmptyMap();
@@ -80,7 +84,11 @@ public class ExperimentalDynamicRegistriesWithWorldHeightFix extends DataFix {
             toElement.set("min_y", fromElement.createInt(fromElement.get("min_y").asInt(0)));
         });
     }
-
+    /**
+        Updates the dimension type with the old dimension type,
+        @param oldDimensionType - The old dimension type
+        @return The updated dimension type
+    */
     private Dynamic<?> updateDimensionType(Dynamic<?> oldDimensionType, DynamicOps<?> ops) {
         String oldId = new Identifier(oldDimensionType.asString().result().orElseGet(() -> {
             return oldDimensionType.get("name").asString().result().orElseGet(() -> {
