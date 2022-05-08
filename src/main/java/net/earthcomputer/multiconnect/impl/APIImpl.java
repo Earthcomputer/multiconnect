@@ -91,13 +91,13 @@ public class APIImpl extends MultiConnectAPI {
     }
 
 
-    // TODO: Rewrite
+    // TODO: Needs replacement for DefaultRegistries
 //    @Override
 //    public <T> boolean doesServerKnow(Registry<T> registry, T value) {
 //        return registry.getKey(value).map(key -> doesServerKnow(registry, key)).orElse(false);
 //    }
-
-
+//
+//
 //    @Override
 //    public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
 //        if (DefaultRegistries.getDefaultRegistry(registry.getKey()) == null)

@@ -237,7 +237,7 @@ public class Utils {
         Biome plainsBiome = biomeRegistry.get(BiomeKeys.PLAINS);
 
         ChunkDataS2CPacket packet = new ChunkDataS2CPacket(new WorldChunk(world, new ChunkPos(x, z)), world.getLightingProvider(), new BitSet(), new BitSet(), true);
-        // TODO: rewrite
+        // TODO: Needs replacement for IUserDataHolder
 //        //noinspection ConstantConditions
 //        IUserDataHolder iPacket = (IUserDataHolder) packet;
 //        iPacket.multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, true);
