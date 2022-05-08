@@ -1,8 +1,10 @@
 package net.earthcomputer.multiconnect.compiler.opto
 
 import net.earthcomputer.multiconnect.compiler.CompileException
+import net.earthcomputer.multiconnect.compiler.McType
 import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
+import net.earthcomputer.multiconnect.compiler.node.PopStmtOp
 import net.earthcomputer.multiconnect.compiler.node.ReturnStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StmtListOp
 import net.earthcomputer.multiconnect.compiler.node.StoreVariableStmtOp
@@ -32,10 +34,10 @@ internal fun Optimizer.extractCommonNodes() {
                 val index = stmtListUsage.inputs.indexOf(extractionNode)
                 stmtListUsage.insertInput(index, storeVariable)
             } else {
-                val returnNode = if (extractionNode.op.isExpression) {
-                    McNode(ReturnStmtOp(extractionNode.op.returnType), extractionNode)
-                } else {
-                    extractionNode
+                val returnNode = when {
+                    !extractionNode.op.isExpression -> extractionNode
+                    extractionNode.op.returnType == McType.VOID -> McNode(PopStmtOp, extractionNode)
+                    else -> McNode(ReturnStmtOp(extractionNode.op.returnType), extractionNode)
                 }
                 extractionNode.replace(McNode(StmtListOp,
                     storeVariable,

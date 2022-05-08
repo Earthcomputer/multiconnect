@@ -1,11 +1,15 @@
 package net.earthcomputer.multiconnect.impl;
 
+import com.google.common.collect.ImmutableMap;
+import com.mojang.datafixers.TypeRewriteRule;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;
 import io.netty.handler.timeout.TimeoutException;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
@@ -13,6 +17,8 @@ import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConfirmScreen;
@@ -22,36 +28,50 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
+import net.minecraft.network.NetworkSide;
+import net.minecraft.network.NetworkState;
+import net.minecraft.network.Packet;
 import net.minecraft.network.PacketEncoderException;
+import net.minecraft.state.property.Property;
 import net.minecraft.text.BaseText;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
+import net.minecraft.util.registry.Registry;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -64,6 +84,7 @@ public class DebugUtils {
     public static String lastServerBrand = ClientBrandRetriever.VANILLA;
     public static final boolean UNIT_TEST_MODE = Boolean.getBoolean("multiconnect.unitTestMode");
     public static final boolean IGNORE_ERRORS = Boolean.getBoolean("multiconnect.ignoreErrors");
+    public static final boolean DUMP_REGISTRIES = Boolean.getBoolean("multiconnect.dumpRegistries");
 
     private static final Map<TrackedData<?>, String> TRACKED_DATA_NAMES = new IdentityHashMap<>();
     private static void computeTrackedDataNames() {
@@ -253,11 +274,172 @@ public class DebugUtils {
         return result.toByteArray();
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> void dumpRegistries() throws IOException {
+        ConnectionMode connectionMode = ConnectionMode.byValue(ConnectionInfo.protocolVersion);
+        File dir = new File("../data/" + connectionMode.getName());
+        if (!dir.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            dir.mkdirs();
+        }
+        dumpPackets(new File(dir, "spackets.csv"), NetworkSide.CLIENTBOUND, "SPacket", "S2CPacket");
+        dumpPackets(new File(dir, "cpackets.csv"), NetworkSide.SERVERBOUND, "CPacket", "C2SPacket");
+        for (Registries registries : Registries.values()) {
+            Stream<Triple<Integer, String, String>> entries;
+            if (registries == Registries.BLOCK_STATE) {
+                entries = StreamSupport.stream(Block.STATE_IDS.spliterator(), false)
+                        .map(it -> Triple.of(Block.STATE_IDS.getRawId(it), blockStateToString(it), blockStateToString(it)));
+            } else {
+                Registry<T> registry;
+                if (registries == Registries.MOTIVE) {
+                    registry = (Registry<T>) Registry.PAINTING_MOTIVE;
+                } else {
+                    try {
+                        registry = (Registry<T>) Registry.class.getDeclaredField(registries.name()).get(null);
+                    } catch (ReflectiveOperationException e) {
+                        throw new AssertionError(e);
+                    }
+                }
+                entries = registry.stream()
+                        .map(it -> {
+                            Identifier name = registry.getId(it);
+                            String nameStr = name == null ? "null" : name.getPath();
+                            return Triple.of(registry.getRawId(it), nameStr, nameStr);
+                        });
+            }
+            try (PrintWriter pw = new PrintWriter(new FileWriter(new File(dir, registries.name().toLowerCase(Locale.ROOT) + ".csv")))) {
+                pw.println("id name oldName");
+                entries.forEach(it -> {
+                    if (it.getMiddle().equals(it.getRight())) {
+                        pw.println(it.getLeft() + " " + it.getMiddle());
+                    } else {
+                        pw.println(it.getLeft() + " " + it.getMiddle() + " " + it.getRight());
+                    }
+                });
+            }
+        }
+    }
+
+    public static String blockStateToString(BlockState state) {
+        Identifier unmodifiedName = Registry.BLOCK.getId(state.getBlock());
+        String result = unmodifiedName.getPath();
+        if (state.getBlock().getStateManager().getProperties().isEmpty()) return result;
+        String stateStr = state.getBlock().getStateManager().getProperties().stream().map(it -> it.getName() + "=" + getName(it, state.get(it))).collect(Collectors.joining(","));
+        return result + "[" + stateStr + "]";
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends Comparable<T>> String getName(Property<T> prop, Object value) {
+        return prop.name((T) value);
+    }
+
+    private static final Map<Class<? extends Packet<?>>, String> SUBST_NAME = ImmutableMap.<Class<? extends Packet<?>>, String>builder()
+            .build();
+    private static void dumpPackets(File output, NetworkSide side, String prefix, String toReplace) throws IOException {
+        var packetHandlers = new ArrayList<>(NetworkState.PLAY.getPacketIdToPacketMap(side).int2ObjectEntrySet());
+        packetHandlers.sort(Comparator.comparingInt(Int2ObjectMap.Entry::getIntKey));
+        try (PrintWriter pw = new PrintWriter(new FileWriter(output))) {
+            pw.println("id clazz");
+            for (var entry : packetHandlers) {
+                int id = entry.getIntKey();
+                String baseClassName = entry.getValue().getName();
+                baseClassName = baseClassName.substring(baseClassName.lastIndexOf('.') + 1);
+                int underscoreIndex = baseClassName.indexOf('_');
+                if (underscoreIndex >= 0) {
+                    baseClassName = baseClassName.substring(0, underscoreIndex);
+                }
+                baseClassName = baseClassName.replace("$", "").replace(toReplace, "");
+                baseClassName = prefix + baseClassName;
+                String className = "net.earthcomputer.multiconnect.packets." + baseClassName;
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(className);
+                } catch (ClassNotFoundException e) {
+                    LOGGER.error("Could not find packet class " + className);
+                    continue;
+                }
+                if (clazz.isInterface()) {
+                    className = "net.earthcomputer.multiconnect.packets.latest." + baseClassName + "_Latest";
+                    try {
+                        Class.forName(className);
+                    } catch (ClassNotFoundException e) {
+                        LOGGER.error("Could not find packet class " + className);
+                        continue;
+                    }
+                }
+                pw.println(id + " " + className);
+            }
+        }
+    }
+
+
     public static void onDebugKey() {
         handlePacketDump(
                 MinecraftClient.getInstance().getNetworkHandler(),
                 "H4sIAAAAAAAA/1NhYGBgYTigcmraiys2Qg4BBxhA4IA7t6FxsDgbAxKwk5w5C0gZOQEA+YjcUTMAAAA=",
                 true
         );
+    }
+
+    public static String dfuToString(Object dfuType) {
+        if (dfuType == null) {
+            return "null";
+        }
+        if (dfuType instanceof Iterable<?> collection) {
+            StringBuilder sb = new StringBuilder("[");
+            boolean appended = false;
+            for (Object o : collection) {
+                if (appended) {
+                    sb.append(",\n");
+                } else {
+                    sb.append("\n");
+                }
+                appended = true;
+                sb.append(dfuToString(o));
+            }
+            return sb.toString().replace("\n", "  \n") + "\n]";
+        }
+
+        if (dfuType instanceof TypeRewriteRule.Nop) {
+            return "Nop";
+        }
+        if (dfuType instanceof TypeRewriteRule.Seq) {
+            return "Seq" + dfuToString(getField(dfuType, "rules"));
+        }
+        if (dfuType instanceof TypeRewriteRule.OrElse) {
+            return "OrElse[" + dfuToString(getField(dfuType, "first")) + ", " + dfuToString(getField(dfuType, "second")) + "]";
+        }
+        if (dfuType instanceof TypeRewriteRule.All) {
+            return "All[" + dfuToString(getField(dfuType, "rule")) + "]";
+        }
+        if (dfuType instanceof TypeRewriteRule.One) {
+            return "One[" + dfuToString(getField(dfuType, "rule")) + "]";
+        }
+        if (dfuType instanceof TypeRewriteRule.CheckOnce) {
+            return "CheckOnce[" + dfuToString(getField(dfuType, "rule")) + "]";
+        }
+        if (dfuType instanceof TypeRewriteRule.Everywhere) {
+            return "Everywhere[" + dfuToString(getField(dfuType, "rule")) + "]";
+        }
+        if (dfuType instanceof TypeRewriteRule.IfSame<?>) {
+            return "IfSame[" + dfuToString(getField(dfuType, "targetType")) + ", " + dfuToString(getField(dfuType, "value")) + "]";
+        }
+
+        return dfuType.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T getField(Object instance, String name) {
+        for (Class<?> clazz = instance.getClass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
+            try {
+                Field field = clazz.getDeclaredField(name);
+                field.setAccessible(true);
+                return (T) field.get(instance);
+            } catch (NoSuchFieldException ignored) {
+            } catch (ReflectiveOperationException e) {
+                Util.throwUnchecked(e);
+            }
+        }
+        throw new IllegalArgumentException("No such field " + name);
     }
 }

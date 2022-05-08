@@ -8,7 +8,7 @@ id clazz
 6 net.earthcomputer.multiconnect.packets.SPacketEntityAnimation
 7 net.earthcomputer.multiconnect.packets.SPacketStatistics
 8 net.earthcomputer.multiconnect.packets.SPacketBlockBreakingProgress
-9 net.earthcomputer.multiconnect.packets.SPacketBlockEntityUpdate
+9 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketBlockEntityUpdate_1_17_1
 10 net.earthcomputer.multiconnect.packets.SPacketBlockEvent
 11 net.earthcomputer.multiconnect.packets.SPacketBlockUpdate
 12 net.earthcomputer.multiconnect.packets.SPacketBossBar
@@ -34,7 +34,7 @@ id clazz
 32 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketChunkData_1_16_5
 33 net.earthcomputer.multiconnect.packets.SPacketWorldEvent
 34 net.earthcomputer.multiconnect.packets.SPacketParticle
-35 net.earthcomputer.multiconnect.packets.SPacketGameJoin
+35 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketGameJoin_1_17_1
 36 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketMapUpdate_1_16_5
 37 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketEntity_1_16_5
 38 net.earthcomputer.multiconnect.packets.SPacketEntityMoveRelative
@@ -49,7 +49,7 @@ id clazz
 47 net.earthcomputer.multiconnect.packets.SPacketUseBed
 48 net.earthcomputer.multiconnect.packets.SPacketUnlockRecipes
 49 net.earthcomputer.multiconnect.packets.SPacketEntitiesDestroy
-50 net.earthcomputer.multiconnect.packets.SPacketRemoveEntityStatusEffect
+50 net.earthcomputer.multiconnect.packets.v1_18.SPacketRemoveEntityStatusEffect_1_18
 51 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketResourcePackSend_1_16_5
 52 net.earthcomputer.multiconnect.packets.SPacketPlayerRespawn
 53 net.earthcomputer.multiconnect.packets.SPacketEntitySetHeadYaw
@@ -77,4 +77,4 @@ id clazz
 75 net.earthcomputer.multiconnect.packets.SPacketEntityPosition
 76 net.earthcomputer.multiconnect.packets.SPacketAdvancementUpdate
 77 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketEntityAttributes_1_16_5
-78 net.earthcomputer.multiconnect.packets.SPacketEntityStatusEffect
+78 net.earthcomputer.multiconnect.packets.v1_18.SPacketEntityStatusEffect_1_18

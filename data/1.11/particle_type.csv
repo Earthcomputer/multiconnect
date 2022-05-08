@@ -34,7 +34,7 @@ id name oldName
 32 null snow_shovel
 33 item_slime
 34 heart
-35 barrier
+35 multiconnect:barrier barrier
 36 item
 37 block
 38 null block_dust

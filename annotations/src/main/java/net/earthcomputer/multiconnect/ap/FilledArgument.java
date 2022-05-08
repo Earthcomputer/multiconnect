@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 public @interface FilledArgument {
     FromRegistry fromRegistry() default @FromRegistry(registry = Registries.BLOCK, value = "");
+    Registries registry() default Registries.BLOCK;
 
     @interface FromRegistry {
         Registries registry();

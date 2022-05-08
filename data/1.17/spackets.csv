@@ -9,7 +9,7 @@ id clazz
 7 net.earthcomputer.multiconnect.packets.SPacketStatistics
 8 net.earthcomputer.multiconnect.packets.SPacketPlayerActionResponse
 9 net.earthcomputer.multiconnect.packets.SPacketBlockBreakingProgress
-10 net.earthcomputer.multiconnect.packets.SPacketBlockEntityUpdate
+10 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketBlockEntityUpdate_1_17_1
 11 net.earthcomputer.multiconnect.packets.SPacketBlockEvent
 12 net.earthcomputer.multiconnect.packets.SPacketBlockUpdate
 13 net.earthcomputer.multiconnect.packets.SPacketBossBar
@@ -33,11 +33,11 @@ id clazz
 31 net.earthcomputer.multiconnect.packets.SPacketOpenHorseScreen
 32 net.earthcomputer.multiconnect.packets.SPacketWorldBorderInitialize
 33 net.earthcomputer.multiconnect.packets.SPacketKeepAlive
-34 net.earthcomputer.multiconnect.packets.latest.SPacketChunkData_Latest
+34 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketChunkData_1_17_1
 35 net.earthcomputer.multiconnect.packets.SPacketWorldEvent
 36 net.earthcomputer.multiconnect.packets.SPacketParticle
 37 net.earthcomputer.multiconnect.packets.latest.SPacketLightUpdate_Latest
-38 net.earthcomputer.multiconnect.packets.SPacketGameJoin
+38 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketGameJoin_1_17_1
 39 net.earthcomputer.multiconnect.packets.SPacketMapUpdate
 40 net.earthcomputer.multiconnect.packets.SPacketSetTradeOffers
 41 net.earthcomputer.multiconnect.packets.SPacketEntityMoveRelative
@@ -58,7 +58,7 @@ id clazz
 56 net.earthcomputer.multiconnect.packets.latest.SPacketPlayerPositionLook_Latest
 57 net.earthcomputer.multiconnect.packets.SPacketUnlockRecipes
 58 net.earthcomputer.multiconnect.packets.v1_17.SPacketEntityDestroy_1_17
-59 net.earthcomputer.multiconnect.packets.SPacketRemoveEntityStatusEffect
+59 net.earthcomputer.multiconnect.packets.v1_18.SPacketRemoveEntityStatusEffect_1_18
 60 net.earthcomputer.multiconnect.packets.latest.SPacketResourcePackSend_Latest
 61 net.earthcomputer.multiconnect.packets.SPacketPlayerRespawn
 62 net.earthcomputer.multiconnect.packets.SPacketEntitySetHeadYaw
@@ -99,6 +99,6 @@ id clazz
 97 net.earthcomputer.multiconnect.packets.SPacketEntityPosition
 98 net.earthcomputer.multiconnect.packets.SPacketAdvancementUpdate
 99 net.earthcomputer.multiconnect.packets.latest.SPacketEntityAttributes_Latest
-100 net.earthcomputer.multiconnect.packets.SPacketEntityStatusEffect
+100 net.earthcomputer.multiconnect.packets.v1_18.SPacketEntityStatusEffect_1_18
 101 net.earthcomputer.multiconnect.packets.SPacketSynchronizeRecipes
 102 net.earthcomputer.multiconnect.packets.latest.SPacketSynchronizeTags_Latest

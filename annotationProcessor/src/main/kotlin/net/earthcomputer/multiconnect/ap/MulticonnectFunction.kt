@@ -31,6 +31,11 @@ sealed class MulticonnectParameter {
     @SerialName("filled")
     class Filled(
         override val paramType: TypeMirror,
-        @Contextual val fromRegistry: FilledArgument.FromRegistry?
+        @Contextual val fromRegistry: FilledArgument.FromRegistry?,
+        val registry: Registries?,
     ): MulticonnectParameter()
+
+    @Serializable
+    @SerialName("globalData")
+    class GlobalData(override val paramType: TypeMirror): MulticonnectParameter()
 }

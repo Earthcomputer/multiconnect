@@ -4,9 +4,11 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
+import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.Packet;
@@ -20,7 +22,9 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class PacketSystem {
@@ -53,6 +57,8 @@ public class PacketSystem {
     });
 
     private static final LoadingCache<Packet<?>, TypedMap> packetUserData = CacheBuilder.newBuilder().weakKeys().build(CacheLoader.from(TypedMap::new));
+    // TODO: clear global data on disconnect
+    private static final Map<Class<?>, Object> globalData = new HashMap<>();
 
     public static TypedMap getUserData(Packet<?> packet) {
         return packetUserData.getUnchecked(packet);
@@ -69,28 +75,44 @@ public class PacketSystem {
     }
 
     public static void sendToServer(ClientPlayNetworkHandler networkHandler, int protocol, Object packet) {
-        List<ByteBuf> bufs = new ArrayList<>(1);
-        TypedMap userData = new TypedMap();
-        protocolClasses.get(ConnectionInfo.protocolVersion).sendToServer(packet, protocol, bufs, networkHandler, userData);
-        PacketIntrinsics.sendRawToServer(networkHandler, bufs);
+        Channel channel = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel();
+        Runnable send = () -> {
+            List<ByteBuf> bufs = new ArrayList<>(1);
+            TypedMap userData = new TypedMap();
+            protocolClasses.get(ConnectionInfo.protocolVersion).sendToServer(packet, protocol, bufs, networkHandler, globalData, userData);
+            PacketIntrinsics.sendRawToServer(networkHandler, bufs);
+        };
+        if (channel.eventLoop().inEventLoop()) {
+            send.run();
+        } else {
+            channel.eventLoop().execute(send);
+        }
     }
 
     public static void sendToClient(ClientPlayNetworkHandler networkHandler, int protocol, Object packet) {
-        List<ByteBuf> bufs = new ArrayList<>(1);
-        TypedMap userData = new TypedMap();
-        protocolClasses.get(protocol).sendToClient(packet, bufs, networkHandler, userData);
-        PacketIntrinsics.sendRawToClient(networkHandler, userData, bufs);
+        Channel channel = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel();
+        Runnable send = () -> {
+            List<ByteBuf> bufs = new ArrayList<>(1);
+            TypedMap userData = new TypedMap();
+            protocolClasses.get(protocol).sendToClient(packet, bufs, networkHandler, globalData, userData);
+            PacketIntrinsics.sendRawToClient(networkHandler, userData, bufs);
+        };
+        if (channel.eventLoop().inEventLoop()) {
+            send.run();
+        } else {
+            channel.eventLoop().execute(send);
+        }
     }
 
     public static class Internals {
         private static final LoadingCache<ByteBuf, TypedMap> bufUserData = CacheBuilder.newBuilder().weakKeys().build(CacheLoader.from(TypedMap::new));
 
         public static void translateSPacket(int protocol, ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
-            protocolClasses.get(protocol).translateSPacket(buf, outBufs, networkHandler, userData);
+            protocolClasses.get(protocol).translateSPacket(buf, outBufs, networkHandler, globalData, userData);
         }
 
         public static void translateCPacket(int protocol, ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
-            protocolClasses.get(protocol).translateCPacket(buf, outBufs, networkHandler, userData);
+            protocolClasses.get(protocol).translateCPacket(buf, outBufs, networkHandler, globalData, userData);
         }
 
         public static void setUserData(Packet<?> packet, TypedMap userData) {
@@ -121,39 +143,39 @@ public class PacketSystem {
         private final MethodHandle sendToServer;
 
         ProtocolClassProxy(Class<?> clazz, int protocol) {
-            this.translateSPacket = findMethodHandle(clazz, "translateSPacket", void.class, ByteBuf.class, List.class, ClientPlayNetworkHandler.class, TypedMap.class);
-            this.translateCPacket = findMethodHandle(clazz, "translateCPacket", void.class, ByteBuf.class, List.class, ClientPlayNetworkHandler.class, TypedMap.class);
-            this.sendToClient = findMethodHandle(clazz, "sendToClient", void.class, Object.class, List.class, ClientPlayNetworkHandler.class, TypedMap.class);
-            this.sendToServer = findMethodHandle(clazz, "sendToServer", void.class, Object.class, int.class, List.class, ClientPlayNetworkHandler.class, TypedMap.class);
+            this.translateSPacket = findMethodHandle(clazz, "translateSPacket", void.class, ByteBuf.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
+            this.translateCPacket = findMethodHandle(clazz, "translateCPacket", void.class, ByteBuf.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
+            this.sendToClient = findMethodHandle(clazz, "sendToClient", void.class, Object.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
+            this.sendToServer = findMethodHandle(clazz, "sendToServer", void.class, Object.class, int.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
         }
 
-        void translateSPacket(ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
+        void translateSPacket(ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
             try {
-                translateSPacket.invoke(buf, outBufs, networkHandler, userData);
+                translateSPacket.invoke(buf, outBufs, networkHandler, globalData, userData);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }
         }
 
-        void translateCPacket(ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
+        void translateCPacket(ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
             try {
-                translateCPacket.invoke(buf, outBufs, networkHandler, userData);
+                translateCPacket.invoke(buf, outBufs, networkHandler, globalData, userData);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }
         }
 
-        void sendToClient(Object packet, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
+        void sendToClient(Object packet, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
             try {
-                sendToClient.invoke(packet, outBufs, networkHandler, userData);
+                sendToClient.invoke(packet, outBufs, networkHandler, globalData, userData);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }
         }
 
-        void sendToServer(Object packet, int fromProtocol, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
+        void sendToServer(Object packet, int fromProtocol, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
             try {
-                sendToServer.invoke(packet, fromProtocol, outBufs, networkHandler, userData);
+                sendToServer.invoke(packet, fromProtocol, outBufs, networkHandler, globalData, userData);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }

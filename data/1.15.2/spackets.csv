@@ -9,7 +9,7 @@ id clazz
 7 net.earthcomputer.multiconnect.packets.SPacketStatistics
 8 net.earthcomputer.multiconnect.packets.SPacketPlayerActionResponse
 9 net.earthcomputer.multiconnect.packets.SPacketBlockBreakingProgress
-10 net.earthcomputer.multiconnect.packets.SPacketBlockEntityUpdate
+10 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketBlockEntityUpdate_1_17_1
 11 net.earthcomputer.multiconnect.packets.SPacketBlockEvent
 12 net.earthcomputer.multiconnect.packets.SPacketBlockUpdate
 13 net.earthcomputer.multiconnect.packets.SPacketBossBar
@@ -37,7 +37,7 @@ id clazz
 35 net.earthcomputer.multiconnect.packets.SPacketWorldEvent
 36 net.earthcomputer.multiconnect.packets.SPacketParticle
 37 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketLightUpdate_1_16_5
-38 net.earthcomputer.multiconnect.packets.SPacketGameJoin
+38 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketGameJoin_1_17_1
 39 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketMapUpdate_1_16_5
 40 net.earthcomputer.multiconnect.packets.SPacketSetTradeOffers
 41 net.earthcomputer.multiconnect.packets.SPacketEntityMoveRelative
@@ -56,7 +56,7 @@ id clazz
 54 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketPlayerPositionLook_1_16_5
 55 net.earthcomputer.multiconnect.packets.SPacketUnlockRecipes
 56 net.earthcomputer.multiconnect.packets.SPacketEntitiesDestroy
-57 net.earthcomputer.multiconnect.packets.SPacketRemoveEntityStatusEffect
+57 net.earthcomputer.multiconnect.packets.v1_18.SPacketRemoveEntityStatusEffect_1_18
 58 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketResourcePackSend_1_16_5
 59 net.earthcomputer.multiconnect.packets.SPacketPlayerRespawn
 60 net.earthcomputer.multiconnect.packets.SPacketEntitySetHeadYaw
@@ -89,6 +89,6 @@ id clazz
 87 net.earthcomputer.multiconnect.packets.SPacketEntityPosition
 88 net.earthcomputer.multiconnect.packets.SPacketAdvancementUpdate
 89 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketEntityAttributes_1_16_5
-90 net.earthcomputer.multiconnect.packets.SPacketEntityStatusEffect
+90 net.earthcomputer.multiconnect.packets.v1_18.SPacketEntityStatusEffect_1_18
 91 net.earthcomputer.multiconnect.packets.SPacketSynchronizeRecipes
 92 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketSynchronizeTags_1_16_5

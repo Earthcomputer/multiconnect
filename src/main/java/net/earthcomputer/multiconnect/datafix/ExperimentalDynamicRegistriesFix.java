@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.datafix;
 
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFix;
+import com.mojang.datafixers.DataFixUtils;
 import com.mojang.datafixers.TypeRewriteRule;
 import com.mojang.datafixers.schemas.Schema;
 import com.mojang.serialization.Dynamic;
@@ -24,7 +25,7 @@ public class ExperimentalDynamicRegistriesFix extends DataFix {
 
     private final NbtCompound dynamicRegistries;
 
-    public <T> ExperimentalDynamicRegistriesFix(Schema outputSchema, boolean changesType, String version) {
+    public ExperimentalDynamicRegistriesFix(Schema outputSchema, boolean changesType, String version) {
         super(outputSchema, changesType);
 
         Identifier resource = new Identifier("multiconnect", "dynamic_registries/" + version + ".nbt");
@@ -43,13 +44,13 @@ public class ExperimentalDynamicRegistriesFix extends DataFix {
     protected TypeRewriteRule makeRule() {
         return TypeRewriteRule.seq(
             fixTypeEverywhereTyped(
-                "RegistryManagerFix",
+                "RegistryManagerFix" + DataFixUtils.getVersion(getOutputSchema().getVersionKey()),
                 getInputSchema().getType(MulticonnectDFU.REGISTRY_MANAGER),
                 getOutputSchema().getType(MulticonnectDFU.REGISTRY_MANAGER),
                 typed -> typed.set(DSL.remainderFinder(), new Dynamic<>(NbtOps.INSTANCE, dynamicRegistries).convert(typed.getOps()))
             ),
             fixTypeEverywhereTyped(
-                "DimensionFix",
+                "DimensionFix" + DataFixUtils.getVersion(getOutputSchema().getVersionKey()),
                 getInputSchema().getType(MulticonnectDFU.DIMENSION),
                 getOutputSchema().getType(MulticonnectDFU.DIMENSION),
                 typed -> typed.update(DSL.remainderFinder(), old -> updateDimensionType(old, typed.getOps()))

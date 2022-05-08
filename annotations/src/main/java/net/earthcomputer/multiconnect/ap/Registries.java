@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.ap;
 
 public enum Registries {
     BLOCK,
+    BLOCK_ENTITY_TYPE,
     BLOCK_STATE,
     CUSTOM_STAT,
     ENTITY_TYPE,

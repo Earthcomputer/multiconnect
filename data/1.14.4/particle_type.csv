@@ -1,7 +1,7 @@
 id name oldName
 0 ambient_entity_effect
 1 angry_villager
-2 barrier
+2 multiconnect:barrier barrier
 3 block
 4 bubble
 5 cloud

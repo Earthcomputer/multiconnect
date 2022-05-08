@@ -6,6 +6,7 @@ import net.earthcomputer.multiconnect.compiler.node.IfStmtOp
 import net.earthcomputer.multiconnect.compiler.node.LambdaOp
 import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
+import net.earthcomputer.multiconnect.compiler.node.PopStmtOp
 import net.earthcomputer.multiconnect.compiler.node.ReturnAsVariableBlockOp
 import net.earthcomputer.multiconnect.compiler.node.ReturnStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StmtListOp
@@ -22,12 +23,17 @@ internal fun Optimizer.extractStatementsInExpressions() {
         if (usage.op is StmtListOp || usage.op is LambdaOp || (usage.op is SwitchOp<*> && node != usage.inputs[0])) {
             return@forEachNodeDepthFirstUnsafe
         }
+        if (usage.op is PopStmtOp) {
+            usage.replace(node)
+            markChanged()
+            return@forEachNodeDepthFirstUnsafe
+        }
         val varType = usage.op.paramTypes[usage.inputs.indexOf(node)]
         if (varType == McType.VOID) {
             return@forEachNodeDepthFirstUnsafe
         }
         val variable = VariableId.create()
-        node.replace(McNode(LoadVariableOp(variable, varType), mutableListOf()))
+        node.replace(McNode(LoadVariableOp(variable, varType)))
         val parentStmt = generateSequence(usage) { it.usages.firstOrNull() }.firstOrNull { !it.op.isExpression } ?: return@forEachNodeDepthFirstUnsafe
         parentStmt.replace(
             McNode(
@@ -67,8 +73,8 @@ private fun convertReturnToVariableDeclaration(stmtList: McNode, variable: Varia
     findEarlyReturnStatements(stmtList, false)
 
     return if (hasEarlyReturnStatements) {
-        McNode(ReturnAsVariableBlockOp(VariableId.create(), variable, varType), mutableListOf(stmtList))
+        McNode(ReturnAsVariableBlockOp(VariableId.create(), variable, varType), stmtList)
     } else {
-        McNode(ReturnAsVariableBlockOp(null, variable, varType), mutableListOf(stmtList))
+        McNode(ReturnAsVariableBlockOp(null, variable, varType), stmtList)
     }
 }

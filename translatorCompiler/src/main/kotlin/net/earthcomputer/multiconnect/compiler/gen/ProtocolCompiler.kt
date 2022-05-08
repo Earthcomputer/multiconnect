@@ -52,6 +52,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
     internal val latestDataDir = FileLocations.dataDir.resolve(protocols[0].name)
     internal val cacheMembers = mutableMapOf<String, (Emitter) -> Unit>()
     internal var currentProtocolId: Int = protocolId
+    internal var defaultConstructProtocolId: Int? = null
     internal var fixRegistriesProtocolOverride: Int? = null
 
     fun compile() {
@@ -85,6 +86,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             .appendClassName(BYTE_BUF).append(" buf, ").appendClassName(LIST)
             .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
             .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+            .appendClassName(MAP).append("<").appendClassName(CLASS).append("<?>, ").appendClassName(OBJECT).append("> globalData, ")
             .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
         val packets = TreeMap<Int, McNode>()
         for ((id, clazz) in readCsv<PacketType>(packetsFile)) {
@@ -98,6 +100,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                             McType.BYTE_BUF,
                             McType.BYTE_BUF.listOf(),
                             McType.DeclaredType(NETWORK_HANDLER),
+                            McType.DeclaredType(MAP),
                             McType.DeclaredType(TYPED_MAP),
                         ),
                         McType.VOID,
@@ -106,6 +109,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                     McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF)),
                     McNode(LoadVariableOp(VariableId.immediate("outBufs"), McType.BYTE_BUF.listOf())),
                     McNode(LoadVariableOp(VariableId.immediate("networkHandler"), McType.DeclaredType(NETWORK_HANDLER))),
+                    McNode(LoadVariableOp(VariableId.immediate("globalData"), McType.DeclaredType(MAP))),
                     McNode(LoadVariableOp(VariableId.immediate("userData"), McType.DeclaredType(TYPED_MAP))),
                 )
             }
@@ -133,6 +137,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             .appendClassName(BYTE_BUF).append(" buf, ").appendClassName(LIST)
             .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
             .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+            .appendClassName(MAP).append("<").appendClassName(CLASS).append("<?>, ").appendClassName(OBJECT).append("> globalData, ")
             .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
         generateByteBufHandler(messageVariantInfo, clientbound).optimize().emit(function, Precedence.COMMA)
         function.dedent().appendNewLine().append("}")
@@ -194,14 +199,15 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                     }
                     field.append(", (")
                     field.appendClassName(PACKET_SENDER)
-                    field.append(") (packet, outBufs, networkHandler, userData) -> ").append(specializedFunctionName).append("((")
-                        .appendClassName(packet).append(") packet, outBufs, networkHandler, userData)")
+                    field.append(") (packet, outBufs, networkHandler, globalData, userData) -> ").append(specializedFunctionName).append("((")
+                        .appendClassName(packet).append(") packet, outBufs, networkHandler, globalData, userData)")
 
                     emitter.addMember(specializedFunctionName)?.let { specializedFunction ->
                         specializedFunction.append("private static void ").append(specializedFunctionName)
                             .append("(").appendClassName(packet).append(" protocol_$protocolId, ").appendClassName(LIST)
                             .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
                             .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+                            .appendClassName(MAP).append("<").appendClassName(CLASS).append("<?>, ").appendClassName(OBJECT).append("> globalData, ")
                             .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
                         generateExplicitSenderClientRegistries(variantInfo, protocolId, clientbound)
                             .optimize().emit(specializedFunction, Precedence.COMMA)
@@ -221,6 +227,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         function.appendClassName(LIST)
             .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
             .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+            .appendClassName(MAP).append("<").appendClassName(CLASS).append("<?>, ").appendClassName(OBJECT).append("> globalData, ")
             .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
 
         function.append(PACKET_SENDER)
@@ -242,7 +249,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             function.append("\"")
         }
         function.append(");").dedent().appendNewLine().append("}").appendNewLine()
-        function.append("sender.send(packet, outBufs, networkHandler, userData);")
+        function.append("sender.send(packet, outBufs, networkHandler, globalData, userData);")
             .dedent().appendNewLine().append("}")
     }
 
@@ -290,8 +297,6 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
     }
 
     internal fun Registries.getRawId(value: String): Either<Int, McNode>? {
-        val registryDir = FileLocations.dataDir.resolve(protocolNamesById[currentProtocolId]!!)
-        val entries = readCsv<RegistryEntry>(registryDir.resolve("${this.name.lowercase()}.csv"))
         val entry = entries.byName(value)
 
         // load id dynamically if necessary
@@ -314,8 +319,6 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
     }
 
     internal fun Registries.getOldName(value: String): String? {
-        val registryDir = FileLocations.dataDir.resolve(protocolNamesById[currentProtocolId]!!)
-        val entries = readCsv<RegistryEntry>(registryDir.resolve("${this.name.lowercase()}.csv"))
         val entry = entries.byName(value)
 
         if (entry == null && currentProtocolId != protocolId && value.startsWith("multiconnect:")) {
@@ -323,5 +326,10 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         }
 
         return entry?.oldName
+    }
+
+    internal val Registries.entries: List<RegistryEntry> get() {
+        val registryDir = FileLocations.dataDir.resolve(protocolNamesById[currentProtocolId]!!)
+        return readCsv(registryDir.resolve("${this.name.lowercase()}.csv"))
     }
 }

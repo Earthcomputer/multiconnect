@@ -10,6 +10,10 @@ import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.SharedConstants;
@@ -53,6 +57,10 @@ public final class PacketIntrinsics {
     }
 
     public static NbtCompound datafix(NbtCompound data, DataFixer fixer, DSL.TypeReference type, int fromVersion) {
+        if (data == null) {
+            return null;
+        }
+
         return (NbtCompound) fixer.update(
                 type,
                 new Dynamic<>(NbtOps.INSTANCE, data),
@@ -84,6 +92,24 @@ public final class PacketIntrinsics {
             builder.put((K) kvs[i], (V) kvs[i + 1]);
         }
         return builder.build();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <V> Int2ObjectMap<V> makeInt2ObjectMap(Object... kvs) {
+        var map = new Int2ObjectOpenHashMap<V>();
+        for (int i = 0; i < kvs.length; i += 2) {
+            map.put(((Integer) kvs[i]).intValue(), (V) kvs[i + 1]);
+        }
+        return map;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <K> Object2IntMap<K> makeObject2IntMap(Object... kvs) {
+        var map = new Object2IntOpenHashMap<K>();
+        for (int i = 0; i < kvs.length; i += 2) {
+            map.put((K) kvs[i], ((Integer) kvs[i + 1]).intValue());
+        }
+        return map;
     }
 
     public static int getStateId(RegistryKey<Block> blockKey, int offset) {
@@ -239,6 +265,12 @@ public final class PacketIntrinsics {
 
     @FunctionalInterface
     public interface PacketSender {
-        void send(Object packet, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData);
+        void send(
+                Object packet,
+                List<ByteBuf> outBufs,
+                ClientPlayNetworkHandler networkHandler,
+                Map<Class<?>, Object> globalData,
+                TypedMap userData
+        );
     }
 }

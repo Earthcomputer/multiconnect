@@ -190,7 +190,10 @@ data class DefaultConstructedParameter(override val paramType: McType) : McParam
 data class SuppliedDefaultConstructedParameter(override val paramType: McType, val suppliedType: McType) : McParameter()
 @Serializable
 @SerialName("filled")
-data class FilledParameter(override val paramType: McType, val fromRegistry: FilledFromRegistry?) : McParameter()
+data class FilledParameter(override val paramType: McType, val registry: Registries?, val fromRegistry: FilledFromRegistry?) : McParameter()
+@Serializable
+@SerialName("globalData")
+data class GlobalDataParameter(override val paramType: McType) : McParameter()
 
 @Serializable
 data class FilledFromRegistry(val registry: Registries, val value: String)

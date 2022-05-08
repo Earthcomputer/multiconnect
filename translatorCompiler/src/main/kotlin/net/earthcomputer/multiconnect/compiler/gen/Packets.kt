@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.compiler.gen
 
 import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.MAP
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.NETWORK_HANDLER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPED_MAP
 import net.earthcomputer.multiconnect.compiler.CompileException
@@ -115,6 +116,7 @@ internal fun ProtocolCompiler.generateExplicitSenderServerRegistries(
         emitter.append(" protocol_").append(protocolId.toString()).append(", ").appendClassName(CommonClassNames.LIST)
             .append("<").appendClassName(CommonClassNames.BYTE_BUF).append("> outBufs, ")
             .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+            .appendClassName(MAP).append("<").appendClassName(CommonClassNames.CLASS).append("<?>, ").appendClassName(CommonClassNames.OBJECT).append("> globalData, ")
             .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
 
         val group = getClassInfo(packet.variantOf ?: packet.className) as? MessageInfo
@@ -145,11 +147,13 @@ internal fun ProtocolCompiler.generateExplicitSenderServerRegistries(
             packet.toMcType(),
             McType.BYTE_BUF.listOf(),
             McType.DeclaredType(NETWORK_HANDLER),
+            McType.DeclaredType(MAP),
             McType.DeclaredType(TYPED_MAP),
         ), McType.VOID, true),
             McNode(LoadVariableOp(packetVar, packet.toMcType())),
             McNode(LoadVariableOp(bufsVar, McType.BYTE_BUF.listOf())),
             McNode(LoadVariableOp(VariableId.immediate("networkHandler"), McType.DeclaredType(NETWORK_HANDLER))),
+            McNode(LoadVariableOp(VariableId.immediate("globalData"), McType.DeclaredType(MAP))),
             McNode(LoadVariableOp(VariableId.immediate("userData"), McType.DeclaredType(TYPED_MAP))),
         )
     )
@@ -193,6 +197,7 @@ private fun ProtocolCompiler.generateTranslate(group: MessageInfo?, packet: Mess
     }
 
     for (index in protocolsSubset.indices.drop(1)) {
+        defaultConstructProtocolId = protocolsSubset[index].id
         nodes += McNode(
             StoreVariableStmtOp(protocolVariable(protocolsSubset[index].id), group?.toMcType() ?: packet.toMcType(), true),
             if (group != null) {
@@ -204,6 +209,7 @@ private fun ProtocolCompiler.generateTranslate(group: MessageInfo?, packet: Mess
         nodes += generatePartialHandlers(protocolsSubset, index) { getVariant(group, it, packet) }
         val (handler, handled) = generateHandler(protocolVariable(protocolsSubset[index].id), protocolsSubset.getOrNull(index + 1)?.id, getVariant(group, protocolsSubset[index].id, packet), clientbound)
         nodes += handler
+        defaultConstructProtocolId = null
         if (handled) {
             return McNode(StmtListOp, nodes) to true
         }
@@ -219,13 +225,20 @@ private inline fun ProtocolCompiler.generatePartialHandlers(
 ): McNode {
     val nodes = mutableListOf<McNode>()
     val packet = getPacket(protocolsSubset[index].id)
+    val loadPacket = if (packet.variantOf != null) {
+        McNode(CastOp(McType.DeclaredType(packet.variantOf), packet.toMcType()),
+            McNode(LoadVariableOp(protocolVariable(protocolsSubset[index].id), McType.DeclaredType(packet.variantOf)))
+        )
+    } else {
+        McNode(LoadVariableOp(protocolVariable(protocolsSubset[index].id), packet.toMcType()))
+    }
     if (index == protocolsSubset.lastIndex || packet.className != getPacket(protocolsSubset[index + 1].id).className) {
         for (partialHandler in packet.partialHandlers) {
             nodes += McNode(PopStmtOp,
                 generateFunctionCallGraph(packet.findFunction(partialHandler)) { name, type ->
                     McNode(
                         LoadFieldOp(packet.toMcType(), name, type),
-                        McNode(LoadVariableOp(VariableId.immediate("protocol_${protocolsSubset[index].id}"), packet.toMcType()))
+                        loadPacket
                     )
                 }
             )
@@ -239,7 +252,7 @@ private inline fun ProtocolCompiler.generatePartialHandlers(
                     val ifBlock = mutableListOf<McNode>()
                     val castedChild = McNode(
                         CastOp(packet.toMcType(), childMessage.toMcType()),
-                        McNode(LoadVariableOp(VariableId.immediate("protocol_${protocolsSubset[index].id}"), packet.toMcType()))
+                        McNode(LoadVariableOp(protocolVariable(protocolsSubset[index].id), packet.toMcType()))
                     )
                     for (partialHandler in childMessage.partialHandlers.asReversed()) {
                         ifBlock += McNode(PopStmtOp,
@@ -250,7 +263,7 @@ private inline fun ProtocolCompiler.generatePartialHandlers(
                     }
                     val condition = McNode(
                         InstanceOfOp(packet.toMcType(), childMessage.toMcType()),
-                        McNode(LoadVariableOp(VariableId.immediate("protocol_${protocolsSubset[index].id}"), packet.toMcType()))
+                        McNode(LoadVariableOp(protocolVariable(protocolsSubset[index].id), packet.toMcType()))
                     )
                     ifElseChain = if (ifElseChain == null) {
                         McNode(IfStmtOp, condition, McNode(StmtListOp, ifBlock))

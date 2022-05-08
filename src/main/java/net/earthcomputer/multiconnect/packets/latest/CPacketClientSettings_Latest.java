@@ -7,7 +7,7 @@ import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketClientSettings;
 
-@MessageVariant(minVersion = Protocols.V1_17)
+@MessageVariant(minVersion = Protocols.V1_18)
 public class CPacketClientSettings_Latest implements CPacketClientSettings {
     public String language;
     public byte renderDistance;
@@ -17,6 +17,7 @@ public class CPacketClientSettings_Latest implements CPacketClientSettings {
     public int displayedSkinParts;
     public Arm mainHand;
     public boolean disableTextFiltering;
+    public boolean allowsListing;
 
     @NetworkEnum
     public enum ChatSetting {

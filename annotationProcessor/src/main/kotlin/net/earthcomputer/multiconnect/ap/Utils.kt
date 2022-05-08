@@ -24,6 +24,9 @@ const val JAVA_UTIL_OPTIONAL = "java.util.Optional"
 const val JAVA_UTIL_OPTIONAL_INT = "java.util.OptionalInt"
 const val JAVA_UTIL_OPTIONAL_LONG = "java.util.OptionalLong"
 const val JAVA_UTIL_UUID = "java.util.UUID"
+const val JAVA_UTIL_FUNCTION_CONSUMER = "java.util.function.Consumer"
+const val JAVA_UTIL_FUNCTION_INT_FUNCTION = "java.util.function.IntFunction"
+const val JAVA_UTIL_FUNCTION_TO_INT_FUNCTION = "java.util.function.ToIntFunction"
 const val JAVA_UTIL_FUNCTION_SUPPLIER = "java.util.function.Supplier"
 const val FASTUTIL_INT_LIST = "it.unimi.dsi.fastutil.ints.IntList"
 const val FASTUTIL_LONG_LIST = "it.unimi.dsi.fastutil.longs.LongList"
@@ -165,10 +168,12 @@ fun TypeElement.findMulticonnectFunction(
         val argument = parameter.getAnnotation(Argument::class)
         val isDefaultConstruct = parameter.hasAnnotation(DefaultConstruct::class)
         val filledArgument = parameter.getAnnotation(FilledArgument::class)
-        when (count(argument != null, isDefaultConstruct, filledArgument != null)) {
+        val isGlobalData = parameter.hasAnnotation(GlobalData::class)
+        val paramType = parameter.asType()
+        when (count(argument != null, isDefaultConstruct, filledArgument != null, isGlobalData)) {
             0 -> {
                 if (parameters.isEmpty()) {
-                    positionalParameters += parameter.asType()
+                    positionalParameters += paramType
                 } else {
                     errorConsumer?.report("Positional parameter detected after non-positional parameter", parameter)
                     return null
@@ -184,11 +189,11 @@ fun TypeElement.findMulticonnectFunction(
                             errorConsumer?.report("Could not resolve argument \"${argument.value}\"", parameter)
                             return null
                         }
-                        parameters += MulticonnectParameter.Argument(parameter.asType(), argument.value)
+                        parameters += MulticonnectParameter.Argument(paramType, argument.value)
                     }
                     isDefaultConstruct -> {
-                        if (parameter.asType().hasQualifiedName(JAVA_UTIL_FUNCTION_SUPPLIER)) {
-                            val typeArgument = (parameter.asType() as? DeclaredType)?.typeArguments?.singleOrNull()
+                        if (paramType.hasQualifiedName(JAVA_UTIL_FUNCTION_SUPPLIER)) {
+                            val typeArgument = (paramType as? DeclaredType)?.typeArguments?.singleOrNull()
                             if (typeArgument == null) {
                                 errorConsumer?.report("Default construct supplier must have a type argument", parameter)
                                 return null
@@ -197,29 +202,46 @@ fun TypeElement.findMulticonnectFunction(
                                 errorConsumer?.report("Cannot default-construct non-multiconnect type", parameter)
                                 return null
                             }
-                            parameters += MulticonnectParameter.SuppliedDefaultConstructed(parameter.asType(), typeArgument)
+                            parameters += MulticonnectParameter.SuppliedDefaultConstructed(paramType, typeArgument)
                         } else {
-                            if (!MulticonnectType.isSupportedType(processingEnv, parameter.asType())) {
+                            if (!MulticonnectType.isSupportedType(processingEnv, paramType)) {
                                 errorConsumer?.report("Cannot default-construct non-multiconnect type", parameter)
                                 return null
                             }
-                            parameters += MulticonnectParameter.DefaultConstructed(parameter.asType())
+                            parameters += MulticonnectParameter.DefaultConstructed(paramType)
                         }
                     }
                     filledArgument != null -> {
-                        val registry = filledArgument.fromRegistry.takeIf { it.value.isNotEmpty() }
-                        if (registry != null) {
-                            if (!MulticonnectType.isRegistryCompatible(parameter.asType())) {
+                        val fromRegistry = filledArgument.fromRegistry.takeIf { it.value.isNotEmpty() }
+                        var registry: Registries? = null
+                        if (fromRegistry != null) {
+                            if (!MulticonnectType.isRegistryCompatible(paramType)) {
                                 errorConsumer?.report("Cannot fill non-registry type from a registry", parameter)
                                 return null
                             }
+                        } else if ((paramType.hasQualifiedName(JAVA_UTIL_FUNCTION_INT_FUNCTION) || paramType.hasQualifiedName(JAVA_UTIL_FUNCTION_TO_INT_FUNCTION))
+                            && (paramType as DeclaredType).typeArguments.firstOrNull()?.hasQualifiedName(MINECRAFT_IDENTIFIER) == true) {
+                            registry = filledArgument.registry
                         } else {
-                            if (!MulticonnectType.canAutoFill(parameter.asType())) {
-                                errorConsumer?.report("Cannot fill type ${parameter.asType()}", parameter)
+                            if (!MulticonnectType.canAutoFill(paramType)) {
+                                errorConsumer?.report("Cannot fill type $paramType", parameter)
                                 return null
                             }
                         }
-                        parameters += MulticonnectParameter.Filled(parameter.asType(), registry)
+                        parameters += MulticonnectParameter.Filled(paramType, fromRegistry, registry)
+                    }
+                    isGlobalData -> {
+                        val isValidType = if (paramType.hasQualifiedName(JAVA_UTIL_FUNCTION_CONSUMER)) {
+                            val consumedType = (paramType as DeclaredType).typeArguments.singleOrNull()
+                            consumedType is DeclaredType
+                        } else {
+                            paramType is DeclaredType
+                        }
+                        if (!isValidType) {
+                            errorConsumer?.report("Invalid global type $paramType", parameter)
+                            return null
+                        }
+                        parameters += MulticonnectParameter.GlobalData(paramType)
                     }
                 }
             }

@@ -1,6 +1,6 @@
 id clazz
 0 net.earthcomputer.multiconnect.packets.SPacketKeepAlive
-1 net.earthcomputer.multiconnect.packets.SPacketGameJoin
+1 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketGameJoin_1_17_1
 2 net.earthcomputer.multiconnect.packets.SPacketGameMessage
 3 net.earthcomputer.multiconnect.packets.SPacketWorldTimeUpdate
 4 net.earthcomputer.multiconnect.packets.SPacketEntityEquipmentUpdate
@@ -28,8 +28,8 @@ id clazz
 26 net.earthcomputer.multiconnect.packets.SPacketEntityStatus
 27 net.earthcomputer.multiconnect.packets.SPacketEntityAttach
 28 net.earthcomputer.multiconnect.packets.SPacketEntityTrackerUpdate
-29 net.earthcomputer.multiconnect.packets.SPacketEntityStatusEffect
-30 net.earthcomputer.multiconnect.packets.SPacketRemoveEntityStatusEffect
+29 net.earthcomputer.multiconnect.packets.v1_18.SPacketEntityStatusEffect_1_18
+30 net.earthcomputer.multiconnect.packets.v1_18.SPacketRemoveEntityStatusEffect_1_18
 31 net.earthcomputer.multiconnect.packets.SPacketExperienceBarUpdate
 32 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketEntityAttributes_1_16_5
 33 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketChunkData_1_16_5
@@ -52,7 +52,7 @@ id clazz
 50 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketAckScreenAction_1_16_5
 51 net.earthcomputer.multiconnect.packets.SPacketUpdateSign
 52 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketMapUpdate_1_16_5
-53 net.earthcomputer.multiconnect.packets.SPacketBlockEntityUpdate
+53 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketBlockEntityUpdate_1_17_1
 54 net.earthcomputer.multiconnect.packets.SPacketSignEditorOpen
 55 net.earthcomputer.multiconnect.packets.SPacketStatistics
 56 net.earthcomputer.multiconnect.packets.SPacketPlayerList

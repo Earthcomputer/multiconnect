@@ -48,6 +48,7 @@
     "connect.MixinMinecraftClient",
     "connect.MixinServerList",
     "connect.MixinServerListIcon",
+    "debug.MixinBootstrap",
     "debug.MixinKeyboard"
   ],
   "client": [
