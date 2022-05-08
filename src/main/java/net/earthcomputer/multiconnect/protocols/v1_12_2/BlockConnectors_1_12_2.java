@@ -92,10 +92,10 @@ public class BlockConnectors_1_12_2 {
             BlockState below = world.getBlockState(pos.down());
             Instrument instrument = Instrument.fromBlockState(below);
             BlockState newState = Blocks.NOTE_BLOCK.getDefaultState().with(Properties.INSTRUMENT, instrument);
-            if (ConnectionInfo.protocol.acceptBlockState(newState)) {
+            // TODO: rewrite 1.12.2
+//            if (ConnectionInfo.protocol.acceptBlockState(newState)) {
                 world.setBlockState(pos, newState);
-            }
-
+//            }
         }));
 
         // bed occupied

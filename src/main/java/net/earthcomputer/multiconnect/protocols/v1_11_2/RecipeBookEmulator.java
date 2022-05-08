@@ -91,45 +91,45 @@ public class RecipeBookEmulator {
     }
 
     // TODO: rewrite 1.12
-    private List<Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer>> mergeTransactions(List<PlaceRecipeC2SPacket_1_12.Transaction> transactions) {
-        // merge
-        var merged = new ArrayList<Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer>>();
-        for (var transaction : transactions) {
-            boolean canMerge = false;
-            if (!merged.isEmpty()) {
-                var lastTransaction = merged.get(merged.size() - 1).getLeft();
-                if (lastTransaction.stack.getCount() == transaction.stack.getCount()
-                        && lastTransaction.craftingSlot == transaction.craftingSlot
-                        && lastTransaction.invSlot == transaction.invSlot) {
-                    canMerge = true;
-                }
-            }
-
-            if (canMerge) {
-                var lastTransaction = merged.get(merged.size() - 1);
-                merged.set(merged.size() - 1, new Pair<>(lastTransaction.getLeft(), lastTransaction.getRight() + 1));
-            } else {
-                merged.add(new Pair<>(transaction, 1));
-            }
-        }
-
-        // translate inv slot to container slot
-        for (int i = 0; i < merged.size(); i++) {
-            var transaction = merged.get(i);
-            var firstTransaction = transaction.getLeft();
-            int slot = getInvSlot(firstTransaction.invSlot);
-            if (slot == -1) {
-                return null;
-            }
-            merged.set(i, new Pair<>(
-                    new PlaceRecipeC2SPacket_1_12.Transaction(firstTransaction.originalStack, firstTransaction.stack,
-                            firstTransaction.placedOn, firstTransaction.craftingSlot, slot),
-                    transaction.getRight()
-            ));
-        }
-
-        return merged;
-    }
+//    private List<Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer>> mergeTransactions(List<PlaceRecipeC2SPacket_1_12.Transaction> transactions) {
+//        // merge
+//        var merged = new ArrayList<Pair<PlaceRecipeC2SPacket_1_12.Transaction, Integer>>();
+//        for (var transaction : transactions) {
+//            boolean canMerge = false;
+//            if (!merged.isEmpty()) {
+//                var lastTransaction = merged.get(merged.size() - 1).getLeft();
+//                if (lastTransaction.stack.getCount() == transaction.stack.getCount()
+//                        && lastTransaction.craftingSlot == transaction.craftingSlot
+//                        && lastTransaction.invSlot == transaction.invSlot) {
+//                    canMerge = true;
+//                }
+//            }
+//
+//            if (canMerge) {
+//                var lastTransaction = merged.get(merged.size() - 1);
+//                merged.set(merged.size() - 1, new Pair<>(lastTransaction.getLeft(), lastTransaction.getRight() + 1));
+//            } else {
+//                merged.add(new Pair<>(transaction, 1));
+//            }
+//        }
+//
+//        // translate inv slot to container slot
+//        for (int i = 0; i < merged.size(); i++) {
+//            var transaction = merged.get(i);
+//            var firstTransaction = transaction.getLeft();
+//            int slot = getInvSlot(firstTransaction.invSlot);
+//            if (slot == -1) {
+//                return null;
+//            }
+//            merged.set(i, new Pair<>(
+//                    new PlaceRecipeC2SPacket_1_12.Transaction(firstTransaction.originalStack, firstTransaction.stack,
+//                            firstTransaction.placedOn, firstTransaction.craftingSlot, slot),
+//                    transaction.getRight()
+//            ));
+//        }
+//
+//        return merged;
+//    }
 
     private int getInvSlot(int invSlot) {
         assert MinecraftClient.getInstance().player != null;

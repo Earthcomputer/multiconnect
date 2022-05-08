@@ -22,7 +22,6 @@ import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.particle.*;
@@ -193,8 +192,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
         if (type.getParametersFactory() == ItemStackParticleEffect.PARAMETERS_FACTORY) {
             Item item = Registry.ITEM.get(iaece.multiconnect_getParam1());
             int meta = iaece.multiconnect_getParam2();
-            ItemStack stack = Items_1_12_2.oldItemStackToNew(new ItemStack(item), meta);
-            entity.setParticleType(createParticle(type, buf -> buf.writeItemStack(stack)));
+            // TODO: rewrite 1.12.2
+//            ItemStack stack = Items_1_12_2.oldItemStackToNew(new ItemStack(item), meta);
+//            entity.setParticleType(createParticle(type, buf -> buf.writeItemStack(stack)));
         } else if (type.getParametersFactory() == BlockStateParticleEffect.PARAMETERS_FACTORY) {
             entity.setParticleType(createParticle(type, buf -> buf.writeVarInt(iaece.multiconnect_getParam1())));
         } else if (type.getParametersFactory() == DustParticleEffect.PARAMETERS_FACTORY) {
