@@ -7,6 +7,7 @@ import net.earthcomputer.multiconnect.impl.DebugUtils;
 import net.earthcomputer.multiconnect.impl.TestingAPI;
 import net.earthcomputer.multiconnect.protocols.generic.MulticonnectClientboundTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.MulticonnectServerboundTranslator;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import org.apache.logging.log4j.LogManager;
@@ -23,7 +24,8 @@ public abstract class MixinClientConnection {
 
     @Inject(method = "setState", at = @At("HEAD"))
     private void onSetState(NetworkState state, CallbackInfo ci) {
-        if (state == NetworkState.PLAY) {
+        // Singleplayer doesnt include encoding
+        if (state == NetworkState.PLAY && !MinecraftClient.getInstance().isIntegratedServerRunning()) {
             channel.pipeline().addBefore("encoder", "multiconnect_serverbound_translator", new MulticonnectServerboundTranslator());
             channel.pipeline().addBefore("decoder", "multiconnect_clientbound_translator", new MulticonnectClientboundTranslator());
         } else {
