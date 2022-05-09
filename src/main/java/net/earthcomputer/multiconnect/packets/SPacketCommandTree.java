@@ -158,6 +158,12 @@ public class SPacketCommandTree {
         public boolean decimals;
     }
 
+    @Polymorphic(stringValue = {"minecraft:resource", "minecraft:resource_or_tag"})
+    @MessageVariant
+    public static class RegistryKeyArgument extends BrigadierArgument {
+        public Identifier registry;
+    }
+
     @Polymorphic(otherwise = true)
     @MessageVariant
     public static class ConstantArgument extends BrigadierArgument {
