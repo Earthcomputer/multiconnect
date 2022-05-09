@@ -70,16 +70,38 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
                 var fromSection = (ChunkData_1_17_1.ChunkSection) fromSections.get(i++);
                 var toSection = new ChunkData_Latest.ChunkSection();
                 toSection.nonEmptyBlockCount = fromSection.nonEmptyBlockCount;
-                toSection.palette = fromSection.palette;
-                toSection.data = fromSection.data;
+
+                // convert block states
+                ChunkData_1_17_1.BlockStatePalettedContainer fromBlockStates = (ChunkData_1_17_1.BlockStatePalettedContainer) fromSection.blockStates;
+                toSection.blockStates = switch (fromBlockStates.paletteSize) {
+                    case 0 -> {
+                        var states = new ChunkData_Latest.BlockStatePalettedContainer.Singleton();
+                        states.blockStateId = fromBlockStates.palette[0];
+                        states.dummyData = new long[0];
+                        yield states;
+                    }
+                    case 1, 2, 3, 4, 5, 6, 7, 8 -> {
+                        var states = new ChunkData_Latest.BlockStatePalettedContainer.Multiple();
+                        states.paletteSize = fromBlockStates.paletteSize;
+                        states.palette = fromBlockStates.palette;
+                        states.data = fromBlockStates.data;
+                        yield states;
+                    }
+                    default -> {
+                        var states = new ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer();
+                        states.paletteSize = fromBlockStates.paletteSize;
+                        states.data = fromBlockStates.data;
+                        yield states;
+                    }
+                };
+
                 computeBiomeData(sectionY, registryManager, biomes, toSection);
                 destSections.add(toSection);
             } else {
                 var toSection = new ChunkData_Latest.ChunkSection();
-                toSection.palette = new ChunkData_Latest.Palette();
-                toSection.palette.paletteSize = 4;
-                toSection.palette.palette = new int[] {0};
-                toSection.data = new long[256];
+                var toStates = new ChunkData_Latest.BlockStatePalettedContainer.Singleton();
+                toStates.dummyData = new long[0];
+                toSection.blockStates = toStates;
                 computeBiomeData(sectionY, registryManager, biomes, toSection);
                 destSections.add(toSection);
             }
@@ -125,27 +147,31 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
 
         int bitsPerBiome = MathHelper.ceilLog2(biomePalette.size());
         if (bitsPerBiome == 0) {
-            var palette = new ChunkData_Latest.BiomePalette.Singleton();
-            palette.biomeId = biomePalette.getInt(0);
-            toSection.biomePalette = palette;
-            bitsPerBiome = 1;
-        } else if (bitsPerBiome <= 2) {
-            var palette = new ChunkData_Latest.BiomePalette.Multiple();
-            palette.paletteSize = (byte) bitsPerBiome;
-            palette.palette = biomePalette.toIntArray();
-            toSection.biomePalette = palette;
-        } else {
-            var palette = new ChunkData_Latest.BiomePalette.Registry();
-            palette.paletteSize = (byte) bitsPerBiome;
-            toSection.biomePalette = palette;
-            bitsPerBiome = MathHelper.ceilLog2(biomeRegistry.size());
+            var toBiomes = new ChunkData_Latest.BiomePalettedContainer.Singleton();
+            toBiomes.dummyData = new long[0];
+            toSection.biomes = toBiomes;
+            toBiomes.biomeId = biomePalette.getInt(0);
+            return;
         }
 
         int minIndex = sectionY << 6;
-
         int biomesPerLong = 64 / bitsPerBiome;
         long[] result = new long[(64 + biomesPerLong - 1) / biomesPerLong];
-        toSection.biomeData = result;
+
+        if (bitsPerBiome <= 3) {
+            var toBiomes = new ChunkData_Latest.BiomePalettedContainer.Multiple();
+            toBiomes.paletteSize = (byte) bitsPerBiome;
+            toBiomes.palette = biomePalette.toIntArray();
+            toBiomes.data = result;
+            toSection.biomes = toBiomes;
+        } else {
+            var toBiomes = new ChunkData_Latest.BiomePalettedContainer.RegistryContainer();
+            toBiomes.paletteSize = (byte) bitsPerBiome;
+            toBiomes.data = result;
+            toSection.biomes = toBiomes;
+            bitsPerBiome = MathHelper.ceilLog2(biomeRegistry.size());
+        }
+
         if (sectionY < 0) {
             return;
         }

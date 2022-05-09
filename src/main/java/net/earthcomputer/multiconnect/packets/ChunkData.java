@@ -7,4 +7,8 @@ public interface ChunkData {
     @Message
     interface Section {
     }
+
+    @Message
+    interface BlockStatePalettedContainer {
+    }
 }

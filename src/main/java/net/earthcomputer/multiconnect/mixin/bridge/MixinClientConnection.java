@@ -25,7 +25,7 @@ public abstract class MixinClientConnection {
     @Inject(method = "setState", at = @At("HEAD"))
     private void onSetState(NetworkState state, CallbackInfo ci) {
         // Singleplayer doesnt include encoding
-        if (state == NetworkState.PLAY && !MinecraftClient.getInstance().isIntegratedServerRunning()) {
+        if (state == NetworkState.PLAY && !MinecraftClient.getInstance().isIntegratedServerRunning() && !DebugUtils.SKIP_TRANSLATION) {
             channel.pipeline().addBefore("encoder", "multiconnect_serverbound_translator", new MulticonnectServerboundTranslator());
             channel.pipeline().addBefore("decoder", "multiconnect_clientbound_translator", new MulticonnectClientboundTranslator());
         } else {

@@ -106,6 +106,7 @@ Debug system properties:
 * `multiconnect.unitTestMode` (boolean) - enables unit test mode.
 * `multiconnect.ignoreErrors` (boolean) - drops packets that have translation errors rather than disconnecting the client. This may be useful to log in to a server to get into a state where you can press the debug key.
 * `multiconnect.dumpRegistries` (boolean) - dumps the registries for the current version in the `data` directory on game startup. Useful for updating to a new version.
+* `multiconnect.skipTranslation` (boolean) - skips multiconnect translation, useful for debugging how vanilla handles a packet.
 
 ## Miscellaneous
 * Please do not copy code whose license doesn't allow to copy without also copying license headers. E.g. ViaVersion.

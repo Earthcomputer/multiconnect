@@ -28,41 +28,67 @@ public class ChunkData_Latest implements ChunkData {
     @MessageVariant(minVersion = Protocols.V1_18)
     public static class ChunkSection implements ChunkData.Section {
         public short nonEmptyBlockCount;
-        public Palette palette;
-        @Type(Types.LONG)
-        public long[] data;
-        public BiomePalette biomePalette;
-        @Type(Types.LONG)
-        public long[] biomeData;
+        public ChunkData.BlockStatePalettedContainer blockStates;
+        public BiomePalettedContainer biomes;
     }
 
-    @MessageVariant
-    public static class Palette {
-        public byte paletteSize;
-        @Registry(Registries.BLOCK_STATE)
-        public int[] palette;
-    }
-
-    @MessageVariant
+    @MessageVariant(minVersion = Protocols.V1_18)
     @Polymorphic
-    public static abstract class BiomePalette {
+    public static abstract class BlockStatePalettedContainer implements ChunkData.BlockStatePalettedContainer {
         public byte paletteSize;
 
         @MessageVariant
         @Polymorphic(intValue = 0)
-        public static class Singleton extends BiomePalette {
-            public int biomeId;
+        public static class Singleton extends BlockStatePalettedContainer {
+            @Registry(Registries.BLOCK_STATE)
+            public int blockStateId;
+            @Type(Types.LONG)
+            public long[] dummyData;
         }
 
         @MessageVariant
-        @Polymorphic(intValue = {1, 2})
-        public static class Multiple extends BiomePalette {
+        @Polymorphic(intValue = {1, 2, 3, 4, 5, 6, 7, 8})
+        public static class Multiple extends BlockStatePalettedContainer {
+            @Registry(Registries.BLOCK_STATE)
             public int[] palette;
+            @Type(Types.LONG)
+            public long[] data;
         }
 
         @MessageVariant
         @Polymorphic(otherwise = true)
-        public static class Registry extends BiomePalette {
+        public static class RegistryContainer extends BlockStatePalettedContainer {
+            @Type(Types.LONG)
+            public long[] data;
+        }
+    }
+
+    @MessageVariant
+    @Polymorphic
+    public static abstract class BiomePalettedContainer {
+        public byte paletteSize;
+
+        @MessageVariant
+        @Polymorphic(intValue = 0)
+        public static class Singleton extends BiomePalettedContainer {
+            public int biomeId;
+            @Type(Types.LONG)
+            public long[] dummyData;
+        }
+
+        @MessageVariant
+        @Polymorphic(intValue = {1, 2, 3})
+        public static class Multiple extends BiomePalettedContainer {
+            public int[] palette;
+            @Type(Types.LONG)
+            public long[] data;
+        }
+
+        @MessageVariant
+        @Polymorphic(otherwise = true)
+        public static class RegistryContainer extends BiomePalettedContainer {
+            @Type(Types.LONG)
+            public long[] data;
         }
     }
 }
