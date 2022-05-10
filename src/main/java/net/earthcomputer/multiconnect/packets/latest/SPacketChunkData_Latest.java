@@ -8,7 +8,6 @@ import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Datafix;
 import net.earthcomputer.multiconnect.ap.DatafixTypes;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
-import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.GlobalData;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Length;
@@ -18,6 +17,7 @@ import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.packets.SPacketChunkData;
 import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1;
@@ -32,8 +32,6 @@ import net.minecraft.util.registry.DynamicRegistryManager;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
-import java.util.function.IntFunction;
-import java.util.function.ToIntFunction;
 
 @MessageVariant(minVersion = Protocols.V1_18)
 public class SPacketChunkData_Latest implements SPacketChunkData {
@@ -52,7 +50,6 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
             @Argument("data") ChunkData data,
             @Argument("biomes") IntList biomes,
             @Argument("blockEntities") List<NbtCompound> blockEntities,
-            @FilledArgument(registry = Registries.BLOCK_ENTITY_TYPE) ToIntFunction<Identifier> blockEntityNameToId,
             @DefaultConstruct InnerData dest,
             @GlobalData DynamicRegistryManager registryManager,
             @GlobalData DimensionTypeReference dimensionType
@@ -115,7 +112,10 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
             destBe.y = (short) be.getInt("y");
             Identifier id = Identifier.tryParse(be.getString("id"));
             if (id != null) {
-                destBe.type = blockEntityNameToId.applyAsInt(id);
+                Integer rawId = PacketSystem.serverIdToRawId(net.minecraft.util.registry.Registry.BLOCK_ENTITY_TYPE, id);
+                if (rawId != null) {
+                    destBe.type = rawId;
+                }
             }
             destBe.nbt = be;
             dest.blockEntities.add(destBe);
@@ -206,15 +206,14 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
 
         public static void preprocessBlockEntity(
                 NbtCompound nbt,
-                @Argument("type") int type,
-                @FilledArgument(registry = Registries.BLOCK_ENTITY_TYPE) IntFunction<Identifier> blockEntityIdToName
+                @Argument("type") int type
         ) {
             if (nbt == null) {
                 return;
             }
-            Identifier name = blockEntityIdToName.apply(type);
+            Identifier name = PacketSystem.serverRawIdToId(net.minecraft.util.registry.Registry.BLOCK_ENTITY_TYPE, type);
             if (name != null) {
-                nbt.putString("id",name.toString());
+                nbt.putString("id", name.toString());
             }
         }
     }

@@ -12,12 +12,14 @@ import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.Packet;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -125,6 +127,44 @@ public class PacketSystem {
         return proxy.doesServerKnow(registry.getKey(), rawId) || proxy.doesServerKnowMulticonnect(key);
     }
 
+    public static int serverRawIdToClient(Registry<?> registry, int serverRawId) {
+        return protocolClasses.get(ConnectionInfo.protocolVersion).remapSInt(registry.getKey(), serverRawId);
+    }
+
+    public static int clientRawIdToServer(Registry<?> registry, int clientRawId) {
+        return protocolClasses.get(ConnectionInfo.protocolVersion).remapCInt(registry.getKey(), clientRawId);
+    }
+
+    public static Identifier serverIdToClient(Registry<?> registry, Identifier serverId) {
+        return protocolClasses.get(ConnectionInfo.protocolVersion).remapSIdentifier(registry.getKey(), serverId);
+    }
+
+    public static Identifier clientIdToServer(Registry<?> registry, Identifier clientId) {
+        return protocolClasses.get(ConnectionInfo.protocolVersion).remapCIdentifier(registry.getKey(), clientId);
+    }
+
+    @Nullable
+    public static <T> Integer serverIdToRawId(Registry<T> registry, Identifier serverId) {
+        Identifier clientId = serverIdToClient(registry, serverId);
+        T value = registry.get(clientId);
+        if (value == null) {
+            return null;
+        }
+        int clientRawId = registry.getRawId(value);
+        return clientRawIdToServer(registry, clientRawId);
+    }
+
+    @Nullable
+    public static <T> Identifier serverRawIdToId(Registry<T> registry, int serverRawId) {
+        int clientRawId = serverRawIdToClient(registry, serverRawId);
+        T value = registry.get(clientRawId);
+        if (value == null) {
+            return null;
+        }
+        Identifier clientId = registry.getId(value);
+        return clientIdToServer(registry, clientId);
+    }
+
     public static class Internals {
         private static final LoadingCache<ByteBuf, TypedMap> bufUserData = CacheBuilder.newBuilder().weakKeys().build(CacheLoader.from(TypedMap::new));
 
@@ -164,6 +204,10 @@ public class PacketSystem {
         private final MethodHandle sendToServer;
         private final MethodHandle doesServerKnow;
         private final MethodHandle doesServerKnowMulticonnect;
+        private final MethodHandle remapCInt;
+        private final MethodHandle remapSInt;
+        private final MethodHandle remapCIdentifier;
+        private final MethodHandle remapSIdentifier;
 
         ProtocolClassProxy(Class<?> clazz, int protocol) {
             this.translateSPacket = findMethodHandle(clazz, "translateSPacket", void.class, ByteBuf.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
@@ -172,6 +216,10 @@ public class PacketSystem {
             this.sendToServer = findMethodHandle(clazz, "sendToServer", void.class, Object.class, int.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
             this.doesServerKnow = findMethodHandle(clazz, "doesServerKnow", boolean.class, RegistryKey.class, int.class);
             this.doesServerKnowMulticonnect = findMethodHandle(clazz, "doesServerKnowMulticonnect", boolean.class, RegistryKey.class);
+            this.remapCInt = findMethodHandle(clazz, "remapCInt", int.class, RegistryKey.class, int.class);
+            this.remapSInt = findMethodHandle(clazz, "remapSInt", int.class, RegistryKey.class, int.class);
+            this.remapCIdentifier = findMethodHandle(clazz, "remapCIdentifier", Identifier.class, RegistryKey.class, Identifier.class);
+            this.remapSIdentifier = findMethodHandle(clazz, "remapSIdentifier", Identifier.class, RegistryKey.class, Identifier.class);
         }
 
         void translateSPacket(ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
@@ -217,6 +265,38 @@ public class PacketSystem {
         boolean doesServerKnowMulticonnect(RegistryKey<?> value) {
             try {
                 return (Boolean) doesServerKnowMulticonnect.invoke(value);
+            } catch (Throwable e) {
+                throw PacketIntrinsics.sneakyThrow(e);
+            }
+        }
+
+        int remapCInt(RegistryKey<? extends Registry<?>> registry, int value) {
+            try {
+                return (Integer) remapCInt.invoke(registry, value);
+            } catch (Throwable e) {
+                throw PacketIntrinsics.sneakyThrow(e);
+            }
+        }
+
+        int remapSInt(RegistryKey<? extends Registry<?>> registry, int value) {
+            try {
+                return (Integer) remapSInt.invoke(registry, value);
+            } catch (Throwable e) {
+                throw PacketIntrinsics.sneakyThrow(e);
+            }
+        }
+
+        Identifier remapCIdentifier(RegistryKey<? extends Registry<?>> registry, Identifier value) {
+            try {
+                return (Identifier) remapCIdentifier.invoke(registry, value);
+            } catch (Throwable e) {
+                throw PacketIntrinsics.sneakyThrow(e);
+            }
+        }
+
+        Identifier remapSIdentifier(RegistryKey<? extends Registry<?>> registry, Identifier value) {
+            try {
+                return (Identifier) remapSIdentifier.invoke(registry, value);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }

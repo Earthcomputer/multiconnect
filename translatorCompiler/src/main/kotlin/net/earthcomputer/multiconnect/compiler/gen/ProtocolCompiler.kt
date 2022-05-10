@@ -6,6 +6,7 @@ import net.earthcomputer.multiconnect.compiler.CommonClassNames.BITSET
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.BYTE_BUF
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.CLASS
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.IDENTIFIER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.INT_UNARY_OPERATOR
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.MAP
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.NETWORK_HANDLER
@@ -18,6 +19,7 @@ import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY_KEY
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.SET
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.SUPPLIER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPED_MAP
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.UNARY_OPERATOR
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.Either
 import net.earthcomputer.multiconnect.compiler.Emitter
@@ -72,6 +74,11 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
 
         emitDoesServerKnow(emitter)
         emitDoesServerKnowMulticonnect(emitter)
+
+        emitRemapFunc(emitter, clientbound = true, identifier = false)
+        emitRemapFunc(emitter, clientbound = false, identifier = false)
+        emitRemapFunc(emitter, clientbound = true, identifier = true)
+        emitRemapFunc(emitter, clientbound = false, identifier = true)
 
         val emittedMembers = mutableSetOf<String>()
         while (cacheMembers.size != emittedMembers.size) {
@@ -339,6 +346,75 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                     .append(".").append(registry.registryKeyFieldName).append(", new ").appendClassName(IDENTIFIER)
                     .append("(\"multiconnect\", \"").append(entry.name.substring("multiconnect:".length)).append("\"))")
             }
+        }
+        field.dedent().appendNewLine().append(");")
+    }
+
+    private fun emitRemapFunc(emitter: Emitter, clientbound: Boolean, identifier: Boolean) {
+        val methodName = "remap%s%s".format(if (clientbound) "S" else "C", if (identifier) "Identifier" else "Int")
+        val fieldName = "REMAP_%s_%s".format(if (clientbound) "S" else "C", if (identifier) "IDENTIFIER" else "INT")
+
+        fun emitType(emitter: Emitter) {
+            if (identifier) {
+                emitter.appendClassName(IDENTIFIER)
+            } else {
+                emitter.append("int")
+            }
+        }
+
+        fun emitUnaryOperator(emitter: Emitter) {
+            if (identifier) {
+                emitter.appendClassName(UNARY_OPERATOR).append("<").appendClassName(IDENTIFIER).append(">")
+            } else {
+                emitter.appendClassName(INT_UNARY_OPERATOR)
+            }
+        }
+
+        val function = emitter.addMember(methodName) ?: return
+        function.append("public static ")
+        emitType(function)
+        function.append(" ").append(methodName).append("(")
+            .appendClassName(REGISTRY_KEY).append("<? extends ").appendClassName(REGISTRY)
+            .append("<?>> registry, ")
+        emitType(function)
+        function.append(" value) {").indent().appendNewLine()
+        emitUnaryOperator(function)
+        function.append(" remapper = ").append(fieldName)
+            .append(".get(registry);").appendNewLine()
+            .append("if (remapper == null) {").indent().appendNewLine()
+            .append("return value;").dedent().appendNewLine()
+            .append("}").appendNewLine()
+            .append("return remapper.apply")
+        if (!identifier) {
+            function.append("AsInt")
+        }
+        function.append("(value);").dedent().appendNewLine().append("}")
+
+        val field = emitter.addMember(fieldName) ?: return
+        field.append("private static final ").appendClassName(MAP).append("<").appendClassName(REGISTRY_KEY)
+            .append("<? extends ").appendClassName(REGISTRY).append("<?>>, ")
+        emitUnaryOperator(field)
+        field.append("> ").append(fieldName).append(" = ").appendClassName(PACKET_INTRINSICS).append(".makeMap(")
+            .indent()
+        var addedAny = false
+        for (registry in Registries.values()) {
+            if (registry == Registries.BLOCK_STATE) {
+                continue
+            }
+            if (addedAny) {
+                field.append(",")
+            }
+            addedAny = true
+            field.appendNewLine().appendClassName(REGISTRY).append(".").append(registry.registryKeyFieldName)
+                .append(", (")
+            emitUnaryOperator(field)
+            field.append(") ").appendClassName(className).append("::").append(
+                if (identifier) {
+                    createStringRemapFunc(registry, clientbound)
+                } else {
+                    createIntRemapFunc(registry, clientbound)
+                }
+            )
         }
         field.dedent().appendNewLine().append(");")
     }

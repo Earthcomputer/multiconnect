@@ -25,8 +25,6 @@ const val JAVA_UTIL_OPTIONAL_INT = "java.util.OptionalInt"
 const val JAVA_UTIL_OPTIONAL_LONG = "java.util.OptionalLong"
 const val JAVA_UTIL_UUID = "java.util.UUID"
 const val JAVA_UTIL_FUNCTION_CONSUMER = "java.util.function.Consumer"
-const val JAVA_UTIL_FUNCTION_INT_FUNCTION = "java.util.function.IntFunction"
-const val JAVA_UTIL_FUNCTION_TO_INT_FUNCTION = "java.util.function.ToIntFunction"
 const val JAVA_UTIL_FUNCTION_SUPPLIER = "java.util.function.Supplier"
 const val FASTUTIL_INT_LIST = "it.unimi.dsi.fastutil.ints.IntList"
 const val FASTUTIL_LONG_LIST = "it.unimi.dsi.fastutil.longs.LongList"
@@ -213,22 +211,18 @@ fun TypeElement.findMulticonnectFunction(
                     }
                     filledArgument != null -> {
                         val fromRegistry = filledArgument.fromRegistry.takeIf { it.value.isNotEmpty() }
-                        var registry: Registries? = null
                         if (fromRegistry != null) {
                             if (!MulticonnectType.isRegistryCompatible(paramType)) {
                                 errorConsumer?.report("Cannot fill non-registry type from a registry", parameter)
                                 return null
                             }
-                        } else if ((paramType.hasQualifiedName(JAVA_UTIL_FUNCTION_INT_FUNCTION) || paramType.hasQualifiedName(JAVA_UTIL_FUNCTION_TO_INT_FUNCTION))
-                            && (paramType as DeclaredType).typeArguments.firstOrNull()?.hasQualifiedName(MINECRAFT_IDENTIFIER) == true) {
-                            registry = filledArgument.registry
                         } else {
                             if (!MulticonnectType.canAutoFill(paramType)) {
                                 errorConsumer?.report("Cannot fill type $paramType", parameter)
                                 return null
                             }
                         }
-                        parameters += MulticonnectParameter.Filled(paramType, fromRegistry, registry)
+                        parameters += MulticonnectParameter.Filled(paramType, fromRegistry)
                     }
                     isGlobalData -> {
                         val isValidType = if (paramType.hasQualifiedName(JAVA_UTIL_FUNCTION_CONSUMER)) {

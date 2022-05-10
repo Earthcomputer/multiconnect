@@ -314,7 +314,7 @@ private sealed class IntRemapValue {
     data class FromStateId(val blockName: String, val offset: Int) : IntRemapValue()
 }
 
-private fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbound: Boolean): String {
+internal fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbound: Boolean): String {
     fun selectShift(shifts: List<Pair<Int, IntRemapValue>>): McNode {
         val middleIndex = shifts.size / 2
         val middleValue = shifts[middleIndex].second
@@ -442,7 +442,7 @@ private fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientboun
     return methodName
 }
 
-private fun ProtocolCompiler.createStringRemapFunc(registry: Registries, clientbound: Boolean): String {
+internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, clientbound: Boolean): String {
     val identifierType = McType.DeclaredType(IDENTIFIER)
 
     fun buildNode(): McNode {

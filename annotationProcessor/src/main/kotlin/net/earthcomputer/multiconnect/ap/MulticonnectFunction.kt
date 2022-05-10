@@ -32,7 +32,6 @@ sealed class MulticonnectParameter {
     class Filled(
         override val paramType: TypeMirror,
         @Contextual val fromRegistry: FilledArgument.FromRegistry?,
-        val registry: Registries?,
     ): MulticonnectParameter()
 
     @Serializable

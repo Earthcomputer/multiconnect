@@ -8,12 +8,10 @@ import net.earthcomputer.multiconnect.compiler.CommonClassNames.CLASS
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.CONSUMER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.DELAYED_PACKET_SENDER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.IDENTIFIER
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.INT_FUNCTION
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.MAP
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.NETWORK_HANDLER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.OBJECT
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.TO_INT_FUNCTION
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPED_MAP
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.DefaultConstruct
@@ -480,68 +478,6 @@ internal fun ProtocolCompiler.generateFilledConstructGraph(type: McType, filledP
             McNode(LoadFieldOp(McType.DeclaredType(className), identifierField, McType.DeclaredType(IDENTIFIER), isStatic = true))
         } else {
             throw CompileException("Invalid @Filled(fromRegistry) type $type")
-        }
-    }
-
-    if (filledParam.registry != null) {
-        return if (type.hasName(INT_FUNCTION)) {
-            val fieldName = "MAP_${filledParam.registry}_I2S_${currentProtocolId}"
-            val identifierType = McType.DeclaredType(IDENTIFIER)
-            val mapType = McType.DeclaredType("it.unimi.dsi.fastutil.ints.Int2ObjectMap", listOf(identifierType))
-            cacheMembers[fieldName] = { emitter ->
-                emitter.append("private static final ")
-                mapType.emit(emitter)
-                emitter.append(" ").append(fieldName).append(" = ").appendClassName(PACKET_INTRINSICS).append(".makeInt2ObjectMap(").indent()
-                for ((index, entry) in filledParam.registry.entries.withIndex()) {
-                    if (index != 0) {
-                        emitter.append(",")
-                    }
-                    emitter.appendNewLine().append(entry.id.toString()).append(", new ").appendClassName(IDENTIFIER).append("(")
-                    val (namespace, path) = entry.oldName.normalizeIdentifier().split(':', limit = 2)
-                    if (namespace != "minecraft") {
-                        emitter.append("\"").append(namespace).append("\", ")
-                    }
-                    emitter.append("\"").append(path).append("\")")
-                }
-                emitter.dedent().appendNewLine().append(");")
-            }
-            val intParam = VariableId.create()
-            McNode(LambdaOp(type, identifierType, listOf(McType.INT), listOf(intParam)),
-                McNode(FunctionCallOp(mapType.name, "get", listOf(mapType, McType.INT), identifierType, false, isStatic = false),
-                    McNode(LoadFieldOp(McType.DeclaredType(className), fieldName, mapType, isStatic = true)),
-                    McNode(LoadVariableOp(intParam, McType.INT))
-                )
-            )
-        } else if (type.hasName(TO_INT_FUNCTION)) {
-            val fieldName = "MAP_${filledParam.registry}_S2I_${currentProtocolId}"
-            val identifierType = McType.DeclaredType(IDENTIFIER)
-            val mapType = McType.DeclaredType("it.unimi.dsi.fastutil.objects.Object2IntMap", listOf(identifierType))
-            cacheMembers[fieldName] = { emitter ->
-                emitter.append("private static final ")
-                mapType.emit(emitter)
-                emitter.append(" ").append(fieldName).append(" = ").appendClassName(PACKET_INTRINSICS).append(".makeObject2IntMap(").indent()
-                for ((index, entry) in filledParam.registry.entries.withIndex()) {
-                    if (index != 0) {
-                        emitter.append(",")
-                    }
-                    emitter.appendNewLine().append("new ").appendClassName(IDENTIFIER).append("(")
-                    val (namespace, path) = entry.oldName.normalizeIdentifier().split(':', limit = 2)
-                    if (namespace != "minecraft") {
-                        emitter.append("\"").append(namespace).append("\", ")
-                    }
-                    emitter.append("\"").append(path).append("\"), ").append(entry.id.toString())
-                }
-                emitter.dedent().appendNewLine().append(");")
-            }
-            val nameParam = VariableId.create()
-            McNode(LambdaOp(type, McType.INT, listOf(identifierType), listOf(nameParam)),
-                McNode(FunctionCallOp(mapType.name, "getInt", listOf(mapType, identifierType), McType.INT, false, isStatic = false),
-                    McNode(LoadFieldOp(McType.DeclaredType(className), fieldName, mapType, isStatic = true)),
-                    McNode(LoadVariableOp(nameParam, identifierType))
-                )
-            )
-        } else {
-            throw CompileException("Invalid @Filled(registry) type $type")
         }
     }
 
