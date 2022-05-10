@@ -5,6 +5,7 @@ package net.earthcomputer.multiconnect.compiler
 import net.earthcomputer.multiconnect.compiler.gen.ProtocolCompiler
 import net.earthcomputer.multiconnect.compiler.gen.checkMessages
 import java.io.File
+import java.util.BitSet
 
 object FileLocations {
     lateinit var jsonDir: File
@@ -42,5 +43,36 @@ private val packageClassSplitRegex = "(.+?)\\.([A-Z].*)".toRegex()
 fun splitPackageClass(className: String): Pair<String, String> {
     val match = packageClassSplitRegex.matchEntire(className) ?: throw IllegalArgumentException("Invalid class name: $className")
     return match.groupValues[1] to match.groupValues[2]
+}
+
+/**
+ * See PacketIntrinsics.makeRLEBitSet
+ */
+fun encodeRLEBitSet(bitset: BitSet): String {
+    return buildString {
+        fun appendVarChar(value_: Int) {
+            if (value_ == 0) {
+                append('\u0000')
+                return
+            }
+            var value = value_
+            while (value > 0) {
+                val char = ((if ((value and 0x7fff) != value) 0x8000 else 0) or (value and 0x7fff)).toChar()
+                append(char)
+                value = value ushr 15
+            }
+        }
+
+        var prevIndex = 0
+        var index = bitset.nextSetBit(0)
+        while (index >= 0) {
+            appendVarChar(index - prevIndex)
+            prevIndex = index
+            index = bitset.nextClearBit(index + 1)
+            appendVarChar(index - prevIndex)
+            prevIndex = index
+            index = bitset.nextSetBit(index + 1)
+        }
+    }
 }
 

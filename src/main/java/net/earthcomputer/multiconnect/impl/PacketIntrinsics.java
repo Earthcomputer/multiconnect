@@ -112,6 +112,44 @@ public final class PacketIntrinsics {
         return map;
     }
 
+    /**
+     * Decodes a bitset from a string. The string is
+     * <a href="https://en.wikipedia.org/wiki/Run-length_encoding">run-length encoded</a>, in the format:
+     * {@code (<length>)*}.
+     *
+     * Since the only possible values in the bitset are true and false, there is no need to explicitly
+     * encode the value in this string, as they will always alternative between 0 and 1. The first length
+     * in the string refers to the number of 0s, followed by the second length specifying the number of 1s
+     * following those 0s, and so on.
+     *
+     * The lengths are "varchars". More chars are continuously read from the string until one of the chars
+     * has its highest bit (0x8000) unset. The bottom 15 bits of each char are included in the length, in
+     * little-endian order.
+     */
+    public static BitSet makeRLEBitSet(String encoded) {
+        BitSet result = new BitSet();
+        int resultIndex = 0;
+        int strIndex = 0;
+        boolean value = false;
+        while (strIndex < encoded.length()) {
+            int length = 0;
+            int shift = 0;
+            char c;
+            do {
+                c = encoded.charAt(strIndex++);
+                length |= (c & 0x7fff) << shift;
+                shift += 15;
+            } while ((c & 0x8000) != 0);
+
+            if (value) {
+                result.set(resultIndex, resultIndex + length);
+            }
+            resultIndex += length;
+            value = !value;
+        }
+        return result;
+    }
+
     public static int getStateId(RegistryKey<Block> blockKey, int offset) {
         Block block = Registry.BLOCK.get(blockKey);
         assert block != null;

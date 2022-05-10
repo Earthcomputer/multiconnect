@@ -92,20 +92,15 @@ public class APIImpl extends MultiConnectAPI {
         CustomPayloadHandler.removeServerboundStringCustomPayloadListener(listener);
     }
 
-    // TODO: rewrite
-//    @Override
-//    public <T> boolean doesServerKnow(Registry<T> registry, T value) {
-//        return registry.getKey(value).map(key -> doesServerKnow(registry, key)).orElse(false);
-//    }
-//
-//    @SuppressWarnings("unchecked")
-//    @Override
-//    public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
-//        if (DefaultRegistries.getDefaultRegistry(registry.getKey()) == null) {
-//            return super.doesServerKnow(registry, key);
-//        }
-//        return ((ISimpleRegistry<T>) registry).multiconnect_getRealEntries().contains(key);
-//    }
+    @Override
+    public <T> boolean doesServerKnow(Registry<T> registry, T value) {
+        return PacketSystem.doesServerKnow(registry, value);
+    }
+
+    @Override
+    public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
+        return PacketSystem.doesServerKnow(registry, key);
+    }
 
     //region deprecated stuff
 

@@ -13,6 +13,8 @@ import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.Packet;
 import net.minecraft.util.Util;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Contract;
@@ -25,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PacketSystem {
@@ -104,6 +107,24 @@ public class PacketSystem {
         }
     }
 
+    public static <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
+        return doesServerKnow(registry, key, registry.get(key));
+    }
+
+    public static <T> boolean doesServerKnow(Registry<T> registry, T value) {
+        Optional<RegistryKey<T>> key = registry.getKey(value);
+        if (key.isEmpty()) {
+            return false;
+        }
+        return doesServerKnow(registry, key.get(), value);
+    }
+
+    private static <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key, T value) {
+        int rawId = registry.getRawId(value);
+        ProtocolClassProxy proxy = protocolClasses.get(ConnectionInfo.protocolVersion);
+        return proxy.doesServerKnow(registry.getKey(), rawId) || proxy.doesServerKnowMulticonnect(key);
+    }
+
     public static class Internals {
         private static final LoadingCache<ByteBuf, TypedMap> bufUserData = CacheBuilder.newBuilder().weakKeys().build(CacheLoader.from(TypedMap::new));
 
@@ -141,12 +162,16 @@ public class PacketSystem {
         private final MethodHandle translateCPacket;
         private final MethodHandle sendToClient;
         private final MethodHandle sendToServer;
+        private final MethodHandle doesServerKnow;
+        private final MethodHandle doesServerKnowMulticonnect;
 
         ProtocolClassProxy(Class<?> clazz, int protocol) {
             this.translateSPacket = findMethodHandle(clazz, "translateSPacket", void.class, ByteBuf.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
             this.translateCPacket = findMethodHandle(clazz, "translateCPacket", void.class, ByteBuf.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
             this.sendToClient = findMethodHandle(clazz, "sendToClient", void.class, Object.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
             this.sendToServer = findMethodHandle(clazz, "sendToServer", void.class, Object.class, int.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
+            this.doesServerKnow = findMethodHandle(clazz, "doesServerKnow", boolean.class, RegistryKey.class, int.class);
+            this.doesServerKnowMulticonnect = findMethodHandle(clazz, "doesServerKnowMulticonnect", boolean.class, RegistryKey.class);
         }
 
         void translateSPacket(ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
@@ -176,6 +201,22 @@ public class PacketSystem {
         void sendToServer(Object packet, int fromProtocol, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
             try {
                 sendToServer.invoke(packet, fromProtocol, outBufs, networkHandler, globalData, userData);
+            } catch (Throwable e) {
+                throw PacketIntrinsics.sneakyThrow(e);
+            }
+        }
+
+        boolean doesServerKnow(RegistryKey<? extends Registry<?>> registry, int newId) {
+            try {
+                return (Boolean) doesServerKnow.invoke(registry, newId);
+            } catch (Throwable e) {
+                throw PacketIntrinsics.sneakyThrow(e);
+            }
+        }
+
+        boolean doesServerKnowMulticonnect(RegistryKey<?> value) {
+            try {
+                return (Boolean) doesServerKnowMulticonnect.invoke(value);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }

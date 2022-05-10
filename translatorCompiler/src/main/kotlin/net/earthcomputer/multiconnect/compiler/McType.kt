@@ -24,6 +24,7 @@ object CommonClassNames {
     const val THROWABLE = "java.lang.Throwable"
     const val LIST = "java.util.List"
     const val MAP = "java.util.Map"
+    const val SET = "java.util.Set"
     const val ARRAY_LIST = "java.util.ArrayList"
     const val OPTIONAL = "java.util.Optional"
     const val OPTIONAL_INT = "java.util.OptionalInt"

@@ -2,8 +2,10 @@ package net.earthcomputer.multiconnect.compiler.gen
 
 import net.earthcomputer.multiconnect.ap.Registries
 import net.earthcomputer.multiconnect.ap.Types
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.BITSET
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.BYTE_BUF
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.CLASS
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.IDENTIFIER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.MAP
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.NETWORK_HANDLER
@@ -13,6 +15,7 @@ import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_SENDER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PAIR
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY_KEY
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.SET
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.SUPPLIER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPED_MAP
 import net.earthcomputer.multiconnect.compiler.CompileException
@@ -25,8 +28,10 @@ import net.earthcomputer.multiconnect.compiler.PacketType
 import net.earthcomputer.multiconnect.compiler.RegistryEntry
 import net.earthcomputer.multiconnect.compiler.allPackets
 import net.earthcomputer.multiconnect.compiler.byName
+import net.earthcomputer.multiconnect.compiler.encodeRLEBitSet
 import net.earthcomputer.multiconnect.compiler.explicitConstructibleMessages
 import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
+import net.earthcomputer.multiconnect.compiler.node.CstStringOp
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
 import net.earthcomputer.multiconnect.compiler.node.LoadFieldOp
 import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
@@ -42,6 +47,7 @@ import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.readCsv
 import net.earthcomputer.multiconnect.compiler.splitPackageClass
 import java.io.File
+import java.util.BitSet
 import java.util.SortedSet
 import java.util.TreeMap
 import java.util.TreeSet
@@ -63,6 +69,9 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
 
         emitPacketSenders(emitter, "sendToClient", true)
         emitPacketSenders(emitter, "sendToServer", false)
+
+        emitDoesServerKnow(emitter)
+        emitDoesServerKnowMulticonnect(emitter)
 
         val emittedMembers = mutableSetOf<String>()
         while (cacheMembers.size != emittedMembers.size) {
@@ -251,6 +260,87 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         function.append(");").dedent().appendNewLine().append("}").appendNewLine()
         function.append("sender.send(packet, outBufs, networkHandler, globalData, userData);")
             .dedent().appendNewLine().append("}")
+    }
+
+    private fun emitDoesServerKnow(emitter: Emitter) {
+        val function = emitter.addMember("doesServerKnow") ?: return
+        function.append("public static boolean doesServerKnow(")
+            .appendClassName(REGISTRY_KEY).append("<? extends ").appendClassName(REGISTRY)
+            .append("<?>> registry, int newId) {").indent().appendNewLine()
+            .appendClassName(BITSET).append(" bitset = DOES_SERVER_KNOW.get(registry);").appendNewLine()
+            .append("if (bitset == null) {").indent().appendNewLine()
+            .append("return true;").dedent().appendNewLine()
+            .append("}").appendNewLine()
+            .append("return bitset.get(newId);").dedent().appendNewLine()
+            .append("}")
+
+        val field = emitter.addMember("DOES_SERVER_KNOW") ?: return
+        field.append("private static final ").appendClassName(MAP)
+            .append("<").appendClassName(REGISTRY_KEY).append("<? extends ").appendClassName(REGISTRY)
+            .append("<?>>, ").appendClassName(BITSET).append("> DOES_SERVER_KNOW = ")
+            .appendClassName(PACKET_INTRINSICS).append(".makeMap(").indent()
+        var addedAnyRegistry = false
+        for (registry in Registries.values()) {
+            if (registry == Registries.BLOCK_STATE) {
+                continue
+            }
+
+            if(addedAnyRegistry) {
+                field.append(",")
+            }
+            addedAnyRegistry = true
+
+            field.appendNewLine().appendClassName(REGISTRY).append(".").append(registry.registryKeyFieldName)
+                .append(", ").appendClassName(PACKET_INTRINSICS).append(".makeRLEBitSet(")
+
+            val bitset = BitSet()
+            currentProtocolId = protocols[0].id
+            val latestEntries = registry.entries
+            currentProtocolId = protocolId
+            val protocolEntries = registry.entries
+            for (entry in latestEntries) {
+                bitset.set(entry.id, protocolEntries.byName(entry.name) != null)
+            }
+
+            McNode(CstStringOp(encodeRLEBitSet(bitset))).emit(field, Precedence.COMMA)
+            field.append(")")
+        }
+        field.dedent().appendNewLine().append(");")
+    }
+
+    private fun emitDoesServerKnowMulticonnect(emitter: Emitter) {
+        val function = emitter.addMember("doesServerKnowMulticonnect") ?: return
+        function.append("public static boolean doesServerKnowMulticonnect(")
+            .appendClassName(REGISTRY_KEY).append("<?> value) {").indent().appendNewLine()
+            .append("return DOES_SERVER_KNOW_MULTICONNECT.contains(value);").dedent().appendNewLine()
+            .append("}")
+
+        val field = emitter.addMember("DOES_SERVER_KNOW_MULTICONNECT") ?: return
+        field.append("private static final ").appendClassName(SET).append("<")
+            .appendClassName(REGISTRY_KEY).append("<?>>").append(" DOES_SERVER_KNOW_MULTICONNECT = ")
+            .appendClassName(SET).append(".of(").indent()
+        var addedAnyKey = false
+        for (registry in Registries.values()) {
+            if (registry == Registries.BLOCK_STATE) {
+                continue
+            }
+
+            for (entry in registry.entries) {
+                if (!entry.name.startsWith("multiconnect:")) {
+                    continue
+                }
+
+                if (addedAnyKey) {
+                    field.append(",")
+                }
+                addedAnyKey = true
+
+                field.appendNewLine().appendClassName(REGISTRY_KEY).append(".of(").appendClassName(REGISTRY)
+                    .append(".").append(registry.registryKeyFieldName).append(", new ").appendClassName(IDENTIFIER)
+                    .append("(\"multiconnect\", \"").append(entry.name.substring("multiconnect:".length)).append("\"))")
+            }
+        }
+        field.dedent().appendNewLine().append(");")
     }
 
     fun compileDefaultConstructors() {
