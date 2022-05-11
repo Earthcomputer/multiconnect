@@ -1,17 +1,12 @@
 package net.earthcomputer.multiconnect.impl;
 
 import com.google.common.cache.Cache;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
-import net.earthcomputer.multiconnect.protocols.generic.*;
-import net.minecraft.block.Block;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.item.Item;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.tag.TagKey;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
@@ -43,10 +38,6 @@ public class Utils {
             }
         }
         return true;
-    }
-
-    public static void copyBlocks(TagRegistry<Item> tags, TagRegistry<Block> blockTags, TagKey<Item> tag, TagKey<Block> blockTag) {
-        tags.add(tag, Collections2.transform(blockTags.get(blockTag.id()), Block::asItem));
     }
 
     public static DropDownWidget<ConnectionMode> createVersionDropdown(Screen screen, ConnectionMode initialMode) {

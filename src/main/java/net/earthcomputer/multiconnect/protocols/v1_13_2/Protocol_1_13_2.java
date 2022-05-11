@@ -6,7 +6,6 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
-import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -20,11 +19,9 @@ import net.minecraft.entity.passive.MooshroomEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.s2c.play.*;
-import net.minecraft.tag.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.village.VillagerData;
@@ -132,63 +129,6 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             case 4 -> VillagerProfession.BUTCHER;
             default -> VillagerProfession.NITWIT;
         };
-    }
-
-    @Override
-    public void addExtraBlockTags(TagRegistry<Block> tags) {
-        tags.add(BlockTags.WOODEN_FENCES, Blocks.OAK_FENCE, Blocks.ACACIA_FENCE, Blocks.DARK_OAK_FENCE, Blocks.SPRUCE_FENCE, Blocks.BIRCH_FENCE, Blocks.JUNGLE_FENCE);
-        tags.add(BlockTags.SMALL_FLOWERS, Blocks.DANDELION, Blocks.POPPY, Blocks.BLUE_ORCHID, Blocks.ALLIUM, Blocks.AZURE_BLUET, Blocks.RED_TULIP, Blocks.ORANGE_TULIP, Blocks.WHITE_TULIP, Blocks.PINK_TULIP, Blocks.OXEYE_DAISY);
-        tags.addTag(BlockTags.ENDERMAN_HOLDABLE, BlockTags.SMALL_FLOWERS);
-        tags.add(BlockTags.WALLS, Blocks.COBBLESTONE_WALL, Blocks.MOSSY_COBBLESTONE_WALL, Blocks.BRICK_WALL, Blocks.PRISMARINE_WALL, Blocks.RED_SANDSTONE_WALL, Blocks.MOSSY_STONE_BRICK_WALL, Blocks.GRANITE_WALL, Blocks.STONE_BRICK_WALL, Blocks.NETHER_BRICK_WALL, Blocks.ANDESITE_WALL, Blocks.RED_NETHER_BRICK_WALL, Blocks.SANDSTONE_WALL, Blocks.END_STONE_BRICK_WALL, Blocks.DIORITE_WALL);
-        tags.add(BlockTags.BAMBOO_PLANTABLE_ON);
-        tags.add(BlockTags.STANDING_SIGNS, Blocks.OAK_SIGN, Blocks.SPRUCE_SIGN, Blocks.BIRCH_SIGN, Blocks.ACACIA_SIGN, Blocks.JUNGLE_SIGN, Blocks.DARK_OAK_SIGN);
-        tags.add(BlockTags.WALL_SIGNS, Blocks.OAK_WALL_SIGN, Blocks.SPRUCE_WALL_SIGN, Blocks.BIRCH_WALL_SIGN, Blocks.ACACIA_WALL_SIGN, Blocks.JUNGLE_WALL_SIGN, Blocks.DARK_OAK_WALL_SIGN);
-        tags.addTag(BlockTags.SIGNS, BlockTags.STANDING_SIGNS);
-        tags.addTag(BlockTags.SIGNS, BlockTags.WALL_SIGNS);
-        tags.add(BlockTags.BEDS, Blocks.RED_BED, Blocks.BLACK_BED, Blocks.BLUE_BED, Blocks.BROWN_BED, Blocks.CYAN_BED, Blocks.GRAY_BED, Blocks.GREEN_BED, Blocks.LIGHT_BLUE_BED, Blocks.LIGHT_GRAY_BED, Blocks.LIME_BED, Blocks.MAGENTA_BED, Blocks.ORANGE_BED, Blocks.PINK_BED, Blocks.PURPLE_BED, Blocks.WHITE_BED, Blocks.YELLOW_BED);
-        tags.addTag(BlockTags.FENCES, BlockTags.WOODEN_FENCES);
-        tags.add(BlockTags.FENCES, Blocks.NETHER_BRICK_FENCE);
-        tags.add(BlockTags.DRAGON_IMMUNE, Blocks.BARRIER, Blocks.BEDROCK, Blocks.END_PORTAL, Blocks.END_PORTAL_FRAME, Blocks.END_GATEWAY, Blocks.COMMAND_BLOCK, Blocks.REPEATING_COMMAND_BLOCK, Blocks.CHAIN_COMMAND_BLOCK, Blocks.STRUCTURE_BLOCK, Blocks.JIGSAW, Blocks.MOVING_PISTON, Blocks.OBSIDIAN, Blocks.END_STONE, Blocks.IRON_BARS);
-        tags.add(BlockTags.WITHER_IMMUNE, Blocks.BARRIER, Blocks.BEDROCK, Blocks.END_PORTAL, Blocks.END_PORTAL_FRAME, Blocks.END_GATEWAY, Blocks.COMMAND_BLOCK, Blocks.REPEATING_COMMAND_BLOCK, Blocks.CHAIN_COMMAND_BLOCK, Blocks.STRUCTURE_BLOCK, Blocks.JIGSAW, Blocks.MOVING_PISTON);
-        super.addExtraBlockTags(tags);
-    }
-
-    @Override
-    public void addExtraItemTags(TagRegistry<Item> tags, TagRegistry<Block> blockTags) {
-        copyBlocks(tags, blockTags, ItemTags.WOODEN_FENCES, BlockTags.WOODEN_FENCES);
-        copyBlocks(tags, blockTags, ItemTags.WALLS, BlockTags.WALLS);
-        copyBlocks(tags, blockTags, ItemTags.SMALL_FLOWERS, BlockTags.SMALL_FLOWERS);
-        copyBlocks(tags, blockTags, ItemTags.BEDS, BlockTags.BEDS);
-        copyBlocks(tags, blockTags, ItemTags.FENCES, BlockTags.FENCES);
-        copyBlocks(tags, blockTags, ItemTags.SIGNS, BlockTags.STANDING_SIGNS);
-        tags.add(ItemTags.MUSIC_DISCS,
-                Items.MUSIC_DISC_13,
-                Items.MUSIC_DISC_CAT,
-                Items.MUSIC_DISC_BLOCKS,
-                Items.MUSIC_DISC_CHIRP,
-                Items.MUSIC_DISC_FAR,
-                Items.MUSIC_DISC_MALL,
-                Items.MUSIC_DISC_MELLOHI,
-                Items.MUSIC_DISC_STAL,
-                Items.MUSIC_DISC_STRAD,
-                Items.MUSIC_DISC_WARD,
-                Items.MUSIC_DISC_11,
-                Items.MUSIC_DISC_WAIT);
-        tags.add(ItemTags.COALS,
-                Items.COAL,
-                Items.CHARCOAL);
-        tags.add(ItemTags.ARROWS,
-                Items.ARROW,
-                Items.TIPPED_ARROW,
-                Items.SPECTRAL_ARROW);
-        super.addExtraItemTags(tags, blockTags);
-    }
-
-    @Override
-    public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
-        tags.add(EntityTypeTags.SKELETONS, EntityType.SKELETON, EntityType.STRAY, EntityType.WITHER_SKELETON);
-        tags.add(EntityTypeTags.RAIDERS, EntityType.EVOKER, EntityType.VINDICATOR, EntityType.ILLUSIONER, EntityType.WITCH);
-        super.addExtraEntityTags(tags);
     }
 
     @ThreadSafe

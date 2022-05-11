@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.protocols.generic;
 
 import com.google.common.base.Suppliers;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
-import net.earthcomputer.multiconnect.impl.IUtils;
 import net.earthcomputer.multiconnect.mixin.bridge.MinecraftClientAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnector;
@@ -10,11 +9,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.Item;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
@@ -22,12 +18,11 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
 
 import java.util.*;
 import java.util.function.Supplier;
 
-public abstract class AbstractProtocol implements IUtils {
+public abstract class AbstractProtocol {
     private static final List<Block> collisionBoxesToRevert = new ArrayList<>();
 
     private int protocolVersion;
@@ -89,21 +84,6 @@ public abstract class AbstractProtocol implements IUtils {
 
     public <T> T readTrackedData(TrackedDataHandler<T> handler, PacketByteBuf buf) {
         return handler.read(buf);
-    }
-
-    public void addExtraBlockTags(TagRegistry<Block> tags) {
-    }
-
-    public void addExtraItemTags(TagRegistry<Item> tags, TagRegistry<Block> blockTags) {
-    }
-
-    public void addExtraFluidTags(TagRegistry<Fluid> tags) {
-    }
-
-    public void addExtraEntityTags(TagRegistry<EntityType<?>> tags) {
-    }
-
-    public void addExtraGameEventTags(TagRegistry<GameEvent> tags) {
     }
 
     @ThreadSafe

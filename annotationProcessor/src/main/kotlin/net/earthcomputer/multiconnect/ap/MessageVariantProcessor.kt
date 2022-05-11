@@ -311,6 +311,37 @@ object MessageVariantProcessor {
                     }
                 }
             }
+            if (multiconnectType.customFix.distinctBy { it.direction }.size != multiconnectType.customFix.size) {
+                errorConsumer.report("Duplicate @CustomFix directions", field)
+                continue
+            }
+            for (customFix in multiconnectType.customFix) {
+                val function = type.findMulticonnectFunction(
+                    processingEnv,
+                    customFix.value,
+                    errorConsumer = null,
+                    errorElement = null,
+                )
+                if (function != null) {
+                    if (function.positionalParameters.size != 1) {
+                        errorConsumer.report("@CustomFix function must have exactly 1 positional parameter", field)
+                        continue
+                    }
+                    if (!processingEnv.typeUtils.isSameType(function.positionalParameters.first(), multiconnectType.realType)) {
+                        errorConsumer.report("@CustomFix function positional parameter must have the same type as the field", field)
+                        continue
+                    }
+                    if (!processingEnv.typeUtils.isSameType(function.returnType, multiconnectType.realType)) {
+                        errorConsumer.report("@CustomFix function return type must have the same type as the field", field)
+                        continue
+                    }
+                    if (!validateFunctionCaptures(function, type, field)) {
+                        errorConsumer.report("@CustomFix function cannot depend on later fields", field)
+                        continue
+                    }
+                    multiconnectFunctions += function
+                }
+            }
         }
 
         checkForRecursiveTypes(type, type, mutableSetOf(), mutableMapOf(), errorConsumer, processingEnv)

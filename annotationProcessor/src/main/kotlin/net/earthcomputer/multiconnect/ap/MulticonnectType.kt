@@ -16,7 +16,8 @@ data class MulticonnectType(
     val onlyIf: String?,
     @Contextual val datafixInfo: Datafix?,
     val polymorphicBy: String?,
-    val introduce: List<@Contextual Introduce>
+    val introduce: List<@Contextual Introduce>,
+    val customFix: List<@Contextual CustomFix>,
 ) {
     fun isConstantRepresentable(): Boolean {
         return realType.kind.isPrimitive

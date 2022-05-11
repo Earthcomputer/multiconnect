@@ -69,7 +69,8 @@ Multiconnect functions may have the following types of parameters:
   - `ClientPlayNetworkHandler` - passes the current network handler.
   - `TypedMap` - passes a typed map for user data that's valid from when the packet was sent/received until it is handled. This holder remains valid for the packets returned from a packet's handler, if any.
   - `Identifier` and integral types - if the `@Filled` annotation has a `fromRegistry` attribute, then the parameter is filled with the string or numeric identifier for the registry entry specified.
-  - `DelayedPacketSender<T>` - passes a function appropriate for sending a packet of type `T` (either to the client or to the server) from within a multiconnect function. Multiconnect functions should *not* send packets through alternative means such as `PacketSystem.sendToClient`. This is because registry IDs are *untranslated* inside multiconnect functions, but `PacketSystem.sendTo*` assumes that IDs have already been translated. Note that the preferred way to send packets from a `@Handler` in the same direction as the incoming packet is to return the packet(s) from the function. 
+  - `DelayedPacketSender<T>` - passes a function appropriate for sending a packet of type `T` (either to the client or to the server) from within a multiconnect function. Multiconnect functions should *not* send packets through alternative means such as `PacketSystem.sendToClient`. This is because registry IDs are *untranslated* inside multiconnect functions, but `PacketSystem.sendTo*` assumes that IDs have already been translated. Note that the preferred way to send packets from a `@Handler` in the same direction as the incoming packet is to return the packet(s) from the function.
+- Global data parameters: parameters annotated with `@GlobalData`. Global data can hold one instance per type and is valid for the duration of a connection. If the parameter is of type `Consumer<T>` then it is a setter to the global instance of type `T`. Otherwise if the parameter is of type `T`, then it gives read-only access to the global instance of type `T`. This instance *must* be treated as immutable because it may be accessed by multiple translator workers at the same time. The only valid way to modify global data is via `Consumer<T>`.
 
 ### Network Enums
 Network enums are simply enums annotated with the `@NetworkEnum` annotation. They must have at least one value. Record fields with a network enum type are serialized as if they were ints.
@@ -147,6 +148,8 @@ It is okay if a field in message variant *X* is not used for filling message var
 
 ### Registry Translation
 Registry translation may occur on raw IDs or on `Identifier` IDs. Most IDs are known at compile time. The exception is multiconnect-added entries representing entries that were removed in vanilla. These entries are registered at game start and raw IDs may change when joining a singleplayer world or when joining a Fabric server due to Fabric registry sync. `Identifier` IDs and raw IDs of vanilla entries are never dynamic in this way.
+
+Registry translation occurs on all fields annotated with `@Registry`. Additionally, DFU fixers can be applied in the registry translation phase with the `@Datafix` annotation, and a custom function can be used using the `@CustomFix` annotation.
 
 ## Packets
 Packets undergo normal [message translation](#message-translation), in addition to a few extra things. This section details those extra things.

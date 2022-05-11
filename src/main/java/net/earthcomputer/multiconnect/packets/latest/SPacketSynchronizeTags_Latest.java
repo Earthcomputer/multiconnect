@@ -2,18 +2,22 @@ package net.earthcomputer.multiconnect.packets.latest;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.ap.Argument;
+import net.earthcomputer.multiconnect.ap.CustomFix;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
-import net.earthcomputer.multiconnect.ap.Registries;
-import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.SPacketSynchronizeTags;
+import net.earthcomputer.multiconnect.protocols.generic.TagLoader;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 @MessageVariant(minVersion = Protocols.V1_17)
 public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
@@ -21,10 +25,10 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
     public List<Group> groups;
 
     public static List<Group> computeGroups(
-            @Argument("blocks") List<BlockGroup.Tag> blocks,
-            @Argument("items") List<ItemGroup.Tag> items,
-            @Argument("fluids") List<FluidGroup.Tag> fluids,
-            @Argument("entities") List<EntityTypeGroup.Tag> entities,
+            @Argument("blocks") List<Tag> blocks,
+            @Argument("items") List<Tag> items,
+            @Argument("fluids") List<Tag> fluids,
+            @Argument("entities") List<Tag> entities,
             @DefaultConstruct BlockGroup blockGroup,
             @DefaultConstruct ItemGroup itemGroup,
             @DefaultConstruct FluidGroup fluidGroup,
@@ -53,65 +57,55 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
     @Polymorphic(stringValue = "block")
     @MessageVariant
     public static class BlockGroup extends Group {
+        @CustomFix("fixTags")
         public List<Tag> tags;
 
-        @MessageVariant
-        public static class Tag {
-            public Identifier name;
-            @Registry(Registries.BLOCK)
-            public IntList entries;
+        public static List<Tag> fixTags(List<Tag> tags) {
+            return doFixTags(Registry.BLOCK, TagLoader::blocks, tags);
         }
     }
 
     @Polymorphic(stringValue = "item")
     @MessageVariant
     public static class ItemGroup extends Group {
+        @CustomFix("fixTags")
         public List<Tag> tags;
 
-        @MessageVariant
-        public static class Tag {
-            public Identifier name;
-            @Registry(Registries.ITEM)
-            public IntList entries;
+        public static List<Tag> fixTags(List<Tag> tags) {
+            return doFixTags(Registry.ITEM, TagLoader::items, tags);
         }
     }
 
     @Polymorphic(stringValue = "fluid")
     @MessageVariant
     public static class FluidGroup extends Group {
+        @CustomFix("fixTags")
         public List<Tag> tags;
 
-        @MessageVariant
-        public static class Tag {
-            public Identifier name;
-            @Registry(Registries.FLUID)
-            public IntList entries;
+        public static List<Tag> fixTags(List<Tag> tags) {
+            return doFixTags(Registry.FLUID, TagLoader::fluids, tags);
         }
     }
 
     @Polymorphic(stringValue = "entity_type")
     @MessageVariant
     public static class EntityTypeGroup extends Group {
+        @CustomFix("fixTags")
         public List<Tag> tags;
 
-        @MessageVariant
-        public static class Tag {
-            public Identifier name;
-            @Registry(Registries.ENTITY_TYPE)
-            public IntList entries;
+        public static List<Tag> fixTags(List<Tag> tags) {
+            return doFixTags(Registry.ENTITY_TYPE, TagLoader::entityTypes, tags);
         }
     }
 
     @Polymorphic(stringValue = "game_event")
     @MessageVariant
     public static class GameEventGroup extends Group {
+        @CustomFix("fixTags")
         public List<Tag> tags;
 
-        @MessageVariant
-        public static class Tag {
-            public Identifier name;
-            @Registry(Registries.GAME_EVENT)
-            public IntList entries;
+        public static List<Tag> fixTags(List<Tag> tags) {
+            return doFixTags(Registry.GAME_EVENT, TagLoader::gameEvents, tags);
         }
     }
 
@@ -119,11 +113,33 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
     @MessageVariant
     public static class OtherGroup extends Group {
         public List<Tag> tags;
+    }
 
-        @MessageVariant
-        public static class Tag {
-            public Identifier name;
-            public IntList entries;
+    private static List<Tag> doFixTags(
+            Registry<?> registry,
+            Supplier<Map<Identifier, IntList>> vanillaSupplier,
+            List<Tag> tags
+    ) {
+        Map<Identifier, IntList> vanillaTags = vanillaSupplier.get();
+        for (Tag tag : tags) {
+            vanillaTags.remove(tag.name);
+            for (int i = 0; i < tag.entries.size(); i++) {
+                tag.entries.set(i, PacketSystem.serverRawIdToClient(registry, tag.entries.getInt(i)));
+            }
+        }
+        vanillaTags.forEach((name, entries) -> tags.add(new Tag(name, entries)));
+        return tags;
+    }
+
+    @MessageVariant
+    public static class Tag {
+        public Identifier name;
+        public IntList entries;
+
+        public Tag() {}
+        public Tag(Identifier name, IntList entries) {
+            this.name = name;
+            this.entries = entries;
         }
     }
 }

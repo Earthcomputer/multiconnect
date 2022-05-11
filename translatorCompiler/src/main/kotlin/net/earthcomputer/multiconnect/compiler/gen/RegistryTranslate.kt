@@ -78,8 +78,11 @@ private fun ProtocolCompiler.hasChanged(registry: Registries, wireType: Types): 
     }
 }
 
-private fun ProtocolCompiler.needsTranslating(field: FieldType): Boolean {
+private fun ProtocolCompiler.needsTranslating(field: FieldType, clientbound: Boolean): Boolean {
     if (field.datafixInfo != null) {
+        return true
+    }
+    if (field.getCustomFixInfo(clientbound) != null) {
         return true
     }
     if (field.registry != null) {
@@ -93,13 +96,13 @@ private fun ProtocolCompiler.needsTranslating(field: FieldType): Boolean {
         else -> return false
     }
 
-    return needsTranslating(messageInfo)
+    return needsTranslating(messageInfo, clientbound)
 }
 
-private fun ProtocolCompiler.needsTranslating(messageInfo: MessageVariantInfo): Boolean {
+private fun ProtocolCompiler.needsTranslating(messageInfo: MessageVariantInfo, clientbound: Boolean): Boolean {
     if (messageInfo.polymorphicParent != null) {
         val parentInfo = getMessageVariantInfo(messageInfo.polymorphicParent)
-        if (parentInfo.fields.any { needsTranslating(it.type) }) {
+        if (parentInfo.fields.any { needsTranslating(it.type, clientbound) }) {
             return true
         }
     }
@@ -108,7 +111,7 @@ private fun ProtocolCompiler.needsTranslating(messageInfo: MessageVariantInfo): 
         if (messageInfo.tailrec && it.type.realType.hasName(messageInfo.className)) {
             return@any false
         }
-        needsTranslating(it.type)
+        needsTranslating(it.type, clientbound)
     }) {
         return true
     }
@@ -123,7 +126,7 @@ private fun ProtocolCompiler.needsTranslating(messageInfo: MessageVariantInfo): 
                 if (childInfo.tailrec && it.type.realType.hasName(childInfo.className)) {
                     return@any false
                 }
-                needsTranslating(it.type)
+                needsTranslating(it.type, clientbound)
             }) {
                 return true
             }
@@ -151,6 +154,15 @@ private fun ProtocolCompiler.fixRegistriesWithType(
     clientbound: Boolean,
     paramResolver: ParamResolver,
 ): McNode {
+    val customFixInfo = field.getCustomFixInfo(clientbound)
+    if (customFixInfo != null) {
+        return generateFunctionCallGraph(
+            ownerType.messageVariantInfo.findFunction(customFixInfo.value),
+            McNode(LoadVariableOp(varId, type)),
+            paramResolver = paramResolver
+        )
+    }
+
     if (type.isOptional) {
         val functionType = McType.DeclaredType("java.util.function.Function")
         val isOptional = (type as McType.DeclaredType).name == OPTIONAL
@@ -510,7 +522,7 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
 }
 
 internal fun ProtocolCompiler.fixRegistries(messageInfo: MessageVariantInfo, messageVar: VariableId, clientbound: Boolean): McNode {
-    if (!needsTranslating(messageInfo)) {
+    if (!needsTranslating(messageInfo, clientbound)) {
         return McNode(StmtListOp)
     }
 
@@ -571,7 +583,7 @@ private fun ProtocolCompiler.fixRegistriesInner(
     val nodes = mutableListOf<McNode>()
 
     fun handleField(ownerVar: VariableId, ownerType: McType, field: McField, outNodes: MutableList<McNode>) {
-        if (!needsTranslating(field.type)) {
+        if (!needsTranslating(field.type, clientbound)) {
             return
         }
 
@@ -617,7 +629,7 @@ private fun ProtocolCompiler.fixRegistriesInner(
 
         for (child in polymorphicChildren[messageInfo.className]!!.asReversed()) {
             val childInfo = getMessageVariantInfo(child)
-            if (!needsTranslating(childInfo)) {
+            if (!needsTranslating(childInfo, clientbound)) {
                 continue
             }
             val childType = childInfo.toMcType()
@@ -665,7 +677,7 @@ private fun ProtocolCompiler.fixRegistriesInner(
 internal fun ProtocolCompiler.fixRegistries(messageInfo: MessageInfo, messageVar: VariableId, clientbound: Boolean): McNode {
     val variant = messageInfo.getVariant(fixRegistriesProtocolOverride ?: protocols[0].id)
         ?: throw CompileException("No latest variant of ${messageInfo.className}")
-    if (!needsTranslating(variant)) {
+    if (!needsTranslating(variant, clientbound)) {
         return McNode(StmtListOp)
     }
 

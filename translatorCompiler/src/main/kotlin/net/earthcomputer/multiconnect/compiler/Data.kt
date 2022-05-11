@@ -154,12 +154,19 @@ data class FieldType(
     val onlyIf: String?,
     val datafixInfo: DatafixInfo?,
     val polymorphicBy: String?,
-    private val introduce: List<IntroduceInfo>
+    private val introduce: List<IntroduceInfo>,
+    private val customFix: List<CustomFixInfo>,
 ) {
     fun getIntroduceInfo(clientbound: Boolean): IntroduceInfo? {
         val direction = if (clientbound) Introduce.Direction.FROM_OLDER else Introduce.Direction.FROM_NEWER
         // TODO: @Introduce validation
         return introduce.firstOrNull { it.direction == Introduce.Direction.AUTO || it.direction == direction }
+    }
+
+    fun getCustomFixInfo(clientbound: Boolean): CustomFixInfo? {
+        val direction = if (clientbound) Introduce.Direction.FROM_OLDER else Introduce.Direction.FROM_NEWER
+        // TODO: @CustomFix validation
+        return customFix.firstOrNull { it.direction == Introduce.Direction.AUTO || it.direction == direction }
     }
 }
 
@@ -349,6 +356,9 @@ sealed class IntroduceInfo {
     data class DefaultConstruct(override val direction: Introduce.Direction) : IntroduceInfo()
     data class Compute(override val direction: Introduce.Direction, val value: String) : IntroduceInfo()
 }
+
+@Serializable
+data class CustomFixInfo(val value: String, val direction: Introduce.Direction)
 
 private typealias MulticonnectBlockStatesSurrogate = Map<String, Map<String, List<String>>>
 @Serializable(with = MulticonnectBlockStates.Serializer::class)
