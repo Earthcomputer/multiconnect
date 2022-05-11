@@ -11,7 +11,6 @@ import net.earthcomputer.multiconnect.ap.Types;
 import net.minecraft.nbt.NbtCompound;
 
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.UUID;
 
 public class CommonTypes {
@@ -193,10 +192,10 @@ public class CommonTypes {
                 public int level;
             }
 
-            @Polymorphic(stringValue = "OPTIONAL_VAR_INT")
+            @Polymorphic(stringValue = "FIREWORK_DATA")
             @MessageVariant
-            public static class OptionalVarInt extends TrackedData {
-                public OptionalInt value;
+            public static class FireworkData extends TrackedData {
+                public int value;
             }
 
             @Polymorphic(stringValue = "POSE")
@@ -224,7 +223,7 @@ public class CommonTypes {
                 NBT,
                 PARTICLE,
                 VILLAGER_DATA,
-                OPTIONAL_VAR_INT,
+                FIREWORK_DATA,
                 POSE
             }
         }
