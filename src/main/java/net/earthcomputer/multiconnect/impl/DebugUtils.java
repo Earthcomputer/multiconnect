@@ -296,6 +296,10 @@ public class DebugUtils {
             Stream<Triple<Integer, String, String>> entries;
             if (registries == Registries.BLOCK_STATE) {
                 entries = StreamSupport.stream(Block.STATE_IDS.spliterator(), false)
+                        .filter(it -> {
+                            Identifier name = Registry.BLOCK.getId(it.getBlock());
+                            return !name.getNamespace().equals("multiconnect");
+                        })
                         .map(it -> Triple.of(Block.STATE_IDS.getRawId(it), blockStateToString(it), blockStateToString(it)));
             } else {
                 Registry<T> registry;
@@ -309,6 +313,10 @@ public class DebugUtils {
                     }
                 }
                 entries = registry.stream()
+                        .filter(it -> {
+                            Identifier name = registry.getId(it);
+                            return name == null || !name.getNamespace().equals("multiconnect");
+                        })
                         .map(it -> {
                             Identifier name = registry.getId(it);
                             String nameStr = name == null ? "null" : name.getPath();
