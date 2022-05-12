@@ -64,6 +64,7 @@ import net.earthcomputer.multiconnect.compiler.polymorphicChildren
 import net.earthcomputer.multiconnect.compiler.protocolDatafixVersionsById
 import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.readCsv
+import net.earthcomputer.multiconnect.compiler.toCamelCase
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.max
@@ -442,11 +443,16 @@ internal fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbou
 
     val methodName = "remap%sInt%s".format(Locale.ROOT,
         if (clientbound) "S" else "C",
-        registry.name.lowercase().replaceFirstChar { it.uppercase() }
+        registry.name.toCamelCase(true)
     )
 
     cacheMembers[methodName] = { emitter ->
-        emitter.append("private static int ").append(methodName).append("(int value) {").indent().appendNewLine()
+        val access = if (registry == Registries.BLOCK_STATE) {
+            "public"
+        } else {
+            "private"
+        }
+        emitter.append(access).append(" static int ").append(methodName).append("(int value) {").indent().appendNewLine()
         buildNode().optimize().emit(emitter, Precedence.COMMA)
         emitter.dedent().appendNewLine().append("}")
     }
@@ -505,7 +511,7 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
 
     val methodName = "remap%sIdentifier%s".format(Locale.ROOT,
         if (clientbound) "S" else "C",
-        registry.name.lowercase().replaceFirstChar { it.uppercase() }
+        registry.name.toCamelCase(true)
     )
 
     cacheMembers[methodName] = { emitter ->

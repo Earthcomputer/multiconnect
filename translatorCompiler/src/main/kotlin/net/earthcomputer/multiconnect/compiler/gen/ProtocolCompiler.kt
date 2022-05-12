@@ -80,6 +80,9 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         emitRemapFunc(emitter, clientbound = true, identifier = true)
         emitRemapFunc(emitter, clientbound = false, identifier = true)
 
+        createIntRemapFunc(Registries.BLOCK_STATE, true)
+        createIntRemapFunc(Registries.BLOCK_STATE, false)
+
         val emittedMembers = mutableSetOf<String>()
         while (cacheMembers.size != emittedMembers.size) {
             for ((memberName, cacheMember) in cacheMembers.toMap()) {

@@ -165,6 +165,14 @@ public class PacketSystem {
         return clientIdToServer(registry, clientId);
     }
 
+    public static int serverBlockStateIdToClient(int serverBlockStateId) {
+        return protocolClasses.get(ConnectionInfo.protocolVersion).remapSIntBlockState(serverBlockStateId);
+    }
+
+    public static int clientBlockStateIdToServer(int clientBlockStateId) {
+        return protocolClasses.get(ConnectionInfo.protocolVersion).remapCIntBlockState(clientBlockStateId);
+    }
+
     public static class Internals {
         private static final LoadingCache<ByteBuf, TypedMap> bufUserData = CacheBuilder.newBuilder().weakKeys().build(CacheLoader.from(TypedMap::new));
 
@@ -208,6 +216,8 @@ public class PacketSystem {
         private final MethodHandle remapSInt;
         private final MethodHandle remapCIdentifier;
         private final MethodHandle remapSIdentifier;
+        private final MethodHandle remapCIntBlockState;
+        private final MethodHandle remapSIntBlockState;
 
         ProtocolClassProxy(Class<?> clazz, int protocol) {
             this.translateSPacket = findMethodHandle(clazz, "translateSPacket", void.class, ByteBuf.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
@@ -220,6 +230,8 @@ public class PacketSystem {
             this.remapSInt = findMethodHandle(clazz, "remapSInt", int.class, RegistryKey.class, int.class);
             this.remapCIdentifier = findMethodHandle(clazz, "remapCIdentifier", Identifier.class, RegistryKey.class, Identifier.class);
             this.remapSIdentifier = findMethodHandle(clazz, "remapSIdentifier", Identifier.class, RegistryKey.class, Identifier.class);
+            this.remapCIntBlockState = findMethodHandle(clazz, "remapCIntBlockState", int.class, int.class);
+            this.remapSIntBlockState = findMethodHandle(clazz, "remapSIntBlockState", int.class, int.class);
         }
 
         void translateSPacket(ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
@@ -297,6 +309,22 @@ public class PacketSystem {
         Identifier remapSIdentifier(RegistryKey<? extends Registry<?>> registry, Identifier value) {
             try {
                 return (Identifier) remapSIdentifier.invoke(registry, value);
+            } catch (Throwable e) {
+                throw PacketIntrinsics.sneakyThrow(e);
+            }
+        }
+
+        int remapCIntBlockState(int value) {
+            try {
+                return (Integer) remapCIntBlockState.invoke(value);
+            } catch (Throwable e) {
+                throw PacketIntrinsics.sneakyThrow(e);
+            }
+        }
+
+        int remapSIntBlockState(int value) {
+            try {
+                return (Integer) remapSIntBlockState.invoke(value);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }

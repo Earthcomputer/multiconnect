@@ -45,6 +45,23 @@ fun splitPackageClass(className: String): Pair<String, String> {
     return match.groupValues[1] to match.groupValues[2]
 }
 
+fun String.toCamelCase(capitalize: Boolean): String {
+    return buildString {
+        for ((index, part) in this@toCamelCase.split('_').withIndex()) {
+            if (part.isEmpty()) {
+                continue
+            }
+
+            val lowercase = part.lowercase()
+            if (index != 0 || capitalize) {
+                append(lowercase.first().uppercase()).append(lowercase.substring(1))
+            } else {
+                append(lowercase)
+            }
+        }
+    }
+}
+
 /**
  * See PacketIntrinsics.makeRLEBitSet
  */
