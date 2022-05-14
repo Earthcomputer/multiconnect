@@ -680,9 +680,12 @@ private fun ProtocolCompiler.translateInner(
     fun handleField(
         field: McField,
         containingMessage: MessageVariantInfo,
+        fieldFromVariant: MessageVariantInfo,
+        fieldFromVarId: VariableId,
         isTailRecursive: Boolean,
-        vars: MutableMap<String, VariableId>
+        vars: MutableMap<String, VariableId>,
     ): McNode {
+        val fieldFromVariantType = fieldFromVariant.toMcType()
         val fieldVarId = VariableId.create()
         vars[field.name] = fieldVarId
         val fieldCreationNode = when (val introduceInfo = field.type.getIntroduceInfo(clientbound)) {
@@ -697,16 +700,16 @@ private fun ProtocolCompiler.translateInner(
                 containingMessage.findFunction(introduceInfo.value),
                 paramResolver = combineParamResolvers(outerParamResolver) { name, type ->
                     // TODO: type checking?
-                    McNode(LoadFieldOp(fromVariantType, name, fromVariant.findField(name).type.realType),
-                        McNode(LoadVariableOp(castedFromVarId, fromVariantType))
+                    McNode(LoadFieldOp(fieldFromVariantType, name, fieldFromVariant.findField(name).type.realType),
+                        McNode(LoadVariableOp(fieldFromVarId, fieldFromVariantType))
                     )
                 }
             )
             null -> {
-                val fromField = fromVariant.findFieldOrNull(field.name)
-                    ?: throw CompileException("Automatic variant conversion transfer not possible, field \"${field.name}\" not found in \"${fromVariant.className}\", and @Introduce is not specified")
-                val fieldLoadNode = McNode(LoadFieldOp(fromVariantType, fromField.name, fromField.type.realType),
-                    McNode(LoadVariableOp(castedFromVarId, fromVariantType))
+                val fromField = fieldFromVariant.findFieldOrNull(field.name)
+                    ?: throw CompileException("Automatic variant conversion transfer not possible, field \"${field.name}\" not found in \"${fieldFromVariant.className}\", and @Introduce is not specified")
+                val fieldLoadNode = McNode(LoadFieldOp(fieldFromVariantType, fromField.name, fromField.type.realType),
+                    McNode(LoadVariableOp(fieldFromVarId, fieldFromVariantType))
                 )
                 autoTransfer(
                     fieldLoadNode,
@@ -723,12 +726,12 @@ private fun ProtocolCompiler.translateInner(
     if (toVariant.polymorphicParent != null) {
         val parentInfo = getMessageVariantInfo(toVariant.polymorphicParent)
         for (field in parentInfo.fields) {
-            nodes += handleField(field, parentInfo, false, vars)
+            nodes += handleField(field, parentInfo, fromVariant, castedFromVarId, false, vars)
         }
     }
 
     for (field in toVariant.fields) {
-        nodes += handleField(field, toVariant, toVariant.tailrec && field.type.realType.hasName(toVariant.className), vars)
+        nodes += handleField(field, toVariant, fromVariant, castedFromVarId, toVariant.tailrec && field.type.realType.hasName(toVariant.className), vars)
     }
 
     val resultVarId = VariableId.create()
@@ -755,7 +758,7 @@ private fun ProtocolCompiler.translateInner(
             )
 
             for (field in childVariant.fields) {
-                childNodes += handleField(field, childVariant, toVariant.tailrec && field.type.realType.hasName(toVariant.className), childVars)
+                childNodes += handleField(field, childVariant, fromChildVariant, castedFromChildVarId, toVariant.tailrec && field.type.realType.hasName(toVariant.className), childVars)
                 val fieldVarId = childVars[field.name]!!
                 childNodes += McNode(StoreFieldStmtOp(childVariant.toMcType(), field.name, field.type.realType),
                     McNode(LoadVariableOp(childVarId, childVariant.toMcType())),

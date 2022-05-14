@@ -15,7 +15,7 @@ id clazz
 13 net.earthcomputer.multiconnect.packets.SPacketDifficulty
 14 net.earthcomputer.multiconnect.packets.SPacketCommandSuggestions
 15 net.earthcomputer.multiconnect.packets.SPacketGameMessage
-16 net.earthcomputer.multiconnect.packets.SPacketChunkDeltaUpdate
+16 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketChunkDeltaUpdate_1_16_1
 17 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketAckScreenAction_1_16_5
 18 net.earthcomputer.multiconnect.packets.SPacketCloseScreen
 19 net.earthcomputer.multiconnect.packets.SPacketGuiOpen
@@ -31,10 +31,10 @@ id clazz
 29 net.earthcomputer.multiconnect.packets.SPacketUnloadChunk
 30 net.earthcomputer.multiconnect.packets.SPacketGameStateChange
 31 net.earthcomputer.multiconnect.packets.SPacketKeepAlive
-32 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketChunkData_1_16_5
+32 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketChunkData_1_16_1
 33 net.earthcomputer.multiconnect.packets.SPacketWorldEvent
 34 net.earthcomputer.multiconnect.packets.SPacketParticle
-35 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketGameJoin_1_17_1
+35 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketGameJoin_1_16_1
 36 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketMapUpdate_1_16_5
 37 net.earthcomputer.multiconnect.packets.SPacketEntityMoveRelative
 38 net.earthcomputer.multiconnect.packets.SPacketEntityRotateAndMoveRelative
@@ -50,7 +50,7 @@ id clazz
 48 net.earthcomputer.multiconnect.packets.SPacketEntitiesDestroy
 49 net.earthcomputer.multiconnect.packets.v1_18.SPacketRemoveEntityStatusEffect_1_18
 50 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketResourcePackSend_1_16_5
-51 net.earthcomputer.multiconnect.packets.SPacketPlayerRespawn
+51 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketPlayerRespawn_1_16_1
 52 net.earthcomputer.multiconnect.packets.SPacketEntitySetHeadYaw
 53 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketWorldBorder_1_16_5
 54 net.earthcomputer.multiconnect.packets.SPacketSetCameraEntity

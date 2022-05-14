@@ -50,7 +50,7 @@ id clazz
 48 net.earthcomputer.multiconnect.packets.SPacketEntitiesDestroy
 49 net.earthcomputer.multiconnect.packets.v1_18.SPacketRemoveEntityStatusEffect_1_18
 50 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketResourcePackSend_1_16_5
-51 net.earthcomputer.multiconnect.packets.SPacketPlayerRespawn
+51 net.earthcomputer.multiconnect.packets.latest.SPacketPlayerRespawn_Latest
 52 net.earthcomputer.multiconnect.packets.SPacketEntitySetHeadYaw
 53 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketWorldBorder_1_16_5
 54 net.earthcomputer.multiconnect.packets.SPacketSetCameraEntity

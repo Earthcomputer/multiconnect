@@ -14,7 +14,7 @@ id clazz
 12 net.earthcomputer.multiconnect.packets.SPacketBossBar
 13 net.earthcomputer.multiconnect.packets.SPacketDifficulty
 14 net.earthcomputer.multiconnect.packets.SPacketGameMessage
-15 net.earthcomputer.multiconnect.packets.SPacketChunkDeltaUpdate
+15 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketChunkDeltaUpdate_1_16_1
 16 net.earthcomputer.multiconnect.packets.SPacketCommandSuggestions
 17 net.earthcomputer.multiconnect.packets.SPacketCommandTree
 18 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketAckScreenAction_1_16_5
@@ -33,10 +33,10 @@ id clazz
 31 net.earthcomputer.multiconnect.packets.SPacketUnloadChunk
 32 net.earthcomputer.multiconnect.packets.SPacketGameStateChange
 33 net.earthcomputer.multiconnect.packets.SPacketKeepAlive
-34 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketChunkData_1_16_5
+34 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketChunkData_1_16_1
 35 net.earthcomputer.multiconnect.packets.SPacketWorldEvent
 36 net.earthcomputer.multiconnect.packets.SPacketParticle
-37 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketGameJoin_1_17_1
+37 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketGameJoin_1_16_1
 38 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketMapUpdate_1_16_5
 39 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketEntity_1_16_5
 40 net.earthcomputer.multiconnect.packets.SPacketEntityMoveRelative
@@ -51,11 +51,11 @@ id clazz
 49 net.earthcomputer.multiconnect.packets.SPacketLookAt
 50 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketPlayerPositionLook_1_16_5
 51 net.earthcomputer.multiconnect.packets.SPacketUseBed
-52 net.earthcomputer.multiconnect.packets.SPacketUnlockRecipes
+52 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketUnlockRecipes_1_16_1
 53 net.earthcomputer.multiconnect.packets.SPacketEntitiesDestroy
 54 net.earthcomputer.multiconnect.packets.v1_18.SPacketRemoveEntityStatusEffect_1_18
 55 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketResourcePackSend_1_16_5
-56 net.earthcomputer.multiconnect.packets.SPacketPlayerRespawn
+56 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketPlayerRespawn_1_16_1
 57 net.earthcomputer.multiconnect.packets.SPacketEntitySetHeadYaw
 58 net.earthcomputer.multiconnect.packets.SPacketSelectAdvancementTab
 59 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketWorldBorder_1_16_5

@@ -10,7 +10,7 @@ id clazz
 8 net.earthcomputer.multiconnect.packets.v1_16_5.CPacketClickSlot_1_16_5
 9 net.earthcomputer.multiconnect.packets.CPacketCloseHandledScreen
 10 net.earthcomputer.multiconnect.packets.CPacketCustomPayload
-11 net.earthcomputer.multiconnect.packets.v1_17.CPacketBookUpdate_1_17
+11 net.earthcomputer.multiconnect.packets.v1_16_3.CPacketBookUpdate_1_16_3
 12 net.earthcomputer.multiconnect.packets.CPacketQueryEntityNbt
 13 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractEntity
 14 net.earthcomputer.multiconnect.packets.CPacketKeepAlive
@@ -26,7 +26,7 @@ id clazz
 24 net.earthcomputer.multiconnect.packets.CPacketPlayerAction
 25 net.earthcomputer.multiconnect.packets.CPacketClientCommand
 26 net.earthcomputer.multiconnect.packets.CPacketPlayerInput
-27 net.earthcomputer.multiconnect.packets.CPacketRecipeBookData
+27 net.earthcomputer.multiconnect.packets.v1_16_1.CPacketRecipeBookData_1_16_1
 28 net.earthcomputer.multiconnect.packets.CPacketRenameItem
 29 net.earthcomputer.multiconnect.packets.CPacketResourcePackStatus
 30 net.earthcomputer.multiconnect.packets.CPacketAdvancementTab

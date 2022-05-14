@@ -6,7 +6,7 @@ id clazz
 4 net.earthcomputer.multiconnect.packets.SPacketEntityEquipmentUpdate
 5 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketPlayerSpawnPosition_1_16_5
 6 net.earthcomputer.multiconnect.packets.SPacketHealthUpdate
-7 net.earthcomputer.multiconnect.packets.SPacketPlayerRespawn
+7 net.earthcomputer.multiconnect.packets.latest.SPacketPlayerRespawn_Latest
 8 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketPlayerPositionLook_1_16_5
 9 net.earthcomputer.multiconnect.packets.SPacketUpdateSelectedSlot
 10 net.earthcomputer.multiconnect.packets.SPacketUseBed

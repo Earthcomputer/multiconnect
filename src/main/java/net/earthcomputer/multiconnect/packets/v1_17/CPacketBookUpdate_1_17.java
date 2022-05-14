@@ -17,7 +17,7 @@ import net.minecraft.nbt.NbtString;
 import java.util.List;
 import java.util.Optional;
 
-@MessageVariant(maxVersion = Protocols.V1_17)
+@MessageVariant(minVersion = Protocols.V1_16_5, maxVersion = Protocols.V1_17)
 public class CPacketBookUpdate_1_17 implements CPacketBookUpdate {
     @Introduce(compute = "computeStack")
     public CommonTypes.ItemStack stack;

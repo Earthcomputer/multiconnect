@@ -9,6 +9,7 @@ import net.earthcomputer.multiconnect.compiler.deepComponentType
 import net.earthcomputer.multiconnect.compiler.getClassInfoOrNull
 import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
 import net.earthcomputer.multiconnect.compiler.groups
+import net.earthcomputer.multiconnect.compiler.polymorphicChildren
 import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.readCsv
 
@@ -30,6 +31,11 @@ fun checkMessages() {
                             is MessageVariantInfo -> processUsed(type.name)
                             else -> {}
                         }
+                    }
+                }
+                if (info.polymorphic != null && info.polymorphicParent == null) {
+                    for (child in polymorphicChildren[message]!!) {
+                        processUsed(child)
                     }
                 }
             }

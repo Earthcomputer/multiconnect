@@ -52,11 +52,11 @@ id clazz
 50 net.earthcomputer.multiconnect.packets.SPacketPlayerList
 51 net.earthcomputer.multiconnect.packets.SPacketLookAt
 52 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketPlayerPositionLook_1_16_5
-53 net.earthcomputer.multiconnect.packets.SPacketUnlockRecipes
+53 net.earthcomputer.multiconnect.packets.latest.SPacketUnlockRecipes_Latest
 54 net.earthcomputer.multiconnect.packets.SPacketEntitiesDestroy
 55 net.earthcomputer.multiconnect.packets.v1_18.SPacketRemoveEntityStatusEffect_1_18
 56 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketResourcePackSend_1_16_5
-57 net.earthcomputer.multiconnect.packets.SPacketPlayerRespawn
+57 net.earthcomputer.multiconnect.packets.latest.SPacketPlayerRespawn_Latest
 58 net.earthcomputer.multiconnect.packets.SPacketEntitySetHeadYaw
 59 net.earthcomputer.multiconnect.packets.SPacketChunkDeltaUpdate
 60 net.earthcomputer.multiconnect.packets.SPacketSelectAdvancementTab

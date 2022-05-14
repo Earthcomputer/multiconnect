@@ -22,7 +22,7 @@ id clazz
 20 net.earthcomputer.multiconnect.packets.CPacketPlayerAction
 21 net.earthcomputer.multiconnect.packets.CPacketClientCommand
 22 net.earthcomputer.multiconnect.packets.CPacketPlayerInput
-23 net.earthcomputer.multiconnect.packets.CPacketRecipeBookData
+23 net.earthcomputer.multiconnect.packets.v1_16_1.CPacketRecipeBookData_1_16_1
 24 net.earthcomputer.multiconnect.packets.CPacketResourcePackStatus
 25 net.earthcomputer.multiconnect.packets.CPacketAdvancementTab
 26 net.earthcomputer.multiconnect.packets.CPacketUpdateSelectedSlot
