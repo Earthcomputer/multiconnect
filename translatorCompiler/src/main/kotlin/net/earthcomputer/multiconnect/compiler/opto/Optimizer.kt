@@ -17,12 +17,13 @@ internal class Optimizer(var rootNode: McNode) {
         extractCommonNodes()
         extractStatementsInExpressions()
         addTryCatchIfNecessary()
+        removeUnusedNodes()
         nameVariables(rootNode)
     }
 
     // parent-first
-    internal inline fun forEachNode(func: (McNode) -> Unit) {
-        forEachNode(rootNode, func)
+    internal inline fun forEachNode(func: NodeIteration.(McNode) -> Unit) {
+        rootNode.forEachNode(func)
     }
 
     // depth first is dangerous while mutating the tree because the iteration may not take into account the mutations.
@@ -37,10 +38,11 @@ internal class Optimizer(var rootNode: McNode) {
     }
 }
 
-private inline fun forEachNode(fromNode: McNode, func: (McNode) -> Unit) {
+internal inline fun McNode.forEachNode(func: NodeIteration.(McNode) -> Unit) {
     val visited = mutableSetOf<McNode>()
-    var toVisit = mutableSetOf(fromNode)
+    var toVisit = mutableSetOf(this)
     var visiting = mutableSetOf<McNode>()
+    val iteration = NodeIteration()
     while (toVisit.isNotEmpty()) {
         visited += toVisit
         val temp = toVisit
@@ -48,7 +50,11 @@ private inline fun forEachNode(fromNode: McNode, func: (McNode) -> Unit) {
         visiting = temp
         toVisit.clear()
         for (node in visiting) {
-            func(node)
+            iteration.func(node)
+            if (!iteration.internalShouldVisitChildren()) {
+                iteration.internalUnskipChildren()
+                continue
+            }
             for (input in node.inputs) {
                 if (input !in visited) {
                     toVisit += input
@@ -56,6 +62,20 @@ private inline fun forEachNode(fromNode: McNode, func: (McNode) -> Unit) {
             }
         }
     }
+}
+
+internal class NodeIteration {
+    private var visitChildren = true
+
+    internal fun skipChildren() {
+        visitChildren = false
+    }
+
+    internal fun internalUnskipChildren() {
+        visitChildren = true
+    }
+
+    internal fun internalShouldVisitChildren() = visitChildren
 }
 
 private fun forEachNodeDepthFirstUnsafe(fromNode: McNode, func: DepthFirstIterator.(McNode) -> Unit, itr: DepthFirstIterator, visited: MutableSet<McNode>, visiting: MutableSet<McNode>) {
@@ -90,7 +110,7 @@ internal class DepthFirstIterator {
 
 private fun nameVariables(fromNode: McNode) {
     var varIndex = 1
-    forEachNode(fromNode) { node ->
+    fromNode.forEachNode { node ->
         for (declaredVar in node.op.declaredVariables) {
             if (!declaredVar.isImmediate) {
                 declaredVar.name = "var$varIndex"
@@ -102,7 +122,7 @@ private fun nameVariables(fromNode: McNode) {
 
 internal fun McNode.debugConvertToString(): String {
     nameVariables(this)
-    val emitter = Emitter("foo.Bar", TreeSet(), TreeMap(), StringBuilder())
+    val emitter = Emitter("foo.Bar", TreeSet(), TreeMap(), StringBuilder(), debugMode = true)
     emit(emitter.addMember("foo")!!, Precedence.COMMA)
     return emitter.createClassText()
 }

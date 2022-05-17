@@ -76,6 +76,10 @@ class McNode(op: McNodeOp, inputs: MutableList<McNode>) {
         onChange()
     }
 
+    fun removeUsageDangerously(index: Int) {
+        mutableUsages.removeAt(index)
+    }
+
     fun replace(other: McNode) {
         val exceptions = mutableSetOf<McNode>()
         fun addExceptions(n: McNode) {

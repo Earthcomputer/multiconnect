@@ -7,6 +7,8 @@ object ReturnVoidStmtOp : McStmtOp() {
     override val paramTypes = emptyList<McType>()
 
     override fun emit(node: McNode, emitter: Emitter) {
-        emitter.append("return;")
+        emitter.appendReturn {
+            // don't append anything
+        }
     }
 }

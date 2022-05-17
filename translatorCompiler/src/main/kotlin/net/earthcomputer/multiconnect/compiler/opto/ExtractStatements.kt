@@ -1,15 +1,18 @@
 package net.earthcomputer.multiconnect.compiler.opto
 
 import net.earthcomputer.multiconnect.compiler.McType
+import net.earthcomputer.multiconnect.compiler.node.DeclareVariableOnlyStmtOp
 import net.earthcomputer.multiconnect.compiler.node.IfElseStmtOp
 import net.earthcomputer.multiconnect.compiler.node.IfStmtOp
 import net.earthcomputer.multiconnect.compiler.node.LambdaOp
 import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
 import net.earthcomputer.multiconnect.compiler.node.PopStmtOp
-import net.earthcomputer.multiconnect.compiler.node.ReturnAsVariableBlockOp
+import net.earthcomputer.multiconnect.compiler.node.LabeledBlockStmtOp
 import net.earthcomputer.multiconnect.compiler.node.ReturnStmtOp
+import net.earthcomputer.multiconnect.compiler.node.ReturnVoidStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StmtListOp
+import net.earthcomputer.multiconnect.compiler.node.StoreVariableStmtOp
 import net.earthcomputer.multiconnect.compiler.node.SwitchOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
 
@@ -36,11 +39,10 @@ internal fun Optimizer.extractStatementsInExpressions() {
         node.replace(McNode(LoadVariableOp(variable, varType)))
         val parentStmt = generateSequence(usage) { it.usages.firstOrNull() }.firstOrNull { !it.op.isExpression } ?: return@forEachNodeDepthFirstUnsafe
         parentStmt.replace(
-            McNode(
-                StmtListOp, mutableListOf(
-                    convertReturnToVariableDeclaration(node, variable, varType),
-                    parentStmt
-                ))
+            McNode(StmtListOp,
+                convertReturnToVariableDeclaration(node, variable, varType),
+                parentStmt
+            )
         )
         markChanged()
     }
@@ -57,7 +59,7 @@ private fun convertReturnToVariableDeclaration(stmtList: McNode, variable: Varia
         for ((index, input) in n.inputs.withIndex()) {
             when (n.op) {
                 is SwitchOp<*> -> if (index != 0) break
-                is ReturnAsVariableBlockOp, is LambdaOp -> break
+                is LabeledBlockStmtOp, is LambdaOp -> break
             }
 
             val childIsEarly = isEarly || when (n.op) {
@@ -72,9 +74,44 @@ private fun convertReturnToVariableDeclaration(stmtList: McNode, variable: Varia
 
     findEarlyReturnStatements(stmtList, false)
 
-    return if (hasEarlyReturnStatements) {
-        McNode(ReturnAsVariableBlockOp(VariableId.create(), variable, varType), stmtList)
+    val returnStatements = mutableListOf<McNode>()
+    stmtList.forEachNode { node ->
+        val parent = node.usages.singleOrNull()
+        if (parent?.op is SwitchOp<*> && node != parent.inputs[0]) {
+            skipChildren()
+            return@forEachNode
+        }
+        when (node.op) {
+            is LabeledBlockStmtOp, is LambdaOp -> skipChildren()
+            is ReturnStmtOp -> {
+                val newReturnStmt = McNode(StoreVariableStmtOp(variable, varType, false),
+                    node.inputs[0]
+                )
+                node.replace(newReturnStmt)
+                returnStatements += newReturnStmt
+            }
+        }
+    }
+
+    val singleReturnStmt = returnStatements.singleOrNull()
+
+    return if (singleReturnStmt != null) {
+        singleReturnStmt.replace(McNode(StoreVariableStmtOp(variable, varType, true),
+            singleReturnStmt.inputs[0]
+        ))
+        stmtList
     } else {
-        McNode(ReturnAsVariableBlockOp(null, variable, varType), stmtList)
+        for (returnStmt in returnStatements) {
+            returnStmt.replace(McNode(StmtListOp,
+                returnStmt,
+                McNode(ReturnVoidStmtOp)
+            ))
+        }
+        McNode(StmtListOp,
+            McNode(DeclareVariableOnlyStmtOp(variable, varType)),
+            McNode(LabeledBlockStmtOp(VariableId.create()),
+                stmtList
+            )
+        )
     }
 }

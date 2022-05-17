@@ -9,6 +9,14 @@ class ImplicitCastOp(fromType: McType, toType: McType) : McNodeOp {
     override val isExpensive = false
     override val precedence = Precedence.PARENTHESES
     override fun emit(node: McNode, emitter: Emitter) {
+        if (emitter.debugMode) {
+            emitter.append("implicitCast<")
+            returnType.emit(emitter)
+            emitter.append(">(")
+        }
         node.inputs[0].emit(emitter, Precedence.COMMA)
+        if (emitter.debugMode) {
+            emitter.append(")")
+        }
     }
 }

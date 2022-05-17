@@ -7,7 +7,8 @@ class Emitter(
     val currentClass: String,
     private val imports: SortedSet<String>,
     private val members: SortedMap<String, Emitter>,
-    private val text: StringBuilder
+    private val text: StringBuilder,
+    val debugMode: Boolean = false,
 ) {
     private var indent = ""
 
@@ -65,7 +66,7 @@ class Emitter(
 
     fun addMember(name: String): Emitter? {
         if (name in members) return null
-        val emitter = Emitter(currentClass, imports, members, StringBuilder())
+        val emitter = Emitter(currentClass, imports, members, StringBuilder(), debugMode)
         emitter.indent()
         emitter.append(emitter.indent)
         members[name] = emitter
