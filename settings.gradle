@@ -29,4 +29,5 @@ buildscript {
 include 'annotationProcessor'
 include 'annotations'
 //include 'integrationTest'
+include 'tools'
 include 'translatorCompiler'
