@@ -4,13 +4,13 @@ import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.packets.CPacketPlayerAbilities;
+import net.earthcomputer.multiconnect.packets.CPacketUpdatePlayerAbilities;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.entity.player.PlayerEntity;
 
 @MessageVariant(maxVersion = Protocols.V1_15_2)
-public class CPacketUpdatePlayerAbilities_1_15_2 implements CPacketPlayerAbilities {
+public class CPacketUpdatePlayerAbilities_1_15_2 implements CPacketUpdatePlayerAbilities {
     @Introduce(compute = "computeFlags")
     public byte flags;
     @Introduce(compute = "computeFlySpeed")
