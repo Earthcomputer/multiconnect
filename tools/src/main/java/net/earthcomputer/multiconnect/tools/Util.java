@@ -35,8 +35,8 @@ public final class Util {
     }
 
     public static int compareVersions(String a, String b) {
-        String[] partsA = a.split(" ");
-        String[] partsB = b.split(" ");
+        String[] partsA = a.split("\\.");
+        String[] partsB = b.split("\\.");
         for (int i = 0, e = Math.min(partsA.length, partsB.length); i < e; i++) {
             Integer ia = tryParse(partsA[i]);
             Integer ib = tryParse(partsB[i]);

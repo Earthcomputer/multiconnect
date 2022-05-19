@@ -16,7 +16,6 @@ public class MulticonnectDFU {
     public static final DataFixer FIXER = Util.make(() -> {
         var builder = new DataFixerBuilder(SharedConstants.getGameVersion().getSaveVersion().getId());
         builder.addSchema(99, Schema99::new);
-        builder.addSchema(2566, Schema2566::new);
         Schema schema16_2 = builder.addSchema(2578, Schema::new);
         builder.addFixer(new ExperimentalDynamicRegistriesFix(schema16_2, true, "1.16.2"));
         Schema schema_17 = builder.addSchema(2724, Schema::new);

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public abstract sealed class CommandBase permits RenameCommand {
+public abstract sealed class CommandBase permits RenameCommand, RenamePacketCommand {
     public static final Map<String, CommandBase> COMMANDS;
     static {
         Map<String, CommandBase> commands = new TreeMap<>();

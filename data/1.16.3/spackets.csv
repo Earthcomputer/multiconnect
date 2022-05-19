@@ -13,7 +13,7 @@ id clazz
 11 net.earthcomputer.multiconnect.packets.SPacketBlockUpdate
 12 net.earthcomputer.multiconnect.packets.SPacketBossBar
 13 net.earthcomputer.multiconnect.packets.SPacketDifficulty
-14 net.earthcomputer.multiconnect.packets.SPacketGameMessage
+14 net.earthcomputer.multiconnect.packets.latest.SPacketGameMessage_Latest
 15 net.earthcomputer.multiconnect.packets.SPacketCommandSuggestions
 16 net.earthcomputer.multiconnect.packets.SPacketCommandTree
 17 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketAckScreenAction_1_16_5
@@ -70,7 +70,7 @@ id clazz
 68 net.earthcomputer.multiconnect.packets.SPacketEntityTrackerUpdate
 69 net.earthcomputer.multiconnect.packets.SPacketEntityAttach
 70 net.earthcomputer.multiconnect.packets.SPacketEntityVelocityUpdate
-71 net.earthcomputer.multiconnect.packets.SPacketEntityEquipmentUpdate
+71 net.earthcomputer.multiconnect.packets.latest.SPacketEntityEquipmentUpdate_Latest
 72 net.earthcomputer.multiconnect.packets.SPacketExperienceBarUpdate
 73 net.earthcomputer.multiconnect.packets.SPacketHealthUpdate
 74 net.earthcomputer.multiconnect.packets.SPacketScoreboardObjectiveUpdate

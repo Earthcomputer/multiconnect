@@ -10,7 +10,7 @@ id clazz
 8 net.earthcomputer.multiconnect.packets.v1_16_5.CPacketClickSlot_1_16_5
 9 net.earthcomputer.multiconnect.packets.CPacketCloseHandledScreen
 10 net.earthcomputer.multiconnect.packets.CPacketCustomPayload
-11 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractEntity
+11 net.earthcomputer.multiconnect.packets.v1_15_2.CPacketPlayerInteractEntity_1_15_2
 12 net.earthcomputer.multiconnect.packets.CPacketKeepAlive
 13 net.earthcomputer.multiconnect.packets.CPacketPlayerMoveOnGroundOnly
 14 net.earthcomputer.multiconnect.packets.CPacketPlayerMovePositionAndOnGround
@@ -18,7 +18,7 @@ id clazz
 16 net.earthcomputer.multiconnect.packets.CPacketPlayerMoveLookAndOnGround
 17 net.earthcomputer.multiconnect.packets.CPacketVehicleMove
 18 net.earthcomputer.multiconnect.packets.CPacketBoatPaddleState
-19 net.earthcomputer.multiconnect.packets.CPacketUpdatePlayerAbilities
+19 net.earthcomputer.multiconnect.packets.v1_15_2.CPacketUpdatePlayerAbilities_1_15_2
 20 net.earthcomputer.multiconnect.packets.CPacketPlayerAction
 21 net.earthcomputer.multiconnect.packets.CPacketClientCommand
 22 net.earthcomputer.multiconnect.packets.CPacketPlayerInput

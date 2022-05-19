@@ -333,7 +333,7 @@ internal fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbou
         val middleValue = shifts[middleIndex].second
         var delta = 0
         val maxDelta = max(middleIndex, shifts.size - middleIndex)
-        while (delta < maxDelta) {
+        while (delta <= maxDelta) {
             val index = middleIndex + delta
             if (index >= 0 && index < shifts.size) {
                 val (id, value) = shifts[index]

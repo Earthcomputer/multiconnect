@@ -56,6 +56,8 @@ public class Main {
     public static final OptionSpec<Void> KEEP_OLD_NAME;
     public static final OptionSpec<String> KEEP_OLD_NAME_UNTIL;
     public static final OptionSpec<String> KEEP_OLD_NAME_SINCE;
+    public static final OptionSpec<String> MIN_VERSION = parser.accepts("min-version", "The minimum version to apply an operation to").withRequiredArg();
+    public static final OptionSpec<String> MAX_VERSION = parser.accepts("max-version", "The maximum version to apply an operation to").withRequiredArg();
 
     static {
         OptionSpecBuilder keepOldNameBuilder = parser.accepts("keep-old-name", "Move the existing name to oldName");

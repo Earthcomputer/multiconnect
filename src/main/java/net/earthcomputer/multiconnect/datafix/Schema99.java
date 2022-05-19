@@ -18,6 +18,9 @@ public class Schema99 extends Schema {
         // register a dummy recursive type, DFU crashes otherwise.
         // see https://github.com/Mojang/DataFixerUpper/issues/45
         schema.registerType(true, () -> "dummy", DSL::remainder);
+
+        schema.registerType(false, MulticonnectDFU.REGISTRY_MANAGER, DSL::remainder);
+        schema.registerType(false, MulticonnectDFU.DIMENSION, DSL::remainder);
     }
 
     @Override

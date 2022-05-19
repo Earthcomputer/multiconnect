@@ -188,7 +188,7 @@ sealed class McParameter {
 }
 @Serializable
 @SerialName("argument")
-data class ArgumentParameter(override val paramType: McType, val name: String) : McParameter()
+data class ArgumentParameter(override val paramType: McType, val name: String, val translate: Boolean) : McParameter()
 @Serializable
 @SerialName("defaultConstructed")
 data class DefaultConstructedParameter(override val paramType: McType) : McParameter()

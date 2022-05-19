@@ -12,7 +12,7 @@ id clazz
 10 net.earthcomputer.multiconnect.packets.CPacketCustomPayload
 11 net.earthcomputer.multiconnect.packets.v1_17.CPacketBookUpdate_1_17
 12 net.earthcomputer.multiconnect.packets.CPacketQueryEntityNbt
-13 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractEntity
+13 net.earthcomputer.multiconnect.packets.latest.CPacketPlayerInteractEntity_Latest
 14 net.earthcomputer.multiconnect.packets.CPacketJigsawGenerating
 15 net.earthcomputer.multiconnect.packets.CPacketKeepAlive
 16 net.earthcomputer.multiconnect.packets.CPacketUpdateDifficultyLock
@@ -24,7 +24,7 @@ id clazz
 22 net.earthcomputer.multiconnect.packets.CPacketBoatPaddleState
 23 net.earthcomputer.multiconnect.packets.CPacketPickFromInventory
 24 net.earthcomputer.multiconnect.packets.CPacketCraftRequest
-25 net.earthcomputer.multiconnect.packets.CPacketUpdatePlayerAbilities
+25 net.earthcomputer.multiconnect.packets.latest.CPacketUpdatePlayerAbilities_Latest
 26 net.earthcomputer.multiconnect.packets.CPacketPlayerAction
 27 net.earthcomputer.multiconnect.packets.CPacketClientCommand
 28 net.earthcomputer.multiconnect.packets.CPacketPlayerInput
@@ -40,7 +40,7 @@ id clazz
 38 net.earthcomputer.multiconnect.packets.CPacketUpdateCommandBlock
 39 net.earthcomputer.multiconnect.packets.CPacketUpdateCommandBlockMinecart
 40 net.earthcomputer.multiconnect.packets.CPacketCreativeInventoryAction
-41 net.earthcomputer.multiconnect.packets.CPacketUpdateJigsaw
+41 net.earthcomputer.multiconnect.packets.latest.CPacketUpdateJigsaw_Latest
 42 net.earthcomputer.multiconnect.packets.CPacketUpdateStructureBlock
 43 net.earthcomputer.multiconnect.packets.CPacketUpdateSign
 44 net.earthcomputer.multiconnect.packets.CPacketHandSwing

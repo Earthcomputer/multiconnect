@@ -187,7 +187,7 @@ fun TypeElement.findMulticonnectFunction(
                             errorConsumer?.report("Could not resolve argument \"${argument.value}\"", parameter)
                             return null
                         }
-                        parameters += MulticonnectParameter.Argument(paramType, argument.value)
+                        parameters += MulticonnectParameter.Argument(paramType, argument.value, argument.translate)
                     }
                     isDefaultConstruct -> {
                         if (paramType.hasQualifiedName(JAVA_UTIL_FUNCTION_SUPPLIER)) {

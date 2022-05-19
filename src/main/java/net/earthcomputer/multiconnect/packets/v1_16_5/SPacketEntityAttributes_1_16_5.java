@@ -5,7 +5,6 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketEntityAttributes;
-import net.earthcomputer.multiconnect.packets.latest.SPacketEntityAttributes_Latest;
 
 import java.util.List;
 
@@ -13,5 +12,5 @@ import java.util.List;
 public class SPacketEntityAttributes_1_16_5 implements SPacketEntityAttributes {
     public int entityId;
     @Length(type = Types.INT)
-    public List<SPacketEntityAttributes_Latest.Property> properties;
+    public List<SPacketEntityAttributes.Property> properties;
 }

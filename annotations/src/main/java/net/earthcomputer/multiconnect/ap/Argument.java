@@ -10,4 +10,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 public @interface Argument {
     String value();
+    boolean translate() default false;
 }

@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.DefaultConstruct;
+import net.earthcomputer.multiconnect.ap.Message;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
@@ -8,6 +8,7 @@ import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
+import net.earthcomputer.multiconnect.packets.latest.ItemStack_Latest;
 import net.minecraft.nbt.NbtCompound;
 
 import java.util.Optional;
@@ -25,17 +26,15 @@ public class CommonTypes {
         public long packedData;
     }
 
-    @Polymorphic
-    @MessageVariant
-    @DefaultConstruct(subType = EmptyItemStack.class)
-    public static abstract class ItemStack {
-        public boolean present;
+    @Message
+    public interface ItemStack {
+        boolean isPresent();
 
-        public static ItemStack fromMinecraft(net.minecraft.item.ItemStack stack) {
+        static ItemStack fromMinecraft(net.minecraft.item.ItemStack stack) {
             if (stack.isEmpty()) {
-                return new EmptyItemStack();
+                return new ItemStack_Latest.Empty();
             } else {
-                NonEmptyItemStack newStack = new NonEmptyItemStack();
+                ItemStack_Latest.NonEmpty newStack = new ItemStack_Latest.NonEmpty();
                 newStack.present = true;
                 newStack.itemId = net.minecraft.util.registry.Registry.ITEM.getRawId(stack.getItem());
                 newStack.count = (byte) stack.getCount();
@@ -43,21 +42,17 @@ public class CommonTypes {
                 return newStack;
             }
         }
-    }
 
-    @Polymorphic(booleanValue = false)
-    @MessageVariant
-    public static class EmptyItemStack extends ItemStack {
-    }
+        @Message
+        interface Empty extends ItemStack {
+        }
 
-    @Polymorphic(booleanValue = true)
-    @MessageVariant
-    public static class NonEmptyItemStack extends ItemStack {
-        @Registry(Registries.ITEM)
-        public int itemId;
-        @DefaultConstruct(intValue = 1)
-        public byte count;
-        public NbtCompound tag;
+        @Message
+        interface NonEmpty extends ItemStack {
+            int getItemId();
+            byte getCount();
+            NbtCompound getTag();
+        }
     }
 
     @Polymorphic

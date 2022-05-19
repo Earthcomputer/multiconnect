@@ -288,9 +288,26 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
 
 
 internal fun ProtocolCompiler.generateFunctionCallGraph(function: McFunction, vararg positionalArguments: McNode, paramResolver: ParamResolver): McNode {
+    return generateFunctionCallGraph(function, *positionalArguments, paramResolver = paramResolver) { _, _ ->
+        throw CompileException("@Argument(translate) can only be used in @Introduce functions")
+    }
+}
+
+internal inline fun ProtocolCompiler.generateFunctionCallGraph(
+    function: McFunction,
+    vararg positionalArguments: McNode,
+    paramResolver: ParamResolver,
+    argTranslator: (McType, McNode) -> McNode
+): McNode {
     val loadParams = function.parameters.mapTo(mutableListOf()) { param ->
         when (param) {
-            is ArgumentParameter -> paramResolver(param.name, param.paramType)
+            is ArgumentParameter -> {
+                var result = paramResolver(param.name, param.paramType)
+                if (param.translate) {
+                    result = argTranslator(param.paramType, result)
+                }
+                result
+            }
             is DefaultConstructedParameter -> generateDefaultConstructGraph(param.paramType, null)
             is SuppliedDefaultConstructedParameter -> McNode(
                 LambdaOp(param.paramType, param.suppliedType, emptyList(), emptyList()),

@@ -9,6 +9,7 @@ import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketBookUpdate;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
+import net.earthcomputer.multiconnect.packets.latest.ItemStack_Latest;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
@@ -30,7 +31,7 @@ public class CPacketBookUpdate_1_17 implements CPacketBookUpdate {
             @Argument("title") Optional<String> title,
             @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.ITEM, value = "writable_book")) int writableBookId,
             @FilledArgument ClientPlayNetworkHandler networkHandler,
-            @DefaultConstruct CommonTypes.NonEmptyItemStack stack
+            @DefaultConstruct ItemStack_Latest.NonEmpty stack
     ) {
         stack.itemId = writableBookId;
         stack.tag = new NbtCompound();

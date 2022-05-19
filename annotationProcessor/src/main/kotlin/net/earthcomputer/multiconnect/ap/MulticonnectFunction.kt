@@ -20,7 +20,7 @@ sealed class MulticonnectParameter {
 
     @Serializable
     @SerialName("argument")
-    class Argument(override val paramType: TypeMirror, val name: String): MulticonnectParameter()
+    class Argument(override val paramType: TypeMirror, val name: String, val translate: Boolean): MulticonnectParameter()
     @Serializable
     @SerialName("defaultConstructed")
     class DefaultConstructed(override val paramType: TypeMirror): MulticonnectParameter()

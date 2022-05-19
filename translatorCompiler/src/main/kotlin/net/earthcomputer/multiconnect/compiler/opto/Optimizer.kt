@@ -14,6 +14,7 @@ fun McNode.optimize(): McNode {
 
 internal class Optimizer(var rootNode: McNode) {
     fun optimize() {
+        removeUnusedNodes()
         extractCommonNodes()
         extractStatementsInExpressions()
         addTryCatchIfNecessary()

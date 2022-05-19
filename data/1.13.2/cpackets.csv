@@ -12,7 +12,7 @@ id clazz
 10 net.earthcomputer.multiconnect.packets.CPacketCustomPayload
 11 net.earthcomputer.multiconnect.packets.v1_16_3.CPacketBookUpdate_1_16_3
 12 net.earthcomputer.multiconnect.packets.CPacketQueryEntityNbt
-13 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractEntity
+13 net.earthcomputer.multiconnect.packets.v1_15_2.CPacketPlayerInteractEntity_1_15_2
 14 net.earthcomputer.multiconnect.packets.CPacketKeepAlive
 15 net.earthcomputer.multiconnect.packets.CPacketPlayerMoveOnGroundOnly
 16 net.earthcomputer.multiconnect.packets.CPacketPlayerMovePositionAndOnGround
@@ -22,7 +22,7 @@ id clazz
 20 net.earthcomputer.multiconnect.packets.CPacketBoatPaddleState
 21 net.earthcomputer.multiconnect.packets.CPacketPickFromInventory
 22 net.earthcomputer.multiconnect.packets.CPacketCraftRequest
-23 net.earthcomputer.multiconnect.packets.CPacketUpdatePlayerAbilities
+23 net.earthcomputer.multiconnect.packets.v1_15_2.CPacketUpdatePlayerAbilities_1_15_2
 24 net.earthcomputer.multiconnect.packets.CPacketPlayerAction
 25 net.earthcomputer.multiconnect.packets.CPacketClientCommand
 26 net.earthcomputer.multiconnect.packets.CPacketPlayerInput
