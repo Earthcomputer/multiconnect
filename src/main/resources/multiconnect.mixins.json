@@ -50,7 +50,8 @@
     "connect.MixinServerList",
     "connect.MixinServerListIcon",
     "connect.MixinSplashOverlay",
-    "debug.MixinKeyboard"
+    "debug.MixinKeyboard",
+    "debug.MixinThreadExecutor"
   ],
   "client": [
   ],

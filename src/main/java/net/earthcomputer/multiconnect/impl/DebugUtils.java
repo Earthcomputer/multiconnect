@@ -15,6 +15,7 @@ import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
+import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
@@ -86,6 +87,9 @@ public class DebugUtils {
     public static final boolean IGNORE_ERRORS = Boolean.getBoolean("multiconnect.ignoreErrors");
     public static final boolean DUMP_REGISTRIES = Boolean.getBoolean("multiconnect.dumpRegistries");
     public static final boolean SKIP_TRANSLATION = Boolean.getBoolean("multiconnect.skipTranslation");
+    public static final boolean STORE_BUFS_FOR_HANDLER = Boolean.getBoolean("multiconnect.storeBufsForHandler");
+
+    public static final Key<byte[]> STORED_BUF = Key.create("storedBuf");
 
     private static final Map<TrackedData<?>, String> TRACKED_DATA_NAMES = new IdentityHashMap<>();
     private static void computeTrackedDataNames() {
@@ -195,17 +199,20 @@ public class DebugUtils {
         return !(t instanceof PacketEncoderException) && !(t instanceof TimeoutException);
     }
 
-    public static void logPacketError(ByteBuf data, String... extraLines) {
-        if (data.hasArray()) {
-            logPacketError(data.array(), extraLines);
-        } else {
-            int prevReaderIndex = data.readerIndex();
-            data.readerIndex(0);
-            byte[] array = new byte[data.readableBytes()];
-            data.readBytes(array);
-            data.readerIndex(prevReaderIndex);
-            logPacketError(array, extraLines);
+    public static byte[] getBufData(ByteBuf buf) {
+        if (buf.hasArray()) {
+            return buf.array();
         }
+        int prevReaderIndex = buf.readerIndex();
+        buf.readerIndex(0);
+        byte[] array = new byte[buf.readableBytes()];
+        buf.readBytes(array);
+        buf.readerIndex(prevReaderIndex);
+        return array;
+    }
+
+    public static void logPacketError(ByteBuf data, String... extraLines) {
+        logPacketError(getBufData(data), extraLines);
     }
 
     public static void logPacketError(byte[] data, String... extraLines) {
