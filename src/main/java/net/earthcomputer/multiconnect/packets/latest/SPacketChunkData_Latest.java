@@ -177,7 +177,9 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
         }
         long currentLong = 0;
         for (int i = 0; i < 64; i++) {
-            int valueToWrite = bitsPerBiome <= 2 ? invBiomePalette.get(biomes.getInt(minIndex + i)) : Protocol_1_17_1.mapBiomeId(biomes.getInt(minIndex + i), biomeRegistry);
+            int valueToWrite = bitsPerBiome <= 2
+                    ? invBiomePalette.get(Protocol_1_17_1.mapBiomeId(biomes.getInt(minIndex + i), biomeRegistry))
+                    : Protocol_1_17_1.mapBiomeId(biomes.getInt(minIndex + i), biomeRegistry);
             int posInLong = i % biomesPerLong;
             currentLong |= (long) valueToWrite << (posInLong * bitsPerBiome);
             if (posInLong + bitsPerBiome >= 64 || i == 63) {

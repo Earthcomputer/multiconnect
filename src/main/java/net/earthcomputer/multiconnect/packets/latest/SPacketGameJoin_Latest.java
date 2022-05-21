@@ -18,7 +18,6 @@ import net.earthcomputer.multiconnect.packets.SPacketGameJoin;
 import net.earthcomputer.multiconnect.protocols.generic.DimensionTypeReference;
 import net.minecraft.SharedConstants;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.DynamicRegistryManager;
@@ -75,12 +74,6 @@ public class SPacketGameJoin_Latest implements SPacketGameJoin {
                     ConnectionMode.byValue(ConnectionInfo.protocolVersion).getDataVersion(),
                     SharedConstants.getGameVersion().getSaveVersion().getId()
             );
-            try {
-                NbtIo.writeCompressed(((NbtCompound) updated.convert(NbtOps.INSTANCE).getValue()), new File("temp" +
-                            ".nbt"));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
             var dataResult = DynamicRegistryManager.CODEC.decode(updated);
             DynamicRegistryManager result = dataResult.getOrThrow(false, err -> {}).getFirst();
             registryManagerSetter.accept(result);
