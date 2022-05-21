@@ -49,6 +49,10 @@ public class MulticonnectClientboundTranslator extends ByteToMessageDecoder {
             }
         }
 
+        if (DebugUtils.STORE_BUFS_FOR_HANDLER) {
+            userData.put(DebugUtils.STORED_BUF, DebugUtils.getBufData(in));
+        }
+
         for (ByteBuf outBuf : outBufs) {
             PacketSystem.Internals.setUserData(outBuf, userData);
         }
