@@ -1,6 +1,5 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
-import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.impl.Utils;
@@ -8,8 +7,6 @@ import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.ChunkConnector;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectableChunk;
-import net.earthcomputer.multiconnect.protocols.v1_14_4.IBiomeStorage_1_14_4;
-import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -30,7 +27,6 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
@@ -54,7 +50,7 @@ public class MixinClientPlayNetworkHandler {
 
     @Unique private ChunkDataS2CPacket currentChunkPacket;
 
-    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
+    @Inject(method = "onChunkData", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
     private void onOnChunkData(ChunkDataS2CPacket packet, CallbackInfo ci) {
         currentChunkPacket = packet;
     }
@@ -88,14 +84,6 @@ public class MixinClientPlayNetworkHandler {
             }
         }
 
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_14_4) {
-            if (chunk != null) {
-                Biome[] biomeData = PacketSystem.getUserData(currentChunkPacket).get(Protocol_1_14_4.BIOME_DATA_KEY);
-                if (biomeData != null) {
-                    ((IBiomeStorage_1_14_4) chunk).multiconnect_setBiomeArray_1_14_4(biomeData);
-                }
-            }
-        }
         return chunk;
     }
 

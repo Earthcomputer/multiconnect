@@ -327,14 +327,14 @@ id name oldName
 325 entity.parrot.imitate.creeper
 326 entity.parrot.imitate.elder_guardian
 327 entity.parrot.imitate.ender_dragon
-328 null entity.parrot.imitate.enderman
+328 multiconnect:entity.parrot.imitate.enderman entity.parrot.imitate.enderman
 329 entity.parrot.imitate.endermite
 330 entity.parrot.imitate.evoker
 331 entity.parrot.imitate.ghast
 332 entity.parrot.imitate.husk
 333 entity.parrot.imitate.illusioner
 334 entity.parrot.imitate.magma_cube
-335 null entity.parrot.imitate.polar_bear
+335 multiconnect:entity.parrot.imitate.polar_bear entity.parrot.imitate.polar_bear
 336 entity.parrot.imitate.shulker
 337 entity.parrot.imitate.silverfish
 338 entity.parrot.imitate.skeleton
@@ -346,9 +346,9 @@ id name oldName
 344 entity.parrot.imitate.witch
 345 entity.parrot.imitate.wither
 346 entity.parrot.imitate.wither_skeleton
-347 null entity.parrot.imitate.wolf
+347 multiconnect:entity.parrot.imitate.wolf entity.parrot.imitate.wolf
 348 entity.parrot.imitate.zombie
-349 null entity.parrot.imitate.zombie_pigman
+349 multiconnect:entity.parrot.imitate.zombie_pigman entity.parrot.imitate.zombie_pigman
 350 entity.parrot.imitate.zombie_villager
 351 entity.parrot.step
 352 entity.pig.ambient

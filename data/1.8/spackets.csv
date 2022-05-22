@@ -11,10 +11,10 @@ id clazz
 9 net.earthcomputer.multiconnect.packets.SPacketUpdateSelectedSlot
 10 net.earthcomputer.multiconnect.packets.SPacketUseBed
 11 net.earthcomputer.multiconnect.packets.SPacketEntityAnimation
-12 net.earthcomputer.multiconnect.packets.SPacketPlayerSpawn
+12 net.earthcomputer.multiconnect.packets.v1_14_4.SPacketPlayerSpawn_1_14_4
 13 net.earthcomputer.multiconnect.packets.SPacketItemPickupAnimation
 14 net.earthcomputer.multiconnect.packets.SPacketEntitySpawn
-15 net.earthcomputer.multiconnect.packets.SPacketMobSpawn
+15 net.earthcomputer.multiconnect.packets.v1_14_4.SPacketMobSpawn_1_14_4
 16 net.earthcomputer.multiconnect.packets.SPacketPaintingSpawn
 17 net.earthcomputer.multiconnect.packets.SPacketExperienceOrbSpawn
 18 net.earthcomputer.multiconnect.packets.SPacketEntityVelocityUpdate
@@ -41,7 +41,7 @@ id clazz
 39 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketExplosion_1_16_5
 40 net.earthcomputer.multiconnect.packets.SPacketWorldEvent
 41 net.earthcomputer.multiconnect.packets.SPacketPlaySoundId
-42 net.earthcomputer.multiconnect.packets.SPacketParticle
+42 net.earthcomputer.multiconnect.packets.v1_14_4.SPacketParticle_1_14_4
 43 net.earthcomputer.multiconnect.packets.SPacketGameStateChange
 44 net.earthcomputer.multiconnect.packets.v1_15_2.SPacketEntitySpawnGlobal_1_15_2
 45 net.earthcomputer.multiconnect.packets.SPacketGuiOpen

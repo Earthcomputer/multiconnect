@@ -445,7 +445,7 @@ id name oldName
 443 entity.parrot.imitate.drowned
 444 entity.parrot.imitate.elder_guardian
 445 entity.parrot.imitate.ender_dragon
-446 null entity.parrot.imitate.enderman
+446 multiconnect:entity.parrot.imitate.enderman entity.parrot.imitate.enderman
 447 entity.parrot.imitate.endermite
 448 entity.parrot.imitate.evoker
 449 entity.parrot.imitate.ghast
@@ -453,10 +453,10 @@ id name oldName
 451 entity.parrot.imitate.husk
 452 entity.parrot.imitate.illusioner
 453 entity.parrot.imitate.magma_cube
-454 null entity.parrot.imitate.panda
+454 multiconnect:entity.parrot.imitate.panda entity.parrot.imitate.panda
 455 entity.parrot.imitate.phantom
 456 entity.parrot.imitate.pillager
-457 null entity.parrot.imitate.polar_bear
+457 multiconnect:entity.parrot.imitate.polar_bear entity.parrot.imitate.polar_bear
 458 entity.parrot.imitate.ravager
 459 entity.parrot.imitate.shulker
 460 entity.parrot.imitate.silverfish
@@ -469,9 +469,9 @@ id name oldName
 467 entity.parrot.imitate.witch
 468 entity.parrot.imitate.wither
 469 entity.parrot.imitate.wither_skeleton
-470 null entity.parrot.imitate.wolf
+470 multiconnect:entity.parrot.imitate.wolf entity.parrot.imitate.wolf
 471 entity.parrot.imitate.zombie
-472 null entity.parrot.imitate.zombie_pigman
+472 multiconnect:entity.parrot.imitate.zombie_pigman entity.parrot.imitate.zombie_pigman
 473 entity.parrot.imitate.zombie_villager
 474 entity.parrot.step
 475 entity.phantom.ambient

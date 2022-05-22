@@ -11,21 +11,15 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.projectile.TridentEntity;
-import net.minecraft.world.biome.Biome;
-
-import java.util.List;
 
 public class Protocol_1_14_4 extends Protocol_1_15 {
 
     public static final TrackedData<Float> OLD_WOLF_HEALTH = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.FLOAT);
-    public static final Key<Biome[]> BIOME_DATA_KEY = Key.create("biomeData");
-    public static final Key<List<DataTracker.Entry<?>>> DATA_TRACKER_ENTRIES_KEY = Key.create("dataTrackerEntries");
 
     @Override
     public void preAcceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {

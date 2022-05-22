@@ -1,9 +1,9 @@
 id clazz
 0 net.earthcomputer.multiconnect.packets.SPacketEntitySpawn
 1 net.earthcomputer.multiconnect.packets.SPacketExperienceOrbSpawn
-2 net.earthcomputer.multiconnect.packets.SPacketMobSpawn
+2 net.earthcomputer.multiconnect.packets.latest.SPacketMobSpawn_Latest
 3 net.earthcomputer.multiconnect.packets.SPacketPaintingSpawn
-4 net.earthcomputer.multiconnect.packets.SPacketPlayerSpawn
+4 net.earthcomputer.multiconnect.packets.latest.SPacketPlayerSpawn_Latest
 5 net.earthcomputer.multiconnect.packets.SPacketVibration
 6 net.earthcomputer.multiconnect.packets.SPacketEntityAnimation
 7 net.earthcomputer.multiconnect.packets.SPacketStatistics
@@ -35,7 +35,7 @@ id clazz
 33 net.earthcomputer.multiconnect.packets.SPacketKeepAlive
 34 net.earthcomputer.multiconnect.packets.latest.SPacketChunkData_Latest
 35 net.earthcomputer.multiconnect.packets.SPacketWorldEvent
-36 net.earthcomputer.multiconnect.packets.SPacketParticle
+36 net.earthcomputer.multiconnect.packets.latest.SPacketParticle_Latest
 37 net.earthcomputer.multiconnect.packets.latest.SPacketLightUpdate_Latest
 38 net.earthcomputer.multiconnect.packets.latest.SPacketGameJoin_Latest
 39 net.earthcomputer.multiconnect.packets.SPacketMapUpdate

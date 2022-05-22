@@ -13,6 +13,7 @@ import net.earthcomputer.multiconnect.compiler.MessageInfo
 import net.earthcomputer.multiconnect.compiler.MessageVariantInfo
 import net.earthcomputer.multiconnect.compiler.PacketType
 import net.earthcomputer.multiconnect.compiler.ProtocolEntry
+import net.earthcomputer.multiconnect.compiler.classInfo
 import net.earthcomputer.multiconnect.compiler.classInfoOrNull
 import net.earthcomputer.multiconnect.compiler.componentType
 import net.earthcomputer.multiconnect.compiler.deepComponentType
@@ -371,7 +372,11 @@ private fun ProtocolCompiler.generateHandlerInner(packetNode: McNode, nextProtoc
     }
 
     for (type in possibleTypes) {
-        val info = type.classInfoOrNull as? MessageVariantInfo
+        val info = when (val classInfo = type.classInfoOrNull) {
+            is MessageVariantInfo -> classInfo
+            is MessageInfo -> classInfo.getVariant(nextProtocolId)!!
+            else -> null
+        }
         val isValid = info?.let {
             getPacketDirection(nextProtocolId, it.className) == PacketDirection.fromClientbound(clientbound)
         } ?: false
@@ -393,6 +398,11 @@ private fun ProtocolCompiler.generateHandlerInner(packetNode: McNode, nextProtoc
             )
         )
         for (returnType in handlerFunc.possibleReturnTypes.asReversed()) {
+            val actualReturnType = when (val classInfo = returnType.classInfo) {
+                is MessageVariantInfo -> classInfo
+                is MessageInfo -> classInfo.getVariant(nextProtocolId)!!
+                else -> throw CompileException("Illegal class info type")
+            }
             val instanceVarId = VariableId.create()
             ifElseChain = McNode(
                 IfElseStmtOp,
@@ -401,13 +411,13 @@ private fun ProtocolCompiler.generateHandlerInner(packetNode: McNode, nextProtoc
                     McNode(LoadVariableOp(elementVar, handlerFunc.returnType.deepComponentType()))
                 ),
                 McNode(StmtListOp,
-                    McNode(StoreVariableStmtOp(instanceVarId, returnType, true),
+                    McNode(StoreVariableStmtOp(instanceVarId, actualReturnType.toMcType(), true),
                         McNode(
-                            CastOp(handlerFunc.returnType.deepComponentType(), returnType),
+                            CastOp(handlerFunc.returnType.deepComponentType(), actualReturnType.toMcType()),
                             McNode(LoadVariableOp(elementVar, handlerFunc.returnType.deepComponentType()))
                         )
                     ),
-                    generateExplicitSenderServerRegistries(returnType.messageVariantInfo, nextProtocolId, instanceVarId, clientbound)
+                    generateExplicitSenderServerRegistries(actualReturnType, nextProtocolId, instanceVarId, clientbound)
                 ),
                 McNode(StmtListOp, ifElseChain)
             )

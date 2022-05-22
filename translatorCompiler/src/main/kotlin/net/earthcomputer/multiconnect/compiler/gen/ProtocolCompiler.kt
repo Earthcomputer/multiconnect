@@ -468,8 +468,12 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
     internal fun Registries.getRawId(value: String): Either<Int, McNode>? {
         val entry = entries.byName(value)
 
+        if (entry != null) {
+            return Either.Left(entry.id)
+        }
+
         // load id dynamically if necessary
-        if (entry == null && currentProtocolId != protocolId && value.startsWith("multiconnect:")) {
+        if (currentProtocolId != protocolId && value.startsWith("multiconnect:")) {
             val registryType = McType.DeclaredType(REGISTRY)
             val registryKeyType = McType.DeclaredType(REGISTRY_KEY)
             val registryElementType = McType.DeclaredType("RegistryElement")
@@ -484,17 +488,37 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             )
         }
 
-        return entry?.id?.let { Either.Left(it) }
+        checkNameLegal(value)
+        return null
     }
 
     internal fun Registries.getOldName(value: String): String? {
         val entry = entries.byName(value)
 
-        if (entry == null && currentProtocolId != protocolId && value.startsWith("multiconnect:")) {
+        if (entry != null) {
+            return entry.oldName
+        }
+
+        if (currentProtocolId != protocolId && value.startsWith("multiconnect:")) {
             return value
         }
 
-        return entry?.oldName
+        checkNameLegal(value)
+        return null
+    }
+
+    private fun Registries.checkNameLegal(value: String) {
+        // check if the name appears in the registry in any version
+        val prevCurrentProtocolId = currentProtocolId
+        for (protocol in protocols) {
+            currentProtocolId = protocol.id
+            if (entries.byName(value) != null) {
+                currentProtocolId = prevCurrentProtocolId
+                return
+            }
+        }
+        currentProtocolId = prevCurrentProtocolId
+        throw CompileException("Unknown ${this.name} registry entry: $value")
     }
 
     internal val Registries.entries: List<RegistryEntry> get() {

@@ -60,7 +60,6 @@ import net.earthcomputer.multiconnect.compiler.node.VariableId
 import net.earthcomputer.multiconnect.compiler.node.createCstNode
 import net.earthcomputer.multiconnect.compiler.normalizeIdentifier
 import net.earthcomputer.multiconnect.compiler.polymorphicChildren
-import net.earthcomputer.multiconnect.compiler.protocolNamesById
 import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.splitPackageClass
 
@@ -460,10 +459,10 @@ internal fun ProtocolCompiler.generateDefaultConstructGraph(
 internal fun ProtocolCompiler.generateConstantGraph(targetType: McType, value: Any, registry: Registries? = null): McNode {
     return if (targetType.isIntegral && registry != null && value is String) {
         targetType as McType.PrimitiveType
-        val rawId = registry.getRawId(value) ?: throw CompileException("Unknown value \"$value\" in registry $registry")
-        when (rawId) {
+        when (val rawId = registry.getRawId(value)) {
             is Either.Left -> createCstNode(rawId.left.downcastConstant(targetType))
             is Either.Right -> targetType.cast(rawId.right)
+            null -> createCstNode(-1)
         }
     } else if (targetType.hasName(IDENTIFIER)) {
         val (namespace, name) = (value as String).normalizeIdentifier().split(':', limit = 2)
@@ -487,10 +486,10 @@ internal fun ProtocolCompiler.generateFilledConstructGraph(type: McType, filledP
             when (val rawId = filledParam.fromRegistry.registry.getRawId(filledParam.fromRegistry.value)) {
                 is Either.Left -> McNode(CstIntOp(rawId.left))
                 is Either.Right -> rawId.right
-                else -> throw CompileException("Unknown registry value ${filledParam.fromRegistry.value} in protocol ${protocolNamesById[currentProtocolId]}")
+                null -> McNode(CstIntOp(-1))
             }
         } else if (type.hasName(IDENTIFIER)) {
-            val oldName = filledParam.fromRegistry.registry.getOldName(filledParam.fromRegistry.value) ?: throw CompileException("Unknown registry value ${filledParam.fromRegistry.value} in protocol ${protocolNamesById[currentProtocolId]}")
+            val oldName = filledParam.fromRegistry.registry.getOldName(filledParam.fromRegistry.value) ?: "null"
             val identifierField = createIdentifierConstantField(oldName)
             McNode(LoadFieldOp(McType.DeclaredType(className), identifierField, McType.DeclaredType(IDENTIFIER), isStatic = true))
         } else {
