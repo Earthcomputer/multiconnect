@@ -6,6 +6,7 @@ import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Registries;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketEntitySpawn;
 import net.minecraft.util.math.MathHelper;
 
@@ -13,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-@MessageVariant
+@MessageVariant(maxVersion = Protocols.V1_15_2)
 public class SPacketEntitySpawnGlobal_1_15_2 {
     private static final Random random = new Random();
 

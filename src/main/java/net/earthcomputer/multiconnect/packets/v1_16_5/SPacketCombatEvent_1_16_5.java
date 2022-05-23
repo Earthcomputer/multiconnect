@@ -8,12 +8,13 @@ import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketDeathMessage;
 import net.earthcomputer.multiconnect.packets.SPacketEndCombat;
 import net.earthcomputer.multiconnect.packets.SPacketEnterCombat;
 
-@MessageVariant
+@MessageVariant(maxVersion = Protocols.V1_16_5)
 @Polymorphic
 public abstract class SPacketCombatEvent_1_16_5 {
     public Mode mode;
@@ -24,7 +25,7 @@ public abstract class SPacketCombatEvent_1_16_5 {
     }
 
     @Polymorphic(stringValue = "ENTER_COMBAT")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class EnterCombat extends SPacketCombatEvent_1_16_5 {
         @Handler
         public static SPacketEnterCombat handle(@DefaultConstruct SPacketEnterCombat packet) {
@@ -33,7 +34,7 @@ public abstract class SPacketCombatEvent_1_16_5 {
     }
 
     @Polymorphic(stringValue = "END_COMBAT")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class EndCombat extends SPacketCombatEvent_1_16_5 {
         public int duration;
         @Type(Types.INT)
@@ -52,7 +53,7 @@ public abstract class SPacketCombatEvent_1_16_5 {
     }
 
     @Polymorphic(stringValue = "ENTITY_DIED")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class EntityDied extends SPacketCombatEvent_1_16_5 {
         public int playerId;
         @Type(Types.INT)

@@ -8,7 +8,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.v1_16_1.CPacketRecipeBookData_1_16_1;
 import net.minecraft.util.Identifier;
 
-@MessageVariant
+@MessageVariant(minVersion = Protocols.V1_16_2)
 public class CPacketRecipeBookData {
     public Identifier displayedRecipe;
 

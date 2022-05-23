@@ -181,34 +181,62 @@ private fun ProtocolCompiler.generateRead(group: MessageInfo?, packet: MessageVa
 
 private fun ProtocolCompiler.generateFixRegistries(group: MessageInfo?, packet: MessageVariantInfo, protocolsSubset: List<ProtocolEntry>, clientbound: Boolean): McNode {
     val protocol = if (clientbound) protocolsSubset.last() else protocolsSubset.first()
-    return if (group != null) {
-        fixRegistries(group, protocolVariable(protocol.id), clientbound)
-    } else {
-        fixRegistries(packet, protocolVariable(protocol.id), clientbound)
-    }
+    return fixRegistries(getVariant(group, protocol.id, packet), protocolVariable(protocol.id), clientbound)
 }
 
 private fun ProtocolCompiler.generateTranslate(group: MessageInfo?, packet: MessageVariantInfo, protocolsSubset: List<ProtocolEntry>, clientbound: Boolean): Pair<McNode, Boolean> {
+    fun isProtocolValid(protocol: Int): Boolean {
+        if (packet.variantOf == null) {
+            if (packet.minVersion != null && protocol < packet.minVersion) {
+                return false
+            }
+            if (packet.maxVersion != null && protocol > packet.maxVersion) {
+                return false
+            }
+        } else {
+            if ((getClassInfo(packet.variantOf) as MessageInfo).getVariant(protocol) == null) {
+                return false
+            }
+        }
+        return true
+    }
+
+    fun getNextProtocol(protocol: Int): Int? {
+        val index = protocols.binarySearch { protocol.compareTo(it.id) }
+        val nextIndex = if (clientbound) {
+            index - 1
+        } else {
+            index + 1
+        }
+        return protocols.getOrNull(nextIndex)?.id
+    }
+
     val nodes = mutableListOf<McNode>()
     nodes += generatePartialHandlers(protocolsSubset, 0) { getVariant(group, it, packet) }
-    val (handler0, handled0) = generateHandler(protocolVariable(protocolsSubset.first().id), protocolsSubset.getOrNull(1)?.id, getVariant(group, protocolsSubset[0].id, packet), clientbound)
+    val (handler0, handled0) = generateHandler(protocolVariable(protocolsSubset.first().id), getNextProtocol(protocolsSubset.first().id), getVariant(group, protocolsSubset[0].id, packet), clientbound, ::isProtocolValid)
     nodes += handler0
     if (handled0) {
         return McNode(StmtListOp, nodes) to true
     }
 
     for (index in protocolsSubset.indices.drop(1)) {
-        defaultConstructProtocolId = protocolsSubset[index].id
+        val protocol = protocolsSubset[index].id
+        if (!isProtocolValid(protocol)) {
+            continue
+        }
+        defaultConstructProtocolId = protocol
         nodes += McNode(
-            StoreVariableStmtOp(protocolVariable(protocolsSubset[index].id), group?.toMcType() ?: packet.toMcType(), true),
+            StoreVariableStmtOp(protocolVariable(protocol), group?.getVariant(protocol)?.toMcType() ?: packet.toMcType(), true),
             if (group != null) {
-                translate(group, protocolsSubset[index - 1].id, protocolsSubset[index].id, protocolVariable(protocolsSubset[index - 1].id), null)
+                translate(group, protocolsSubset[index - 1].id,
+                    protocol, protocolVariable(protocolsSubset[index - 1].id), null)
             } else {
-                translate(packet, protocolsSubset[index - 1].id, protocolsSubset[index].id, protocolVariable(protocolsSubset[index - 1].id), null)
+                translate(packet, protocolsSubset[index - 1].id,
+                    protocol, protocolVariable(protocolsSubset[index - 1].id), null)
             }
         )
         nodes += generatePartialHandlers(protocolsSubset, index) { getVariant(group, it, packet) }
-        val (handler, handled) = generateHandler(protocolVariable(protocolsSubset[index].id), protocolsSubset.getOrNull(index + 1)?.id, getVariant(group, protocolsSubset[index].id, packet), clientbound)
+        val (handler, handled) = generateHandler(protocolVariable(protocol), getNextProtocol(protocol), getVariant(group, protocol, packet), clientbound, ::isProtocolValid)
         nodes += handler
         defaultConstructProtocolId = null
         if (handled) {
@@ -282,12 +310,25 @@ private inline fun ProtocolCompiler.generatePartialHandlers(
     return McNode(StmtListOp, nodes)
 }
 
-private fun ProtocolCompiler.generateHandler(varId: VariableId, nextProtocolId: Int?, packet: MessageVariantInfo, clientbound: Boolean): Pair<McNode, Boolean> {
-    if (packet.handler != null && (clientbound || this.protocolId <= (packet.handlerProtocol ?: throw CompileException("@Handler protocol is required for serverbound packets (${packet.className})")))) {
+private fun ProtocolCompiler.generateHandler(
+    varId: VariableId,
+    nextProtocolId: Int?,
+    packet: MessageVariantInfo,
+    clientbound: Boolean,
+    isProtocolValid: (Int) -> Boolean,
+): Pair<McNode, Boolean> {
+    if (packet.handler != null
+        && (clientbound || this.protocolId <= (packet.handlerProtocol ?: throw CompileException("@Handler protocol is required for serverbound packets (${packet.className})")))
+        && (nextProtocolId == null || !isProtocolValid(nextProtocolId) || (packet.variantOf != null && (getClassInfo(packet.variantOf) as MessageInfo).getVariant(nextProtocolId)!!.className != packet.className))
+    ) {
         return generateHandlerInner(McNode(LoadVariableOp(varId, packet.toMcType())), nextProtocolId, packet, packet.handler, clientbound) to true
     }
     if (packet.polymorphic != null && packet.polymorphicParent == null) {
-        val alwaysHandled = polymorphicChildren[packet.className]!!.all { getMessageVariantInfo(it).handler != null }
+        val alwaysHandled = polymorphicChildren[packet.className]!!.all {
+            val variant = getMessageVariantInfo(it)
+            variant.handler != null
+                && (nextProtocolId == null || !isProtocolValid(nextProtocolId) || (variant.variantOf != null && (getClassInfo(variant.variantOf) as MessageInfo).getVariant(nextProtocolId)!!.className != variant.className))
+        }
         var ifElseChain = if (alwaysHandled) {
             McNode(
                 ThrowStmtOp,
@@ -301,7 +342,10 @@ private fun ProtocolCompiler.generateHandler(varId: VariableId, nextProtocolId: 
         }
         for (childName in polymorphicChildren[packet.className]!!.asReversed()) {
             val childMessage = getMessageVariantInfo(childName)
-            if (childMessage.handler != null && (clientbound || this.protocolId <= (childMessage.handlerProtocol ?: throw CompileException("@Handler protocol is required for serverbound packets ($childName)")))) {
+            if (childMessage.handler != null
+                && (clientbound || this.protocolId <= (childMessage.handlerProtocol ?: throw CompileException("@Handler protocol is required for serverbound packets ($childName)")))
+                && (nextProtocolId == null || !isProtocolValid(nextProtocolId) || (packet.variantOf != null && (getClassInfo(packet.variantOf) as MessageInfo).getVariant(nextProtocolId)!!.className != packet.className))
+            ) {
                 val condition = McNode(
                     InstanceOfOp(packet.toMcType(), childMessage.toMcType()),
                     McNode(LoadVariableOp(varId, packet.toMcType()))

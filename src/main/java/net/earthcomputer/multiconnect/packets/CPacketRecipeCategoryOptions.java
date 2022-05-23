@@ -7,7 +7,7 @@ import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.v1_16_1.CPacketRecipeBookData_1_16_1;
 
-@MessageVariant
+@MessageVariant(minVersion = Protocols.V1_16_2)
 public class CPacketRecipeCategoryOptions {
     public Category category;
     public boolean bookOpen;

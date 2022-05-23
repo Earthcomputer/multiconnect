@@ -8,6 +8,7 @@ import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketClearTitle;
 import net.earthcomputer.multiconnect.packets.SPacketOverlayMessage;
@@ -15,13 +16,13 @@ import net.earthcomputer.multiconnect.packets.SPacketSubtitle;
 import net.earthcomputer.multiconnect.packets.SPacketTitle;
 import net.earthcomputer.multiconnect.packets.SPacketTitleFade;
 
-@MessageVariant
+@MessageVariant(maxVersion = Protocols.V1_16_5)
 @Polymorphic
 public abstract class SPacketTitle_1_16_5 {
     public Mode mode;
 
     @Polymorphic(stringValue = "TITLE")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class Title extends SPacketTitle_1_16_5 {
         public CommonTypes.Text text;
 
@@ -36,7 +37,7 @@ public abstract class SPacketTitle_1_16_5 {
     }
 
     @Polymorphic(stringValue = "SUBTITLE")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class Subtitle extends SPacketTitle_1_16_5 {
         public CommonTypes.Text text;
 
@@ -51,7 +52,7 @@ public abstract class SPacketTitle_1_16_5 {
     }
 
     @Polymorphic(stringValue = "ACTIONBAR")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class ActionBar extends SPacketTitle_1_16_5 {
         public CommonTypes.Text text;
 
@@ -66,7 +67,7 @@ public abstract class SPacketTitle_1_16_5 {
     }
 
     @Polymorphic(stringValue = "TIMES")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class Times extends SPacketTitle_1_16_5 {
         @Type(Types.INT)
         public int fadeInTime;
@@ -90,7 +91,7 @@ public abstract class SPacketTitle_1_16_5 {
     }
 
     @Polymorphic(stringValue = {"CLEAR", "RESET"})
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class Clear extends SPacketTitle_1_16_5 {
         @Handler
         public static SPacketClearTitle handle(

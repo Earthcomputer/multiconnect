@@ -365,13 +365,13 @@ private fun ProtocolCompiler.translateInner(
         )
         val translateNode = when (val fieldTypeInfo = field.type.realType.deepComponentType().classInfoOrNull) {
             is MessageInfo -> wrapContainerTranslation(field.type.realType, fromFieldVarId) { varId ->
-                translate(
+                McNode(ImplicitCastOp(fieldTypeInfo.getVariant(toVersion)!!.toMcType(), fieldTypeInfo.toMcType()), translate(
                     fieldTypeInfo,
                     fromVersion,
                     toVersion,
                     varId,
                     combineParamResolvers(outerParamResolver) { name, type -> McNode(LoadVariableOp(vars[name]!!.second, type)) }
-                )
+                ))
             }
             is MessageVariantInfo -> wrapContainerTranslation(field.type.realType, fromFieldVarId) { varId ->
                 translate(
@@ -429,13 +429,13 @@ private fun ProtocolCompiler.translateInner(
                     )
                     val translateNode = when (val fieldTypeInfo = field.type.realType.deepComponentType().classInfoOrNull) {
                         is MessageInfo -> wrapContainerTranslation(field.type.realType, fromFieldVarId) { varId ->
-                            translate(
+                            McNode(ImplicitCastOp(fieldTypeInfo.getVariant(toVersion)!!.toMcType(), fieldTypeInfo.toMcType()), translate(
                                 fieldTypeInfo,
                                 fromVersion,
                                 toVersion,
                                 varId,
                                 combineParamResolvers(outerParamResolver) { name, type -> McNode(LoadVariableOp(vars[name]!!.second, type)) }
-                            )
+                            ))
                         }
                         is MessageVariantInfo -> wrapContainerTranslation(field.type.realType, fromFieldVarId) { varId ->
                             translate(
@@ -503,7 +503,9 @@ internal fun ProtocolCompiler.translate(
     val messageType = message.toMcType()
 
     if (!message.needsTranslation(fromVersion, toVersion)) {
-        return McNode(LoadVariableOp(fromVarId, messageType))
+        return McNode(CastOp(messageType, message.getVariant(toVersion)!!.toMcType()),
+            McNode(LoadVariableOp(fromVarId, messageType))
+        )
     }
 
     val fromVariant = message.getVariant(fromVersion)!!
@@ -704,9 +706,9 @@ private fun ProtocolCompiler.translateInner(
                     val argVarId = VariableId.create()
                     argNodes += McNode(StoreVariableStmtOp(argVarId, type, true), argNode)
                     val argTranslateNode = when (val classInfo = type.classInfoOrNull) {
-                        is MessageInfo -> translate(classInfo, fromVersion, toVersion, argVarId,
+                        is MessageInfo -> McNode(ImplicitCastOp(classInfo.getVariant(toVersion)!!.toMcType(), classInfo.toMcType()), translate(classInfo, fromVersion, toVersion, argVarId,
                             combineParamResolvers(outerParamResolver) { name, typ -> McNode(LoadVariableOp(vars[name]!!, typ)) }
-                        )
+                        ))
                         is MessageVariantInfo -> translate(classInfo, fromVersion, toVersion, argVarId,
                             combineParamResolvers(outerParamResolver) { name, typ -> McNode(LoadVariableOp(vars[name]!!, typ)) }
                         )
@@ -797,10 +799,8 @@ private fun ProtocolCompiler.translateInner(
         )
     }
 
-    nodes += McNode(ReturnStmtOp(messageType),
-        McNode(ImplicitCastOp(toVariant.toMcType(), messageType),
-            McNode(LoadVariableOp(resultVarId, toVariant.toMcType()))
-        )
+    nodes += McNode(ReturnStmtOp(toVariant.toMcType()),
+        McNode(LoadVariableOp(resultVarId, toVariant.toMcType()))
     )
 
     return McNode(StmtListOp, nodes)
@@ -965,7 +965,11 @@ private fun ProtocolCompiler.autoTransfer(
                 McNode(StoreVariableStmtOp(variableId, oldType, true), node),
                 when (val groupInfo = getClassInfo(group)) {
                     is MessageVariantInfo -> translate(groupInfo, fromProtocol, toProtocol, variableId, outerParamResolver)
-                    is MessageInfo -> translate(groupInfo, fromProtocol, toProtocol, variableId, outerParamResolver)
+                    is MessageInfo -> McNode(ReturnStmtOp(groupInfo.toMcType()),
+                        McNode(ImplicitCastOp(groupInfo.getVariant(toProtocol)!!.toMcType(), groupInfo.toMcType()),
+                            translate(groupInfo, fromProtocol, toProtocol, variableId, outerParamResolver)
+                        )
+                    )
                     else -> throw CompileException("Invalid groupInfo")
                 }
             )

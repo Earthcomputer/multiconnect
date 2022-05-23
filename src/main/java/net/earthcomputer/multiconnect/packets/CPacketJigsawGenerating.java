@@ -4,7 +4,7 @@ import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.api.Protocols;
 
-@MessageVariant
+@MessageVariant(minVersion = Protocols.V1_16)
 public class CPacketJigsawGenerating {
     public CommonTypes.BlockPos pos;
     public int levels;

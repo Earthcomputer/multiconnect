@@ -6,6 +6,7 @@ import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketWorldBorderCenterChanged;
 import net.earthcomputer.multiconnect.packets.SPacketWorldBorderInitialize;
 import net.earthcomputer.multiconnect.packets.SPacketWorldBorderInterpolateSize;
@@ -13,13 +14,13 @@ import net.earthcomputer.multiconnect.packets.SPacketWorldBorderSizeChanged;
 import net.earthcomputer.multiconnect.packets.SPacketWorldBorderWarningBlocksChanged;
 import net.earthcomputer.multiconnect.packets.SPacketWorldBorderWarningTimeChanged;
 
-@MessageVariant
+@MessageVariant(maxVersion = Protocols.V1_16_5)
 @Polymorphic
 public abstract class SPacketWorldBorder_1_16_5 {
     public Mode mode;
 
     @Polymorphic(stringValue = "SET_SIZE")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class SetSize extends SPacketWorldBorder_1_16_5 {
         public double newSize;
 
@@ -34,7 +35,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
     }
 
     @Polymorphic(stringValue = "LERP_SIZE")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class LerpSize extends SPacketWorldBorder_1_16_5 {
         public double oldSize;
         public double newSize;
@@ -55,7 +56,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
     }
 
     @Polymorphic(stringValue = "SET_CENTER")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class SetCenter extends SPacketWorldBorder_1_16_5 {
         public double x;
         public double z;
@@ -73,7 +74,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
     }
 
     @Polymorphic(stringValue = "SET_WARNING_BLOCKS")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class SetWarningBlocks extends SPacketWorldBorder_1_16_5 {
         public int warningBlocks;
 
@@ -88,7 +89,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
     }
 
     @Polymorphic(stringValue = "SET_WARNING_TIME")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class SetWarningTime extends SPacketWorldBorder_1_16_5 {
         public int warningTime;
 
@@ -103,7 +104,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
     }
 
     @Polymorphic(stringValue = "INITIALIZE")
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class Initialize extends SPacketWorldBorder_1_16_5 {
         public double x;
         public double z;

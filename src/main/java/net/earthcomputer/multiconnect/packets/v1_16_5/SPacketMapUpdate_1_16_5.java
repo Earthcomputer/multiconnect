@@ -8,6 +8,7 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketMapUpdate;
 import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
@@ -20,7 +21,7 @@ import net.minecraft.item.map.MapState;
 import java.util.List;
 import java.util.Optional;
 
-@MessageVariant
+@MessageVariant(maxVersion = Protocols.V1_16_5)
 public class SPacketMapUpdate_1_16_5 {
     public int mapId;
     public byte scale;

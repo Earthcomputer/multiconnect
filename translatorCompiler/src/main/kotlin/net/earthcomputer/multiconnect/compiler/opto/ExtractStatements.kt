@@ -37,7 +37,12 @@ internal fun Optimizer.extractStatementsInExpressions() {
         }
         val variable = VariableId.create()
         node.replace(McNode(LoadVariableOp(variable, varType)))
-        val parentStmt = generateSequence(usage) { it.usages.firstOrNull() }.firstOrNull { !it.op.isExpression } ?: return@forEachNodeDepthFirstUnsafe
+        var parentStmt = generateSequence(usage) { it.usages.firstOrNull() }.firstOrNull { !it.op.isExpression || it.op is LambdaOp } ?: return@forEachNodeDepthFirstUnsafe
+        if (parentStmt.op is LambdaOp) {
+            val newParent = McNode(ReturnStmtOp(parentStmt.inputs[0].op.returnType), parentStmt.inputs[0])
+            parentStmt.inputs[0].replace(McNode(StmtListOp, newParent))
+            parentStmt = newParent
+        }
         parentStmt.replace(
             McNode(StmtListOp,
                 convertReturnToVariableDeclaration(node, variable, varType),

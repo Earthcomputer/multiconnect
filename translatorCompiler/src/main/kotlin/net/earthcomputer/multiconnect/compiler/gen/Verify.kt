@@ -62,7 +62,7 @@ fun checkMessages() {
             if (messageIndex != 0 && (lastMaxVersion == null || info.minVersion == null || info.minVersion <= lastMaxVersion)) {
                 throw IllegalStateException("Message $message has a lower min version than the max version of the previous message in the variant group")
             }
-            val index = if (messageIndex == 0) protocols.lastIndex else protocols.binarySearch { info.minVersion!!.compareTo(it.id) }
+            val index = if (info.minVersion == null) protocols.lastIndex else protocols.binarySearch { info.minVersion.compareTo(it.id) }
             if (index < 0) {
                 throw IllegalStateException("Message $message has a min version that is not in the protocol list")
             }

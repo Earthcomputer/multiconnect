@@ -6,6 +6,7 @@ import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketChunkDeltaUpdate;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
@@ -13,7 +14,7 @@ import net.minecraft.util.math.ChunkSectionPos;
 import java.util.ArrayList;
 import java.util.List;
 
-@MessageVariant
+@MessageVariant(maxVersion = Protocols.V1_16_1)
 public class SPacketChunkDeltaUpdate_1_16_1 {
     @Type(Types.INT)
     public int chunkX;
@@ -21,7 +22,7 @@ public class SPacketChunkDeltaUpdate_1_16_1 {
     public int chunkZ;
     public Update[] updates;
 
-    @MessageVariant
+    @MessageVariant(maxVersion = Protocols.V1_16_1)
     public static class Update {
         public short index;
         public int stateId;
