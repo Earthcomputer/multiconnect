@@ -472,7 +472,7 @@ private fun ProtocolCompiler.generateTypeReadGraph(
     if (realType.classInfoOrNull is EnumInfo) {
         val enumName = (realType as McType.DeclaredType).name
         val fieldName = "ENUM_VALUES_${enumName.uppercase().replace('.', '_')}"
-        cacheMembers[fieldName] = { emitter ->
+        addMember(fieldName) { emitter ->
             emitter.append("private static final ").appendClassName(enumName).append("[] ").append(fieldName)
                 .append(" = ").appendClassName(enumName).append(".values();")
         }

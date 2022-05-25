@@ -111,7 +111,7 @@ internal fun ProtocolCompiler.generateExplicitSenderServerRegistries(
 ): McNode {
     val functionName = "translateExplicit${splitPackageClass(packet.className).second.replace('.', '_')}$protocolId"
 
-    cacheMembers[functionName] = { emitter ->
+    addMember(functionName) { emitter ->
         emitter.append("private static void ").append(functionName).append("(")
         packet.toMcType().emit(emitter)
         emitter.append(" protocol_").append(protocolId.toString()).append(", ").appendClassName(CommonClassNames.LIST)

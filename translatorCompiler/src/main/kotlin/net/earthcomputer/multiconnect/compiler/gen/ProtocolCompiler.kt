@@ -14,9 +14,11 @@ import net.earthcomputer.multiconnect.compiler.CommonClassNames.OBJECT
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_SENDER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PAIR
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.RAW_PACKET_SENDER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY_KEY
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.SET
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.START_SEND_PACKET_RESULT
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.SUPPLIER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPED_MAP
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.UNARY_OPERATOR
@@ -38,10 +40,12 @@ import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
 import net.earthcomputer.multiconnect.compiler.node.LoadFieldOp
 import net.earthcomputer.multiconnect.compiler.node.LoadVariableOp
 import net.earthcomputer.multiconnect.compiler.node.McNode
+import net.earthcomputer.multiconnect.compiler.node.NewOp
 import net.earthcomputer.multiconnect.compiler.node.Precedence
 import net.earthcomputer.multiconnect.compiler.node.ReturnStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StmtListOp
 import net.earthcomputer.multiconnect.compiler.node.SwitchOp
+import net.earthcomputer.multiconnect.compiler.node.ThrowStmtOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
 import net.earthcomputer.multiconnect.compiler.opto.optimize
 import net.earthcomputer.multiconnect.compiler.protocolNamesById
@@ -58,14 +62,20 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
     internal val className = "net.earthcomputer.multiconnect.generated.Protocol_${protocolName.replace('.', '_')}"
     internal val dataDir = FileLocations.dataDir.resolve(protocolName)
     internal val latestDataDir = FileLocations.dataDir.resolve(protocols[0].name)
-    internal val cacheMembers = mutableMapOf<String, (Emitter) -> Unit>()
+    private val cacheMembers = mutableMapOf<String, (Emitter) -> Unit>()
     internal var currentProtocolId: Int = protocolId
     internal var defaultConstructProtocolId: Int? = null
     internal var fixRegistriesProtocolOverride: Int? = null
+    private val readDependenciesCache = mutableMapOf<String, List<String>>()
+    private val writeDependenciesCache = mutableMapOf<String, List<String>>()
+    internal val readDependencies = TreeSet<String>()
+    internal val writeDependencies = TreeSet<String>()
+    private val dependencyIds = mutableMapOf<List<String>, Int>()
 
     fun compile() {
         val emitter = Emitter(className, TreeSet(), TreeMap(), StringBuilder())
 
+        // These need to be first because they track global data dependencies
         emitPacketTranslators(emitter, "translateSPacket", dataDir.resolve("spackets.csv"), true)
         emitPacketTranslators(emitter, "translateCPacket", latestDataDir.resolve("cpackets.csv"), false)
 
@@ -99,49 +109,102 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         outputFile.writeText(emitter.createClassText())
     }
 
+    internal fun addMember(name: String, emitter: (Emitter) -> Unit) {
+        if (cacheMembers.containsKey(name)) {
+            readDependencies += readDependenciesCache[name]!!
+            writeDependencies += writeDependenciesCache[name]!!
+            return
+        }
+        // Run a dry-run of the emitter to grab its read/write dependencies
+        val prevReadDeps = readDependencies.toList()
+        val prevWriteDeps = writeDependencies.toList()
+        readDependencies.clear()
+        writeDependencies.clear()
+        emitter(Emitter(className, TreeSet(), TreeMap(), StringBuilder()))
+        val memberReadDeps = readDependencies.toList()
+        val memberWriteDeps = writeDependencies.toList()
+        readDependencies.clear()
+        writeDependencies.clear()
+        readDependencies += prevReadDeps
+        readDependencies += memberReadDeps
+        writeDependencies += prevWriteDeps
+        writeDependencies += memberWriteDeps
+        readDependenciesCache[name] = memberReadDeps
+        writeDependenciesCache[name] = memberWriteDeps
+        cacheMembers[name] = emitter
+    }
+
     private fun emitPacketTranslators(emitter: Emitter, functionName: String, packetsFile: File, clientbound: Boolean) {
         val function = emitter.addMember(functionName) ?: return
-        function.append("public static void ").append(functionName).append("(")
-            .appendClassName(BYTE_BUF).append(" buf, ").appendClassName(LIST)
-            .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
-            .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
-            .appendClassName(MAP).append("<").appendClassName(CLASS).append("<?>, ").appendClassName(OBJECT).append("> globalData, ")
-            .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
+        function.append("public static ").appendClassName(START_SEND_PACKET_RESULT).append(" ").append(functionName)
+            .append("(").appendClassName(BYTE_BUF).append(" buf) {").indent().appendNewLine()
         val packets = TreeMap<Int, McNode>()
+
+        val retType = McType.DeclaredType(START_SEND_PACKET_RESULT)
+        val senderType = McType.DeclaredType(RAW_PACKET_SENDER)
+        val classType = McType.DeclaredType(CLASS)
+
         for ((id, clazz) in readCsv<PacketType>(packetsFile)) {
+            if (readDependencies.isNotEmpty() || writeDependencies.isNotEmpty()) {
+                throw AssertionError("readDependencies or writeDependencies is not empty")
+            }
             val packetFunctionName = "translate${clazz.substringAfterLast('.')}"
             if (emitPacketTranslator(emitter, packetFunctionName, clazz, clientbound)) {
-                packets[id] = McNode(
-                    FunctionCallOp(
-                        emitter.currentClass,
-                        packetFunctionName,
-                        listOf(
-                            McType.BYTE_BUF,
-                            McType.BYTE_BUF.listOf(),
-                            McType.DeclaredType(NETWORK_HANDLER),
-                            McType.DeclaredType(MAP),
-                            McType.DeclaredType(TYPED_MAP),
-                        ),
-                        McType.VOID,
-                        true
-                    ),
-                    McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF)),
-                    McNode(LoadVariableOp(VariableId.immediate("outBufs"), McType.BYTE_BUF.listOf())),
-                    McNode(LoadVariableOp(VariableId.immediate("networkHandler"), McType.DeclaredType(NETWORK_HANDLER))),
-                    McNode(LoadVariableOp(VariableId.immediate("globalData"), McType.DeclaredType(MAP))),
-                    McNode(LoadVariableOp(VariableId.immediate("userData"), McType.DeclaredType(TYPED_MAP))),
+                packets[id] = McNode(NewOp(START_SEND_PACKET_RESULT, listOf(classType.arrayOf(), classType.arrayOf(), senderType)),
+                    McNode(LoadFieldOp(McType.DeclaredType(className), makeDependencyField(readDependencies), classType.arrayOf(), isStatic = true)),
+                    McNode(LoadFieldOp(McType.DeclaredType(className), makeDependencyField(writeDependencies), classType.arrayOf(), isStatic = true)),
+                    McNode(LoadVariableOp(
+                        VariableId.immediate("${splitPackageClass(className).second}::$packetFunctionName"),
+                        senderType
+                    ))
                 )
             }
+            readDependencies.clear()
+            writeDependencies.clear()
         }
-        val stmt = McNode(
-            SwitchOp(packets.keys as SortedSet<Int>, false, McType.INT, McType.VOID),
-            mutableListOf<McNode>().apply {
-                add(IoOps.readType(VariableId.immediate("buf"), Types.VAR_INT))
-                addAll(packets.values)
-            }
+        val stmt = McNode(ReturnStmtOp(retType),
+            McNode(SwitchOp(packets.keys as SortedSet<Int>, true, McType.INT, retType),
+                mutableListOf<McNode>().apply {
+                    add(IoOps.readType(VariableId.immediate("buf"), Types.VAR_INT))
+                    addAll(packets.values)
+                    add(McNode(StmtListOp,
+                        McNode(ThrowStmtOp,
+                            McNode(NewOp("java.lang.IllegalArgumentException", listOf(McType.STRING)),
+                                McNode(CstStringOp("Bad packet id"))
+                            )
+                        )
+                    ))
+                }
+            )
         ).optimize()
         stmt.emit(function, Precedence.COMMA)
         function.dedent().appendNewLine().append("}")
+    }
+
+    private fun makeDependencyField(classes: Collection<String>): String {
+        val classesList = classes.toList()
+        var id = dependencyIds[classesList]
+        val exists = id != null
+        if (!exists) {
+            id = dependencyIds.size
+            dependencyIds[classesList] = id
+        }
+        val fieldName = "DEPENDENCY_$id"
+        if (exists) {
+            return fieldName
+        }
+        addMember(fieldName) { emitter ->
+            emitter.append("private static final ").appendClassName(CLASS).append("<?>[] ").append(fieldName)
+                .append(" = { ")
+            for ((index, clazz) in classesList.withIndex()) {
+                if (index != 0) {
+                    emitter.append(", ")
+                }
+                emitter.appendClassName(clazz).append(".class")
+            }
+            emitter.append(" };")
+        }
+        return fieldName
     }
 
     private fun emitPacketTranslator(

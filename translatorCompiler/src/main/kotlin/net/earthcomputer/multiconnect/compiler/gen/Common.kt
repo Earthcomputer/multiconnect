@@ -538,12 +538,15 @@ internal fun ProtocolCompiler.generateFilledConstructGraph(type: McType, filledP
     }
 }
 
-private fun generateGlobalDataGraph(paramType: McType): McNode {
+private fun ProtocolCompiler.generateGlobalDataGraph(paramType: McType): McNode {
     val classType = McType.DeclaredType(CLASS)
     val objectType = McType.DeclaredType(OBJECT)
     val mapType = McType.DeclaredType(MAP, listOf(classType, objectType))
     if (paramType.hasName(CONSUMER)) {
         val consumedType = paramType.typeArguments.single()
+        if (consumedType is McType.DeclaredType) {
+            writeDependencies += consumedType.name
+        }
         val consumedVar = VariableId.create()
         return McNode(LambdaOp(paramType, McType.VOID, listOf(consumedType), listOf(consumedVar)),
             McNode(FunctionCallOp(mapType.name, "put", listOf(mapType, classType, objectType), McType.VOID, true, isStatic = false),
@@ -553,6 +556,9 @@ private fun generateGlobalDataGraph(paramType: McType): McNode {
             )
         )
     } else {
+        if (paramType is McType.DeclaredType) {
+            readDependencies += paramType.name
+        }
         return McNode(CastOp(objectType, paramType),
             McNode(FunctionCallOp(mapType.name, "get", listOf(mapType, classType), objectType, false, isStatic = false),
                 McNode(LoadVariableOp(VariableId.immediate("globalData"), mapType)),
@@ -564,7 +570,7 @@ private fun generateGlobalDataGraph(paramType: McType): McNode {
 
 internal fun ProtocolCompiler.createTailRecurseField(ownerClass: String, fieldName: String, fieldType: String): String {
     val handleFieldName = "MH_${ownerClass.replace('.', '_').uppercase()}_TAIL_RECURSE"
-    cacheMembers[handleFieldName] = { emitter ->
+    addMember(handleFieldName) { emitter ->
         emitter.append("private static final ").appendClassName(CommonClassNames.METHOD_HANDLE).append(" ").append(handleFieldName)
             .append(" = ").appendClassName(PACKET_INTRINSICS).append(".findSetterHandle(")
             .appendClassName(ownerClass).append(".class, \"").append(fieldName).append("\", ").appendClassName(fieldType).append(".class);")
@@ -575,7 +581,7 @@ internal fun ProtocolCompiler.createTailRecurseField(ownerClass: String, fieldNa
 internal fun ProtocolCompiler.createIdentifierConstantField(constant: String): String {
     val (namespace, name) = constant.normalizeIdentifier().split(':', limit = 2)
     val fieldName = "IDENTIFIER_${namespace.uppercase()}_${name.uppercase().replace('/', '_').replace('.', '_')}"
-    cacheMembers[fieldName] = { emitter ->
+    addMember(fieldName) { emitter ->
         emitter.append("private static final ").appendClassName(IDENTIFIER).append(" ").append(fieldName)
             .append(" = new ").appendClassName(IDENTIFIER).append("(")
         McNode(CstStringOp(namespace)).emit(emitter, Precedence.COMMA)
@@ -589,7 +595,7 @@ internal fun ProtocolCompiler.createIdentifierConstantField(constant: String): S
 internal fun ProtocolCompiler.createRegistryKeyField(registry: Registries, id: String): String {
     val (namespace, name) = id.normalizeIdentifier().split(':', limit = 2)
     val fieldName = "RK_${registry.name}_${namespace.uppercase()}_${name.uppercase().replace('/', '_').replace('.', '_')}"
-    cacheMembers[fieldName] = { emitter ->
+    addMember(fieldName) { emitter ->
         emitter.append("private static final ").appendClassName(CommonClassNames.REGISTRY_KEY).append(" ").append(fieldName)
             .append(" = ").appendClassName(CommonClassNames.REGISTRY_KEY).append(".of(")
             .appendClassName(CommonClassNames.REGISTRY).append(".").append(registry.registryKeyFieldName).append(", new ")

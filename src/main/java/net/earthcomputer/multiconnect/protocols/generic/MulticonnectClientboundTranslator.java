@@ -5,19 +5,16 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.DebugUtils;
+import net.earthcomputer.multiconnect.impl.PacketIntrinsics;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.listener.PacketListener;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MulticonnectClientboundTranslator extends ByteToMessageDecoder {
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    @SuppressWarnings("unchecked")
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         ClientConnection clientConnection = (ClientConnection) ctx.pipeline().context("packet_handler").handler();
@@ -30,31 +27,26 @@ public class MulticonnectClientboundTranslator extends ByteToMessageDecoder {
         }
         TypedMap userData = new TypedMap();
 
-        List<ByteBuf> outBufs = (List<ByteBuf>) (List<?>) out;
-        try {
-            PacketSystem.Internals.translateSPacket(ConnectionInfo.protocolVersion, in, outBufs, networkHandler, userData);
-        } catch (Throwable e) {
-            DebugUtils.logPacketError(in, "Direction: inbound");
-            for (ByteBuf buf : outBufs) {
-                buf.release();
-            }
-            // consume all the input
+        DebugUtils.wrapInErrorHandler(in, "inbound", () -> {
+            var result = PacketSystem.Internals.translateSPacket(ConnectionInfo.protocolVersion, in);
+            ByteBuf inCopy = in.copy(0, in.readerIndex() + in.readableBytes());
+            inCopy.readerIndex(in.readerIndex());
             in.readerIndex(in.readerIndex() + in.readableBytes());
-            if (DebugUtils.IGNORE_ERRORS) {
-                LOGGER.warn("Ignoring error in packet");
-                e.printStackTrace();
-                outBufs.clear();
-            } else {
-                throw e;
-            }
-        }
+            List<ByteBuf> outBufs = new ArrayList<>(1);
+            PacketSystem.Internals.submitTranslationTask(result.readDependencies(), result.writeDependencies(), () -> {
+                DebugUtils.wrapInErrorHandler(inCopy, "inbound", () -> {
+                    result.sender().send(inCopy, outBufs, networkHandler, PacketSystem.Internals.getGlobalData(), userData);
+                    for (ByteBuf outBuf : outBufs) {
+                        PacketSystem.Internals.setUserData(outBuf, userData);
+                    }
+                });
+            }, () -> {
+                PacketIntrinsics.sendRawToClient(networkHandler, userData, outBufs);
+            }, true);
+        });
 
         if (DebugUtils.STORE_BUFS_FOR_HANDLER) {
             userData.put(DebugUtils.STORED_BUF, DebugUtils.getBufData(in));
-        }
-
-        for (ByteBuf outBuf : outBufs) {
-            PacketSystem.Internals.setUserData(outBuf, userData);
         }
     }
 }

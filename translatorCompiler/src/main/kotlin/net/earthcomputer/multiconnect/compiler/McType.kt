@@ -44,6 +44,8 @@ object CommonClassNames {
     const val NETWORK_HANDLER = "net.minecraft.client.network.ClientPlayNetworkHandler"
     const val PACKET_INTRINSICS = "net.earthcomputer.multiconnect.impl.PacketIntrinsics"
     const val PACKET_SENDER = "net.earthcomputer.multiconnect.impl.PacketIntrinsics.PacketSender"
+    const val RAW_PACKET_SENDER = "net.earthcomputer.multiconnect.impl.PacketIntrinsics.RawPacketSender"
+    const val START_SEND_PACKET_RESULT = "net.earthcomputer.multiconnect.impl.PacketIntrinsics.StartSendPacketResult"
     const val MULTICONNECT_DFU = "net.earthcomputer.multiconnect.datafix.MulticonnectDFU"
     const val DELAYED_PACKET_SENDER = "net.earthcomputer.multiconnect.impl.DelayedPacketSender"
     const val TYPED_MAP = "net.earthcomputer.multiconnect.protocols.generic.TypedMap"

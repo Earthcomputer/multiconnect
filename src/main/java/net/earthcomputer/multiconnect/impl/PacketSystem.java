@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class PacketSystem {
@@ -62,8 +63,47 @@ public class PacketSystem {
     });
 
     private static final LoadingCache<Packet<?>, TypedMap> packetUserData = CacheBuilder.newBuilder().weakKeys().build(CacheLoader.from(TypedMap::new));
-    // TODO: clear global data on disconnect
     private static final Map<Class<?>, Object> globalData = new HashMap<>();
+
+    // TODO: enable threaded translation by default if we decide it's needed
+    private static final boolean USE_THREADED_TRANSLATION = Boolean.parseBoolean(System.getProperty("multiconnect.useThreadedTranslation", "false"));
+    private static ReadWritePacketExecutor clientboundExecutor;
+    private static ReadWritePacketExecutor serverboundExecutor;
+
+    public static void connect() {
+        if (USE_THREADED_TRANSLATION) {
+            clientboundExecutor = new ReadWritePacketExecutor(true);
+            serverboundExecutor = new ReadWritePacketExecutor(false);
+        }
+    }
+
+    public static void disconnect() {
+        joinExecutors();
+        globalData.clear();
+    }
+
+    private static void joinExecutors() {
+        if (clientboundExecutor == null && serverboundExecutor == null) {
+            return;
+        }
+
+        if (clientboundExecutor != null) {
+            clientboundExecutor.shutdown();
+        }
+        if (serverboundExecutor != null) {
+            serverboundExecutor.shutdown();
+        }
+
+        long start = System.nanoTime();
+        List<CompletableFuture<Void>> futures = new ArrayList<>(2);
+        if (clientboundExecutor != null) {
+            futures.add(clientboundExecutor.awaitTermination(start));
+        }
+        if (serverboundExecutor != null) {
+            futures.add(serverboundExecutor.awaitTermination(start));
+        }
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+    }
 
     public static TypedMap getUserData(Packet<?> packet) {
         return packetUserData.getUnchecked(packet);
@@ -176,12 +216,12 @@ public class PacketSystem {
     public static class Internals {
         private static final LoadingCache<ByteBuf, TypedMap> bufUserData = CacheBuilder.newBuilder().weakKeys().build(CacheLoader.from(TypedMap::new));
 
-        public static void translateSPacket(int protocol, ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
-            protocolClasses.get(protocol).translateSPacket(buf, outBufs, networkHandler, globalData, userData);
+        public static PacketIntrinsics.StartSendPacketResult translateSPacket(int protocol, ByteBuf buf) {
+            return protocolClasses.get(protocol).translateSPacket(buf);
         }
 
-        public static void translateCPacket(int protocol, ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, TypedMap userData) {
-            protocolClasses.get(protocol).translateCPacket(buf, outBufs, networkHandler, globalData, userData);
+        public static PacketIntrinsics.StartSendPacketResult translateCPacket(int protocol, ByteBuf buf) {
+            return protocolClasses.get(protocol).translateCPacket(buf);
         }
 
         public static void setUserData(Packet<?> packet, TypedMap userData) {
@@ -194,6 +234,28 @@ public class PacketSystem {
 
         public static void setUserData(ByteBuf buf, TypedMap userData) {
             bufUserData.put(buf, userData);
+        }
+
+        public static void submitTranslationTask(
+                Class<?>[] readDependencies,
+                Class<?>[] writeDependencies,
+                Runnable translation,
+                Runnable onTranslated,
+                boolean clientbound
+        ) {
+            ReadWritePacketExecutor executor = clientbound ? clientboundExecutor : serverboundExecutor;
+
+            if (!USE_THREADED_TRANSLATION || executor == null) {
+                translation.run();
+                onTranslated.run();
+                return;
+            }
+
+            executor.submit(readDependencies, writeDependencies, translation, onTranslated);
+        }
+
+        public static Map<Class<?>, Object> getGlobalData() {
+            return globalData;
         }
     }
 
@@ -220,8 +282,8 @@ public class PacketSystem {
         private final MethodHandle remapSIntBlockState;
 
         ProtocolClassProxy(Class<?> clazz, int protocol) {
-            this.translateSPacket = findMethodHandle(clazz, "translateSPacket", void.class, ByteBuf.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
-            this.translateCPacket = findMethodHandle(clazz, "translateCPacket", void.class, ByteBuf.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
+            this.translateSPacket = findMethodHandle(clazz, "translateSPacket", PacketIntrinsics.StartSendPacketResult.class, ByteBuf.class);
+            this.translateCPacket = findMethodHandle(clazz, "translateCPacket", PacketIntrinsics.StartSendPacketResult.class, ByteBuf.class);
             this.sendToClient = findMethodHandle(clazz, "sendToClient", void.class, Object.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
             this.sendToServer = findMethodHandle(clazz, "sendToServer", void.class, Object.class, int.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
             this.doesServerKnow = findMethodHandle(clazz, "doesServerKnow", boolean.class, RegistryKey.class, int.class);
@@ -234,17 +296,17 @@ public class PacketSystem {
             this.remapSIntBlockState = findMethodHandle(clazz, "remapSIntBlockState", int.class, int.class);
         }
 
-        void translateSPacket(ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
+        PacketIntrinsics.StartSendPacketResult translateSPacket(ByteBuf buf) {
             try {
-                translateSPacket.invoke(buf, outBufs, networkHandler, globalData, userData);
+                return (PacketIntrinsics.StartSendPacketResult) translateSPacket.invoke(buf);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }
         }
 
-        void translateCPacket(ByteBuf buf, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
+        PacketIntrinsics.StartSendPacketResult translateCPacket(ByteBuf buf) {
             try {
-                translateCPacket.invoke(buf, outBufs, networkHandler, globalData, userData);
+                return (PacketIntrinsics.StartSendPacketResult) translateCPacket.invoke(buf);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }

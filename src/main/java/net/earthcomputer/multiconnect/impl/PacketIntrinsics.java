@@ -311,4 +311,17 @@ public final class PacketIntrinsics {
                 TypedMap userData
         );
     }
+
+    @FunctionalInterface
+    public interface RawPacketSender {
+        void send(
+                ByteBuf packet,
+                List<ByteBuf> outBufs,
+                ClientPlayNetworkHandler networkHandler,
+                Map<Class<?>, Object> globalData,
+                TypedMap userData
+        );
+    }
+
+    public record StartSendPacketResult(Class<?>[] readDependencies, Class<?>[] writeDependencies, RawPacketSender sender) {}
 }

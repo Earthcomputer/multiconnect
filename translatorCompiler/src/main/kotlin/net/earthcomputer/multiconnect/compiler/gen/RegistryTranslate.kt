@@ -446,7 +446,7 @@ internal fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbou
         registry.name.toCamelCase(true)
     )
 
-    cacheMembers[methodName] = { emitter ->
+    addMember(methodName) { emitter ->
         val access = if (registry == Registries.BLOCK_STATE) {
             "public"
         } else {
@@ -514,7 +514,7 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
         registry.name.toCamelCase(true)
     )
 
-    cacheMembers[methodName] = { emitter ->
+    addMember(methodName) { emitter ->
         emitter.append("private static ")
         identifierType.emit(emitter)
         emitter.append(" ").append(methodName).append("(")

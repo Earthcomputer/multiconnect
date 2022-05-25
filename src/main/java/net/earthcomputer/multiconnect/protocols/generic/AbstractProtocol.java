@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.generic;
 
 import com.google.common.base.Suppliers;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.mixin.bridge.MinecraftClientAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnector;
@@ -34,6 +35,7 @@ public abstract class AbstractProtocol {
     }
 
     public void setup(boolean resourceReload) {
+        PacketSystem.connect();
         revertCollisionBoxes();
         if (!resourceReload) {
             DataTrackerManager.onConnectToServer();
@@ -47,6 +49,7 @@ public abstract class AbstractProtocol {
     }
 
     public void disable() {
+        PacketSystem.disconnect();
     }
 
     public void preAcceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {

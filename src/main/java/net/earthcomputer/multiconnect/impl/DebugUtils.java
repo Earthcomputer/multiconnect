@@ -199,6 +199,22 @@ public class DebugUtils {
         return !(t instanceof PacketEncoderException) && !(t instanceof TimeoutException);
     }
 
+    public static void wrapInErrorHandler(ByteBuf buf, String direction, Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (Throwable e) {
+            DebugUtils.logPacketError(buf, "Direction: " + direction);
+            // consume all the input
+            buf.readerIndex(buf.readerIndex() + buf.readableBytes());
+            if (DebugUtils.IGNORE_ERRORS) {
+                LOGGER.warn("Ignoring error in packet");
+                e.printStackTrace();
+            } else {
+                throw e;
+            }
+        }
+    }
+
     public static byte[] getBufData(ByteBuf buf) {
         if (buf.hasArray()) {
             return buf.array();
