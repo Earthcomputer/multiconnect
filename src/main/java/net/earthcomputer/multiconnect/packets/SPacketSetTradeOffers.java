@@ -31,11 +31,9 @@ public class SPacketSetTradeOffers {
         @Type(Types.INT)
         public int specialPrice;
         public float priceMultiplier;
-        @Type(Types.INT)
-        public int demand;
     }
     @Message
     public interface Trade {
-        
+
     }
 }
