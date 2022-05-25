@@ -16,7 +16,7 @@ public class SPacketSetTradeOffers {
     public boolean isRegularVillager;
     public boolean canRestock;
 
-    @MessageVariant(minVersion = Protocols.V1_14_3)
+    @MessageVariant(minVersion = Protocols.V1_14_4)
     public static class Trade_Latest implements Trade{
         public CommonTypes.ItemStack input1;
         public CommonTypes.ItemStack output;

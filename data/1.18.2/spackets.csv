@@ -103,3 +103,4 @@ id clazz
 101 net.earthcomputer.multiconnect.packets.latest.SPacketEntityStatusEffect_Latest
 102 net.earthcomputer.multiconnect.packets.SPacketSynchronizeRecipes
 103 net.earthcomputer.multiconnect.packets.latest.SPacketSynchronizeTags_Latest
+48 net.earthcomputer.multiconnect.packets.SPacketSetTradeOffers.Trade_Latest
