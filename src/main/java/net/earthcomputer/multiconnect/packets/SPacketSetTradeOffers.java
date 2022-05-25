@@ -10,7 +10,7 @@ import java.util.Optional;
 public class SPacketSetTradeOffers {
     public int syncId;
     @Length(type = Types.UNSIGNED_BYTE)
-    public List<Trade_Latest> trades;
+    public List<Trade> trades;
     public int villagerLevel;
     public int experience;
     public boolean isRegularVillager;
