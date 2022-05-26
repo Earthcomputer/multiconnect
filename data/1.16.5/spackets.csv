@@ -37,7 +37,7 @@ id clazz
 35 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketLightUpdate_1_16_5
 36 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketGameJoin_1_17_1
 37 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketMapUpdate_1_16_5
-38 net.earthcomputer.multiconnect.packets.SPacketSetTradeOffers
+38 net.earthcomputer.multiconnect.packets.latest.SPacketSetTradeOffers_Latest
 39 net.earthcomputer.multiconnect.packets.SPacketEntityMoveRelative
 40 net.earthcomputer.multiconnect.packets.SPacketEntityRotateAndMoveRelative
 41 net.earthcomputer.multiconnect.packets.SPacketEntityRotate

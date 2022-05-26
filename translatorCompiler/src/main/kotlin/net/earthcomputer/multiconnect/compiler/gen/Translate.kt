@@ -833,7 +833,7 @@ private fun ProtocolCompiler.autoTransfer(
         if (type.hasName(OPTIONAL) && oldType.hasName(OPTIONAL)) {
             val functionType = McType.DeclaredType("java.util.function.Function")
             val lambdaParam = VariableId.create()
-            return McNode(FunctionCallOp(OPTIONAL, "map", listOf(functionType), type, false, isStatic = false),
+            return McNode(FunctionCallOp(OPTIONAL, "map", listOf(type, functionType), type, false, isStatic = false),
                 node,
                 McNode(LambdaOp(functionType, type.componentType(), listOf(oldType.componentType()), listOf(lambdaParam)),
                     autoTransfer(McNode(LoadVariableOp(lambdaParam, oldType.componentType())), type.componentType(), fromProtocol, toProtocol, outerParamResolver)

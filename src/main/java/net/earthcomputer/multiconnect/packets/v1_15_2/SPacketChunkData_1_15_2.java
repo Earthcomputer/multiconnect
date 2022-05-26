@@ -45,6 +45,10 @@ public class SPacketChunkData_1_15_2 implements SPacketChunkData {
 
     public static IntList computeBiomes(@Argument("data") ChunkData data_) {
         ChunkData_1_14_4 data = (ChunkData_1_14_4) data_;
+        if (data.biomes.length == 0) {
+            return new IntArrayList();
+        }
+
         // from: z * 16 | x
         // to: y * 16 | z * 4 | x
         int[] result = new int[1024];
