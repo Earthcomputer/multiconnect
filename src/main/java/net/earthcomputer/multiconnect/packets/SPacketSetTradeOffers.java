@@ -9,7 +9,6 @@ import java.util.Optional;
 @MessageVariant
 public class SPacketSetTradeOffers {
     public int syncId;
-    @Length(type = Types.UNSIGNED_BYTE)
     public List<Trade> trades;
     public int villagerLevel;
     public int experience;
