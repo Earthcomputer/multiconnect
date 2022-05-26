@@ -70,27 +70,28 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
 
                 // convert block states
                 ChunkData_1_17_1.BlockStatePalettedContainer fromBlockStates = (ChunkData_1_17_1.BlockStatePalettedContainer) fromSection.blockStates;
-                toSection.blockStates = switch (fromBlockStates.paletteSize) {
-                    case 0 -> {
+                if (fromBlockStates instanceof ChunkData_1_17_1.BlockStatePalettedContainer.Multiple multiple) {
+                    if (multiple.palette.length == 1) {
                         var states = new ChunkData_Latest.BlockStatePalettedContainer.Singleton();
-                        states.blockStateId = fromBlockStates.palette[0];
+                        states.paletteSize = 0;
+                        states.blockStateId = multiple.palette[0];
                         states.dummyData = new long[0];
-                        yield states;
-                    }
-                    case 1, 2, 3, 4, 5, 6, 7, 8 -> {
+                        toSection.blockStates = states;
+                    } else {
                         var states = new ChunkData_Latest.BlockStatePalettedContainer.Multiple();
-                        states.paletteSize = fromBlockStates.paletteSize;
-                        states.palette = fromBlockStates.palette;
-                        states.data = fromBlockStates.data;
-                        yield states;
+                        states.paletteSize = multiple.paletteSize;
+                        states.palette = multiple.palette;
+                        states.data = multiple.data;
+                        toSection.blockStates = states;
                     }
-                    default -> {
-                        var states = new ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer();
-                        states.paletteSize = fromBlockStates.paletteSize;
-                        states.data = fromBlockStates.data;
-                        yield states;
-                    }
-                };
+                } else if (fromBlockStates instanceof ChunkData_1_17_1.BlockStatePalettedContainer.RegistryContainer registry) {
+                    var states = new ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer();
+                    states.paletteSize = registry.paletteSize;
+                    states.data = registry.data;
+                    toSection.blockStates = states;
+                } else {
+                    throw new IllegalStateException("Illegal subtype of BlockStatePalettedContainer");
+                }
 
                 computeBiomeData(sectionY, registryManager, biomes, toSection);
                 destSections.add(toSection);

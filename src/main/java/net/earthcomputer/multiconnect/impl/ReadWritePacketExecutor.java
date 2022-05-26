@@ -90,6 +90,8 @@ public final class ReadWritePacketExecutor {
                         slidingWindow.poll().getValue().run();
                     }
                 }
+            } catch (Throwable e) {
+                e.printStackTrace();
             } finally {
                 for (Class<?> read : readDependencies) {
                     queue.finishedReadAccess(read);
