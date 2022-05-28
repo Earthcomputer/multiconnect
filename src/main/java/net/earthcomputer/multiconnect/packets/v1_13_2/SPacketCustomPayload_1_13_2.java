@@ -29,7 +29,7 @@ public abstract class SPacketCustomPayload_1_13_2 implements SPacketCustomPayloa
 
     @Polymorphic(stringValue = "trader_list")
     @MessageVariant(maxVersion = Protocols.V1_13_2)
-    public static class TraderList extends SPacketCustomPayload_1_13_2 {
+    public static class TraderList extends SPacketCustomPayload_1_13_2 implements SPacketCustomPayload.TraderList {
         public int syncId;
         @Length(type = Types.UNSIGNED_BYTE)
         public List<SPacketSetTradeOffers.Trade> trades;
@@ -51,7 +51,7 @@ public abstract class SPacketCustomPayload_1_13_2 implements SPacketCustomPayloa
 
     @Polymorphic(stringValue = "open_book")
     @MessageVariant(maxVersion = Protocols.V1_13_2)
-    public static class OpenBook extends SPacketCustomPayload_1_13_2 {
+    public static class OpenBook extends SPacketCustomPayload_1_13_2 implements SPacketCustomPayload.OpenBook {
         public CommonTypes.Hand hand;
 
         @Handler

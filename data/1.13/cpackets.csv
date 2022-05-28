@@ -10,7 +10,7 @@ id clazz
 8 net.earthcomputer.multiconnect.packets.v1_16_5.CPacketClickSlot_1_16_5
 9 net.earthcomputer.multiconnect.packets.CPacketCloseHandledScreen
 10 net.earthcomputer.multiconnect.packets.CPacketCustomPayload
-11 net.earthcomputer.multiconnect.packets.v1_16_3.CPacketBookUpdate_1_16_3
+11 net.earthcomputer.multiconnect.packets.v1_13.CPacketBookUpdate_1_13
 12 net.earthcomputer.multiconnect.packets.CPacketQueryEntityNbt
 13 net.earthcomputer.multiconnect.packets.v1_15_2.CPacketPlayerInteractEntity_1_15_2
 14 net.earthcomputer.multiconnect.packets.CPacketKeepAlive

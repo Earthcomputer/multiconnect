@@ -17,9 +17,15 @@ import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
 
 @Polymorphic
-@MessageVariant(maxVersion = Protocols.V1_13_2)
+@MessageVariant(minVersion = Protocols.V1_13_2, maxVersion = Protocols.V1_13_2)
+@DefaultConstruct(subType = ItemStack_1_13_2.Empty.class)
 public abstract class ItemStack_1_13_2 implements CommonTypes.ItemStack {
+    @Introduce(direction = Introduce.Direction.FROM_OLDER, compute = "computePresent")
     public boolean present;
+
+    public static boolean computePresent(@Argument("itemId") short itemId) {
+        return itemId != -1;
+    }
 
     @Override
     public boolean isPresent() {
@@ -27,12 +33,12 @@ public abstract class ItemStack_1_13_2 implements CommonTypes.ItemStack {
     }
 
     @Polymorphic(booleanValue = false)
-    @MessageVariant(maxVersion = Protocols.V1_13_2)
+    @MessageVariant(minVersion = Protocols.V1_13_2, maxVersion = Protocols.V1_13_2)
     public static class Empty extends ItemStack_1_13_2 implements CommonTypes.ItemStack.Empty {
     }
 
     @Polymorphic(booleanValue = true)
-    @MessageVariant(maxVersion = Protocols.V1_13_2)
+    @MessageVariant(minVersion = Protocols.V1_13_2, maxVersion = Protocols.V1_13_2)
     public static class NonEmpty extends ItemStack_1_13_2 implements CommonTypes.ItemStack.NonEmpty {
         @Registry(Registries.ITEM)
         public int itemId;

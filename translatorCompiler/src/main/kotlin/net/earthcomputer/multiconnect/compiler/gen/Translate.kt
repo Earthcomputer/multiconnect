@@ -700,9 +700,13 @@ private fun ProtocolCompiler.translateInner(
                 containingMessage.findFunction(introduceInfo.value),
                 paramResolver = combineParamResolvers(outerParamResolver) { name, type ->
                     // TODO: type checking?
-                    McNode(LoadFieldOp(fieldFromVariantType, name, fieldFromVariant.findField(name).type.realType),
+                    if (name == "this") {
                         McNode(LoadVariableOp(fieldFromVarId, fieldFromVariantType))
-                    )
+                    } else {
+                        McNode(LoadFieldOp(fieldFromVariantType, name, fieldFromVariant.findField(name).type.realType),
+                            McNode(LoadVariableOp(fieldFromVarId, fieldFromVariantType))
+                        )
+                    }
                 },
                 argTranslator = argTranslator@{ _, type, argNode ->
                     val argNodes = mutableListOf<McNode>()

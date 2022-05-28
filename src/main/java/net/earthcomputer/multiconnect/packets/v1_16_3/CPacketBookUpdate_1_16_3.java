@@ -7,7 +7,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketBookUpdate;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 
-@MessageVariant(maxVersion = Protocols.V1_16_3)
+@MessageVariant(minVersion = Protocols.V1_13_1, maxVersion = Protocols.V1_16_3)
 public class CPacketBookUpdate_1_16_3 implements CPacketBookUpdate {
     public CommonTypes.ItemStack stack;
     public boolean sign;

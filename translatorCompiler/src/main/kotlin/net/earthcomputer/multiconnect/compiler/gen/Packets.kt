@@ -338,7 +338,7 @@ private fun ProtocolCompiler.generateHandler(
         val alwaysHandled = polymorphicChildren[packet.className]!!.all {
             val variant = getMessageVariantInfo(it)
             variant.handler != null
-                && (nextProtocolId == null || !isProtocolValid(nextProtocolId) || (variant.variantOf != null && (getClassInfo(variant.variantOf) as MessageInfo).getVariant(nextProtocolId)!!.className != variant.className))
+                && (nextProtocolId == null || !isProtocolValid(nextProtocolId) || (variant.variantOf != null && (getClassInfo(variant.variantOf) as MessageInfo).getVariant(nextProtocolId)?.className != variant.className))
         }
         var ifElseChain = if (alwaysHandled) {
             McNode(

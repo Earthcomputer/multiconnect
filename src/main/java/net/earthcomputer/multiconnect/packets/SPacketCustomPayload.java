@@ -9,6 +9,14 @@ public interface SPacketCustomPayload {
     }
 
     @Message
+    interface TraderList {
+    }
+
+    @Message
+    interface OpenBook {
+    }
+
+    @Message
     interface Other {
     }
 }
