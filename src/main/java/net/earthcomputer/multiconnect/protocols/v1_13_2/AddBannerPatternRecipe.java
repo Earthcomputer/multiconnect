@@ -15,10 +15,10 @@ import net.minecraft.recipe.SpecialCraftingRecipe;
 import net.minecraft.recipe.SpecialRecipeSerializer;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 
 public class AddBannerPatternRecipe extends SpecialCraftingRecipe {
-
     public static final RecipeSerializer<AddBannerPatternRecipe> SERIALIZER = new SpecialRecipeSerializer<>(AddBannerPatternRecipe::new);
 
     public AddBannerPatternRecipe(Identifier output) {
@@ -159,5 +159,9 @@ public class AddBannerPatternRecipe extends SpecialCraftingRecipe {
         }
 
         return null;
+    }
+
+    public static void register() {
+        Registry.register(Registry.RECIPE_SERIALIZER, "multiconnect:crafting_special_banneraddpattern", SERIALIZER);
     }
 }

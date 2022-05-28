@@ -29,6 +29,7 @@ import net.earthcomputer.multiconnect.compiler.Polymorphic
 import net.earthcomputer.multiconnect.compiler.SuppliedDefaultConstructedParameter
 import net.earthcomputer.multiconnect.compiler.classInfoOrNull
 import net.earthcomputer.multiconnect.compiler.downcastConstant
+import net.earthcomputer.multiconnect.compiler.getClassInfo
 import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
 import net.earthcomputer.multiconnect.compiler.hasName
 import net.earthcomputer.multiconnect.compiler.isIntegral
@@ -62,6 +63,7 @@ import net.earthcomputer.multiconnect.compiler.normalizeIdentifier
 import net.earthcomputer.multiconnect.compiler.polymorphicChildren
 import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.splitPackageClass
+import kotlin.math.absoluteValue
 
 typealias ParamResolver = (String, McType) -> McNode
 
@@ -287,7 +289,7 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
 
 
 internal fun ProtocolCompiler.generateFunctionCallGraph(function: McFunction, vararg positionalArguments: McNode, paramResolver: ParamResolver): McNode {
-    return generateFunctionCallGraph(function, *positionalArguments, paramResolver = paramResolver) { _, _ ->
+    return generateFunctionCallGraph(function, *positionalArguments, paramResolver = paramResolver) { _, _, _ ->
         throw CompileException("@Argument(translate) can only be used in @Introduce functions")
     }
 }
@@ -296,14 +298,14 @@ internal inline fun ProtocolCompiler.generateFunctionCallGraph(
     function: McFunction,
     vararg positionalArguments: McNode,
     paramResolver: ParamResolver,
-    argTranslator: (McType, McNode) -> McNode
+    argTranslator: (String, McType, McNode) -> McNode
 ): McNode {
     val loadParams = function.parameters.mapTo(mutableListOf()) { param ->
         when (param) {
             is ArgumentParameter -> {
                 var result = paramResolver(param.name, param.paramType)
                 if (param.translate) {
-                    result = argTranslator(param.paramType, result)
+                    result = argTranslator(param.name, param.paramType, result)
                 }
                 result
             }
@@ -495,6 +497,27 @@ internal fun ProtocolCompiler.generateFilledConstructGraph(type: McType, filledP
         } else {
             throw CompileException("Invalid @Filled(fromRegistry) type $type")
         }
+    }
+
+    if (filledParam.fromVersion != null) {
+        filledParam.toVersion!!
+        val typeArgs = (filledParam.paramType as McType.DeclaredType).typeArguments
+        assert(typeArgs.size == 2)
+        val fromType = typeArgs[0].messageVariantInfo
+        val toType = typeArgs[1].messageVariantInfo
+        val fromIndex = protocols.binarySearch { filledParam.fromVersion.compareTo(it.id) }
+        val toIndex = protocols.binarySearch { filledParam.toVersion.compareTo(it.id) }
+        if (fromIndex < 0 || toIndex < 0 || (toIndex - fromIndex).absoluteValue != 1) {
+            throw CompileException("Protocols ${filledParam.fromVersion} and ${filledParam.toVersion} are not consecutive")
+        }
+        val lambdaParam = VariableId.create()
+        return McNode(LambdaOp(filledParam.paramType, toType.toMcType(), listOf(fromType.toMcType()), listOf(lambdaParam)),
+            if (fromType.variantOf != null) {
+                translate(getClassInfo(fromType.variantOf) as MessageInfo, filledParam.fromVersion, filledParam.toVersion, lambdaParam, null)
+            } else {
+                translate(fromType, filledParam.fromVersion, filledParam.toVersion, lambdaParam, null)
+            }
+        )
     }
 
     return when ((type as? McType.DeclaredType)?.name) {

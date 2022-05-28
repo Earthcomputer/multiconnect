@@ -1,14 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_13_2;
 
-import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.api.ThreadSafe;
-import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.*;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -21,19 +15,12 @@ import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.play.*;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.village.VillagerData;
 import net.minecraft.village.VillagerProfession;
-import net.minecraft.world.Difficulty;
 
 import java.util.*;
 
 public class Protocol_1_13_2 extends Protocol_1_14 {
-    public static final Identifier CUSTOM_PAYLOAD_TRADE_LIST = new Identifier("trader_list");
-    public static final Identifier CUSTOM_PAYLOAD_OPEN_BOOK = new Identifier("open_book");
-
     public static final TrackedData<Integer> OLD_FIREWORK_SHOOTER = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     public static final TrackedData<Integer> OLD_VILLAGER_PROFESSION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     public static final TrackedData<Byte> OLD_ILLAGER_FLAGS = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BYTE);
@@ -42,9 +29,8 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
     public static final TrackedData<Integer> OLD_ZOMBIE_VILLAGER_PROFESSION = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
     public static final TrackedData<Integer> OLD_HORSE_ARMOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
 
-    private static final Key<byte[][]> BLOCK_LIGHT_KEY = Key.create("blockLight");
-    private static final Key<byte[][]> SKY_LIGHT_KEY = Key.create("skyLight");
-    public static final Key<Difficulty> DIFFICULTY_KEY = Key.create("difficulty");
+    public static final Key<byte[][]> BLOCK_LIGHT_KEY = Key.create("blockLight");
+    public static final Key<byte[][]> SKY_LIGHT_KEY = Key.create("skyLight");
 
     @Override
     public void preAcceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
@@ -129,17 +115,5 @@ public class Protocol_1_13_2 extends Protocol_1_14 {
             case 4 -> VillagerProfession.BUTCHER;
             default -> VillagerProfession.NITWIT;
         };
-    }
-
-    @ThreadSafe
-    public static void updateCameraPosition() {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
-            ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
-            ClientPlayerEntity player = MinecraftClient.getInstance().player;
-            if (networkHandler != null && player != null) {
-                ChunkSectionPos chunkPos = ChunkSectionPos.from(player);
-                networkHandler.onChunkRenderDistanceCenter(new ChunkRenderDistanceCenterS2CPacket(chunkPos.getSectionX(), chunkPos.getSectionZ()));
-            }
-        }
     }
 }

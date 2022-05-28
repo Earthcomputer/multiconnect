@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
+import net.earthcomputer.multiconnect.ap.Argument;
+import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Message;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
@@ -8,6 +10,7 @@ import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.latest.ItemStack_Latest;
 import net.minecraft.nbt.NbtCompound;
 
@@ -20,10 +23,31 @@ public class CommonTypes {
         public String json;
     }
 
-    @MessageVariant
-    public static class BlockPos {
+    @Message
+    public interface BlockPos {
+        net.minecraft.util.math.BlockPos toMinecraft();
+    }
+
+    @MessageVariant(minVersion = Protocols.V1_14)
+    public static class BlockPos_Latest implements BlockPos {
         @Type(Types.LONG)
+        @Introduce(direction = Introduce.Direction.FROM_OLDER, compute = "computePackedData")
         public long packedData;
+
+        public static long computePackedData(@Argument("packedData") long packedData) {
+            int x = (int) (packedData >> 38);
+            int y = (int) (packedData << 26 >> 52);
+            int z = (int) (packedData << 38 >> 38);
+            return ((long)(x & 0x3FFFFFF) << 38) | ((long)(z & 0x3FFFFFF) << 12) | (long)(y & 0xFFF);
+        }
+
+        @Override
+        public net.minecraft.util.math.BlockPos toMinecraft() {
+            int x = (int) (packedData >> 38);
+            int y = (int) (packedData << 52 >> 52);
+            int z = (int) (packedData << 26 >> 38);
+            return new net.minecraft.util.math.BlockPos(x, y, z);
+        }
     }
 
     @Message

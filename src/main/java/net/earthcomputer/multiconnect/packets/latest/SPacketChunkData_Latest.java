@@ -8,6 +8,7 @@ import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Datafix;
 import net.earthcomputer.multiconnect.ap.DatafixTypes;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
+import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.GlobalData;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Length;
@@ -18,10 +19,13 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
+import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.packets.SPacketChunkData;
 import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1;
 import net.earthcomputer.multiconnect.protocols.generic.DimensionTypeReference;
+import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
+import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
@@ -41,7 +45,7 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
     public int z;
     @Introduce(compute = "computeInnerData")
     public InnerData innerData;
-    @Introduce(defaultConstruct = true)
+    @Introduce(compute = "computeLightData")
     public LightData lightData;
 
     public static InnerData computeInnerData(
@@ -188,6 +192,36 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
                 currentLong = 0;
             }
         }
+    }
+
+    public static LightData computeLightData(
+            @Argument("verticalStripBitmask") BitSet verticalStripBitmask,
+            @FilledArgument TypedMap userData,
+            @DefaultConstruct LightData lightData
+    ) {
+        byte[][] blockLight = userData.get(Protocol_1_13_2.BLOCK_LIGHT_KEY);
+        if (blockLight != null) {
+            BitSet blockLightMask = (BitSet) verticalStripBitmask.clone();
+            Utils.leftShift(blockLightMask, 1);
+
+            lightData.blockLightMask = blockLightMask;
+            for (byte[] section : blockLight) {
+                if (section != null) {
+                    lightData.blockLightData.add(section);
+                }
+            }
+
+            byte[][] skyLight = userData.get(Protocol_1_13_2.SKY_LIGHT_KEY);
+            if (skyLight != null) {
+                lightData.skyLightMask = blockLightMask;
+                for (byte[] section : skyLight) {
+                    if (section != null) {
+                        lightData.skyLightData.add(section);
+                    }
+                }
+            }
+        }
+        return lightData;
     }
 
     @MessageVariant

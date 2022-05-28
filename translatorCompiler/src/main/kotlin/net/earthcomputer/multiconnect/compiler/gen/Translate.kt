@@ -701,7 +701,7 @@ private fun ProtocolCompiler.translateInner(
                         McNode(LoadVariableOp(fieldFromVarId, fieldFromVariantType))
                     )
                 },
-                argTranslator = argTranslator@{ type, argNode ->
+                argTranslator = argTranslator@{ _, type, argNode ->
                     val argNodes = mutableListOf<McNode>()
                     val argVarId = VariableId.create()
                     argNodes += McNode(StoreVariableStmtOp(argVarId, type, true), argNode)

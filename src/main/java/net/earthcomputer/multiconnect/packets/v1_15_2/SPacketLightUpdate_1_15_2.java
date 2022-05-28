@@ -6,7 +6,7 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketLightUpdate;
 
-@MessageVariant(maxVersion = Protocols.V1_15_2)
+@MessageVariant(minVersion = Protocols.V1_14, maxVersion = Protocols.V1_15_2)
 public class SPacketLightUpdate_1_15_2 implements SPacketLightUpdate {
     public int chunkX;
     public int chunkZ;

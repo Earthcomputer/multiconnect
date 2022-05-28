@@ -14,4 +14,4 @@ id name oldName
 12 crafting_special_shulkerboxcoloring
 13 crafting_special_repairitem
 14 smelting
-15 null crafting_special_banneraddpattern
+15 multiconnect:crafting_special_banneraddpattern crafting_special_banneraddpattern

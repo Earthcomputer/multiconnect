@@ -12,11 +12,15 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 
 import java.util.UUID;
 
 @Polymorphic
-@MessageVariant(maxVersion = Protocols.V1_15_2)
+@MessageVariant(minVersion = Protocols.V1_14, maxVersion = Protocols.V1_15_2)
 @DefaultConstruct(subType = ItemStack_1_15_2.Empty.class)
 public abstract class ItemStack_1_15_2 implements CommonTypes.ItemStack {
     public boolean present;
@@ -27,18 +31,19 @@ public abstract class ItemStack_1_15_2 implements CommonTypes.ItemStack {
     }
 
     @Polymorphic(booleanValue = false)
-    @MessageVariant(maxVersion = Protocols.V1_15_2)
+    @MessageVariant(minVersion = Protocols.V1_14, maxVersion = Protocols.V1_15_2)
     public static class Empty extends ItemStack_1_15_2 implements CommonTypes.ItemStack.Empty {
     }
 
     @Polymorphic(booleanValue = true)
-    @MessageVariant(maxVersion = Protocols.V1_15_2)
+    @MessageVariant(minVersion = Protocols.V1_14, maxVersion = Protocols.V1_15_2)
     public static class NonEmpty extends ItemStack_1_15_2 implements CommonTypes.ItemStack.NonEmpty {
         @Registry(Registries.ITEM)
         public int itemId;
         @DefaultConstruct(intValue = 1)
         public byte count;
         @Introduce(direction = Introduce.Direction.FROM_NEWER, compute = "translateTagServerbound")
+        @Introduce(direction = Introduce.Direction.FROM_OLDER, compute = "translateTagClientbound")
         public NbtCompound tag;
 
         @Override
@@ -73,6 +78,27 @@ public abstract class ItemStack_1_15_2 implements CommonTypes.ItemStack {
                 }
             }
 
+            return tag;
+        }
+
+        public static NbtCompound translateTagClientbound(
+                @Argument("tag") NbtCompound tag
+        ) {
+            if (tag == null) {
+                return null;
+            }
+            if (tag.contains("display", NbtElement.COMPOUND_TYPE)) {
+                NbtCompound display = tag.getCompound("display");
+                if (display.contains("Lore", NbtElement.LIST_TYPE)) {
+                    NbtList lore = display.getList("Lore", NbtElement.STRING_TYPE);
+                    display.put("multiconnect:1.13.2/oldLore", lore);
+                    NbtList newLore = new NbtList();
+                    for (int i = 0; i < lore.size(); i++) {
+                        newLore.add(NbtString.of(Text.Serializer.toJson(new LiteralText(lore.getString(i)))));
+                    }
+                    display.put("Lore", newLore);
+                }
+            }
             return tag;
         }
     }

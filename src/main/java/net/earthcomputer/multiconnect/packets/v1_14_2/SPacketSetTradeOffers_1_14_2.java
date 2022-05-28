@@ -8,7 +8,7 @@ import net.earthcomputer.multiconnect.packets.SPacketSetTradeOffers;
 
 import java.util.List;
 
-@MessageVariant(maxVersion = Protocols.V1_14_2)
+@MessageVariant(minVersion = Protocols.V1_14, maxVersion = Protocols.V1_14_2)
 public class SPacketSetTradeOffers_1_14_2 implements SPacketSetTradeOffers {
     public int syncId;
     @Length(type = Types.UNSIGNED_BYTE)

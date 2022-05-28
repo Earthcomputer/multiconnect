@@ -1,13 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.MessageVariant;
-import net.earthcomputer.multiconnect.ap.Type;
-import net.earthcomputer.multiconnect.ap.Types;
+import net.earthcomputer.multiconnect.ap.Message;
 
-@MessageVariant
-public class SPacketEntityAttach {
-    @Type(Types.INT)
-    public int attached;
-    @Type(Types.INT)
-    public int holding;
+@Message
+public interface SPacketEntityAttach {
 }

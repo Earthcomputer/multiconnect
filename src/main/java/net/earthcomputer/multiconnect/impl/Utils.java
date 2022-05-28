@@ -105,6 +105,35 @@ public class Utils {
         }
     }
 
+    public static int getOldPackedBitArrayElement(long[] array, int index, int elementBits) {
+        int mask = (1 << elementBits) - 1;
+        int bitIndex = index * elementBits;
+        int wordIndex = bitIndex >>> 6;
+        int endWordIndex = ((index + 1) * elementBits - 1) >>> 6;
+        int indexInWord = (bitIndex ^ (wordIndex << 6));
+        if (wordIndex == endWordIndex) {
+            return (int) (array[wordIndex] >>> indexInWord) & mask;
+        } else {
+            int firstBits = 64 - indexInWord;
+            return ((int) (array[wordIndex] >>> indexInWord) & mask) | ((int) (array[endWordIndex] << firstBits) & mask);
+        }
+    }
+
+    public static void setOldPackedBitArrayElement(long[] array, int index, int value, int elementBits) {
+        int mask = (1 << elementBits) - 1;
+        int bitIndex = index * elementBits;
+        int wordIndex = bitIndex >>> 6;
+        int endWordIndex = ((index + 1) * elementBits - 1) >>> 6;
+        int indexInWord = (bitIndex ^ (wordIndex << 6));
+        array[wordIndex] = (array[wordIndex] & ~((long) mask << indexInWord)) | ((long) (value & mask) << indexInWord);
+        if (wordIndex != endWordIndex) {
+            int bitsWritten = 64 - indexInWord;
+            int bitsToWrite = elementBits - bitsWritten;
+            //noinspection PointlessBitwiseExpression
+            array[endWordIndex] = (array[wordIndex] & ~((1L << bitsToWrite) - 1)) | (long) ((value & mask) >>> bitsWritten);
+        }
+    }
+
     private static final ScheduledExecutorService AUTO_CACHE_CLEAN_EXECUTOR = Executors.newScheduledThreadPool(1);
     private static final Cleaner AUTO_CACHE_CLEANER = Cleaner.create();
     public static void autoCleanUp(Cache<?, ?> cache, long time, TimeUnit timeUnit) {

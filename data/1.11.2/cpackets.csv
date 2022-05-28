@@ -27,5 +27,5 @@ id clazz
 25 net.earthcomputer.multiconnect.packets.CPacketUpdateSign
 26 net.earthcomputer.multiconnect.packets.CPacketHandSwing
 27 net.earthcomputer.multiconnect.packets.CPacketSpectatorTeleport
-28 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractBlock
+28 net.earthcomputer.multiconnect.packets.v1_13_2.CPacketPlayerInteractBlock_1_13_2
 29 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractItem

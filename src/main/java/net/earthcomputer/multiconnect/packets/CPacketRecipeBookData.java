@@ -1,23 +1,14 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.Argument;
-import net.earthcomputer.multiconnect.ap.DefaultConstruct;
-import net.earthcomputer.multiconnect.ap.Handler;
-import net.earthcomputer.multiconnect.ap.MessageVariant;
-import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.packets.v1_16_1.CPacketRecipeBookData_1_16_1;
-import net.minecraft.util.Identifier;
+import net.earthcomputer.multiconnect.ap.Message;
 
-@MessageVariant(minVersion = Protocols.V1_16_2)
-public class CPacketRecipeBookData {
-    public Identifier displayedRecipe;
+@Message
+public interface CPacketRecipeBookData {
+    @Message
+    interface Shown {
+    }
 
-    @Handler(protocol = Protocols.V1_16_1)
-    public static CPacketRecipeBookData_1_16_1 handle(
-            @Argument("displayedRecipe") Identifier displayedRecipe,
-            @DefaultConstruct CPacketRecipeBookData_1_16_1.Shown packet
-    ) {
-        packet.recipeId = displayedRecipe;
-        return packet;
+    @Message
+    interface Settings {
     }
 }

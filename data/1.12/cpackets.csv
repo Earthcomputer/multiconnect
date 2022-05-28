@@ -22,7 +22,7 @@ id clazz
 20 net.earthcomputer.multiconnect.packets.CPacketPlayerAction
 21 net.earthcomputer.multiconnect.packets.CPacketClientCommand
 22 net.earthcomputer.multiconnect.packets.CPacketPlayerInput
-23 net.earthcomputer.multiconnect.packets.v1_16_1.CPacketRecipeBookData_1_16_1
+23 net.earthcomputer.multiconnect.packets.v1_13_2.CPacketRecipeBookData_1_13_2
 24 net.earthcomputer.multiconnect.packets.CPacketResourcePackStatus
 25 net.earthcomputer.multiconnect.packets.CPacketAdvancementTab
 26 net.earthcomputer.multiconnect.packets.CPacketUpdateSelectedSlot
@@ -30,5 +30,5 @@ id clazz
 28 net.earthcomputer.multiconnect.packets.CPacketUpdateSign
 29 net.earthcomputer.multiconnect.packets.CPacketHandSwing
 30 net.earthcomputer.multiconnect.packets.CPacketSpectatorTeleport
-31 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractBlock
+31 net.earthcomputer.multiconnect.packets.v1_13_2.CPacketPlayerInteractBlock_1_13_2
 32 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractItem

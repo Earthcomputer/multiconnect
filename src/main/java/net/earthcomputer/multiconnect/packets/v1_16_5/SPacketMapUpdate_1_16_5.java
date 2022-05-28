@@ -4,12 +4,14 @@ import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Handler;
+import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketMapUpdate;
+import net.earthcomputer.multiconnect.packets.latest.SPacketMapUpdate_Latest;
 import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.MapStateAccessor;
@@ -21,13 +23,14 @@ import net.minecraft.item.map.MapState;
 import java.util.List;
 import java.util.Optional;
 
-@MessageVariant(maxVersion = Protocols.V1_16_5)
-public class SPacketMapUpdate_1_16_5 {
+@MessageVariant(minVersion = Protocols.V1_14, maxVersion = Protocols.V1_16_5)
+public class SPacketMapUpdate_1_16_5 implements SPacketMapUpdate {
     public int mapId;
     public byte scale;
     public boolean showIcons;
+    @Introduce(booleanValue = false)
     public boolean locked;
-    public List<SPacketMapUpdate.Icon> icons;
+    public List<SPacketMapUpdate_Latest.Icon> icons;
     @Type(Types.UNSIGNED_BYTE)
     public int columns;
     @OnlyIf("hasColumns")
@@ -46,18 +49,18 @@ public class SPacketMapUpdate_1_16_5 {
     public static final Key<Runnable> POST_HANDLE_MAP_PACKET = Key.create("postHandleMapPacket");
 
     @Handler
-    public static SPacketMapUpdate handle(
+    public static SPacketMapUpdate_Latest handle(
             @Argument("mapId") int mapId,
             @Argument("scale") byte scale,
             @Argument("showIcons") boolean showIcons,
             @Argument("locked") boolean locked,
-            @Argument("icons") List<SPacketMapUpdate.Icon> icons,
+            @Argument("icons") List<SPacketMapUpdate_Latest.Icon> icons,
             @Argument("columns") int columns,
             @Argument("rows") byte rows,
             @Argument("x") byte x,
             @Argument("z") byte z,
             @Argument("data") byte[] data,
-            @DefaultConstruct SPacketMapUpdate newPacket,
+            @DefaultConstruct SPacketMapUpdate_Latest newPacket,
             @FilledArgument TypedMap userData
     ) {
         newPacket.mapId = mapId;

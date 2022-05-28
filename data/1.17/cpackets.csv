@@ -30,7 +30,7 @@ id clazz
 28 net.earthcomputer.multiconnect.packets.CPacketPlayerInput
 29 net.earthcomputer.multiconnect.packets.CPacketPlayPong
 30 net.earthcomputer.multiconnect.packets.CPacketRecipeCategoryOptions
-31 net.earthcomputer.multiconnect.packets.CPacketRecipeBookData
+31 net.earthcomputer.multiconnect.packets.latest.CPacketRecipeBookData_Latest
 32 net.earthcomputer.multiconnect.packets.CPacketRenameItem
 33 net.earthcomputer.multiconnect.packets.CPacketResourcePackStatus
 34 net.earthcomputer.multiconnect.packets.CPacketAdvancementTab
@@ -45,5 +45,5 @@ id clazz
 43 net.earthcomputer.multiconnect.packets.CPacketUpdateSign
 44 net.earthcomputer.multiconnect.packets.CPacketHandSwing
 45 net.earthcomputer.multiconnect.packets.CPacketSpectatorTeleport
-46 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractBlock
+46 net.earthcomputer.multiconnect.packets.latest.CPacketPlayerInteractBlock_Latest
 47 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractItem

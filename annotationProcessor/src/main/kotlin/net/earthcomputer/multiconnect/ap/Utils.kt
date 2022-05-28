@@ -12,6 +12,8 @@ import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.MirroredTypeException
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 import kotlin.reflect.KClass
 
 const val JAVA_LANG_OBJECT = "java.lang.Object"
@@ -25,6 +27,7 @@ const val JAVA_UTIL_OPTIONAL_INT = "java.util.OptionalInt"
 const val JAVA_UTIL_OPTIONAL_LONG = "java.util.OptionalLong"
 const val JAVA_UTIL_UUID = "java.util.UUID"
 const val JAVA_UTIL_FUNCTION_CONSUMER = "java.util.function.Consumer"
+const val JAVA_UTIL_FUNCTION_FUNCTION = "java.util.function.Function"
 const val JAVA_UTIL_FUNCTION_SUPPLIER = "java.util.function.Supplier"
 const val FASTUTIL_INT_LIST = "it.unimi.dsi.fastutil.ints.IntList"
 const val FASTUTIL_LONG_LIST = "it.unimi.dsi.fastutil.longs.LongList"
@@ -182,6 +185,7 @@ fun TypeElement.findMulticonnectFunction(
                     argument != null -> {
                         if (argumentResolveContext != null
                             && !argument.value.startsWith("outer.")
+                            && (!method.hasAnnotation(Handler::class) || argument.value != "this")
                             && !argumentResolveContext.allRecordFields.any { it.simpleName.contentEquals(argument.value) }
                         ) {
                             errorConsumer?.report("Could not resolve argument \"${argument.value}\"", parameter)
@@ -191,7 +195,7 @@ fun TypeElement.findMulticonnectFunction(
                     }
                     isDefaultConstruct -> {
                         if (paramType.hasQualifiedName(JAVA_UTIL_FUNCTION_SUPPLIER)) {
-                            val typeArgument = (paramType as? DeclaredType)?.typeArguments?.singleOrNull()
+                            val typeArgument = paramType.typeArguments?.singleOrNull()
                             if (typeArgument == null) {
                                 errorConsumer?.report("Default construct supplier must have a type argument", parameter)
                                 return null
@@ -211,9 +215,43 @@ fun TypeElement.findMulticonnectFunction(
                     }
                     filledArgument != null -> {
                         val fromRegistry = filledArgument.fromRegistry.takeIf { it.value.isNotEmpty() }
+                        val fromVersion = filledArgument.fromVersion.takeIf { it != -1 }
+                        val toVersion = filledArgument.toVersion.takeIf { it != -1 }
                         if (fromRegistry != null) {
+                            if (fromVersion != null || toVersion != null) {
+                                errorConsumer?.report("Cannot specify fromRegistry and fromVersion or toVersion", parameter)
+                                return null
+                            }
                             if (!MulticonnectType.isRegistryCompatible(paramType)) {
                                 errorConsumer?.report("Cannot fill non-registry type from a registry", parameter)
+                                return null
+                            }
+                        } else if (fromVersion != null || toVersion != null) {
+                            if (fromVersion == null || toVersion == null) {
+                                errorConsumer?.report("Cannot specify fromVersion without toVersion or vice versa", parameter)
+                                return null
+                            }
+                            var validType = false
+                            if (paramType.hasQualifiedName(JAVA_UTIL_FUNCTION_FUNCTION)) {
+                                val typeArguments = paramType.typeArguments
+                                if (typeArguments.size == 2) {
+                                    val type1 = typeArguments[0]
+                                    val type2 = typeArguments[1]
+                                    if (type1.isMessageVariant && type2.isMessageVariant) {
+                                        if (processingEnv.typeUtils.isSameType(type1, type2)) {
+                                            validType = true
+                                        } else {
+                                            val group1 = type1.asTypeElement()?.interfaces?.singleOrNull()
+                                            val group2 = type2.asTypeElement()?.interfaces?.singleOrNull()
+                                            if (group1 != null && group2 != null && processingEnv.typeUtils.isSameType(group1, group2)) {
+                                                validType = true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (!validType) {
+                                errorConsumer?.report("Invalid filled variant conversion type", parameter)
                                 return null
                             }
                         } else {
@@ -222,11 +260,11 @@ fun TypeElement.findMulticonnectFunction(
                                 return null
                             }
                         }
-                        parameters += MulticonnectParameter.Filled(paramType, fromRegistry)
+                        parameters += MulticonnectParameter.Filled(paramType, fromRegistry, fromVersion, toVersion)
                     }
                     isGlobalData -> {
                         val isValidType = if (paramType.hasQualifiedName(JAVA_UTIL_FUNCTION_CONSUMER)) {
-                            val consumedType = (paramType as DeclaredType).typeArguments.singleOrNull()
+                            val consumedType = paramType.typeArguments.singleOrNull()
                             consumedType is DeclaredType
                         } else {
                             paramType is DeclaredType
@@ -270,11 +308,19 @@ inline fun toTypeMirror(func: () -> KClass<*>): TypeMirror {
     throw IllegalArgumentException("The lambda must attempt to get a class value from an annotation")
 }
 
+@OptIn(ExperimentalContracts::class)
 fun TypeMirror.asTypeElement(): TypeElement? {
+    contract {
+        returnsNotNull() implies (this@asTypeElement is DeclaredType)
+    }
     return (this as? DeclaredType)?.asElement() as? TypeElement
 }
 
+@OptIn(ExperimentalContracts::class)
 fun TypeMirror.hasQualifiedName(name: String): Boolean {
+    contract {
+        returns(true) implies (this@hasQualifiedName is DeclaredType)
+    }
     return this.asTypeElement()?.qualifiedName?.contentEquals(name) ?: false
 }
 

@@ -3,22 +3,24 @@ package net.earthcomputer.multiconnect.packets.v1_16_1;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.packets.CPacketRecipeBookData;
 import net.minecraft.util.Identifier;
 
-@MessageVariant
+@MessageVariant(minVersion = Protocols.V1_14, maxVersion = Protocols.V1_16_1)
 @Polymorphic
-public abstract class CPacketRecipeBookData_1_16_1 {
+public abstract class CPacketRecipeBookData_1_16_1 implements CPacketRecipeBookData {
     public Mode mode;
 
-    @MessageVariant
+    @MessageVariant(minVersion = Protocols.V1_14, maxVersion = Protocols.V1_16_1)
     @Polymorphic(stringValue = "SHOWN")
-    public static class Shown extends CPacketRecipeBookData_1_16_1 {
+    public static class Shown extends CPacketRecipeBookData_1_16_1 implements CPacketRecipeBookData.Shown {
         public Identifier recipeId;
     }
 
-    @MessageVariant
+    @MessageVariant(minVersion = Protocols.V1_14, maxVersion = Protocols.V1_16_1)
     @Polymorphic(stringValue = "SETTINGS")
-    public static class Settings extends CPacketRecipeBookData_1_16_1 {
+    public static class Settings extends CPacketRecipeBookData_1_16_1 implements CPacketRecipeBookData.Settings {
         public boolean guiOpen;
         public boolean filteringCraftable;
         public boolean furnaceGuiOpen;

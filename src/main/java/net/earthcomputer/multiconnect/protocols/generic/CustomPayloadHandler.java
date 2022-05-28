@@ -128,10 +128,6 @@ public class CustomPayloadHandler {
             }
         }
 
-        // removed vanilla ones, from when they actually used to custom payload for stuff
-        vanillaChannels.add(Protocol_1_13_2.CUSTOM_PAYLOAD_OPEN_BOOK);
-        vanillaChannels.add(Protocol_1_13_2.CUSTOM_PAYLOAD_TRADE_LIST);
-
         VANILLA_CLIENTBOUND_CHANNELS = vanillaChannels.build();
     }
 }

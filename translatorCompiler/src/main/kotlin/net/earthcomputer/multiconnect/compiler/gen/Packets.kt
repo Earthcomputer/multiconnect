@@ -35,6 +35,7 @@ import net.earthcomputer.multiconnect.compiler.node.McNode
 import net.earthcomputer.multiconnect.compiler.node.NewOp
 import net.earthcomputer.multiconnect.compiler.node.PopStmtOp
 import net.earthcomputer.multiconnect.compiler.node.Precedence
+import net.earthcomputer.multiconnect.compiler.node.ReturnStmtOp
 import net.earthcomputer.multiconnect.compiler.node.ReturnVoidStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StmtListOp
 import net.earthcomputer.multiconnect.compiler.node.StoreVariableStmtOp
@@ -47,6 +48,8 @@ import net.earthcomputer.multiconnect.compiler.protocolNamesById
 import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.readCsv
 import net.earthcomputer.multiconnect.compiler.splitPackageClass
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 // region TOP LEVEL FUNCTIONS
 
@@ -212,8 +215,15 @@ private fun ProtocolCompiler.generateTranslate(group: MessageInfo?, packet: Mess
     }
 
     val nodes = mutableListOf<McNode>()
-    nodes += generatePartialHandlers(protocolsSubset, 0) { getVariant(group, it, packet) }
-    val (handler0, handled0) = generateHandler(protocolVariable(protocolsSubset.first().id), getNextProtocol(protocolsSubset.first().id), getVariant(group, protocolsSubset[0].id, packet), clientbound, ::isProtocolValid)
+    nodes += generatePartialHandlers(protocolsSubset, 0) { getVariantOrNull(group, it, packet) }
+    val (handler0, handled0) = generateHandler(
+        protocolVariable(protocolsSubset.first().id),
+        protocolsSubset.first().id,
+        getNextProtocol(protocolsSubset.first().id),
+        getVariant(group, protocolsSubset[0].id, packet),
+        clientbound,
+        ::isProtocolValid
+    )
     nodes += handler0
     if (handled0) {
         return McNode(StmtListOp, nodes) to true
@@ -235,8 +245,8 @@ private fun ProtocolCompiler.generateTranslate(group: MessageInfo?, packet: Mess
                     protocol, protocolVariable(protocolsSubset[index - 1].id), null)
             }
         )
-        nodes += generatePartialHandlers(protocolsSubset, index) { getVariant(group, it, packet) }
-        val (handler, handled) = generateHandler(protocolVariable(protocol), getNextProtocol(protocol), getVariant(group, protocol, packet), clientbound, ::isProtocolValid)
+        nodes += generatePartialHandlers(protocolsSubset, index) { getVariantOrNull(group, it, packet) }
+        val (handler, handled) = generateHandler(protocolVariable(protocol), protocol, getNextProtocol(protocol), getVariant(group, protocol, packet), clientbound, ::isProtocolValid)
         nodes += handler
         defaultConstructProtocolId = null
         if (handled) {
@@ -250,10 +260,10 @@ private fun ProtocolCompiler.generateTranslate(group: MessageInfo?, packet: Mess
 private inline fun ProtocolCompiler.generatePartialHandlers(
     protocolsSubset: List<ProtocolEntry>,
     index: Int,
-    getPacket: (Int) -> MessageVariantInfo
+    getPacket: (Int) -> MessageVariantInfo?
 ): McNode {
     val nodes = mutableListOf<McNode>()
-    val packet = getPacket(protocolsSubset[index].id)
+    val packet = getPacket(protocolsSubset[index].id)!!
     val loadPacket = if (packet.variantOf != null) {
         McNode(CastOp(McType.DeclaredType(packet.variantOf), packet.toMcType()),
             McNode(LoadVariableOp(protocolVariable(protocolsSubset[index].id), McType.DeclaredType(packet.variantOf)))
@@ -261,7 +271,7 @@ private inline fun ProtocolCompiler.generatePartialHandlers(
     } else {
         McNode(LoadVariableOp(protocolVariable(protocolsSubset[index].id), packet.toMcType()))
     }
-    if (index == protocolsSubset.lastIndex || packet.className != getPacket(protocolsSubset[index + 1].id).className) {
+    if (index == protocolsSubset.lastIndex || packet.className != getPacket(protocolsSubset[index + 1].id)?.className) {
         for (partialHandler in packet.partialHandlers) {
             nodes += McNode(PopStmtOp,
                 generateFunctionCallGraph(packet.findFunction(partialHandler)) { name, type ->
@@ -312,6 +322,7 @@ private inline fun ProtocolCompiler.generatePartialHandlers(
 
 private fun ProtocolCompiler.generateHandler(
     varId: VariableId,
+    protocolId: Int,
     nextProtocolId: Int?,
     packet: MessageVariantInfo,
     clientbound: Boolean,
@@ -321,7 +332,7 @@ private fun ProtocolCompiler.generateHandler(
         && (clientbound || this.protocolId <= (packet.handlerProtocol ?: throw CompileException("@Handler protocol is required for serverbound packets (${packet.className})")))
         && (nextProtocolId == null || !isProtocolValid(nextProtocolId) || (packet.variantOf != null && (getClassInfo(packet.variantOf) as MessageInfo).getVariant(nextProtocolId)!!.className != packet.className))
     ) {
-        return generateHandlerInner(McNode(LoadVariableOp(varId, packet.toMcType())), nextProtocolId, packet, packet.handler, clientbound) to true
+        return generateHandlerInner(McNode(LoadVariableOp(varId, packet.toMcType())), protocolId, nextProtocolId, packet, packet.handler, clientbound) to true
     }
     if (packet.polymorphic != null && packet.polymorphicParent == null) {
         val alwaysHandled = polymorphicChildren[packet.className]!!.all {
@@ -355,6 +366,7 @@ private fun ProtocolCompiler.generateHandler(
                         CastOp(packet.toMcType(), childMessage.toMcType()),
                         McNode(LoadVariableOp(varId, packet.toMcType()))
                     ),
+                    protocolId,
                     nextProtocolId,
                     childMessage,
                     childMessage.handler,
@@ -391,11 +403,44 @@ private fun ProtocolCompiler.generateHandler(
     return McNode(StmtListOp) to false
 }
 
-private fun ProtocolCompiler.generateHandlerInner(packetNode: McNode, nextProtocolId: Int?, packet: MessageVariantInfo, handlerName: String, clientbound: Boolean): McNode {
+private fun ProtocolCompiler.generateHandlerInner(
+    packetNode: McNode,
+    protocolId: Int,
+    nextProtocolId: Int?,
+    packet: MessageVariantInfo,
+    handlerName: String,
+    clientbound: Boolean
+): McNode {
     val handlerFunc = packet.findFunction(handlerName)
-    val functionCall = generateFunctionCallGraph(handlerFunc) { name, type ->
-        McNode(LoadFieldOp(packet.toMcType(), name, type), packetNode)
-    }
+    val functionCall = generateFunctionCallGraph(
+        handlerFunc,
+        paramResolver = { name, type ->
+            if (name == "this") {
+                packetNode
+            } else {
+                McNode(LoadFieldOp(packet.toMcType(), name, type), packetNode)
+            }
+        },
+        argTranslator = { name, type, node ->
+            if (name != "this") {
+                throw CompileException("@Argument(translate) not supported for @Handler function non-this arguments")
+            }
+            if (nextProtocolId == null) {
+                throw CompileException("@Argument(translate) not supported in @Handler function where there is no next packet")
+            }
+            val packetVarId = VariableId.create()
+            McNode(StmtListOp,
+                McNode(StoreVariableStmtOp(packetVarId, packet.toMcType(), true), node),
+                McNode(ReturnStmtOp(type),
+                    if (packet.variantOf != null) {
+                        translate(getClassInfo(packet.variantOf) as MessageInfo, protocolId, nextProtocolId, packetVarId, null)
+                    } else {
+                        translate(packet, protocolId, nextProtocolId, packetVarId, null)
+                    }
+                )
+            )
+        }
+    )
     if (handlerFunc.returnType == McType.VOID) {
         return McNode(PopStmtOp, functionCall)
     }
@@ -550,10 +595,19 @@ private fun protocolVariable(id: Int): VariableId {
 }
 
 private fun getVariant(group: MessageInfo?, protocol: Int, dflt: MessageVariantInfo): MessageVariantInfo {
+    return getVariantOrNull(group, protocol, dflt)
+        ?: throw CompileException("No variant of packet \"${group?.className}\" found for protocol $protocol")
+}
+
+@OptIn(ExperimentalContracts::class)
+private fun getVariantOrNull(group: MessageInfo?, protocol: Int, dflt: MessageVariantInfo): MessageVariantInfo? {
+    contract {
+         returns(null) implies (group != null)
+    }
     if (group == null) {
         return dflt
     }
-    return group.getVariant(protocol) ?: throw CompileException("No variant of packet \"${group.className}\" found for protocol $protocol")
+    return group.getVariant(protocol)
 }
 
 internal enum class PacketDirection {

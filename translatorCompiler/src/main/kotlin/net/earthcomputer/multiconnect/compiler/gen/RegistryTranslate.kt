@@ -467,9 +467,9 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
         val oldEntries = readCsv<RegistryEntry>(dataDir.resolve("${registry.name.lowercase()}.csv"))
         val newEntries = readCsv<RegistryEntry>(latestDataDir.resolve("${registry.name.lowercase()}.csv"))
         val (fromEntries, toEntries) = if (clientbound) {
-            Pair(oldEntries, newEntries)
+            oldEntries to newEntries
         } else {
-            Pair(newEntries, oldEntries)
+            newEntries to oldEntries
         }
 
         val resultToInputs = mutableMapOf<String, MutableList<String>>()
@@ -478,6 +478,9 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
             val newEntry = toEntries.byName(fromEntry.name) ?: if (!clientbound) {
                 toEntries.first()
             } else if (fromEntry.name.startsWith("multiconnect:")) {
+                if (fromEntry.oldName != fromEntry.name) {
+                    resultToInputs.computeIfAbsent(fromEntry.name.normalizeIdentifier()) { mutableListOf() } += fromEntry.oldName.normalizeIdentifier()
+                }
                 continue
             } else {
                 throw CompileException("No value for ${fromEntry.name} in latest ${registry.name} registry")

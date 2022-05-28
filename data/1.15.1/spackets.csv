@@ -1,5 +1,5 @@
 id clazz
-0 net.earthcomputer.multiconnect.packets.SPacketEntitySpawn
+0 net.earthcomputer.multiconnect.packets.latest.SPacketEntitySpawn_Latest
 1 net.earthcomputer.multiconnect.packets.SPacketExperienceOrbSpawn
 2 net.earthcomputer.multiconnect.packets.v1_15_2.SPacketEntitySpawnGlobal_1_15_2
 3 net.earthcomputer.multiconnect.packets.latest.SPacketMobSpawn_Latest
@@ -13,7 +13,7 @@ id clazz
 11 net.earthcomputer.multiconnect.packets.SPacketBlockEvent
 12 net.earthcomputer.multiconnect.packets.SPacketBlockUpdate
 13 net.earthcomputer.multiconnect.packets.SPacketBossBar
-14 net.earthcomputer.multiconnect.packets.SPacketDifficulty
+14 net.earthcomputer.multiconnect.packets.latest.SPacketDifficulty_Latest
 15 net.earthcomputer.multiconnect.packets.v1_15_2.SPacketGameMessage_1_15_2
 16 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketChunkDeltaUpdate_1_16_1
 17 net.earthcomputer.multiconnect.packets.SPacketCommandSuggestions
@@ -24,7 +24,7 @@ id clazz
 22 net.earthcomputer.multiconnect.packets.SPacketScreenHandlerPropertyUpdate
 23 net.earthcomputer.multiconnect.packets.v1_17.SPacketScreenHandlerSlotUpdate_1_17
 24 net.earthcomputer.multiconnect.packets.SPacketCooldownUpdate
-25 net.earthcomputer.multiconnect.packets.SPacketCustomPayload
+25 net.earthcomputer.multiconnect.packets.latest.SPacketCustomPayload_Latest
 26 net.earthcomputer.multiconnect.packets.SPacketPlaySoundId
 27 net.earthcomputer.multiconnect.packets.SPacketDisconnect
 28 net.earthcomputer.multiconnect.packets.SPacketEntityStatus
@@ -46,7 +46,7 @@ id clazz
 44 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketEntity_1_16_5
 45 net.earthcomputer.multiconnect.packets.SPacketVehicleMove
 46 net.earthcomputer.multiconnect.packets.SPacketOpenWrittenBook
-47 net.earthcomputer.multiconnect.packets.SPacketOpenScreen
+47 net.earthcomputer.multiconnect.packets.latest.SPacketOpenScreen_Latest
 48 net.earthcomputer.multiconnect.packets.SPacketSignEditorOpen
 49 net.earthcomputer.multiconnect.packets.SPacketCraftFailedResponse
 50 net.earthcomputer.multiconnect.packets.SPacketPlayerAbilities
@@ -68,7 +68,7 @@ id clazz
 66 net.earthcomputer.multiconnect.packets.SPacketChunkLoadDistance
 67 net.earthcomputer.multiconnect.packets.SPacketScoreboardDisplay
 68 net.earthcomputer.multiconnect.packets.SPacketEntityTrackerUpdate
-69 net.earthcomputer.multiconnect.packets.SPacketEntityAttach
+69 net.earthcomputer.multiconnect.packets.latest.SPacketEntityAttach_Latest
 70 net.earthcomputer.multiconnect.packets.SPacketEntityVelocityUpdate
 71 net.earthcomputer.multiconnect.packets.v1_15_2.SPacketEntityEquipmentUpdate_1_15_2
 72 net.earthcomputer.multiconnect.packets.SPacketExperienceBarUpdate
@@ -90,5 +90,5 @@ id clazz
 88 net.earthcomputer.multiconnect.packets.SPacketAdvancementUpdate
 89 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketEntityAttributes_1_16_5
 90 net.earthcomputer.multiconnect.packets.v1_18.SPacketEntityStatusEffect_1_18
-91 net.earthcomputer.multiconnect.packets.SPacketSynchronizeRecipes
+91 net.earthcomputer.multiconnect.packets.latest.SPacketSynchronizeRecipes_Latest
 92 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketSynchronizeTags_1_16_5

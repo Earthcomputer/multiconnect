@@ -7,7 +7,7 @@ import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.packets.SPacketEntitySpawn;
+import net.earthcomputer.multiconnect.packets.latest.SPacketEntitySpawn_Latest;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.ArrayList;
@@ -25,12 +25,12 @@ public class SPacketEntitySpawnGlobal_1_15_2 {
     public double z;
 
     @Handler
-    public static List<SPacketEntitySpawn> toEntitySpawnPacket(
+    public static List<SPacketEntitySpawn_Latest> toEntitySpawnPacket(
             @Argument("entityTypeId") byte entityTypeId,
             @Argument("x") double x,
             @Argument("y") double y,
             @Argument("z") double z,
-            @DefaultConstruct SPacketEntitySpawn packet,
+            @DefaultConstruct SPacketEntitySpawn_Latest packet,
             @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.ENTITY_TYPE, value = "lightning_bolt")) int lightningBoltId
     ) {
         if (entityTypeId != 1) { // lightning bolt id
@@ -43,7 +43,7 @@ public class SPacketEntitySpawnGlobal_1_15_2 {
         packet.x = x;
         packet.y = y;
         packet.z = z;
-        List<SPacketEntitySpawn> packets = new ArrayList<>(1);
+        List<SPacketEntitySpawn_Latest> packets = new ArrayList<>(1);
         packets.add(packet);
         return packets;
     }
