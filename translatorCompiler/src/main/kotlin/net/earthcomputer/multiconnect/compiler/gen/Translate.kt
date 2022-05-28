@@ -235,7 +235,10 @@ internal fun ProtocolCompiler.translate(
                             McNode(LoadVariableOp(curToVarId, messageType)),
                             McNode(LoadVariableOp(nextToVarId, messageType))
                         )
-                    )
+                    ),
+                    McNode(StoreVariableStmtOp(curToVarId, messageType, false),
+                        McNode(LoadVariableOp(nextToVarId, messageType))
+                    ),
                 )
             )
         }
