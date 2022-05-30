@@ -56,7 +56,7 @@ data class ProtocolEntry(val id: Int, val datafixVersion: Int, val name: String)
 }
 
 @Serializable
-data class RegistryEntry(val id: Int, val name: String, val oldName: String = name) {
+data class RegistryEntry(val id: Int, val name: String, val oldName: String = name, val remapTo: String? = null) {
     override fun toString(): String {
         return "$name (ID $id)"
     }
@@ -129,7 +129,7 @@ data class MessageVariantInfo(
     }
 
     fun findField(name: String, includeParent: Boolean = true): McField {
-        return findFieldOrNull(name, includeParent) ?: throw NoSuchElementException()
+        return findFieldOrNull(name, includeParent) ?: throw CompileException("Could not find field \"$name\" in $className")
     }
 
     fun findFunctionOrNull(name: String): McFunction? {
@@ -137,7 +137,7 @@ data class MessageVariantInfo(
     }
 
     fun findFunction(name: String): McFunction {
-        return functions.first { it.name == name }
+        return findFunctionOrNull(name) ?: throw CompileException("Could not find multiconnect function \"$name\" in $className")
     }
 }
 

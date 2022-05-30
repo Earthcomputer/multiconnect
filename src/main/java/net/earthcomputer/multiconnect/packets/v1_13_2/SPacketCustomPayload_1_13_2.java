@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.packets.v1_13_2;
 
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Handler;
+import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
@@ -12,23 +13,37 @@ import net.earthcomputer.multiconnect.packets.SPacketCustomPayload;
 import net.earthcomputer.multiconnect.packets.SPacketOpenWrittenBook;
 import net.earthcomputer.multiconnect.packets.SPacketSetTradeOffers;
 import net.earthcomputer.multiconnect.packets.v1_14_2.SPacketSetTradeOffers_1_14_2;
+import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.util.Identifier;
 
 import java.util.List;
 
 @Polymorphic
-@MessageVariant(maxVersion = Protocols.V1_13_2)
+@MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
 public abstract class SPacketCustomPayload_1_13_2 implements SPacketCustomPayload {
+    public static final Identifier TRADER_LIST = new Identifier("trader_list");
+    public static final Identifier OPEN_BOOK = new Identifier("open_book");
+
+    @Introduce(compute = "computeChannel")
     public Identifier channel;
 
+    public static Identifier computeChannel(@Argument("channel") String channel) {
+        return switch (channel) {
+            case "MC|Brand" -> CustomPayloadS2CPacket.BRAND;
+            case "MC|TrList" -> TRADER_LIST;
+            case "MC|BOpen" -> OPEN_BOOK;
+            default -> throw new IllegalStateException("This packet should have been handled a different way");
+        };
+    }
+
     @Polymorphic(stringValue = "brand")
-    @MessageVariant(maxVersion = Protocols.V1_13_2)
+    @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
     public static class BrandPayload extends SPacketCustomPayload_1_13_2 implements Brand {
         public String brand;
     }
 
     @Polymorphic(stringValue = "trader_list")
-    @MessageVariant(maxVersion = Protocols.V1_13_2)
+    @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
     public static class TraderList extends SPacketCustomPayload_1_13_2 implements SPacketCustomPayload.TraderList {
         public int syncId;
         @Length(type = Types.UNSIGNED_BYTE)
@@ -50,7 +65,7 @@ public abstract class SPacketCustomPayload_1_13_2 implements SPacketCustomPayloa
     }
 
     @Polymorphic(stringValue = "open_book")
-    @MessageVariant(maxVersion = Protocols.V1_13_2)
+    @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
     public static class OpenBook extends SPacketCustomPayload_1_13_2 implements SPacketCustomPayload.OpenBook {
         public CommonTypes.Hand hand;
 
@@ -63,7 +78,7 @@ public abstract class SPacketCustomPayload_1_13_2 implements SPacketCustomPayloa
     }
 
     @Polymorphic(otherwise = true)
-    @MessageVariant(maxVersion = Protocols.V1_13_2)
+    @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
     public static class OtherPayload extends SPacketCustomPayload_1_13_2 implements Other {
         @Length(remainingBytes = true)
         public byte[] payload;

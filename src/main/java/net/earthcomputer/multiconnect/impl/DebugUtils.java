@@ -347,7 +347,7 @@ public class DebugUtils {
                         });
             }
             try (PrintWriter pw = new PrintWriter(new FileWriter(new File(dir, registries.name().toLowerCase(Locale.ROOT) + ".csv")))) {
-                pw.println("id name oldName");
+                pw.println("id name oldName remapTo");
                 entries.forEach(it -> {
                     if (it.getMiddle().equals(it.getRight())) {
                         pw.println(it.getLeft() + " " + it.getMiddle());

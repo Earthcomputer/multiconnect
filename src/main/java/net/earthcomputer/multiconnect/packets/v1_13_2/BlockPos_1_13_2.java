@@ -29,4 +29,10 @@ public class BlockPos_1_13_2 implements CommonTypes.BlockPos {
         int z = (int) (packedData << 38 >> 38);
         return new BlockPos(x, y, z);
     }
+
+    public static BlockPos_1_13_2 fromMinecraft(BlockPos blockPos) {
+        BlockPos_1_13_2 result = new BlockPos_1_13_2();
+        result.packedData = ((long)(blockPos.getX() & 0x3FFFFFF) << 38) | ((long)(blockPos.getY() & 0xFFF) << 26) | (long)(blockPos.getZ() & 0x3FFFFFF);
+        return result;
+    }
 }

@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 0 ambient.cave
 1 ambient.basalt_deltas.additions
 2 ambient.basalt_deltas.loop

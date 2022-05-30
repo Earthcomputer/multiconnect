@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 0 ambient.cave
 1 block.anvil.break
 2 block.anvil.destroy

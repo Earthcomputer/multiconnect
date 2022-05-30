@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 0 mined
 1 crafted
 2 used

@@ -1,9 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.MessageVariant;
+import net.earthcomputer.multiconnect.ap.Message;
 
-@MessageVariant
-public class CPacketRequestCommandCompletions {
-    public int transactionId;
-    public String text;
+@Message
+public interface CPacketRequestCommandCompletions {
 }

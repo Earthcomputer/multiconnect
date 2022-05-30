@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 0 air
 1 stone
 2 granite

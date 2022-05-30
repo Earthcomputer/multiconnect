@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 1 speed
 2 slowness
 3 haste

@@ -1,3 +1,17 @@
 {
-
+  "multiconnect:seamless_brick_slab": {},
+  "multiconnect:seamless_cobblestone_slab": {},
+  "multiconnect:seamless_petrified_oak_slab": {},
+  "multiconnect:nether_brick_slab": {},
+  "multiconnect:nodrop_skull": {
+    "facing": [
+      "down",
+      "up",
+      "north",
+      "south",
+      "west",
+      "east"
+    ]
+  },
+  "multiconnect:stone_brick_slab": {}
 }

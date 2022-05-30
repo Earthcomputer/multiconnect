@@ -1,10 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.MessageVariant;
-import net.minecraft.util.Identifier;
+import net.earthcomputer.multiconnect.ap.Message;
 
-@MessageVariant
-public class SPacketCraftFailedResponse {
-    public byte syncId;
-    public Identifier recipe;
+@Message
+public interface SPacketCraftFailedResponse {
 }

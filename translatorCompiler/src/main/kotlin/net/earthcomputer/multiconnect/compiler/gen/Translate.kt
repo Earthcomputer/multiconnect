@@ -767,7 +767,7 @@ private fun ProtocolCompiler.translateInner(
             val childVariantOf = childVariant.variantOf
                 ?: throw CompileException("Polymorphic subclass \"${childVariant.className}\" of multi-variant message \"${toVariant.className}\" is not itself multi-variant")
             val fromChildVariant = (getClassInfo(childVariantOf) as MessageInfo).getVariant(fromVersion)
-                ?: throw CompileException("Polymorphic subclass \"${childVariant.className}\" of multi-variant message \"${toVariant.className}\" does not have a variant for protocol $fromVersion")
+                ?: return@generatePolymorphicInstantiationGraph McNode(StmtListOp)
             val fromChildVariantType = fromChildVariant.toMcType()
             val castedFromChildVarId = VariableId.create()
             val childNodes = mutableListOf<McNode>()

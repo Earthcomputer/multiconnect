@@ -2,12 +2,14 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.earthcomputer.multiconnect.impl.DebugUtils;
 import net.earthcomputer.multiconnect.protocols.generic.IParticleManager;
 import net.earthcomputer.multiconnect.protocols.generic.MyParticleType;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.CrackParticleAccessor;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.SuspendParticleAccessor;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.particle.*;
 import net.minecraft.client.render.*;
 import net.minecraft.client.world.ClientWorld;
@@ -18,6 +20,7 @@ import net.minecraft.particle.ParticleType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.registry.Registry;
 
 public class Particles_1_12_2 {
 
@@ -27,11 +30,22 @@ public class Particles_1_12_2 {
     public static final ParticleType<BlockStateParticleEffect> BLOCK_DUST = new MyBlockStateParticleType(false);
     public static final DefaultParticleType TAKE = new MyParticleType(false);
 
-    public static void registerParticleFactories(IParticleManager particleManager) {
-        particleManager.multiconnect_registerSpriteAwareFactory(DEPTH_SUSPEND, DepthSuspendFactory::new);
-        particleManager.multiconnect_registerFactory(FOOTSTEP, new FootprintParticle.Factory());
-        particleManager.multiconnect_registerFactory(SNOW_SHOVEL, new SnowShovelFactory());
-        particleManager.multiconnect_registerFactory(BLOCK_DUST, new OldBlockDustParticle.Factory());
+    public static void register() {
+        Registry.register(Registry.PARTICLE_TYPE, "multiconnect:depth_suspend", DEPTH_SUSPEND);
+        Registry.register(Registry.PARTICLE_TYPE, "multiconnect:footstep", FOOTSTEP);
+        Registry.register(Registry.PARTICLE_TYPE, "multiconnect:snow_shovel", SNOW_SHOVEL);
+        Registry.register(Registry.PARTICLE_TYPE, "multiconnect:block_dust", BLOCK_DUST);
+        Registry.register(Registry.PARTICLE_TYPE, "multiconnect:take", TAKE);
+    }
+
+    public static void registerFactories() {
+        if (!DebugUtils.UNIT_TEST_MODE) {
+            IParticleManager particleManager = (IParticleManager) MinecraftClient.getInstance().particleManager;
+            particleManager.multiconnect_registerSpriteAwareFactory(DEPTH_SUSPEND, DepthSuspendFactory::new);
+            particleManager.multiconnect_registerFactory(FOOTSTEP, new FootprintParticle.Factory());
+            particleManager.multiconnect_registerFactory(SNOW_SHOVEL, new SnowShovelFactory());
+            particleManager.multiconnect_registerFactory(BLOCK_DUST, new OldBlockDustParticle.Factory());
+        }
     }
 
     private static class DepthSuspendFactory implements ParticleFactory<DefaultParticleType> {

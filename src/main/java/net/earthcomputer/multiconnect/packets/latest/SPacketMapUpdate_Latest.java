@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets.latest;
 
 import net.earthcomputer.multiconnect.ap.Argument;
+import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
@@ -18,7 +19,7 @@ public class SPacketMapUpdate_Latest implements SPacketMapUpdate {
     public int mapId;
     public byte scale;
     public boolean locked;
-    public Optional<List<Icon>> icons;
+    public Optional<List<SPacketMapUpdate.Icon>> icons;
     @Type(Types.UNSIGNED_BYTE)
     public int columns;
     @OnlyIf("hasColumns")
@@ -34,13 +35,24 @@ public class SPacketMapUpdate_Latest implements SPacketMapUpdate {
         return columns > 0;
     }
 
-    @MessageVariant
-    public static class Icon {
+    @MessageVariant(minVersion = Protocols.V1_13)
+    public static class Icon implements SPacketMapUpdate.Icon {
+        @Introduce(compute = "computeType")
         public Type type;
         public byte x;
         public byte z;
+        @Introduce(compute = "computeDirection")
         public byte direction;
+        @Introduce(defaultConstruct = true)
         public Optional<CommonTypes.Text> displayName;
+
+        public static Type computeType(@Argument("metadata") byte metadata) {
+            return Type.VALUES[(metadata >> 4) & 15];
+        }
+
+        public static byte computeDirection(@Argument("metadata") byte metadata) {
+            return (byte) (metadata & 15);
+        }
 
         @NetworkEnum
         public enum Type {
@@ -71,6 +83,9 @@ public class SPacketMapUpdate_Latest implements SPacketMapUpdate {
             BANNER_RED,
             BANNER_BLACK,
             RED_X,
+            ;
+
+            public static final Type[] VALUES = values();
         }
     }
 }

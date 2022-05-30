@@ -9,7 +9,10 @@ public final class Util {
     private Util() {}
 
     @Nullable
-    public static Integer tryParse(String s) {
+    public static Integer tryParse(@Nullable String s) {
+        if (s == null) {
+            return null;
+        }
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {

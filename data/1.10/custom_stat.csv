@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 0 leave_game
 1 play_time play_one_minute
 2 time_since_death

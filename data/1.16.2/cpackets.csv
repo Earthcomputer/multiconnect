@@ -5,12 +5,12 @@ id clazz
 3 net.earthcomputer.multiconnect.packets.CPacketChatMessage
 4 net.earthcomputer.multiconnect.packets.CPacketClientStatus
 5 net.earthcomputer.multiconnect.packets.v1_16_5.CPacketClientSettings_1_16_5
-6 net.earthcomputer.multiconnect.packets.CPacketRequestCommandCompletions
+6 net.earthcomputer.multiconnect.packets.latest.CPacketRequestCommandCompletions_Latest
 7 net.earthcomputer.multiconnect.packets.v1_16_5.CPacketAckScreenAction_1_16_5
 8 net.earthcomputer.multiconnect.packets.CPacketButtonClick
 9 net.earthcomputer.multiconnect.packets.v1_16_5.CPacketClickSlot_1_16_5
 10 net.earthcomputer.multiconnect.packets.CPacketCloseHandledScreen
-11 net.earthcomputer.multiconnect.packets.CPacketCustomPayload
+11 net.earthcomputer.multiconnect.packets.latest.CPacketCustomPayload_Latest
 12 net.earthcomputer.multiconnect.packets.v1_16_3.CPacketBookUpdate_1_16_3
 13 net.earthcomputer.multiconnect.packets.CPacketQueryEntityNbt
 14 net.earthcomputer.multiconnect.packets.latest.CPacketPlayerInteractEntity_Latest
@@ -24,7 +24,7 @@ id clazz
 22 net.earthcomputer.multiconnect.packets.CPacketVehicleMove
 23 net.earthcomputer.multiconnect.packets.CPacketBoatPaddleState
 24 net.earthcomputer.multiconnect.packets.CPacketPickFromInventory
-25 net.earthcomputer.multiconnect.packets.CPacketCraftRequest
+25 net.earthcomputer.multiconnect.packets.latest.CPacketCraftRequest_Latest
 26 net.earthcomputer.multiconnect.packets.latest.CPacketUpdatePlayerAbilities_Latest
 27 net.earthcomputer.multiconnect.packets.CPacketPlayerAction
 28 net.earthcomputer.multiconnect.packets.CPacketClientCommand

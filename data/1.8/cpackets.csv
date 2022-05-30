@@ -19,9 +19,9 @@ id clazz
 17 net.earthcomputer.multiconnect.packets.CPacketButtonClick
 18 net.earthcomputer.multiconnect.packets.CPacketUpdateSign
 19 net.earthcomputer.multiconnect.packets.v1_15_2.CPacketUpdatePlayerAbilities_1_15_2
-20 net.earthcomputer.multiconnect.packets.CPacketRequestCommandCompletions
+20 net.earthcomputer.multiconnect.packets.v1_12_2.CPacketRequestCommandCompletions_1_12_2
 21 net.earthcomputer.multiconnect.packets.v1_16_5.CPacketClientSettings_1_16_5
 22 net.earthcomputer.multiconnect.packets.CPacketClientStatus
-23 net.earthcomputer.multiconnect.packets.CPacketCustomPayload
+23 net.earthcomputer.multiconnect.packets.v1_12_2.CPacketCustomPayload_1_12_2
 24 net.earthcomputer.multiconnect.packets.CPacketSpectatorTeleport
 25 net.earthcomputer.multiconnect.packets.CPacketResourcePackStatus

@@ -251,7 +251,7 @@ object MessageVariantProcessor {
 
             if (multiconnectType.polymorphicBy != null) {
                 val polymorphicType = deepComponentType.asTypeElement()
-                if (polymorphicType?.isPolymorphicRoot != true) {
+                if (polymorphicType?.isPolymorphicRoot != true && polymorphicType?.isMessage != true) {
                     errorConsumer.report("@PolymorphicBy can only be used on fields of a polymorphic root type", field)
                     continue
                 }
@@ -264,10 +264,12 @@ object MessageVariantProcessor {
                     errorConsumer.report("@PolymorphicBy field must be before the target field", field)
                     continue
                 }
-                val typeField = polymorphicType.recordFields.firstOrNull() ?: continue
-                if (!processingEnv.typeUtils.isAssignable(polymorphicByField.asType(), typeField.asType())) {
-                    errorConsumer.report("@PolymorphicBy field must be assignable to the type field", field)
-                    continue
+                if (!polymorphicType.isMessage) {
+                    val typeField = polymorphicType.recordFields.firstOrNull() ?: continue
+                    if (!processingEnv.typeUtils.isAssignable(polymorphicByField.asType(), typeField.asType())) {
+                        errorConsumer.report("@PolymorphicBy field must be assignable to the type field", field)
+                        continue
+                    }
                 }
             }
 

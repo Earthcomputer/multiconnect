@@ -8,6 +8,8 @@ import net.minecraft.client.particle.SpriteProvider;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleType;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,7 +25,7 @@ import java.util.function.Function;
 @Mixin(ParticleManager.class)
 public class MixinParticleManager implements IParticleManager {
 
-    @Shadow @Final private Map<ParticleType<?>, Object> spriteAwareFactories;
+    @Shadow @Final private Map<Identifier, Object> spriteAwareFactories;
     @Shadow protected ClientWorld world;
 
     @Unique private final Map<ParticleType<?>, ParticleFactory<?>> customFactories = new HashMap<>();
@@ -46,7 +48,7 @@ public class MixinParticleManager implements IParticleManager {
                                                                                    Function<SpriteProvider, ParticleFactory<T>> spriteAwareFactory) {
         SpriteProvider spriteProvider = new ParticleManager.SimpleSpriteProvider();
 
-        spriteAwareFactories.put(type, spriteProvider);
+        spriteAwareFactories.put(Registry.PARTICLE_TYPE.getId(type), spriteProvider);
         customFactories.put(type, spriteAwareFactory.apply(spriteProvider));
     }
 }

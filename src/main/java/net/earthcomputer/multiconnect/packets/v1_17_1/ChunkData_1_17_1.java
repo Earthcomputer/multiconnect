@@ -11,7 +11,6 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.ChunkData;
-import net.earthcomputer.multiconnect.packets.v1_15_2.ChunkSection_1_15_2;
 import net.minecraft.datafixer.fix.BitStorageAlignFix;
 import net.minecraft.util.math.MathHelper;
 
@@ -36,39 +35,28 @@ public class ChunkData_1_17_1 implements ChunkData {
         public ChunkData.BlockStatePalettedContainer blockStates;
 
         public static ChunkData.BlockStatePalettedContainer translateBlockStates(
-                @Argument("blockStates") ChunkData.BlockStatePalettedContainer blockStates
+                @Argument("blockStates") ChunkData.BlockStatePalettedContainer blockStates_
         ) {
-            var blockStates15 = (ChunkSection_1_15_2.BlockStatePalettedContainer) blockStates;
-            if (blockStates15.paletteSize >= 1 && blockStates15.paletteSize <= 8) {
-                var ret = new BlockStatePalettedContainer.Multiple();
-                ret.paletteSize = blockStates15.paletteSize;
-                ret.palette = blockStates15.palette;
-                if (MathHelper.isPowerOfTwo(blockStates15.paletteSize)) {
-                    ret.data = blockStates15.data;
+            var blockStates = (BlockStatePalettedContainer) blockStates_;
+            if (blockStates.paletteSize != 0 && !MathHelper.isPowerOfTwo(blockStates.paletteSize)) {
+                if (blockStates instanceof BlockStatePalettedContainer.Multiple multiple) {
+                    multiple.data = BitStorageAlignFix.resizePackedIntArray(4096, blockStates.paletteSize, multiple.data);
                 } else {
-                    ret.data = BitStorageAlignFix.resizePackedIntArray(4096, blockStates15.paletteSize, blockStates15.data);
+                    var registryContainer = (BlockStatePalettedContainer.RegistryContainer) blockStates;
+                    registryContainer.data = BitStorageAlignFix.resizePackedIntArray(4096, blockStates.paletteSize, registryContainer.data);
                 }
-                return ret;
-            } else {
-                var ret = new BlockStatePalettedContainer.RegistryContainer();
-                ret.paletteSize = blockStates15.paletteSize;
-                if (ret.paletteSize == 0 || MathHelper.isPowerOfTwo(ret.paletteSize)) {
-                    ret.data = blockStates15.data;
-                } else {
-                    ret.data = BitStorageAlignFix.resizePackedIntArray(4096, blockStates15.paletteSize, blockStates15.data);
-                }
-                return ret;
             }
+            return blockStates;
         }
     }
 
     @Polymorphic
-    @MessageVariant(minVersion = Protocols.V1_16, maxVersion = Protocols.V1_17_1)
+    @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_17_1)
     public abstract static class BlockStatePalettedContainer implements ChunkData.BlockStatePalettedContainer {
         public byte paletteSize;
 
         @Polymorphic(intValue = {1, 2, 3, 4, 5, 6, 7, 8})
-        @MessageVariant(minVersion = Protocols.V1_16, maxVersion = Protocols.V1_17_1)
+        @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_17_1)
         public static class Multiple extends BlockStatePalettedContainer {
             @Registry(Registries.BLOCK_STATE)
             public int[] palette;
@@ -77,7 +65,7 @@ public class ChunkData_1_17_1 implements ChunkData {
         }
 
         @Polymorphic(otherwise = true)
-        @MessageVariant(minVersion = Protocols.V1_16, maxVersion = Protocols.V1_17_1)
+        @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_17_1)
         public static class RegistryContainer extends BlockStatePalettedContainer {
             @Type(Types.LONG)
             public long[] data;

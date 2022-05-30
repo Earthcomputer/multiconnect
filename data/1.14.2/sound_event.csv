@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 0 ambient.cave
 1 ambient.underwater.enter
 2 ambient.underwater.exit

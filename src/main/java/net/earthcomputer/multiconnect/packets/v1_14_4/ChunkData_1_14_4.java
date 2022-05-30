@@ -11,7 +11,7 @@ import net.earthcomputer.multiconnect.packets.ChunkData;
 
 import java.util.List;
 
-@MessageVariant(maxVersion = Protocols.V1_14_4)
+@MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_14_4)
 public class ChunkData_1_14_4 implements ChunkData {
     @Length(compute = "computeSectionsLength")
     public List<Section> sections;

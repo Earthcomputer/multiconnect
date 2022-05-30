@@ -16,7 +16,7 @@ import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.packets.SPacketChunkData;
 import net.earthcomputer.multiconnect.packets.v1_13_2.ChunkSection_1_13_2;
-import net.earthcomputer.multiconnect.packets.v1_15_2.ChunkSection_1_15_2;
+import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.NbtCompound;
@@ -72,8 +72,7 @@ public class SPacketChunkData_1_14_4 implements SPacketChunkData {
                 for (; y >= 0; y--) {
                     // get the chunk section
                     ChunkSection_1_13_2 section = sections[y >> 4];
-                    var blockStates = section == null ? null : (ChunkSection_1_15_2.BlockStatePalettedContainer) section.blockStates;
-                    boolean isRegistryPalette = blockStates != null && blockStates.paletteSize > 8;
+                    var blockStates = section == null ? null : (ChunkData_1_17_1.BlockStatePalettedContainer) section.blockStates;
 
                     // get the state at this position
                     int index = ((y & 15) << 8) | (z << 4) | x;
@@ -81,9 +80,12 @@ public class SPacketChunkData_1_14_4 implements SPacketChunkData {
                     if (blockStates == null) {
                         stateId = airId;
                     } else {
-                        stateId = Utils.getOldPackedBitArrayElement(blockStates.data, index, blockStates.paletteSize);
-                        if (!isRegistryPalette) {
-                            stateId = blockStates.palette[stateId];
+                        if (blockStates instanceof ChunkData_1_17_1.BlockStatePalettedContainer.Multiple multiple) {
+                            stateId = Utils.getOldPackedBitArrayElement(multiple.data, index, blockStates.paletteSize);
+                            stateId = multiple.palette[stateId];
+                        } else {
+                            var registryPalette = (ChunkData_1_17_1.BlockStatePalettedContainer.RegistryContainer) blockStates;
+                            stateId = Utils.getOldPackedBitArrayElement(registryPalette.data, index, blockStates.paletteSize);
                         }
                     }
                     stateId = PacketSystem.serverBlockStateIdToClient(stateId);

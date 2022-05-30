@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 0 furnace Furnace
 1 chest Chest
 2 ender_chest EnderChest

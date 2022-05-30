@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 0 crafting_shaped
 1 crafting_shapeless
 2 crafting_special_armordye

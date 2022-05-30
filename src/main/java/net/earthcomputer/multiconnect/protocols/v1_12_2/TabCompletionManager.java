@@ -1,12 +1,10 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.suggestion.Suggestion;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.CommandSource;
 import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket;
-import net.minecraft.network.packet.s2c.play.CommandSuggestionsS2CPacket;
 import net.minecraft.network.packet.s2c.play.CommandTreeS2CPacket;
 
 import java.util.ArrayDeque;
@@ -51,43 +49,27 @@ public class TabCompletionManager {
         return future;
     }
 
-    public static boolean handleCustomCompletions(CommandSuggestionsS2CPacket packet) {
-        if (packet.getCompletionId() == -1) {
+    public static boolean handleCustomCompletions(Entry entry, List<String> suggestions) {
+        if (entry.id() == -1) {
             var dispatcher = new CommandDispatcher<CommandSource>();
-            Commands_1_12_2.registerAll(dispatcher, packet.getSuggestions().getList().stream()
-                    .map(Suggestion::getText)
+            Commands_1_12_2.registerAll(dispatcher, suggestions.stream()
                     .filter(str -> !str.isEmpty())
                     .map(str -> str.substring(1))
                     .collect(Collectors.toSet()));
             assert MinecraftClient.getInstance().getNetworkHandler() != null;
             MinecraftClient.getInstance().getNetworkHandler().onCommandTree(new CommandTreeS2CPacket(dispatcher.getRoot()));
             return true;
-        } else if (packet.getCompletionId() == -2) {
+        } else if (entry.id() == -2) {
             if (customCompletions.isEmpty())
                 return false;
-            customCompletions.remove().complete(packet.getSuggestions().getList().stream().map(Suggestion::getText).collect(Collectors.toList()));
+            customCompletions.remove().complete(suggestions);
             return true;
         } else {
             return false;
         }
     }
 
-    public static final class Entry {
-        private final int id;
-        private final String message;
-
-        public Entry(int id, String message) {
-            this.id = id;
-            this.message = message;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public String getMessage() {
-            return message;
-        }
+    public record Entry(int id, String message) {
     }
 
 }

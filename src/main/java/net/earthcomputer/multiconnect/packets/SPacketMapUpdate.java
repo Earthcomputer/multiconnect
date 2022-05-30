@@ -4,4 +4,7 @@ import net.earthcomputer.multiconnect.ap.Message;
 
 @Message
 public interface SPacketMapUpdate {
+    @Message
+    interface Icon {
+    }
 }

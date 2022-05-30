@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 0 empty
 1 flowing_water
 2 water

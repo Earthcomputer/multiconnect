@@ -7,7 +7,6 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketMapUpdate;
-import net.earthcomputer.multiconnect.packets.latest.SPacketMapUpdate_Latest;
 
 import java.util.List;
 
@@ -16,7 +15,7 @@ public class SPacketMapUpdate_1_13_2 implements SPacketMapUpdate {
     public int mapId;
     public byte scale;
     public boolean showIcons;
-    public List<SPacketMapUpdate_Latest.Icon> icons;
+    public List<SPacketMapUpdate.Icon> icons;
     @Type(Types.UNSIGNED_BYTE)
     public int columns;
     @OnlyIf("hasColumns")

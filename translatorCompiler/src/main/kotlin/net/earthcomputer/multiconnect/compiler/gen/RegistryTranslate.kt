@@ -382,12 +382,12 @@ internal fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbou
             }
             is IntRemapValue.FromStateId -> {
                 val registryKeyType = McType.DeclaredType(CommonClassNames.REGISTRY_KEY)
-                McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT)),
+                McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT),
                     McNode(FunctionCallOp(PACKET_INTRINSICS, "getStateId", listOf(registryKeyType, McType.INT), McType.INT, false),
                         McNode(LoadFieldOp(McType.DeclaredType(className), createRegistryKeyField(Registries.BLOCK, middleValue.blockName), registryKeyType, isStatic = true)),
                         McNode(CstIntOp(middleValue.offset))
                     )
-                )
+                ))
             }
         }
     }
@@ -404,7 +404,7 @@ internal fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbou
         val shifts = mutableListOf<Pair<Int, IntRemapValue>>()
 
         for (fromEntry in fromEntries) {
-            val newId = toEntries.byName(fromEntry.name)?.id
+            val newId = toEntries.byName(fromEntry.remapTo ?: fromEntry.name)?.id
             val value = when {
                 newId != null -> IntRemapValue.Relative(newId - fromEntry.id)
                 clientbound -> {
@@ -420,9 +420,11 @@ internal fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbou
                             } else {
                                 fromEntry.name to mapOf()
                             }
+                            val multiconnectBlockState = getMulticonnectBlockStates().states.firstOrNull { it.name == blockName }
+                                ?: throw CompileException("No multiconnect block state found for $blockName")
                             IntRemapValue.FromStateId(
                                 blockName,
-                                getMulticonnectBlockStates().states.first { it.name == blockName }.validStates.indexOf(properties)
+                                multiconnectBlockState.validStates.indexOf(properties)
                             )
                         } else {
                             IntRemapValue.FromName(fromEntry.name)
@@ -475,7 +477,7 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
         val resultToInputs = mutableMapOf<String, MutableList<String>>()
 
         for (fromEntry in fromEntries) {
-            val newEntry = toEntries.byName(fromEntry.name) ?: if (!clientbound) {
+            val newEntry = toEntries.byName(fromEntry.remapTo ?: fromEntry.name) ?: if (!clientbound) {
                 toEntries.first()
             } else if (fromEntry.name.startsWith("multiconnect:")) {
                 if (fromEntry.oldName != fromEntry.name) {

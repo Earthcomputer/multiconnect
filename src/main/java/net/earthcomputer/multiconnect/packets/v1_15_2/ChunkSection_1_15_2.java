@@ -5,12 +5,10 @@ import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Registries;
-import net.earthcomputer.multiconnect.ap.Registry;
-import net.earthcomputer.multiconnect.ap.Type;
-import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.packets.ChunkData;
+import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1;
 
 @MessageVariant(minVersion = Protocols.V1_14, maxVersion = Protocols.V1_15_2)
 public class ChunkSection_1_15_2 implements ChunkData.Section {
@@ -24,27 +22,19 @@ public class ChunkSection_1_15_2 implements ChunkData.Section {
             @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.BLOCK_STATE, value = "void_air")) int voidAirId,
             @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.BLOCK_STATE, value = "cave_air")) int caveAirId
     ) {
-        var blockStates = (BlockStatePalettedContainer) blockStates_;
-        boolean isRegistryPalette = blockStates.paletteSize > 8;
+        var blockStates = (ChunkData_1_17_1.BlockStatePalettedContainer) blockStates_;
+        var palettedStates = blockStates instanceof ChunkData_1_17_1.BlockStatePalettedContainer.Multiple ? (ChunkData_1_17_1.BlockStatePalettedContainer.Multiple) blockStates : null;
+        var nonPalettedStates = palettedStates == null ? (ChunkData_1_17_1.BlockStatePalettedContainer.RegistryContainer) blockStates : null;
         int count = 0;
         for (int i = 0; i < 4096; i++) {
-            int stateId = Utils.getOldPackedBitArrayElement(blockStates.data, i, blockStates.paletteSize);
-            if (!isRegistryPalette) {
-                stateId = blockStates.palette[stateId];
+            int stateId = Utils.getOldPackedBitArrayElement(palettedStates == null ? nonPalettedStates.data : palettedStates.data, i, blockStates.paletteSize);
+            if (palettedStates != null) {
+                stateId = palettedStates.palette[stateId];
             }
             if (stateId != airId && stateId != voidAirId && stateId != caveAirId) {
                 count++;
             }
         }
         return (short) count;
-    }
-
-    @MessageVariant(maxVersion = Protocols.V1_15_2)
-    public static class BlockStatePalettedContainer implements ChunkData.BlockStatePalettedContainer {
-        public byte paletteSize;
-        @Registry(Registries.BLOCK_STATE)
-        public int[] palette;
-        @Type(Types.LONG)
-        public long[] data;
     }
 }

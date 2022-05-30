@@ -30,7 +30,7 @@ public class SPacketMapUpdate_1_16_5 implements SPacketMapUpdate {
     public boolean showIcons;
     @Introduce(booleanValue = false)
     public boolean locked;
-    public List<SPacketMapUpdate_Latest.Icon> icons;
+    public List<SPacketMapUpdate.Icon> icons;
     @Type(Types.UNSIGNED_BYTE)
     public int columns;
     @OnlyIf("hasColumns")
@@ -54,7 +54,7 @@ public class SPacketMapUpdate_1_16_5 implements SPacketMapUpdate {
             @Argument("scale") byte scale,
             @Argument("showIcons") boolean showIcons,
             @Argument("locked") boolean locked,
-            @Argument("icons") List<SPacketMapUpdate_Latest.Icon> icons,
+            @Argument("icons") List<SPacketMapUpdate.Icon> icons,
             @Argument("columns") int columns,
             @Argument("rows") byte rows,
             @Argument("x") byte x,

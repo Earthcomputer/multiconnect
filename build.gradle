@@ -144,6 +144,12 @@ task remapSlimJar(type: RemapJarTask, dependsOn: jar) {
 remapJar.dependsOn remapApiJar
 remapApiJar.dependsOn remapGeneratedJar
 
+idea {
+	module {
+		excludeDirs << file('src/generated/java')
+	}
+}
+
 jar {
 	from "LICENSE"
 }

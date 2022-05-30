@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 0 area_effect_cloud
 1 armor_stand
 2 arrow

@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 0 poof
 1 explosion
 2 explosion_emitter
@@ -7,7 +7,7 @@ id name oldName
 5 splash
 6 fishing
 7 underwater
-8 null depth_suspend
+8 multiconnect:depth_suspend depth_suspend
 9 crit
 10 enchanted_hit
 11 smoke
@@ -27,11 +27,11 @@ id name oldName
 25 enchant
 26 flame
 27 lava
-28 null footstep
+28 multiconnect:footstep footstep
 29 cloud
 30 dust
 31 item_snowball
-32 null snow_shovel
+32 multiconnect:snow_shovel snow_shovel
 33 item_slime
 34 heart
 35 multiconnect:barrier barrier
@@ -39,6 +39,6 @@ id name oldName
 37 block blockcrack_
 38 null blockdust_
 39 rain
-40 null take
+40 multiconnect:take take
 41 elder_guardian
 46 falling_dust

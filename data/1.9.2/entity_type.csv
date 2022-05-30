@@ -1,4 +1,4 @@
-id name oldName
+id name oldName remapTo
 1 item
 2 experience_orb xp_orb
 3 area_effect_cloud

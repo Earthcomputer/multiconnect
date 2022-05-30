@@ -78,14 +78,6 @@ public abstract class MixinClientPlayNetworkHandler {
         }
     }
 
-    @Inject(method = "onCommandSuggestions", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER), cancellable = true)
-    private void onOnCommandSuggestions(CommandSuggestionsS2CPacket packet, CallbackInfo ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            if (TabCompletionManager.handleCustomCompletions(packet))
-                ci.cancel();
-        }
-    }
-
     @Inject(method = "onEntityStatus", at = @At("RETURN"))
     private void onOnEntityStatus(EntityStatusS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {

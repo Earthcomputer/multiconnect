@@ -12,7 +12,7 @@ import net.minecraft.util.Identifier;
 
 import java.util.List;
 
-@MessageVariant(maxVersion = Protocols.V1_13_2)
+@MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
 public class SPacketSynchronizeRecipes_1_13_2 implements SPacketSynchronizeRecipes {
     public List<RecipeWithId> recipes;
 
