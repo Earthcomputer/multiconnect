@@ -16,7 +16,7 @@ public abstract class Particle_1_12_2 implements CommonTypes.Particle {
     @Type(Types.INT)
     public int particleId;
 
-    @Polymorphic(stringValue = {"block", "falling_dust"})
+    @Polymorphic(stringValue = {"block", "falling_dust", "multiconnect:block_dust"})
     @MessageVariant(maxVersion = Protocols.V1_12_2)
     public static class BlockState extends Particle_1_12_2 implements CommonTypes.Particle.BlockState {
         public int blockStateId;

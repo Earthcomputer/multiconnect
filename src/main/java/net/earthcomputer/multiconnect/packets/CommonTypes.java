@@ -322,7 +322,7 @@ public class CommonTypes {
         @Type(Types.INT)
         public int particleId;
 
-        @Polymorphic(stringValue = {"block", "falling_dust"})
+        @Polymorphic(stringValue = {"block", "falling_dust", "multiconnect:block_dust"})
         @MessageVariant(minVersion = Protocols.V1_13)
         public static class BlockState extends Particle_Latest implements Particle.BlockState {
             @Registry(Registries.BLOCK_STATE)

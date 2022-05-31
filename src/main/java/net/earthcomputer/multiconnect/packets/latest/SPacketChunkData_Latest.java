@@ -212,11 +212,12 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
             }
 
             byte[][] skyLight = userData.get(Protocol_1_13_2.SKY_LIGHT_KEY);
-            if (skyLight != null) {
-                lightData.skyLightMask = blockLightMask;
-                for (byte[] section : skyLight) {
-                    if (section != null) {
-                        lightData.skyLightData.add(section);
+            for (int i = 0; i < blockLight.length; i++) {
+                if (blockLightMask.get(i)) {
+                    if (skyLight != null && i < skyLight.length && skyLight[i] != null) {
+                        lightData.skyLightData.add(skyLight[i]);
+                    } else {
+                        lightData.skyLightData.add(new byte[2048]);
                     }
                 }
             }
