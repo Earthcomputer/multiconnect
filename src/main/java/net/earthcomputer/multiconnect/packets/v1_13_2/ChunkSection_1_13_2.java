@@ -26,7 +26,7 @@ public class ChunkSection_1_13_2 implements ChunkData.Section {
             @Argument("blockStates") ChunkData.BlockStatePalettedContainer blockStates_
     ) {
         var blockStates = (ChunkData_1_12_2.BlockStatePalettedContainer) blockStates_;
-        if (blockStates.paletteSize > 8) {
+        if (blockStates.paletteSize == 0 || blockStates.paletteSize > 8) {
             var newBlockStates = new ChunkData_1_17_1.BlockStatePalettedContainer.RegistryContainer();
             newBlockStates.paletteSize = blockStates.paletteSize;
             newBlockStates.data = blockStates.data;

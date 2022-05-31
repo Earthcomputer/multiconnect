@@ -18,7 +18,6 @@ import net.earthcomputer.multiconnect.packets.v1_13_1.ItemStack_1_13_1;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Blocks_1_12_2;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -114,57 +113,58 @@ public class CommonTypes {
         @Polymorphic
         @MessageVariant
         public static abstract class TrackedData {
-            public Handler handler;
+            @Registry(Registries.TRACKED_DATA_HANDLER)
+            public int handler;
 
-            @Polymorphic(stringValue = "BYTE")
+            @Polymorphic(stringValue = "byte")
             @MessageVariant
             public static class Byte extends TrackedData {
                 public byte value;
             }
 
-            @Polymorphic(stringValue = "VAR_INT")
+            @Polymorphic(stringValue = "integer")
             @MessageVariant
             public static class VarInt extends TrackedData {
                 public int value;
             }
 
-            @Polymorphic(stringValue = "FLOAT")
+            @Polymorphic(stringValue = "float")
             @MessageVariant
             public static class Float extends TrackedData {
                 public float value;
             }
 
-            @Polymorphic(stringValue = "STRING")
+            @Polymorphic(stringValue = "string")
             @MessageVariant
             public static class String extends TrackedData {
                 public java.lang.String value;
             }
 
-            @Polymorphic(stringValue = "TEXT")
+            @Polymorphic(stringValue = "text_component")
             @MessageVariant
             public static class Text extends TrackedData {
                 public CommonTypes.Text value;
             }
 
-            @Polymorphic(stringValue = "OPTIONAL_TEXT")
+            @Polymorphic(stringValue = "optional_text_component")
             @MessageVariant
             public static class OptionalText extends TrackedData {
                 public Optional<CommonTypes.Text> value;
             }
 
-            @Polymorphic(stringValue = "ITEM_STACK")
+            @Polymorphic(stringValue = "item_stack")
             @MessageVariant
             public static class ItemStack extends TrackedData {
                 public CommonTypes.ItemStack value;
             }
 
-            @Polymorphic(stringValue = "BOOLEAN")
+            @Polymorphic(stringValue = "boolean")
             @MessageVariant
             public static class Boolean extends TrackedData {
                 public boolean value;
             }
 
-            @Polymorphic(stringValue = "ROTATION")
+            @Polymorphic(stringValue = "rotation")
             @MessageVariant
             public static class Rotation extends TrackedData {
                 public float x;
@@ -172,50 +172,50 @@ public class CommonTypes {
                 public float z;
             }
 
-            @Polymorphic(stringValue = "BLOCK_POS")
+            @Polymorphic(stringValue = "block_pos")
             @MessageVariant
             public static class BlockPos extends TrackedData {
                 public CommonTypes.BlockPos value;
             }
 
-            @Polymorphic(stringValue = "OPTIONAL_BLOCK_POS")
+            @Polymorphic(stringValue = "optional_block_pos")
             @MessageVariant
             public static class OptionalBlockPos extends TrackedData {
                 public Optional<CommonTypes.BlockPos> value;
             }
 
-            @Polymorphic(stringValue = "DIRECTION")
+            @Polymorphic(stringValue = "facing")
             @MessageVariant
             public static class Direction extends TrackedData {
                 public CommonTypes.Direction value;
             }
 
-            @Polymorphic(stringValue = "OPTIONAL_UUID")
+            @Polymorphic(stringValue = "optional_uuid")
             @MessageVariant
             public static class OptionalUuid extends TrackedData {
                 public Optional<UUID> value;
             }
 
-            @Polymorphic(stringValue = "OPTIONAL_BLOCK_STATE")
+            @Polymorphic(stringValue = "optional_block_state")
             @MessageVariant
             public static class OptionalBlockState extends TrackedData {
                 @Registry(Registries.BLOCK_STATE)
                 public int value;
             }
 
-            @Polymorphic(stringValue = "NBT")
+            @Polymorphic(stringValue = "nbt_compound")
             @MessageVariant
             public static class Nbt extends TrackedData {
                 public NbtCompound value;
             }
 
-            @Polymorphic(stringValue = "PARTICLE")
+            @Polymorphic(stringValue = "particle")
             @MessageVariant
             public static class Particle extends TrackedData {
                 public CommonTypes.Particle value;
             }
 
-            @Polymorphic(stringValue = "VILLAGER_DATA")
+            @Polymorphic(stringValue = "villager_data")
             @MessageVariant
             public static class VillagerData extends TrackedData {
                 @Registry(Registries.VILLAGER_TYPE)
@@ -225,39 +225,16 @@ public class CommonTypes {
                 public int level;
             }
 
-            @Polymorphic(stringValue = "FIREWORK_DATA")
+            @Polymorphic(stringValue = "firework_data")
             @MessageVariant
             public static class FireworkData extends TrackedData {
                 public int value;
             }
 
-            @Polymorphic(stringValue = "POSE")
+            @Polymorphic(stringValue = "entity_pose")
             @MessageVariant
             public static class Pose extends TrackedData {
                 public CommonTypes.Pose value;
-            }
-
-            @NetworkEnum
-            public enum Handler {
-                BYTE,
-                VAR_INT,
-                FLOAT,
-                STRING,
-                TEXT,
-                OPTIONAL_TEXT,
-                ITEM_STACK,
-                BOOLEAN,
-                ROTATION,
-                BLOCK_POS,
-                OPTIONAL_BLOCK_POS,
-                DIRECTION,
-                OPTIONAL_UUID,
-                OPTIONAL_BLOCK_STATE,
-                NBT,
-                PARTICLE,
-                VILLAGER_DATA,
-                FIREWORK_DATA,
-                POSE
             }
         }
     }

@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.CommandSource;
+import net.minecraft.network.OffThreadException;
 import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket;
 import net.minecraft.network.packet.s2c.play.CommandTreeS2CPacket;
 
@@ -57,7 +58,11 @@ public class TabCompletionManager {
                     .map(str -> str.substring(1))
                     .collect(Collectors.toSet()));
             assert MinecraftClient.getInstance().getNetworkHandler() != null;
-            MinecraftClient.getInstance().getNetworkHandler().onCommandTree(new CommandTreeS2CPacket(dispatcher.getRoot()));
+            try {
+                // TODO: make this use the new packet system
+                MinecraftClient.getInstance().getNetworkHandler().onCommandTree(new CommandTreeS2CPacket(dispatcher.getRoot()));
+            } catch (OffThreadException ignore) {
+            }
             return true;
         } else if (entry.id() == -2) {
             if (customCompletions.isEmpty())

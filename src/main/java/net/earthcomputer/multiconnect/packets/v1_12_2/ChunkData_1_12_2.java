@@ -52,6 +52,7 @@ public class ChunkData_1_12_2 implements ChunkData {
     public static class BlockStatePalettedContainer implements ChunkData.BlockStatePalettedContainer {
         public byte paletteSize;
         public int[] palette;
+        @Type(Types.LONG)
         public long[] data;
     }
 }

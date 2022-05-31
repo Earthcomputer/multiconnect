@@ -29,6 +29,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandler;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
@@ -324,7 +326,35 @@ public class DebugUtils {
                             return !name.getNamespace().equals("multiconnect");
                         })
                         .map(it -> Triple.of(Block.STATE_IDS.getRawId(it), blockStateToString(it), blockStateToString(it)));
+            } else if (registries == Registries.TRACKED_DATA_HANDLER) {
+                List<Triple<Integer, String, String>> entryList = new ArrayList<>();
+                TrackedDataHandler<?> handler;
+                for (int i = 0; (handler = TrackedDataHandlerRegistry.get(i)) != null; i++) {
+                    String name = null;
+                    for (Field field : TrackedDataHandlerRegistry.class.getFields()) {
+                        if (Modifier.isStatic(field.getModifiers()) && field.getType() == TrackedDataHandler.class) {
+                            Object fieldValue;
+                            try {
+                                fieldValue = field.get(null);
+                            } catch (ReflectiveOperationException e) {
+                                throw new AssertionError(e);
+                            }
+                            if (handler == fieldValue) {
+                                name = field.getName().toLowerCase(Locale.ROOT);
+                                break;
+                            }
+                        }
+                    }
+                    if (name == null) {
+                        throw new AssertionError("Could not find tracked data handler name for id " + i);
+                    }
+                    entryList.add(Triple.of(i, name, name));
+                }
+                entries = entryList.stream();
             } else {
+                if (!registries.isRealRegistry()) {
+                    throw new AssertionError("No way to dump registry " + registries);
+                }
                 Registry<T> registry;
                 if (registries == Registries.MOTIVE) {
                     registry = (Registry<T>) Registry.PAINTING_MOTIVE;

@@ -354,7 +354,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             .appendClassName(PACKET_INTRINSICS).append(".makeMap(").indent()
         var addedAnyRegistry = false
         for (registry in Registries.values()) {
-            if (registry == Registries.BLOCK_STATE) {
+            if (!registry.isRealRegistry) {
                 continue
             }
 
@@ -394,7 +394,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             .appendClassName(SET).append(".of(").indent()
         var addedAnyKey = false
         for (registry in Registries.values()) {
-            if (registry == Registries.BLOCK_STATE) {
+            if (!registry.isRealRegistry) {
                 continue
             }
 
@@ -464,7 +464,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             .indent()
         var addedAny = false
         for (registry in Registries.values()) {
-            if (registry == Registries.BLOCK_STATE) {
+            if (!registry.isRealRegistry) {
                 continue
             }
             if (addedAny) {
