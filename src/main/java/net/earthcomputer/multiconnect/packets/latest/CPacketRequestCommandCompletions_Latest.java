@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.packets.latest;
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
+import net.earthcomputer.multiconnect.ap.Sendable;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketRequestCommandCompletions;
 import net.earthcomputer.multiconnect.packets.v1_12_2.CPacketRequestCommandCompletions_1_12_2;
@@ -15,6 +16,7 @@ import net.minecraft.util.hit.HitResult;
 import java.util.Optional;
 
 @MessageVariant(minVersion = Protocols.V1_13)
+@Sendable(from = Protocols.V1_13)
 public class CPacketRequestCommandCompletions_Latest implements CPacketRequestCommandCompletions {
     public int transactionId;
     public String text;

@@ -34,7 +34,7 @@ id clazz
 32 net.earthcomputer.multiconnect.packets.v1_13_2.SPacketChunkData_1_13_2
 33 net.earthcomputer.multiconnect.packets.v1_12_2.SPacketWorldEvent_1_12_2
 34 net.earthcomputer.multiconnect.packets.v1_12_2.SPacketParticle_1_12_2
-35 net.earthcomputer.multiconnect.packets.v1_13_2.SPacketGameJoin_1_13_2
+35 net.earthcomputer.multiconnect.packets.v1_12_2.SPacketGameJoin_1_12_2
 36 net.earthcomputer.multiconnect.packets.v1_13_2.SPacketMapUpdate_1_13_2
 37 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketEntity_1_16_5
 38 net.earthcomputer.multiconnect.packets.SPacketEntityMoveRelative

@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-@MessageVariant(maxVersion = Protocols.V1_13_2)
+@MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
 public class SPacketGameJoin_1_13_2 implements SPacketGameJoin {
     @Type(Types.INT)
     public int entityId;

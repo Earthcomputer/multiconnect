@@ -1,11 +1,14 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.mojang.brigadier.CommandDispatcher;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
+import net.earthcomputer.multiconnect.packets.latest.CPacketRequestCommandCompletions_Latest;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.command.CommandSource;
 import net.minecraft.network.OffThreadException;
-import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket;
 import net.minecraft.network.packet.s2c.play.CommandTreeS2CPacket;
 
 import java.util.ArrayDeque;
@@ -37,16 +40,25 @@ public class TabCompletionManager {
     }
 
     public static void requestCommandList() {
-        assert MinecraftClient.getInstance().getNetworkHandler() != null;
-        MinecraftClient.getInstance().getNetworkHandler().sendPacket(new RequestCommandCompletionsC2SPacket(-1, "/"));
+        var packet = new CPacketRequestCommandCompletions_Latest();
+        packet.transactionId = -1;
+        packet.text = "/";
+        ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+        if (networkHandler != null) {
+            PacketSystem.sendToServer(networkHandler, Protocols.V1_13, packet);
+        }
     }
 
     public static CompletableFuture<List<String>> requestCustomCompletion(String command) {
-        assert MinecraftClient.getInstance().getNetworkHandler() != null;
         var future = new CompletableFuture<List<String>>();
         customCompletions.add(future);
-        MinecraftClient.getInstance().getNetworkHandler().sendPacket(new RequestCommandCompletionsC2SPacket(-2,
-                command));
+        var packet = new CPacketRequestCommandCompletions_Latest();
+        packet.transactionId = -2;
+        packet.text = command;
+        ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+        if (networkHandler != null) {
+            PacketSystem.sendToServer(networkHandler, Protocols.V1_13, packet);
+        }
         return future;
     }
 
