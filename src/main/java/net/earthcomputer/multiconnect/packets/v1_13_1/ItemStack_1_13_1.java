@@ -15,6 +15,7 @@ import net.earthcomputer.multiconnect.packets.v1_13_2.ItemStack_1_13_2;
 import net.minecraft.datafixer.fix.ItemInstanceTheFlatteningFix;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.SpawnEggItem;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -86,6 +87,21 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
     @Override
     public boolean isPresent() {
         return itemId != -1;
+    }
+
+    public static ItemStack_1_13_1 fromMinecraft(ItemStack stack) {
+        if (stack.isEmpty()) {
+            var result = new Empty();
+            result.itemId = -1;
+            return result;
+        } else {
+            var later = (ItemStack_1_13_2.NonEmpty) ItemStack_1_13_2.fromMinecraft(stack);
+            var result = new NonEmpty();
+            result.itemId = (short) later.itemId;
+            result.count = later.count;
+            result.tag = later.tag;
+            return result;
+        }
     }
 
     @Polymorphic(intValue = -1)

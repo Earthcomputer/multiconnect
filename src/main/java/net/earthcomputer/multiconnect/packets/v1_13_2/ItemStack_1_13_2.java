@@ -10,6 +10,8 @@ import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
+import net.earthcomputer.multiconnect.packets.v1_15_2.ItemStack_1_15_2;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -30,6 +32,20 @@ public abstract class ItemStack_1_13_2 implements CommonTypes.ItemStack {
     @Override
     public boolean isPresent() {
         return present;
+    }
+
+    public static ItemStack_1_13_2 fromMinecraft(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return new Empty();
+        } else {
+            var later = (ItemStack_1_15_2.NonEmpty) ItemStack_1_15_2.fromMinecraft(stack);
+            var result = new NonEmpty();
+            result.present = true;
+            result.itemId = later.itemId;
+            result.count = later.count;
+            result.tag = NonEmpty.translateTagServerbound(later.tag);
+            return result;
+        }
     }
 
     @Polymorphic(booleanValue = false)

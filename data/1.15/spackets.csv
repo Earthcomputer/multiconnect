@@ -32,7 +32,7 @@ id clazz
 30 net.earthcomputer.multiconnect.packets.SPacketUnloadChunk
 31 net.earthcomputer.multiconnect.packets.SPacketGameStateChange
 32 net.earthcomputer.multiconnect.packets.SPacketOpenHorseScreen
-33 net.earthcomputer.multiconnect.packets.SPacketKeepAlive
+33 net.earthcomputer.multiconnect.packets.latest.SPacketKeepAlive_Latest
 34 net.earthcomputer.multiconnect.packets.v1_15_2.SPacketChunkData_1_15_2
 35 net.earthcomputer.multiconnect.packets.latest.SPacketWorldEvent_Latest
 36 net.earthcomputer.multiconnect.packets.latest.SPacketParticle_Latest

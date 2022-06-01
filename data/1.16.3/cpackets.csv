@@ -15,7 +15,7 @@ id clazz
 13 net.earthcomputer.multiconnect.packets.CPacketQueryEntityNbt
 14 net.earthcomputer.multiconnect.packets.latest.CPacketPlayerInteractEntity_Latest
 15 net.earthcomputer.multiconnect.packets.CPacketJigsawGenerating
-16 net.earthcomputer.multiconnect.packets.CPacketKeepAlive
+16 net.earthcomputer.multiconnect.packets.latest.CPacketKeepAlive_Latest
 17 net.earthcomputer.multiconnect.packets.CPacketUpdateDifficultyLock
 18 net.earthcomputer.multiconnect.packets.CPacketPlayerMovePositionAndOnGround
 19 net.earthcomputer.multiconnect.packets.CPacketPlayerMoveFull

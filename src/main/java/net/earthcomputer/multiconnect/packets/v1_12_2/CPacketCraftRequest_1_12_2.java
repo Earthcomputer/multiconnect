@@ -1,13 +1,14 @@
 package net.earthcomputer.multiconnect.packets.v1_12_2;
 
 import net.earthcomputer.multiconnect.ap.Argument;
+import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketCraftRequest;
 import net.minecraft.util.Identifier;
 
-@MessageVariant(maxVersion = Protocols.V1_12_2)
+@MessageVariant(minVersion = Protocols.V1_12_1, maxVersion = Protocols.V1_12_2)
 public class CPacketCraftRequest_1_12_2 implements CPacketCraftRequest {
     public byte syncId;
     @Introduce(compute = "computeRecipeId")
@@ -20,5 +21,9 @@ public class CPacketCraftRequest_1_12_2 implements CPacketCraftRequest {
         } catch (NumberFormatException e) {
             return 0;
         }
+    }
+
+    @Handler(protocol = Protocols.V1_12)
+    public static void drop() {
     }
 }

@@ -1,5 +1,5 @@
 id clazz
-0 net.earthcomputer.multiconnect.packets.SPacketKeepAlive
+0 net.earthcomputer.multiconnect.packets.v1_12_1.SPacketKeepAlive_1_12_1
 1 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketGameJoin_1_17_1
 2 net.earthcomputer.multiconnect.packets.v1_15_2.SPacketGameMessage_1_15_2
 3 net.earthcomputer.multiconnect.packets.SPacketWorldTimeUpdate

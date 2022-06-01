@@ -1,5 +1,5 @@
 id clazz
-0 net.earthcomputer.multiconnect.packets.CPacketKeepAlive
+0 net.earthcomputer.multiconnect.packets.v1_12_1.CPacketKeepAlive_1_12_1
 1 net.earthcomputer.multiconnect.packets.CPacketChatMessage
 2 net.earthcomputer.multiconnect.packets.v1_15_2.CPacketPlayerInteractEntity_1_15_2
 3 net.earthcomputer.multiconnect.packets.CPacketPlayerMoveOnGroundOnly

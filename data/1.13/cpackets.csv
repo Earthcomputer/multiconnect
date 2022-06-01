@@ -13,7 +13,7 @@ id clazz
 11 net.earthcomputer.multiconnect.packets.v1_13.CPacketBookUpdate_1_13
 12 net.earthcomputer.multiconnect.packets.CPacketQueryEntityNbt
 13 net.earthcomputer.multiconnect.packets.v1_15_2.CPacketPlayerInteractEntity_1_15_2
-14 net.earthcomputer.multiconnect.packets.CPacketKeepAlive
+14 net.earthcomputer.multiconnect.packets.latest.CPacketKeepAlive_Latest
 15 net.earthcomputer.multiconnect.packets.CPacketPlayerMoveOnGroundOnly
 16 net.earthcomputer.multiconnect.packets.CPacketPlayerMovePositionAndOnGround
 17 net.earthcomputer.multiconnect.packets.CPacketPlayerMoveFull

@@ -9,7 +9,9 @@ import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 
@@ -24,6 +26,20 @@ public abstract class ItemStack_Latest implements CommonTypes.ItemStack {
     @Override
     public boolean isPresent() {
         return present;
+    }
+
+    public static ItemStack_Latest fromMinecraft(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return new Empty();
+        } else {
+            var result = new NonEmpty();
+            result.present = true;
+            var itemRegistry = net.minecraft.util.registry.Registry.ITEM;
+            result.itemId = PacketSystem.clientRawIdToServer(itemRegistry, itemRegistry.getRawId(stack.getItem()));
+            result.count = (byte) stack.getCount();
+            result.tag = stack.getNbt();
+            return result;
+        }
     }
 
     @Polymorphic(booleanValue = false)

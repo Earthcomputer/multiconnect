@@ -16,6 +16,8 @@ import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.ItemInstanceTheFla
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.BannerItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.item.SpawnEggItem;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -76,6 +78,29 @@ public abstract class ItemStack_1_12_2 implements CommonTypes.ItemStack {
     @Override
     public boolean isPresent() {
         return itemId != -1;
+    }
+
+    public static ItemStack_1_12_2 fromMinecraft(ItemStack stack) {
+        if (stack.isEmpty()) {
+            var result = new Empty();
+            result.itemId = -1;
+            return result;
+        } else {
+            var later = (ItemStack_1_13_1.NonEmpty) ItemStack_1_13_1.fromMinecraft(stack);
+            var result = new NonEmpty();
+            result.itemId = computeItemId(later.itemId, PacketSystem.clientRawIdToServer(Registry.ITEM, Registry.ITEM.getRawId(Items.BAT_SPAWN_EGG)));
+            result.count = later.count;
+            int filledMapId = PacketSystem.clientRawIdToServer(Registry.ITEM, Registry.ITEM.getRawId(Items.FILLED_MAP));
+            result.damage = NonEmpty.computeDamage(result.itemId, result.tag, filledMapId);
+            result.tag = NonEmpty.computeTag(
+                    result.itemId,
+                    result.tag,
+                    filledMapId,
+                    PacketSystem.clientRawIdToServer(Registry.ITEM, Registry.ITEM.getRawId(Items.ENCHANTED_BOOK)),
+                    PacketSystem.clientRawIdToServer(Registry.ITEM, Registry.ITEM.getRawId(Items.SHIELD))
+            );
+            return result;
+        }
     }
 
     @Polymorphic(intValue = -1)
