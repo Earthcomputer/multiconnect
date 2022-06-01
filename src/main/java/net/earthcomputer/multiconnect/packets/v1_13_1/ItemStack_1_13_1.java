@@ -73,11 +73,11 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
         Identifier name = PacketSystem.serverRawIdToId(Registry.ITEM, self.itemId);
         String newName = ItemInstanceTheFlatteningFix.getItem(name == null ? null : name.toString(), nonEmptySelf.damage);
         if (newName != null) {
-            Integer newId = PacketSystem.serverIdToRawId(Registry.ITEM, new Identifier(newName));
-            if (newId == null) {
-                throw new AssertionError("ItemInstanceTheFlatteningFix.getItem returned value not in registry");
-            }
-            return newId.shortValue();
+            // convert 1.13 name to server raw id
+            Identifier currentName = PacketSystem.serverIdToClient(Protocols.V1_13, Registry.ITEM, new Identifier(newName));
+            Item item = Registry.ITEM.get(currentName);
+            int currentRawId = Registry.ITEM.getRawId(item);
+            return (short) PacketSystem.clientRawIdToServer(Registry.ITEM, currentRawId);
         }
 
         return self.itemId;

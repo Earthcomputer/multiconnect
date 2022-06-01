@@ -31,7 +31,7 @@ id name oldName remapTo
 29 sticky_piston
 30 cobweb web
 31 grass tallgrass
-32 dead_bush deadbush
+32 multiconnect:old_dead_bush deadbush dead_bush
 33 piston
 34 piston_head
 35 white_wool wool

@@ -25,7 +25,8 @@ id name oldName remapTo
 28 detector_rail
 29 sticky_piston
 30 cobweb web
-32 dead_bush deadbush
+31 dead_bush tallgrass
+32 multiconnect:old_dead_bush deadbush dead_bush
 33 piston
 35 white_wool wool
 37 dandelion yellow_flower
@@ -603,3 +604,5 @@ id name oldName remapTo
 2533 horse_spawn_egg
 2534 rabbit_spawn_egg
 2535 villager_spawn_egg
+2536 grass
+2537 fern

@@ -58,7 +58,7 @@ public abstract class ItemStack_1_12_2 implements CommonTypes.ItemStack {
         }
 
         Identifier newName = Registry.ITEM.getId(item);
-        Identifier name = PacketSystem.clientIdToServer(Registry.ITEM, newName);
+        Identifier name = PacketSystem.clientIdToServer(Protocols.V1_13, Registry.ITEM, newName);
         if (name != null) {
             ObjectIntPair<Identifier> pair = REVERSE_FLATTENING_MAP.get(name.toString());
             if (pair != null) {

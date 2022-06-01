@@ -168,49 +168,83 @@ public class PacketSystem {
     }
 
     public static int serverRawIdToClient(Registry<?> registry, int serverRawId) {
-        return protocolClasses.get(ConnectionInfo.protocolVersion).remapSInt(registry.getKey(), serverRawId);
+        return serverRawIdToClient(ConnectionInfo.protocolVersion, registry, serverRawId);
+    }
+
+    public static int serverRawIdToClient(int serverVersion, Registry<?> registry, int serverRawId) {
+        return protocolClasses.get(serverVersion).remapSInt(registry.getKey(), serverRawId);
     }
 
     public static int clientRawIdToServer(Registry<?> registry, int clientRawId) {
-        return protocolClasses.get(ConnectionInfo.protocolVersion).remapCInt(registry.getKey(), clientRawId);
+        return clientRawIdToServer(ConnectionInfo.protocolVersion, registry, clientRawId);
+    }
+
+    public static int clientRawIdToServer(int serverVersion, Registry<?> registry, int clientRawId) {
+        return protocolClasses.get(serverVersion).remapCInt(registry.getKey(), clientRawId);
     }
 
     public static Identifier serverIdToClient(Registry<?> registry, Identifier serverId) {
-        return protocolClasses.get(ConnectionInfo.protocolVersion).remapSIdentifier(registry.getKey(), serverId);
+        return serverIdToClient(ConnectionInfo.protocolVersion, registry, serverId);
+    }
+
+    public static Identifier serverIdToClient(int serverVersion, Registry<?> registry, Identifier serverId) {
+        return protocolClasses.get(serverVersion).remapSIdentifier(registry.getKey(), serverId);
     }
 
     public static Identifier clientIdToServer(Registry<?> registry, Identifier clientId) {
-        return protocolClasses.get(ConnectionInfo.protocolVersion).remapCIdentifier(registry.getKey(), clientId);
+        return clientIdToServer(ConnectionInfo.protocolVersion, registry, clientId);
+    }
+
+    public static Identifier clientIdToServer(int serverVersion, Registry<?> registry, Identifier clientId) {
+        return protocolClasses.get(serverVersion).remapCIdentifier(registry.getKey(), clientId);
     }
 
     @Nullable
-    public static <T> Integer serverIdToRawId(Registry<T> registry, Identifier serverId) {
-        Identifier clientId = serverIdToClient(registry, serverId);
+    public static Integer serverIdToRawId(Registry<?> registry, Identifier serverId) {
+        return serverIdToRawId(ConnectionInfo.protocolVersion, registry, serverId);
+    }
+
+    @Nullable
+    public static <T> Integer serverIdToRawId(int serverVersion, Registry<T> registry, Identifier serverId) {
+        Identifier clientId = serverIdToClient(serverVersion, registry, serverId);
         T value = registry.get(clientId);
         if (value == null) {
             return null;
         }
         int clientRawId = registry.getRawId(value);
-        return clientRawIdToServer(registry, clientRawId);
+        return clientRawIdToServer(serverVersion, registry, clientRawId);
     }
 
     @Nullable
-    public static <T> Identifier serverRawIdToId(Registry<T> registry, int serverRawId) {
-        int clientRawId = serverRawIdToClient(registry, serverRawId);
+    public static Identifier serverRawIdToId(Registry<?> registry, int serverRawId) {
+        return serverRawIdToId(ConnectionInfo.protocolVersion, registry, serverRawId);
+    }
+
+    @Nullable
+    public static <T> Identifier serverRawIdToId(int serverVersion, Registry<T> registry, int serverRawId) {
+        int clientRawId = serverRawIdToClient(serverVersion, registry, serverRawId);
         T value = registry.get(clientRawId);
         if (value == null) {
             return null;
         }
         Identifier clientId = registry.getId(value);
-        return clientIdToServer(registry, clientId);
+        return clientIdToServer(serverVersion, registry, clientId);
     }
 
     public static int serverBlockStateIdToClient(int serverBlockStateId) {
-        return protocolClasses.get(ConnectionInfo.protocolVersion).remapSIntBlockState(serverBlockStateId);
+        return serverBlockStateIdToClient(ConnectionInfo.protocolVersion, serverBlockStateId);
+    }
+
+    public static int serverBlockStateIdToClient(int serverVersion, int serverBlockStateId) {
+        return protocolClasses.get(serverVersion).remapSIntBlockState(serverBlockStateId);
     }
 
     public static int clientBlockStateIdToServer(int clientBlockStateId) {
-        return protocolClasses.get(ConnectionInfo.protocolVersion).remapCIntBlockState(clientBlockStateId);
+        return clientBlockStateIdToServer(ConnectionInfo.protocolVersion, clientBlockStateId);
+    }
+
+    public static int clientBlockStateIdToServer(int serverVersion, int clientBlockStateId) {
+        return protocolClasses.get(serverVersion).remapCIntBlockState(clientBlockStateId);
     }
 
     public static class Internals {
