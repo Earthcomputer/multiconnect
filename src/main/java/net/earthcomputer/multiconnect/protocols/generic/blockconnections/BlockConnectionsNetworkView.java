@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
 
+import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.packets.latest.ChunkData_Latest;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -9,26 +10,27 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.util.List;
+
 /**
  * Assumes that block state IDs have been translated by this point
  */
 public class BlockConnectionsNetworkView implements IBlockConnectionsBlockView {
     private final int minY;
-    private final ChunkData_Latest.ChunkSection[] sections;
+    private final List<ChunkData.Section> sections;
     private final PackedIntegerArray[] packedArrays;
 
-    public BlockConnectionsNetworkView(int minY, ChunkData_Latest.ChunkSection[] sections) {
+    public BlockConnectionsNetworkView(int minY, List<ChunkData.Section> sections) {
         this.minY = minY;
         this.sections = sections;
-        this.packedArrays = new PackedIntegerArray[sections.length];
-        for (int i = 0; i < sections.length; i++) {
-            if (sections[i] != null) {
-                var blockStates = sections[i].blockStates;
-                if (blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Multiple multiple) {
-                    packedArrays[i] = new PackedIntegerArray(multiple.paletteSize, 4096, multiple.data);
-                } else if (blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer registryContainer) {
-                    packedArrays[i] = new PackedIntegerArray(registryContainer.paletteSize, 4096, registryContainer.data);
-                }
+        this.packedArrays = new PackedIntegerArray[sections.size()];
+        for (int i = 0; i < sections.size(); i++) {
+            var section = (ChunkData_Latest.ChunkSection) sections.get(i);
+            var blockStates = section.blockStates;
+            if (blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Multiple multiple) {
+                packedArrays[i] = new PackedIntegerArray(multiple.paletteSize, 4096, multiple.data);
+            } else if (blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer registryContainer) {
+                packedArrays[i] = new PackedIntegerArray(registryContainer.paletteSize, 4096, registryContainer.data);
             }
         }
     }
@@ -36,13 +38,10 @@ public class BlockConnectionsNetworkView implements IBlockConnectionsBlockView {
     @Override
     public BlockState getBlockState(BlockPos pos) {
         int sectionIndex = (pos.getY() - minY) >> 4;
-        if (sectionIndex < 0 || sectionIndex >= sections.length) {
+        if (sectionIndex < 0 || sectionIndex >= sections.size()) {
             return Blocks.AIR.getDefaultState();
         }
-        ChunkData_Latest.ChunkSection section = sections[sectionIndex];
-        if (section == null) {
-            return Blocks.AIR.getDefaultState();
-        }
+        var section = (ChunkData_Latest.ChunkSection) sections.get(sectionIndex);
         int stateId;
         if (section.blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Singleton singleton) {
             stateId = singleton.blockStateId;
@@ -58,13 +57,10 @@ public class BlockConnectionsNetworkView implements IBlockConnectionsBlockView {
     @Override
     public void setBlockState(BlockPos pos, BlockState state) {
         int sectionIndex = (pos.getY() - minY) >> 4;
-        if (sectionIndex < 0 || sectionIndex >= sections.length) {
+        if (sectionIndex < 0 || sectionIndex >= sections.size()) {
             return;
         }
-        ChunkData_Latest.ChunkSection section = sections[sectionIndex];
-        if (section == null) {
-            return;
-        }
+        var section = (ChunkData_Latest.ChunkSection) sections.get(sectionIndex);
         int stateId = Block.getRawIdFromState(state);
         int index = (((pos.getY() - minY) & 15) << 8) | ((pos.getZ() & 15) << 4) | (pos.getX() & 15);
         if (section.blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Singleton singleton) {
@@ -125,10 +121,15 @@ public class BlockConnectionsNetworkView implements IBlockConnectionsBlockView {
 
     @Override
     public int getMaxY() {
-        return minY + 16 * sections.length - 1;
+        return minY + 16 * sections.size() - 1;
     }
 
     public boolean doesSectionExist(int sectionIndex) {
-        return sectionIndex >= 0 && sectionIndex < sections.length && sections[sectionIndex] != null;
+        if (sectionIndex < 0 || sectionIndex >= sections.size()) {
+            return false;
+        }
+        var section = (ChunkData_Latest.ChunkSection) sections.get(sectionIndex);
+        return !(section.blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Singleton singleton)
+                || singleton.blockStateId != 0;
     }
 }

@@ -40,7 +40,6 @@ import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.EightWayDirection;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.DynamicRegistryManager;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -249,29 +248,22 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
                 @GlobalData DimensionTypeReference dimType
         ) {
             var data = (ChunkData_Latest) data_;
-            @Nullable ChunkData_Latest.ChunkSection[] sections = new ChunkData_Latest.ChunkSection[dimType.value().value().getHeight() >> 4];
-            @Nullable BitSet verticalStripBitmask = userData.get(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
-            for (int i = 0, j = 0; i < sections.length; i++) {
-                if (verticalStripBitmask == null || verticalStripBitmask.get(i)) {
-                    sections[i] = (ChunkData_Latest.ChunkSection) data.sections.get(j++);
-                }
-            }
+            List<ChunkData.Section> sections = data.sections;
 
-            for (ChunkData_Latest.ChunkSection section : sections) {
-                if (section != null) {
-                    if (section.blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Singleton singleton) {
-                        singleton.blockStateId = PacketSystem.serverBlockStateIdToClient(singleton.blockStateId);
-                    } else if (section.blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Multiple multiple) {
-                        for (int i = 0; i < multiple.palette.length; i++) {
-                            multiple.palette[i] = PacketSystem.serverBlockStateIdToClient(multiple.palette[i]);
-                        }
-                    } else {
-                        // TODO: handle case where registry bits change
-                        var registryContainer = (ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer) section.blockStates;
-                        PackedIntegerArray packedArray = new PackedIntegerArray(MathHelper.ceilLog2(Block.STATE_IDS.size()), 4096, registryContainer.data);
-                        for (int i = 0; i < 4096; i++) {
-                            packedArray.set(i, PacketSystem.serverBlockStateIdToClient(packedArray.get(i)));
-                        }
+            for (ChunkData.Section section_ : sections) {
+                var section = (ChunkData_Latest.ChunkSection) section_;
+                if (section.blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Singleton singleton) {
+                    singleton.blockStateId = PacketSystem.serverBlockStateIdToClient(singleton.blockStateId);
+                } else if (section.blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Multiple multiple) {
+                    for (int i = 0; i < multiple.palette.length; i++) {
+                        multiple.palette[i] = PacketSystem.serverBlockStateIdToClient(multiple.palette[i]);
+                    }
+                } else {
+                    // TODO: handle case where registry bits change
+                    var registryContainer = (ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer) section.blockStates;
+                    PackedIntegerArray packedArray = new PackedIntegerArray(MathHelper.ceilLog2(Block.STATE_IDS.size()), 4096, registryContainer.data);
+                    for (int i = 0; i < 4096; i++) {
+                        packedArray.set(i, PacketSystem.serverBlockStateIdToClient(packedArray.get(i)));
                     }
                 }
             }
