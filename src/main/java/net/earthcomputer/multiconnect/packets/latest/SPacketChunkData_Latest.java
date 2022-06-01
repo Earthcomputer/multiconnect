@@ -4,7 +4,9 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.earthcomputer.multiconnect.ap.Argument;
+import net.earthcomputer.multiconnect.ap.CustomFix;
 import net.earthcomputer.multiconnect.ap.Datafix;
 import net.earthcomputer.multiconnect.ap.DatafixTypes;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
@@ -18,6 +20,7 @@ import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.packets.ChunkData;
@@ -25,16 +28,23 @@ import net.earthcomputer.multiconnect.packets.SPacketChunkData;
 import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1;
 import net.earthcomputer.multiconnect.protocols.generic.DimensionTypeReference;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
+import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnectionsNetworkView;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
+import net.minecraft.block.Block;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.collection.PackedIntegerArray;
 import net.minecraft.util.math.ChunkSectionPos;
+import net.minecraft.util.math.EightWayDirection;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.DynamicRegistryManager;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.EnumMap;
 import java.util.List;
 
 @MessageVariant(minVersion = Protocols.V1_18)
@@ -229,8 +239,50 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
     public static class InnerData {
         public NbtCompound heightmaps;
         @Length(raw = true)
+        @CustomFix("fixData")
         public ChunkData data;
         public List<BlockEntityData> blockEntities;
+
+        public static ChunkData fixData(
+                ChunkData data_,
+                @FilledArgument TypedMap userData,
+                @GlobalData DimensionTypeReference dimType
+        ) {
+            var data = (ChunkData_Latest) data_;
+            @Nullable ChunkData_Latest.ChunkSection[] sections = new ChunkData_Latest.ChunkSection[dimType.value().value().getHeight() >> 4];
+            @Nullable BitSet verticalStripBitmask = userData.get(Protocol_1_17_1.VERTICAL_STRIP_BITMASK);
+            for (int i = 0, j = 0; i < sections.length; i++) {
+                if (verticalStripBitmask == null || verticalStripBitmask.get(i)) {
+                    sections[i] = (ChunkData_Latest.ChunkSection) data.sections.get(j++);
+                }
+            }
+
+            for (ChunkData_Latest.ChunkSection section : sections) {
+                if (section != null) {
+                    if (section.blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Singleton singleton) {
+                        singleton.blockStateId = PacketSystem.serverBlockStateIdToClient(singleton.blockStateId);
+                    } else if (section.blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Multiple multiple) {
+                        for (int i = 0; i < multiple.palette.length; i++) {
+                            multiple.palette[i] = PacketSystem.serverBlockStateIdToClient(multiple.palette[i]);
+                        }
+                    } else {
+                        // TODO: handle case where registry bits change
+                        var registryContainer = (ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer) section.blockStates;
+                        PackedIntegerArray packedArray = new PackedIntegerArray(MathHelper.ceilLog2(Block.STATE_IDS.size()), 4096, registryContainer.data);
+                        for (int i = 0; i < 4096; i++) {
+                            packedArray.set(i, PacketSystem.serverBlockStateIdToClient(packedArray.get(i)));
+                        }
+                    }
+                }
+            }
+
+            var world = new BlockConnectionsNetworkView(dimType.value().value().getMinimumY(), sections);
+            var blocksNeedingUpdate = new EnumMap<EightWayDirection, IntSet>(EightWayDirection.class);
+            ConnectionInfo.protocol.getBlockConnector().fixChunkData(world, blocksNeedingUpdate);
+            userData.put(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY, blocksNeedingUpdate);
+
+            return data;
+        }
     }
 
     @MessageVariant
