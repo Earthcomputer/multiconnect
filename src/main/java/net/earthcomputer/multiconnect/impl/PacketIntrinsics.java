@@ -152,7 +152,9 @@ public final class PacketIntrinsics {
 
     public static int getStateId(RegistryKey<Block> blockKey, int offset) {
         Block block = Registry.BLOCK.get(blockKey);
-        assert block != null;
+        if (block == null) {
+            throw new AssertionError("Could not find block " + blockKey.getValue());
+        }
         BlockState firstState = block.getStateManager().getStates().get(0);
         return Block.getRawIdFromState(firstState) + offset;
     }

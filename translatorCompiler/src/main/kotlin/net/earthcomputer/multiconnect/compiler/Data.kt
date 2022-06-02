@@ -385,7 +385,7 @@ class MulticonnectBlockStates(val states: List<State>) {
     class State(val name: String, val properties: Map<String, Property>) {
         val validStates: List<Map<String, String>>
             get() {
-                var states = mutableListOf<Map<String, String>>()
+                var states = mutableListOf(emptyMap<String, String>())
                 for (property in properties.keys.sorted()) {
                     val newStates = mutableListOf<Map<String, String>>()
                     val validValues = properties[property]!!.validValues

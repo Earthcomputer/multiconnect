@@ -405,6 +405,9 @@ internal fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbou
 
         for (fromEntry in fromEntries) {
             val newId = toEntries.byName(fromEntry.remapTo ?: fromEntry.name)?.id
+            if (newId == null && fromEntry.remapTo != null && clientbound) {
+                throw CompileException("Registry entry \"${fromEntry.name}\" is remapped to \"${fromEntry.remapTo}\" which doesn't exist in the latest registry")
+            }
             val value = when {
                 newId != null -> IntRemapValue.Relative(newId - fromEntry.id)
                 clientbound -> {
@@ -422,9 +425,13 @@ internal fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbou
                             }
                             val multiconnectBlockState = getMulticonnectBlockStates().states.firstOrNull { it.name == blockName }
                                 ?: throw CompileException("No multiconnect block state found for $blockName")
+                            val offset = multiconnectBlockState.validStates.indexOf(properties)
+                            if (offset == -1) {
+                                throw CompileException("${fromEntry.name} is not a valid state")
+                            }
                             IntRemapValue.FromStateId(
                                 blockName,
-                                multiconnectBlockState.validStates.indexOf(properties)
+                                offset
                             )
                         } else {
                             IntRemapValue.FromName(fromEntry.name)
