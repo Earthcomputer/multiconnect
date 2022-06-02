@@ -1,15 +1,21 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
+import net.earthcomputer.multiconnect.impl.PacketSystem;
+import net.earthcomputer.multiconnect.packets.latest.SPacketSynchronizeRecipes_Latest;
+import net.earthcomputer.multiconnect.packets.v1_13_1.ItemStack_1_13_1;
+import net.earthcomputer.multiconnect.packets.v1_13_2.SPacketSynchronizeRecipes_1_13_2;
 import net.minecraft.item.ItemConvertible;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.util.registry.Registry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public final class RecipeInfo<T extends Recipe<?>> {
 
@@ -192,5 +198,53 @@ public final class RecipeInfo<T extends Recipe<?>> {
 
     public String getDistinguisher() {
         return distinguisher;
+    }
+
+    public SPacketSynchronizeRecipes_1_13_2.RecipeWithId toPacketRecipe(Identifier id) {
+        var recipe = create(id);
+        SPacketSynchronizeRecipes_1_13_2.Recipe packetRecipe;
+        if (recipeType == RecipeSerializer.SMELTING) {
+            var smelting = (SmeltingRecipe) recipe;
+            var packetSmelting = new SPacketSynchronizeRecipes_1_13_2.Smelting();
+            packetSmelting.group = smelting.getGroup();
+            packetSmelting.ingredient = convertIngredient(smelting.getIngredients().get(0));
+            packetSmelting.result = ItemStack_1_13_1.fromMinecraft(smelting.getOutput());
+            packetSmelting.experience = smelting.getExperience();
+            packetSmelting.cookingTime = smelting.getCookTime();
+            packetRecipe = packetSmelting;
+        } else if (recipeType == RecipeSerializer.SHAPED) {
+            var shaped = (ShapedRecipe) recipe;
+            var packetShaped = new SPacketSynchronizeRecipes_1_13_2.CraftingShaped();
+            packetShaped.width = shaped.getWidth();
+            packetShaped.height = shaped.getHeight();
+            packetShaped.group = shaped.getGroup();
+            packetShaped.ingredients = shaped.getIngredients().stream().map(RecipeInfo::convertIngredient).collect(Collectors.toCollection(ArrayList::new));
+            packetShaped.result = ItemStack_1_13_1.fromMinecraft(shaped.getOutput());
+            packetRecipe = packetShaped;
+        } else if (recipeType == RecipeSerializer.SHAPELESS) {
+            var shapeless = (ShapelessRecipe) recipe;
+            var packetShapeless = new SPacketSynchronizeRecipes_1_13_2.CraftingShapeless();
+            packetShapeless.group = shapeless.getGroup();
+            packetShapeless.ingredients = shapeless.getIngredients().stream().map(RecipeInfo::convertIngredient).collect(Collectors.toCollection(ArrayList::new));
+            packetShapeless.result = ItemStack_1_13_1.fromMinecraft(shapeless.getOutput());
+            packetRecipe = packetShapeless;
+        } else {
+            packetRecipe = new SPacketSynchronizeRecipes_1_13_2.Special();
+        }
+        packetRecipe.type = PacketSystem.clientIdToServer(Registry.RECIPE_SERIALIZER, Registry.RECIPE_SERIALIZER.getId(recipe.getSerializer())).getPath();
+
+        var result = new SPacketSynchronizeRecipes_1_13_2.RecipeWithId();
+        result.recipeId = id;
+        result.recipe = packetRecipe;
+        return result;
+    }
+
+    private static SPacketSynchronizeRecipes_Latest.Ingredient convertIngredient(Ingredient ingredient) {
+        var result = new SPacketSynchronizeRecipes_Latest.Ingredient();
+        result.options = new ArrayList<>(ingredient.getMatchingStacks().length);
+        for (ItemStack matchingStack : ingredient.getMatchingStacks()) {
+            result.options.add(ItemStack_1_13_1.fromMinecraft(matchingStack));
+        }
+        return result;
     }
 }

@@ -65,9 +65,4 @@ public class SPacketSynchronizeRecipes_1_13_2 implements SPacketSynchronizeRecip
     @MessageVariant
     public static class Special extends Recipe {
     }
-
-    @MessageVariant
-    public static class Ingredient {
-        public List<CommonTypes.ItemStack> options;
-    }
 }
