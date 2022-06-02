@@ -201,18 +201,34 @@ public class DebugUtils {
         return !(t instanceof PacketEncoderException) && !(t instanceof TimeoutException);
     }
 
+    private static class ErrorHandlerInfo {
+        static final ThreadLocal<ErrorHandlerInfo> INSTANCE = ThreadLocal.withInitial(ErrorHandlerInfo::new);
+
+        int wrapperCount = 0;
+        boolean handledError = false;
+    }
+
     public static void wrapInErrorHandler(ByteBuf buf, String direction, Runnable runnable) {
+        ErrorHandlerInfo handlerInfo = ErrorHandlerInfo.INSTANCE.get();
+        handlerInfo.wrapperCount++;
         try {
             runnable.run();
         } catch (Throwable e) {
-            DebugUtils.logPacketError(buf, "Direction: " + direction);
+            if (!handlerInfo.handledError) {
+                DebugUtils.logPacketError(buf, "Direction: " + direction);
+            }
             // consume all the input
             buf.readerIndex(buf.readerIndex() + buf.readableBytes());
             if (DebugUtils.IGNORE_ERRORS) {
                 LOGGER.warn("Ignoring error in packet");
                 e.printStackTrace();
             } else {
+                handlerInfo.handledError = true;
                 throw e;
+            }
+        } finally {
+            if (--handlerInfo.wrapperCount == 0) {
+                handlerInfo.handledError = false;
             }
         }
     }
