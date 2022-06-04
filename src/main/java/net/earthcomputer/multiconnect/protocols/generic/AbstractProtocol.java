@@ -44,7 +44,6 @@ public abstract class AbstractProtocol {
             AssetDownloader.reloadLanguages();
         }
         markChangedCollisionBoxes();
-        ((MinecraftClientAccessor) MinecraftClient.getInstance()).callInitializeSearchableContainers();
         ((MinecraftClientAccessor) MinecraftClient.getInstance()).getSearchManager().reload(MinecraftClient.getInstance().getResourceManager());
     }
 

@@ -2,12 +2,18 @@ package net.earthcomputer.multiconnect.packets;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.ap.Argument;
+import net.earthcomputer.multiconnect.ap.Introduce;
+import net.earthcomputer.multiconnect.ap.Message;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
+import net.earthcomputer.multiconnect.ap.Registries;
+import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.minecraft.util.Identifier;
 
 import java.util.List;
@@ -48,15 +54,61 @@ public class SPacketCommandTree {
         }
     }
 
+    @Message
+    public interface BrigadierArgument {
+        @Message
+        interface DoubleArgument {
+        }
+
+        @Message
+        interface FloatArgument {
+        }
+
+        @Message
+        interface IntArgument {
+        }
+
+        @Message
+        interface LongArgument {
+        }
+
+        @Message
+        interface StringArgument {
+        }
+
+        @Message
+        interface EntityArgument {
+        }
+
+        @Message
+        interface ScoreHolderArgument {
+        }
+
+        @Message
+        interface RegistryKeyArgument {
+        }
+
+        @Message
+        interface ConstantArgument {
+        }
+    }
+
     @Polymorphic
-    @MessageVariant
-    public static abstract class BrigadierArgument {
-        public Identifier parser;
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static abstract class BrigadierArgument_Latest implements BrigadierArgument {
+        @Registry(Registries.COMMAND_ARGUMENT_TYPE)
+        @Introduce(compute = "computeParser")
+        public int parser;
+
+        public static int computeParser(@Argument("parser") Identifier parser) {
+            Integer rawId = PacketSystem.serverIdToRawId(net.minecraft.util.registry.Registry.COMMAND_ARGUMENT_TYPE, parser);
+            return rawId == null ? 0 : rawId;
+        }
     }
 
     @Polymorphic(stringValue = "brigadier:double")
-    @MessageVariant
-    public static class DoubleArgument extends BrigadierArgument {
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static class DoubleArgument extends BrigadierArgument_Latest implements BrigadierArgument.DoubleArgument {
         public byte flags;
         @OnlyIf("hasMin")
         public double min;
@@ -73,8 +125,8 @@ public class SPacketCommandTree {
     }
 
     @Polymorphic(stringValue = "brigadier:float")
-    @MessageVariant
-    public static class FloatArgument extends BrigadierArgument {
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static class FloatArgument extends BrigadierArgument_Latest implements BrigadierArgument.FloatArgument {
         public byte flags;
         @OnlyIf("hasMin")
         public float min;
@@ -91,8 +143,8 @@ public class SPacketCommandTree {
     }
 
     @Polymorphic(stringValue = "brigadier:integer")
-    @MessageVariant
-    public static class IntArgument extends BrigadierArgument {
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static class IntArgument extends BrigadierArgument_Latest implements BrigadierArgument.IntArgument {
         public byte flags;
         @OnlyIf("hasMin")
         @Type(Types.INT)
@@ -111,8 +163,8 @@ public class SPacketCommandTree {
     }
 
     @Polymorphic(stringValue = "brigadier:long")
-    @MessageVariant
-    public static class LongArgument extends BrigadierArgument {
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static class LongArgument extends BrigadierArgument_Latest implements BrigadierArgument.LongArgument {
         public byte flags;
         @OnlyIf("hasMin")
         @Type(Types.LONG)
@@ -131,8 +183,8 @@ public class SPacketCommandTree {
     }
 
     @Polymorphic(stringValue = "brigadier:string")
-    @MessageVariant
-    public static class StringArgument extends BrigadierArgument {
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static class StringArgument extends BrigadierArgument_Latest implements BrigadierArgument.StringArgument {
         public Type type;
         @NetworkEnum
         public enum Type {
@@ -141,31 +193,25 @@ public class SPacketCommandTree {
     }
 
     @Polymorphic(stringValue = "minecraft:entity")
-    @MessageVariant
-    public static class EntityArgument extends BrigadierArgument {
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static class EntityArgument extends BrigadierArgument_Latest implements BrigadierArgument.EntityArgument {
         public byte flags;
     }
 
     @Polymorphic(stringValue = "minecraft:score_holder")
-    @MessageVariant
-    public static class ScoreHolderArgument extends BrigadierArgument {
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static class ScoreHolderArgument extends BrigadierArgument_Latest implements BrigadierArgument.ScoreHolderArgument {
         public byte flags;
     }
 
-    @Polymorphic(stringValue = "minecraft:range")
-    @MessageVariant
-    public static class RangeArgument extends BrigadierArgument {
-        public boolean decimals;
-    }
-
     @Polymorphic(stringValue = {"minecraft:resource", "minecraft:resource_or_tag"})
-    @MessageVariant
-    public static class RegistryKeyArgument extends BrigadierArgument {
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static class RegistryKeyArgument extends BrigadierArgument_Latest implements BrigadierArgument.RegistryKeyArgument {
         public Identifier registry;
     }
 
     @Polymorphic(otherwise = true)
-    @MessageVariant
-    public static class ConstantArgument extends BrigadierArgument {
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static class ConstantArgument extends BrigadierArgument_Latest implements BrigadierArgument.ConstantArgument {
     }
 }

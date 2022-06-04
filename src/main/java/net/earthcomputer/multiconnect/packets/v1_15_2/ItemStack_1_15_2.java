@@ -17,7 +17,6 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 
 import java.util.UUID;
@@ -111,7 +110,7 @@ public abstract class ItemStack_1_15_2 implements CommonTypes.ItemStack {
                     display.put("multiconnect:1.13.2/oldLore", lore);
                     NbtList newLore = new NbtList();
                     for (int i = 0; i < lore.size(); i++) {
-                        newLore.add(NbtString.of(Text.Serializer.toJson(new LiteralText(lore.getString(i)))));
+                        newLore.add(NbtString.of(Text.Serializer.toJson(Text.literal(lore.getString(i)))));
                     }
                     display.put("Lore", newLore);
                 }

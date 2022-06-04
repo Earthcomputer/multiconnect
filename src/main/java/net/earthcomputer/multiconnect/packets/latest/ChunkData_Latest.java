@@ -11,6 +11,7 @@ import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.DimensionTypeReference;
+import net.minecraft.util.registry.DynamicRegistryManager;
 
 import java.util.List;
 
@@ -20,9 +21,10 @@ public class ChunkData_Latest implements ChunkData {
     public List<ChunkData.Section> sections;
 
     public static int computeSectionsLength(
+            @GlobalData DynamicRegistryManager registryManager,
             @GlobalData DimensionTypeReference dimensionType
     ) {
-        return dimensionType.value().value().getHeight() >> 4;
+        return dimensionType.getValue(registryManager).height() >> 4;
     }
 
     @MessageVariant(minVersion = Protocols.V1_18)

@@ -2,7 +2,7 @@ id clazz
 0 net.earthcomputer.multiconnect.packets.CPacketTeleportConfirm
 1 net.earthcomputer.multiconnect.packets.CPacketQueryBlockNbt
 2 net.earthcomputer.multiconnect.packets.CPacketUpdateDifficulty
-3 net.earthcomputer.multiconnect.packets.CPacketChatMessage
+3 net.earthcomputer.multiconnect.packets.v1_18_2.CPacketChatMessage_1_18_2
 4 net.earthcomputer.multiconnect.packets.CPacketClientStatus
 5 net.earthcomputer.multiconnect.packets.v1_17_1.CPacketClientSettings_1_17_1
 6 net.earthcomputer.multiconnect.packets.latest.CPacketRequestCommandCompletions_Latest
@@ -25,7 +25,7 @@ id clazz
 23 net.earthcomputer.multiconnect.packets.CPacketPickFromInventory
 24 net.earthcomputer.multiconnect.packets.latest.CPacketCraftRequest_Latest
 25 net.earthcomputer.multiconnect.packets.latest.CPacketUpdatePlayerAbilities_Latest
-26 net.earthcomputer.multiconnect.packets.CPacketPlayerAction
+26 net.earthcomputer.multiconnect.packets.v1_18_2.CPacketPlayerAction_1_18_2
 27 net.earthcomputer.multiconnect.packets.CPacketClientCommand
 28 net.earthcomputer.multiconnect.packets.CPacketPlayerInput
 29 net.earthcomputer.multiconnect.packets.CPacketPlayPong
@@ -35,7 +35,7 @@ id clazz
 33 net.earthcomputer.multiconnect.packets.CPacketResourcePackStatus
 34 net.earthcomputer.multiconnect.packets.CPacketAdvancementTab
 35 net.earthcomputer.multiconnect.packets.CPacketSelectMerchantTrade
-36 net.earthcomputer.multiconnect.packets.CPacketUpdateBeacon
+36 net.earthcomputer.multiconnect.packets.v1_18_2.CPacketUpdateBeacon_1_18_2
 37 net.earthcomputer.multiconnect.packets.CPacketUpdateSelectedSlot
 38 net.earthcomputer.multiconnect.packets.CPacketUpdateCommandBlock
 39 net.earthcomputer.multiconnect.packets.CPacketUpdateCommandBlockMinecart
@@ -46,4 +46,4 @@ id clazz
 44 net.earthcomputer.multiconnect.packets.CPacketHandSwing
 45 net.earthcomputer.multiconnect.packets.CPacketSpectatorTeleport
 46 net.earthcomputer.multiconnect.packets.latest.CPacketPlayerInteractBlock_Latest
-47 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractItem
+47 net.earthcomputer.multiconnect.packets.v1_18_2.CPacketPlayerInteractItem_1_18_2

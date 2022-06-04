@@ -243,7 +243,7 @@ public abstract class ItemStack_1_12_2 implements CommonTypes.ItemStack {
                     try {
                         MutableText name = Text.Serializer.fromJson(display.getString("Name"));
                         if (name != null) {
-                            display.putString("Name", name.asString());
+                            display.putString("Name", name.getString());
                         }
                     } catch (Exception ignored) {
                     }

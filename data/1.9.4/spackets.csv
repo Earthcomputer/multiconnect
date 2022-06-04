@@ -10,7 +10,7 @@ id clazz
 8 net.earthcomputer.multiconnect.packets.SPacketBlockBreakingProgress
 9 net.earthcomputer.multiconnect.packets.v1_17_1.SPacketBlockEntityUpdate_1_17_1
 10 net.earthcomputer.multiconnect.packets.SPacketBlockEvent
-11 net.earthcomputer.multiconnect.packets.SPacketBlockUpdate
+11 net.earthcomputer.multiconnect.packets.v1_18_2.SPacketBlockUpdate_1_18_2
 12 net.earthcomputer.multiconnect.packets.latest.SPacketBossBar_Latest
 13 net.earthcomputer.multiconnect.packets.v1_13_2.SPacketDifficulty_1_13_2
 14 net.earthcomputer.multiconnect.packets.v1_12_2.SPacketCommandSuggestions_1_12_2
@@ -50,7 +50,7 @@ id clazz
 48 net.earthcomputer.multiconnect.packets.SPacketEntitiesDestroy
 49 net.earthcomputer.multiconnect.packets.v1_18.SPacketRemoveEntityStatusEffect_1_18
 50 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketResourcePackSend_1_16_5
-51 net.earthcomputer.multiconnect.packets.latest.SPacketPlayerRespawn_Latest
+51 net.earthcomputer.multiconnect.packets.v1_18_2.SPacketPlayerRespawn_1_18_2
 52 net.earthcomputer.multiconnect.packets.SPacketEntitySetHeadYaw
 53 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketWorldBorder_1_16_5
 54 net.earthcomputer.multiconnect.packets.SPacketSetCameraEntity
@@ -69,7 +69,7 @@ id clazz
 67 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketPlayerSpawnPosition_1_16_5
 68 net.earthcomputer.multiconnect.packets.SPacketWorldTimeUpdate
 69 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketTitle_1_16_5
-70 net.earthcomputer.multiconnect.packets.SPacketPlaySound
+70 net.earthcomputer.multiconnect.packets.v1_18_2.SPacketPlaySound_1_18_2
 71 net.earthcomputer.multiconnect.packets.SPacketPlayerListHeader
 72 net.earthcomputer.multiconnect.packets.SPacketItemPickupAnimation
 73 net.earthcomputer.multiconnect.packets.SPacketEntityPosition

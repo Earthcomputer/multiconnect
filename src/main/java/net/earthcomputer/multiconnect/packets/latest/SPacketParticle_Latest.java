@@ -10,10 +10,9 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketParticle;
 
-@MessageVariant(minVersion = Protocols.V1_15)
+@MessageVariant(minVersion = Protocols.V1_19)
 public class SPacketParticle_Latest implements SPacketParticle {
     @Registry(Registries.PARTICLE_TYPE)
-    @Type(Types.INT)
     public int particleId;
     public boolean longDistance;
     public double x;

@@ -31,19 +31,21 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketEncoderException;
 import net.minecraft.state.property.Property;
-import net.minecraft.text.BaseText;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Triple;
@@ -51,11 +53,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -63,6 +67,8 @@ import java.lang.reflect.ParameterizedType;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
@@ -158,11 +164,11 @@ public class DebugUtils {
         }
 
         String url = MULTICONNECT_ISSUE_URL.formatted(rareBugIdThatOccurred);
-        mc.inGameHud.getChatHud().addMessage(new TranslatableText("multiconnect.rareBug", new TranslatableText("multiconnect.rareBug.link")
-                .styled(style -> style.withUnderline(true)
-                        .withColor(Formatting.BLUE)
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(url)))
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))))
+        mc.inGameHud.getChatHud().addMessage(Text.translatable("multiconnect.rareBug", Text.translatable("multiconnect.rareBug.link")
+                        .styled(style -> style.withUnderline(true)
+                                .withColor(Formatting.BLUE)
+                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(url)))
+                                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))))
             .formatted(Formatting.YELLOW));
     }
 
@@ -170,12 +176,12 @@ public class DebugUtils {
         return rareBugIdThatOccurred != 0 && (System.nanoTime() - timeThatRareBugOccurred) < 10_000_000_000L;
     }
 
-    private static BaseText getRareBugText(int line) {
+    private static Text getRareBugText(int line) {
         String url = MULTICONNECT_ISSUE_URL.formatted(rareBugIdThatOccurred);
-        return new TranslatableText("multiconnect.rareBug", new TranslatableText("multiconnect.rareBug.link")
+        return Text.translatable("multiconnect.rareBug", Text.translatable("multiconnect.rareBug.link")
                 .styled(style -> style.withUnderline(true)
                         .withColor(Formatting.BLUE)
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(url)))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(url)))
                         .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))));
     }
 
@@ -193,7 +199,7 @@ public class DebugUtils {
                 Util.getOperatingSystem().open(url);
             }
             MinecraftClient.getInstance().setScreen(parentScreen);
-        }, parentScreen.getTitle(), new TranslatableText("multiconnect.rareBug.screen"));
+        }, parentScreen.getTitle(), Text.translatable("multiconnect.rareBug.screen"));
     }
 
     @ThreadSafe
@@ -325,8 +331,7 @@ public class DebugUtils {
 
     @SuppressWarnings("unchecked")
     public static <T> void dumpRegistries() throws IOException {
-        ConnectionMode connectionMode = ConnectionMode.byValue(ConnectionInfo.protocolVersion);
-        File dir = new File("../data/" + connectionMode.getName());
+        File dir = new File("../data/" + SharedConstants.getGameVersion().getReleaseTarget());
         if (!dir.exists()) {
             //noinspection ResultOfMethodCallIgnored
             dir.mkdirs();
@@ -372,14 +377,10 @@ public class DebugUtils {
                     throw new AssertionError("No way to dump registry " + registries);
                 }
                 Registry<T> registry;
-                if (registries == Registries.MOTIVE) {
-                    registry = (Registry<T>) Registry.PAINTING_MOTIVE;
-                } else {
-                    try {
-                        registry = (Registry<T>) Registry.class.getDeclaredField(registries.name()).get(null);
-                    } catch (ReflectiveOperationException e) {
-                        throw new AssertionError(e);
-                    }
+                try {
+                    registry = (Registry<T>) Registry.class.getDeclaredField(registries.name()).get(null);
+                } catch (ReflectiveOperationException e) {
+                    throw new AssertionError(e);
                 }
                 entries = registry.stream()
                         .filter(it -> {
@@ -388,7 +389,7 @@ public class DebugUtils {
                         })
                         .map(it -> {
                             Identifier name = registry.getId(it);
-                            String nameStr = name == null ? "null" : name.getPath();
+                            String nameStr = identifierToString(name);
                             return Triple.of(registry.getRawId(it), nameStr, nameStr);
                         });
             }
@@ -403,11 +404,23 @@ public class DebugUtils {
                 });
             }
         }
+
+        dumpDynamicRegistries();
+    }
+
+    public static String identifierToString(@Nullable Identifier identifier) {
+        if (identifier == null) {
+            return "null";
+        }
+        if (identifier.getNamespace().equals("minecraft")) {
+            return identifier.getPath();
+        }
+        return identifier.toString();
     }
 
     public static String blockStateToString(BlockState state) {
         Identifier unmodifiedName = Registry.BLOCK.getId(state.getBlock());
-        String result = unmodifiedName.getPath();
+        String result = identifierToString(unmodifiedName);
         if (state.getBlock().getStateManager().getProperties().isEmpty()) return result;
         String stateStr = state.getBlock().getStateManager().getProperties().stream().map(it -> it.getName() + "=" + getName(it, state.get(it))).collect(Collectors.joining(","));
         return result + "[" + stateStr + "]";
@@ -457,6 +470,16 @@ public class DebugUtils {
         }
     }
 
+    private static void dumpDynamicRegistries() throws IOException {
+        Path destFile = Path.of("data/registry_manager.nbt");
+        Files.createDirectories(destFile.getParent());
+        var registryManager = DynamicRegistryManager.createAndLoad().toImmutable();
+        try (OutputStream output = new BufferedOutputStream(Files.newOutputStream(destFile))) {
+            NbtCompound nbt = (NbtCompound) DynamicRegistryManager.CODEC.encodeStart(NbtOps.INSTANCE, registryManager)
+                    .getOrThrow(false, err -> {});
+            NbtIo.writeCompressed(nbt, output);
+        }
+    }
 
     public static void onDebugKey() {
     }

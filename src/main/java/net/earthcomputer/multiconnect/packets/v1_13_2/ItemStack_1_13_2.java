@@ -95,7 +95,7 @@ public abstract class ItemStack_1_13_2 implements CommonTypes.ItemStack {
                             if (text == null) {
                                 throw new JsonParseException("text null");
                             }
-                            newLore.add(NbtString.of(text.asString()));
+                            newLore.add(NbtString.of(text.getString()));
                         } catch (JsonParseException e) {
                             newLore.add(lore.get(i));
                         }

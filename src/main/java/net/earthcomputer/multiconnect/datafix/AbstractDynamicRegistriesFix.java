@@ -36,7 +36,7 @@ public abstract class AbstractDynamicRegistriesFix extends DataFix {
         Identifier resource = new Identifier("multiconnect", "dynamic_registries/" + version + ".nbt");
 
         NbtCompound value;
-        try (InputStream input = MinecraftClient.getInstance().getResourceManager().getResource(resource).getInputStream()) {
+        try (InputStream input = MinecraftClient.getInstance().getResourceManager().getResourceOrThrow(resource).getInputStream()) {
             value = NbtIo.readCompressed(input);
         } catch (IOException e) {
             LOGGER.error(() -> "Error reading resource " + resource, e);

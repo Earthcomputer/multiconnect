@@ -23,11 +23,11 @@ public class BlockConnectionsWorldView implements IBlockConnectionsBlockView {
 
     @Override
     public int getMinY() {
-        return world.getDimension().getMinimumY();
+        return world.getDimension().minY();
     }
 
     @Override
     public int getMaxY() {
-        return getMinY() + world.getDimension().getHeight() - 1;
+        return getMinY() + world.getDimension().height() - 1;
     }
 }

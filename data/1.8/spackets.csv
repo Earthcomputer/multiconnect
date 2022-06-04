@@ -6,7 +6,7 @@ id clazz
 4 net.earthcomputer.multiconnect.packets.v1_15_2.SPacketEntityEquipmentUpdate_1_15_2
 5 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketPlayerSpawnPosition_1_16_5
 6 net.earthcomputer.multiconnect.packets.SPacketHealthUpdate
-7 net.earthcomputer.multiconnect.packets.latest.SPacketPlayerRespawn_Latest
+7 net.earthcomputer.multiconnect.packets.v1_18_2.SPacketPlayerRespawn_1_18_2
 8 net.earthcomputer.multiconnect.packets.v1_13_2.SPacketPlayerPositionLook_1_13_2
 9 net.earthcomputer.multiconnect.packets.SPacketUpdateSelectedSlot
 10 net.earthcomputer.multiconnect.packets.v1_13_2.SPacketUseBed_1_13_2
@@ -34,7 +34,7 @@ id clazz
 32 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketEntityAttributes_1_16_5
 33 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketChunkData_1_16_5
 34 net.earthcomputer.multiconnect.packets.SPacketChunkDeltaUpdate
-35 net.earthcomputer.multiconnect.packets.SPacketBlockUpdate
+35 net.earthcomputer.multiconnect.packets.v1_18_2.SPacketBlockUpdate_1_18_2
 36 net.earthcomputer.multiconnect.packets.SPacketBlockEvent
 37 net.earthcomputer.multiconnect.packets.SPacketBlockBreakingProgress
 38 net.earthcomputer.multiconnect.packets.SPacketBulkChunkData

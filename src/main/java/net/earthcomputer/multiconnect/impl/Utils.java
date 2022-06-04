@@ -7,8 +7,8 @@ import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.registry.*;
@@ -42,16 +42,16 @@ public class Utils {
 
     public static DropDownWidget<ConnectionMode> createVersionDropdown(Screen screen, ConnectionMode initialMode) {
         var versionDropDown = new DropDownWidget<>(screen.width - 80, 5, 75, 20, initialMode, mode -> {
-            LiteralText text = new LiteralText(mode.getName());
+            MutableText text = Text.literal(mode.getName());
             if (mode.isMulticonnectBeta()) {
-                text.append(new LiteralText(" !").formatted(Formatting.RED));
+                text.append(Text.literal(" !").formatted(Formatting.RED));
             }
             return text;
         })
                 .setCategoryLabelExtractor(mode -> {
-                    LiteralText text = new LiteralText(mode.getMajorReleaseName());
+                    MutableText text = Text.literal(mode.getMajorReleaseName());
                     if (mode.isMulticonnectBeta()) {
-                        text.append(new LiteralText(" !").formatted(Formatting.RED));
+                        text.append(Text.literal(" !").formatted(Formatting.RED));
                     }
                     return text;
                 })
@@ -59,8 +59,8 @@ public class Utils {
                     if (mode.isMulticonnectBeta()) {
                         String modeName = isCategory ? mode.getMajorReleaseName() : mode.getName();
                         screen.renderTooltip(matrices, ImmutableList.of(
-                                new TranslatableText("multiconnect.betaWarning.line1", modeName),
-                                new TranslatableText("multiconnect.betaWarning.line2", modeName)
+                                Text.translatable("multiconnect.betaWarning.line1", modeName),
+                                Text.translatable("multiconnect.betaWarning.line2", modeName)
                         ), x, y);
                     }
                 });

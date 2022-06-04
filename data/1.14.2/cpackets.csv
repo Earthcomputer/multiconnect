@@ -2,7 +2,7 @@ id clazz
 0 net.earthcomputer.multiconnect.packets.CPacketTeleportConfirm
 1 net.earthcomputer.multiconnect.packets.CPacketQueryBlockNbt
 2 net.earthcomputer.multiconnect.packets.CPacketUpdateDifficulty
-3 net.earthcomputer.multiconnect.packets.CPacketChatMessage
+3 net.earthcomputer.multiconnect.packets.v1_18_2.CPacketChatMessage_1_18_2
 4 net.earthcomputer.multiconnect.packets.CPacketClientStatus
 5 net.earthcomputer.multiconnect.packets.v1_16_5.CPacketClientSettings_1_16_5
 6 net.earthcomputer.multiconnect.packets.latest.CPacketRequestCommandCompletions_Latest
@@ -25,7 +25,7 @@ id clazz
 23 net.earthcomputer.multiconnect.packets.CPacketPickFromInventory
 24 net.earthcomputer.multiconnect.packets.latest.CPacketCraftRequest_Latest
 25 net.earthcomputer.multiconnect.packets.v1_15_2.CPacketUpdatePlayerAbilities_1_15_2
-26 net.earthcomputer.multiconnect.packets.CPacketPlayerAction
+26 net.earthcomputer.multiconnect.packets.v1_18_2.CPacketPlayerAction_1_18_2
 27 net.earthcomputer.multiconnect.packets.CPacketClientCommand
 28 net.earthcomputer.multiconnect.packets.CPacketPlayerInput
 29 net.earthcomputer.multiconnect.packets.v1_16_1.CPacketRecipeBookData_1_16_1
@@ -33,7 +33,7 @@ id clazz
 31 net.earthcomputer.multiconnect.packets.CPacketResourcePackStatus
 32 net.earthcomputer.multiconnect.packets.CPacketAdvancementTab
 33 net.earthcomputer.multiconnect.packets.CPacketSelectMerchantTrade
-34 net.earthcomputer.multiconnect.packets.CPacketUpdateBeacon
+34 net.earthcomputer.multiconnect.packets.v1_18_2.CPacketUpdateBeacon_1_18_2
 35 net.earthcomputer.multiconnect.packets.CPacketUpdateSelectedSlot
 36 net.earthcomputer.multiconnect.packets.CPacketUpdateCommandBlock
 37 net.earthcomputer.multiconnect.packets.CPacketUpdateCommandBlockMinecart
@@ -44,4 +44,4 @@ id clazz
 42 net.earthcomputer.multiconnect.packets.CPacketHandSwing
 43 net.earthcomputer.multiconnect.packets.CPacketSpectatorTeleport
 44 net.earthcomputer.multiconnect.packets.latest.CPacketPlayerInteractBlock_Latest
-45 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractItem
+45 net.earthcomputer.multiconnect.packets.v1_18_2.CPacketPlayerInteractItem_1_18_2

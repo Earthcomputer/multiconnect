@@ -21,6 +21,7 @@ public class Schema99 extends Schema {
 
         schema.registerType(false, MulticonnectDFU.REGISTRY_MANAGER, DSL::remainder);
         schema.registerType(false, MulticonnectDFU.DIMENSION, DSL::remainder);
+        schema.registerType(false, MulticonnectDFU.STATUS_EFFECT_FACTOR_DATA, DSL::remainder);
     }
 
     @Override

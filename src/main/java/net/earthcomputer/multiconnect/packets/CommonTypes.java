@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Argument;
+import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Message;
@@ -17,8 +18,10 @@ import net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2;
 import net.earthcomputer.multiconnect.packets.v1_13_1.ItemStack_1_13_1;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Blocks_1_12_2;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.LiteralText;
+import net.minecraft.util.Identifier;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -28,8 +31,15 @@ public class CommonTypes {
     public static class Text {
         public String json;
 
+        public Text() {
+        }
+
+        public Text(String json) {
+            this.json = json;
+        }
+
         public static Text createLiteral(String value) {
-            var text = new LiteralText(value);
+            var text = net.minecraft.text.Text.literal(value);
             Text result = new Text();
             result.json = net.minecraft.text.Text.Serializer.toJson(text);
             return result;
@@ -61,6 +71,49 @@ public class CommonTypes {
             int z = (int) (packedData << 26 >> 38);
             return new net.minecraft.util.math.BlockPos(x, y, z);
         }
+
+        public static BlockPos_Latest fromMinecraft(net.minecraft.util.math.BlockPos pos) {
+            var result = new BlockPos_Latest();
+            result.packedData = ((long)(pos.getX() & 0x3FFFFFF) << 38) | ((long)(pos.getZ() & 0x3FFFFFF) << 12) | (long)(pos.getY() & 0xFFF);
+            return result;
+        }
+    }
+
+    @MessageVariant
+    public static class GlobalPos {
+        public Identifier dimension;
+        public BlockPos pos;
+    }
+
+    @MessageVariant
+    public static class GameProfile {
+        public UUID uuid;
+        public String name;
+        public List<Property> properties;
+
+        public GameProfile() {
+        }
+
+        public GameProfile(UUID uuid, String name) {
+            this.uuid = uuid;
+            this.name = name;
+            this.properties = new ArrayList<>(0);
+        }
+
+        @MessageVariant
+        public static class Property {
+            public String name;
+            public String value;
+            public Optional<String> signature;
+        }
+    }
+
+    @MessageVariant
+    public static class PublicKey {
+        @Type(Types.LONG)
+        public long expiresAt;
+        public byte[] key;
+        public byte[] keySignature;
     }
 
     @Message
@@ -225,9 +278,9 @@ public class CommonTypes {
                 public int level;
             }
 
-            @Polymorphic(stringValue = "firework_data")
+            @Polymorphic(stringValue = "optional_int")
             @MessageVariant
-            public static class FireworkData extends TrackedData {
+            public static class OptionalInt extends TrackedData {
                 public int value;
             }
 
@@ -235,6 +288,33 @@ public class CommonTypes {
             @MessageVariant
             public static class Pose extends TrackedData {
                 public CommonTypes.Pose value;
+            }
+
+            @Polymorphic(stringValue = "cat_variant")
+            @MessageVariant
+            public static class CatVariant extends TrackedData {
+                @Registry(Registries.CAT_VARIANT)
+                public int value;
+            }
+
+            @Polymorphic(stringValue = "frog_variant")
+            @MessageVariant
+            public static class FrogVariant extends TrackedData {
+                @Registry(Registries.FROG_VARIANT)
+                public int value;
+            }
+
+            @Polymorphic(stringValue = "optional_global_pos")
+            @MessageVariant
+            public static class OptionalGlobalPos extends TrackedData {
+                public Optional<GlobalPos> value;
+            }
+
+            @Polymorphic(stringValue = "painting_variant")
+            @MessageVariant
+            public static class PaintingVariant extends TrackedData {
+                @Registry(Registries.PAINTING_VARIANT)
+                public int value;
             }
         }
     }
@@ -380,19 +460,52 @@ public class CommonTypes {
         @Polymorphic(stringValue = "vibration")
         @MessageVariant(minVersion = Protocols.V1_13)
         public static class Vibration extends Particle_Latest implements Particle.Vibration {
-            public double originX;
-            public double originY;
-            public double originZ;
-            public double destX;
-            public double destY;
-            public double destZ;
-            @Type(Types.INT)
-            public int ticks;
+            public VibrationPath path;
         }
 
         @Polymorphic(otherwise = true)
         @MessageVariant(minVersion = Protocols.V1_13)
         public static class Simple extends Particle_Latest implements Particle.Simple {
+        }
+    }
+
+    @Message
+    public interface VibrationPath {
+    }
+
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static class VibrationPath_Latest implements VibrationPath {
+        @Introduce(compute = "computeSource")
+        public PositionSource source;
+        public int ticks;
+
+        public static PositionSource computeSource(
+                @Argument("destX") double destX,
+                @Argument("destY") double destY,
+                @Argument("destZ") double destZ,
+                @DefaultConstruct PositionSource.Block source
+        ) {
+            source.pos = BlockPos_Latest.fromMinecraft(new net.minecraft.util.math.BlockPos(destX, destY, destZ));
+            return source;
+        }
+    }
+
+    @Polymorphic
+    @MessageVariant
+    public static abstract class PositionSource {
+        @Registry(Registries.POSITION_SOURCE_TYPE)
+        public Identifier type;
+
+        @Polymorphic(stringValue = "block")
+        @MessageVariant
+        public static class Block extends PositionSource {
+            public CommonTypes.BlockPos pos;
+        }
+
+        @Polymorphic(stringValue = "entity")
+        @MessageVariant
+        public static class Entity extends PositionSource {
+            public int entityId;
         }
     }
 }

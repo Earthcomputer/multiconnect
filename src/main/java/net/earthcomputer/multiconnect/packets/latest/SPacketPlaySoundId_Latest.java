@@ -1,6 +1,5 @@
 package net.earthcomputer.multiconnect.packets.latest;
 
-import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Registries;
@@ -12,10 +11,9 @@ import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketPlaySoundId;
 import net.minecraft.util.Identifier;
 
-@MessageVariant(minVersion = Protocols.V1_13)
+@MessageVariant(minVersion = Protocols.V1_19)
 public class SPacketPlaySoundId_Latest implements SPacketPlaySoundId {
     @Registry(Registries.SOUND_EVENT)
-    @Introduce(compute = "computeId")
     public Identifier id;
     public CommonTypes.SoundCategory category;
     @Type(Types.INT)
@@ -26,9 +24,7 @@ public class SPacketPlaySoundId_Latest implements SPacketPlaySoundId {
     public int z;
     public float volume;
     public float pitch;
-
-    public static Identifier computeId(@Argument("id") String id) {
-        Identifier newId = Identifier.tryParse(id);
-        return newId == null ? new Identifier("ambient.cave") : newId;
-    }
+    @Type(Types.LONG)
+    @Introduce(intValue = 0)
+    public long seed;
 }

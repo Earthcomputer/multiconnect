@@ -18,7 +18,6 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.WitherEntity;
@@ -37,9 +36,9 @@ import net.minecraft.entity.mob.SlimeEntity;
 import net.minecraft.entity.mob.SpiderEntity;
 import net.minecraft.entity.mob.WitchEntity;
 import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.passive.BatEntity;
 import net.minecraft.entity.passive.CatEntity;
-import net.minecraft.entity.passive.HorseBaseEntity;
 import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.PigEntity;
@@ -75,14 +74,13 @@ import net.minecraft.potion.PotionUtil;
 import net.minecraft.potion.Potions;
 import net.minecraft.screen.BrewingStandScreenHandler;
 import net.minecraft.screen.ScreenHandler;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.EulerAngle;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 import java.util.OptionalDouble;
 import java.util.Set;
@@ -292,7 +290,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
                 } else if (entity instanceof PassiveEntity) {
                     if (id == 12) {
                         entity.getDataTracker().set(PassiveEntityAccessor.getChild(), data < 0);
-                    } else if (entity instanceof HorseBaseEntity) {
+                    } else if (entity instanceof AbstractHorseEntity) {
                         if (id == 19) {
                             entity.getDataTracker().set(Protocol_1_10.OLD_HORSE_TYPE, (int) data);
                         }
@@ -431,7 +429,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
                 } else if (id == 17) {
                     entity.getDataTracker().set(GuardianEntityAccessor.getBeamTargetId(), data);
                 }
-            } else if (entity instanceof HorseBaseEntity) {
+            } else if (entity instanceof AbstractHorseEntity) {
                 if (id == 16) {
                     entity.getDataTracker().set(Protocol_1_10.OLD_HORSE_FLAGS, (byte) data);
                 } else if (id == 20) {
@@ -508,7 +506,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
     public static void handleStringTrackedData(Entity entity, int id, String data) {
         if (id == 2) {
             entity.getDataTracker().set(Protocol_1_12_2.OLD_CUSTOM_NAME, data);
-        } else if (entity instanceof HorseBaseEntity horse) {
+        } else if (entity instanceof AbstractHorseEntity horse) {
             if (id == 21) {
                 if (data.isEmpty()) {
                     horse.setOwnerUuid(null);
@@ -524,7 +522,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
             if (id == 23) {
                 entity.getDataTracker().set(CommandBlockMinecartEntityAccessor.getCommand(), data);
             } else if (id == 24) {
-                entity.getDataTracker().set(CommandBlockMinecartEntityAccessor.getLastOutput(), new LiteralText(data));
+                entity.getDataTracker().set(CommandBlockMinecartEntityAccessor.getLastOutput(), Text.literal(data));
             }
         } else if (entity instanceof TameableEntity tameable) {
             if (id == 17) {

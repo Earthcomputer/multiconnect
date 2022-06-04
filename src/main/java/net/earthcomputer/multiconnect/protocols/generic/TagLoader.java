@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -35,11 +34,10 @@ public final class TagLoader {
 
     private static final Gson GSON = new Gson();
     private static final ResourceManager DATA_LOADER = Util.make(() -> {
-        try (ResourcePackManager packManager = new ResourcePackManager(ResourceType.SERVER_DATA, new VanillaDataPackProvider())) {
-            packManager.scanPacks();
-            packManager.setEnabledProfiles(Collections.singletonList("vanilla"));
-            return new LifecycledResourceManagerImpl(ResourceType.SERVER_DATA, packManager.createResourcePacks());
-        }
+        ResourcePackManager packManager = new ResourcePackManager(ResourceType.SERVER_DATA, new VanillaDataPackProvider());
+        packManager.scanPacks();
+        packManager.setEnabledProfiles(Collections.singletonList("vanilla"));
+        return new LifecycledResourceManagerImpl(ResourceType.SERVER_DATA, packManager.createResourcePacks());
     });
 
     private static List<Tag<Identifier>> loadTags(RegistryKey<? extends Registry<?>> registry) {
@@ -58,14 +56,15 @@ public final class TagLoader {
             registryName = registry.getValue().getPath();
         }
         String startingPath = "tags/" + registryName;
-        Collection<Identifier> tagPaths = DATA_LOADER.findResources(startingPath, path -> path.endsWith(".json"));
+        Map<Identifier, Resource> tagPaths = DATA_LOADER.findResources(startingPath, path -> path.getPath().endsWith(".json"));
 
-        List<Tag<String>> unresolvedTags = tagPaths.stream().map(tagPath -> {
+        List<Tag<String>> unresolvedTags = tagPaths.entrySet().stream().map(entry -> {
+            Identifier tagPath = entry.getKey();
             String path = tagPath.getPath();
             Identifier tagName = new Identifier(tagPath.getNamespace(), path.substring(startingPath.length() + 1, path.length() - 5));
             // load the tag
-            try (Resource resource = DATA_LOADER.getResource(tagPath)) {
-                Reader reader = new BufferedReader(new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8));
+            Resource resource = entry.getValue();
+            try (Reader reader = new BufferedReader(new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
                 TagJson tagJson = JsonHelper.deserialize(GSON, reader, TagJson.class);
                 if (tagJson == null) {
                     throw new IllegalStateException("Illegal built-in tag " + tagName);

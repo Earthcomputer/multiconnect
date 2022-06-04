@@ -15,7 +15,7 @@ public class MixinStructureBlockBlockEntity {
     @Unique
     private String name_1122;
 
-    @Inject(method = "getStructureName", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getTemplateName", at = @At("HEAD"), cancellable = true)
     private void onGetStructureName(CallbackInfoReturnable<String> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             ci.setReturnValue(name_1122 == null ? "" : name_1122);
@@ -29,7 +29,7 @@ public class MixinStructureBlockBlockEntity {
         }
     }
 
-    @Inject(method = "setStructureName(Ljava/lang/String;)V", at = @At("HEAD"))
+    @Inject(method = "setTemplateName(Ljava/lang/String;)V", at = @At("HEAD"))
     private void onSetStructureName(String name, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
             name_1122 = name;

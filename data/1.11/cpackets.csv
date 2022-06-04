@@ -1,7 +1,7 @@
 id clazz
 0 net.earthcomputer.multiconnect.packets.CPacketTeleportConfirm
 1 net.earthcomputer.multiconnect.packets.v1_12_2.CPacketRequestCommandCompletions_1_12_2
-2 net.earthcomputer.multiconnect.packets.CPacketChatMessage
+2 net.earthcomputer.multiconnect.packets.v1_18_2.CPacketChatMessage_1_18_2
 3 net.earthcomputer.multiconnect.packets.CPacketClientStatus
 4 net.earthcomputer.multiconnect.packets.v1_16_5.CPacketClientSettings_1_16_5
 5 net.earthcomputer.multiconnect.packets.v1_16_5.CPacketAckScreenAction_1_16_5
@@ -18,7 +18,7 @@ id clazz
 16 net.earthcomputer.multiconnect.packets.CPacketVehicleMove
 17 net.earthcomputer.multiconnect.packets.CPacketBoatPaddleState
 18 net.earthcomputer.multiconnect.packets.v1_15_2.CPacketUpdatePlayerAbilities_1_15_2
-19 net.earthcomputer.multiconnect.packets.CPacketPlayerAction
+19 net.earthcomputer.multiconnect.packets.v1_18_2.CPacketPlayerAction_1_18_2
 20 net.earthcomputer.multiconnect.packets.CPacketClientCommand
 21 net.earthcomputer.multiconnect.packets.CPacketPlayerInput
 22 net.earthcomputer.multiconnect.packets.CPacketResourcePackStatus
@@ -28,4 +28,4 @@ id clazz
 26 net.earthcomputer.multiconnect.packets.CPacketHandSwing
 27 net.earthcomputer.multiconnect.packets.CPacketSpectatorTeleport
 28 net.earthcomputer.multiconnect.packets.v1_13_2.CPacketPlayerInteractBlock_1_13_2
-29 net.earthcomputer.multiconnect.packets.CPacketPlayerInteractItem
+29 net.earthcomputer.multiconnect.packets.v1_18_2.CPacketPlayerInteractItem_1_18_2

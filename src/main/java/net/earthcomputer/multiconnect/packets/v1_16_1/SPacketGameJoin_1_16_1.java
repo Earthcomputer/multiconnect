@@ -12,7 +12,6 @@ import net.earthcomputer.multiconnect.packets.SPacketGameJoin;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -62,9 +61,9 @@ public class SPacketGameJoin_1_16_1 implements SPacketGameJoin {
 
     public static Identifier computeDimension(@Argument("dimensionId") int dimensionId) {
         return switch (dimensionId) {
-            case -1 -> DimensionType.THE_NETHER_ID;
-            case 1 -> DimensionType.THE_END_ID;
-            default -> DimensionType.OVERWORLD_ID;
+            case -1 -> World.NETHER.getValue();
+            case 1 -> World.END.getValue();
+            default -> World.OVERWORLD.getValue();
         };
     }
 

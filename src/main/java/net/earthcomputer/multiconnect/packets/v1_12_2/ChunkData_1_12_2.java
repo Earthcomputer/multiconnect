@@ -10,6 +10,7 @@ import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.DimensionTypeReference;
+import net.minecraft.util.registry.DynamicRegistryManager;
 
 import java.util.List;
 
@@ -42,9 +43,10 @@ public class ChunkData_1_12_2 implements ChunkData {
         public byte[] skyLight;
 
         public static boolean hasSkyLight(
+                @GlobalData DynamicRegistryManager registryManager,
                 @GlobalData DimensionTypeReference dimType
         ) {
-            return dimType.value().value().hasSkyLight();
+            return dimType.getValue(registryManager).hasSkyLight();
         }
     }
 

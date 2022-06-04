@@ -8,7 +8,6 @@ import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.command.CommandSource;
-import net.minecraft.network.OffThreadException;
 import net.minecraft.network.packet.s2c.play.CommandTreeS2CPacket;
 
 import java.util.ArrayDeque;
@@ -64,17 +63,16 @@ public class TabCompletionManager {
 
     public static boolean handleCustomCompletions(Entry entry, List<String> suggestions) {
         if (entry.id() == -1) {
-            var dispatcher = new CommandDispatcher<CommandSource>();
-            Commands_1_12_2.registerAll(dispatcher, suggestions.stream()
-                    .filter(str -> !str.isEmpty())
-                    .map(str -> str.substring(1))
-                    .collect(Collectors.toSet()));
-            assert MinecraftClient.getInstance().getNetworkHandler() != null;
-            try {
-                // TODO: make this use the new packet system
-                MinecraftClient.getInstance().getNetworkHandler().onCommandTree(new CommandTreeS2CPacket(dispatcher.getRoot()));
-            } catch (OffThreadException ignore) {
-            }
+            MinecraftClient.getInstance().execute(() -> {
+                ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+                if (networkHandler != null) {
+                    networkHandler.onCommandTree(new CommandTreeS2CPacket(new CommandDispatcher<CommandSource>().getRoot()));
+                    Commands_1_12_2.registerAll(networkHandler.getCommandDispatcher(), suggestions.stream()
+                            .filter(str -> !str.isEmpty())
+                            .map(str -> str.substring(1))
+                            .collect(Collectors.toSet()));
+                }
+            });
             return true;
         } else if (entry.id() == -2) {
             if (customCompletions.isEmpty())

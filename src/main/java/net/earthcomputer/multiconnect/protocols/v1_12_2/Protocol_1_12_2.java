@@ -23,7 +23,7 @@ import net.minecraft.item.Item;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.particle.*;
 import net.minecraft.stat.Stats;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
@@ -150,7 +150,7 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
 
         if (clazz == Entity.class && data == EntityAccessor.getCustomName()) {
             DataTrackerManager.registerOldTrackedData(Entity.class, OLD_CUSTOM_NAME, "",
-                    (entity, val) -> entity.setCustomName(val.isEmpty() ? null : new LiteralText(val)));
+                    (entity, val) -> entity.setCustomName(val.isEmpty() ? null : Text.literal(val)));
             return false;
         }
 

@@ -16,17 +16,19 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.TrackedPosition;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.AbstractDonkeyEntity;
-import net.minecraft.entity.passive.HorseBaseEntity;
+import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.recipe.RecipeSerializer;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
 import java.util.Set;
@@ -237,15 +239,15 @@ public class Protocol_1_10 extends Protocol_1_11 {
             });
             return false;
         }
-        if (clazz == HorseBaseEntity.class && data == HorseBaseEntityAccessor.getHorseFlags()) {
-            DataTrackerManager.registerOldTrackedData(HorseBaseEntity.class, OLD_HORSE_FLAGS, (byte)0, (entity, val) -> {
+        if (clazz == AbstractHorseEntity.class && data == AbstractHorseEntityAccessor.getHorseFlags()) {
+            DataTrackerManager.registerOldTrackedData(AbstractHorseEntity.class, OLD_HORSE_FLAGS, (byte)0, (entity, val) -> {
                 // keep the bottom 3 flags, skip the 4th and shift the higher ones down
-                entity.getDataTracker().set(HorseBaseEntityAccessor.getHorseFlags(), (byte) ((val & 7) | ((val & ~15) >>> 1)));
+                entity.getDataTracker().set(AbstractHorseEntityAccessor.getHorseFlags(), (byte) ((val & 7) | ((val & ~15) >>> 1)));
                 if (entity instanceof AbstractDonkeyEntity donkey) {
                     donkey.setHasChest((val & 8) != 0);
                 }
             });
-            DataTrackerManager.registerOldTrackedData(HorseBaseEntity.class, OLD_HORSE_TYPE, 0, (entity, val) -> {
+            DataTrackerManager.registerOldTrackedData(AbstractHorseEntity.class, OLD_HORSE_TYPE, 0, (entity, val) -> {
                 EntityType<?> newType = switch (val) {
                     case 1 -> EntityType.DONKEY;
                     case 2 -> EntityType.MULE;
@@ -257,7 +259,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
                     changeEntityType(entity, newType);
                 }
             });
-            DataTrackerManager.registerOldTrackedData(HorseBaseEntity.class, OLD_HORSE_VARIANT, 0, (entity, val) -> {
+            DataTrackerManager.registerOldTrackedData(AbstractHorseEntity.class, OLD_HORSE_VARIANT, 0, (entity, val) -> {
                 if (entity instanceof HorseEntity) {
                     entity.getDataTracker().set(HorseEntityAccessor.getVariant(), val);
                 }
@@ -276,8 +278,8 @@ public class Protocol_1_10 extends Protocol_1_11 {
     @Override
     public void postEntityDataRegister(Class<? extends Entity> clazz) {
         super.postEntityDataRegister(clazz);
-        if (clazz == HorseBaseEntity.class) {
-            DataTrackerManager.registerOldTrackedData(HorseBaseEntity.class, OLD_HORSE_ARMOR, 0, (entity, val) -> {
+        if (clazz == AbstractHorseEntity.class) {
+            DataTrackerManager.registerOldTrackedData(AbstractHorseEntity.class, OLD_HORSE_ARMOR, 0, (entity, val) -> {
                 if (entity instanceof HorseEntity) {
                     entity.getDataTracker().set(Protocol_1_13_2.OLD_HORSE_ARMOR, val);
                 }
@@ -294,7 +296,10 @@ public class Protocol_1_10 extends Protocol_1_11 {
 
         // copy the entity
         destEntity.readNbt(entity.writeNbt(new NbtCompound()));
-        destEntity.updateTrackedPosition(entity.getTrackedPosition());
+        TrackedPosition trackedPosition = entity.getTrackedPosition();
+        // yarn has the subtract method backwards >.< also yes it's stupid we have to do it this way
+        Vec3d trackedPos = trackedPosition.subtract(Vec3d.ZERO).negate();
+        destEntity.updateTrackedPosition(trackedPos.x, trackedPos.y, trackedPos.z);
 
         // replace entity in world and exchange entity id
         int entityId = entity.getId();

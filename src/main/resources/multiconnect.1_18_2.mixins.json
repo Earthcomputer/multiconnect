@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_18_2.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "ClientWorldAccessor",
+    "MixinClientPlayNetworkHandler",
+    "MixinLoginHelloC2SPacket",
+    "MixinLoginKeyC2SPacket",
+    "MixinLoginSuccessPacket",
+    "MixinPendingUpdateManager",
+    "PaintingEntityAccessor"
+  ],
+  "client": [
+    "MixinClientLoginNetworkHandler"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

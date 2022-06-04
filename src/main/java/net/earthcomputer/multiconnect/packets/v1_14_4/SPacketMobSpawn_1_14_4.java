@@ -10,7 +10,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketEntityTrackerUpdate;
 import net.earthcomputer.multiconnect.packets.SPacketMobSpawn;
-import net.earthcomputer.multiconnect.packets.latest.SPacketMobSpawn_Latest;
+import net.earthcomputer.multiconnect.packets.v1_18_2.SPacketMobSpawn_1_18_2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +54,7 @@ public class SPacketMobSpawn_1_14_4 implements SPacketMobSpawn {
         List<Object> packets = new ArrayList<>(2);
 
         {
-            SPacketMobSpawn_Latest packet = new SPacketMobSpawn_Latest();
+            SPacketMobSpawn_1_18_2 packet = new SPacketMobSpawn_1_18_2();
             packet.entityId = entityId;
             packet.uuid = uuid;
             packet.type = type;

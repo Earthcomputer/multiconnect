@@ -1,8 +1,11 @@
 package net.earthcomputer.multiconnect.packets;
 
+import net.earthcomputer.multiconnect.ap.Introduce;
+import net.earthcomputer.multiconnect.ap.Message;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
+import net.earthcomputer.multiconnect.api.Protocols;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,21 +21,18 @@ public abstract class SPacketPlayerList {
     public static class AddPlayer extends SPacketPlayerList {
         public List<Player> players;
 
-        @MessageVariant
-        public static class Player {
-            public UUID uuid;
-            public String name;
-            public List<Property> properties;
+        @Message
+        public interface Player {
+        }
+
+        @MessageVariant(minVersion = Protocols.V1_19)
+        public static class Player_Latest implements Player {
+            public CommonTypes.GameProfile profile;
             public int gamemode;
             public int ping;
             public Optional<CommonTypes.Text> displayName;
-
-            @MessageVariant
-            public static class Property {
-                public String name;
-                public String value;
-                public Optional<String> signature;
-            }
+            @Introduce(defaultConstruct = true)
+            public Optional<CommonTypes.PublicKey> profilePublicKey;
         }
     }
 

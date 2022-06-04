@@ -73,7 +73,7 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
         List<ChunkData.Section> fromSections = ((ChunkData_1_17_1) data).sections;
         List<ChunkData.Section> destSections = new ArrayList<>(fromSections.size());
         ((ChunkData_Latest) dest.data).sections = destSections;
-        int numSections = dimensionType.value().value().getHeight() >> 4;
+        int numSections = dimensionType.getValue(registryManager).height() >> 4;
         int i = 0;
         for (int sectionY = 0; sectionY < numSections; sectionY++) {
             if (verticalStripBitmask.get(sectionY)) {
@@ -245,6 +245,7 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
         public static ChunkData fixData(
                 ChunkData data_,
                 @FilledArgument TypedMap userData,
+                @GlobalData DynamicRegistryManager registryManager,
                 @GlobalData DimensionTypeReference dimType
         ) {
             var data = (ChunkData_Latest) data_;
@@ -268,7 +269,7 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
                 }
             }
 
-            var world = new BlockConnectionsNetworkView(dimType.value().value().getMinimumY(), sections);
+            var world = new BlockConnectionsNetworkView(dimType.getValue(registryManager).minY(), sections);
             var blocksNeedingUpdate = new EnumMap<EightWayDirection, IntSet>(EightWayDirection.class);
             ConnectionInfo.protocol.getBlockConnector().fixChunkData(world, blocksNeedingUpdate);
             userData.put(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY, blocksNeedingUpdate);

@@ -5,7 +5,6 @@ import net.minecraft.network.listener.ClientQueryPacketListener;
 import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket;
 import net.minecraft.network.packet.s2c.query.QueryResponseS2CPacket;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 
 public class GetProtocolPacketListener implements ClientQueryPacketListener {
 
@@ -22,7 +21,7 @@ public class GetProtocolPacketListener implements ClientQueryPacketListener {
     public void onResponse(QueryResponseS2CPacket packet) {
         protocol = packet.getServerMetadata().getVersion().getProtocolVersion();
         completed = true;
-        connection.disconnect(new TranslatableText("multiplayer.status.finished"));
+        connection.disconnect(Text.translatable("multiplayer.status.finished"));
     }
 
     @Override

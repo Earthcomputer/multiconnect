@@ -12,6 +12,7 @@ public class MulticonnectDFU {
 
     public static final DSL.TypeReference DIMENSION = () -> "dimension";
     public static final DSL.TypeReference REGISTRY_MANAGER = () -> "registry_manager";
+    public static final DSL.TypeReference STATUS_EFFECT_FACTOR_DATA = () -> "status_effect_factor_data";
 
     public static final DataFixer FIXER = Util.make(() -> {
         var builder = new DataFixerBuilder(SharedConstants.getGameVersion().getSaveVersion().getId());
@@ -24,6 +25,8 @@ public class MulticonnectDFU {
         builder.addFixer(new DynamicRegistries1_18Fix(schema_18, true));
         Schema schema_18_2 = builder.addSchema(2975, Schema::new);
         builder.addFixer(new DynamicRegistries1_18_2Fix(schema_18_2, true));
-        return builder.build(Util.getBootstrapExecutor());
+        Schema schema_19 = builder.addSchema(3103, Schema::new);
+        builder.addFixer(new DynamicRegistries1_19Fix(schema_19, true));
+        return builder.buildOptimized(Util.getBootstrapExecutor());
     });
 }

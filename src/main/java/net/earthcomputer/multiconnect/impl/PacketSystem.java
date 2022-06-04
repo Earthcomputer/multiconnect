@@ -10,6 +10,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.Packet;
 import net.minecraft.util.Identifier;
@@ -40,12 +41,19 @@ public class PacketSystem {
 
     private static final Int2ObjectMap<ProtocolClassProxy> protocolClasses = Util.make(new Int2ObjectOpenHashMap<>(), map -> {
         for (ConnectionMode protocol : ConnectionMode.protocolValues()) {
+            String protocolName = protocol.getName();
+
+            // handle snapshot version for snapshot development
+            if (!SharedConstants.getGameVersion().isStable() && protocolName.equals(SharedConstants.getGameVersion().getId())) {
+                protocolName = SharedConstants.getGameVersion().getReleaseTarget();
+            }
+
             Class<?> clazz;
             try {
-                clazz = Class.forName("net.earthcomputer.multiconnect.generated.Protocol_" + protocol.getName().replace('.', '_'));
+                clazz = Class.forName("net.earthcomputer.multiconnect.generated.Protocol_" + protocolName.replace('.', '_'));
             } catch (ClassNotFoundException e) {
                 // TODO: make this a hard error once the packet system is complete
-                LOGGER.warn("Protocol class not found for {}", protocol.getName());
+                LOGGER.warn("Protocol class not found for {}", protocolName);
                 continue;
             }
             map.put(protocol.getValue(), new ProtocolClassProxy(clazz, protocol.getValue()));

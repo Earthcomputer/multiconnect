@@ -7,16 +7,16 @@ import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.packets.latest.SPacketEntitySpawn_Latest;
+import net.earthcomputer.multiconnect.packets.v1_18_2.SPacketEntitySpawn_1_18_2;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.random.Random;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @MessageVariant(maxVersion = Protocols.V1_15_2)
 public class SPacketEntitySpawnGlobal_1_15_2 {
-    private static final Random random = new Random();
+    private static final Random random = Random.createLocal();
 
     public int id;
     public byte entityTypeId;
@@ -25,12 +25,12 @@ public class SPacketEntitySpawnGlobal_1_15_2 {
     public double z;
 
     @Handler
-    public static List<SPacketEntitySpawn_Latest> toEntitySpawnPacket(
+    public static List<SPacketEntitySpawn_1_18_2> toEntitySpawnPacket(
             @Argument("entityTypeId") byte entityTypeId,
             @Argument("x") double x,
             @Argument("y") double y,
             @Argument("z") double z,
-            @DefaultConstruct SPacketEntitySpawn_Latest packet,
+            @DefaultConstruct SPacketEntitySpawn_1_18_2 packet,
             @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.ENTITY_TYPE, value = "lightning_bolt")) int lightningBoltId
     ) {
         if (entityTypeId != 1) { // lightning bolt id
@@ -43,7 +43,7 @@ public class SPacketEntitySpawnGlobal_1_15_2 {
         packet.x = x;
         packet.y = y;
         packet.z = z;
-        List<SPacketEntitySpawn_Latest> packets = new ArrayList<>(1);
+        List<SPacketEntitySpawn_1_18_2> packets = new ArrayList<>(1);
         packets.add(packet);
         return packets;
     }

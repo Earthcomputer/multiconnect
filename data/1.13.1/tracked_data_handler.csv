@@ -16,5 +16,5 @@ id name oldName remapTo
 14 nbt_compound
 15 particle
 16 villager_data
-17 firework_data
+17 optional_int
 18 entity_pose

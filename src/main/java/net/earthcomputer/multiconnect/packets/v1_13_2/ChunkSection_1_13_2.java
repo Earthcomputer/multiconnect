@@ -11,6 +11,7 @@ import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.packets.v1_12_2.ChunkData_1_12_2;
 import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1;
 import net.earthcomputer.multiconnect.protocols.generic.DimensionTypeReference;
+import net.minecraft.util.registry.DynamicRegistryManager;
 
 @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
 public class ChunkSection_1_13_2 implements ChunkData.Section {
@@ -41,8 +42,9 @@ public class ChunkSection_1_13_2 implements ChunkData.Section {
     }
 
     public static boolean hasSkyLight(
+            @GlobalData DynamicRegistryManager registryManager,
             @GlobalData DimensionTypeReference dimType
     ) {
-        return dimType.value().value().hasSkyLight();
+        return dimType.getValue(registryManager).hasSkyLight();
     }
 }

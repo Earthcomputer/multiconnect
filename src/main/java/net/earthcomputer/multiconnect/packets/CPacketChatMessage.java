@@ -1,8 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.MessageVariant;
+import net.earthcomputer.multiconnect.ap.Message;
 
-@MessageVariant
-public class CPacketChatMessage {
-    public String message;
+@Message
+public interface CPacketChatMessage {
 }

@@ -4,14 +4,14 @@ import net.fabricmc.loom.task.RemapJarTask
 import java.util.regex.Pattern
 
 plugins {
-	id 'fabric-loom' version '0.10-SNAPSHOT'
+	id 'fabric-loom' version '0.12-SNAPSHOT'
 	id 'maven-publish'
 	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
 	id 'com.modrinth.minotaur' version '1.2.1'
 	id 'com.github.breadmoirai.github-release' version '2.2.12'
 	id 'io.codearte.nexus-staging' version '0.30.0'
-	// id 'io.github.juuxel.loom-quiltflower-mini' version '1.2.1'
+	id 'io.github.juuxel.loom-quiltflower' version '1.7.1'
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
@@ -29,6 +29,7 @@ configurations {
 sourceSets {
 	generated
 	api
+	stubs
 }
 
 compileApiJava.dependsOn processApiResources // wtf gradle
@@ -70,24 +71,24 @@ processResources {
 // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
 tasks.withType(JavaCompile) {
 	options.encoding = "UTF-8"
-	options.release = 17
+	options.release.set(17)
 }
 
 // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
 // if it is present.
 // If you remove this task, sources will not be generated.
 task sourcesJar(type: Jar, dependsOn: classes) {
-	archiveClassifier = "sources"
+	archiveClassifier.set("sources")
 	from sourceSets.main.allSource
 }
 
 task javadocJar(type: Jar, dependsOn: classes) {
-	archiveClassifier = "javadoc"
+	archiveClassifier.set("javadoc")
 
 }
 
 task apiJar(type: Jar, dependsOn: apiClasses) {
-	archiveClassifier = 'api-dev'
+	archiveClassifier.set('api-dev')
 	from (sourceSets.api.output) {
 		include "fabric.mod.json"
 		expand "version": project.version
@@ -99,7 +100,7 @@ task apiJar(type: Jar, dependsOn: apiClasses) {
 }
 
 task apiSourcesJar(type: Jar, dependsOn: apiClasses) {
-	archiveClassifier = 'api-sources'
+	archiveClassifier.set('api-sources')
 	from sourceSets.api.allSource
 }
 
@@ -109,18 +110,18 @@ task apiJavadoc(type: Javadoc) {
 }
 
 task apiJavadocJar(type: Jar) {
-	archiveClassifier = 'api-javadoc'
+	archiveClassifier.set('api-javadoc')
 	from apiJavadoc
 }
 
 task remapApiJar(type: RemapJarTask, dependsOn: project.apiJar) {
 	input = apiJar.archiveFile
-	classifier = 'api'
-	addNestedDependencies = false
+	archiveClassifier.set('api')
+	nestedJars.setFrom([])
 }
 
 task generatedJar(type: Jar, dependsOn: generatedClasses) {
-	archiveClassifier = 'generated-dev'
+	archiveClassifier.set('generated-dev')
 	from(sourceSets.generated.output)
 	from(rootProject.file('data/generated.mod.json')) {
 		expand 'version': project.version
@@ -131,14 +132,14 @@ task generatedJar(type: Jar, dependsOn: generatedClasses) {
 
 task remapGeneratedJar(type: RemapJarTask, dependsOn: project.generatedJar) {
 	input = generatedJar.archiveFile
-	classifier = 'generated'
-	addDefaultNestedDependencies.set(false)
+	archiveClassifier.set('generated')
+	nestedJars.setFrom([])
 }
 
 task remapSlimJar(type: RemapJarTask, dependsOn: jar) {
 	input = jar.archiveFile
-	classifier = 'slim'
-	addDefaultNestedDependencies.set(false)
+	archiveClassifier.set('slim')
+	nestedJars.setFrom([])
 }
 
 remapJar.dependsOn remapApiJar
@@ -158,9 +159,9 @@ loom {
 	accessWidenerPath = file('src/main/resources/multiconnect.accesswidener')
 }
 
-/*quiltflower {
+quiltflower {
 	addToRuntimeClasspath = true
-}*/
+}
 
 subprojects {
 	if (name == 'integrationTest') {
@@ -194,6 +195,7 @@ dependencies {
 	testImplementation "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 	sourceSets.generated.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
+	sourceSets.stubs.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 	generatedImplementation sourceSets.main.output
 
 	if (true) {
@@ -216,7 +218,8 @@ dependencies {
 	implementation sourceSets.api.output
 	include name: file(remapApiJar.archivePath).name.with { it.endsWith('.jar') ? it.substring(0, it.length() - 4) : it }
 	runtimeOnly sourceSets.generated.output
-	include name: file(remapGeneratedJar.archivePath).name.with { it.endsWith('.jar') ? it.substring(0, it.length() - 4) : it }
+	include name: remapGeneratedJar.archiveFile.get().getAsFile().name.with { it.endsWith('.jar') ? it.substring(0, it.length() - 4) : it }
+	compileOnly sourceSets.stubs.output
 
 	sourceSets.test.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
@@ -260,7 +263,7 @@ afterEvaluate {
 	}
 }
 
-def isBeta = version.contains 'pre'
+def isBeta = version.contains('pre') || version.contains('beta')
 def changes = file('changelog.txt')
 changes = changes.exists() ? changes.getText('UTF-8') : ''
 
@@ -382,7 +385,7 @@ curseforge {
 		releaseType = isBeta ? 'beta' : 'release'
 		addGameVersion project.minecraft_version
 		addGameVersion 'Fabric'
-		mainArtifact remapJar.archivePath
+		mainArtifact remapJar.archiveFile.get().getAsFile()
 		afterEvaluate {
 			uploadTask.dependsOn remapJar
 		}
@@ -419,7 +422,7 @@ githubRelease {
 	releaseName("Version $version for Minecraft ${project.minecraft_version}")
 	body changes
 	prerelease isBeta
-	releaseAssets remapJar.archivePath
+	releaseAssets remapJar.archiveFile.get().getAsFile()
 }
 tasks.getByName('githubRelease').dependsOn remapJar
 

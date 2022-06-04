@@ -9,7 +9,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.command.CommandSource;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,7 +19,7 @@ public class AchievementArgumentType implements ArgumentType<Advancement> {
 
     private static final Collection<String> EXAMPLES = Arrays.asList("achievement.openInventory", "achievement.mineWood");
 
-    private static final DynamicCommandExceptionType NO_SUCH_ACHIEVEMENT_EXCEPTION = new DynamicCommandExceptionType(arg -> new TranslatableText("commands.achievement.unknownAchievement", arg));
+    private static final DynamicCommandExceptionType NO_SUCH_ACHIEVEMENT_EXCEPTION = new DynamicCommandExceptionType(arg -> Text.translatable("commands.achievement.unknownAchievement", arg));
 
     private AchievementArgumentType() {
     }

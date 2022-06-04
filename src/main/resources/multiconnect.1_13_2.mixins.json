@@ -8,7 +8,6 @@
     "EntityAccessor",
     "FireworkEntityAccessor",
     "LivingEntityAccessor",
-    "MixinArgumentTypes",
     "MixinClientChunkManager",
     "MixinClientPlayNetworkHandler",
     "MixinEntity",

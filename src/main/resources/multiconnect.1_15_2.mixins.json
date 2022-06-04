@@ -3,7 +3,6 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_15_2.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "MixinLoginSuccessPacket",
     "MixinWallBlock",
     "TameableEntityAccessor",
     "WolfEntityAccessor"

@@ -12,7 +12,6 @@ import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 
@@ -25,8 +24,8 @@ public class DropDownWidget<T> extends PressableWidget {
 
     private static final int DROP_DOWN_ELEMENT_HEIGHT = 20;
     private static final int SCROLL_BAR_WIDTH = 6;
-    private static final Text EXPAND_DOWN_TEXT = new LiteralText("v");
-    private static final Text EXPAND_RIGHT_TEXT = new LiteralText(">");
+    private static final Text EXPAND_DOWN_TEXT = Text.literal("v");
+    private static final Text EXPAND_RIGHT_TEXT = Text.literal(">");
 
     private final Function<T, Text> labelExtractor;
     private Function<T, Text> categoryLabelExtractor;
