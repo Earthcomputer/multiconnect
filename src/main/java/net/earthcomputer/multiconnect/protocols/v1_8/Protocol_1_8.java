@@ -10,6 +10,7 @@ import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.TameableEntityAccessor;
+import net.earthcomputer.multiconnect.protocols.v1_18_2.Protocol_1_18_2;
 import net.earthcomputer.multiconnect.protocols.v1_8.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
 import net.minecraft.block.*;
@@ -439,7 +440,7 @@ public class Protocol_1_8 extends Protocol_1_9 {
                 }
             } else if (entity instanceof CatEntity) {
                 if (id == 18) {
-                    entity.getDataTracker().set(CatEntityAccessor.getCatType(), data);
+                    entity.getDataTracker().set(Protocol_1_18_2.OLD_CAT_VARIANT, data);
                 }
             } else if (entity instanceof PlayerEntity) {
                 if (id == 18) {
