@@ -163,9 +163,10 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
         };
 
         var packet = new SPacketChatMessage();
-        packet.text = contentIndex == null || contentIndex >= myText.with.length
+        packet.signedContent = contentIndex == null || contentIndex >= myText.with.length
                 ? text
                 : new CommonTypes.Text(GSON.toJson(myText.with[contentIndex]));
+        packet.unsignedContent = Optional.empty();
         packet.messageType = messageType;
         packet.sender = sender;
         Integer senderIndex = getSenderIndex(myText);

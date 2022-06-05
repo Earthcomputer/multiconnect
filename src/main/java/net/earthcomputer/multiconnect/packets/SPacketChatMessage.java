@@ -9,7 +9,8 @@ import java.util.UUID;
 
 @MessageVariant
 public class SPacketChatMessage {
-    public CommonTypes.Text text;
+    public CommonTypes.Text signedContent;
+    public Optional<CommonTypes.Text> unsignedContent;
     public int messageType;
     public UUID sender;
     public CommonTypes.Text displayName;
