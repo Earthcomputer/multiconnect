@@ -10,7 +10,9 @@ class DeclareVariableOnlyStmtOp(private val variable: VariableId, private val ty
 
     override fun emit(node: McNode, emitter: Emitter) {
         type.emit(emitter)
-        emitter.append(" ").append(variable.name).append(";")
+        emitter.append(" ")
+        variable.emit(emitter)
+        emitter.append(";")
     }
 
 }

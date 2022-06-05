@@ -22,9 +22,16 @@ class LambdaOp(
 
     override fun emit(node: McNode, emitter: Emitter) {
         if (bodyParamTypes.size == 1) {
-            emitter.append(bodyParamNames.single().name)
+            bodyParamNames.single().emit(emitter)
         } else {
-            emitter.append("(").append(bodyParamNames.joinToString(", ") { it.name }).append(")")
+            emitter.append("(")
+            for ((index, paramName) in bodyParamNames.withIndex()) {
+                if (index != 0) {
+                    emitter.append(", ")
+                }
+                paramName.emit(emitter)
+            }
+            emitter.append(")")
         }
         emitter.append(" -> ")
         if (node.inputs[0].op == StmtListOp) {

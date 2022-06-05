@@ -9,6 +9,6 @@ class LoadVariableOp(private val variable: VariableId, type: McType) : McNodeOp 
     override val isExpensive = false
     override val precedence = Precedence.PARENTHESES
     override fun emit(node: McNode, emitter: Emitter) {
-        emitter.append(variable.name)
+        variable.emit(emitter)
     }
 }

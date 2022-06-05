@@ -76,6 +76,11 @@ class CstNullOp(override val returnType: McType) : CstOp() {
 
     override fun emit(node: McNode, emitter: Emitter) {
         emitter.append("null")
+        if (emitter.debugMode) {
+            emitter.append("<")
+            returnType.emit(emitter)
+            emitter.append(">")
+        }
     }
 }
 

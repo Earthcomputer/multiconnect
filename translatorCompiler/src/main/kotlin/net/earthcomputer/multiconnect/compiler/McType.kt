@@ -3,6 +3,8 @@ package net.earthcomputer.multiconnect.compiler
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.earthcomputer.multiconnect.ap.Types
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.BITSET
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.STRING
 import net.earthcomputer.multiconnect.compiler.node.CastOp
 import net.earthcomputer.multiconnect.compiler.node.CstBoolOp
 import net.earthcomputer.multiconnect.compiler.node.CstDoubleOp
@@ -306,6 +308,21 @@ val McType.classInfo get() = if (this is McType.DeclaredType) getClassInfo(name)
 val McType.classInfoOrNull get() = (this as? McType.DeclaredType)?.name?.let(::getClassInfoOrNull)
 
 val McType.messageVariantInfo get() = if (this is McType.DeclaredType) getMessageVariantInfo(name) else throw CompileException("Message variant info not found for $this")
+
+val McType.canEverBeNull: Boolean get() = when (this) {
+    is McType.PrimitiveType -> false
+    is McType.ArrayType -> true
+    is McType.DeclaredType -> {
+        when {
+            this.name == STRING -> false
+            this.isOptional || this.isList -> false
+            this.name == BITSET -> false
+            this.classInfoOrNull is EnumInfo -> false
+            else -> true
+        }
+    }
+    else -> false
+}
 
 val Types.isIntegral
     get() = when (this) {

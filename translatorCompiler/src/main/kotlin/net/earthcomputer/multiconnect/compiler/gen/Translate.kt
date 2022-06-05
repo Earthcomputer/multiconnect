@@ -16,6 +16,7 @@ import net.earthcomputer.multiconnect.compiler.McField
 import net.earthcomputer.multiconnect.compiler.McType
 import net.earthcomputer.multiconnect.compiler.MessageInfo
 import net.earthcomputer.multiconnect.compiler.MessageVariantInfo
+import net.earthcomputer.multiconnect.compiler.canEverBeNull
 import net.earthcomputer.multiconnect.compiler.classInfoOrNull
 import net.earthcomputer.multiconnect.compiler.componentType
 import net.earthcomputer.multiconnect.compiler.componentTypeOrNull
@@ -366,7 +367,7 @@ private fun ProtocolCompiler.translateInner(
                 McNode(LoadVariableOp(fromVarId, messageType))
             )
         )
-        val translateNode = when (val fieldTypeInfo = field.type.realType.deepComponentType().classInfoOrNull) {
+        var translateNode = when (val fieldTypeInfo = field.type.realType.deepComponentType().classInfoOrNull) {
             is MessageInfo -> wrapContainerTranslation(field.type.realType, fromFieldVarId) { varId ->
                 McNode(ImplicitCastOp(fieldTypeInfo.getVariant(toVersion)!!.toMcType(), fieldTypeInfo.toMcType()), translate(
                     fieldTypeInfo,
@@ -387,6 +388,7 @@ private fun ProtocolCompiler.translateInner(
             }
             else -> McNode(LoadVariableOp(fromFieldVarId, field.type.realType))
         }
+        translateNode = wrapTranslationInNullCheckIfNecessary(field, field, McNode(LoadVariableOp(fromFieldVarId, field.type.realType)), translateNode)
         nodes += McNode(StoreVariableStmtOp(toFieldVarId, field.type.realType, true), translateNode)
     }
 
@@ -731,13 +733,14 @@ private fun ProtocolCompiler.translateInner(
                 val fieldLoadNode = McNode(LoadFieldOp(fieldFromVariantType, fromField.name, fromField.type.realType),
                     McNode(LoadVariableOp(fieldFromVarId, fieldFromVariantType))
                 )
-                autoTransfer(
+                val autoTransferNode = autoTransfer(
                     fieldLoadNode,
                     field.type.realType,
                     fromVersion,
                     toVersion,
                     combineParamResolvers(outerParamResolver) { name, type -> McNode(LoadVariableOp(vars[name]!!, type)) }
                 )
+                wrapTranslationInNullCheckIfNecessary(field, fromField, fieldLoadNode, autoTransferNode)
             }
         }
         return McNode(StoreVariableStmtOp(fieldVarId, field.type.realType, true), fieldCreationNode)
@@ -811,6 +814,42 @@ private fun ProtocolCompiler.translateInner(
     )
 
     return McNode(StmtListOp, nodes)
+}
+
+fun wrapTranslationInNullCheckIfNecessary(
+    field: McField,
+    fromField: McField,
+    originalNode: McNode,
+    translatedNode: McNode
+): McNode {
+    return if (field.type.onlyIf != null && field.type.realType.canEverBeNull) {
+        // onlyIf types are nullable, so handle null
+        val nullableVar = VariableId.create()
+        McNode(StmtListOp,
+            McNode(DeclareVariableOnlyStmtOp(nullableVar, field.type.realType)),
+            McNode(IfElseStmtOp,
+                McNode(BinaryExpressionOp("==", fromField.type.realType, fromField.type.realType),
+                    originalNode,
+                    McNode(CstNullOp(fromField.type.realType))
+                ),
+                McNode(StmtListOp,
+                    McNode(StoreVariableStmtOp(nullableVar, field.type.realType, false),
+                        McNode(CstNullOp(field.type.realType))
+                    )
+                ),
+                McNode(StmtListOp,
+                    McNode(StoreVariableStmtOp(nullableVar, field.type.realType, false),
+                        translatedNode
+                    )
+                )
+            ),
+            McNode(ReturnStmtOp(field.type.realType),
+                McNode(LoadVariableOp(nullableVar, field.type.realType))
+            )
+        )
+    } else {
+        translatedNode
+    }
 }
 
 private fun ProtocolCompiler.autoTransfer(

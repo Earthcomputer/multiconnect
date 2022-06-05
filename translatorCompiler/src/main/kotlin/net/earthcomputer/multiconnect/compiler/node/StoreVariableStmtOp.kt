@@ -31,7 +31,8 @@ class StoreVariableStmtOp(
             type.emit(emitter)
             emitter.append(" ")
         }
-        emitter.append(variable.name).append(" ").append(operator).append(" ")
+        variable.emit(emitter)
+        emitter.append(" ").append(operator).append(" ")
         node.inputs[0].emit(emitter, Precedence.ASSIGNMENT)
         emitter.append(";")
     }

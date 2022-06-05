@@ -10,9 +10,12 @@ class LabeledBlockStmtOp(
     override val declaredVariables = listOf(blockName)
 
     override fun emit(node: McNode, emitter: Emitter) {
-        emitter.append(blockName.name).append(": {").indent().appendNewLine()
+        blockName.emit(emitter)
+        emitter.append(": {").indent().appendNewLine()
         emitter.pushReturnHandler {
-            emitter.append("break ").append(blockName.name).append(";")
+            emitter.append("break ")
+            blockName.emit(emitter)
+            emitter.append(";")
         }
         node.inputs[0].emit(emitter, Precedence.COMMA)
         emitter.popReturnHandler()
