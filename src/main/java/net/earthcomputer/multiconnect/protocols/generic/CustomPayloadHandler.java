@@ -1,36 +1,29 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
-import com.google.common.collect.ImmutableSet;
+import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.api.ICustomPayloadListener;
+import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.CustomPayloadEvent;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
+import net.earthcomputer.multiconnect.packets.latest.CPacketCustomPayload_Latest;
+import net.earthcomputer.multiconnect.packets.v1_12_2.CPacketCustomPayload_1_12_2;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
-import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.util.Identifier;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class CustomPayloadHandler {
-    public static final Identifier DROP_ID = new Identifier("multiconnect", "drop");
-    public static final Set<Identifier> VANILLA_CLIENTBOUND_CHANNELS;
+    public static final Key<Boolean> IS_FORCE_SENT = Key.create("isForceSent", false);
 
     private static final List<ICustomPayloadListener<Identifier>> clientboundIdentifierCustomPayloadListeners = new CopyOnWriteArrayList<>();
     private static final List<ICustomPayloadListener<String>> clientboundStringCustomPayloadListeners = new CopyOnWriteArrayList<>();
     private static final List<ICustomPayloadListener<Identifier>> serverboundIdentifierCustomPayloadListeners = new CopyOnWriteArrayList<>();
     private static final List<ICustomPayloadListener<String>> serverboundStringCustomPayloadListeners = new CopyOnWriteArrayList<>();
-
-    private static final Map<Identifier, String> clientboundStringCustomPayloadChannels = new WeakHashMap<>();
-    private static volatile int clientboundStringCustomPayloadId = 0;
 
     public static void addClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
         clientboundIdentifierCustomPayloadListeners.add(listener);
@@ -64,70 +57,67 @@ public class CustomPayloadHandler {
         serverboundStringCustomPayloadListeners.remove(listener);
     }
 
-    // TODO: rewrite
-//    @ThreadSafe
-//    public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket packet) {
-//        var event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
-//        serverboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
-//    }
-//
-//    @ThreadSafe
-//    public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadC2SPacket_1_12_2 packet) {
-//        var event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
-//        serverboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
-//    }
+    public static void forceSendIdentifierCustomPayload(ClientPlayNetworkHandler networkHandler, Identifier channel, PacketByteBuf data) {
+        var packet = new CPacketCustomPayload_Latest.Other();
+        packet.channel = channel;
+        packet.data = new byte[data.readableBytes()];
+        data.readBytes(packet.data);
+        PacketSystem.sendToServer(networkHandler, SharedConstants.getProtocolVersion(), packet, userData -> {
+            userData.put(IS_FORCE_SENT, true);
+        });
+    }
 
-    @ThreadSafe
-    public static void handleClientboundCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadS2CPacket packet) {
-        String str;
-        synchronized (clientboundStringCustomPayloadChannels) {
-            str = clientboundStringCustomPayloadChannels.remove(packet.getChannel());
-        }
-        if (str != null) {
-            handleClientboundStringCustomPayload(networkHandler, str, packet.getData());
-        } else {
-            handleClientboundIdentifierCustomPayload(networkHandler, packet);
-        }
+    public static void forceSendStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
+        var packet = new CPacketCustomPayload_1_12_2.Other();
+        packet.channel = channel;
+        packet.data = new byte[data.readableBytes()];
+        data.readBytes(packet.data);
+        PacketSystem.sendToServer(networkHandler, Protocols.V1_12_2, packet, userData -> {
+            userData.put(IS_FORCE_SENT, true);
+        });
     }
 
     @ThreadSafe
-    private static void handleClientboundIdentifierCustomPayload(ClientPlayNetworkHandler networkHandler, CustomPayloadS2CPacket packet) {
-        var event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, packet.getChannel(), packet.getData(), networkHandler);
+    public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, Identifier channel, byte[] data) {
+        var event = new CustomPayloadEvent<>(
+                ConnectionInfo.protocolVersion,
+                channel,
+                new PacketByteBuf(Unpooled.wrappedBuffer(data)),
+                networkHandler
+        );
+        serverboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
+    }
+
+    @ThreadSafe
+    public static void handleServerboundCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, byte[] data) {
+        var event = new CustomPayloadEvent<>(
+                ConnectionInfo.protocolVersion,
+                channel,
+                new PacketByteBuf(Unpooled.wrappedBuffer(data)),
+                networkHandler
+        );
+        serverboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
+    }
+
+    @ThreadSafe
+    public static void handleClientboundIdentifierCustomPayload(ClientPlayNetworkHandler networkHandler, Identifier channel, byte[] data) {
+        var event = new CustomPayloadEvent<>(
+                ConnectionInfo.protocolVersion,
+                channel,
+                new PacketByteBuf(Unpooled.wrappedBuffer(data)),
+                networkHandler
+        );
         clientboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
     @ThreadSafe
-    private static void handleClientboundStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
-        var event = new CustomPayloadEvent<>(ConnectionInfo.protocolVersion, channel, data, networkHandler);
+    public static void handleClientboundStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, byte[] data) {
+        var event = new CustomPayloadEvent<>(
+                ConnectionInfo.protocolVersion,
+                channel,
+                new PacketByteBuf(Unpooled.wrappedBuffer(data)),
+                networkHandler
+        );
         clientboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
-    }
-
-    @ThreadSafe
-    public static Identifier getClientboundIdentifierForStringCustomPayload(String channel) {
-        synchronized (clientboundStringCustomPayloadChannels) {
-            Identifier id = new Identifier("multiconnect", "generated_" + Integer.toUnsignedString(clientboundStringCustomPayloadId++));
-            clientboundStringCustomPayloadChannels.put(id, channel);
-            return id;
-        }
-    }
-
-    static {
-        var vanillaChannels = ImmutableSet.<Identifier>builder();
-
-        // existing vanilla ones
-        for (Field field : CustomPayloadS2CPacket.class.getDeclaredFields()) {
-            if ((field.getModifiers() & (Modifier.STATIC | Modifier.FINAL)) == (Modifier.STATIC | Modifier.FINAL)) {
-                if (field.getType() == Identifier.class) {
-                    field.setAccessible(true);
-                    try {
-                        vanillaChannels.add((Identifier) field.get(null));
-                    } catch (ReflectiveOperationException e) {
-                        throw new AssertionError(e);
-                    }
-                }
-            }
-        }
-
-        VANILLA_CLIENTBOUND_CHANNELS = vanillaChannels.build();
     }
 }

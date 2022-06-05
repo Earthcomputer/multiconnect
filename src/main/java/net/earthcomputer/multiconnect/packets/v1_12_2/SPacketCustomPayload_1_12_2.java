@@ -1,5 +1,7 @@
 package net.earthcomputer.multiconnect.packets.v1_12_2;
 
+import net.earthcomputer.multiconnect.ap.Argument;
+import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
@@ -9,6 +11,8 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketCustomPayload;
 import net.earthcomputer.multiconnect.packets.SPacketSetTradeOffers;
+import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 
 import java.util.List;
 
@@ -19,7 +23,7 @@ public abstract class SPacketCustomPayload_1_12_2 implements SPacketCustomPayloa
 
     @Polymorphic(stringValue = "MC|Brand")
     @MessageVariant(maxVersion = Protocols.V1_12_2)
-    public static class BrandPayload extends SPacketCustomPayload_1_12_2 implements SPacketCustomPayload.Brand {
+    public static class Brand extends SPacketCustomPayload_1_12_2 implements SPacketCustomPayload.Brand {
         public String brand;
     }
 
@@ -39,13 +43,17 @@ public abstract class SPacketCustomPayload_1_12_2 implements SPacketCustomPayloa
 
     @Polymorphic(otherwise = true)
     @MessageVariant(maxVersion = Protocols.V1_12_2)
-    public static class OtherPayload extends SPacketCustomPayload_1_12_2 implements SPacketCustomPayload.Other {
+    public static class Other extends SPacketCustomPayload_1_12_2 implements SPacketCustomPayload.Other {
         @Length(remainingBytes = true)
-        public byte[] payload;
+        public byte[] data;
 
         @Handler
-        public static void handle() {
-            // TODO: 1.12.2 custom payload handling
+        public static void handle(
+                @Argument("channel") String channel,
+                @Argument("data") byte[] data,
+                @FilledArgument ClientPlayNetworkHandler networkHandler
+        ) {
+            CustomPayloadHandler.handleClientboundStringCustomPayload(networkHandler, channel, data);
         }
     }
 }

@@ -255,7 +255,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                 } else {
                     variantInfo.sendableFrom.orEmpty().filter {
                         it >= protocolId && getPacketDirection(it, packet) == PacketDirection.SERVERBOUND
-                    }
+                    } + listOfNotNull(protocols[0].id.takeIf { variantInfo.sendableFromLatest })
                 }
                 for (protocolId in protocolIds) {
                     val specializedFunctionName = buildString {

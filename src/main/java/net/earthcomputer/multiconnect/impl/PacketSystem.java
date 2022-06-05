@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class PacketSystem {
@@ -128,10 +129,15 @@ public class PacketSystem {
     }
 
     public static void sendToServer(ClientPlayNetworkHandler networkHandler, int protocol, Object packet) {
+        sendToServer(networkHandler, protocol, packet, userData -> {});
+    }
+
+    public static void sendToServer(ClientPlayNetworkHandler networkHandler, int protocol, Object packet, Consumer<TypedMap> userDataSetter) {
         Channel channel = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel();
         Runnable send = () -> {
             List<ByteBuf> bufs = new ArrayList<>(1);
             TypedMap userData = new TypedMap();
+            userDataSetter.accept(userData);
             protocolClasses.get(ConnectionInfo.protocolVersion).sendToServer(packet, protocol, bufs, networkHandler, globalData, userData);
             PacketIntrinsics.sendRawToServer(networkHandler, bufs);
         };
@@ -143,10 +149,15 @@ public class PacketSystem {
     }
 
     public static void sendToClient(ClientPlayNetworkHandler networkHandler, int protocol, Object packet) {
+        sendToClient(networkHandler, protocol, packet, userData -> {});
+    }
+
+    public static void sendToClient(ClientPlayNetworkHandler networkHandler, int protocol, Object packet, Consumer<TypedMap> userDataSetter) {
         Channel channel = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel();
         Runnable send = () -> {
             List<ByteBuf> bufs = new ArrayList<>(1);
             TypedMap userData = new TypedMap();
+            userDataSetter.accept(userData);
             protocolClasses.get(protocol).sendToClient(packet, bufs, networkHandler, globalData, userData);
             PacketIntrinsics.sendRawToClient(networkHandler, userData, bufs);
         };

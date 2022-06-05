@@ -3,6 +3,8 @@ package net.earthcomputer.multiconnect.impl;
 import net.earthcomputer.multiconnect.api.*;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
@@ -47,30 +49,24 @@ public class APIImpl extends MultiConnectAPI {
         CustomPayloadHandler.removeClientboundStringCustomPayloadListener(listener);
     }
 
-    // TODO: rewrite
-//    @Override
-//    public void forceSendCustomPayload(ClientPlayNetworkHandler networkHandler, Identifier channel, PacketByteBuf data) {
-//        if (networkHandler == null) {
-//            throw new IllegalStateException("Trying to send custom payload when not in-game");
-//        }
-//        CustomPayloadC2SPacket packet = new CustomPayloadC2SPacket(channel, data);
-//        //noinspection ConstantConditions
-//        ((ICustomPayloadC2SPacket) packet).multiconnect_unblock();
-//        networkHandler.sendPacket(packet);
-//    }
-//
-//    @Override
-//    public void forceSendStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
-//        if (networkHandler == null) {
-//            throw new IllegalStateException("Trying to send custom payload when not in-game");
-//        }
-//        if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
-//            throw new IllegalStateException("Trying to send string custom payload to " + ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName() + " server");
-//        }
-//        var packet = new CustomPayloadC2SPacket_1_12_2(channel, data);
-//        packet.unblock();
-//        networkHandler.sendPacket(packet);
-//    }
+    @Override
+    public void forceSendCustomPayload(ClientPlayNetworkHandler networkHandler, Identifier channel, PacketByteBuf data) {
+        if (networkHandler == null) {
+            throw new IllegalStateException("Trying to send custom payload when not in-game");
+        }
+        CustomPayloadHandler.forceSendIdentifierCustomPayload(networkHandler, channel, data);
+    }
+
+    @Override
+    public void forceSendStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
+        if (networkHandler == null) {
+            throw new IllegalStateException("Trying to send custom payload when not in-game");
+        }
+        if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
+            throw new IllegalStateException("Trying to send string custom payload to " + ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName() + " server");
+        }
+        CustomPayloadHandler.forceSendStringCustomPayload(networkHandler, channel, data);
+    }
 
     @Override
     public void addServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
@@ -153,13 +149,9 @@ public class APIImpl extends MultiConnectAPI {
     }
 
     @Deprecated
-    private static final class IdentifierCustomPayloadListenerProxy implements ICustomPayloadListener<Identifier> {
-        private final IIdentifierCustomPayloadListener delegate;
-
-        private IdentifierCustomPayloadListenerProxy(IIdentifierCustomPayloadListener delegate) {
-            this.delegate = delegate;
-        }
-
+    private record IdentifierCustomPayloadListenerProxy(
+            IIdentifierCustomPayloadListener delegate
+    ) implements ICustomPayloadListener<Identifier> {
         @Override
         public void onCustomPayload(ICustomPayloadEvent<Identifier> event) {
             delegate.onCustomPayload(event.getProtocol(), event.getChannel(), event.getData());
@@ -177,13 +169,9 @@ public class APIImpl extends MultiConnectAPI {
     }
 
     @Deprecated
-    private static final class StringCustomPayloadListenerProxy implements ICustomPayloadListener<String> {
-        private final IStringCustomPayloadListener delegate;
-
-        private StringCustomPayloadListenerProxy(IStringCustomPayloadListener delegate) {
-            this.delegate = delegate;
-        }
-
+    private record StringCustomPayloadListenerProxy(
+            IStringCustomPayloadListener delegate
+    ) implements ICustomPayloadListener<String> {
         @Override
         public void onCustomPayload(ICustomPayloadEvent<String> event) {
             delegate.onCustomPayload(event.getProtocol(), event.getChannel(), event.getData());

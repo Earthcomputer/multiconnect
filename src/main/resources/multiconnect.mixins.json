@@ -16,7 +16,6 @@
     "bridge.MixinClientPlayNetworkHandler",
     "bridge.MixinClientWorld",
     "bridge.MixinCreativeInventoryActionC2SPacket",
-    "bridge.MixinCustomPayloadC2S",
     "bridge.MixinDataTracker",
     "bridge.MixinDecoderHandler",
     "bridge.MixinEncoderHandler",

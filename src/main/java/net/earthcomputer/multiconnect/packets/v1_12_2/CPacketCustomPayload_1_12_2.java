@@ -4,6 +4,7 @@ import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
+import net.earthcomputer.multiconnect.ap.Sendable;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
@@ -12,6 +13,7 @@ import net.earthcomputer.multiconnect.packets.CommonTypes;
 
 @Polymorphic
 @MessageVariant(maxVersion = Protocols.V1_12_2)
+@Sendable(from = Protocols.V1_12_2)
 public abstract class CPacketCustomPayload_1_12_2 implements CPacketCustomPayload {
     @Introduce(stringValue = "MC|Brand") // the only channel translated here is minecraft:brand
     public String channel;

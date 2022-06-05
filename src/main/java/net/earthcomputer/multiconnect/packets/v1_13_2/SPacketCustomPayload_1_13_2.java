@@ -38,7 +38,7 @@ public abstract class SPacketCustomPayload_1_13_2 implements SPacketCustomPayloa
 
     @Polymorphic(stringValue = "brand")
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
-    public static class BrandPayload extends SPacketCustomPayload_1_13_2 implements Brand {
+    public static class Brand extends SPacketCustomPayload_1_13_2 implements SPacketCustomPayload.Brand {
         public String brand;
     }
 
@@ -79,8 +79,8 @@ public abstract class SPacketCustomPayload_1_13_2 implements SPacketCustomPayloa
 
     @Polymorphic(otherwise = true)
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
-    public static class OtherPayload extends SPacketCustomPayload_1_13_2 implements Other {
+    public static class Other extends SPacketCustomPayload_1_13_2 implements SPacketCustomPayload.Other {
         @Length(remainingBytes = true)
-        public byte[] payload;
+        public byte[] data;
     }
 }

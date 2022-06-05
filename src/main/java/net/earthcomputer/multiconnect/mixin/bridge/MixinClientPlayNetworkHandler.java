@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.impl.Utils;
-import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.ChunkConnector;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectableChunk;
@@ -17,10 +16,8 @@ import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.NetworkThreadUtils;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.network.packet.s2c.play.InventoryS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.screen.ScreenHandler;
@@ -101,18 +98,6 @@ public class MixinClientPlayNetworkHandler {
             if (newState != currentState) {
                 world.setBlockState(pos, newState, Block.NOTIFY_ALL | Block.FORCE_STATE | Block.SKIP_LIGHTING_UPDATES);
             }
-        }
-    }
-
-    @Inject(method = "onCustomPayload", at = @At("HEAD"), cancellable = true)
-    private void onOnCustomPayload(CustomPayloadS2CPacket packet, CallbackInfo ci) {
-        if (packet.getChannel().equals(CustomPayloadHandler.DROP_ID)) {
-            ci.cancel();
-        } else if (ConnectionInfo.protocolVersion != SharedConstants.getGameVersion().getProtocolVersion()
-                && !CustomPayloadHandler.VANILLA_CLIENTBOUND_CHANNELS.contains(packet.getChannel())) {
-            NetworkThreadUtils.forceMainThread(packet, (ClientPlayNetworkHandler) (Object) this, MinecraftClient.getInstance());
-            CustomPayloadHandler.handleClientboundCustomPayload((ClientPlayNetworkHandler) (Object) this, packet);
-            ci.cancel();
         }
     }
 

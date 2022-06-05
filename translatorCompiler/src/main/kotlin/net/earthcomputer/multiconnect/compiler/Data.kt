@@ -117,6 +117,7 @@ data class MessageVariantInfo(
     val minVersion: Int?,
     val maxVersion: Int?,
     val sendableFrom: List<Int>?,
+    val sendableFromLatest: Boolean,
     val explicitConstructible: Boolean,
     val tailrec: Boolean = false
 ) : ClassInfo() {

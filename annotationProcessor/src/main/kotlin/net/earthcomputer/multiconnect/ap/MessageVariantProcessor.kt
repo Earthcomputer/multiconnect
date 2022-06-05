@@ -385,6 +385,7 @@ object MessageVariantProcessor {
             minVersion,
             maxVersion,
             type.getAnnotation(Sendable::class)?.from?.toList(),
+            type.getAnnotation(Sendable::class)?.fromLatest ?: false,
             type.hasAnnotation(ExplicitConstructible::class),
             messageVariant.tailrec
         )
