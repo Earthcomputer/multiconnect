@@ -113,6 +113,11 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
             @Argument("sender") UUID sender,
             @GlobalData DynamicRegistryManager registryManager
     ) {
+        if (registryManager == null) {
+            // Some servers apparently send chat messages before the game join packet. We can't handle these anymore
+            return new ArrayList<>(0);
+        }
+
         Registry<MessageType> messageTypeRegistry = registryManager.get(Registry.MESSAGE_TYPE_KEY);
         int systemId = messageTypeRegistry.getRawId(messageTypeRegistry.get(MessageType.SYSTEM));
         int gameInfoId = messageTypeRegistry.getRawId(messageTypeRegistry.get(MessageType.GAME_INFO));
