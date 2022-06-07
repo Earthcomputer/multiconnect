@@ -1,0 +1,21 @@
+id name oldName remapTo
+0 crafting_shaped
+1 crafting_shapeless
+2 crafting_special_armordye
+3 crafting_special_bookcloning
+4 crafting_special_mapcloning
+5 crafting_special_mapextending
+6 crafting_special_firework_rocket
+7 crafting_special_firework_star
+8 crafting_special_firework_star_fade
+9 crafting_special_tippedarrow
+10 crafting_special_bannerduplicate
+11 crafting_special_shielddecoration
+12 crafting_special_shulkerboxcoloring
+13 crafting_special_suspiciousstew
+14 crafting_special_repairitem
+15 smelting
+16 blasting
+17 smoking
+18 campfire_cooking
+19 stonecutting

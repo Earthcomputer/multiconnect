@@ -1,0 +1,25 @@
+digraph {
+    subgraph {
+        node [shape=box]
+        MessageA [label="Message (A)"]
+        MessageB [label="Message (B)"]
+        MessageC [label="Message (C[i])"]
+        MessageD [label="Message (D[i])"]
+    }
+
+    PreTranslation [label="Pre-Translation"]
+    RecordTranslation [label="Record Translation"]
+    PostTranslation [label="Post-Translation"]
+    VariantConversion [label="Variant Conversion"]
+    InvisNode [style=invis]
+
+    PreTranslation -> MessageA
+    MessageA -> RecordTranslation
+    RecordTranslation -> MessageB
+    RecordTranslation -> MessageC
+    RecordTranslation -> MessageD [dir=back]
+    MessageC -> VariantConversion
+    MessageD -> VariantConversion [dir=back]
+    MessageB -> PostTranslation
+    RecordTranslation -> InvisNode -> MessageB [style=invis]
+}

@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 public class TestingExtension implements BeforeAllCallback, Function<Class<?>, Class<?>> {
 
-    private static ClassLoader knotClassLoader;
+    private static KnotClassLoaderInterface knotClassLoader;
 
     private static AtomicBoolean isSetup = new AtomicBoolean(false);
     private static AtomicBoolean isSettingUp = new AtomicBoolean(true);
@@ -24,16 +24,18 @@ public class TestingExtension implements BeforeAllCallback, Function<Class<?>, C
                     Thread.currentThread().interrupt();
                 }
             }
-            Thread.currentThread().setContextClassLoader(knotClassLoader);
+            Thread.currentThread().setContextClassLoader(knotClassLoader.getClassLoader());
             return;
         }
         System.setProperty("fabric.development", "true");
         System.setProperty("fabric.loader.entrypoint", "net.earthcomputer.multiconnect.TestingDummyMain");
+        System.setProperty("fabric.loader.useCompatibilityClassLoader", "true");
+        System.setProperty("fabric.debug.disableClassPathIsolation", "true");
         System.setProperty("multiconnect.unitTestMode", "true");
         Knot knot = new Knot(EnvType.CLIENT);
         knot.init(new String[0]);
         knotClassLoader = knot.getClassLoader();
-        ((KnotClassLoaderInterface) knotClassLoader).addClassLoaderExclusion("net.earthcomputer.multiconnect.TestingExtension");
+        knotClassLoader.addClassLoaderExclusion("net.earthcomputer.multiconnect.TestingExtension");
         isSettingUp.set(false);
     }
 
@@ -46,7 +48,7 @@ public class TestingExtension implements BeforeAllCallback, Function<Class<?>, C
     public Class<?> apply(Class<?> clazz) {
         setup();
         try {
-            return knotClassLoader.loadClass(clazz.getName());
+            return knotClassLoader.getClassLoader().loadClass(clazz.getName());
         } catch (ClassNotFoundException e) {
             return clazz;
         }

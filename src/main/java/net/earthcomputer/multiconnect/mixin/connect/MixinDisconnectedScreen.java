@@ -12,7 +12,6 @@ import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,7 +35,7 @@ public abstract class MixinDisconnectedScreen extends Screen {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(Screen parent, Text title, Text reason, CallbackInfo ci) {
-        forceProtocolLabel = new TranslatableText("multiconnect.changeForcedProtocol").append(" ->").asOrderedText();
+        forceProtocolLabel = Text.translatable("multiconnect.changeForcedProtocol").append(" ->").asOrderedText();
 
         isProtocolReason = false;
         server = MinecraftClient.getInstance().getCurrentServerEntry();

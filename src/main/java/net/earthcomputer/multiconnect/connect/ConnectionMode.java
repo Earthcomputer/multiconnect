@@ -13,6 +13,8 @@ public enum ConnectionMode implements IProtocol {
 
     // Protocols should go in reverse chronological order
     AUTO("Auto", -1, -1, InitFlags.MAJOR_RELEASE),
+    V1_19("1.19", Protocols.V1_19, 3105, InitFlags.MAJOR_RELEASE),
+    V1_18_2("1.18.2", Protocols.V1_18_2, 2975),
     V1_18("1.18", Protocols.V1_18, 2865, InitFlags.MAJOR_RELEASE),
     V1_17_1("1.17.1", Protocols.V1_17_1, 2730),
     V1_17("1.17", Protocols.V1_17, 2724, InitFlags.MAJOR_RELEASE),
@@ -32,17 +34,17 @@ public enum ConnectionMode implements IProtocol {
     V1_13_2("1.13.2", Protocols.V1_13_2, 1631),
     V1_13_1("1.13.1", Protocols.V1_13_1, 1628),
     V1_13("1.13", Protocols.V1_13, 1519, InitFlags.MAJOR_RELEASE),
-    V1_12_2("1.12.2", Protocols.V1_12_2, 1343),
-    V1_12_1("1.12.1", Protocols.V1_12_1, 1241),
-    V1_12("1.12", Protocols.V1_12, 1139, InitFlags.MAJOR_RELEASE),
-    V1_11_2("1.11.2", Protocols.V1_11_2, 922),
-    V1_11("1.11", Protocols.V1_11, 921, InitFlags.MAJOR_RELEASE),
-    V1_10("1.10", Protocols.V1_10, 512, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
-    V1_9_4("1.9.4", Protocols.V1_9_4, 184, InitFlags.MULTICONNECT_BETA),
-    V1_9_2("1.9.2", Protocols.V1_9_2, 176, InitFlags.MULTICONNECT_BETA),
-    V1_9_1("1.9.1", Protocols.V1_9_1, 175, InitFlags.MULTICONNECT_BETA),
-    V1_9("1.9", Protocols.V1_9, 169, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
-    V1_8("1.8", Protocols.V1_8, 99, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
+    V1_12_2("1.12.2", Protocols.V1_12_2, 1343, InitFlags.MULTICONNECT_BETA),
+    V1_12_1("1.12.1", Protocols.V1_12_1, 1241, InitFlags.MULTICONNECT_BETA),
+    V1_12("1.12", Protocols.V1_12, 1139, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
+//    V1_11_2("1.11.2", Protocols.V1_11_2, 922),
+//    V1_11("1.11", Protocols.V1_11, 921, InitFlags.MAJOR_RELEASE),
+//    V1_10("1.10", Protocols.V1_10, 512, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
+//    V1_9_4("1.9.4", Protocols.V1_9_4, 184, InitFlags.MULTICONNECT_BETA),
+//    V1_9_2("1.9.2", Protocols.V1_9_2, 176, InitFlags.MULTICONNECT_BETA),
+//    V1_9_1("1.9.1", Protocols.V1_9_1, 175, InitFlags.MULTICONNECT_BETA),
+//    V1_9("1.9", Protocols.V1_9, 169, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
+//    V1_8("1.8", Protocols.V1_8, 99, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
     // the last value MUST be considered a "major release"
     ;
 

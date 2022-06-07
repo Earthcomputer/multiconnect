@@ -1,12 +1,13 @@
 package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.suggestion.Suggestion;
+import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
+import net.earthcomputer.multiconnect.packets.latest.CPacketRequestCommandCompletions_Latest;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.command.CommandSource;
-import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket;
-import net.minecraft.network.packet.s2c.play.CommandSuggestionsS2CPacket;
 import net.minecraft.network.packet.s2c.play.CommandTreeS2CPacket;
 
 import java.util.ArrayDeque;
@@ -38,56 +39,52 @@ public class TabCompletionManager {
     }
 
     public static void requestCommandList() {
-        assert MinecraftClient.getInstance().getNetworkHandler() != null;
-        MinecraftClient.getInstance().getNetworkHandler().sendPacket(new RequestCommandCompletionsC2SPacket(-1, "/"));
+        var packet = new CPacketRequestCommandCompletions_Latest();
+        packet.transactionId = -1;
+        packet.text = "/";
+        ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+        if (networkHandler != null) {
+            PacketSystem.sendToServer(networkHandler, Protocols.V1_13, packet);
+        }
     }
 
     public static CompletableFuture<List<String>> requestCustomCompletion(String command) {
-        assert MinecraftClient.getInstance().getNetworkHandler() != null;
         var future = new CompletableFuture<List<String>>();
         customCompletions.add(future);
-        MinecraftClient.getInstance().getNetworkHandler().sendPacket(new RequestCommandCompletionsC2SPacket(-2,
-                command));
+        var packet = new CPacketRequestCommandCompletions_Latest();
+        packet.transactionId = -2;
+        packet.text = command;
+        ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+        if (networkHandler != null) {
+            PacketSystem.sendToServer(networkHandler, Protocols.V1_13, packet);
+        }
         return future;
     }
 
-    public static boolean handleCustomCompletions(CommandSuggestionsS2CPacket packet) {
-        if (packet.getCompletionId() == -1) {
-            var dispatcher = new CommandDispatcher<CommandSource>();
-            Commands_1_12_2.registerAll(dispatcher, packet.getSuggestions().getList().stream()
-                    .map(Suggestion::getText)
-                    .filter(str -> !str.isEmpty())
-                    .map(str -> str.substring(1))
-                    .collect(Collectors.toSet()));
-            assert MinecraftClient.getInstance().getNetworkHandler() != null;
-            MinecraftClient.getInstance().getNetworkHandler().onCommandTree(new CommandTreeS2CPacket(dispatcher.getRoot()));
+    public static boolean handleCustomCompletions(Entry entry, List<String> suggestions) {
+        if (entry.id() == -1) {
+            MinecraftClient.getInstance().execute(() -> {
+                ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+                if (networkHandler != null) {
+                    networkHandler.onCommandTree(new CommandTreeS2CPacket(new CommandDispatcher<CommandSource>().getRoot()));
+                    Commands_1_12_2.registerAll(networkHandler.getCommandDispatcher(), suggestions.stream()
+                            .filter(str -> !str.isEmpty())
+                            .map(str -> str.substring(1))
+                            .collect(Collectors.toSet()));
+                }
+            });
             return true;
-        } else if (packet.getCompletionId() == -2) {
+        } else if (entry.id() == -2) {
             if (customCompletions.isEmpty())
                 return false;
-            customCompletions.remove().complete(packet.getSuggestions().getList().stream().map(Suggestion::getText).collect(Collectors.toList()));
+            customCompletions.remove().complete(suggestions);
             return true;
         } else {
             return false;
         }
     }
 
-    public static final class Entry {
-        private final int id;
-        private final String message;
-
-        public Entry(int id, String message) {
-            this.id = id;
-            this.message = message;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public String getMessage() {
-            return message;
-        }
+    public record Entry(int id, String message) {
     }
 
 }

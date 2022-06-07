@@ -33,7 +33,6 @@ public class MixinClientPlayerInteractionManager {
                 creativePacket = new CreativeInventoryActionC2SPacket(slot, creativePacket.getItemStack());
             }
 
-            //noinspection ConstantConditions
             ((IServerboundSlotPacket) creativePacket).multiconnect_setProcessed();
 
             return creativePacket;
@@ -61,7 +60,6 @@ public class MixinClientPlayerInteractionManager {
                 clickSlotPacket = new ClickSlotC2SPacket(clickSlotPacket.getSyncId(), clickSlotPacket.getRevision(), slot, clickSlotPacket.getButton(), clickSlotPacket.getActionType(), clickSlotPacket.getStack(), modifiedStacks);
             }
 
-            //noinspection ConstantConditions
             ((IServerboundSlotPacket) clickSlotPacket).multiconnect_setProcessed();
 
             return clickSlotPacket;

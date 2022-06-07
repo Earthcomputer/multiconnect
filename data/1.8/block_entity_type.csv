@@ -1,0 +1,22 @@
+id name oldName remapTo
+0 furnace Furnace
+1 chest Chest
+2 ender_chest EnderChest
+3 jukebox RecordPlayer
+4 dispenser Trap
+5 dropper Dropper
+6 sign Sign
+7 mob_spawner MobSpawner
+8 piston Piston
+9 brewing_stand Cauldron
+10 enchanting_table EnchantTable
+11 end_portal Airportal
+12 beacon Beacon
+13 skull Skull
+14 daylight_detector DLDetector
+15 hopper Hopper
+16 comparator Comparator
+17 banner Banner
+18 command_block Control
+19 multiconnect:noteblock Music
+20 multiconnect:flower_pot FlowerPot

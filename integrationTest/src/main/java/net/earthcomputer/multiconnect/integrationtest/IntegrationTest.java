@@ -168,6 +168,9 @@ public class IntegrationTest implements ModInitializer {
         serverProperties.setProperty("online-mode", "false");
         serverProperties.setProperty("server-port", String.valueOf(port));
         serverProperties.setProperty("sync-chunk-writes", "false");
+        if (protocol <= Protocols.V1_11_2) {
+            serverProperties.setProperty("use-native-transport", "false");
+        }
         try (Writer writer = new FileWriter(new File(serverDir, "server.properties"))) {
             serverProperties.store(writer, "");
             writer.flush();

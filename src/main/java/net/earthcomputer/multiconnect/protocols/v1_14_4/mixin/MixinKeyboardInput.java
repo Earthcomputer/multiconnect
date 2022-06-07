@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(KeyboardInput.class)
 public abstract class MixinKeyboardInput extends Input {
     @ModifyVariable(
-        method = "tick(Z)V",
+        method = "tick",
         at = @At(
             value = "LOAD",
             ordinal = 0

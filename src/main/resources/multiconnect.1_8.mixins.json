@@ -5,7 +5,6 @@
   "mixins": [
     "BatEntityAccessor",
     "BlazeEntityAccessor",
-    "CatEntityAccessor",
     "CommandBlockMinecartEntityAccessor",
     "CreeperEntityAccessor",
     "EndermanEntityAccessor",

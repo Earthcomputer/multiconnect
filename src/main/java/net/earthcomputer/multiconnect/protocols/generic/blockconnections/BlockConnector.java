@@ -3,14 +3,11 @@ package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
-import net.earthcomputer.multiconnect.protocols.generic.ChunkData;
-import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.IBlockConnector;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.EightWayDirection;
-import net.minecraft.world.chunk.ChunkSection;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -43,25 +40,24 @@ public class BlockConnector {
         }
     }
 
-    public void fixChunkData(ChunkData chunkData, EnumMap<EightWayDirection, IntSet> blocksNeedingUpdateOut) {
+    public void fixChunkData(BlockConnectionsNetworkView connectionsView, EnumMap<EightWayDirection, IntSet> blocksNeedingUpdateOut) {
         // early exit if no fixing ever needs to be done
         if (connectors.isEmpty()) {
             return;
         }
 
-        int chunkX = ChunkDataTranslator.current().getPacket().getX();
-        int chunkZ = ChunkDataTranslator.current().getPacket().getZ();
-        ChunkSection[] sections = chunkData.getSections();
-        for (int sectionY = 0; sectionY < sections.length; sectionY++) {
-            if (sections[sectionY] != null) {
-                for (BlockPos pos : BlockPos.iterate(chunkX << 4, sectionY << 4, chunkZ << 4, (chunkX << 4) + 15, (sectionY << 4) + 15, (chunkZ << 4) + 15)) {
-                    IBlockConnector connector = connectors.get(chunkData.getBlockState(pos).getBlock());
+        int minY = connectionsView.getMinY();
+        int numSections = (connectionsView.getMaxY() - minY + 1) >> 4;
+        for (int sectionIndex = 0; sectionIndex < numSections; sectionIndex++) {
+            if (connectionsView.doesSectionExist(sectionIndex)) {
+                for (BlockPos pos : BlockPos.iterate(0, (sectionIndex << 4) + minY, 0, 15, (sectionIndex << 4) + 15 + minY, 15)) {
+                    IBlockConnector connector = connectors.get(connectionsView.getBlockState(pos).getBlock());
                     if (connector != null) {
                         EightWayDirection dir = ChunkConnector.directionForPos(pos);
                         if (dir == null || !connector.needsNeighbors()) {
-                            connector.fix(chunkData, pos);
+                            connector.fix(connectionsView, pos);
                         } else {
-                            blocksNeedingUpdateOut.computeIfAbsent(dir, k -> new IntOpenHashSet()).add(ChunkConnector.packLocalPos(chunkData.getMinY(), pos));
+                            blocksNeedingUpdateOut.computeIfAbsent(dir, k -> new IntOpenHashSet()).add(ChunkConnector.packLocalPos(connectionsView.getMinY(), pos));
                         }
                     }
                 }

@@ -1,21 +1,21 @@
 package net.earthcomputer.multiconnect.impl;
 
+import com.google.common.collect.ImmutableMap;
+import com.mojang.datafixers.TypeRewriteRule;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandler;
 import io.netty.handler.timeout.TimeoutException;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
-import net.earthcomputer.multiconnect.mixin.bridge.ChunkDataAccessor;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
-import net.earthcomputer.multiconnect.mixin.connect.DecoderHandlerAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
-import net.earthcomputer.multiconnect.protocols.generic.ChunkDataTranslator;
-import net.earthcomputer.multiconnect.protocols.generic.IIdList;
-import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
-import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
+import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
@@ -25,46 +25,62 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
-import net.minecraft.network.DecoderHandler;
+import net.minecraft.entity.data.TrackedDataHandler;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.network.NetworkSide;
+import net.minecraft.network.NetworkState;
+import net.minecraft.network.Packet;
 import net.minecraft.network.PacketEncoderException;
-import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.text.BaseText;
+import net.minecraft.state.property.Property;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Base64;
-import java.util.BitSet;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -76,24 +92,12 @@ public class DebugUtils {
     private static long timeThatRareBugOccurred;
     public static String lastServerBrand = ClientBrandRetriever.VANILLA;
     public static final boolean UNIT_TEST_MODE = Boolean.getBoolean("multiconnect.unitTestMode");
+    public static final boolean IGNORE_ERRORS = Boolean.getBoolean("multiconnect.ignoreErrors");
+    public static final boolean DUMP_REGISTRIES = Boolean.getBoolean("multiconnect.dumpRegistries");
+    public static final boolean SKIP_TRANSLATION = Boolean.getBoolean("multiconnect.skipTranslation");
+    public static final boolean STORE_BUFS_FOR_HANDLER = Boolean.getBoolean("multiconnect.storeBufsForHandler");
 
-    @SuppressWarnings("unchecked")
-    public static void dumpBlockStates() {
-        for (int id : ((IIdList<BlockState>) Block.STATE_IDS).multiconnect_ids()) {
-            BlockState state = Block.STATE_IDS.get(id);
-            assert state != null;
-            StringBuilder sb = new StringBuilder().append(id).append(": ").append(Registry.BLOCK.getId(state.getBlock()));
-            if (!state.getEntries().isEmpty()) {
-                sb.append("[")
-                        .append(state.getEntries().entrySet().stream()
-                                .sorted(Comparator.comparing(entry -> entry.getKey().getName()))
-                                .map(entry -> entry.getKey().getName() + "=" + Util.getValueAsString(entry.getKey(), entry.getValue()))
-                                .collect(Collectors.joining(",")))
-                        .append("]");
-            }
-            System.out.println(sb);
-        }
-    }
+    public static final Key<byte[]> STORED_BUF = Key.create("storedBuf");
 
     private static final Map<TrackedData<?>, String> TRACKED_DATA_NAMES = new IdentityHashMap<>();
     private static void computeTrackedDataNames() {
@@ -160,11 +164,11 @@ public class DebugUtils {
         }
 
         String url = MULTICONNECT_ISSUE_URL.formatted(rareBugIdThatOccurred);
-        mc.inGameHud.getChatHud().addMessage(new TranslatableText("multiconnect.rareBug", new TranslatableText("multiconnect.rareBug.link")
-                .styled(style -> style.withUnderline(true)
-                        .withColor(Formatting.BLUE)
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(url)))
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))))
+        mc.inGameHud.getChatHud().addMessage(Text.translatable("multiconnect.rareBug", Text.translatable("multiconnect.rareBug.link")
+                        .styled(style -> style.withUnderline(true)
+                                .withColor(Formatting.BLUE)
+                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(url)))
+                                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))))
             .formatted(Formatting.YELLOW));
     }
 
@@ -172,12 +176,12 @@ public class DebugUtils {
         return rareBugIdThatOccurred != 0 && (System.nanoTime() - timeThatRareBugOccurred) < 10_000_000_000L;
     }
 
-    private static BaseText getRareBugText(int line) {
+    private static Text getRareBugText(int line) {
         String url = MULTICONNECT_ISSUE_URL.formatted(rareBugIdThatOccurred);
-        return new TranslatableText("multiconnect.rareBug", new TranslatableText("multiconnect.rareBug.link")
+        return Text.translatable("multiconnect.rareBug", Text.translatable("multiconnect.rareBug.link")
                 .styled(style -> style.withUnderline(true)
                         .withColor(Formatting.BLUE)
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(url)))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(url)))
                         .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))));
     }
 
@@ -195,7 +199,7 @@ public class DebugUtils {
                 Util.getOperatingSystem().open(url);
             }
             MinecraftClient.getInstance().setScreen(parentScreen);
-        }, parentScreen.getTitle(), new TranslatableText("multiconnect.rareBug.screen"));
+        }, parentScreen.getTitle(), Text.translatable("multiconnect.rareBug.screen"));
     }
 
     @ThreadSafe
@@ -203,17 +207,56 @@ public class DebugUtils {
         return !(t instanceof PacketEncoderException) && !(t instanceof TimeoutException);
     }
 
-    public static byte[] getData(ByteBuf buf) {
-        int prevReaderIndex = buf.readerIndex();
-        buf.readerIndex(0);
-        byte[] data = new byte[buf.readableBytes()];
-        buf.readBytes(data);
-        buf.readerIndex(prevReaderIndex);
-        return data;
+    private static class ErrorHandlerInfo {
+        static final ThreadLocal<ErrorHandlerInfo> INSTANCE = ThreadLocal.withInitial(ErrorHandlerInfo::new);
+
+        int wrapperCount = 0;
+        boolean handledError = false;
     }
 
-    public static void logPacketDisconnectError(byte[] data, String... extraLines) {
-        LOGGER.error("!!!!!!!! Unexpected disconnect, please upload this error to " + MULTICONNECT_ISSUES_BASE_URL + " !!!!!!!!");
+    public static void wrapInErrorHandler(ByteBuf buf, String direction, Runnable runnable) {
+        ErrorHandlerInfo handlerInfo = ErrorHandlerInfo.INSTANCE.get();
+        handlerInfo.wrapperCount++;
+        try {
+            runnable.run();
+        } catch (Throwable e) {
+            if (!handlerInfo.handledError) {
+                DebugUtils.logPacketError(buf, "Direction: " + direction);
+            }
+            // consume all the input
+            buf.readerIndex(buf.readerIndex() + buf.readableBytes());
+            if (DebugUtils.IGNORE_ERRORS) {
+                LOGGER.warn("Ignoring error in packet");
+                e.printStackTrace();
+            } else {
+                handlerInfo.handledError = true;
+                throw e;
+            }
+        } finally {
+            if (--handlerInfo.wrapperCount == 0) {
+                handlerInfo.handledError = false;
+            }
+        }
+    }
+
+    public static byte[] getBufData(ByteBuf buf) {
+        if (buf.hasArray()) {
+            return buf.array();
+        }
+        int prevReaderIndex = buf.readerIndex();
+        buf.readerIndex(0);
+        byte[] array = new byte[buf.readableBytes()];
+        buf.readBytes(array);
+        buf.readerIndex(prevReaderIndex);
+        return array;
+    }
+
+    public static void logPacketError(ByteBuf data, String... extraLines) {
+        logPacketError(getBufData(data), extraLines);
+    }
+
+    public static void logPacketError(byte[] data, String... extraLines) {
+        LOGGER.error("!!!!!!!! Unexpected packet error, please upload this error to " + MULTICONNECT_ISSUES_BASE_URL + " !!!!!!!!");
         LOGGER.error("It may be helpful if you also provide the server IP, but you are not obliged to do this.");
         LOGGER.error("Minecraft version: {}", SharedConstants.getGameVersion().getName());
         FabricLoader.getInstance().getModContainer("multiconnect").ifPresent(modContainer -> {
@@ -244,24 +287,31 @@ public class DebugUtils {
         LOGGER.info("Artificially handling packet of length {}", bytes.length);
         Channel channel = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel();
         assert channel != null;
-        channel.pipeline().context("decoder").fireChannelRead(Unpooled.wrappedBuffer(bytes));
-    }
-
-    public static void handleChunkDataDump(ClientPlayNetworkHandler networkHandler, String base64, boolean compressed, int x, int z, @Nullable BitSet verticalStripBitmask) {
-        byte[] data = decode(base64, compressed);
-        if (data == null) {
-            return;
+        ChannelHandlerContext context = channel.pipeline().context("multiconnect_clientbound_translator");
+        if (context == null) {
+            context = channel.pipeline().context("decoder");
+            if (context == null) {
+                throw new IllegalStateException("Cannot handle packet dump on singleplayer");
+            }
         }
-        LOGGER.info("Artificially handling chunk data of length {} at {}, {}", data.length, x, z);
-        ClientWorld world = networkHandler.getWorld();
-        DynamicRegistryManager registryManager = networkHandler.getRegistryManager();
-        ChunkDataS2CPacket packet = Utils.createEmptyChunkDataPacket(x, z, world, registryManager);
-        ((IUserDataHolder) packet).multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, false);
-        ((ChunkDataAccessor) packet.getChunkData()).setSectionsData(data);
-        if (verticalStripBitmask != null) {
-            ((IUserDataHolder) packet).multiconnect_setUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK, verticalStripBitmask);
+        try {
+            ByteBuf buf = Unpooled.wrappedBuffer(bytes);
+            buf.readerIndex(0);
+            if (channel.eventLoop().inEventLoop()) {
+                ((ChannelInboundHandler) context.handler()).channelRead(context, buf);
+            } else {
+                ChannelHandlerContext context_f = context;
+                channel.eventLoop().execute(() -> {
+                    try {
+                        ((ChannelInboundHandler) context_f.handler()).channelRead(context_f, buf);
+                    } catch (Exception e) {
+                        throw PacketIntrinsics.sneakyThrow(e);
+                    }
+                });
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
         }
-        ChunkDataTranslator.submit(packet);
     }
 
     private static byte @Nullable [] decode(String base64, boolean compressed) {
@@ -279,32 +329,220 @@ public class DebugUtils {
         return result.toByteArray();
     }
 
-    public static void onDebugKey() {
-
-    }
-
-    public static class DebugDecoderHandler extends DecoderHandler {
-        private final DecoderHandlerAccessor delegate;
-
-        public DebugDecoderHandler(DecoderHandler delegate) {
-            this((DecoderHandlerAccessor) delegate);
+    @SuppressWarnings("unchecked")
+    public static <T> void dumpRegistries() throws IOException {
+        File dir = new File("../data/" + SharedConstants.getGameVersion().getReleaseTarget());
+        if (!dir.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            dir.mkdirs();
         }
-
-        private DebugDecoderHandler(DecoderHandlerAccessor delegate) {
-            super(delegate.getSide());
-            this.delegate = delegate;
-        }
-
-        @Override
-        protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-            try {
-                delegate.callDecode(ctx, in, out);
-            } catch (Throwable t) {
-                if (isUnexpectedDisconnect(t)) {
-                    logPacketDisconnectError(DebugUtils.getData(in));
+        dumpPackets(new File(dir, "spackets.csv"), NetworkSide.CLIENTBOUND, "SPacket", "S2CPacket");
+        dumpPackets(new File(dir, "cpackets.csv"), NetworkSide.SERVERBOUND, "CPacket", "C2SPacket");
+        for (Registries registries : Registries.values()) {
+            Stream<Triple<Integer, String, String>> entries;
+            if (registries == Registries.BLOCK_STATE) {
+                entries = StreamSupport.stream(Block.STATE_IDS.spliterator(), false)
+                        .filter(it -> {
+                            Identifier name = Registry.BLOCK.getId(it.getBlock());
+                            return !name.getNamespace().equals("multiconnect");
+                        })
+                        .map(it -> Triple.of(Block.STATE_IDS.getRawId(it), blockStateToString(it), blockStateToString(it)));
+            } else if (registries == Registries.TRACKED_DATA_HANDLER) {
+                List<Triple<Integer, String, String>> entryList = new ArrayList<>();
+                TrackedDataHandler<?> handler;
+                for (int i = 0; (handler = TrackedDataHandlerRegistry.get(i)) != null; i++) {
+                    String name = null;
+                    for (Field field : TrackedDataHandlerRegistry.class.getFields()) {
+                        if (Modifier.isStatic(field.getModifiers()) && field.getType() == TrackedDataHandler.class) {
+                            Object fieldValue;
+                            try {
+                                fieldValue = field.get(null);
+                            } catch (ReflectiveOperationException e) {
+                                throw new AssertionError(e);
+                            }
+                            if (handler == fieldValue) {
+                                name = field.getName().toLowerCase(Locale.ROOT);
+                                break;
+                            }
+                        }
+                    }
+                    if (name == null) {
+                        throw new AssertionError("Could not find tracked data handler name for id " + i);
+                    }
+                    entryList.add(Triple.of(i, name, name));
                 }
-                throw t;
+                entries = entryList.stream();
+            } else {
+                if (!registries.isRealRegistry()) {
+                    throw new AssertionError("No way to dump registry " + registries);
+                }
+                Registry<T> registry;
+                try {
+                    registry = (Registry<T>) Registry.class.getDeclaredField(registries.name()).get(null);
+                } catch (ReflectiveOperationException e) {
+                    throw new AssertionError(e);
+                }
+                entries = registry.stream()
+                        .filter(it -> {
+                            Identifier name = registry.getId(it);
+                            return name == null || !name.getNamespace().equals("multiconnect");
+                        })
+                        .map(it -> {
+                            Identifier name = registry.getId(it);
+                            String nameStr = identifierToString(name);
+                            return Triple.of(registry.getRawId(it), nameStr, nameStr);
+                        });
+            }
+            try (PrintWriter pw = new PrintWriter(new FileWriter(new File(dir, registries.name().toLowerCase(Locale.ROOT) + ".csv")))) {
+                pw.println("id name oldName remapTo");
+                entries.forEach(it -> {
+                    if (it.getMiddle().equals(it.getRight())) {
+                        pw.println(it.getLeft() + " " + it.getMiddle());
+                    } else {
+                        pw.println(it.getLeft() + " " + it.getMiddle() + " " + it.getRight());
+                    }
+                });
             }
         }
+
+        dumpDynamicRegistries();
+    }
+
+    public static String identifierToString(@Nullable Identifier identifier) {
+        if (identifier == null) {
+            return "null";
+        }
+        if (identifier.getNamespace().equals("minecraft")) {
+            return identifier.getPath();
+        }
+        return identifier.toString();
+    }
+
+    public static String blockStateToString(BlockState state) {
+        Identifier unmodifiedName = Registry.BLOCK.getId(state.getBlock());
+        String result = identifierToString(unmodifiedName);
+        if (state.getBlock().getStateManager().getProperties().isEmpty()) return result;
+        String stateStr = state.getBlock().getStateManager().getProperties().stream().map(it -> it.getName() + "=" + getName(it, state.get(it))).collect(Collectors.joining(","));
+        return result + "[" + stateStr + "]";
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends Comparable<T>> String getName(Property<T> prop, Object value) {
+        return prop.name((T) value);
+    }
+
+    private static final Map<Class<? extends Packet<?>>, String> SUBST_NAME = ImmutableMap.<Class<? extends Packet<?>>, String>builder()
+            .build();
+    private static void dumpPackets(File output, NetworkSide side, String prefix, String toReplace) throws IOException {
+        var packetHandlers = new ArrayList<>(NetworkState.PLAY.getPacketIdToPacketMap(side).int2ObjectEntrySet());
+        packetHandlers.sort(Comparator.comparingInt(Int2ObjectMap.Entry::getIntKey));
+        try (PrintWriter pw = new PrintWriter(new FileWriter(output))) {
+            pw.println("id clazz");
+            for (var entry : packetHandlers) {
+                int id = entry.getIntKey();
+                String baseClassName = entry.getValue().getName();
+                baseClassName = baseClassName.substring(baseClassName.lastIndexOf('.') + 1);
+                int underscoreIndex = baseClassName.indexOf('_');
+                if (underscoreIndex >= 0) {
+                    baseClassName = baseClassName.substring(0, underscoreIndex);
+                }
+                baseClassName = baseClassName.replace("$", "").replace(toReplace, "");
+                baseClassName = prefix + baseClassName;
+                String className = "net.earthcomputer.multiconnect.packets." + baseClassName;
+                Class<?> clazz;
+                try {
+                    clazz = Class.forName(className);
+                } catch (ClassNotFoundException e) {
+                    LOGGER.error("Could not find packet class " + className);
+                    continue;
+                }
+                if (clazz.isInterface()) {
+                    className = "net.earthcomputer.multiconnect.packets.latest." + baseClassName + "_Latest";
+                    try {
+                        Class.forName(className);
+                    } catch (ClassNotFoundException e) {
+                        LOGGER.error("Could not find packet class " + className);
+                        continue;
+                    }
+                }
+                pw.println(id + " " + className);
+            }
+        }
+    }
+
+    private static void dumpDynamicRegistries() throws IOException {
+        Path destFile = Path.of("data/registry_manager.nbt");
+        Files.createDirectories(destFile.getParent());
+        var registryManager = DynamicRegistryManager.createAndLoad().toImmutable();
+        try (OutputStream output = new BufferedOutputStream(Files.newOutputStream(destFile))) {
+            NbtCompound nbt = (NbtCompound) DynamicRegistryManager.CODEC.encodeStart(NbtOps.INSTANCE, registryManager)
+                    .getOrThrow(false, err -> {});
+            NbtIo.writeCompressed(nbt, output);
+        }
+    }
+
+    public static void onDebugKey() {
+    }
+
+    public static String dfuToString(Object dfuType) {
+        if (dfuType == null) {
+            return "null";
+        }
+        if (dfuType instanceof Iterable<?> collection) {
+            StringBuilder sb = new StringBuilder("[");
+            boolean appended = false;
+            for (Object o : collection) {
+                if (appended) {
+                    sb.append(",\n");
+                } else {
+                    sb.append("\n");
+                }
+                appended = true;
+                sb.append(dfuToString(o));
+            }
+            return sb.toString().replace("\n", "  \n") + "\n]";
+        }
+
+        if (dfuType instanceof TypeRewriteRule.Nop) {
+            return "Nop";
+        }
+        if (dfuType instanceof TypeRewriteRule.Seq) {
+            return "Seq" + dfuToString(getField(dfuType, "rules"));
+        }
+        if (dfuType instanceof TypeRewriteRule.OrElse) {
+            return "OrElse[" + dfuToString(getField(dfuType, "first")) + ", " + dfuToString(getField(dfuType, "second")) + "]";
+        }
+        if (dfuType instanceof TypeRewriteRule.All) {
+            return "All[" + dfuToString(getField(dfuType, "rule")) + "]";
+        }
+        if (dfuType instanceof TypeRewriteRule.One) {
+            return "One[" + dfuToString(getField(dfuType, "rule")) + "]";
+        }
+        if (dfuType instanceof TypeRewriteRule.CheckOnce) {
+            return "CheckOnce[" + dfuToString(getField(dfuType, "rule")) + "]";
+        }
+        if (dfuType instanceof TypeRewriteRule.Everywhere) {
+            return "Everywhere[" + dfuToString(getField(dfuType, "rule")) + "]";
+        }
+        if (dfuType instanceof TypeRewriteRule.IfSame<?>) {
+            return "IfSame[" + dfuToString(getField(dfuType, "targetType")) + ", " + dfuToString(getField(dfuType, "value")) + "]";
+        }
+
+        return dfuType.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T getField(Object instance, String name) {
+        for (Class<?> clazz = instance.getClass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
+            try {
+                Field field = clazz.getDeclaredField(name);
+                field.setAccessible(true);
+                return (T) field.get(instance);
+            } catch (NoSuchFieldException ignored) {
+            } catch (ReflectiveOperationException e) {
+                Util.throwUnchecked(e);
+            }
+        }
+        throw new IllegalArgumentException("No such field " + name);
     }
 }

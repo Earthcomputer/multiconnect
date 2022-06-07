@@ -8,7 +8,7 @@ import com.mojang.brigadier.exceptions.Dynamic2CommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.command.CommandSource;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 public final class EnumArgumentType implements ArgumentType<String> {
 
     private static final Dynamic2CommandExceptionType INVALID_ENUM_EXCEPTION =
-            new Dynamic2CommandExceptionType((actual, expected) -> new LiteralText("Invalid enum \"" + actual + "\", expected one of " + String.join(", ", (String[]) expected)));
+            new Dynamic2CommandExceptionType((actual, expected) -> Text.literal("Invalid enum \"" + actual + "\", " + "expected one of " + String.join(", ", (String[]) expected)));
 
     private final String[] values;
     private boolean caseSensitive = true;

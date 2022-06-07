@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.connect;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,7 +25,7 @@ public final class ServersExt {
             if (configFile.exists()) {
                 try (FileReader reader = new FileReader(configFile)) {
                     instance = GSON.fromJson(reader, ServersExt.class);
-                } catch (IOException e) {
+                } catch (IOException | JsonParseException e) {
                     LOGGER.error("Failed to load extra server data", e);
                 }
             }

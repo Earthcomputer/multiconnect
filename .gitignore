@@ -33,3 +33,5 @@ run/*
 changelog.txt
 
 *.class
+
+src/generated/

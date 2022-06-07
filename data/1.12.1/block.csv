@@ -1,0 +1,523 @@
+id name oldName remapTo
+0 air
+1 stone
+2 grass_block grass
+3 dirt
+4 cobblestone
+5 oak_planks planks
+6 oak_sapling sapling
+7 bedrock
+8 multiconnect:flowing_water flowing_water
+9 water
+10 multiconnect:flowing_lava flowing_lava
+11 lava
+12 sand
+13 gravel
+14 gold_ore
+15 iron_ore
+16 coal_ore
+17 oak_log log
+18 oak_leaves leaves
+19 sponge
+20 glass
+21 lapis_ore
+22 lapis_block
+23 dispenser
+24 sandstone
+25 note_block noteblock
+26 white_bed bed
+27 powered_rail golden_rail
+28 detector_rail
+29 sticky_piston
+30 cobweb web
+31 grass tallgrass
+32 multiconnect:old_dead_bush deadbush dead_bush
+33 piston
+34 piston_head
+35 white_wool wool
+36 moving_piston piston_extension
+37 dandelion yellow_flower
+38 poppy red_flower
+39 brown_mushroom
+40 red_mushroom
+41 gold_block
+42 iron_block
+43 multiconnect:double_stone_slab double_stone_slab
+44 smooth_stone_slab stone_slab
+45 bricks brick_block
+46 tnt
+47 bookshelf
+48 mossy_cobblestone
+49 obsidian
+50 torch
+51 fire
+52 spawner mob_spawner
+53 oak_stairs
+54 chest
+55 redstone_wire
+56 diamond_ore
+57 diamond_block
+58 crafting_table
+59 wheat
+60 farmland
+61 furnace
+62 multiconnect:lit_furnace lit_furnace
+63 oak_sign standing_sign
+64 oak_door wooden_door
+65 ladder
+66 rail
+67 cobblestone_stairs stone_stairs
+68 oak_wall_sign wall_sign
+69 lever
+70 stone_pressure_plate
+71 iron_door
+72 oak_pressure_plate wooden_pressure_plate
+73 redstone_ore
+74 multiconnect:lit_redstone_ore lit_redstone_ore
+75 multiconnect:unlit_redstone_torch unlit_redstone_torch
+76 redstone_torch
+77 stone_button
+78 snow snow_layer
+79 ice
+80 snow_block snow
+81 cactus
+82 clay
+83 sugar_cane reeds
+84 jukebox
+85 oak_fence fence
+86 carved_pumpkin pumpkin
+87 netherrack
+88 soul_sand
+89 glowstone
+90 nether_portal portal
+91 jack_o_lantern lit_pumpkin
+92 cake
+93 repeater unpowered_repeater
+94 multiconnect:powered_repeater powered_repeater
+95 white_stained_glass stained_glass
+96 oak_trapdoor trapdoor
+97 infested_stone monster_egg
+98 stone_bricks stonebrick
+99 brown_mushroom_block
+100 red_mushroom_block
+101 iron_bars
+102 glass_pane
+103 melon melon_block
+104 pumpkin_stem
+105 melon_stem
+106 vine
+107 oak_fence_gate fence_gate
+108 brick_stairs
+109 stone_brick_stairs
+110 mycelium
+111 lily_pad waterlily
+112 nether_bricks nether_brick
+113 nether_brick_fence
+114 nether_brick_stairs
+115 nether_wart
+116 enchanting_table
+117 brewing_stand
+118 cauldron
+119 end_portal
+120 end_portal_frame
+121 end_stone
+122 dragon_egg
+123 redstone_lamp
+124 multiconnect:lit_redstone_lamp lit_redstone_lamp
+125 multiconnect:double_wooden_slab double_wooden_slab
+126 oak_slab wooden_slab
+127 cocoa
+128 sandstone_stairs
+129 emerald_ore
+130 ender_chest
+131 tripwire_hook
+132 tripwire
+133 emerald_block
+134 spruce_stairs
+135 birch_stairs
+136 jungle_stairs
+137 command_block
+138 beacon
+139 cobblestone_wall
+140 flower_pot
+141 carrots
+142 potatoes
+143 oak_button wooden_button
+144 skeleton_skull skull
+145 anvil
+146 trapped_chest
+147 light_weighted_pressure_plate
+148 heavy_weighted_pressure_plate
+149 comparator unpowered_comparator
+150 multiconnect:powered_comparator powered_comparator
+151 daylight_detector
+152 redstone_block
+153 nether_quartz_ore quartz_ore
+154 hopper
+155 quartz_block
+156 quartz_stairs
+157 activator_rail
+158 dropper
+159 white_terracotta stained_hardened_clay
+160 white_stained_glass_pane stained_glass_pane
+161 acacia_leaves leaves2
+162 acacia_log log2
+163 acacia_stairs
+164 dark_oak_stairs
+165 slime_block slime
+166 barrier
+167 iron_trapdoor
+168 prismarine
+169 sea_lantern
+170 hay_block
+171 white_carpet carpet
+172 terracotta hardened_clay
+173 coal_block
+174 packed_ice
+175 sunflower double_plant
+176 black_banner standing_banner
+177 black_wall_banner wall_banner
+178 multiconnect:daylight_detector_inverted daylight_detector_inverted
+179 red_sandstone
+180 red_sandstone_stairs
+181 multiconnect:double_stone_slab2 double_stone_slab2
+182 red_sandstone_slab stone_slab2
+183 spruce_fence_gate
+184 birch_fence_gate
+185 jungle_fence_gate
+186 dark_oak_fence_gate
+187 acacia_fence_gate
+188 spruce_fence
+189 birch_fence
+190 jungle_fence
+191 dark_oak_fence
+192 acacia_fence
+193 spruce_door
+194 birch_door
+195 jungle_door
+196 acacia_door
+197 dark_oak_door
+198 end_rod
+199 chorus_plant
+200 chorus_flower
+201 purpur_block
+202 purpur_pillar
+203 purpur_stairs
+204 multiconnect:purpur_double_slab purpur_double_slab
+205 purpur_slab
+206 end_stone_bricks end_bricks
+207 beetroots
+208 dirt_path grass_path
+209 end_gateway
+210 repeating_command_block
+211 chain_command_block
+212 frosted_ice
+213 magma_block magma
+214 nether_wart_block
+215 red_nether_bricks red_nether_brick
+216 bone_block
+217 structure_void
+218 observer
+219 white_shulker_box
+220 orange_shulker_box
+221 magenta_shulker_box
+222 light_blue_shulker_box
+223 yellow_shulker_box
+224 lime_shulker_box
+225 pink_shulker_box
+226 gray_shulker_box
+227 light_gray_shulker_box silver_shulker_box
+228 cyan_shulker_box
+229 purple_shulker_box
+230 blue_shulker_box
+231 brown_shulker_box
+232 green_shulker_box
+233 red_shulker_box
+234 black_shulker_box
+235 white_glazed_terracotta
+236 orange_glazed_terracotta
+237 magenta_glazed_terracotta
+238 light_blue_glazed_terracotta
+239 yellow_glazed_terracotta
+240 lime_glazed_terracotta
+241 pink_glazed_terracotta
+242 gray_glazed_terracotta
+243 light_gray_glazed_terracotta silver_glazed_terracotta
+244 cyan_glazed_terracotta
+245 purple_glazed_terracotta
+246 blue_glazed_terracotta
+247 brown_glazed_terracotta
+248 green_glazed_terracotta
+249 red_glazed_terracotta
+250 black_glazed_terracotta
+251 white_concrete concrete
+252 white_concrete_powder concrete_powder
+255 structure_block
+256 granite
+257 coarse_dirt
+258 spruce_planks
+259 spruce_sapling
+260 red_sand
+261 spruce_log
+262 spruce_leaves
+263 wet_sponge
+264 chiseled_sandstone
+265 orange_bed
+266 orange_wool
+267 blue_orchid
+268 sandstone_slab
+269 wall_torch
+270 redstone_wall_torch
+271 orange_stained_glass
+272 infested_cobblestone
+273 mossy_stone_bricks
+274 spruce_slab
+275 mossy_cobblestone_wall
+276 potted_oak_sapling
+277 skeleton_wall_skull
+278 chiseled_quartz_block
+279 orange_terracotta
+280 orange_stained_glass_pane
+281 dark_oak_leaves
+282 dark_oak_log
+283 prismarine_bricks
+284 orange_carpet
+285 lilac
+286 orange_banner
+287 orange_wall_banner
+288 chiseled_red_sandstone
+289 orange_concrete
+290 orange_concrete_powder
+291 polished_granite
+292 podzol
+293 birch_planks
+294 birch_sapling
+295 birch_log
+296 birch_leaves
+297 cut_sandstone
+298 magenta_bed
+299 fern
+300 magenta_wool
+301 allium
+302 petrified_oak_slab
+303 magenta_stained_glass
+304 infested_stone_bricks
+305 cracked_stone_bricks
+306 birch_slab
+307 potted_spruce_sapling
+308 wither_skeleton_skull
+309 quartz_pillar
+310 magenta_terracotta
+311 magenta_stained_glass_pane
+312 dark_prismarine
+313 magenta_carpet
+314 tall_grass
+315 magenta_banner
+316 magenta_wall_banner
+317 cut_red_sandstone
+318 magenta_concrete
+319 magenta_concrete_powder
+320 diorite
+321 jungle_planks
+322 jungle_sapling
+323 jungle_log
+324 jungle_leaves
+325 light_blue_bed
+326 light_blue_wool
+327 azure_bluet
+328 cobblestone_slab
+329 light_blue_stained_glass
+330 infested_mossy_stone_bricks
+331 chiseled_stone_bricks
+332 jungle_slab
+333 potted_birch_sapling
+334 wither_skeleton_wall_skull
+335 light_blue_terracotta
+336 light_blue_stained_glass_pane
+337 light_blue_carpet
+338 large_fern
+339 light_blue_banner
+340 light_blue_wall_banner
+341 light_blue_concrete
+342 light_blue_concrete_powder
+343 polished_diorite
+344 acacia_planks
+345 acacia_sapling
+346 yellow_bed
+347 yellow_wool
+348 red_tulip
+349 brick_slab
+350 yellow_stained_glass
+351 infested_cracked_stone_bricks
+352 acacia_slab
+353 potted_jungle_sapling
+354 zombie_head
+355 chipped_anvil
+356 yellow_terracotta
+357 yellow_stained_glass_pane
+358 yellow_carpet
+359 rose_bush
+360 yellow_banner
+361 yellow_wall_banner
+362 yellow_concrete
+363 yellow_concrete_powder
+364 andesite
+365 dark_oak_planks
+366 dark_oak_sapling
+367 lime_bed
+368 lime_wool
+369 orange_tulip
+370 stone_brick_slab
+371 lime_stained_glass
+372 infested_chiseled_stone_bricks
+373 dark_oak_slab
+374 potted_acacia_sapling
+375 zombie_wall_head
+376 lime_terracotta
+377 lime_stained_glass_pane
+378 lime_carpet
+379 peony
+380 lime_banner
+381 lime_wall_banner
+382 lime_concrete
+383 lime_concrete_powder
+384 polished_andesite
+385 pink_bed
+386 pink_wool
+387 white_tulip
+388 nether_brick_slab
+389 pink_stained_glass
+390 potted_dark_oak_sapling
+391 player_head
+392 pink_terracotta
+393 pink_stained_glass_pane
+394 pink_carpet
+395 pink_banner
+396 pink_wall_banner
+397 pink_concrete
+398 pink_concrete_powder
+399 gray_bed
+400 gray_wool
+401 pink_tulip
+402 quartz_slab
+403 gray_stained_glass
+404 potted_fern
+405 player_wall_head
+406 gray_terracotta
+407 gray_stained_glass_pane
+408 gray_carpet
+409 gray_banner
+410 gray_wall_banner
+411 gray_concrete
+412 gray_concrete_powder
+413 light_gray_bed
+414 light_gray_wool
+415 oxeye_daisy
+416 smooth_stone
+417 light_gray_stained_glass
+418 potted_dandelion
+419 creeper_head
+420 damaged_anvil
+421 light_gray_terracotta
+422 light_gray_stained_glass_pane
+423 light_gray_carpet
+424 light_gray_banner
+425 light_gray_wall_banner
+426 smooth_red_sandstone
+427 light_gray_concrete
+428 light_gray_concrete_powder
+429 cyan_bed
+430 cyan_wool
+431 smooth_sandstone
+432 cyan_stained_glass
+433 potted_poppy
+434 creeper_wall_head
+435 cyan_terracotta
+436 cyan_stained_glass_pane
+437 cyan_carpet
+438 cyan_banner
+439 cyan_wall_banner
+440 cyan_concrete
+441 cyan_concrete_powder
+442 purple_bed
+443 purple_wool
+444 purple_stained_glass
+445 mushroom_stem
+446 potted_blue_orchid
+447 dragon_head
+448 purple_terracotta
+449 purple_stained_glass_pane
+450 purple_carpet
+451 purple_banner
+452 purple_wall_banner
+453 purple_concrete
+454 purple_concrete_powder
+455 blue_bed
+456 blue_wool
+457 blue_stained_glass
+458 potted_allium
+459 dragon_wall_head
+460 blue_terracotta
+461 blue_stained_glass_pane
+462 blue_carpet
+463 blue_banner
+464 blue_wall_banner
+465 blue_concrete
+466 blue_concrete_powder
+467 oak_wood
+468 brown_bed
+469 brown_wool
+470 brown_stained_glass
+471 potted_azure_bluet
+472 brown_terracotta
+473 brown_stained_glass_pane
+474 acacia_wood
+475 brown_carpet
+476 brown_banner
+477 brown_wall_banner
+478 brown_concrete
+479 brown_concrete_powder
+480 spruce_wood
+481 green_bed
+482 green_wool
+483 green_stained_glass
+484 potted_red_tulip
+485 green_terracotta
+486 green_stained_glass_pane
+487 dark_oak_wood
+488 green_carpet
+489 green_banner
+490 green_wall_banner
+491 green_concrete
+492 green_concrete_powder
+493 birch_wood
+494 red_bed
+495 red_wool
+496 red_stained_glass
+497 potted_orange_tulip
+498 red_terracotta
+499 red_stained_glass_pane
+500 red_carpet
+501 red_banner
+502 red_wall_banner
+503 red_concrete
+504 red_concrete_powder
+505 jungle_wood
+506 black_bed
+507 black_wool
+508 smooth_quartz
+509 black_stained_glass
+510 potted_white_tulip
+511 black_terracotta
+512 black_stained_glass_pane
+513 black_carpet
+514 white_banner black_banner
+515 white_wall_banner black_wall_banner
+516 black_concrete
+517 black_concrete_powder
+518 potted_pink_tulip
+519 potted_oxeye_daisy
+520 potted_red_mushroom
+521 potted_brown_mushroom
+522 potted_dead_bush
+523 potted_cactus

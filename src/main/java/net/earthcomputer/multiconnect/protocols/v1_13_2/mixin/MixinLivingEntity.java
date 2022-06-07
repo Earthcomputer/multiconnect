@@ -37,7 +37,7 @@ public abstract class MixinLivingEntity extends Entity {
         return horizontalCollision;
     }
 
-    @ModifyVariable(method = "method_26317(DZLnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", ordinal = 0, at = @At("HEAD"))
+    @ModifyVariable(method = "applyFluidMovingSpeed", ordinal = 0, at = @At("HEAD"), argsOnly = true)
     private boolean modifyMovingDown(boolean movingDown) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_13_2) {
             return true;

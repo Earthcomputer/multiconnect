@@ -1,0 +1,46 @@
+id name oldName remapTo
+0 block_attach
+1 block_change
+2 block_close
+3 block_destroy
+4 block_detach
+5 block_open
+6 block_place
+7 block_activate block_press
+8 multiconnect:block_switch block_switch block_activate
+9 block_deactivate block_unpress
+10 multiconnect:block_unswitch block_unswitch block_deactivate
+11 container_close
+12 container_open
+13 dispense_fail
+14 drink drinking_finish
+15 eat
+16 elytra_glide elytra_free_fall
+17 entity_damage entity_damaged
+18 entity_die entity_killed
+19 entity_place
+20 equip
+21 explode
+22 item_interact_start fishing_rod_cast
+23 item_interact_finish fishing_rod_reel_in
+24 flap
+25 fluid_pickup
+26 fluid_place
+27 hit_ground
+28 entity_interact mob_interact
+29 lightning_strike
+30 multiconnect:minecart_moving minecart_moving
+31 piston_contract
+32 piston_extend
+33 prime_fuse
+34 projectile_land
+35 projectile_shoot
+36 entity_roar ravager_roar
+37 multiconnect:ring_bell ring_bell block_change
+38 shear
+39 multiconnect:shulker_close shulker_close container_close
+40 multiconnect:shulker_open shulker_open container_open
+41 splash
+42 step
+43 swim
+44 entity_shake wolf_shaking

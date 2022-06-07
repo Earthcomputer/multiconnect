@@ -7,7 +7,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.tag.FluidTags;
-import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,15 +40,15 @@ public abstract class MixinLivingEntity extends Entity {
         return self.isSprinting();
     }
 
-    @Inject(method = "method_26317(DZLnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "applyFluidMovingSpeed", at = @At("HEAD"), cancellable = true)
     private void modifySwimSprintFallSpeed(double gravity, boolean movingDown, Vec3d velocity, CallbackInfoReturnable<Vec3d> ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2 && !hasNoGravity()) {
             ci.setReturnValue(new Vec3d(velocity.x, velocity.y - 0.02, velocity.z));
         }
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getFluidHeight(Lnet/minecraft/tag/Tag;)D"))
-    private double redirectFluidHeight(LivingEntity entity, Tag<Fluid> tag) {
+    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getFluidHeight(Lnet/minecraft/tag/TagKey;)D"))
+    private double redirectFluidHeight(LivingEntity entity, TagKey<Fluid> tag) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2 && tag == FluidTags.WATER) {
             // If you're in water, you're in water, even if you're almost at the surface
             if (entity.getFluidHeight(tag) > 0)

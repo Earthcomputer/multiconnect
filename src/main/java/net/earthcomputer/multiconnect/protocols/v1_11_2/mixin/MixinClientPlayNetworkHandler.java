@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_11_2.mixin;
 import com.google.common.collect.Collections2;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocols.generic.IUserDataHolder;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.AchievementManager;
 import net.earthcomputer.multiconnect.protocols.v1_11_2.PendingAchievements;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -33,7 +33,7 @@ public abstract class MixinClientPlayNetworkHandler {
     @Inject(method = "onStatistics", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
     private void onOnStatistics(StatisticsS2CPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_11_2) {
-            PendingAchievements achievements = ((IUserDataHolder) packet).multiconnect_getUserData(PendingAchievements.KEY);
+            PendingAchievements achievements = PacketSystem.getUserData(packet).get(PendingAchievements.KEY);
             AchievementManager.update(achievements.toAdd(), achievements.toRemove());
         }
     }

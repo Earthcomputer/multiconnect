@@ -6,7 +6,7 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinEntity {
 
     @Shadow public World world;
-    @Shadow protected Object2DoubleMap<Tag<Fluid>> fluidHeight;
+    @Shadow protected Object2DoubleMap<TagKey<Fluid>> fluidHeight;
 
     @Shadow public abstract Box getBoundingBox();
 
@@ -39,7 +39,7 @@ public abstract class MixinEntity {
 
     @SuppressWarnings("deprecation")
     @Inject(method = "updateMovementInFluid", at = @At("HEAD"), cancellable = true)
-    private void modifyFluidMovementBoundingBox(Tag<Fluid> fluidTag, double d, CallbackInfoReturnable<Boolean> ci) {
+    private void modifyFluidMovementBoundingBox(TagKey<Fluid> fluidTag, double d, CallbackInfoReturnable<Boolean> ci) {
         if (ConnectionInfo.protocolVersion > Protocols.V1_12_2)
             return;
 

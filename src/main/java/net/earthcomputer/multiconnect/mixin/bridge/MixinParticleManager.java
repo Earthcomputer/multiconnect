@@ -1,7 +1,5 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
-import net.earthcomputer.multiconnect.impl.Utils;
-import net.earthcomputer.multiconnect.protocols.generic.DefaultRegistries;
 import net.earthcomputer.multiconnect.protocols.generic.IParticleManager;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleFactory;
@@ -18,18 +16,16 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 
 @Mixin(ParticleManager.class)
 public class MixinParticleManager implements IParticleManager {
 
-    @Shadow @Final private Map<ParticleType<?>, Object> spriteAwareFactories;
+    @Shadow @Final private Map<Identifier, Object> spriteAwareFactories;
     @Shadow protected ClientWorld world;
 
     @Unique private final Map<ParticleType<?>, ParticleFactory<?>> customFactories = new HashMap<>();
@@ -42,16 +38,6 @@ public class MixinParticleManager implements IParticleManager {
             ci.setReturnValue(customFactory.createParticle(effect, world, x, y, z, xSpeed, ySpeed, zSpeed));
     }
 
-    @Redirect(method = "createParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/Registry;getRawId(Ljava/lang/Object;)I"))
-    private int redirectRawId(Registry<ParticleType<?>> registry, Object type) {
-        return Utils.getUnmodifiedId(registry, (ParticleType<?>) type);
-    }
-
-    @Redirect(method = "reload", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/registry/Registry;getIds()Ljava/util/Set;"))
-    private Set<Identifier> redirectGetIds(Registry<ParticleType<?>> registry) {
-        return DefaultRegistries.DEFAULT_REGISTRIES.get(registry).defaultIdToEntry.keySet();
-    }
-
     @Override
     public <T extends ParticleEffect> void multiconnect_registerFactory(ParticleType<T> type, ParticleFactory<T> factory) {
         customFactories.put(type, factory);
@@ -62,7 +48,7 @@ public class MixinParticleManager implements IParticleManager {
                                                                                    Function<SpriteProvider, ParticleFactory<T>> spriteAwareFactory) {
         SpriteProvider spriteProvider = new ParticleManager.SimpleSpriteProvider();
 
-        spriteAwareFactories.put(type, spriteProvider);
+        spriteAwareFactories.put(Registry.PARTICLE_TYPE.getId(type), spriteProvider);
         customFactories.put(type, spriteAwareFactory.apply(spriteProvider));
     }
 }

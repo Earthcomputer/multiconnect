@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.scoreboard.Team;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -27,8 +26,8 @@ public abstract class MixinTeam {
     )
     private void modifyTeamNameDecoration(Text name, CallbackInfoReturnable<MutableText> cir) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            String concated = this.prefix.asString() + name.asString() + this.suffix.asString();
-            MutableText mutableText = new LiteralText(concated);
+            String concated = this.prefix.getString() + name.getString() + this.suffix.getString();
+            MutableText mutableText = Text.literal(concated);
             Formatting formatting = this.getColor();
             if (formatting != Formatting.RESET) {
                 mutableText.formatted(formatting);

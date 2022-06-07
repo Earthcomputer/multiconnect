@@ -1,32 +1,37 @@
 
 import com.modrinth.minotaur.TaskModrinthUpload
+import net.earthcomputer.multiconnect.buildscript.BuildUtils
 import net.fabricmc.loom.task.RemapJarTask
 import java.util.regex.Pattern
 
 plugins {
-	id 'fabric-loom' version '0.10-SNAPSHOT'
+	id 'fabric-loom' version '0.12-SNAPSHOT'
 	id 'maven-publish'
 	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
 	id 'com.modrinth.minotaur' version '1.2.1'
 	id 'com.github.breadmoirai.github-release' version '2.2.12'
 	id 'io.codearte.nexus-staging' version '0.30.0'
-	id 'io.github.juuxel.loom-quiltflower-mini' version '1.1.0'
+	id 'io.github.juuxel.loom-quiltflower' version '1.7.1'
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
 
-archivesBaseName = project.archives_base_name
-version = project.mod_version
-group = project.maven_group
-
-sourceSets {
-	api
-	tools
+allprojects {
+	archivesBaseName = rootProject.archives_base_name
+	version = rootProject.mod_version
+	group = rootProject.maven_group
 }
 
-compileApiJava.dependsOn processApiResources // wtf gradle
+configurations {
+	multiconnectProcessor
+	annotationProcessor.extendsFrom multiconnectProcessor
+}
+
+sourceSets {
+	generated
+}
 
 def snapshotPattern = Pattern.compile('(\\d\\d)w(\\d\\d)([a-z])')
 def prereleasePattern = Pattern.compile('[\\d.]+-(pre|rc)(\\d+)')
@@ -34,7 +39,7 @@ def normalizedVersion = project.minecraft_version
 def snapshotMatcher = snapshotPattern.matcher(project.minecraft_version)
 def prereleaseMatcher = prereleasePattern.matcher(project.minecraft_version)
 if (snapshotMatcher.matches()) {
-    normalizedVersion = project.target_release + '-alpha.' + snapshotMatcher.group(1) + '.' + snapshotMatcher.group(2) + '.' + snapshotMatcher.group(3)
+    normalizedVersion = project.target_release + '-alpha.' + snapshotMatcher.group(1) + '.' + (snapshotMatcher.group(2) as Integer) + '.' + snapshotMatcher.group(3)
 } else if (prereleaseMatcher.matches()) {
 	def type = prereleaseMatcher.group(1)
 	if (type == 'pre') {
@@ -45,6 +50,8 @@ if (snapshotMatcher.matches()) {
 }
 
 processResources {
+	dependsOn processGeneratedResources
+
 	duplicatesStrategy = DuplicatesStrategy.WARN
 	inputs.property "version", project.version
 	inputs.property "mcversion", project.supported_versions ?: normalizedVersion
@@ -65,65 +72,39 @@ processResources {
 // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
 tasks.withType(JavaCompile) {
 	options.encoding = "UTF-8"
-	options.release = 17
+	options.release.set(17)
 }
 
 // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
 // if it is present.
 // If you remove this task, sources will not be generated.
 task sourcesJar(type: Jar, dependsOn: classes) {
-	archiveClassifier = "sources"
+	archiveClassifier.set("sources")
 	from sourceSets.main.allSource
 }
 
 task javadocJar(type: Jar, dependsOn: classes) {
-	archiveClassifier = "javadoc"
+	archiveClassifier.set("javadoc")
 
-}
-
-task apiJar(type: Jar, dependsOn: apiClasses) {
-	archiveClassifier = 'api-dev'
-	from (sourceSets.api.output) {
-		include "fabric.mod.json"
-		expand "version": project.version
-	}
-	from (sourceSets.api.output) {
-		exclude "fabric.mod.json"
-	}
-	from 'LICENSE'
-}
-
-task apiSourcesJar(type: Jar, dependsOn: apiClasses) {
-	archiveClassifier = 'api-sources'
-	from sourceSets.api.allSource
-}
-
-task apiJavadoc(type: Javadoc) {
-	classpath = sourceSets.main.compileClasspath
-	source = sourceSets.api.allJava
-}
-
-task apiJavadocJar(type: Jar) {
-	archiveClassifier = 'api-javadoc'
-	from apiJavadoc
-}
-
-task remapApiJar(type: RemapJarTask, dependsOn: project.apiJar) {
-	input = apiJar.archiveFile
-	classifier = 'api'
-	addNestedDependencies = false
 }
 
 task remapSlimJar(type: RemapJarTask, dependsOn: jar) {
 	input = jar.archiveFile
-	classifier = 'slim'
-	addNestedDependencies = false
+	archiveClassifier.set('slim')
+	nestedJars.setFrom([])
 }
 
-remapJar.dependsOn remapApiJar
+
+idea {
+	module {
+		excludeDirs << file('src/generated/java')
+	}
+}
 
 jar {
 	from "LICENSE"
+	from sourceSets.generated.output.classesDirs
+	from sourceSets.generated.output.resourcesDir
 }
 
 loom {
@@ -139,7 +120,7 @@ subprojects {
 		afterEvaluate {
 			dependencies {
 				implementation project(':')
-				implementation rootProject.sourceSets.api.output
+				implementation project(':api')
 			}
 		}
 	}
@@ -149,28 +130,32 @@ repositories {
 	maven {
 		url 'https://jitpack.io/'
 	}
-	flatDir {
-		dirs file(remapApiJar.archivePath).parentFile
-	}
 }
 
 dependencies {
 	//to change the versions see the gradle.properties file
+	multiconnectProcessor project(':annotationProcessor')
+	implementation project(':annotations')
+	implementation project(':api')
+	include project(':api')
+	compileOnly project(':stubs')
+
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modCompileOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	modRuntimeOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	testImplementation "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
-	sourceSets.api.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
+	sourceSets.generated.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
+	generatedImplementation sourceSets.main.output
 
 	if (true) {
-		modCompileOnly("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
+		modCompileOnly(fabricApi.module('fabric-resource-loader-v0', project.fabric_api_version)) {
 			transitive = false // to stop it using its own fabric-loader
 		}
-		modRuntimeOnly("net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}") {
+		modRuntimeOnly(fabricApi.module('fabric-resource-loader-v0', project.fabric_api_version)) {
 			transitive = false // to stop it using its own fabric-loader
 		}
-		include "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
+		include fabricApi.module('fabric-resource-loader-v0', project.fabric_api_version)
 	} else {
 		modCompileOnly("net.fabricmc.fabric-api:fabric-api:0.45.1+1.18") {
 			exclude group: 'net.fabricmc', module: 'fabric-loader'
@@ -180,16 +165,12 @@ dependencies {
 		}
 	}
 
-	implementation sourceSets.api.output
-	include name: file(remapApiJar.archivePath).name.with { it.endsWith('.jar') ? it.substring(0, it.length() - 4) : it }
+	runtimeOnly sourceSets.generated.output
 
 	sourceSets.test.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
-	testRuntimeOnly 'com.github.Earthcomputer.junit5:junit-jupiter-engine:8785ac4d'
+//	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
+	testImplementation 'com.github.Earthcomputer.junit5:junit-jupiter-engine:8785ac4d'
 	testImplementation 'org.mockito:mockito-all:1.10.19'
-
-	sourceSets.tools.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
-	sourceSets.tools.runtimeClasspath += files({sourceSets.main.runtimeClasspath.toList()})
 }
 
 test {
@@ -199,53 +180,43 @@ test {
 	workingDir 'run'
 }
 
-def isBeta = version.contains 'pre'
+afterEvaluate {
+	task multiconnectAP(type: JavaCompile, group: 'build') {
+		source = sourceSets.main.java
+		classpath = configurations.compileClasspath
+		options.annotationProcessorPath = configurations.multiconnectProcessor
+		options.compilerArgs = [
+				'-proc:only',
+				'-processor', 'net.earthcomputer.multiconnect.ap.MulticonnectAP'
+		]
+		destinationDirectory.set(file("$buildDir/translatorJsons"))
+	}
+
+	task generateTranslators(group: 'build') {
+		dependsOn multiconnectAP
+		dependsOn ':translatorCompiler:compileTranslator'
+		inputs.dir "$buildDir/translatorJsons"
+		outputs.dirs sourceSets.generated.java.srcDirs
+	}
+
+	compileGeneratedJava {
+		dependsOn generateTranslators
+		options.warnings = false
+	}
+
+	clean {
+		delete sourceSets.generated.java.srcDirs
+	}
+}
+
 def changes = file('changelog.txt')
 changes = changes.exists() ? changes.getText('UTF-8') : ''
 
 // configure the maven publication
 publishing {
-	repositories {
-		maven {
-			name = 'nexus'
-			url = isBeta ? 'https://s01.oss.sonatype.org/content/repositories/snapshots/' : 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
-			credentials {
-				username(project.hasProperty('ossrhUser') ? ossrhUser : 'foo')
-				password(project.hasProperty('ossrhPass') ? ossrhPass : 'bar')
-			}
-		}
-		// mavenLocal()
-	}
+	repositories(BuildUtils.repositoryHandler(project))
 
 	publications {
-		def configurePom = {
-			packaging 'jar'
-			inceptionYear = '2019'
-			licenses {
-				license {
-					name = 'MIT'
-					url = 'https://github.com/Earthcomputer/multiconnect/blob/master/LICENSE'
-				}
-			}
-			url = 'https://github.com/Earthcomputer/multiconnect'
-			issueManagement {
-				url = 'https://github.com/Earthcomputer/multiconnect/issues'
-			}
-			scm {
-				connection = 'scm:git:https://github.com/Earthcomputer/multiconnect'
-				developerConnection = 'scm:git:https://github.com/Earthcomputer/multiconnect'
-				url = 'https://github.com/Earthcomputer/multiconnect'
-			}
-			developers {
-				developer {
-					name = 'Joseph Burton'
-					id = 'Earthcomputer'
-					email = 'burtonjae@hotmail.co.uk'
-					roles = ['Main Developer']
-				}
-			}
-		}
-
 		mod(MavenPublication) {
 			artifactId 'multiconnect'
 			artifact(remapJar) {
@@ -257,27 +228,9 @@ publishing {
 			artifact(javadocJar) {
 				builtBy javadocJar
 			}
-			pom configurePom
+			pom BuildUtils.configurePom
 			pom.name = 'multiconnect'
 			pom.description = 'The full multiconnect mod JAR'
-		}
-		api(MavenPublication) {
-			artifactId 'multiconnect-api'
-			artifact(remapApiJar) {
-				builtBy remapApiJar
-				classifier = ''
-			}
-			artifact(apiSourcesJar) {
-				builtBy apiSourcesJar
-				classifier = 'sources'
-			}
-			artifact(apiJavadocJar) {
-				builtBy apiJavadocJar
-				classifier = 'javadoc'
-			}
-			pom configurePom
-			pom.name = 'multiconnect-api'
-			pom.description = 'The multiconnect API'
 		}
 		slim(MavenPublication) {
 			artifactId 'multiconnect-slim'
@@ -293,7 +246,7 @@ publishing {
 				builtBy javadocJar
 				classifier = 'javadoc'
 			}
-			pom configurePom
+			pom BuildUtils.configurePom
 			pom.name = 'multiconnect-slim'
 			pom.description = 'The multiconnect mod JAR without the API'
 		}
@@ -302,7 +255,6 @@ publishing {
 
 signing {
 	sign publishing.publications.mod
-	sign publishing.publications.api
 	sign publishing.publications.slim
 }
 
@@ -318,10 +270,10 @@ curseforge {
 		apiKey = project.hasProperty('curseForgeKey') ? curseForgeKey : 'baz'
 		id = '336018'
 		changelog = changes
-		releaseType = isBeta ? 'beta' : 'release'
+		releaseType = BuildUtils.isBeta(project) ? 'beta' : 'release'
 		addGameVersion project.minecraft_version
 		addGameVersion 'Fabric'
-		mainArtifact remapJar.archivePath
+		mainArtifact remapJar.archiveFile.get().getAsFile()
 		afterEvaluate {
 			uploadTask.dependsOn remapJar
 		}
@@ -357,8 +309,8 @@ githubRelease {
 	tagName("v$version")
 	releaseName("Version $version for Minecraft ${project.minecraft_version}")
 	body changes
-	prerelease isBeta
-	releaseAssets remapJar.archivePath
+	prerelease BuildUtils.isBeta(project)
+	releaseAssets remapJar.archiveFile.get().getAsFile()
 }
 tasks.getByName('githubRelease').dependsOn remapJar
 

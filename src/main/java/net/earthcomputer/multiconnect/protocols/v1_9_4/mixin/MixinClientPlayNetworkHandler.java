@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.protocols.v1_9_4.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.protocols.v1_9_4.ResourcePackStatusC2SPacket_1_9_4;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.ResourcePackStatusC2SPacket;
@@ -31,7 +30,8 @@ public abstract class MixinClientPlayNetworkHandler {
     @Inject(method = "sendResourcePackStatus", at = @At("HEAD"), cancellable = true)
     private void onSendResourcePackStatus(ResourcePackStatusC2SPacket.Status status, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_9_4) {
-            sendPacket(new ResourcePackStatusC2SPacket_1_9_4(lastHash, status));
+            // TODO: rewrite 1.9.4
+//            sendPacket(new ResourcePackStatusC2SPacket_1_9_4(lastHash, status));
             ci.cancel();
         }
     }

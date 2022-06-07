@@ -4,6 +4,9 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
+import net.earthcomputer.multiconnect.packets.v1_12.CPacketPlaceRecipe_1_12;
+import net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -23,6 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class RecipeBook_1_12<C extends Inventory> {
 
@@ -55,13 +59,16 @@ public class RecipeBook_1_12<C extends Inventory> {
             tryPlaceRecipe(recipe, screenHandler.slots);
         } else {
             // clear craft matrix and show ghost recipe
-            var transactionFromMatrix = clearCraftMatrix();
+            var transactionsFromMatrix = clearCraftMatrix();
             recipeBookWidget.showGhostRecipe(recipe, screenHandler.slots);
 
-            if (!transactionFromMatrix.isEmpty()) {
-                short transactionId = Protocol_1_16_5.nextScreenActionId();
-                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(screenHandler.syncId, transactionId,
-                        transactionFromMatrix, new ArrayList<>()));
+            if (!transactionsFromMatrix.isEmpty()) {
+                var packet = new CPacketPlaceRecipe_1_12();
+                packet.syncId = screenHandler.syncId;
+                packet.transactionId = Protocol_1_16_5.nextScreenActionId();
+                packet.transactionsToMatrix = new ArrayList<>();
+                packet.transactionsFromMatrix = transactionsFromMatrix.stream().map(Transaction::toPacketTransaction).collect(Collectors.toCollection(ArrayList::new));
+                PacketSystem.sendToServer(mc.getNetworkHandler(), Protocols.V1_12, packet);
 
                 if (iRecipeBookWidget.getRecipeBook().isFilteringCraftable(screenHandler)) {
                     mc.player.getInventory().markDirty();
@@ -119,22 +126,24 @@ public class RecipeBook_1_12<C extends Inventory> {
             if (iRecipeBookWidget.getRecipeFinder().match(recipe, inputItemIds, actualCount)) {
                 // clear the craft matrix and place the recipe
                 var transactionsFromMatrix = clearCraftMatrix();
-                var transactionsToMatrix = new ArrayList<PlaceRecipeC2SPacket_1_12.Transaction>();
+                var transactionsToMatrix = new ArrayList<Transaction>();
                 placeRecipe(recipe, slots, actualCount, inputItemIds, transactionsToMatrix);
-                short transactionId = Protocol_1_16_5.nextScreenActionId();
-                mc.getNetworkHandler().sendPacket(new PlaceRecipeC2SPacket_1_12(screenHandler.syncId, transactionId,
-                        transactionsFromMatrix, transactionsToMatrix));
-                mc.player.getInventory().markDirty();
+                var packet = new CPacketPlaceRecipe_1_12();
+                packet.syncId = screenHandler.syncId;
+                packet.transactionId = Protocol_1_16_5.nextScreenActionId();
+                packet.transactionsToMatrix = transactionsToMatrix.stream().map(Transaction::toPacketTransaction).collect(Collectors.toCollection(ArrayList::new));
+                packet.transactionsFromMatrix = transactionsFromMatrix.stream().map(Transaction::toPacketTransaction).collect(Collectors.toCollection(ArrayList::new));
+                PacketSystem.sendToServer(mc.getNetworkHandler(), Protocols.V1_12, packet);
             }
         }
     }
 
-    private List<PlaceRecipeC2SPacket_1_12.Transaction> clearCraftMatrix() {
+    private List<Transaction> clearCraftMatrix() {
         assert mc.player != null;
 
         iRecipeBookWidget.getGhostSlots().reset();
         PlayerInventory playerInv = mc.player.getInventory();
-        var transactionsFromMatrix = new ArrayList<PlaceRecipeC2SPacket_1_12.Transaction>();
+        var transactionsFromMatrix = new ArrayList<Transaction>();
 
         int serverSlot = 1;
         for (int i = 0; i < screenHandler.getCraftingSlotCount(); i++) {
@@ -168,7 +177,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                     }
 
                     screenHandler.getSlot(i).takeStack(1);
-                    transactionsFromMatrix.add(new PlaceRecipeC2SPacket_1_12.Transaction(originalStack,
+                    transactionsFromMatrix.add(new Transaction(originalStack,
                             targetStack.copy(), placedOn, serverSlot, destSlot));
                 }
             }
@@ -207,7 +216,7 @@ public class RecipeBook_1_12<C extends Inventory> {
         return stackSize;
     }
 
-    private void placeRecipe(Recipe<C> recipe, List<Slot> slots, int placeCount, IntList inputItemIds, List<PlaceRecipeC2SPacket_1_12.Transaction> transactionsToMatrix) {
+    private void placeRecipe(Recipe<C> recipe, List<Slot> slots, int placeCount, IntList inputItemIds, List<Transaction> transactionsToMatrix) {
         int width = screenHandler.getCraftingWidth();
         int height = screenHandler.getCraftingHeight();
 
@@ -250,7 +259,7 @@ public class RecipeBook_1_12<C extends Inventory> {
         }
     }
 
-    private PlaceRecipeC2SPacket_1_12.Transaction findAndMoveToCraftMatrix(int destSlotIndex, Slot destSlot, ItemStack stackNeeded) {
+    private Transaction findAndMoveToCraftMatrix(int destSlotIndex, Slot destSlot, ItemStack stackNeeded) {
         assert mc.player != null;
 
         PlayerInventory playerInv = mc.player.getInventory();
@@ -281,7 +290,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                     destSlot.getStack().increment(1);
                 }
 
-                return new PlaceRecipeC2SPacket_1_12.Transaction(originalStack, stack, placedOn, destSlotIndex, fromSlot);
+                return new Transaction(originalStack, stack, placedOn, destSlotIndex, fromSlot);
             }
         }
     }
@@ -345,4 +354,27 @@ public class RecipeBook_1_12<C extends Inventory> {
         return slotId < screenHandler.getCraftingSlotCount() && slotId != screenHandler.getCraftingResultSlotIndex();
     }
 
+    private record Transaction(
+            ItemStack originalStack,
+            ItemStack stack,
+            ItemStack placedOn,
+            int craftingSlot,
+            int invSlot
+    ) {
+        private Transaction(ItemStack originalStack, ItemStack stack, ItemStack placedOn, int craftingSlot, int invSlot) {
+            this.originalStack = originalStack;
+            this.stack = stack.copy();
+            this.placedOn = placedOn;
+            this.craftingSlot = craftingSlot;
+            this.invSlot = invSlot;
+        }
+
+        private CPacketPlaceRecipe_1_12.Transaction toPacketTransaction() {
+            var result = new CPacketPlaceRecipe_1_12.Transaction();
+            result.stack = ItemStack_1_12_2.fromMinecraft(this.stack);
+            result.craftingSlot = (byte) this.craftingSlot;
+            result.invSlot = (byte) this.invSlot;
+            return result;
+        }
+    }
 }

@@ -3,14 +3,12 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_16_5.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "CommandTreeS2CAccessor",
-    "DimensionTypeAccessor",
     "EntityAccessor",
     "MapStateAccessor",
     "MixinClientPlayerInteractionManager",
+    "MixinClientPlayNetworkHandler",
     "MixinSquidEntity",
-    "ShulkerEntityAccessor",
-    "TagGroupSerializedAccessor"
+    "ShulkerEntityAccessor"
   ],
   "client": [
   ],

@@ -10,7 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.potion.PotionUtil;
 import net.minecraft.potion.Potions;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import java.util.LinkedHashMap;
@@ -79,8 +79,8 @@ public class Achievements_1_11_2 {
         Identifier id = new Identifier(CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, name));
         AdvancementDisplay display = new AdvancementDisplay(
                 icon,
-                new TranslatableText("achievement." + name),
-                new TranslatableText("achievement." + name + ".desc"),
+                Text.translatable("achievement." + name),
+                Text.translatable("achievement." + name + ".desc"),
                 parent == null ? new Identifier("textures/gui/advancements/backgrounds/stone.png") : null,
                 special ? AdvancementFrame.CHALLENGE : AdvancementFrame.TASK,
                 true,

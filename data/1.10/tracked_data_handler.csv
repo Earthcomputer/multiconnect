@@ -1,0 +1,19 @@
+id name oldName remapTo
+0 byte
+1 integer
+2 float
+3 string
+4 text_component
+5 item_stack
+6 boolean
+7 rotation
+8 block_pos
+9 optional_block_pos
+10 facing
+11 optional_uuid
+12 optional_block_state
+13 nbt_compound
+14 particle
+15 villager_data
+16 optional_int
+17 entity_pose

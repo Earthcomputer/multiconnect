@@ -34,35 +34,37 @@ import java.util.Collection;
 public class MixinClientPlayerInteractionManager {
     @Shadow @Final private ClientPlayNetworkHandler networkHandler;
 
+    // TODO: rewrite for 1.19
+
     // FIXME: change back to custom injection point once Mixin is updated to 0.8.3
-    @Redirect(method = "interactBlock",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V", ordinal = 1),
-            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;shouldCancelInteraction()Z")))
-    private void cancelInteractBlockPacket(ClientPlayNetworkHandler networkHandler, Packet<?> packet) {
-        if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
-            networkHandler.sendPacket(packet);
-        }
-    }
-
-    @Inject(method = "interactBlock",
-            at = @At(value = "RETURN", ordinal = 0),
-            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;useOnBlock(Lnet/minecraft/item/ItemUsageContext;)Lnet/minecraft/util/ActionResult;", ordinal = 1)))
-    private void onUsedOnBlock(ClientPlayerEntity player, ClientWorld world, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            if (ci.getReturnValue().isAccepted()) {
-                networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand, hitResult));
-            }
-        }
-    }
-
-    @Inject(method = "interactBlock",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/util/ActionResult;PASS:Lnet/minecraft/util/ActionResult;", ordinal = 0),
-            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getItemCooldownManager()Lnet/minecraft/entity/player/ItemCooldownManager;", ordinal = 0)))
-    private void onUsedOnBlockCoolingDown(ClientPlayerEntity player, ClientWorld world, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
-            networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand, hitResult));
-        }
-    }
+//    @Redirect(method = "interactBlock",
+//            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V", ordinal = 1),
+//            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;shouldCancelInteraction()Z")))
+//    private void cancelInteractBlockPacket(ClientPlayNetworkHandler networkHandler, Packet<?> packet) {
+//        if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
+//            networkHandler.sendPacket(packet);
+//        }
+//    }
+//
+//    @Inject(method = "interactBlock",
+//            at = @At(value = "RETURN", ordinal = 0),
+//            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;useOnBlock(Lnet/minecraft/item/ItemUsageContext;)Lnet/minecraft/util/ActionResult;", ordinal = 1)))
+//    private void onUsedOnBlock(ClientPlayerEntity player, ClientWorld world, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> ci) {
+//        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
+//            if (ci.getReturnValue().isAccepted()) {
+//                networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand, hitResult));
+//            }
+//        }
+//    }
+//
+//    @Inject(method = "interactBlock",
+//            at = @At(value = "FIELD", target = "Lnet/minecraft/util/ActionResult;PASS:Lnet/minecraft/util/ActionResult;", ordinal = 0),
+//            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getItemCooldownManager()Lnet/minecraft/entity/player/ItemCooldownManager;", ordinal = 0)))
+//    private void onUsedOnBlockCoolingDown(ClientPlayerEntity player, ClientWorld world, Hand hand, BlockHitResult hitResult, CallbackInfoReturnable<ActionResult> ci) {
+//        if (ConnectionInfo.protocolVersion <= Protocols.V1_12_2) {
+//            networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand, hitResult));
+//        }
+//    }
 }
 
 class SendInteractBlockInjectionPoint extends InjectionPoint {

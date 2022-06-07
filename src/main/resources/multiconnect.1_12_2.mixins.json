@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_16",
   "mixins": [
     "FireBlockAccessor",
+    "ItemInstanceTheFlatteningFixAccessor",
     "MixinAbstractBlockState",
     "MixinClientPlayerInteractionManager",
     "MixinItemPlacementContext",

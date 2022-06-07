@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "minecraft:block/repeater_1tick_on"
+    }
+  }
+}

@@ -1,10 +1,7 @@
 accessWidener   v1  named
 accessible class net/minecraft/client/particle/ParticleManager$SimpleSpriteProvider
 accessible method net/minecraft/client/particle/ParticleManager$SimpleSpriteProvider <init> ()V
-accessible class net/minecraft/util/registry/DynamicRegistryManager$Info
 accessible class net/minecraft/block/entity/BlockEntityType$BlockEntityFactory
-accessible class net/minecraft/tag/RequiredTagList$TagWrapper
-accessible class net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket$InteractType
-accessible class net/minecraft/network/packet/s2c/play/BossBarS2CPacket$Type
-accessible class net/minecraft/network/packet/s2c/play/CommandTreeS2CPacket$CommandNodeData
-accessible class net/minecraft/network/packet/s2c/play/ChunkData$BlockEntityData
+accessible class net/minecraft/client/network/PendingUpdateManager$PendingUpdate
+accessible field net/minecraft/client/network/PendingUpdateManager$PendingUpdate sequence I
+accessible method net/minecraft/client/network/PendingUpdateManager$PendingUpdate setBlockState (Lnet/minecraft/block/BlockState;)V
