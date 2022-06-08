@@ -105,6 +105,11 @@ public class Utils {
         }
     }
 
+    public static int getExpectedPackedIntegerArraySize(int paletteSize, int size) {
+        int elementsPerLong = 64 / paletteSize;
+        return (size + elementsPerLong - 1) / elementsPerLong;
+    }
+
     public static int getOldPackedBitArrayElement(long[] array, int index, int elementBits) {
         int mask = (1 << elementBits) - 1;
         int bitIndex = index * elementBits;

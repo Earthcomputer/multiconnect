@@ -42,6 +42,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.DynamicRegistryManager;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.EnumMap;
 import java.util.List;
@@ -259,10 +260,21 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
                     for (int i = 0; i < multiple.palette.length; i++) {
                         multiple.palette[i] = PacketSystem.serverBlockStateIdToClient(multiple.palette[i]);
                     }
+                    int expectedSize = Utils.getExpectedPackedIntegerArraySize(multiple.paletteSize, 4096);
+                    if (multiple.data.length != expectedSize) {
+                        // some servers send a shorter array than necessary, presumably to save bytes
+                        multiple.data = Arrays.copyOf(multiple.data, expectedSize);
+                    }
                 } else {
                     // TODO: handle case where registry bits change
                     var registryContainer = (ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer) section.blockStates;
-                    PackedIntegerArray packedArray = new PackedIntegerArray(MathHelper.ceilLog2(Block.STATE_IDS.size()), 4096, registryContainer.data);
+                    int paletteSize = MathHelper.ceilLog2(Block.STATE_IDS.size());
+                    int expectedSize = Utils.getExpectedPackedIntegerArraySize(paletteSize, 4096);
+                    if (registryContainer.data.length != expectedSize) {
+                        // some servers send a shorter array than necessary, presumably to save bytes
+                        registryContainer.data = Arrays.copyOf(registryContainer.data, expectedSize);
+                    }
+                    PackedIntegerArray packedArray = new PackedIntegerArray(paletteSize, 4096, registryContainer.data);
                     for (int i = 0; i < 4096; i++) {
                         packedArray.set(i, PacketSystem.serverBlockStateIdToClient(packedArray.get(i)));
                     }
