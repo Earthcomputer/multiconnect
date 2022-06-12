@@ -1,0 +1,15 @@
+id name oldName remapTo
+0 standing
+1 fall_flying
+2 sleeping
+3 swimming
+4 spin_attack
+5 crouching
+6 long_jumping
+7 dying
+8 croaking
+9 using_tongue
+10 roaring
+11 sniffing
+12 emerging
+13 digging

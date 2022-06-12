@@ -26,6 +26,7 @@ import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
@@ -79,6 +80,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
@@ -372,10 +374,18 @@ public class DebugUtils {
                     entryList.add(Triple.of(i, name, name));
                 }
                 entries = entryList.stream();
+            } else if (!registries.isRealRegistry()) {
+                Class<? extends Enum<?>> enumClass = switch (registries) {
+                    case ENTITY_POSE -> EntityPose.class;
+                    default -> throw new AssertionError("No way to dump registry " + registries);
+                };
+                Enum<?>[] enumConstants = enumClass.getEnumConstants();
+                entries = IntStream.range(0, enumConstants.length)
+                        .mapToObj(i -> {
+                            String name = enumConstants[i].name().toLowerCase(Locale.ROOT);
+                            return Triple.of(i, name, name);
+                        });
             } else {
-                if (!registries.isRealRegistry()) {
-                    throw new AssertionError("No way to dump registry " + registries);
-                }
                 Registry<T> registry;
                 try {
                     registry = (Registry<T>) Registry.class.getDeclaredField(registries.name()).get(null);

@@ -1,0 +1,9 @@
+id name oldName remapTo
+0 standing
+1 fall_flying
+2 sleeping
+3 swimming
+4 spin_attack
+5 crouching
+6 dying
+7 long_jumping

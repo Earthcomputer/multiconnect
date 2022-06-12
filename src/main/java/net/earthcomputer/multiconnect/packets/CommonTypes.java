@@ -287,7 +287,8 @@ public class CommonTypes {
             @Polymorphic(stringValue = "entity_pose")
             @MessageVariant
             public static class Pose extends TrackedData {
-                public CommonTypes.Pose value;
+                @Registry(Registries.ENTITY_POSE)
+                public int value;
             }
 
             @Polymorphic(stringValue = "cat_variant")
@@ -332,11 +333,6 @@ public class CommonTypes {
     @NetworkEnum
     public enum Direction {
         DOWN, UP, NORTH, SOUTH, WEST, EAST
-    }
-
-    @NetworkEnum
-    public enum Pose {
-        STANDING, FALL_FLYING, SLEEPING, SWIMMING, SPIN_ATTACK, SNEAKING, DYING, LONG_JUMPING
     }
 
     @NetworkEnum
