@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.connect;
 
+import com.mojang.logging.LogUtils;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.mixin.connect.HandshakePacketAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
@@ -16,15 +17,13 @@ import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.Locale;
 
 public class ConnectionHandler {
-
-    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public static boolean preConnect(InetSocketAddress addr, ServerAddress serverAddress, String addressField) {
         // Hypixel has their own closed-source connection proxy and closed-source anti-cheat.

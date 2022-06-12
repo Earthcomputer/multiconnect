@@ -3,19 +3,17 @@ package net.earthcomputer.multiconnect.connect;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
+import com.mojang.logging.LogUtils;
 import net.fabricmc.loader.api.FabricLoader;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class ServersExt {
-
-    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final File configFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), "multiconnect/servers_ext.json");
     private static ServersExt instance;

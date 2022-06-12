@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.protocols.generic;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.mojang.logging.LogUtils;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
@@ -9,8 +10,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import org.apache.commons.io.FileUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.FileReader;
@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 
 public class AssetDownloader {
 
-    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final Gson GSON = new Gson();
 
     private static final Pattern ARG_PATTERN = Pattern.compile("%(\\d+\\$)?[\\d.]*[dfs]");

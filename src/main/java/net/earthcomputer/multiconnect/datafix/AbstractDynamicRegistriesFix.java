@@ -5,6 +5,7 @@ import com.mojang.datafixers.DataFix;
 import com.mojang.datafixers.DataFixUtils;
 import com.mojang.datafixers.TypeRewriteRule;
 import com.mojang.datafixers.schemas.Schema;
+import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.DynamicOps;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -14,8 +15,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.util.Identifier;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +26,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class AbstractDynamicRegistriesFix extends DataFix {
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     protected final NbtCompound dynamicRegistries;
 
@@ -39,7 +39,7 @@ public abstract class AbstractDynamicRegistriesFix extends DataFix {
         try (InputStream input = MinecraftClient.getInstance().getResourceManager().getResourceOrThrow(resource).getInputStream()) {
             value = NbtIo.readCompressed(input);
         } catch (IOException e) {
-            LOGGER.error(() -> "Error reading resource " + resource, e);
+            LOGGER.error("Error reading resource " + resource, e);
             value = new NbtCompound();
         }
         this.dynamicRegistries = value;

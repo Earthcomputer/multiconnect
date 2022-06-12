@@ -18,8 +18,9 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,9 +29,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientConnection.class)
 public abstract class MixinClientConnection {
-
+    @Shadow @Final private static Logger LOGGER;
     @Shadow private Channel channel;
-
     @Shadow private PacketListener packetListener;
 
     @Inject(method = "setState", at = @At("HEAD"))
@@ -54,7 +54,7 @@ public abstract class MixinClientConnection {
     public void onExceptionCaught(ChannelHandlerContext context, Throwable t, CallbackInfo ci) {
         if (DebugUtils.isUnexpectedDisconnect(t) && channel.isOpen()) {
             TestingAPI.onUnexpectedDisconnect(t);
-            LogManager.getLogger("multiconnect").error("Unexpectedly disconnected from server!", t);
+            LOGGER.error("Unexpectedly disconnected from server!", t);
         }
     }
 

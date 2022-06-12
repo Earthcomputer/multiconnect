@@ -2,6 +2,7 @@ package net.earthcomputer.multiconnect.impl;
 
 import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.TypeRewriteRule;
+import com.mojang.logging.LogUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -50,9 +51,8 @@ import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Triple;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -87,7 +87,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class DebugUtils {
-    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final String MULTICONNECT_ISSUES_BASE_URL = "https://github.com/Earthcomputer/multiconnect/issues";
     private static final String MULTICONNECT_ISSUE_URL = MULTICONNECT_ISSUES_BASE_URL + "/%d";
     private static int rareBugIdThatOccurred = 0;
@@ -270,7 +270,7 @@ public class DebugUtils {
         for (String extraLine : extraLines) {
             LOGGER.error(extraLine);
         }
-        LOGGER.error("Compressed packet data: {}", () -> {
+        LOGGER.error("Compressed packet data: {}", LogUtils.defer(() -> {
             ByteArrayOutputStream result = new ByteArrayOutputStream();
             try (var out = new GZIPOutputStream(Base64.getEncoder().wrap(result))) {
                 out.write(data);
@@ -278,7 +278,7 @@ public class DebugUtils {
                 return "[error compressing] " + Base64.getEncoder().encodeToString(data);
             }
             return result.toString(StandardCharsets.UTF_8);
-        });
+        }));
     }
 
     public static void handlePacketDump(ClientPlayNetworkHandler networkHandler, String base64, boolean compressed) {

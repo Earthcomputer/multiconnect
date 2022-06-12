@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_12;
 
+import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.api.Protocols;
@@ -21,7 +22,7 @@ import net.minecraft.recipe.ShapedRecipe;
 import net.minecraft.screen.AbstractFurnaceScreenHandler;
 import net.minecraft.screen.AbstractRecipeScreenHandler;
 import net.minecraft.screen.slot.Slot;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class RecipeBook_1_12<C extends Inventory> {
-
+    private static final Logger LOGGER = LogUtils.getLogger();
     private final MinecraftClient mc = MinecraftClient.getInstance();
     private final RecipeBookWidget recipeBookWidget;
     private final IRecipeBookWidget iRecipeBookWidget;
@@ -173,7 +174,7 @@ public class RecipeBook_1_12<C extends Inventory> {
                         targetStack.increment(1);
                     } else {
                         // This shouldn't happen - condition already checked by canClearCraftMatrix
-                        LogManager.getLogger().error("Can't find any space for item in inventory");
+                        LOGGER.error("Can't find any space for item in inventory");
                     }
 
                     screenHandler.getSlot(i).takeStack(1);
@@ -271,7 +272,7 @@ public class RecipeBook_1_12<C extends Inventory> {
             ItemStack stack = playerInv.getStack(fromSlot).copy();
 
             if (stack.isEmpty()) {
-                LogManager.getLogger().error("Matched: " + stackNeeded.getTranslationKey() + " with empty item.");
+                LOGGER.error("Matched: {} with empty item.", stackNeeded.getTranslationKey());
                 return null;
             } else {
                 if (stack.getCount() > 1) {

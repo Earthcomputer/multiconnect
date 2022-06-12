@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.packets.v1_12_2;
 
+import com.mojang.logging.LogUtils;
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
@@ -7,8 +8,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketCommandSuggestions;
 import net.earthcomputer.multiconnect.packets.latest.SPacketCommandSuggestions_Latest;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.TabCompletionManager;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @MessageVariant(maxVersion = Protocols.V1_12_2)
 public class SPacketCommandSuggestions_1_12_2 implements SPacketCommandSuggestions {
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public List<String> suggestions;
 

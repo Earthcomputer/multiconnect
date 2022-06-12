@@ -1,10 +1,10 @@
 package net.earthcomputer.multiconnect.mixin.compat;
 
 import com.google.common.base.Joiner;
+import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.util.Identifier;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 @Mixin(targets = "net.fabricmc.fabric.impl.registry.sync.RegistrySyncManager", remap = false)
 public class MixinRegistrySyncManager {
     @Unique
-    private static final Logger MULTICONNECT_LOGGER = LogManager.getLogger("multiconnect");
+    private static final Logger MULTICONNECT_LOGGER = LogUtils.getLogger();
 
     @Dynamic
     @Inject(method = {"sendPacket(Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/fabricmc/fabric/impl/registry/sync/packet/RegistryPacketHandler;)V", "sendPacket(Lnet/minecraft/class_3222;Lnet/fabricmc/fabric/impl/registry/sync/packet/RegistryPacketHandler;)V"},

@@ -2,12 +2,12 @@ package net.earthcomputer.multiconnect.protocols.v1_8;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
+import com.mojang.logging.LogUtils;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SoundData_1_8 {
-    private static final Logger LOGGER = LogManager.getLogger("multiconnect");
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static SoundData_1_8 INSTANCE;
     public static SoundData_1_8 getInstance() {

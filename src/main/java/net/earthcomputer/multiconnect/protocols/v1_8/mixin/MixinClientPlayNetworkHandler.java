@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_8.mixin;
 
+import com.mojang.logging.LogUtils;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
@@ -25,8 +26,7 @@ import net.minecraft.util.math.EulerAngle;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -38,7 +38,7 @@ import java.util.List;
 
 @Mixin(value = ClientPlayNetworkHandler.class, priority = -1000)
 public abstract class MixinClientPlayNetworkHandler {
-    @Unique private static final Logger MULTICONNECT_LOGGER = LogManager.getLogger("multiconnect");
+    @Unique private static final Logger MULTICONNECT_LOGGER = LogUtils.getLogger();
 
     @Shadow private ClientWorld world;
 
