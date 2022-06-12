@@ -45,7 +45,9 @@ public class MulticonnectServerboundTranslator extends ChannelOutboundHandlerAda
                     // don't need user data in the serverbound direction
                 });
             }, () -> {
-                PacketIntrinsics.sendRawToServer(networkHandler, bufs);
+                DebugUtils.wrapInErrorHandler(inCopy, "outbound", () -> {
+                    PacketIntrinsics.sendRawToServer(networkHandler, bufs);
+                });
             }, false);
         });
     }

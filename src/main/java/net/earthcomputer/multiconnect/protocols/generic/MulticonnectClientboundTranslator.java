@@ -41,7 +41,9 @@ public class MulticonnectClientboundTranslator extends ByteToMessageDecoder {
                     }
                 });
             }, () -> {
-                PacketIntrinsics.sendRawToClient(networkHandler, userData, outBufs);
+                DebugUtils.wrapInErrorHandler(inCopy, "inbound", () -> {
+                    PacketIntrinsics.sendRawToClient(networkHandler, userData, outBufs);
+                });
             }, true);
         });
 
