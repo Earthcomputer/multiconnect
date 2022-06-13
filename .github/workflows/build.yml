@@ -1,8 +1,6 @@
-name: Check Build
+name: Check and Release Build
 on:
   push:
-      branches: ['*']
-  pull_request:
       branches: ['*']
 jobs:
   build:
@@ -14,4 +12,8 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: 17
-      - run: ./gradlew build --stacktrace --no-daemon
+      - run: ./gradlew build -Pmod_version="$(git describe --always --tags | cut -c2-)" --stacktrace --no-daemon
+      - uses: actions/upload-artifact@v2
+        with:
+          name: multiconnect-snapshot
+          path: build/libs/
