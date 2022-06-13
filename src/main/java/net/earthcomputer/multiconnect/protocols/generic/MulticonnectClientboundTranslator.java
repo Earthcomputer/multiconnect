@@ -27,6 +27,12 @@ public class MulticonnectClientboundTranslator extends ByteToMessageDecoder {
         }
         TypedMap userData = new TypedMap();
 
+        if (DebugUtils.STORE_BUFS_FOR_HANDLER) {
+            byte[] bufData = DebugUtils.getBufData(in);
+            userData.put(DebugUtils.STORED_BUF, bufData);
+            ctx.channel().attr(DebugUtils.NETTY_STORED_BUF).set(bufData);
+        }
+
         DebugUtils.wrapInErrorHandler(in, "inbound", () -> {
             var result = PacketSystem.Internals.translateSPacket(ConnectionInfo.protocolVersion, in);
             ByteBuf inCopy = in.copy(0, in.readerIndex() + in.readableBytes());
@@ -46,11 +52,5 @@ public class MulticonnectClientboundTranslator extends ByteToMessageDecoder {
                 });
             }, true);
         });
-
-        if (DebugUtils.STORE_BUFS_FOR_HANDLER) {
-            byte[] bufData = DebugUtils.getBufData(in);
-            userData.put(DebugUtils.STORED_BUF, bufData);
-            ctx.channel().attr(DebugUtils.NETTY_STORED_BUF).set(bufData);
-        }
     }
 }
