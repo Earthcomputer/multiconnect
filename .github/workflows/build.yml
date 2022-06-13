@@ -15,3 +15,7 @@ jobs:
         with:
           java-version: 17
       - run: ./gradlew build --stacktrace --no-daemon
+      - uses: actions/upload-artifact@v2
+        with:
+          name: multiconnect-snapshot
+          path: build/libs/
