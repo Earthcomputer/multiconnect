@@ -9,6 +9,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;
 import io.netty.handler.timeout.TimeoutException;
+import io.netty.util.AttributeKey;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
@@ -100,6 +101,7 @@ public class DebugUtils {
     public static final boolean STORE_BUFS_FOR_HANDLER = Boolean.getBoolean("multiconnect.storeBufsForHandler");
 
     public static final Key<byte[]> STORED_BUF = Key.create("storedBuf");
+    public static final AttributeKey<byte[]> NETTY_STORED_BUF = AttributeKey.valueOf("multiconnect.storedBuf");
 
     private static final Map<TrackedData<?>, String> TRACKED_DATA_NAMES = new IdentityHashMap<>();
     private static void computeTrackedDataNames() {
