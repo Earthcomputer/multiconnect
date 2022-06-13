@@ -17,3 +17,4 @@ id name oldName remapTo
 15 villager_data
 16 optional_int
 17 entity_pose
+18 painting_variant multiconnect:painting_variant
