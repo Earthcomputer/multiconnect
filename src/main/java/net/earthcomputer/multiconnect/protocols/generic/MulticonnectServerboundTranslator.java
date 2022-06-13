@@ -34,18 +34,18 @@ public class MulticonnectServerboundTranslator extends ChannelOutboundHandlerAda
 
         List<ByteBuf> bufs = new ArrayList<>(1);
 
-        DebugUtils.wrapInErrorHandler(untranslated, "outbound", () -> {
+        DebugUtils.wrapInErrorHandler(ctx, untranslated, "outbound", () -> {
             var result = PacketSystem.Internals.translateCPacket(ConnectionInfo.protocolVersion, untranslated);
             ByteBuf inCopy = untranslated.copy(0, untranslated.readerIndex() + untranslated.readableBytes());
             inCopy.readerIndex(untranslated.readerIndex());
             untranslated.readerIndex(untranslated.readerIndex() + untranslated.readableBytes());
             PacketSystem.Internals.submitTranslationTask(result.readDependencies(), result.writeDependencies(), () -> {
-                DebugUtils.wrapInErrorHandler(inCopy, "outbound", () -> {
+                DebugUtils.wrapInErrorHandler(ctx, inCopy, "outbound", () -> {
                     result.sender().send(inCopy, bufs, networkHandler, PacketSystem.Internals.getGlobalData(), userData);
                     // don't need user data in the serverbound direction
                 });
             }, () -> {
-                DebugUtils.wrapInErrorHandler(inCopy, "outbound", () -> {
+                DebugUtils.wrapInErrorHandler(ctx, inCopy, "outbound", () -> {
                     PacketIntrinsics.sendRawToServer(networkHandler, bufs);
                 });
             }, false);

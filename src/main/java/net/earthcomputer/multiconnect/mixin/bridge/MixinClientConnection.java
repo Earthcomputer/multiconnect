@@ -54,12 +54,14 @@ public abstract class MixinClientConnection {
     public void onExceptionCaught(ChannelHandlerContext context, Throwable t, CallbackInfo ci) {
         if (DebugUtils.isUnexpectedDisconnect(t) && channel.isOpen()) {
             TestingAPI.onUnexpectedDisconnect(t);
-            if (!DebugUtils.STORE_BUFS_FOR_HANDLER) {
-                LOGGER.error("Note: to get a more complete error, run with JVM argument -Dmulticonnect.storeBufsForHandler=true");
-            } else {
-                byte[] buf = context.channel().attr(DebugUtils.NETTY_STORED_BUF).get();
-                if (buf != null) {
-                    DebugUtils.logPacketError(buf);
+            if (context.channel().attr(DebugUtils.NETTY_HAS_HANDLED_ERROR).get() != Boolean.TRUE) {
+                if (!DebugUtils.STORE_BUFS_FOR_HANDLER) {
+                    LOGGER.error("Note: to get a more complete error, run with JVM argument -Dmulticonnect.storeBufsForHandler=true");
+                } else {
+                    byte[] buf = context.channel().attr(DebugUtils.NETTY_STORED_BUF).get();
+                    if (buf != null) {
+                        DebugUtils.logPacketError(buf);
+                    }
                 }
             }
             LOGGER.error("Unexpectedly disconnected from server!", t);

@@ -27,27 +27,28 @@ public class MulticonnectClientboundTranslator extends ByteToMessageDecoder {
         }
         TypedMap userData = new TypedMap();
 
+        ctx.channel().attr(DebugUtils.NETTY_HAS_HANDLED_ERROR).set(Boolean.FALSE);
         if (DebugUtils.STORE_BUFS_FOR_HANDLER) {
             byte[] bufData = DebugUtils.getBufData(in);
             userData.put(DebugUtils.STORED_BUF, bufData);
             ctx.channel().attr(DebugUtils.NETTY_STORED_BUF).set(bufData);
         }
 
-        DebugUtils.wrapInErrorHandler(in, "inbound", () -> {
+        DebugUtils.wrapInErrorHandler(ctx, in, "inbound", () -> {
             var result = PacketSystem.Internals.translateSPacket(ConnectionInfo.protocolVersion, in);
             ByteBuf inCopy = in.copy(0, in.readerIndex() + in.readableBytes());
             inCopy.readerIndex(in.readerIndex());
             in.readerIndex(in.readerIndex() + in.readableBytes());
             List<ByteBuf> outBufs = new ArrayList<>(1);
             PacketSystem.Internals.submitTranslationTask(result.readDependencies(), result.writeDependencies(), () -> {
-                DebugUtils.wrapInErrorHandler(inCopy, "inbound", () -> {
+                DebugUtils.wrapInErrorHandler(ctx, inCopy, "inbound", () -> {
                     result.sender().send(inCopy, outBufs, networkHandler, PacketSystem.Internals.getGlobalData(), userData);
                     for (ByteBuf outBuf : outBufs) {
                         PacketSystem.Internals.setUserData(outBuf, userData);
                     }
                 });
             }, () -> {
-                DebugUtils.wrapInErrorHandler(inCopy, "inbound", () -> {
+                DebugUtils.wrapInErrorHandler(ctx, inCopy, "inbound", () -> {
                     PacketIntrinsics.sendRawToClient(networkHandler, userData, outBufs);
                 });
             }, true);

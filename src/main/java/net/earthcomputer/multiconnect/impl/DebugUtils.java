@@ -102,6 +102,7 @@ public class DebugUtils {
 
     public static final Key<byte[]> STORED_BUF = Key.create("storedBuf");
     public static final AttributeKey<byte[]> NETTY_STORED_BUF = AttributeKey.valueOf("multiconnect.storedBuf");
+    public static final AttributeKey<Boolean> NETTY_HAS_HANDLED_ERROR = AttributeKey.valueOf("multiconnect.hasHandledError");
 
     private static final Map<TrackedData<?>, String> TRACKED_DATA_NAMES = new IdentityHashMap<>();
     private static void computeTrackedDataNames() {
@@ -218,13 +219,14 @@ public class DebugUtils {
         boolean handledError = false;
     }
 
-    public static void wrapInErrorHandler(ByteBuf buf, String direction, Runnable runnable) {
+    public static void wrapInErrorHandler(ChannelHandlerContext context, ByteBuf buf, String direction, Runnable runnable) {
         ErrorHandlerInfo handlerInfo = ErrorHandlerInfo.INSTANCE.get();
         handlerInfo.wrapperCount++;
         try {
             runnable.run();
         } catch (Throwable e) {
             if (!handlerInfo.handledError) {
+                context.channel().attr(NETTY_HAS_HANDLED_ERROR).set(Boolean.TRUE);
                 DebugUtils.logPacketError(buf, "Direction: " + direction);
             }
             // consume all the input
