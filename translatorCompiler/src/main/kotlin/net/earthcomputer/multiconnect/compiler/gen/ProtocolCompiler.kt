@@ -35,6 +35,7 @@ import net.earthcomputer.multiconnect.compiler.byName
 import net.earthcomputer.multiconnect.compiler.encodeRLEBitSet
 import net.earthcomputer.multiconnect.compiler.explicitConstructibleMessages
 import net.earthcomputer.multiconnect.compiler.getMessageVariantInfo
+import net.earthcomputer.multiconnect.compiler.node.BinaryExpressionOp
 import net.earthcomputer.multiconnect.compiler.node.CstStringOp
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
 import net.earthcomputer.multiconnect.compiler.node.LoadFieldOp
@@ -44,6 +45,7 @@ import net.earthcomputer.multiconnect.compiler.node.NewOp
 import net.earthcomputer.multiconnect.compiler.node.Precedence
 import net.earthcomputer.multiconnect.compiler.node.ReturnStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StmtListOp
+import net.earthcomputer.multiconnect.compiler.node.StoreVariableStmtOp
 import net.earthcomputer.multiconnect.compiler.node.SwitchOp
 import net.earthcomputer.multiconnect.compiler.node.ThrowStmtOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
@@ -162,19 +164,28 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             readDependencies.clear()
             writeDependencies.clear()
         }
-        val stmt = McNode(ReturnStmtOp(retType),
-            McNode(SwitchOp(packets.keys as SortedSet<Int>, true, McType.INT, retType),
-                mutableListOf<McNode>().apply {
-                    add(IoOps.readType(VariableId.immediate("buf"), Types.VAR_INT))
-                    addAll(packets.values)
-                    add(McNode(StmtListOp,
-                        McNode(ThrowStmtOp,
-                            McNode(NewOp("java.lang.IllegalArgumentException", listOf(McType.STRING)),
-                                McNode(CstStringOp("Bad packet id"))
+        val packetIdVar = VariableId.immediate("packetId")
+        val stmt = McNode(StmtListOp,
+            McNode(StoreVariableStmtOp(packetIdVar, McType.INT, true),
+                IoOps.readType(VariableId.immediate("buf"), Types.VAR_INT)
+            ),
+            McNode(ReturnStmtOp(retType),
+                McNode(SwitchOp(packets.keys as SortedSet<Int>, true, McType.INT, retType),
+                    mutableListOf<McNode>().apply {
+                        add(McNode(LoadVariableOp(packetIdVar, McType.INT)))
+                        addAll(packets.values)
+                        add(McNode(StmtListOp,
+                            McNode(ThrowStmtOp,
+                                McNode(NewOp("java.lang.IllegalArgumentException", listOf(McType.STRING)),
+                                    McNode(BinaryExpressionOp("+", McType.STRING, McType.INT),
+                                        McNode(CstStringOp("Bad packet id: ")),
+                                        McNode(LoadVariableOp(packetIdVar, McType.INT))
+                                    )
+                                )
                             )
-                        )
-                    ))
-                }
+                        ))
+                    }
+                )
             )
         ).optimize()
         stmt.emit(function, Precedence.COMMA)

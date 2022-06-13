@@ -86,6 +86,7 @@ id clazz
 84 net.earthcomputer.multiconnect.packets.SPacketEntityPassengersSet
 85 net.earthcomputer.multiconnect.packets.latest.SPacketTeam_Latest
 86 net.earthcomputer.multiconnect.packets.SPacketScoreboardPlayerUpdate
+87 net.earthcomputer.multiconnect.packets.SPacketSimulationDistance
 88 net.earthcomputer.multiconnect.packets.SPacketSubtitle
 89 net.earthcomputer.multiconnect.packets.SPacketWorldTimeUpdate
 90 net.earthcomputer.multiconnect.packets.SPacketTitle
