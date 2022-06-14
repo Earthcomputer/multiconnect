@@ -441,6 +441,7 @@ public class CommonTypes {
             public float green;
             @Introduce(doubleValue = 1)
             public float blue;
+            @Introduce(doubleValue = 1)
             public float scale;
         }
 
