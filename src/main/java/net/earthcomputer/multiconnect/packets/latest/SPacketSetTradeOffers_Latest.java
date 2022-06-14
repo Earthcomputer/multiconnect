@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.packets.latest;
 
+import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
@@ -23,11 +24,12 @@ public class SPacketSetTradeOffers_Latest implements SPacketSetTradeOffers {
     @Introduce(booleanValue = true)
     public boolean canRestock;
 
-    @MessageVariant(minVersion = Protocols.V1_14_4)
+    @MessageVariant(minVersion = Protocols.V1_19)
     public static class Trade_Latest implements Trade {
         public CommonTypes.ItemStack input1;
         public CommonTypes.ItemStack output;
-        public Optional<CommonTypes.ItemStack> input2;
+        @Introduce(compute = "computeInput2")
+        public CommonTypes.ItemStack input2;
         public boolean tradeDisabled;
         @Type(Types.INT)
         public int uses;
@@ -41,5 +43,11 @@ public class SPacketSetTradeOffers_Latest implements SPacketSetTradeOffers {
         @Type(Types.INT)
         @Introduce(intValue = 0)
         public int demand;
+
+        public static CommonTypes.ItemStack computeInput2(
+                @Argument("input2") Optional<CommonTypes.ItemStack> input2
+        ) {
+            return input2.orElseGet(ItemStack_Latest.Empty::new);
+        }
     }
 }
