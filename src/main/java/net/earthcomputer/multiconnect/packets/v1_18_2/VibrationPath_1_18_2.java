@@ -8,12 +8,7 @@ import net.earthcomputer.multiconnect.packets.CommonTypes;
 
 @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
 public class VibrationPath_1_18_2 implements CommonTypes.VibrationPath {
-    public double originX;
-    public double originY;
-    public double originZ;
-    public double destX;
-    public double destY;
-    public double destZ;
-    @Type(Types.INT)
+    public CommonTypes.BlockPos pos;
+    public CommonTypes.PositionSource source;
     public int ticks;
 }

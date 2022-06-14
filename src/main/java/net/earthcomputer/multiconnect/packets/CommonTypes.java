@@ -1,7 +1,6 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Argument;
-import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Length;
@@ -475,19 +474,8 @@ public class CommonTypes {
 
     @MessageVariant(minVersion = Protocols.V1_19)
     public static class VibrationPath_Latest implements VibrationPath {
-        @Introduce(compute = "computeSource")
         public PositionSource source;
         public int ticks;
-
-        public static PositionSource computeSource(
-                @Argument("destX") double destX,
-                @Argument("destY") double destY,
-                @Argument("destZ") double destZ,
-                @DefaultConstruct PositionSource.Block source
-        ) {
-            source.pos = BlockPos_Latest.fromMinecraft(new net.minecraft.util.math.BlockPos(destX, destY, destZ));
-            return source;
-        }
     }
 
     @Polymorphic
