@@ -4,6 +4,7 @@ import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Introduce;
+import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.Message;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
@@ -18,6 +19,7 @@ import net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2;
 import net.earthcomputer.multiconnect.packets.v1_13_1.ItemStack_1_13_1;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Blocks_1_12_2;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ import java.util.function.Function;
 public class CommonTypes {
     @MessageVariant
     public static class Text {
+        @Length(max = PacketByteBuf.MAX_TEXT_LENGTH)
         public String json;
 
         public Text() {

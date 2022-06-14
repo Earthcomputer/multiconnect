@@ -220,16 +220,16 @@ public final class PacketIntrinsics {
         return result;
     }
 
-    public static String readString(ByteBuf buf) {
+    public static String readString(ByteBuf buf, int maxLength) {
         int length = readVarInt(buf);
-        if (length > PacketByteBuf.DEFAULT_MAX_STRING_LENGTH * 4) {
+        if (length > maxLength * 3) {
             throw new DecoderException("The received encoded string buffer length is longer than maximum allowed (" + length + " > " + PacketByteBuf.DEFAULT_MAX_STRING_LENGTH * 4 + ")");
         } else if (length < 0) {
             throw new DecoderException("The received encoded string buffer length is less than zero! Weird string!");
         }
         String string = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
         buf.readerIndex(buf.readerIndex() + length);
-        if (string.length() > PacketByteBuf.DEFAULT_MAX_STRING_LENGTH) {
+        if (string.length() > maxLength) {
             throw new DecoderException("The received string length is longer than maximum allowed (" + length + " > " + PacketByteBuf.DEFAULT_MAX_STRING_LENGTH + ")");
         }
         return string;

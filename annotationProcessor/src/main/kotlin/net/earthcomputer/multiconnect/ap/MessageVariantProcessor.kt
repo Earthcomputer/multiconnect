@@ -125,7 +125,9 @@ object MessageVariantProcessor {
             }
 
             if (multiconnectType.lengthInfo != null) {
-                if (!multiconnectType.lengthInfo.raw && !multiconnectType.realType.hasLength) {
+                val isStringSpecialCase = multiconnectType.realType.hasQualifiedName(JAVA_LANG_STRING)
+                        && multiconnectType.lengthInfo.max >= 0
+                if (!multiconnectType.lengthInfo.raw && !multiconnectType.realType.hasLength && !isStringSpecialCase) {
                     errorConsumer.report("Non-raw @Length can only be used on fields with a length", field)
                     continue
                 }
@@ -137,7 +139,8 @@ object MessageVariantProcessor {
                         multiconnectType.lengthInfo.remainingBytes,
                         multiconnectType.lengthInfo.compute.isNotEmpty(),
                         multiconnectType.lengthInfo.constant != -1,
-                        multiconnectType.lengthInfo.raw
+                        multiconnectType.lengthInfo.raw,
+                        isStringSpecialCase,
                     ) > 1) {
                     errorConsumer.report("@Length cannot have more than one way to compute the length", field)
                     continue

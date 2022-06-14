@@ -48,7 +48,7 @@ object IoOps {
         }
     }
 
-    fun readType(bufVar: VariableId, type: Types): McNode {
+    fun readType(bufVar: VariableId, type: Types, maxLength: Int? = null): McNode {
         fun byteBuf(name: String, returnType: McType): McNode {
             return McNode(
                 FunctionCallOp(CommonClassNames.BYTE_BUF, name, listOf(McType.BYTE_BUF), returnType, true, isStatic = false),
@@ -74,8 +74,11 @@ object IoOps {
             Types.INT -> byteBuf("readInt", McType.INT)
             Types.SHORT -> byteBuf("readShort", McType.SHORT)
             Types.NBT_COMPOUND -> intrinsic("readNbtCompound", McType.DeclaredType(CommonClassNames.NBT_COMPOUND))
-            Types.IDENTIFIER -> McNode(NewOp(CommonClassNames.IDENTIFIER, listOf(McType.STRING)), intrinsic("readString", McType.STRING))
-            Types.STRING -> intrinsic("readString", McType.STRING)
+            Types.IDENTIFIER -> McNode(NewOp(CommonClassNames.IDENTIFIER, listOf(McType.STRING)), readType(bufVar, Types.STRING, maxLength))
+            Types.STRING -> McNode(FunctionCallOp(CommonClassNames.PACKET_INTRINSICS, "readString", listOf(McType.BYTE_BUF, McType.INT), McType.STRING, true),
+                McNode(LoadVariableOp(bufVar, McType.BYTE_BUF)),
+                McNode(CstIntOp(maxLength ?: 32767)),
+            )
             Types.UUID -> McNode(NewOp(CommonClassNames.UUID, listOf(McType.LONG, McType.LONG)), byteBuf("readLong", McType.LONG), byteBuf("readLong", McType.LONG))
             Types.BITSET -> intrinsic("readBitSet", McType.DeclaredType(CommonClassNames.BITSET))
         }

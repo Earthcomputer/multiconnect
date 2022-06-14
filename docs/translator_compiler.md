@@ -35,7 +35,9 @@ Optional types are serialized by default has a boolean, followed by the wire typ
 
 The way list type lengths are serialized and calculated can be customized using the `@Length` annotation. You can change the wire type of the length, or specify a [multiconnect function](#multiconnect-functions) to compute the length from preceding fields, or specify a constant value for the length.
 
-A field of type `byte[]` may be annotated with `@RemainingBytes` to override the normal length computation and fill the byte array with all remaining bytes in the ByteBuf.
+A field of type `byte[]` may be annotated with `@Length(remainingBytes = true)` to override the normal length computation and fill the byte array with all remaining bytes in the ByteBuf.
+
+Lists, arrays and strings may optionally be annotated with `@Length(max = ...)` to customize the max length before the object is allocated.
 
 ### Conditions using `@OnlyIf`
 You can specify a [multiconnect function](#multiconnect-functions) which returns a boolean for whether a field annotated with `@OnlyIf` is present or should be skipped.

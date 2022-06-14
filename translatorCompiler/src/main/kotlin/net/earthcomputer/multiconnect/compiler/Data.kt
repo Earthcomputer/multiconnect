@@ -278,10 +278,11 @@ sealed class DefaultConstruct {
 }
 
 @Serializable(with = LengthInfo.Serializer::class)
-data class LengthInfo(val type: Types, val computeInfo: ComputeInfo?) {
+data class LengthInfo(val type: Types, val max: Int?, val computeInfo: ComputeInfo?) {
     @Serializable
     private class Surrogate(
         val type: Types,
+        val max: Int,
         val constant: Int,
         val compute: String?,
         val remainingBytes: Boolean,
@@ -299,7 +300,7 @@ data class LengthInfo(val type: Types, val computeInfo: ComputeInfo?) {
                 surrogate.constant >= 0 -> ComputeInfo.Constant(surrogate.constant)
                 else -> null
             }
-            return LengthInfo(surrogate.type, computeInfo)
+            return LengthInfo(surrogate.type, surrogate.max.takeIf { it >= 0 }, computeInfo)
         }
 
         override fun serialize(encoder: Encoder, value: LengthInfo) {

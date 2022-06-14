@@ -13,4 +13,5 @@ public @interface Length {
     String compute() default "";
     boolean remainingBytes() default false;
     boolean raw() default false;
+    int max() default -1;
 }

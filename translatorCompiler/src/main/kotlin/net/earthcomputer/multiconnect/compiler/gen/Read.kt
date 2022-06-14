@@ -22,9 +22,11 @@ import net.earthcomputer.multiconnect.compiler.node.BinaryExpressionOp
 import net.earthcomputer.multiconnect.compiler.node.CstBoolOp
 import net.earthcomputer.multiconnect.compiler.node.CstIntOp
 import net.earthcomputer.multiconnect.compiler.node.CstNullOp
+import net.earthcomputer.multiconnect.compiler.node.CstStringOp
 import net.earthcomputer.multiconnect.compiler.node.DeclareVariableOnlyStmtOp
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
 import net.earthcomputer.multiconnect.compiler.node.IfElseStmtOp
+import net.earthcomputer.multiconnect.compiler.node.IfStmtOp
 import net.earthcomputer.multiconnect.compiler.node.ImplicitCastOp
 import net.earthcomputer.multiconnect.compiler.node.LoadArrayOp
 import net.earthcomputer.multiconnect.compiler.node.LoadFieldOp
@@ -38,6 +40,7 @@ import net.earthcomputer.multiconnect.compiler.node.StmtListOp
 import net.earthcomputer.multiconnect.compiler.node.StoreArrayStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StoreFieldStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StoreVariableStmtOp
+import net.earthcomputer.multiconnect.compiler.node.ThrowStmtOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
 import net.earthcomputer.multiconnect.compiler.node.WhileStmtOp
 import net.earthcomputer.multiconnect.compiler.node.createCstNode
@@ -336,7 +339,37 @@ private fun ProtocolCompiler.generateTypeReadGraph(
                 McNode(LoadVariableOp(VariableId.immediate("buf"), McType.BYTE_BUF))
             )
             is LengthInfo.ComputeInfo.Raw,
-            null -> McType.INT.cast(IoOps.readType(VariableId.immediate("buf"), lengthInfo?.type ?: Types.VAR_INT))
+            null -> {
+                val lengthReadNode = McType.INT.cast(IoOps.readType(VariableId.immediate("buf"), lengthInfo?.type ?: Types.VAR_INT))
+                if (lengthInfo?.max == null) {
+                    lengthReadNode
+                } else {
+                    val innerLengthVar = VariableId.create()
+                    McNode(StmtListOp,
+                        McNode(StoreVariableStmtOp(innerLengthVar, McType.INT, true), lengthReadNode),
+                        McNode(IfStmtOp,
+                            McNode(BinaryExpressionOp(">", McType.INT, McType.INT),
+                                McNode(LoadVariableOp(innerLengthVar, McType.INT)),
+                                McNode(CstIntOp(lengthInfo.max)),
+                            ),
+                            McNode(StmtListOp,
+                                McNode(ThrowStmtOp,
+                                    McNode(NewOp("io.netty.handler.codec.DecoderException", listOf(McType.STRING)),
+                                        McNode(BinaryExpressionOp("+", McType.STRING, McType.STRING),
+                                            McNode(CstStringOp("Length ")),
+                                            McNode(BinaryExpressionOp("+", McType.INT, McType.STRING),
+                                                McNode(LoadVariableOp(innerLengthVar, McType.INT)),
+                                                McNode(CstStringOp(" longer than max allowed ${lengthInfo.max}"))
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        McNode(ReturnStmtOp(McType.INT), McNode(LoadVariableOp(innerLengthVar, McType.INT))),
+                    )
+                }
+            }
         }
 
         if (lengthInfo?.computeInfo is LengthInfo.ComputeInfo.Raw) {
@@ -479,14 +512,14 @@ private fun ProtocolCompiler.generateTypeReadGraph(
         return McNode(
             LoadArrayOp(realType),
             McNode(LoadFieldOp(McType.DeclaredType(className), fieldName, realType.arrayOf(), isStatic = true)),
-            McType.INT.cast(IoOps.readType(VariableId.immediate("buf"), wireType))
+            McType.INT.cast(IoOps.readType(VariableId.immediate("buf"), wireType, lengthInfo?.max))
         )
     }
 
     // direct read, easy, but cast primitives if necessary
     return if (realType is McType.PrimitiveType) {
-        realType.cast(IoOps.readType(VariableId.immediate("buf"), wireType))
+        realType.cast(IoOps.readType(VariableId.immediate("buf"), wireType, lengthInfo?.max))
     } else {
-        IoOps.readType(VariableId.immediate("buf"), wireType)
+        IoOps.readType(VariableId.immediate("buf"), wireType, lengthInfo?.max)
     }
 }
