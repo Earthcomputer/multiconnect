@@ -24,7 +24,6 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.NbtTagSizeTracker;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 
@@ -223,14 +222,14 @@ public final class PacketIntrinsics {
     public static String readString(ByteBuf buf, int maxLength) {
         int length = readVarInt(buf);
         if (length > maxLength * 3) {
-            throw new DecoderException("The received encoded string buffer length is longer than maximum allowed (" + length + " > " + PacketByteBuf.DEFAULT_MAX_STRING_LENGTH * 4 + ")");
+            throw new DecoderException("The received encoded string buffer length is longer than maximum allowed (" + length + " > " + maxLength * 3 + ")");
         } else if (length < 0) {
             throw new DecoderException("The received encoded string buffer length is less than zero! Weird string!");
         }
         String string = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
         buf.readerIndex(buf.readerIndex() + length);
         if (string.length() > maxLength) {
-            throw new DecoderException("The received string length is longer than maximum allowed (" + length + " > " + PacketByteBuf.DEFAULT_MAX_STRING_LENGTH + ")");
+            throw new DecoderException("The received string length is longer than maximum allowed (" + length + " > " + maxLength + ")");
         }
         return string;
     }
