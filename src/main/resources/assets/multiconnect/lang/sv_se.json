@@ -5,7 +5,7 @@
   "multiconnect.config.allowOldUnsignedChat": "Tillåt Gamla Osäkra Meddelanden",
   "multiconnect.config.allowOldUnsignedChat.tooltip": "Tillåter osäkra chattmeddelanden från 1.18.2-servrar eller äldre",
   "multiconnect.config.title": "Multiconnect Konfiguration",
-  "multiconnect.rareBug": "Ett sällsynt fel inträffade just i multiconnect. Ladda upp din spellogg till %s så att det kan felet åtgärdas.",
+  "multiconnect.rareBug": "Ett sällsynt fel inträffade just i multiconnect. Ladda upp din spellogg till %s så att det felet kan åtgärdas.",
   "multiconnect.rareBug.link": "Issue Tracker",
   "multiconnect.rareBug.screen": "En sällsynt bugg inträffade just i multiconnect. Vill du ladda upp din spellogg till issue tracker för att hjälpa till att åtgärda problemet?",
   "multiconnect.signedChatScreen.title": "Säker Chatt Varning",
