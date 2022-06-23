@@ -28,23 +28,39 @@ import java.util.UUID;
 import java.util.function.Function;
 
 public class CommonTypes {
-    @MessageVariant
-    public static class Text {
+
+    @Message
+    public interface Text {
+        String getJson();
+    }
+
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static class Text_Latest implements Text {
+        @Introduce(direction = Introduce.Direction.FROM_OLDER, compute = "fixNullJson")
         @Length(max = PacketByteBuf.MAX_TEXT_LENGTH)
         public String json;
 
-        public Text() {
+        public Text_Latest() {
         }
 
-        public Text(String json) {
+        public Text_Latest(String json) {
             this.json = json;
         }
 
-        public static Text createLiteral(String value) {
+        @Override
+        public String getJson() {
+            return json;
+        }
+
+        public static Text_Latest createLiteral(String value) {
             var text = net.minecraft.text.Text.literal(value);
-            Text result = new Text();
-            result.json = net.minecraft.text.Text.Serializer.toJson(text);
-            return result;
+            String json = net.minecraft.text.Text.Serializer.toJson(text);
+            return new Text_Latest(json);
+        }
+
+        public static String fixNullJson(@Argument("json") String json) {
+            // Some servers send null as the json string
+            return "null".equals(json) ? "{\"text\":\"\"}" : json;
         }
     }
 

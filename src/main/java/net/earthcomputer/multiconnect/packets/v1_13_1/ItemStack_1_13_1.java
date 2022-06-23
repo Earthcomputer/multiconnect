@@ -12,6 +12,7 @@ import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2;
 import net.earthcomputer.multiconnect.packets.v1_13_2.ItemStack_1_13_2;
+import net.earthcomputer.multiconnect.packets.v1_18_2.Text_1_18_2;
 import net.minecraft.datafixer.fix.ItemInstanceTheFlatteningFix;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
@@ -191,7 +192,7 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
                 }
                 NbtCompound display = tag.getCompound("display");
                 if (display.contains("Name", NbtElement.STRING_TYPE)) {
-                    display.putString("Name", CommonTypes.Text.createLiteral(display.getString("Name")).json);
+                    display.putString("Name", Text_1_18_2.createLiteral(display.getString("Name")).json);
                 }
             }
 
