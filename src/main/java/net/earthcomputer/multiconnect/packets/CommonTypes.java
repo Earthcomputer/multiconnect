@@ -410,58 +410,35 @@ public class CommonTypes {
     }
 
     @Polymorphic
-    @MessageVariant(minVersion = Protocols.V1_13)
+    @MessageVariant(minVersion = Protocols.V1_19)
     public static abstract class Particle_Latest implements Particle {
         @Registry(Registries.PARTICLE_TYPE)
-        @Type(Types.INT)
         public int particleId;
 
         @Polymorphic(stringValue = {"block", "falling_dust", "multiconnect:block_dust"})
-        @MessageVariant(minVersion = Protocols.V1_13)
+        @MessageVariant(minVersion = Protocols.V1_19)
         public static class BlockState extends Particle_Latest implements Particle.BlockState {
             @Registry(Registries.BLOCK_STATE)
-            @Introduce(compute = "computeBlockStateId")
             public int blockStateId;
-
-            public static int computeBlockStateId(@Argument("blockStateId") int blockStateId) {
-                return Blocks_1_12_2.convertToStateRegistryId(blockStateId);
-            }
         }
 
         @Polymorphic(stringValue = "item")
-        @MessageVariant(minVersion = Protocols.V1_13)
+        @MessageVariant(minVersion = Protocols.V1_19)
         public static class Item extends Particle_Latest implements Particle.Item {
-            @Introduce(compute = "computeStack")
             public CommonTypes.ItemStack stack;
-
-            public static CommonTypes.ItemStack computeStack(
-                    @Argument("itemId") int itemId,
-                    @Argument("damage") int damage,
-                    @FilledArgument(fromVersion = Protocols.V1_12_2, toVersion = Protocols.V1_13) Function<ItemStack_1_12_2, ItemStack_1_13_1> itemStackTranslator
-            ) {
-                var stack = new ItemStack_1_12_2.NonEmpty();
-                stack.itemId = (short) itemId;
-                stack.count = 1;
-                stack.damage = (short) damage;
-                return itemStackTranslator.apply(stack);
-            }
         }
 
         @Polymorphic(stringValue = "dust")
-        @MessageVariant(minVersion = Protocols.V1_13)
+        @MessageVariant(minVersion = Protocols.V1_19)
         public static class Dust extends Particle_Latest implements Particle.Dust {
-            @Introduce(doubleValue = 1)
             public float red;
-            @Introduce(doubleValue = 1)
             public float green;
-            @Introduce(doubleValue = 1)
             public float blue;
-            @Introduce(doubleValue = 1)
             public float scale;
         }
 
         @Polymorphic(stringValue = "dust_color_transition")
-        @MessageVariant(minVersion = Protocols.V1_13)
+        @MessageVariant(minVersion = Protocols.V1_19)
         public static class DustColorTransition extends Particle_Latest implements Particle.DustColorTransition {
             public float fromRed;
             public float fromGreen;
@@ -473,13 +450,13 @@ public class CommonTypes {
         }
 
         @Polymorphic(stringValue = "vibration")
-        @MessageVariant(minVersion = Protocols.V1_13)
+        @MessageVariant(minVersion = Protocols.V1_19)
         public static class Vibration extends Particle_Latest implements Particle.Vibration {
             public VibrationPath path;
         }
 
         @Polymorphic(otherwise = true)
-        @MessageVariant(minVersion = Protocols.V1_13)
+        @MessageVariant(minVersion = Protocols.V1_19)
         public static class Simple extends Particle_Latest implements Particle.Simple {
         }
     }

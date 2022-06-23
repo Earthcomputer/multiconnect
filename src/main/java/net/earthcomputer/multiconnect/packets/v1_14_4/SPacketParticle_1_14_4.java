@@ -13,6 +13,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketParticle;
 import net.earthcomputer.multiconnect.packets.v1_12_2.Particle_1_12_2;
+import net.earthcomputer.multiconnect.packets.v1_18_2.Particle_1_18_2;
 
 import java.util.function.Function;
 
@@ -64,10 +65,10 @@ public class SPacketParticle_1_14_4 implements SPacketParticle {
             @Argument("offsetY") float offsetY,
             @Argument("offsetZ") float offsetZ,
             @Argument("particle") CommonTypes.Particle particle,
-            @FilledArgument(fromVersion = Protocols.V1_12_2, toVersion = Protocols.V1_13) Function<Particle_1_12_2, CommonTypes.Particle_Latest> particleTranslator
+            @FilledArgument(fromVersion = Protocols.V1_12_2, toVersion = Protocols.V1_13) Function<Particle_1_12_2, Particle_1_18_2> particleTranslator
     ) {
         var newParticle = particleTranslator.apply((Particle_1_12_2) particle);
-        if (newParticle instanceof CommonTypes.Particle_Latest.Dust dust) {
+        if (newParticle instanceof Particle_1_18_2.Dust dust) {
             dust.red = offsetX;
             dust.green = offsetY;
             dust.blue = offsetZ;
