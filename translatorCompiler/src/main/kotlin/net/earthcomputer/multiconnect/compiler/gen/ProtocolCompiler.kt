@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.compiler.gen
 import net.earthcomputer.multiconnect.ap.Registries
 import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.BITSET
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.BLOCK_STATE
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.BYTE_BUF
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.CLASS
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.IDENTIFIER
@@ -86,6 +87,8 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
 
         emitDoesServerKnow(emitter)
         emitDoesServerKnowMulticonnect(emitter)
+        emitDoesServerKnowBlockState(emitter)
+        emitDoesServerKnowBlockStateMulticonnect(emitter)
 
         emitRemapFunc(emitter, clientbound = true, identifier = false)
         emitRemapFunc(emitter, clientbound = false, identifier = false)
@@ -423,6 +426,55 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                     .append(".").append(registry.registryKeyFieldName).append(", new ").appendClassName(IDENTIFIER)
                     .append("(\"multiconnect\", \"").append(entry.name.substring("multiconnect:".length)).append("\"))")
             }
+        }
+        field.dedent().appendNewLine().append(");")
+    }
+
+    private fun emitDoesServerKnowBlockState(emitter: Emitter) {
+        val function = emitter.addMember("doesServerKnowBlockState") ?: return
+        function.append("public static boolean doesServerKnowBlockState(int newId) {").indent()
+            .appendNewLine().append("return DOES_SERVER_KNOW_BLOCK_STATE.get(newId);").dedent()
+            .appendNewLine().append("}")
+
+        val field = emitter.addMember("DOES_SERVER_KNOW_BLOCK_STATE") ?: return
+        field.append("private static final ").appendClassName(BITSET)
+            .append(" DOES_SERVER_KNOW_BLOCK_STATE = ").appendClassName(PACKET_INTRINSICS)
+            .append(".makeRLEBitSet(")
+        val bitset = BitSet()
+        currentProtocolId = protocols[0].id
+        val latestEntries = Registries.BLOCK_STATE.entries
+        currentProtocolId = protocolId
+        val protocolEntries = Registries.BLOCK_STATE.entries
+        for (entry in latestEntries) {
+            bitset.set(entry.id, protocolEntries.byName(entry.name) != null)
+        }
+        McNode(CstStringOp(encodeRLEBitSet(bitset))).emit(field, Precedence.COMMA)
+        field.append(");")
+    }
+
+    private fun emitDoesServerKnowBlockStateMulticonnect(emitter: Emitter) {
+        val function = emitter.addMember("doesServerKnowBlockStateMulticonnect") ?: return
+        function.append("public static boolean doesServerKnowBlockStateMulticonnect(")
+            .appendClassName(BLOCK_STATE).append(" value) {").indent().appendNewLine()
+            .append("return DOES_SERVER_KNOW_BLOCK_STATE_MULTICONNECT.contains(value);").dedent().appendNewLine()
+            .append("}")
+
+        val field = emitter.addMember("DOES_SERVER_KNOW_BLOCK_STATE_MULTICONNECT") ?: return
+        field.append("private static final ").appendClassName(SET).append("<")
+            .appendClassName(BLOCK_STATE).append(">").append(" DOES_SERVER_KNOW_BLOCK_STATE_MULTICONNECT = ")
+            .appendClassName(PACKET_INTRINSICS).append(".makeMulticonnectBlockStateSet(").indent()
+        var addedAnyKey = false
+        for (entry in Registries.BLOCK_STATE.entries) {
+            if (!entry.name.startsWith("multiconnect:")) {
+                continue
+            }
+
+            if (addedAnyKey) {
+                field.append(",")
+            }
+            addedAnyKey = true
+
+            field.appendNewLine().append("\"").append(entry.name.substring("multiconnect:".length)).append("\"")
         }
         field.dedent().appendNewLine().append(");")
     }

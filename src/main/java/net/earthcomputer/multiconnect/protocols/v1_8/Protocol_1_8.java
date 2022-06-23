@@ -4,7 +4,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.Blocks_1_12_2;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.block.Blocks_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Protocol_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;

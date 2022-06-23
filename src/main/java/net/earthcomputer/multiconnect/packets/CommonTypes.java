@@ -1,7 +1,6 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Argument;
-import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.Message;
@@ -14,9 +13,6 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.latest.ItemStack_Latest;
-import net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2;
-import net.earthcomputer.multiconnect.packets.v1_13_1.ItemStack_1_13_1;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.Blocks_1_12_2;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
@@ -25,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
 
 public class CommonTypes {
 

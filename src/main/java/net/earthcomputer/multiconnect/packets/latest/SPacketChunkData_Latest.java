@@ -266,15 +266,29 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
                         multiple.data = Arrays.copyOf(multiple.data, expectedSize);
                     }
                 } else {
-                    // TODO: handle case where registry bits change
                     var registryContainer = (ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer) section.blockStates;
-                    int paletteSize = MathHelper.ceilLog2(Block.STATE_IDS.size());
-                    int expectedSize = Utils.getExpectedPackedIntegerArraySize(paletteSize, 4096);
+                    int newPaletteSize = MathHelper.ceilLog2(Block.STATE_IDS.size());
+                    int oldPaletteSize = userData.get(ChunkData.BlockStatePalettedContainer.HAS_EXPANDED_REGISTRY_PALETTE)
+                            ? PacketSystem.getServerBlockStateRegistryBits()
+                            : newPaletteSize;
+
+                    int expectedSize = Utils.getExpectedPackedIntegerArraySize(newPaletteSize, 4096);
                     if (registryContainer.data.length != expectedSize) {
                         // some servers send a shorter array than necessary, presumably to save bytes
                         registryContainer.data = Arrays.copyOf(registryContainer.data, expectedSize);
                     }
-                    PackedIntegerArray packedArray = new PackedIntegerArray(paletteSize, 4096, registryContainer.data);
+
+                    if (oldPaletteSize != newPaletteSize) {
+                        registryContainer.paletteSize = (byte) newPaletteSize;
+                        PackedIntegerArray oldPalette = new PackedIntegerArray(oldPaletteSize, 4096, registryContainer.data);
+                        PackedIntegerArray newPalette = new PackedIntegerArray(newPaletteSize, 4096);
+                        for (int i = 0; i < 4096; i++) {
+                            newPalette.set(i, oldPalette.get(i));
+                        }
+                        registryContainer.data = newPalette.getData();
+                    }
+
+                    PackedIntegerArray packedArray = new PackedIntegerArray(newPaletteSize, 4096, registryContainer.data);
                     for (int i = 0; i < 4096; i++) {
                         packedArray.set(i, PacketSystem.serverBlockStateIdToClient(packedArray.get(i)));
                     }

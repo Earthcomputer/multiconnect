@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.protocols.generic.*;
 import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.block.Blocks_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.command.Commands_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;

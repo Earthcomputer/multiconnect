@@ -10,7 +10,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketWorldEvent;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.Blocks_1_12_2;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.block.Blocks_1_12_2;
 import net.minecraft.world.WorldEvents;
 
 @MessageVariant(minVersion = Protocols.V1_13)

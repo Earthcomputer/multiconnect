@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
 import net.earthcomputer.multiconnect.protocols.v1_12_2.BlockConnectors_1_12_2;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.Blocks_1_12_2;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.block.Blocks_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.Particles_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_13_2.AddBannerPatternRecipe;
 import net.earthcomputer.multiconnect.protocols.v1_14_4.SoundEvents_1_14_4;

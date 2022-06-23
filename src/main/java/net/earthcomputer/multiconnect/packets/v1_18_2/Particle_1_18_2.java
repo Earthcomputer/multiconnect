@@ -13,7 +13,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2;
 import net.earthcomputer.multiconnect.packets.v1_13_1.ItemStack_1_13_1;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.Blocks_1_12_2;
+import net.earthcomputer.multiconnect.protocols.v1_12_2.block.Blocks_1_12_2;
 
 import java.util.function.Function;
 

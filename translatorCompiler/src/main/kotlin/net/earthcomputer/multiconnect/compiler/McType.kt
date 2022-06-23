@@ -54,6 +54,7 @@ object CommonClassNames {
     const val METHOD_HANDLE = "java.lang.invoke.MethodHandle"
     const val REGISTRY = "net.minecraft.util.registry.Registry"
     const val REGISTRY_KEY = "net.minecraft.util.registry.RegistryKey"
+    const val BLOCK_STATE = "net.minecraft.block.BlockState"
     const val SCHEMAS = "net.minecraft.datafixer.Schemas"
     const val TYPE_REFERENCES = "net.minecraft.datafixer.TypeReferences"
     const val TYPE_REFERENCE = "com.mojang.datafixers.DSL.TypeReference"
