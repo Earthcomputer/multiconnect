@@ -110,7 +110,7 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
     @ReturnType(SPacketChatMessage.class)
     @Handler
     public static List<Object> handle(
-            @Argument("text") CommonTypes.Text text,
+            @Argument("text") CommonTypes.Text text_,
             @Argument("position") byte position,
             @Argument("sender") UUID sender,
             @FilledArgument(fromVersion = Protocols.V1_18_2, toVersion = Protocols.V1_19) Function<Text_1_18_2, CommonTypes.Text_Latest> textTranslator,
@@ -120,6 +120,8 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
             // Some servers apparently send chat messages before the game join packet. We can't handle these anymore
             return new ArrayList<>(0);
         }
+
+        CommonTypes.Text text = textTranslator.apply((Text_1_18_2) text_);
 
         Registry<MessageType> messageTypeRegistry = registryManager.get(Registry.MESSAGE_TYPE_KEY);
         int systemId = messageTypeRegistry.getRawId(messageTypeRegistry.get(MessageType.SYSTEM));
@@ -134,7 +136,7 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
         List<Object> packets = new ArrayList<>(1);
         var basicPacket = new SPacketGameMessage_Latest();
         basicPacket.messageType = messageType;
-        basicPacket.text = textTranslator.apply((Text_1_18_2) text);
+        basicPacket.text = text;
         packets.add(basicPacket);
 
         MyText myText;

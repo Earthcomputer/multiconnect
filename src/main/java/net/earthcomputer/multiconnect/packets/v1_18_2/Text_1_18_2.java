@@ -25,7 +25,7 @@ public class Text_1_18_2 implements CommonTypes.Text {
     }
 
     public static Text_1_18_2 createLiteral(String value) {
-        var text = net.minecraft.text.Text.literal(value);
+        var text = Text.literal(value);
         String json = Text.Serializer.toJson(text);
         return new Text_1_18_2(json);
     }
