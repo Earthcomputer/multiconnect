@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_18_2.mixin;
+package net.earthcomputer.multiconnect.protocols.v1_19.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinClientPlayNetworkHandler {
     @Inject(method = "isSignatureValid", at = @At("HEAD"), cancellable = true)
     private void onIsSignatureValid(CallbackInfoReturnable<Boolean> ci) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_18_2 && MulticonnectConfig.INSTANCE.allowOldUnsignedChat == Boolean.TRUE) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_19 && MulticonnectConfig.INSTANCE.allowOldUnsignedChat == Boolean.TRUE) {
             ci.setReturnValue(Boolean.TRUE);
         }
     }

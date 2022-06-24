@@ -5,15 +5,12 @@
   "mixins": [
     "CatEntityAccessor",
     "ClientWorldAccessor",
-    "MixinClientPlayNetworkHandler",
-    "MixinLoginHelloC2SPacket",
     "MixinLoginKeyC2SPacket",
     "MixinLoginSuccessPacket",
     "MixinPendingUpdateManager",
     "PaintingEntityAccessor"
   ],
   "client": [
-    "MixinClientLoginNetworkHandler"
   ],
   "injectors": {
     "defaultRequire": 1
