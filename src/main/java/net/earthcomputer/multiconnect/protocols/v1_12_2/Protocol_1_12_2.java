@@ -100,9 +100,9 @@ public class Protocol_1_12_2 extends Protocol_1_13 {
     }
 
     @Override
-    public void setup(boolean resourceReload) {
+    public void setup() {
         TabCompletionManager.reset();
-        super.setup(resourceReload);
+        super.setup();
     }
 
     @SuppressWarnings("unchecked")

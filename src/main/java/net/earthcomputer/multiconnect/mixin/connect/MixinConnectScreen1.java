@@ -34,7 +34,7 @@ public class MixinConnectScreen1 {
 
     @Redirect(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;)V", ordinal = 0))
     public void sendHandshake(ClientConnection connect, Packet<?> packet) {
-        ConnectionHandler.onSendHandshake(connect, packet);
+        ConnectionHandler.onSendHandshake(packet);
         connect.send(packet);
     }
 

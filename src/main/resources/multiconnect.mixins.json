@@ -47,10 +47,14 @@
     "connect.MixinServerList",
     "connect.MixinServerListIcon",
     "connect.MixinSplashOverlay",
+    "debug.MixinClientConnection",
     "debug.MixinKeyboard",
     "debug.MixinThreadExecutor"
   ],
   "client": [
+    "debug.MixinClientLoginNetworkHandler",
+    "debug.MixinClientPlayerEntity",
+    "debug.MixinMinecraftClient"
   ],
   "injectors": {
     "defaultRequire": 1

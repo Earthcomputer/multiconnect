@@ -101,8 +101,11 @@ As you're contributing to multiconnect, it may be helpful to debug it. The most 
 * `onDebugKey` - called when the multiconnect debug key (F8) is pressed while in-game, if the system property for it is enabled. This allows you to trigger an action on demand in-game. Change the content of this method to what you need.
 * `handlePacketDump` - handles an encoded packet dump that appears in a game log. This forces the game to receive the exact same packet data as the user who uploaded the game log did, which makes it easy to reproduce the issue.
 
+To replay a packet log, make sure there is a file named `replay.log` (for uncompressed logs) or `replay.log.gz` (for compressed logs) in `.minecraft/config/multiconnect/packet-logs`, then press the multiconnect debug key (F8) in the title screen after enabling the system property for it (see below).
+
 Debug system properties:
 * `multiconnect.debugKey` (boolean) - enables the multiconnect debug key (F8).
+* `multiconnect.enablePacketRecorder` (boolean) - enables the packet recorder, which can then be replayed later.
 * `multiconnect.unitTestMode` (boolean) - enables unit test mode.
 * `multiconnect.ignoreErrors` (boolean) - drops packets that have translation errors rather than disconnecting the client. This may be useful to log in to a server to get into a state where you can press the debug key.
 * `multiconnect.dumpRegistries` (boolean) - dumps the registries for the current version in the `data` directory on game startup. Useful for updating to a new version.

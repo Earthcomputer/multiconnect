@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.impl;
+package net.earthcomputer.multiconnect.debug;
 
 import com.google.common.annotations.VisibleForTesting;
 import net.earthcomputer.multiconnect.api.ThreadSafe;

@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_17_1;
 
-import net.earthcomputer.multiconnect.impl.DebugUtils;
+import net.earthcomputer.multiconnect.debug.DebugUtils;
 import net.earthcomputer.multiconnect.protocols.generic.IParticleManager;
 import net.earthcomputer.multiconnect.protocols.generic.MyParticleType;
 import net.earthcomputer.multiconnect.protocols.v1_17_1.mixin.BlockMarkerParticleAccessor;

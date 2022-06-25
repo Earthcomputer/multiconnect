@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_12_2;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.earthcomputer.multiconnect.impl.DebugUtils;
+import net.earthcomputer.multiconnect.debug.DebugUtils;
 import net.earthcomputer.multiconnect.protocols.generic.IParticleManager;
 import net.earthcomputer.multiconnect.protocols.generic.MyParticleType;
 import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.CrackParticleAccessor;

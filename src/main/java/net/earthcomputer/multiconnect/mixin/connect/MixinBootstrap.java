@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.mixin.connect;
 
-import net.earthcomputer.multiconnect.impl.DebugUtils;
+import net.earthcomputer.multiconnect.debug.DebugUtils;
 import net.earthcomputer.multiconnect.protocols.generic.MulticonnectAddedRegistryEntries;
 import net.minecraft.Bootstrap;
 import org.apache.logging.log4j.LogManager;

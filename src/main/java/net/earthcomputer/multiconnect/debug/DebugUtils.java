@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.impl;
+package net.earthcomputer.multiconnect.debug;
 
 import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.TypeRewriteRule;
@@ -14,6 +14,8 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.PacketIntrinsics;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
@@ -274,15 +276,21 @@ public class DebugUtils {
         for (String extraLine : extraLines) {
             LOGGER.error(extraLine);
         }
-        LOGGER.error("Compressed packet data: {}", LogUtils.defer(() -> {
-            ByteArrayOutputStream result = new ByteArrayOutputStream();
-            try (var out = new GZIPOutputStream(Base64.getEncoder().wrap(result))) {
-                out.write(data);
-            } catch (IOException e) {
-                return "[error compressing] " + Base64.getEncoder().encodeToString(data);
-            }
-            return result.toString(StandardCharsets.UTF_8);
-        }));
+        LOGGER.error("Compressed packet data: {}", LogUtils.defer(() -> toCompressedBase64(data)));
+        if (!PacketRecorder.ENABLED) {
+            LOGGER.error("It's possible to create a full recording of all packets in a session by adding -Dmulticonnect.enablePacketRecorder=true to your JVM args.");
+            LOGGER.error("For more complex problems, this may be required to diagnose the issue.");
+        }
+    }
+
+    public static String toCompressedBase64(byte[] data) {
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        try (var out = new GZIPOutputStream(Base64.getEncoder().wrap(result))) {
+            out.write(data);
+        } catch (IOException e) {
+            return "[error compressing] " + Base64.getEncoder().encodeToString(data);
+        }
+        return result.toString(StandardCharsets.UTF_8);
     }
 
     public static void handlePacketDump(ClientPlayNetworkHandler networkHandler, String base64, boolean compressed) {

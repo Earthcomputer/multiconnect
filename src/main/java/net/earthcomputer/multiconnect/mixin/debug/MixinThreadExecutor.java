@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.mixin.debug;
 
-import net.earthcomputer.multiconnect.impl.DebugUtils;
+import net.earthcomputer.multiconnect.debug.DebugUtils;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.NetworkThreadUtils;

@@ -205,8 +205,8 @@ public class Protocol_1_8 extends Protocol_1_9 {
     }
 
     @Override
-    public void setup(boolean resourceReload) {
-        super.setup(resourceReload);
+    public void setup() {
+        super.setup();
         ((EntityTypeAccessor) EntityType.BOAT).setDimensions(EntityDimensions.changing(1.5f, 0.5625f));
     }
 

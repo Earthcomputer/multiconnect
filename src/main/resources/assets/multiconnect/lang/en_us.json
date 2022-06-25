@@ -5,6 +5,7 @@
   "multiconnect.config.allowOldUnsignedChat": "Allow Old Insecure Chat Messages",
   "multiconnect.config.allowOldUnsignedChat.tooltip": "Allows through insecure chat messages from 1.18.2 servers or older",
   "multiconnect.config.title": "Multiconnect Config",
+  "multiconnect.debug.startingReplay": "Starting Packet Replay",
   "multiconnect.rareBug": "A rare bug just occurred in multiconnect. Please upload your game log to the %s so it can be fixed.",
   "multiconnect.rareBug.link": "issue tracker",
   "multiconnect.rareBug.screen": "A rare bug just occurred in multiconnect. Would you like to upload your game log to the issue tracker to help it get fixed?",

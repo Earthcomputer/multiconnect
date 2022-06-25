@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.connect;
 
 import com.mojang.logging.LogUtils;
+import net.earthcomputer.multiconnect.debug.PacketRecorder;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.mixin.connect.HandshakePacketAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
@@ -69,16 +70,11 @@ public class ConnectionHandler {
         connection.send(handshake);
         connection.send(new QueryRequestC2SPacket());
 
-        while (!listener.hasCompleted()) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            if (connectScreen.isConnectingCancelled()) {
-                connection.disconnect(Text.translatable("multiplayer.disconnected"));
-                return false;
-            }
+        try {
+            listener.await();
+        } catch (InterruptedException e) {
+            connection.disconnect(Text.translatable("multiplayer.disconnected"));
+            return false;
         }
 
         if (listener.hasFailed()) {
@@ -104,11 +100,12 @@ public class ConnectionHandler {
         return true;
     }
 
-    public static void onSendHandshake(ClientConnection connect, Packet<?> handshakePacket) {
+    public static void onSendHandshake(Packet<?> handshakePacket) {
         if (ConnectionMode.isSupportedProtocol(ConnectionInfo.protocolVersion)) {
             ((HandshakePacketAccessor) handshakePacket).setProtocolVersion(ConnectionInfo.protocolVersion);
             ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
-            ConnectionInfo.protocol.setup(false);
+            ConnectionInfo.protocol.setup();
+            PacketRecorder.onConnect();
         }
     }
 
