@@ -133,6 +133,14 @@ repositories {
 	}
 }
 
+loom {
+	runs {
+		client {
+			vmArgs "-Dmulticonnect.debugKey=true"
+		}
+	}
+}
+
 dependencies {
 	//to change the versions see the gradle.properties file
 	multiconnectProcessor project(':annotationProcessor')
