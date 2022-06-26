@@ -319,7 +319,12 @@ public final class PacketVisualizer {
     @Language("HTML")
     private static String messageVariantContents(Object object, boolean clientbound) {
         StringBuilder ret = new StringBuilder("<div class='record_table'>");
-        appendFields(object, object.getClass(), ret, clientbound);
+        Class<?> clazz = object.getClass();
+        Class<?> superclass = clazz.getSuperclass();
+        if (superclass != null && superclass != Object.class) {
+            appendFields(object, superclass, ret, clientbound);
+        }
+        appendFields(object, clazz, ret, clientbound);
         ret.append("</div>");
         return ret.toString();
     }
@@ -331,7 +336,7 @@ public final class PacketVisualizer {
     }
 
     private static void appendFields(Object object, Class<?> clazz, StringBuilder sb, boolean clientbound) {
-        for (Field field : clazz.getFields()) {
+        for (Field field : clazz.getDeclaredFields()) {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
