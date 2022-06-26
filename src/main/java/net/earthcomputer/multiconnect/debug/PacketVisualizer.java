@@ -93,7 +93,7 @@ public final class PacketVisualizer {
     public static final String SCRIPT_EPILOGUE = """
             async function loadPage(number, details) {
                 const req = await fetch(`packets/${number}.html`);
-                if (req.status != 200) {
+                if (req.status !== 200) {
                     alert(`failed to load ${req.status}: \\n${req.statusText}`);
                     return;
                 }

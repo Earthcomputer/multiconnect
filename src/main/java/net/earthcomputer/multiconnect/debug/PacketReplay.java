@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -30,6 +32,7 @@ import net.minecraft.network.DecoderHandler;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.PacketEncoder;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -39,6 +42,7 @@ import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.GZIPInputStream;
@@ -184,11 +188,45 @@ public final class PacketReplay {
         }
         htmlWriter = null;
 
-//        Util.getOperatingSystem().open(FabricLoader.getInstance().getConfigDir().resolve("multiconnect").resolve("packet-logs").resolve("replay.html").toFile());
+        startHttpServer();
 
         connection = null;
 
         MinecraftClient.getInstance().setScreen(new TitleScreen());
+    }
+
+    private static void fetchFile(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        if (path.equals("/")) {
+            path = "replay.html";
+        }
+        Path file = FabricLoader.getInstance().getConfigDir().resolve("multiconnect").resolve("packet-logs").resolve(path);
+        if (Files.isDirectory(file)) {
+            file = file.resolve("index.html");
+        }
+        if (!Files.isRegularFile(file)) {
+            exchange.sendResponseHeaders(404, 0);
+            return;
+        }
+        try (DataInputStream in = new DataInputStream(new BufferedInputStream(Files.newInputStream(file)))) {
+            exchange.sendResponseHeaders(200, 0);
+            exchange.getResponseBody().write(in.readAllBytes());
+        } catch (IOException e) {
+            LOGGER.error("Error reading file", e);
+            exchange.sendResponseHeaders(500, 0);
+        }
+    }
+
+    private static void startHttpServer() {
+        try {
+            HttpServer server = HttpServer.create();
+            server.createContext("/", PacketReplay::fetchFile);
+            server.bind(new InetSocketAddress(8080), 0);
+            server.start();
+            Util.getOperatingSystem().open("http://localhost:8080/");
+        } catch (IOException e) {
+            LOGGER.error("Error starting HTTP server", e);
+        }
     }
 
     private static boolean loadFile() {
