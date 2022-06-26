@@ -6,8 +6,6 @@ import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -34,6 +32,12 @@ import net.minecraft.network.NetworkState;
 import net.minecraft.network.PacketEncoder;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.protocol.HttpContext;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
@@ -42,7 +46,8 @@ import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.GZIPInputStream;
@@ -195,9 +200,19 @@ public final class PacketReplay {
         MinecraftClient.getInstance().setScreen(new TitleScreen());
     }
 
-    private static void fetchFile(HttpExchange exchange) throws IOException {
-        String path = exchange.getRequestURI().getPath();
-        if (path.equals("/")) {
+    private static void fetchFile(HttpRequest request, HttpResponse response, HttpContext context) throws IOException {
+        String path;
+        try {
+            path = new URI(request.getRequestLine().getUri()).getPath();
+        } catch (URISyntaxException e) {
+            LOGGER.error("Invalid URI: {}", request.getRequestLine().getUri());
+            return;
+        }
+        while (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+
+        if (path.isEmpty()) {
             path = "replay.html";
         }
         Path file = FabricLoader.getInstance().getConfigDir().resolve("multiconnect").resolve("packet-logs").resolve(path);
@@ -205,25 +220,28 @@ public final class PacketReplay {
             file = file.resolve("index.html");
         }
         if (!Files.isRegularFile(file)) {
-            exchange.sendResponseHeaders(404, 0);
+            response.setStatusCode(404);
             return;
         }
-        try (DataInputStream in = new DataInputStream(new BufferedInputStream(Files.newInputStream(file)))) {
-            exchange.sendResponseHeaders(200, 0);
-            exchange.getResponseBody().write(in.readAllBytes());
+        try {
+            DataInputStream in = new DataInputStream(new BufferedInputStream(Files.newInputStream(file)));
+            response.setStatusCode(200);
+            response.setEntity(new InputStreamEntity(in, in.available()));
         } catch (IOException e) {
             LOGGER.error("Error reading file", e);
-            exchange.sendResponseHeaders(500, 0);
+            response.setStatusCode(500);
         }
     }
 
     private static void startHttpServer() {
         try {
-            HttpServer server = HttpServer.create();
-            server.createContext("/", PacketReplay::fetchFile);
-            server.bind(new InetSocketAddress(8080), 0);
+            ServerBootstrap bootstrap = ServerBootstrap.bootstrap();
+            bootstrap.registerHandler("*", PacketReplay::fetchFile);
+            bootstrap.setListenerPort(8080);
+            HttpServer server = bootstrap.create();
             server.start();
             Util.getOperatingSystem().open("http://localhost:8080/");
+            MinecraftClient.getInstance().setScreen(new RunningHttpServerScreen(server));
         } catch (IOException e) {
             LOGGER.error("Error starting HTTP server", e);
         }
