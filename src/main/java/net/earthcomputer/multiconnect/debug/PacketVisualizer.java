@@ -9,9 +9,12 @@ import net.earthcomputer.multiconnect.ap.Registry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.AbstractNbtList;
 import net.minecraft.nbt.AbstractNbtNumber;
+import net.minecraft.nbt.NbtByteArray;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtIntArray;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtLongArray;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.util.Identifier;
 import org.intellij.lang.annotations.Language;
@@ -45,10 +48,6 @@ public final class PacketVisualizer {
                 color: rebeccapurple;
                 font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             }
-            iframe {
-                border: none;
-                width: 100vw;
-            }
             .entry {
                 border: 1px solid black;
                 border-radius: 5px;
@@ -74,7 +73,7 @@ public final class PacketVisualizer {
             }
             .record_table {
                 display: inline-grid;
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(2, max-content);
                 grid-column-gap: 10px;
             }
             .table_key {
@@ -148,21 +147,21 @@ public final class PacketVisualizer {
             writer.write("</style>\n");
             writer.write("</head>\n");
             writer.write("<body>\n");
-            writer.write(objectToHtml(packet, null, clientbound));
+            writer.write(messageVariantContents(packet, clientbound));
             writer.write("</body>\n");
             writer.write("</html>\n");
         } catch (IOException e) {
             LOGGER.error("Error writing packet log", e);
         }
-        return "<details ontoggle='onDetailsClick(this)' data-number='" + packetCounter + "'><summary>Click to expand " + getPresentableClassName(packet.getClass()) + "</summary><div></div></details>";
+        return "<span class='entry message_variant'><details ontoggle='onDetailsClick(this)' data-number='" + packetCounter + "'><summary>Click to expand " + getPresentableClassName(packet.getClass()) + "</summary><div></div></details></span>";
     }
 
     @SuppressWarnings("unchecked")
     @Language("HTML")
-    private static <T> String objectToHtml(Object object, @Nullable Registries registry, boolean clientbound) {
+    private static <T> String objectToHtml(Object object, @Nullable Registries registry, boolean clientbound, boolean wantOutline) {
         // handle null first to avoid NPEs
         if (object == null) {
-            return stringEntry("null", EntryType.NULL);
+            return stringEntry("null", EntryType.NULL, wantOutline);
         }
 
         // handle simple stringifiable types
@@ -181,141 +180,148 @@ public final class PacketVisualizer {
                     } else {
                         text = object + " // " + registryLike.getName(registryLike.getValue(rawId));
                     }
-                    return stringEntry(text, EntryType.PRIMITIVE);
+                    return stringEntry(text, EntryType.PRIMITIVE, wantOutline);
                 }
             }
 
-            return stringEntry(object.toString(), EntryType.PRIMITIVE);
+            return stringEntry(object.toString(), EntryType.PRIMITIVE, wantOutline);
         }
         if (object instanceof Enum<?> en) {
-            return stringEntry(en.name(), EntryType.PRIMITIVE);
+            return stringEntry(en.name(), EntryType.PRIMITIVE, wantOutline);
         }
         if (object instanceof String str) {
             return entry("&quot;"
                             + HtmlEscapers.htmlEscaper().escape(str)
                             .replace("&quot;", "<span style='color: orange;'>&quot;</span>")
                             + "&quot;",
-                    EntryType.PRIMITIVE);
+                    EntryType.PRIMITIVE, wantOutline);
         }
 
         // optionals
         if (object instanceof OptionalInt optInt) {
             if (optInt.isEmpty()) {
-                return stringEntry("OptionalInt.empty()", EntryType.PRIMITIVE);
+                return stringEntry("OptionalInt.empty()", EntryType.PRIMITIVE, wantOutline);
             } else {
-                return entry(objectToHtml(optInt.getAsInt(), registry, clientbound), EntryType.PRIMITIVE);
+                return objectToHtml(optInt.getAsInt(), registry, clientbound, wantOutline);
             }
         }
         if (object instanceof OptionalLong optLong) {
             if (optLong.isEmpty()) {
-                return stringEntry("OptionalLong.empty()", EntryType.PRIMITIVE);
+                return stringEntry("OptionalLong.empty()", EntryType.PRIMITIVE, wantOutline);
             } else {
-                return entry(objectToHtml(optLong.getAsLong(), registry, clientbound), EntryType.PRIMITIVE);
+                return objectToHtml(optLong.getAsLong(), registry, clientbound, wantOutline);
             }
         }
         if (object instanceof Optional<?> opt) {
             if (opt.isEmpty()) {
-                return stringEntry("Optional.empty()", EntryType.PRIMITIVE);
+                return stringEntry("Optional.empty()", EntryType.PRIMITIVE, wantOutline);
             } else {
-                return objectToHtml(opt.get(), registry, clientbound);
+                return objectToHtml(opt.get(), registry, clientbound, wantOutline);
             }
         }
 
         // arrays
         if (object instanceof byte[] bytes) {
-            return makePrimitiveList(IntStream.range(0, bytes.length).mapToObj(i -> bytes[i]), registry, clientbound);
+            return makePrimitiveList(IntStream.range(0, bytes.length).mapToObj(i -> bytes[i]), registry, clientbound, wantOutline);
         }
         if (object instanceof short[] shorts) {
-            return makePrimitiveList(IntStream.range(0, shorts.length).mapToObj(i -> shorts[i]), registry, clientbound);
+            return makePrimitiveList(IntStream.range(0, shorts.length).mapToObj(i -> shorts[i]), registry, clientbound, wantOutline);
         }
         if (object instanceof int[] ints) {
-            return makePrimitiveList(Arrays.stream(ints).boxed(), registry, clientbound);
+            return makePrimitiveList(Arrays.stream(ints).boxed(), registry, clientbound, wantOutline);
         }
         if (object instanceof long[] longs) {
-            return makePrimitiveList(Arrays.stream(longs).boxed(), registry, clientbound);
+            return makePrimitiveList(Arrays.stream(longs).boxed(), registry, clientbound, wantOutline);
         }
         if (object instanceof float[] floats) {
-            return makePrimitiveList(IntStream.range(0, floats.length).mapToObj(i -> floats[i]), registry, clientbound);
+            return makePrimitiveList(IntStream.range(0, floats.length).mapToObj(i -> floats[i]), registry, clientbound, wantOutline);
         }
         if (object instanceof double[] doubles) {
-            return makePrimitiveList(Arrays.stream(doubles).boxed(), registry, clientbound);
+            return makePrimitiveList(Arrays.stream(doubles).boxed(), registry, clientbound, wantOutline);
         }
         if (object.getClass().isArray()) {
             Object[] arr = (Object[]) object;
-            return makeObjectList(Arrays.stream(arr), registry, clientbound);
+            return makeObjectList(Arrays.stream(arr), registry, clientbound, wantOutline);
         }
 
         // lists
         if (object instanceof IntList ints) {
-            return makePrimitiveList(ints.intStream().boxed(), registry, clientbound);
+            return makePrimitiveList(ints.intStream().boxed(), registry, clientbound, wantOutline);
         }
         if (object instanceof LongList longs) {
-            return makePrimitiveList(longs.longStream().boxed(), registry, clientbound);
+            return makePrimitiveList(longs.longStream().boxed(), registry, clientbound, wantOutline);
         }
         if (object instanceof List<?> list) {
-            return makeObjectList(list.stream(), registry, clientbound);
+            return makeObjectList(list.stream(), registry, clientbound, wantOutline);
         }
 
         // bit set
         if (object instanceof BitSet bitSet) {
-            return makePrimitiveList(IntStream.range(0, bitSet.length()).mapToObj(i -> bitSet.get(i) ? "1" : "0"), null, clientbound);
+            return makePrimitiveList(IntStream.range(0, bitSet.length()).mapToObj(i -> bitSet.get(i) ? "1" : "0"), null, clientbound, wantOutline);
         }
 
         // nbt
         if (object instanceof NbtCompound compound) {
-            return nbtToHtml(compound);
+            return nbtToHtml(compound, wantOutline);
         }
 
         // message variants
-        return messageVariantToHtml(object, clientbound);
+        return messageVariantToHtml(object, clientbound, wantOutline);
     }
 
     @Language("HTML")
-    private static String nbtToHtml(NbtElement nbt) {
+    private static String nbtToHtml(NbtElement nbt, boolean wantOutline) {
         if (nbt instanceof NbtCompound compound) {
             StringBuilder text = new StringBuilder(
                     "<details><summary>Click to expand NBT Compound</summary><div class='record_table'>"
             );
             for (String key : compound.getKeys()) {
                 text.append("<span class='table_key'>").append(key).append(": </span>");
-                text.append("<span>").append(nbtToHtml(compound.get(key))).append("</span>");
+                text.append("<span>").append(nbtToHtml(compound.get(key), true)).append("</span>");
             }
             text.append("</div></details>");
-            return entry(text.toString(), EntryType.NBT);
+            return entry(text.toString(), EntryType.NBT, wantOutline);
         }
         if (nbt instanceof AbstractNbtList<?> list) {
             if (nbt instanceof NbtList) {
-                return makeObjectList(list.stream(), null, false);
+                return makeObjectList(list.stream(), null, false, wantOutline);
+            } else if (nbt instanceof NbtByteArray byteArray) {
+                return objectToHtml(byteArray.getByteArray(), null, false, wantOutline);
+            } else if (nbt instanceof NbtIntArray intArray) {
+                return objectToHtml(intArray.getIntArray(), null, false, wantOutline);
+            } else if (nbt instanceof NbtLongArray longArray) {
+                return objectToHtml(longArray.getLongArray(), null, false, wantOutline);
             } else {
-                return makePrimitiveList(list.stream(), null, false);
+                throw new IllegalStateException("Unknown NbtList type: " + nbt.getClass());
             }
         }
         if (nbt instanceof AbstractNbtNumber number) {
-            return stringEntry(number.numberValue().toString(), EntryType.PRIMITIVE);
+            return stringEntry(number.numberValue().toString(), EntryType.PRIMITIVE, wantOutline);
         }
         if (nbt instanceof NbtString str) {
-            return objectToHtml(str.asString(), null, false);
+            return objectToHtml(str.asString(), null, false, wantOutline);
         }
         throw new IllegalStateException("Unknown NbtElement type: " + nbt.getClass());
     }
 
     @Language("HTML")
-    private static String messageVariantToHtml(Object object, boolean clientbound) {
+    private static String messageVariantToHtml(Object object, boolean clientbound, boolean wantOutline) {
         Class<?> clazz = object.getClass();
-        Class<?> superclass = clazz.getSuperclass();
 
         StringBuilder ret = new StringBuilder("<details><summary>Click to expand ")
                 .append(getPresentableClassName(clazz))
-                .append("</summary><div class='record_table'>");
+                .append("</summary>");
+        ret.append(messageVariantContents(object, clientbound));
+        ret.append("</details>");
+        return entry(ret.toString(), EntryType.MESSAGE_VARIANT, wantOutline);
+    }
 
-        if (superclass != Object.class) {
-            appendFields(object, superclass, ret, clientbound);
-        }
-
-        appendFields(object, clazz, ret, clientbound);
-
-        ret.append("</div></details>");
-        return entry(ret.toString(), EntryType.MESSAGE_VARIANT);
+    @Language("HTML")
+    private static String messageVariantContents(Object object, boolean clientbound) {
+        StringBuilder ret = new StringBuilder("<div class='record_table'>");
+        appendFields(object, object.getClass(), ret, clientbound);
+        ret.append("</div>");
+        return ret.toString();
     }
 
     @NotNull
@@ -338,7 +344,7 @@ public final class PacketVisualizer {
 
                 Object value = field.get(object);
                 sb.append("<span class='table_key'>").append(field.getName()).append(": </span>");
-                sb.append("<span>").append(objectToHtml(value, registry, clientbound)).append("</span>");
+                sb.append("<span>").append(objectToHtml(value, registry, clientbound, true)).append("</span>");
             } catch (IllegalAccessException e) {
                 throw new IllegalStateException(e);
             }
@@ -346,7 +352,12 @@ public final class PacketVisualizer {
     }
 
     @Language("HTML")
-    private static <T> String makePrimitiveList(Stream<T> list, @Nullable Registries registry, boolean clientbound) {
+    private static <T> String makePrimitiveList(Stream<T> list, @Nullable Registries registry, boolean clientbound, boolean wantOutline) {
+        if (registry != null) {
+            // we don't want to pack up registry objects, they're too wide
+            return makeObjectList(list, registry, clientbound, wantOutline);
+        }
+
         StringBuilder text = new StringBuilder(
                 "<details><summary>Click to expand list</summary><div class='primitive_list_table'>"
         );
@@ -356,30 +367,34 @@ public final class PacketVisualizer {
                 text.append("<span class='table_key'>").append(count[0]).append(": </span>");
             }
             count[0]++;
-            text.append("<span>").append(objectToHtml(obj, registry, clientbound)).append("</span>");
+            text.append("<span>").append(objectToHtml(obj, registry, clientbound, false)).append("</span>");
         });
         text.append("</div></details>");
-        return entry(text.toString(), EntryType.PRIMITIVE_LIST);
+        return entry(text.toString(), EntryType.PRIMITIVE_LIST, wantOutline);
     }
 
-    private static <T> String makeObjectList(Stream<T> list, @Nullable Registries registry, boolean clientbound) {
+    private static <T> String makeObjectList(Stream<T> list, @Nullable Registries registry, boolean clientbound, boolean wantOutline) {
         StringBuilder text = new StringBuilder(
                 "<details><summary>Click to expand list</summary><ol start=\"0\">"
         );
         list.forEach(obj -> {
-            text.append("<li>").append(objectToHtml(obj, registry, clientbound)).append("</li>");
+            text.append("<li>").append(objectToHtml(obj, registry, clientbound, true)).append("</li>");
         });
         text.append("</ol></details>");
-        return entry(text.toString(), EntryType.OBJECT_LIST);
+        return entry(text.toString(), EntryType.OBJECT_LIST, wantOutline);
     }
 
-    private static String stringEntry(String text, EntryType type) {
-        return entry(HtmlEscapers.htmlEscaper().escape(text), type);
+    private static String stringEntry(String text, EntryType type, boolean wantOutline) {
+        return entry(HtmlEscapers.htmlEscaper().escape(text), type, wantOutline);
     }
 
     @Language("HTML")
-    private static String entry(@Language("HTML") String text, EntryType type) {
-        return "<span class='entry " + type.name().toLowerCase(Locale.ROOT) + "'>" + text + "</span>";
+    private static String entry(@Language("HTML") String text, EntryType type, boolean wantOutline) {
+        if (wantOutline) {
+            return "<span class='entry " + type.name().toLowerCase(Locale.ROOT) + "'>" + text + "</span>";
+        } else {
+            return text;
+        }
     }
 
     private enum EntryType {

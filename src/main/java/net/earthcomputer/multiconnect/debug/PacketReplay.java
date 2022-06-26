@@ -18,7 +18,6 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.nbt.NbtCompound;
@@ -196,8 +195,6 @@ public final class PacketReplay {
         startHttpServer();
 
         connection = null;
-
-        MinecraftClient.getInstance().setScreen(new TitleScreen());
     }
 
     private static void fetchFile(HttpRequest request, HttpResponse response, HttpContext context) throws IOException {
@@ -240,7 +237,11 @@ public final class PacketReplay {
             bootstrap.setListenerPort(8080);
             HttpServer server = bootstrap.create();
             server.start();
-            Util.getOperatingSystem().open("http://localhost:8080/");
+            Thread thread = new Thread(() -> {
+                Util.getOperatingSystem().open("http://localhost:8080/");
+            });
+            thread.setDaemon(true);
+            thread.start();
             MinecraftClient.getInstance().setScreen(new RunningHttpServerScreen(server));
         } catch (IOException e) {
             LOGGER.error("Error starting HTTP server", e);
