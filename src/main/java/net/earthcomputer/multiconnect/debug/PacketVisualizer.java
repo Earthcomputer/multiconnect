@@ -261,8 +261,8 @@ public final class PacketVisualizer {
         }
 
         // nbt
-        if (object instanceof NbtCompound compound) {
-            return nbtToHtml(compound, wantOutline);
+        if (object instanceof NbtElement nbt) {
+            return nbtToHtml(nbt, wantOutline);
         }
 
         // message variants
