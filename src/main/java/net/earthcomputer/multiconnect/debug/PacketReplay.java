@@ -35,6 +35,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -45,14 +46,30 @@ import java.util.zip.GZIPInputStream;
 public final class PacketReplay {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static DataInputStream stream;
+    private static BufferedWriter htmlWriter;
     private static ClientConnection connection;
     private static Channel channel;
+    private static int packetCount;
 
     private PacketReplay() {
     }
 
     public static boolean isReplaying() {
         return stream != null;
+    }
+
+    public static void onPacketDeserialized(Object packet, boolean clientbound) {
+        if (stream == null) {
+            return;
+        }
+
+        String clientboundStr = clientbound ? "Clientbound" : "Serverbound";
+        try {
+            htmlWriter.write("<h2>" + clientboundStr + " Packet</h2>\n");
+            htmlWriter.write(PacketVisualizer.visualize(packet, clientbound, packetCount++) + "\n");
+        } catch (IOException e) {
+            LOGGER.error("Error writing to HTML file", e);
+        }
     }
 
     public static void start() {
@@ -155,6 +172,20 @@ public final class PacketReplay {
         }
         stream = null;
 
+        try {
+            htmlWriter.write("<script>\n");
+            htmlWriter.write(PacketVisualizer.SCRIPT_EPILOGUE + "\n");
+            htmlWriter.write("</script>\n");
+            htmlWriter.write("</body>\n");
+            htmlWriter.write("</html>\n");
+            htmlWriter.close();
+        } catch (IOException e) {
+            LOGGER.error("Error closing packet replay HTML file", e);
+        }
+        htmlWriter = null;
+
+//        Util.getOperatingSystem().open(FabricLoader.getInstance().getConfigDir().resolve("multiconnect").resolve("packet-logs").resolve("replay.html").toFile());
+
         connection = null;
 
         MinecraftClient.getInstance().setScreen(new TitleScreen());
@@ -171,6 +202,30 @@ public final class PacketReplay {
                 LOGGER.error("Failed to open packet replay file", e);
                 return false;
             }
+        }
+
+        packetCount = 0;
+        PacketVisualizer.reset();
+
+        try {
+            htmlWriter = Files.newBufferedWriter(logsDir.resolve("replay.html"));
+            htmlWriter.write("<!DOCTYPE html>\n");
+            htmlWriter.write("<html>\n");
+            htmlWriter.write("<head>\n");
+            htmlWriter.write("<meta charset=\"UTF-8\">\n");
+            htmlWriter.write("<title>Packet Replay</title>\n");
+            htmlWriter.write("<style>\n");
+            htmlWriter.write(PacketVisualizer.STYLESHEET + "\n");
+            htmlWriter.write("</style>\n");
+            htmlWriter.write("<script>\n");
+            htmlWriter.write(PacketVisualizer.SCRIPT_PROLOGUE + "\n");
+            htmlWriter.write("</script>\n");
+            htmlWriter.write("</head>\n");
+            htmlWriter.write("<body>\n");
+            htmlWriter.write("<h1>Packet Replay</h1>\n");
+        } catch (IOException e) {
+            LOGGER.error("Failed to open packet replay HTML file", e);
+            return false;
         }
 
         NbtCompound nbt;

@@ -98,6 +98,7 @@ task remapSlimJar(type: RemapJarTask, dependsOn: jar) {
 idea {
 	module {
 		excludeDirs << file('src/generated/java')
+		excludeDirs << file('run/config/multiconnect/packet-logs')
 	}
 }
 

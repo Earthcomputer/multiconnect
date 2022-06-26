@@ -1,6 +1,5 @@
 package net.earthcomputer.multiconnect.debug;
 
-import com.google.common.collect.ImmutableMap;
 import com.mojang.datafixers.TypeRewriteRule;
 import com.mojang.logging.LogUtils;
 import io.netty.buffer.ByteBuf;
@@ -11,11 +10,13 @@ import io.netty.channel.ChannelInboundHandler;
 import io.netty.handler.timeout.TimeoutException;
 import io.netty.util.AttributeKey;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.PacketIntrinsics;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
@@ -41,7 +42,6 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.NetworkState;
-import net.minecraft.network.Packet;
 import net.minecraft.network.PacketEncoderException;
 import net.minecraft.state.property.Property;
 import net.minecraft.text.ClickEvent;
@@ -50,10 +50,12 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
+import net.minecraft.util.collection.IndexedIterable;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Triple;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -78,14 +80,12 @@ import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -344,6 +344,38 @@ public class DebugUtils {
     }
 
     @SuppressWarnings("unchecked")
+    public static <T, R extends Registry<T>> RegistryLike<?> getRegistryLike(Registries registry) {
+        return switch (registry) {
+            case BLOCK_STATE -> new IndexedIterableRegistryLike<>(Block.STATE_IDS) {
+                @Override
+                public String getName(BlockState value) {
+                    return blockStateToString(value);
+                }
+
+                @Override
+                public @NotNull Integer serverRawIdToClient(int serverRawId) {
+                    return PacketSystem.serverBlockStateIdToClient(serverRawId);
+                }
+            };
+            case TRACKED_DATA_HANDLER -> TrackedDataHandlerRegistryLike.INSTANCE;
+            case ENTITY_POSE -> new EnumRegistryLike<>(EntityPose.values());
+            default -> {
+                if (!registry.isRealRegistry()) {
+                    throw new IllegalArgumentException("Cannot get indexed iterable for " + registry);
+                }
+                RegistryKey<R> registryKey;
+                try {
+                    Field field = Registry.class.getField(registry.getRegistryKeyFieldName());
+                    registryKey = (RegistryKey<R>) field.get(null);
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalArgumentException("Cannot get indexed iterable for " + registry, e);
+                }
+                yield new RegistryRegistryLike<>(((Registry<R>) Registry.REGISTRIES).get(registryKey));
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
     public static <T> void dumpRegistries() throws IOException {
         File dir = new File("../data/" + SharedConstants.getGameVersion().getReleaseTarget());
         if (!dir.exists()) {
@@ -353,77 +385,15 @@ public class DebugUtils {
         dumpPackets(new File(dir, "spackets.csv"), NetworkSide.CLIENTBOUND, "SPacket", "S2CPacket");
         dumpPackets(new File(dir, "cpackets.csv"), NetworkSide.SERVERBOUND, "CPacket", "C2SPacket");
         for (Registries registries : Registries.values()) {
-            Stream<Triple<Integer, String, String>> entries;
-            if (registries == Registries.BLOCK_STATE) {
-                entries = StreamSupport.stream(Block.STATE_IDS.spliterator(), false)
-                        .filter(it -> {
-                            Identifier name = Registry.BLOCK.getId(it.getBlock());
-                            return !name.getNamespace().equals("multiconnect");
-                        })
-                        .map(it -> Triple.of(Block.STATE_IDS.getRawId(it), blockStateToString(it), blockStateToString(it)));
-            } else if (registries == Registries.TRACKED_DATA_HANDLER) {
-                List<Triple<Integer, String, String>> entryList = new ArrayList<>();
-                TrackedDataHandler<?> handler;
-                for (int i = 0; (handler = TrackedDataHandlerRegistry.get(i)) != null; i++) {
-                    String name = null;
-                    for (Field field : TrackedDataHandlerRegistry.class.getFields()) {
-                        if (Modifier.isStatic(field.getModifiers()) && field.getType() == TrackedDataHandler.class) {
-                            Object fieldValue;
-                            try {
-                                fieldValue = field.get(null);
-                            } catch (ReflectiveOperationException e) {
-                                throw new AssertionError(e);
-                            }
-                            if (handler == fieldValue) {
-                                name = field.getName().toLowerCase(Locale.ROOT);
-                                break;
-                            }
-                        }
-                    }
-                    if (name == null) {
-                        throw new AssertionError("Could not find tracked data handler name for id " + i);
-                    }
-                    entryList.add(Triple.of(i, name, name));
-                }
-                entries = entryList.stream();
-            } else if (!registries.isRealRegistry()) {
-                Class<? extends Enum<?>> enumClass = switch (registries) {
-                    case ENTITY_POSE -> EntityPose.class;
-                    default -> throw new AssertionError("No way to dump registry " + registries);
-                };
-                Enum<?>[] enumConstants = enumClass.getEnumConstants();
-                entries = IntStream.range(0, enumConstants.length)
-                        .mapToObj(i -> {
-                            String name = enumConstants[i].name().toLowerCase(Locale.ROOT);
-                            return Triple.of(i, name, name);
-                        });
-            } else {
-                Registry<T> registry;
-                try {
-                    registry = (Registry<T>) Registry.class.getDeclaredField(registries.name()).get(null);
-                } catch (ReflectiveOperationException e) {
-                    throw new AssertionError(e);
-                }
-                entries = registry.stream()
-                        .filter(it -> {
-                            Identifier name = registry.getId(it);
-                            return name == null || !name.getNamespace().equals("multiconnect");
-                        })
-                        .map(it -> {
-                            Identifier name = registry.getId(it);
-                            String nameStr = identifierToString(name);
-                            return Triple.of(registry.getRawId(it), nameStr, nameStr);
-                        });
-            }
+            RegistryLike<T> registryLike = (RegistryLike<T>) getRegistryLike(registries);
             try (PrintWriter pw = new PrintWriter(new FileWriter(new File(dir, registries.name().toLowerCase(Locale.ROOT) + ".csv")))) {
                 pw.println("id name oldName remapTo");
-                entries.forEach(it -> {
-                    if (it.getMiddle().equals(it.getRight())) {
-                        pw.println(it.getLeft() + " " + it.getMiddle());
-                    } else {
-                        pw.println(it.getLeft() + " " + it.getMiddle() + " " + it.getRight());
+                for (T value : registryLike) {
+                    String name = registryLike.getName(value);
+                    if (!name.startsWith("multiconnect:")) {
+                        pw.println(registryLike.getRawId(value) + " " + name);
                     }
-                });
+                }
             }
         }
 
@@ -453,8 +423,6 @@ public class DebugUtils {
         return prop.name((T) value);
     }
 
-    private static final Map<Class<? extends Packet<?>>, String> SUBST_NAME = ImmutableMap.<Class<? extends Packet<?>>, String>builder()
-            .build();
     private static void dumpPackets(File output, NetworkSide side, String prefix, String toReplace) throws IOException {
         var packetHandlers = new ArrayList<>(NetworkState.PLAY.getPacketIdToPacketMap(side).int2ObjectEntrySet());
         packetHandlers.sort(Comparator.comparingInt(Int2ObjectMap.Entry::getIntKey));
@@ -566,5 +534,160 @@ public class DebugUtils {
             }
         }
         throw new IllegalArgumentException("No such field " + name);
+    }
+
+    public interface RegistryLike<T> extends Iterable<T> {
+        int getRawId(T value);
+        T getValue(int id);
+        String getName(T value);
+        @Nullable
+        Integer serverRawIdToClient(int serverRawId);
+    }
+
+    private enum TrackedDataHandlerRegistryLike implements RegistryLike<TrackedDataHandler<?>> {
+        INSTANCE;
+
+        private static final Int2ObjectMap<String> NAME_MAP = Util.make(new Int2ObjectOpenHashMap<>(), map -> {
+            for (Field field : TrackedDataHandlerRegistry.class.getFields()) {
+                if (Modifier.isStatic(field.getModifiers()) && TrackedDataHandler.class.isAssignableFrom(field.getType())) {
+                    TrackedDataHandler<?> trackedDataHandler;
+                    try {
+                        trackedDataHandler = (TrackedDataHandler<?>) field.get(null);
+                    } catch (IllegalAccessException e) {
+                        throw new AssertionError("Failed to access tracked data handler", e);
+                    }
+                    map.put(TrackedDataHandlerRegistry.getId(trackedDataHandler), field.getName().toLowerCase(Locale.ROOT));
+                }
+            }
+        });
+
+        @Override
+        public int getRawId(TrackedDataHandler<?> value) {
+            return TrackedDataHandlerRegistry.getId(value);
+        }
+
+        @Override
+        public TrackedDataHandler<?> getValue(int id) {
+            return TrackedDataHandlerRegistry.get(id);
+        }
+
+        @Override
+        public String getName(TrackedDataHandler<?> value) {
+            return NAME_MAP.get(getRawId(value));
+        }
+
+        @Override
+        public @NotNull Integer serverRawIdToClient(int serverRawId) {
+            // TODO: implement tracked data remapping for debug
+            return serverRawId;
+        }
+
+        @NotNull
+        @Override
+        public Iterator<TrackedDataHandler<?>> iterator() {
+            return new Iterator<>() {
+                private int index = 0;
+                private TrackedDataHandler<?> next = getValue(index);
+
+                @Override
+                public boolean hasNext() {
+                    return next != null;
+                }
+
+                @Override
+                public TrackedDataHandler<?> next() {
+                    TrackedDataHandler<?> result = next;
+                    next = getValue(++index);
+                    return result;
+                }
+            };
+        }
+    }
+
+    private record EnumRegistryLike<T extends Enum<T>>(T[] values) implements RegistryLike<T> {
+        @Override
+        public int getRawId(T value) {
+            return value.ordinal();
+        }
+
+        @Override
+        public T getValue(int index) {
+            if (index < 0 || index >= values.length) {
+                throw new IndexOutOfBoundsException();
+            }
+            return values[index];
+        }
+
+        @Override
+        public String getName(T value) {
+            return value.name().toLowerCase(Locale.ROOT);
+        }
+
+        @Override
+        public @NotNull Integer serverRawIdToClient(int serverRawId) {
+            // TODO: implement enum remapping for debug
+            return serverRawId;
+        }
+
+        @NotNull
+        @Override
+        public Iterator<T> iterator() {
+            return new Iterator<>() {
+                private int index = 0;
+
+                @Override
+                public boolean hasNext() {
+                    return index < values.length;
+                }
+
+                @Override
+                public T next() {
+                    return values[index++];
+                }
+            };
+        }
+    }
+
+    private static abstract class IndexedIterableRegistryLike<T> implements RegistryLike<T> {
+        private final IndexedIterable<T> registry;
+
+        protected IndexedIterableRegistryLike(IndexedIterable<T> registry) {
+            this.registry = registry;
+        }
+
+        @Override
+        public int getRawId(T value) {
+            return registry.getRawId(value);
+        }
+
+        @Override
+        public T getValue(int index) {
+            return registry.get(index);
+        }
+
+        @NotNull
+        @Override
+        public Iterator<T> iterator() {
+            return registry.iterator();
+        }
+    }
+
+    private static final class RegistryRegistryLike<T> extends IndexedIterableRegistryLike<T> {
+        private final Registry<T> registry;
+
+        private RegistryRegistryLike(Registry<T> registry) {
+            super(registry);
+            this.registry = registry;
+        }
+
+        @Override
+        public String getName(T value) {
+            return identifierToString(registry.getId(value));
+        }
+
+        @Override
+        public @NotNull Integer serverRawIdToClient(int serverRawId) {
+            return PacketSystem.serverRawIdToClient(registry, serverRawId);
+        }
     }
 }

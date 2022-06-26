@@ -15,6 +15,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.earthcomputer.multiconnect.debug.PacketReplay;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.SharedConstants;
@@ -237,6 +238,10 @@ public final class PacketIntrinsics {
             PacketSystem.Internals.setUserData(buf, userData);
             context.fireChannelRead(buf);
         }
+    }
+
+    public static void onPacketDeserialized(Object packet, boolean clientbound) {
+        PacketReplay.onPacketDeserialized(packet, clientbound);
     }
 
     public static int readVarInt(ByteBuf buf) {
