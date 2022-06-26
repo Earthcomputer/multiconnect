@@ -90,30 +90,25 @@ public final class PacketVisualizer {
             """;
 
     @Language("JS")
-    public static final String SCRIPT_PROLOGUE = """
-            function resizeIframe(iframe) {
-                iframe.height = iframe.contentWindow.document.body.scrollHeight;
-                iframe.contentWindow.addEventListener("DOMContentModified", () => resizeIframe(iframe));
-            }
-            """;
-
-    @Language("JS")
     public static final String SCRIPT_EPILOGUE = """
-            const io = new IntersectionObserver(entries => {
-                entries.forEach(entry => {
-                    const iframe = entry.target;
-                    if (entry.isIntersecting) {
-                        iframe.setAttribute("src", iframe.getAttribute("data-src"));
-                    } else {
-                        iframe.removeAttribute("src");
-                        iframe.height = 0;
-                    }
-                });
-            });
-            const iframes = document.getElementsByTagName("iframe");
-            for (let i = 0; i < iframes.length; i++) {
-                const iframe = iframes[i];
-                io.observe(iframe);
+            async function loadPage(number, details) {
+                const req = await fetch(`packets/${number}.html`);
+                if (req.status != 200) {
+                    alert(`failed to load ${req.status}: \\n${req.statusText}`);
+                    return;
+                }
+                const text = await req.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, "text/html").getElementsByTagName("body")[0];
+                details.innerHTML = doc.innerHTML;
+            }
+            async function onDetailsClick(details) {
+                if (details.hasAttribute("open")) {
+                    const number = details.getAttribute("data-number");
+                    loadPage(number, details.children[1]);
+                } else {
+                    details.children[1].innerHTML = "";
+                }
             }
             """;
 
@@ -159,7 +154,7 @@ public final class PacketVisualizer {
         } catch (IOException e) {
             LOGGER.error("Error writing packet log", e);
         }
-        return "<details><summary>Click to expand " + getPresentableClassName(packet.getClass()) + "</summary><iframe data-src='" + url + "' onload='resizeIframe(this)'></iframe></details>";
+        return "<details ontoggle='onDetailsClick(this)' data-number='" + packetCounter + "'><summary>Click to expand " + getPresentableClassName(packet.getClass()) + "</summary><div></div></details>";
     }
 
     @SuppressWarnings("unchecked")

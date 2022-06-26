@@ -217,9 +217,6 @@ public final class PacketReplay {
             htmlWriter.write("<style>\n");
             htmlWriter.write(PacketVisualizer.STYLESHEET + "\n");
             htmlWriter.write("</style>\n");
-            htmlWriter.write("<script>\n");
-            htmlWriter.write(PacketVisualizer.SCRIPT_PROLOGUE + "\n");
-            htmlWriter.write("</script>\n");
             htmlWriter.write("</head>\n");
             htmlWriter.write("<body>\n");
             htmlWriter.write("<h1>Packet Replay</h1>\n");
