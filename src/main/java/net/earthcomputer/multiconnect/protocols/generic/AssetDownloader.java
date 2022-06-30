@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -24,6 +25,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 public class AssetDownloader {
 
@@ -320,7 +322,11 @@ public class AssetDownloader {
 
             destFile.getParentFile().mkdirs();
             try {
-                FileUtils.copyInputStreamToFile(connection.getInputStream(), destFile);
+                InputStream stream = connection.getInputStream();
+                if ("gzip".equals(connection.getContentEncoding())) {
+                    stream = new GZIPInputStream(stream);
+                }
+                FileUtils.copyInputStreamToFile(stream, destFile);
             } catch (IOException e) {
                 destFile.delete();
                 throw e;
