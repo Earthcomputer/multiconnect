@@ -51,6 +51,7 @@ import net.earthcomputer.multiconnect.compiler.node.SwitchOp
 import net.earthcomputer.multiconnect.compiler.node.ThrowStmtOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
 import net.earthcomputer.multiconnect.compiler.opto.optimize
+import net.earthcomputer.multiconnect.compiler.polymorphicChildren
 import net.earthcomputer.multiconnect.compiler.protocolNamesById
 import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.readCsv
@@ -271,43 +272,50 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                         it >= protocolId && getPacketDirection(it, packet) == PacketDirection.SERVERBOUND
                     } + listOfNotNull(protocols[0].id.takeIf { variantInfo.sendableFromLatest })
                 }
-                for (protocolId in protocolIds) {
-                    val specializedFunctionName = buildString {
-                        append("send")
-                        append(splitPackageClass(packet).second.replace('.', '_'))
-                        append(if (clientbound) "ToClient" else "ToServer")
-                        if (!clientbound) {
-                            append(protocolId)
+                val packetImpls = if (variantInfo.polymorphic != null && variantInfo.polymorphicParent == null) {
+                    polymorphicChildren[packet]!!
+                } else {
+                    listOf(packet)
+                }
+                for (packetImpl in packetImpls) {
+                    for (protocolId in protocolIds) {
+                        val specializedFunctionName = buildString {
+                            append("send")
+                            append(splitPackageClass(packet).second.replace('.', '_'))
+                            append(if (clientbound) "ToClient" else "ToServer")
+                            if (!clientbound) {
+                                append(protocolId)
+                            }
                         }
-                    }
 
-                    if (!empty) {
-                        field.append(",")
-                    }
-                    empty = false
-                    field.appendNewLine()
-                    if (!clientbound) {
-                        field.appendClassName(PAIR).append(".of(")
-                    }
-                    field.appendClassName(packet).append(".class")
-                    if (!clientbound) {
-                        field.append(", ").append(protocolId.toString()).append(")")
-                    }
-                    field.append(", (")
-                    field.appendClassName(PACKET_SENDER)
-                    field.append(") (packet, outBufs, networkHandler, globalData, userData) -> ").append(specializedFunctionName).append("((")
-                        .appendClassName(packet).append(") packet, outBufs, networkHandler, globalData, userData)")
+                        if (!empty) {
+                            field.append(",")
+                        }
+                        empty = false
+                        field.appendNewLine()
+                        if (!clientbound) {
+                            field.appendClassName(PAIR).append(".of(")
+                        }
+                        field.appendClassName(packetImpl).append(".class")
+                        if (!clientbound) {
+                            field.append(", ").append(protocolId.toString()).append(")")
+                        }
+                        field.append(", (")
+                        field.appendClassName(PACKET_SENDER)
+                        field.append(") (packet, outBufs, networkHandler, globalData, userData) -> ").append(specializedFunctionName).append("((")
+                            .appendClassName(packet).append(") packet, outBufs, networkHandler, globalData, userData)")
 
-                    emitter.addMember(specializedFunctionName)?.let { specializedFunction ->
-                        specializedFunction.append("private static void ").append(specializedFunctionName)
-                            .append("(").appendClassName(packet).append(" protocol_$protocolId, ").appendClassName(LIST)
-                            .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
-                            .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
-                            .appendClassName(MAP).append("<").appendClassName(CLASS).append("<?>, ").appendClassName(OBJECT).append("> globalData, ")
-                            .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
-                        generateExplicitSenderClientRegistries(variantInfo, protocolId, clientbound)
-                            .optimize().emit(specializedFunction, Precedence.COMMA)
-                        specializedFunction.dedent().appendNewLine().append("}")
+                        emitter.addMember(specializedFunctionName)?.let { specializedFunction ->
+                            specializedFunction.append("private static void ").append(specializedFunctionName)
+                                .append("(").appendClassName(packet).append(" protocol_$protocolId, ").appendClassName(LIST)
+                                .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
+                                .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+                                .appendClassName(MAP).append("<").appendClassName(CLASS).append("<?>, ").appendClassName(OBJECT).append("> globalData, ")
+                                .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
+                            generateExplicitSenderClientRegistries(variantInfo, protocolId, clientbound)
+                                .optimize().emit(specializedFunction, Precedence.COMMA)
+                            specializedFunction.dedent().appendNewLine().append("}")
+                        }
                     }
                 }
             }
