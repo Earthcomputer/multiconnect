@@ -4,7 +4,18 @@ pluginManagement {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
         }
+        maven {
+            name = 'JitPack'
+            url = 'https://jitpack.io/'
+        }
         gradlePluginPortal()
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'fabric-loom') {
+                useModule('com.github.Earthcomputer:fabric-loom:3320f0dc')
+            }
+        }
     }
 }
 

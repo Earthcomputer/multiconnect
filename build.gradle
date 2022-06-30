@@ -4,7 +4,7 @@ import net.fabricmc.loader.impl.game.minecraft.McVersion
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
-	id 'fabric-loom' version '0.8-SNAPSHOT'
+	id 'fabric-loom'
 	id 'maven-publish'
 	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
@@ -352,4 +352,4 @@ task releaseAll {
 	dependsOn tasks.getByName('githubRelease')
 }
 
-apply from: 'setupRealMcAccount.gradle'
+//apply from: 'setupRealMcAccount.gradle'
