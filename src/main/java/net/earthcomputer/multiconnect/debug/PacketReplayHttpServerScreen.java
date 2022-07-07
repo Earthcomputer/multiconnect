@@ -6,12 +6,12 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import org.apache.http.impl.bootstrap.HttpServer;
 
-public class RunningHttpServerScreen extends Screen {
+public class PacketReplayHttpServerScreen extends Screen {
     private static final Text TITLE = Text.translatable("multiconnect.debug.runningHttpServer.title");
 
     private final HttpServer server;
 
-    public RunningHttpServerScreen(HttpServer server) {
+    public PacketReplayHttpServerScreen(HttpServer server) {
         super(TITLE);
         this.server = server;
     }
@@ -26,7 +26,7 @@ public class RunningHttpServerScreen extends Screen {
     @Override
     public void close() {
         server.stop();
-        super.close();
+        this.client.setScreen(new PacketReplayMenuScreen());
     }
 
     @Override

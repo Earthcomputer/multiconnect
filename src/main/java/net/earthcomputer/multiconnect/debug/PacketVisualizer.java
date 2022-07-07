@@ -42,80 +42,11 @@ import java.util.stream.Stream;
 public final class PacketVisualizer {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    @Language("CSS")
-    public static final String STYLESHEET = """
-            body {
-                color: rebeccapurple;
-                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            }
-            .entry {
-                border: 1px solid black;
-                border-radius: 5px;
-                padding: 3px;
-                display: inline-block;
-            }
-            .null {
-                background-color: pink;
-            }
-            .primitive {
-                background-color: lightblue;
-            }
-            .primitive_list {
-                background-color: lightblue;
-            }
-            .primitive_list_table {
-                display: inline-grid;
-                grid-template-columns: repeat(11, 1fr);
-                grid-column-gap: 10px;
-            }
-            .object_list {
-                background-color: burlywood;
-            }
-            .record_table {
-                display: inline-grid;
-                grid-template-columns: repeat(2, max-content);
-                grid-column-gap: 10px;
-            }
-            .table_key {
-                color: black;
-                font-weight: bold;
-            }
-            .nbt {
-                background-color: lightgreen;
-            }
-            .message_variant {
-                background-color: pink;
-            }
-            """;
-
-    @Language("JS")
-    public static final String SCRIPT_EPILOGUE = """
-            async function loadPage(number, details) {
-                const req = await fetch(`packets/${number}.html`);
-                if (req.status !== 200) {
-                    alert(`failed to load ${req.status}: \\n${req.statusText}`);
-                    return;
-                }
-                const text = await req.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(text, "text/html").getElementsByTagName("body")[0];
-                details.innerHTML = doc.innerHTML;
-            }
-            async function onDetailsClick(details) {
-                if (details.hasAttribute("open")) {
-                    const number = details.getAttribute("data-number");
-                    loadPage(number, details.children[1]);
-                } else {
-                    details.children[1].innerHTML = "";
-                }
-            }
-            """;
-
     private PacketVisualizer() {
     }
 
     public static void reset() {
-        Path packetsDir = FabricLoader.getInstance().getConfigDir().resolve("multiconnect").resolve("packet-logs").resolve("packets");
+        Path packetsDir = PacketReplay.packetLogsDir.resolve("packets");
         try (Stream<Path> files = Files.list(packetsDir)) {
             files.forEach(file -> {
                 try {
@@ -137,14 +68,11 @@ public final class PacketVisualizer {
     public static String visualize(Object packet, boolean clientbound, int packetCounter) {
         @Language("HTML")
         String url = "packets/" + packetCounter + ".html";
-        try (BufferedWriter writer = Files.newBufferedWriter(FabricLoader.getInstance().getConfigDir().resolve("multiconnect").resolve("packet-logs").resolve(url))) {
+        try (BufferedWriter writer = Files.newBufferedWriter(PacketReplay.packetLogsDir.resolve(url))) {
             writer.write("<!DOCTYPE html>\n");
             writer.write("<html>\n");
             writer.write("<head>\n");
             writer.write("<meta charset=\"UTF-8\">\n");
-            writer.write("<style>\n");
-            writer.write(STYLESHEET + "\n");
-            writer.write("</style>\n");
             writer.write("</head>\n");
             writer.write("<body>\n");
             writer.write(messageVariantContents(packet, clientbound));

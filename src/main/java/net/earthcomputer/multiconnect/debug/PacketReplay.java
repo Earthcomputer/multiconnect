@@ -37,6 +37,7 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.bootstrap.HttpServer;
 import org.apache.http.impl.bootstrap.ServerBootstrap;
 import org.apache.http.protocol.HttpContext;
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
@@ -53,11 +54,81 @@ import java.util.zip.GZIPInputStream;
 
 public final class PacketReplay {
     private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Path packetLogsDir = FabricLoader.getInstance().getConfigDir().resolve("multiconnect").resolve("packet-logs");
     private static DataInputStream stream;
     private static BufferedWriter htmlWriter;
     private static ClientConnection connection;
     private static Channel channel;
     private static int packetCount;
+
+    @Language("CSS")
+    public static final String STYLESHEET = """
+            body {
+                color: rebeccapurple;
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            }
+            .entry {
+                border: 1px solid black;
+                border-radius: 5px;
+                padding: 3px;
+                display: inline-block;
+            }
+            .null {
+                background-color: pink;
+            }
+            .primitive {
+                background-color: lightblue;
+            }
+            .primitive_list {
+                background-color: lightblue;
+            }
+            .primitive_list_table {
+                display: inline-grid;
+                grid-template-columns: repeat(11, 1fr);
+                grid-column-gap: 10px;
+            }
+            .object_list {
+                background-color: burlywood;
+            }
+            .record_table {
+                display: inline-grid;
+                grid-template-columns: repeat(2, max-content);
+                grid-column-gap: 10px;
+            }
+            .table_key {
+                color: black;
+                font-weight: bold;
+            }
+            .nbt {
+                background-color: lightgreen;
+            }
+            .message_variant {
+                background-color: pink;
+            }
+            """;
+
+    @Language("JS")
+    public static final String SCRIPT_EPILOGUE = """
+            async function loadPage(number, details) {
+                const req = await fetch(`packets/${number}.html`);
+                if (req.status !== 200) {
+                    alert(`failed to load ${req.status}: \\n${req.statusText}`);
+                    return;
+                }
+                const text = await req.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, "text/html").getElementsByTagName("body")[0];
+                details.innerHTML = doc.innerHTML;
+            }
+            async function onDetailsClick(details) {
+                if (details.hasAttribute("open")) {
+                    const number = details.getAttribute("data-number");
+                    loadPage(number, details.children[1]);
+                } else {
+                    details.children[1].innerHTML = "";
+                }
+            }
+            """;
 
     private PacketReplay() {
     }
@@ -74,7 +145,8 @@ public final class PacketReplay {
         String clientboundStr = clientbound ? "Clientbound" : "Serverbound";
         try {
             htmlWriter.write("<h2>" + clientboundStr + " Packet</h2>\n");
-            htmlWriter.write(PacketVisualizer.visualize(packet, clientbound, packetCount++) + "\n");
+            htmlWriter.write(PacketVisualizer.visualize(packet, clientbound, packetCount) + "\n");
+            packetCount++;
         } catch (IOException e) {
             LOGGER.error("Error writing to HTML file", e);
         }
@@ -182,7 +254,7 @@ public final class PacketReplay {
 
         try {
             htmlWriter.write("<script>\n");
-            htmlWriter.write(PacketVisualizer.SCRIPT_EPILOGUE + "\n");
+            htmlWriter.write(SCRIPT_EPILOGUE + "\n");
             htmlWriter.write("</script>\n");
             htmlWriter.write("</body>\n");
             htmlWriter.write("</html>\n");
@@ -212,7 +284,7 @@ public final class PacketReplay {
         if (path.isEmpty()) {
             path = "replay.html";
         }
-        Path file = FabricLoader.getInstance().getConfigDir().resolve("multiconnect").resolve("packet-logs").resolve(path);
+        Path file = packetLogsDir.resolve(path);
         if (Files.isDirectory(file)) {
             file = file.resolve("index.html");
         }
@@ -230,7 +302,7 @@ public final class PacketReplay {
         }
     }
 
-    private static void startHttpServer() {
+    public static void startHttpServer() {
         try {
             ServerBootstrap bootstrap = ServerBootstrap.bootstrap();
             bootstrap.registerHandler("*", PacketReplay::fetchFile);
@@ -242,19 +314,18 @@ public final class PacketReplay {
             });
             thread.setDaemon(true);
             thread.start();
-            MinecraftClient.getInstance().setScreen(new RunningHttpServerScreen(server));
+            MinecraftClient.getInstance().setScreen(new PacketReplayHttpServerScreen(server));
         } catch (IOException e) {
             LOGGER.error("Error starting HTTP server", e);
         }
     }
 
     private static boolean loadFile() {
-        Path logsDir = FabricLoader.getInstance().getConfigDir().resolve("multiconnect").resolve("packet-logs");
         try {
-            stream = new DataInputStream(new GZIPInputStream(new BufferedInputStream(Files.newInputStream(logsDir.resolve("replay.log.gz")))));
+            stream = new DataInputStream(new GZIPInputStream(new BufferedInputStream(Files.newInputStream(packetLogsDir.resolve("replay.log.gz")))));
         } catch (IOException e) {
             try {
-                stream = new DataInputStream(new BufferedInputStream(Files.newInputStream(logsDir.resolve("replay.log"))));
+                stream = new DataInputStream(new BufferedInputStream(Files.newInputStream(packetLogsDir.resolve("replay.log"))));
             } catch (IOException e1) {
                 LOGGER.error("Failed to open packet replay file", e);
                 return false;
@@ -265,15 +336,17 @@ public final class PacketReplay {
         PacketVisualizer.reset();
 
         try {
-            htmlWriter = Files.newBufferedWriter(logsDir.resolve("replay.html"));
+            htmlWriter = Files.newBufferedWriter(packetLogsDir.resolve("style.css"));
+            htmlWriter.write(STYLESHEET);
+            htmlWriter.close();
+
+            htmlWriter = Files.newBufferedWriter(packetLogsDir.resolve("replay.html"));
             htmlWriter.write("<!DOCTYPE html>\n");
             htmlWriter.write("<html>\n");
             htmlWriter.write("<head>\n");
             htmlWriter.write("<meta charset=\"UTF-8\">\n");
             htmlWriter.write("<title>Packet Replay</title>\n");
-            htmlWriter.write("<style>\n");
-            htmlWriter.write(PacketVisualizer.STYLESHEET + "\n");
-            htmlWriter.write("</style>\n");
+            htmlWriter.write("<link rel=\"stylesheet\" type=\"text/css\" href=\"" + packetLogsDir.toUri().relativize(packetLogsDir.resolve("style.css").toUri())+ "\">");
             htmlWriter.write("</head>\n");
             htmlWriter.write("<body>\n");
             htmlWriter.write("<h1>Packet Replay</h1>\n");

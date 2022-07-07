@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.mixin.debug;
 
 import net.earthcomputer.multiconnect.debug.DebugUtils;
-import net.earthcomputer.multiconnect.debug.PacketReplay;
+import net.earthcomputer.multiconnect.debug.PacketReplayMenuScreen;
 import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -34,7 +34,7 @@ public class MixinKeyboard {
         if (MULTICONNECT_DEBUG_KEY && key == GLFW.GLFW_KEY_F8 && action == GLFW.GLFW_PRESS) {
             Screen currentScreen = MinecraftClient.getInstance().currentScreen;
             if (currentScreen instanceof TitleScreen) {
-                PacketReplay.start();
+                MinecraftClient.getInstance().setScreen(new PacketReplayMenuScreen());
             }
         }
     }

@@ -24,8 +24,9 @@ public class ConfigScreen extends Screen {
     protected void init() {
         addDrawableChild(CyclingButtonWidget.onOffBuilder(MulticonnectConfig.INSTANCE.allowOldUnsignedChat == Boolean.TRUE)
                 .tooltip(SimpleOption.<Boolean>constantTooltip(ALLOW_OLD_UNSIGNED_CHAT_TOOLTIP).apply(client))
-                .build(width / 2, 50, 100, 20, ALLOW_OLD_UNSIGNED_CHAT, (button, value) -> MulticonnectConfig.INSTANCE.allowOldUnsignedChat = value));
-        addDrawableChild(new ButtonWidget(20, height - 50, 100, 20, ScreenTexts.DONE, button -> close()));
+                .build(width / 2 - 105 , 50, 210, 20, ALLOW_OLD_UNSIGNED_CHAT, (button, value) -> MulticonnectConfig.INSTANCE.allowOldUnsignedChat = value));
+
+        addDrawableChild(new ButtonWidget(this.width / 2 - 100, this.height - 27, 200, 20, ScreenTexts.DONE, button -> close()));
     }
 
     @Override
