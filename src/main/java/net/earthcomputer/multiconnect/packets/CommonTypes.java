@@ -1,7 +1,6 @@
 package net.earthcomputer.multiconnect.packets;
 
 import net.earthcomputer.multiconnect.ap.Argument;
-import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.Message;
@@ -14,9 +13,6 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.latest.ItemStack_Latest;
-import net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2;
-import net.earthcomputer.multiconnect.packets.v1_13_1.ItemStack_1_13_1;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.Blocks_1_12_2;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
@@ -25,26 +21,41 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
 
 public class CommonTypes {
-    @MessageVariant
-    public static class Text {
+
+    @Message
+    public interface Text {
+        String getJson();
+    }
+
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static class Text_Latest implements Text {
+        @Introduce(direction = Introduce.Direction.FROM_OLDER, compute = "fixNullJson")
         @Length(max = PacketByteBuf.MAX_TEXT_LENGTH)
         public String json;
 
-        public Text() {
+        public Text_Latest() {
         }
 
-        public Text(String json) {
+        public Text_Latest(String json) {
             this.json = json;
         }
 
-        public static Text createLiteral(String value) {
+        @Override
+        public String getJson() {
+            return json;
+        }
+
+        public static Text_Latest createLiteral(String value) {
             var text = net.minecraft.text.Text.literal(value);
-            Text result = new Text();
-            result.json = net.minecraft.text.Text.Serializer.toJson(text);
-            return result;
+            String json = net.minecraft.text.Text.Serializer.toJson(text);
+            return new Text_Latest(json);
+        }
+
+        public static String fixNullJson(@Argument("json") String json) {
+            // Some servers send null as the json string
+            return "null".equals(json) ? "{\"text\":\"\"}" : json;
         }
     }
 
@@ -394,58 +405,35 @@ public class CommonTypes {
     }
 
     @Polymorphic
-    @MessageVariant(minVersion = Protocols.V1_13)
+    @MessageVariant(minVersion = Protocols.V1_19)
     public static abstract class Particle_Latest implements Particle {
         @Registry(Registries.PARTICLE_TYPE)
-        @Type(Types.INT)
         public int particleId;
 
         @Polymorphic(stringValue = {"block", "falling_dust", "multiconnect:block_dust"})
-        @MessageVariant(minVersion = Protocols.V1_13)
+        @MessageVariant(minVersion = Protocols.V1_19)
         public static class BlockState extends Particle_Latest implements Particle.BlockState {
             @Registry(Registries.BLOCK_STATE)
-            @Introduce(compute = "computeBlockStateId")
             public int blockStateId;
-
-            public static int computeBlockStateId(@Argument("blockStateId") int blockStateId) {
-                return Blocks_1_12_2.convertToStateRegistryId(blockStateId);
-            }
         }
 
         @Polymorphic(stringValue = "item")
-        @MessageVariant(minVersion = Protocols.V1_13)
+        @MessageVariant(minVersion = Protocols.V1_19)
         public static class Item extends Particle_Latest implements Particle.Item {
-            @Introduce(compute = "computeStack")
             public CommonTypes.ItemStack stack;
-
-            public static CommonTypes.ItemStack computeStack(
-                    @Argument("itemId") int itemId,
-                    @Argument("damage") int damage,
-                    @FilledArgument(fromVersion = Protocols.V1_12_2, toVersion = Protocols.V1_13) Function<ItemStack_1_12_2, ItemStack_1_13_1> itemStackTranslator
-            ) {
-                var stack = new ItemStack_1_12_2.NonEmpty();
-                stack.itemId = (short) itemId;
-                stack.count = 1;
-                stack.damage = (short) damage;
-                return itemStackTranslator.apply(stack);
-            }
         }
 
         @Polymorphic(stringValue = "dust")
-        @MessageVariant(minVersion = Protocols.V1_13)
+        @MessageVariant(minVersion = Protocols.V1_19)
         public static class Dust extends Particle_Latest implements Particle.Dust {
-            @Introduce(doubleValue = 1)
             public float red;
-            @Introduce(doubleValue = 1)
             public float green;
-            @Introduce(doubleValue = 1)
             public float blue;
-            @Introduce(doubleValue = 1)
             public float scale;
         }
 
         @Polymorphic(stringValue = "dust_color_transition")
-        @MessageVariant(minVersion = Protocols.V1_13)
+        @MessageVariant(minVersion = Protocols.V1_19)
         public static class DustColorTransition extends Particle_Latest implements Particle.DustColorTransition {
             public float fromRed;
             public float fromGreen;
@@ -457,13 +445,13 @@ public class CommonTypes {
         }
 
         @Polymorphic(stringValue = "vibration")
-        @MessageVariant(minVersion = Protocols.V1_13)
+        @MessageVariant(minVersion = Protocols.V1_19)
         public static class Vibration extends Particle_Latest implements Particle.Vibration {
             public VibrationPath path;
         }
 
         @Polymorphic(otherwise = true)
-        @MessageVariant(minVersion = Protocols.V1_13)
+        @MessageVariant(minVersion = Protocols.V1_19)
         public static class Simple extends Particle_Latest implements Particle.Simple {
         }
     }

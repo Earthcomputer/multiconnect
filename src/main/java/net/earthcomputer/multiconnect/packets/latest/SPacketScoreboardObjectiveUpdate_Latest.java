@@ -8,6 +8,7 @@ import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketScoreboardObjectiveUpdate;
+import net.earthcomputer.multiconnect.packets.v1_18_2.Text_1_18_2;
 
 @MessageVariant
 public class SPacketScoreboardObjectiveUpdate_Latest implements SPacketScoreboardObjectiveUpdate {
@@ -34,7 +35,7 @@ public class SPacketScoreboardObjectiveUpdate_Latest implements SPacketScoreboar
         public ObjectiveType type;
 
         public static CommonTypes.Text computeValue(@Argument("value") String value) {
-            return CommonTypes.Text.createLiteral(value);
+            return Text_1_18_2.createLiteral(value);
         }
 
         public static ObjectiveType computeType(@Argument("type") String type) {

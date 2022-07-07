@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.impl;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.serialization.Dynamic;
@@ -14,6 +15,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.earthcomputer.multiconnect.debug.PacketReplay;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.SharedConstants;
@@ -24,6 +26,9 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.NbtTagSizeTracker;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.Property;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 
@@ -31,11 +36,14 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
+import java.util.Set;
 import java.util.function.IntUnaryOperator;
 import java.util.function.LongUnaryOperator;
 
@@ -149,6 +157,49 @@ public final class PacketIntrinsics {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T extends Comparable<T>> Set<BlockState> makeMulticonnectBlockStateSet(String... strings) {
+        var ret = ImmutableSet.<BlockState>builder();
+        List<String> invalidStates = null;
+        for (String string : strings) {
+            try {
+                int bracketIndex = string.indexOf('[');
+                String blockName;
+                if (bracketIndex == -1) {
+                    blockName = string;
+                } else {
+                    blockName = string.substring(0, bracketIndex);
+                }
+                Block block = Registry.BLOCK.getOrThrow(RegistryKey.of(Registry.BLOCK_KEY, new Identifier("multiconnect", blockName)));
+                if (bracketIndex == -1) {
+                    ret.add(block.getDefaultState());
+                } else {
+                    String stateString = string.substring(bracketIndex + 1, string.length() - 1);
+                    BlockState state = block.getDefaultState();
+                    StateManager<Block, BlockState> stateManager = block.getStateManager();
+                    for (String propertyString : stateString.split(",")) {
+                        String[] propertySplit = propertyString.split("=", 2);
+                        String propertyName = propertySplit[0];
+                        String propertyValue = propertySplit[1];
+                        Property<T> property = (Property<T>) stateManager.getProperty(propertyName);
+                        Objects.requireNonNull(property);
+                        state = state.with(property, property.parse(propertyValue).orElseThrow(() -> new IllegalArgumentException("Could not parse property " + propertyName + " with value " + propertyValue)));
+                    }
+                    ret.add(state);
+                }
+            } catch (Throwable e) {
+                if (invalidStates == null) {
+                    invalidStates = new ArrayList<>();
+                }
+                invalidStates.add(string);
+            }
+        }
+        if (invalidStates != null) {
+            throw new IllegalArgumentException("Could not parse multiconnect block states: " + invalidStates);
+        }
+        return ret.build();
+    }
+
     public static int getStateId(RegistryKey<Block> blockKey, int offset) {
         Block block = Registry.BLOCK.get(blockKey);
         if (block == null) {
@@ -187,6 +238,10 @@ public final class PacketIntrinsics {
             PacketSystem.Internals.setUserData(buf, userData);
             context.fireChannelRead(buf);
         }
+    }
+
+    public static void onPacketDeserialized(Object packet, boolean clientbound) {
+        PacketReplay.onPacketDeserialized(packet, clientbound);
     }
 
     public static int readVarInt(ByteBuf buf) {

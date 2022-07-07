@@ -11,6 +11,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.earthcomputer.multiconnect.ap.Argument;
+import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.GlobalData;
 import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.Introduce;
@@ -37,6 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 
 @MessageVariant(minVersion = Protocols.V1_16, maxVersion = Protocols.V1_18_2)
 public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
@@ -53,7 +55,7 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
     public static UUID computeSender(@Argument("text") CommonTypes.Text text) {
         MyText myText;
         try {
-            myText = JsonHelper.deserialize(GSON, text.json, MyText.class, false);
+            myText = JsonHelper.deserialize(GSON, text.getJson(), MyText.class, false);
         } catch (JsonParseException e) {
             return Util.NIL_UUID;
         }
@@ -108,15 +110,18 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
     @ReturnType(SPacketChatMessage.class)
     @Handler
     public static List<Object> handle(
-            @Argument("text") CommonTypes.Text text,
+            @Argument("text") CommonTypes.Text text_,
             @Argument("position") byte position,
             @Argument("sender") UUID sender,
+            @FilledArgument(fromVersion = Protocols.V1_18_2, toVersion = Protocols.V1_19) Function<Text_1_18_2, CommonTypes.Text_Latest> textTranslator,
             @GlobalData DynamicRegistryManager registryManager
     ) {
         if (registryManager == null) {
             // Some servers apparently send chat messages before the game join packet. We can't handle these anymore
             return new ArrayList<>(0);
         }
+
+        CommonTypes.Text text = textTranslator.apply((Text_1_18_2) text_);
 
         Registry<MessageType> messageTypeRegistry = registryManager.get(Registry.MESSAGE_TYPE_KEY);
         int systemId = messageTypeRegistry.getRawId(messageTypeRegistry.get(MessageType.SYSTEM));
@@ -136,7 +141,7 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
 
         MyText myText;
         try {
-            myText = JsonHelper.deserialize(GSON, text.json, MyText.class, false);
+            myText = JsonHelper.deserialize(GSON, text.getJson(), MyText.class, false);
         } catch (JsonParseException e) {
             return packets;
         }
@@ -170,17 +175,17 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
         var packet = new SPacketChatMessage();
         packet.signedContent = contentIndex == null || contentIndex >= myText.with.length
                 ? text
-                : new CommonTypes.Text(GSON.toJson(myText.with[contentIndex]));
+                : new CommonTypes.Text_Latest(GSON.toJson(myText.with[contentIndex]));
         packet.unsignedContent = Optional.empty();
         packet.messageType = messageType;
         packet.sender = sender;
         Integer senderIndex = getSenderIndex(myText);
         packet.displayName = senderIndex == null || senderIndex >= myText.with.length
-                ? new CommonTypes.Text("\"\"")
-                : new CommonTypes.Text(GSON.toJson(myText.with[senderIndex]));
+                ? new CommonTypes.Text_Latest("\"\"")
+                : new CommonTypes.Text_Latest(GSON.toJson(myText.with[senderIndex]));
         packet.teamDisplayName = messageType != teamId || myText.with.length == 0
                 ? Optional.empty()
-                : Optional.of(new CommonTypes.Text(GSON.toJson(myText.with[0])));
+                : Optional.of(new CommonTypes.Text_Latest(GSON.toJson(myText.with[0])));
         packet.timestamp = Instant.now().toEpochMilli();
         packet.salt = 0;
         packet.signature = new byte[0];

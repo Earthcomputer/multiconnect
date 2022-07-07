@@ -6,16 +6,22 @@ import com.google.common.cache.LoadingCache;
 import com.mojang.logging.LogUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntMaps;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.SharedConstants;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.Packet;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import org.jetbrains.annotations.Contract;
@@ -32,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -186,6 +194,12 @@ public class PacketSystem {
         return proxy.doesServerKnow(registry.getKey(), rawId) || proxy.doesServerKnowMulticonnect(key);
     }
 
+    public static boolean doesServerKnowBlockState(BlockState state) {
+        int rawId = Block.getRawIdFromState(state);
+        ProtocolClassProxy proxy = protocolClasses.get(ConnectionInfo.protocolVersion);
+        return proxy.doesServerKnowBlockState(rawId) || proxy.doesServerKnowBlockStateMulticonnect(state);
+    }
+
     public static int serverRawIdToClient(Registry<?> registry, int serverRawId) {
         return serverRawIdToClient(ConnectionInfo.protocolVersion, registry, serverRawId);
     }
@@ -266,6 +280,35 @@ public class PacketSystem {
         return protocolClasses.get(serverVersion).remapCIntBlockState(clientBlockStateId);
     }
 
+    private static final ReadWriteLock blockStateRegistryBitsLock = new ReentrantReadWriteLock();
+    private static final Int2IntMap blockStateRegistryBits = Int2IntMaps.synchronize(new Int2IntOpenHashMap());
+
+    public static int getServerBlockStateRegistryBits() {
+        blockStateRegistryBitsLock.readLock().lock();
+        try {
+            int result = blockStateRegistryBits.getOrDefault(ConnectionInfo.protocolVersion, -1);
+            if (result != -1) {
+                return -1;
+            }
+        } finally {
+            blockStateRegistryBitsLock.readLock().unlock();
+        }
+        blockStateRegistryBitsLock.writeLock().lock();
+        try {
+            return blockStateRegistryBits.computeIfAbsent(ConnectionInfo.protocolVersion, k -> {
+                int count = 0;
+                for (BlockState state : Block.STATE_IDS) {
+                    if (doesServerKnowBlockState(state)) {
+                        count++;
+                    }
+                }
+                return MathHelper.ceilLog2(count);
+            });
+        } finally {
+            blockStateRegistryBitsLock.writeLock().unlock();
+        }
+    }
+
     public static class Internals {
         private static final LoadingCache<ByteBuf, TypedMap> bufUserData = CacheBuilder.newBuilder().weakKeys().build(CacheLoader.from(TypedMap::new));
 
@@ -327,6 +370,8 @@ public class PacketSystem {
         private final MethodHandle sendToServer;
         private final MethodHandle doesServerKnow;
         private final MethodHandle doesServerKnowMulticonnect;
+        private final MethodHandle doesServerKnowBlockState;
+        private final MethodHandle doesServerKnowBlockStateMulticonnect;
         private final MethodHandle remapCInt;
         private final MethodHandle remapSInt;
         private final MethodHandle remapCIdentifier;
@@ -341,6 +386,8 @@ public class PacketSystem {
             this.sendToServer = findMethodHandle(clazz, "sendToServer", void.class, Object.class, int.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
             this.doesServerKnow = findMethodHandle(clazz, "doesServerKnow", boolean.class, RegistryKey.class, int.class);
             this.doesServerKnowMulticonnect = findMethodHandle(clazz, "doesServerKnowMulticonnect", boolean.class, RegistryKey.class);
+            this.doesServerKnowBlockState = findMethodHandle(clazz, "doesServerKnowBlockState", boolean.class, int.class);
+            this.doesServerKnowBlockStateMulticonnect = findMethodHandle(clazz, "doesServerKnowBlockStateMulticonnect", boolean.class, BlockState.class);
             this.remapCInt = findMethodHandle(clazz, "remapCInt", int.class, RegistryKey.class, int.class);
             this.remapSInt = findMethodHandle(clazz, "remapSInt", int.class, RegistryKey.class, int.class);
             this.remapCIdentifier = findMethodHandle(clazz, "remapCIdentifier", Identifier.class, RegistryKey.class, Identifier.class);
@@ -392,6 +439,22 @@ public class PacketSystem {
         boolean doesServerKnowMulticonnect(RegistryKey<?> value) {
             try {
                 return (Boolean) doesServerKnowMulticonnect.invoke(value);
+            } catch (Throwable e) {
+                throw PacketIntrinsics.sneakyThrow(e);
+            }
+        }
+
+        boolean doesServerKnowBlockState(int newId) {
+            try {
+                return (Boolean) doesServerKnowBlockState.invoke(newId);
+            } catch (Throwable e) {
+                throw PacketIntrinsics.sneakyThrow(e);
+            }
+        }
+
+        boolean doesServerKnowBlockStateMulticonnect(BlockState value) {
+            try {
+                return (Boolean) doesServerKnowBlockStateMulticonnect.invoke(value);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }

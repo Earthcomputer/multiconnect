@@ -8,6 +8,7 @@ import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketTeam;
+import net.earthcomputer.multiconnect.packets.v1_18_2.Text_1_18_2;
 
 import java.util.List;
 
@@ -44,15 +45,15 @@ public class SPacketTeam_Latest implements SPacketTeam {
         public List<String> entities;
 
         public static CommonTypes.Text computeDisplayName(@Argument("displayName") String displayName) {
-            return CommonTypes.Text.createLiteral(displayName);
+            return Text_1_18_2.createLiteral(displayName);
         }
 
         public static CommonTypes.Text computePrefix(@Argument("prefix") String prefix) {
-            return CommonTypes.Text.createLiteral(prefix);
+            return Text_1_18_2.createLiteral(prefix);
         }
 
         public static CommonTypes.Text computeSuffix(@Argument("suffix") String suffix) {
-            return CommonTypes.Text.createLiteral(suffix);
+            return Text_1_18_2.createLiteral(suffix);
         }
 
         public static CommonTypes.Formatting computeColor(@Argument("color") byte color) {
@@ -84,15 +85,15 @@ public class SPacketTeam_Latest implements SPacketTeam {
         public CommonTypes.Text suffix;
 
         public static CommonTypes.Text computeDisplayName(@Argument("displayName") String displayName) {
-            return CommonTypes.Text.createLiteral(displayName);
+            return Text_1_18_2.createLiteral(displayName);
         }
 
         public static CommonTypes.Text computePrefix(@Argument("prefix") String prefix) {
-            return CommonTypes.Text.createLiteral(prefix);
+            return Text_1_18_2.createLiteral(prefix);
         }
 
         public static CommonTypes.Text computeSuffix(@Argument("suffix") String suffix) {
-            return CommonTypes.Text.createLiteral(suffix);
+            return Text_1_18_2.createLiteral(suffix);
         }
 
         public static CommonTypes.Formatting computeColor(@Argument("color") byte color) {

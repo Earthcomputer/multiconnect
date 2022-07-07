@@ -4,6 +4,7 @@ import net.earthcomputer.multiconnect.connect.IConnectScreen;
 import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.network.ClientConnection;
+import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -20,10 +21,6 @@ public abstract class MixinConnectScreen implements IConnectScreen {
 
     @Accessor
     @Override
-    public abstract boolean isConnectingCancelled();
-
-    @Accessor
-    @Override
     public abstract Screen getParent();
 
     @Override
@@ -35,10 +32,19 @@ public abstract class MixinConnectScreen implements IConnectScreen {
     private void onTick(CallbackInfo ci) {
         ClientConnection versionRequestConnection = this.versionRequestConnection.get();
         if (versionRequestConnection != null) {
-            if (versionRequestConnection.isOpen())
+            if (versionRequestConnection.isOpen()) {
                 versionRequestConnection.tick();
-            else
+            } else {
                 versionRequestConnection.handleDisconnection();
+            }
+        }
+    }
+
+    @Inject(method = "method_19800", remap = false, at = @At("HEAD"))
+    private void onDisconnectButtonPressed(CallbackInfo ci) {
+        ClientConnection versionRequestConnection = this.versionRequestConnection.get();
+        if (versionRequestConnection != null) {
+            versionRequestConnection.disconnect(Text.translatable("connect.aborted"));
         }
     }
 }

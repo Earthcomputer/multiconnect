@@ -42,14 +42,14 @@ public class SPacketPaintingSpawn_1_18_2 implements SPacketPaintingSpawn {
     ) {
         List<Object> packets = new ArrayList<>(2);
 
-        Direction direction = Direction.byId(self.direction);
+        Direction direction = Direction.fromHorizontal(self.direction);
 
         {
             var packet = new SPacketEntitySpawn_Latest();
             packet.entityId = self.entityId;
             packet.uuid = self.uuid;
             packet.type = paintingId;
-            packet.data = self.direction;
+            packet.data = direction.getId();
             var mcPos = self.pos.toMinecraft();
             packet.x = mcPos.getX() + 0.5 - 0.46875 * direction.getOffsetX();
             packet.y = mcPos.getY() + 0.5;

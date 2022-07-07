@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.packets.latest;
 
+import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Dynamic;
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.Datafix;
@@ -25,6 +26,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.world.World;
+import org.slf4j.Logger;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +34,8 @@ import java.util.function.Consumer;
 
 @MessageVariant(minVersion = Protocols.V1_19)
 public class SPacketGameJoin_Latest implements SPacketGameJoin {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     @Type(Types.INT)
     public int entityId;
     public boolean isHardcore;
@@ -58,7 +62,8 @@ public class SPacketGameJoin_Latest implements SPacketGameJoin {
 
     public static Identifier computeDimensionType(
             @Argument("registryManager") NbtCompound registryManager,
-            @Argument("dimensionType") NbtCompound dimensionType
+            @Argument("dimensionType") NbtCompound dimensionType,
+            @Argument("dimension") Identifier dimensionName
     ) {
         NbtCompound updatedDimType = (NbtCompound) MulticonnectDFU.FIXER.update(
                 MulticonnectDFU.DIMENSION,
@@ -80,16 +85,60 @@ public class SPacketGameJoin_Latest implements SPacketGameJoin {
             return World.OVERWORLD.getValue();
         }
         NbtList dimTypeValues = dimensionTypes.getList("value", NbtElement.COMPOUND_TYPE);
+
+        Identifier matchedDimension = World.OVERWORLD.getValue();
+        int maxScore = -1;
         for (int i = 0; i < dimTypeValues.size(); i++) {
             NbtCompound dimension = dimTypeValues.getCompound(i);
             if (!dimension.contains("name", NbtElement.STRING_TYPE) || !dimension.contains("element", NbtElement.COMPOUND_TYPE)) {
                 continue;
             }
-            if (dimension.getCompound("element").equals(updatedDimType)) {
-                return new Identifier(dimension.getString("name"));
+            int score = matchDimensionType(dimension.getCompound("element"), updatedDimType);
+            String name = dimension.getString("name");
+            if (name.equals(dimensionName.toString())) {
+                score += 90;
+            }
+            if (score > maxScore) {
+                maxScore = score;
+                matchedDimension = new Identifier(name);
             }
         }
-        return World.OVERWORLD.getValue();
+        if (maxScore < 0) {
+            LOGGER.error("Failed to find a matching dimension type for {}", updatedDimType);
+        }
+        return matchedDimension;
+    }
+
+    public static int matchDimensionType(NbtCompound a, NbtCompound b) {
+        // match height first, it's the most important
+        if (a.getInt("height") != b.getInt("height")) {
+            return -101;
+        }
+        if (a.getInt("min_y") != b.getInt("min_y")) {
+            return -101;
+        }
+
+        int score = 0;
+
+        // visual effects have a high score, but don't need to disconnect the client if they don't match
+        if (a.getBoolean("has_skylight") == b.getBoolean("has_skylight")) {
+            score += 100;
+        }
+        score += (int) (Math.abs(a.getFloat("ambient_light") - b.getFloat("ambient_light")) * 100);
+
+        if (a.getString("effects").equals(b.getString("effects"))) {
+            score += 100;
+        }
+
+        // some nice-to-haves
+        if (a.getBoolean("has_ceiling") == b.getBoolean("has_ceiling")) {
+            score += 20;
+        }
+        if (a.getString("infiniburn").equals(b.getString("infiniburn"))) {
+            score += 20;
+        }
+
+        return score;
     }
 
     @PartialHandler

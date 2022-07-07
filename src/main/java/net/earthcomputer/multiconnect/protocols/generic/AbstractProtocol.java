@@ -34,15 +34,11 @@ public abstract class AbstractProtocol {
         this.protocolVersion = protocolVersion;
     }
 
-    public void setup(boolean resourceReload) {
+    public void setup() {
         PacketSystem.connect();
         revertCollisionBoxes();
-        if (!resourceReload) {
-            DataTrackerManager.onConnectToServer();
-        }
-        if (!resourceReload) {
-            AssetDownloader.reloadLanguages();
-        }
+        DataTrackerManager.onConnectToServer();
+        AssetDownloader.reloadLanguages();
         markChangedCollisionBoxes();
         ((MinecraftClientAccessor) MinecraftClient.getInstance()).getSearchManager().reload(MinecraftClient.getInstance().getResourceManager());
     }

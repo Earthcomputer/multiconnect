@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.impl.DebugUtils;
+import net.earthcomputer.multiconnect.debug.DebugUtils;
 import net.earthcomputer.multiconnect.protocols.generic.DataTrackerManager;
 import net.earthcomputer.multiconnect.protocols.generic.IDataTracker;
 import net.minecraft.entity.Entity;

@@ -5,8 +5,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
-import net.earthcomputer.multiconnect.impl.DebugUtils;
-import net.earthcomputer.multiconnect.impl.TestingAPI;
+import net.earthcomputer.multiconnect.debug.DebugUtils;
+import net.earthcomputer.multiconnect.debug.PacketRecorder;
+import net.earthcomputer.multiconnect.debug.TestingAPI;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
 import net.earthcomputer.multiconnect.protocols.generic.MulticonnectClientboundTranslator;
 import net.earthcomputer.multiconnect.protocols.generic.MulticonnectServerboundTranslator;
@@ -36,16 +37,23 @@ public abstract class MixinClientConnection {
     @Inject(method = "setState", at = @At("HEAD"))
     private void onSetState(NetworkState state, CallbackInfo ci) {
         // Singleplayer doesnt include encoding
-        if (state == NetworkState.PLAY && !MinecraftClient.getInstance().isIntegratedServerRunning() && !DebugUtils.SKIP_TRANSLATION) {
-            channel.pipeline().addBefore("encoder", "multiconnect_serverbound_translator", new MulticonnectServerboundTranslator());
+        boolean enableTranslation = !MinecraftClient.getInstance().isIntegratedServerRunning() && !DebugUtils.SKIP_TRANSLATION;
+
+        if (enableTranslation) {
+            PacketRecorder.install(channel);
+        }
+
+        if (channel.pipeline().context("multiconnect_serverbound_translator") != null) {
+            channel.pipeline().remove("multiconnect_serverbound_translator");
+        }
+        if (channel.pipeline().context("multiconnect_clientbound_translator") != null) {
+            channel.pipeline().remove("multiconnect_clientbound_translator");
+        }
+
+        if (state == NetworkState.PLAY && enableTranslation) {
+            String serverboundBefore = channel.pipeline().context("multiconnect_serverbound_logger") != null ? "multiconnect_serverbound_logger" : "encoder";
+            channel.pipeline().addBefore(serverboundBefore, "multiconnect_serverbound_translator", new MulticonnectServerboundTranslator());
             channel.pipeline().addBefore("decoder", "multiconnect_clientbound_translator", new MulticonnectClientboundTranslator());
-        } else {
-            if (channel.pipeline().context("multiconnect_serverbound_translator") != null) {
-                channel.pipeline().remove("multiconnect_serverbound_translator");
-            }
-            if (channel.pipeline().context("multiconnect_clientbound_translator") != null) {
-                channel.pipeline().remove("multiconnect_clientbound_translator");
-            }
         }
     }
 

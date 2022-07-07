@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.packets.latest;
 
+import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Dynamic;
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.GlobalData;
@@ -23,12 +24,15 @@ import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
+import org.slf4j.Logger;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 
 @MessageVariant(minVersion = Protocols.V1_19)
 public class SPacketPlayerRespawn_Latest implements SPacketPlayerRespawn {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     @Introduce(compute = "computeDimension")
     public Identifier dimension;
     public Identifier dimensionId;
@@ -46,6 +50,7 @@ public class SPacketPlayerRespawn_Latest implements SPacketPlayerRespawn {
 
     public static Identifier computeDimension(
             @Argument("dimension") NbtCompound dimension,
+            @Argument("dimensionId") Identifier dimensionId,
             @GlobalData DynamicRegistryManager registryManager
     ) {
         NbtCompound updatedDimension = (NbtCompound) MulticonnectDFU.FIXER.update(
@@ -61,13 +66,26 @@ public class SPacketPlayerRespawn_Latest implements SPacketPlayerRespawn {
                 ).result().orElseThrow().getFirst()
         ).result().orElseThrow();
         Registry<DimensionType> dimensionTypeRegistry = registryManager.get(Registry.DIMENSION_TYPE_KEY);
+
+        Identifier matchedDimension = World.OVERWORLD.getValue();
+        int maxScore = -1;
+
         for (DimensionType dimType : dimensionTypeRegistry) {
             NbtCompound candidate = (NbtCompound) DimensionType.CODEC.encodeStart(NbtOps.INSTANCE, dimType).result().orElseThrow();
-            if (candidate.equals(updatedDimension)) {
-                return dimensionTypeRegistry.getId(dimType);
+            int score = SPacketGameJoin_Latest.matchDimensionType(candidate, updatedDimension);
+            Identifier candidateId = dimensionTypeRegistry.getId(dimType);
+            if (dimensionId.equals(candidateId)) {
+                score += 90;
+            }
+            if (score > maxScore) {
+                maxScore = score;
+                matchedDimension = candidateId;
             }
         }
-        return World.OVERWORLD.getValue();
+        if (maxScore < 0) {
+            LOGGER.error("Failed to find a matching dimension type for {}", dimensionId);
+        }
+        return matchedDimension;
     }
 
     @PartialHandler

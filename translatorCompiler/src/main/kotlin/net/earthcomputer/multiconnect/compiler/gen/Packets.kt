@@ -4,6 +4,7 @@ import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.MAP
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.NETWORK_HANDLER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPED_MAP
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.FileLocations
@@ -23,6 +24,7 @@ import net.earthcomputer.multiconnect.compiler.hasName
 import net.earthcomputer.multiconnect.compiler.messageVariantInfo
 import net.earthcomputer.multiconnect.compiler.node.BinaryExpressionOp
 import net.earthcomputer.multiconnect.compiler.node.CastOp
+import net.earthcomputer.multiconnect.compiler.node.CstBoolOp
 import net.earthcomputer.multiconnect.compiler.node.CstIntOp
 import net.earthcomputer.multiconnect.compiler.node.CstStringOp
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
@@ -179,7 +181,15 @@ private fun ProtocolCompiler.generateRead(group: MessageInfo?, packet: MessageVa
         currentProtocolId = protocolId
     }
 
-    return ret
+    return McNode(StmtListOp,
+        ret,
+        McNode(PopStmtOp,
+            McNode(FunctionCallOp(PACKET_INTRINSICS, "onPacketDeserialized", listOf(packet.toMcType(), McType.BOOLEAN), McType.VOID, true),
+                McNode(LoadVariableOp(protocolVariable(protocolsSubset.first().id), packet.toMcType())),
+                McNode(CstBoolOp(clientbound)),
+            ),
+        )
+    )
 }
 
 private fun ProtocolCompiler.generateFixRegistries(group: MessageInfo?, packet: MessageVariantInfo, protocolsSubset: List<ProtocolEntry>, clientbound: Boolean): McNode {

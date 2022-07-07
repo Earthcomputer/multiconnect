@@ -1,8 +1,10 @@
 package net.earthcomputer.multiconnect.mixin.connect;
 
+import net.earthcomputer.multiconnect.debug.PacketReplay;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.impl.DebugUtils;
+import net.earthcomputer.multiconnect.debug.DebugUtils;
 import net.earthcomputer.multiconnect.impl.MulticonnectConfig;
+import net.earthcomputer.multiconnect.debug.PacketRecorder;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.v1_18_2.SignedChatScreen;
 import net.minecraft.SharedConstants;
@@ -23,9 +25,11 @@ public abstract class MixinMinecraftClient {
         if (ConnectionInfo.protocol != null) {
             ConnectionInfo.protocol.disable();
         }
+        PacketRecorder.onDisconnect();
+        PacketReplay.stop();
         ConnectionInfo.protocolVersion = SharedConstants.getGameVersion().getProtocolVersion();
         ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
-        ConnectionInfo.protocol.setup(false);
+        ConnectionInfo.protocol.setup();
     }
 
     @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)
