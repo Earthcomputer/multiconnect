@@ -466,22 +466,35 @@ public class CommonTypes {
         public int ticks;
     }
 
+    @Message
+    public interface PositionSource {
+        @Message
+        interface Block {
+        }
+
+        @Message
+        interface Entity {
+        }
+    }
+
     @Polymorphic
-    @MessageVariant
-    public static abstract class PositionSource {
+    @MessageVariant(minVersion = Protocols.V1_19)
+    public static abstract class PositionSource_Latest implements PositionSource {
         @Registry(Registries.POSITION_SOURCE_TYPE)
         public Identifier type;
 
         @Polymorphic(stringValue = "block")
-        @MessageVariant
-        public static class Block extends PositionSource {
+        @MessageVariant(minVersion = Protocols.V1_19)
+        public static class Block extends PositionSource_Latest implements PositionSource.Block {
             public CommonTypes.BlockPos pos;
         }
 
         @Polymorphic(stringValue = "entity")
-        @MessageVariant
-        public static class Entity extends PositionSource {
+        @MessageVariant(minVersion = Protocols.V1_19)
+        public static class Entity extends PositionSource_Latest implements PositionSource.Entity {
             public int entityId;
+            @Introduce(doubleValue = 0)
+            public float yOffset;
         }
     }
 }
