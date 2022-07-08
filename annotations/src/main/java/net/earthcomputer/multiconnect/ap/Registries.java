@@ -1,6 +1,7 @@
 package net.earthcomputer.multiconnect.ap;
 
 public enum Registries {
+    BANNER_PATTERN,
     BLOCK,
     BLOCK_ENTITY_TYPE,
     BLOCK_STATE(false),
@@ -12,9 +13,11 @@ public enum Registries {
     FLUID,
     FROG_VARIANT,
     GAME_EVENT,
+    INSTRUMENT,
     ITEM,
     PAINTING_VARIANT,
     PARTICLE_TYPE,
+    POINT_OF_INTEREST_TYPE,
     POSITION_SOURCE_TYPE,
     RECIPE_SERIALIZER,
     SCREEN_HANDLER("MENU_KEY"),

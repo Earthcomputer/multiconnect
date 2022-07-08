@@ -1,9 +1,11 @@
 package net.earthcomputer.multiconnect.packets.latest;
 
+import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.ap.Argument;
 import net.earthcomputer.multiconnect.ap.CustomFix;
 import net.earthcomputer.multiconnect.ap.DefaultConstruct;
+import net.earthcomputer.multiconnect.ap.GlobalData;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
@@ -12,16 +14,20 @@ import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.SPacketSynchronizeTags;
 import net.earthcomputer.multiconnect.protocols.generic.TagLoader;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @MessageVariant(minVersion = Protocols.V1_17)
 public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
     @Introduce(compute = "computeGroups")
+    @CustomFix(value = "fixGroups", recursive = true)
     public List<Group> groups;
 
     public static List<Group> computeGroups(
@@ -48,6 +54,36 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
         return ret;
     }
 
+    private static final Map<Identifier, Supplier<Group>> REQUIRED_GROUPS = ImmutableMap.<Identifier, Supplier<Group>>builder()
+        .put(new Identifier("block"), BlockGroup::create)
+        .put(new Identifier("item"), ItemGroup::create)
+        .put(new Identifier("fluid"), FluidGroup::create)
+        .put(new Identifier("entity_type"), EntityTypeGroup::create)
+        .put(new Identifier("game_event"), GameEventGroup::create)
+        .put(new Identifier("instrument"), InstrumentGroup::create)
+        .put(new Identifier("painting_variant"), PaintingVariantGroup::create)
+        .put(new Identifier("banner_pattern"), BannerPatternGroup::create)
+        .put(new Identifier("point_of_interest_type"), PointOfInterestTypeGroup::create)
+        .put(new Identifier("cat_variant"), CatVariantGroup::create)
+        .put(new Identifier("worldgen/biome"), BiomeGroup::create)
+        .build();
+
+    public static List<Group> fixGroups(List<Group> groups) {
+        var groupsMap = groups.stream().collect(Collectors.groupingBy(group -> group.id));
+        List<Group> ret = new ArrayList<>(REQUIRED_GROUPS.size());
+        REQUIRED_GROUPS.forEach((id, supplier) -> {
+            List<Group> group = groupsMap.get(id);
+            if (group == null) {
+                Group g = supplier.get();
+                g.id = id;
+                ret.add(g);
+            } else {
+                ret.addAll(group);
+            }
+        });
+        return ret;
+    }
+
     @Polymorphic
     @MessageVariant
     public static abstract class Group {
@@ -60,6 +96,12 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
         @CustomFix("fixTags")
         public List<Tag> tags;
 
+        private static BlockGroup create() {
+            BlockGroup ret = new BlockGroup();
+            ret.tags = new ArrayList<>();
+            return ret;
+        }
+
         public static List<Tag> fixTags(List<Tag> tags) {
             return doFixTags(Registry.BLOCK, TagLoader::blocks, tags);
         }
@@ -70,6 +112,12 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
     public static class ItemGroup extends Group {
         @CustomFix("fixTags")
         public List<Tag> tags;
+
+        private static ItemGroup create() {
+            ItemGroup ret = new ItemGroup();
+            ret.tags = new ArrayList<>();
+            return ret;
+        }
 
         public static List<Tag> fixTags(List<Tag> tags) {
             return doFixTags(Registry.ITEM, TagLoader::items, tags);
@@ -82,6 +130,12 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
         @CustomFix("fixTags")
         public List<Tag> tags;
 
+        private static FluidGroup create() {
+            FluidGroup ret = new FluidGroup();
+            ret.tags = new ArrayList<>();
+            return ret;
+        }
+
         public static List<Tag> fixTags(List<Tag> tags) {
             return doFixTags(Registry.FLUID, TagLoader::fluids, tags);
         }
@@ -92,6 +146,12 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
     public static class EntityTypeGroup extends Group {
         @CustomFix("fixTags")
         public List<Tag> tags;
+
+        private static EntityTypeGroup create() {
+            EntityTypeGroup ret = new EntityTypeGroup();
+            ret.tags = new ArrayList<>();
+            return ret;
+        }
 
         public static List<Tag> fixTags(List<Tag> tags) {
             return doFixTags(Registry.ENTITY_TYPE, TagLoader::entityTypes, tags);
@@ -104,8 +164,116 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
         @CustomFix("fixTags")
         public List<Tag> tags;
 
+        private static GameEventGroup create() {
+            GameEventGroup ret = new GameEventGroup();
+            ret.tags = new ArrayList<>();
+            return ret;
+        }
+
         public static List<Tag> fixTags(List<Tag> tags) {
             return doFixTags(Registry.GAME_EVENT, TagLoader::gameEvents, tags);
+        }
+    }
+
+    @Polymorphic(stringValue = "instrument")
+    @MessageVariant
+    public static class InstrumentGroup extends Group {
+        @CustomFix("fixTags")
+        public List<Tag> tags;
+
+        private static InstrumentGroup create() {
+            InstrumentGroup ret = new InstrumentGroup();
+            ret.tags = new ArrayList<>();
+            return ret;
+        }
+
+        public static List<Tag> fixTags(List<Tag> tags) {
+            return doFixTags(Registry.INSTRUMENT, TagLoader::instruments, tags);
+        }
+    }
+
+    @Polymorphic(stringValue = "painting_variant")
+    @MessageVariant
+    public static class PaintingVariantGroup extends Group {
+        @CustomFix("fixTags")
+        public List<Tag> tags;
+
+        private static PaintingVariantGroup create() {
+            PaintingVariantGroup ret = new PaintingVariantGroup();
+            ret.tags = new ArrayList<>();
+            return ret;
+        }
+
+        public static List<Tag> fixTags(List<Tag> tags) {
+            return doFixTags(Registry.PAINTING_VARIANT, TagLoader::paintingVariants, tags);
+        }
+    }
+
+    @Polymorphic(stringValue = "banner_pattern")
+    @MessageVariant
+    public static class BannerPatternGroup extends Group {
+        @CustomFix("fixTags")
+        public List<Tag> tags;
+
+        private static BannerPatternGroup create() {
+            BannerPatternGroup ret = new BannerPatternGroup();
+            ret.tags = new ArrayList<>();
+            return ret;
+        }
+
+        public static List<Tag> fixTags(List<Tag> tags) {
+            return doFixTags(Registry.BANNER_PATTERN, TagLoader::bannerPatterns, tags);
+        }
+    }
+
+    @Polymorphic(stringValue = "point_of_interest_type")
+    @MessageVariant
+    public static class PointOfInterestTypeGroup extends Group {
+        @CustomFix("fixTags")
+        public List<Tag> tags;
+
+        private static PointOfInterestTypeGroup create() {
+            PointOfInterestTypeGroup ret = new PointOfInterestTypeGroup();
+            ret.tags = new ArrayList<>();
+            return ret;
+        }
+
+        public static List<Tag> fixTags(List<Tag> tags) {
+            return doFixTags(Registry.POINT_OF_INTEREST_TYPE, TagLoader::pointOfInterestTypes, tags);
+        }
+    }
+
+    @Polymorphic(stringValue = "cat_variant")
+    @MessageVariant
+    public static class CatVariantGroup extends Group {
+        @CustomFix("fixTags")
+        public List<Tag> tags;
+
+        private static CatVariantGroup create() {
+            CatVariantGroup ret = new CatVariantGroup();
+            ret.tags = new ArrayList<>();
+            return ret;
+        }
+
+        public static List<Tag> fixTags(List<Tag> tags) {
+            return doFixTags(Registry.CAT_VARIANT, TagLoader::catVariants, tags);
+        }
+    }
+
+    @Polymorphic(stringValue = "worldgen/biome")
+    @MessageVariant
+    public static class BiomeGroup extends Group {
+        @CustomFix("fixTags")
+        public List<Tag> tags;
+
+        private static BiomeGroup create() {
+            BiomeGroup ret = new BiomeGroup();
+            ret.tags = new ArrayList<>();
+            return ret;
+        }
+
+        public static List<Tag> fixTags(List<Tag> tags, @GlobalData DynamicRegistryManager registryManager) {
+            return doFixTags(null, () -> TagLoader.biomes(registryManager), tags);
         }
     }
 
@@ -116,15 +284,17 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
     }
 
     private static List<Tag> doFixTags(
-            Registry<?> registry,
+            @Nullable Registry<?> registry,
             Supplier<Map<Identifier, IntList>> vanillaSupplier,
             List<Tag> tags
     ) {
         Map<Identifier, IntList> vanillaTags = vanillaSupplier.get();
         for (Tag tag : tags) {
             vanillaTags.remove(tag.name);
-            for (int i = 0; i < tag.entries.size(); i++) {
-                tag.entries.set(i, PacketSystem.serverRawIdToClient(registry, tag.entries.getInt(i)));
+            if (registry != null) {
+                for (int i = 0; i < tag.entries.size(); i++) {
+                    tag.entries.set(i, PacketSystem.serverRawIdToClient(registry, tag.entries.getInt(i)));
+                }
             }
         }
         vanillaTags.forEach((name, entries) -> tags.add(new Tag(name, entries)));

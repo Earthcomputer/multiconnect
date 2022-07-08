@@ -155,15 +155,37 @@ private fun ProtocolCompiler.fixRegistriesWithType(
     clientbound: Boolean,
     paramResolver: ParamResolver,
 ): McNode {
-    val customFixInfo = field.getCustomFixInfo(clientbound)
+    val customFixInfo = field.getCustomFixInfo(clientbound).takeIf { type == field.realType }
     if (customFixInfo != null) {
-        return generateFunctionCallGraph(
+        val customFixNode = generateFunctionCallGraph(
             ownerType.messageVariantInfo.findFunction(customFixInfo.value),
             McNode(LoadVariableOp(varId, type)),
             paramResolver = paramResolver
         )
+        return if (customFixInfo.recursive) {
+            val fixedVarId = VariableId.create()
+            McNode(StmtListOp,
+                McNode(StoreVariableStmtOp(fixedVarId, type, true), customFixNode),
+                McNode(ReturnStmtOp(type),
+                    fixRegistriesWithTypeInner(ownerType, field, type, fixedVarId, clientbound, paramResolver)
+                )
+            )
+        } else {
+            customFixNode
+        }
     }
 
+    return fixRegistriesWithTypeInner(ownerType, field, type, varId, clientbound, paramResolver)
+}
+
+private fun ProtocolCompiler.fixRegistriesWithTypeInner(
+    ownerType: McType,
+    field: FieldType,
+    type: McType,
+    varId: VariableId,
+    clientbound: Boolean,
+    paramResolver: ParamResolver
+): McNode {
     if (type.isOptional) {
         val functionType = McType.DeclaredType("java.util.function.Function")
         val isOptional = (type as McType.DeclaredType).name == OPTIONAL

@@ -12,6 +12,7 @@ import net.minecraft.resource.VanillaDataPackProvider;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Util;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import org.jetbrains.annotations.Contract;
@@ -117,6 +118,12 @@ public final class TagLoader {
     private static final List<Tag<Identifier>> FLUIDS = loadTags(Registry.FLUID_KEY);
     private static final List<Tag<Identifier>> ENTITY_TYPES = loadTags(Registry.ENTITY_TYPE_KEY);
     private static final List<Tag<Identifier>> GAME_EVENTS = loadTags(Registry.GAME_EVENT_KEY);
+    private static final List<Tag<Identifier>> INSTRUMENTS = loadTags(Registry.INSTRUMENT_KEY);
+    private static final List<Tag<Identifier>> PAINTING_VARIANTS = loadTags(Registry.PAINTING_VARIANT_KEY);
+    private static final List<Tag<Identifier>> BANNER_PATTERNS = loadTags(Registry.BANNER_PATTERN_KEY);
+    private static final List<Tag<Identifier>> POINT_OF_INTEREST_TYPES = loadTags(Registry.POINT_OF_INTEREST_TYPE_KEY);
+    private static final List<Tag<Identifier>> CAT_VARIANTS = loadTags(Registry.CAT_VARIANT_KEY);
+    private static final List<Tag<Identifier>> BIOMES = loadTags(Registry.BIOME_KEY);
 
     @Contract("-> new")
     public static Map<Identifier, IntList> blocks() {
@@ -141,6 +148,36 @@ public final class TagLoader {
     @Contract("-> new")
     public static Map<Identifier, IntList> gameEvents() {
         return convertTags(Registry.GAME_EVENT, GAME_EVENTS);
+    }
+
+    @Contract("-> new")
+    public static Map<Identifier, IntList> instruments() {
+        return convertTags(Registry.INSTRUMENT, INSTRUMENTS);
+    }
+
+    @Contract("-> new")
+    public static Map<Identifier, IntList> paintingVariants() {
+        return convertTags(Registry.PAINTING_VARIANT, PAINTING_VARIANTS);
+    }
+
+    @Contract("-> new")
+    public static Map<Identifier, IntList> bannerPatterns() {
+        return convertTags(Registry.BANNER_PATTERN, BANNER_PATTERNS);
+    }
+
+    @Contract("-> new")
+    public static Map<Identifier, IntList> pointOfInterestTypes() {
+        return convertTags(Registry.POINT_OF_INTEREST_TYPE, POINT_OF_INTEREST_TYPES);
+    }
+
+    @Contract("-> new")
+    public static Map<Identifier, IntList> catVariants() {
+        return convertTags(Registry.CAT_VARIANT, CAT_VARIANTS);
+    }
+
+    @Contract("_ -> new")
+    public static Map<Identifier, IntList> biomes(DynamicRegistryManager registryManager) {
+        return convertTags(registryManager.get(Registry.BIOME_KEY), BIOMES);
     }
 
     @Contract("_, _ -> new")
