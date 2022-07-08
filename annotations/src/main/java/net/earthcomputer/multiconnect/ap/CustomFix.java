@@ -11,5 +11,6 @@ import java.lang.annotation.Target;
 @Repeatable(CustomFixes.class)
 public @interface CustomFix {
     String value();
+    boolean recursive() default false;
     Introduce.Direction direction() default Introduce.Direction.AUTO;
 }
