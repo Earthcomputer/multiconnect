@@ -7,6 +7,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.MessageToByteEncoder;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
+import net.earthcomputer.multiconnect.impl.MulticonnectConfig;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
@@ -36,16 +37,13 @@ import java.util.zip.GZIPOutputStream;
 
 public final class PacketRecorder {
     private static final Logger LOGGER = LogUtils.getLogger();
-    public static final boolean ENABLED = Boolean.getBoolean("multiconnect.enablePacketRecorder");
     public static final int VERSION = 1;
-
     public static final int CLIENTBOUND_PACKET = 0;
     public static final int SERVERBOUND_PACKET = 1;
     public static final int PLAYER_POSITION = 2;
     public static final int TICK = 3;
     public static final int NETWORK_STATE = 4;
     public static final int DISCONNECTED = 255;
-
     private static final Object LOCK = new Object();
     private static DataOutputStream stream;
     private static boolean hasThrownError = false;
@@ -53,8 +51,12 @@ public final class PacketRecorder {
     private PacketRecorder() {
     }
 
+    public static boolean isEnabled(){
+        return (Boolean.getBoolean("multiconnect.enablePacketRecorder") || Boolean.TRUE.equals(MulticonnectConfig.INSTANCE.enablePacketRecorder));
+    }
+
     public static void onConnect() {
-        if (!ENABLED) {
+        if (!isEnabled()) {
             return;
         }
 
@@ -124,7 +126,7 @@ public final class PacketRecorder {
     }
 
     public static void onDisconnect() {
-        if (!ENABLED) {
+        if (!isEnabled()) {
             return;
         }
         synchronized (LOCK) {
@@ -182,7 +184,7 @@ public final class PacketRecorder {
     }
 
     private static void writePacketLogEntry(EntryWriter entryWriter) {
-        if (!ENABLED) {
+        if (!isEnabled()) {
             return;
         }
 
@@ -211,7 +213,7 @@ public final class PacketRecorder {
     }
 
     public static void install(Channel channel) {
-        if (!ENABLED || stream == null) {
+        if (!(isEnabled()) || stream == null) {
             return;
         }
         if (channel.pipeline().context("multiconnect_clientbound_logger") != null) {
