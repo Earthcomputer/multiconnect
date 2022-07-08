@@ -4,6 +4,8 @@
   "multiconnect.changeForcedProtocol": "Version",
   "multiconnect.config.allowOldUnsignedChat": "Allow Old Insecure Chat Messages",
   "multiconnect.config.allowOldUnsignedChat.tooltip": "Allows through insecure chat messages from 1.18.2 servers or older",
+  "multiconnect.config.enableDebugKey": "Enable Debug Key",
+  "multiconnect.config.enablePacketRecording": "Enable Packet Recorder",
   "multiconnect.config.title": "Multiconnect Config",
   "multiconnect.debug.runningHttpServer.stop": "Stop",
   "multiconnect.debug.runningHttpServer.title": "Running HTTP Server",

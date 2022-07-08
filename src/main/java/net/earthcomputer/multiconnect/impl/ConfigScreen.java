@@ -11,6 +11,8 @@ import net.minecraft.text.Text;
 public class ConfigScreen extends Screen {
     private static final Text TITLE = Text.translatable("multiconnect.config.title");
     private static final Text ALLOW_OLD_UNSIGNED_CHAT = Text.translatable("multiconnect.config.allowOldUnsignedChat");
+    private static final Text ENABLE_DEBUGKEY = Text.translatable("multiconnect.config.enableDebugKey");
+    private static final Text ENABLE_PACKET_RECORDING = Text.translatable("multiconnect.config.enablePacketRecording");
     private static final Text ALLOW_OLD_UNSIGNED_CHAT_TOOLTIP = Text.translatable("multiconnect.config.allowOldUnsignedChat.tooltip");
 
     private final Screen parent;
@@ -22,9 +24,15 @@ public class ConfigScreen extends Screen {
 
     @Override
     protected void init() {
-        addDrawableChild(CyclingButtonWidget.onOffBuilder(MulticonnectConfig.INSTANCE.allowOldUnsignedChat == Boolean.TRUE)
+        addDrawableChild(CyclingButtonWidget.onOffBuilder(Boolean.TRUE.equals(MulticonnectConfig.INSTANCE.allowOldUnsignedChat))
                 .tooltip(SimpleOption.<Boolean>constantTooltip(ALLOW_OLD_UNSIGNED_CHAT_TOOLTIP).apply(client))
                 .build(width / 2 - 105 , 50, 210, 20, ALLOW_OLD_UNSIGNED_CHAT, (button, value) -> MulticonnectConfig.INSTANCE.allowOldUnsignedChat = value));
+
+        addDrawableChild(CyclingButtonWidget.onOffBuilder(Boolean.TRUE.equals(MulticonnectConfig.INSTANCE.enablePacketRecorder))
+                .build(width / 2 - 105 , 80, 210, 20, ENABLE_PACKET_RECORDING, (button, value) -> MulticonnectConfig.INSTANCE.enablePacketRecorder = value));
+
+        addDrawableChild(CyclingButtonWidget.onOffBuilder(Boolean.TRUE.equals(MulticonnectConfig.INSTANCE.debugKey))
+                .build(width / 2 - 105 , 110, 210, 20, ENABLE_DEBUGKEY, (button, value) -> MulticonnectConfig.INSTANCE.debugKey = value));
 
         addDrawableChild(new ButtonWidget(this.width / 2 - 100, this.height - 27, 200, 20, ScreenTexts.DONE, button -> close()));
     }

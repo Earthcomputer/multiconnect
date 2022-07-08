@@ -21,6 +21,10 @@ public class MulticonnectConfig {
 
     @Nullable
     public Boolean allowOldUnsignedChat;
+    @Nullable
+    public Boolean enablePacketRecorder;
+    @Nullable
+    public Boolean debugKey;
 
     private static MulticonnectConfig load() {
         MulticonnectConfig config = null;

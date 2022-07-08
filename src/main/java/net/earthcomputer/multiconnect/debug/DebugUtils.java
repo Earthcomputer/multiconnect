@@ -277,8 +277,8 @@ public class DebugUtils {
             LOGGER.error(extraLine);
         }
         LOGGER.error("Compressed packet data: {}", LogUtils.defer(() -> toCompressedBase64(data)));
-        if (!PacketRecorder.ENABLED) {
-            LOGGER.error("It's possible to create a full recording of all packets in a session by adding -Dmulticonnect.enablePacketRecorder=true to your JVM args.");
+        if (!PacketRecorder.isEnabled()) {
+            LOGGER.error("It's possible to create a full recording of all packets in a session by adding -Dmulticonnect.enablePacketRecorder=true to your JVM args. Or by enabling it through the configuration screen.");
             LOGGER.error("For more complex problems, this may be required to diagnose the issue.");
         }
     }
