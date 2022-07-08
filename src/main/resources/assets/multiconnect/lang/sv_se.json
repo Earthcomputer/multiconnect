@@ -4,6 +4,8 @@
   "multiconnect.changeForcedProtocol": "Version",
   "multiconnect.config.allowOldUnsignedChat": "Tillåt Gamla Osäkra Meddelanden",
   "multiconnect.config.allowOldUnsignedChat.tooltip": "Tillåter osäkra chattmeddelanden från 1.18.2-servrar eller äldre",
+  "multiconnect.config.enableDebugKey": "Aktivera Debug Knapp",
+  "multiconnect.config.enablePacketRecording": "Aktivera Packet Inspelare",
   "multiconnect.config.title": "Multiconnect Konfiguration",
   "multiconnect.debug.runningHttpServer.stop": "Stoppa Server",
   "multiconnect.debug.runningHttpServer.title": "Körande HTTP Server",
