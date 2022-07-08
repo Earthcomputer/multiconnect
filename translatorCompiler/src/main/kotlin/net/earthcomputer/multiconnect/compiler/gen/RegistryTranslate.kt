@@ -600,12 +600,19 @@ private fun ProtocolCompiler.fixRegistriesInner(
 
     val nodes = mutableListOf<McNode>()
 
-    fun handleField(ownerVar: VariableId, ownerType: McType, field: McField, outNodes: MutableList<McNode>) {
+    fun handleField(
+        ownerVar: VariableId,
+        ownerType: McType,
+        field: McField,
+        fieldVars: MutableMap<String, VariableId>,
+        outNodes: MutableList<McNode>
+    ) {
         if (!needsTranslating(field.type, clientbound)) {
             return
         }
 
         val fieldVar = VariableId.create()
+        fieldVars[field.name] = fieldVar
         outNodes += McNode(StoreVariableStmtOp(fieldVar, field.type.realType, true),
             McNode(LoadFieldOp(ownerType, field.name, field.type.realType),
                 McNode(LoadVariableOp(ownerVar, ownerType))
@@ -615,17 +622,24 @@ private fun ProtocolCompiler.fixRegistriesInner(
             McNode(LoadVariableOp(ownerVar, ownerType)),
             fixRegistries(ownerType, field.type, fieldVar, clientbound) { name, type ->
                 // TODO: support for outer references?
-                McNode(LoadFieldOp(ownerType, name, type),
-                    McNode(LoadVariableOp(ownerVar, ownerType))
-                )
+                val existingVar = fieldVars[name]
+                if (existingVar != null) {
+                    McNode(LoadVariableOp(existingVar, type))
+                } else {
+                    McNode(LoadFieldOp(ownerType, name, type),
+                        McNode(LoadVariableOp(ownerVar, ownerType))
+                    )
+                }
             }
         )
     }
 
+    val fieldVars = mutableMapOf<String, VariableId>()
+
     if (messageInfo.polymorphicParent != null) {
         val parentInfo = getMessageVariantInfo(messageInfo.polymorphicParent)
         for (field in parentInfo.fields) {
-            handleField(messageVar, messageType, field, nodes)
+            handleField(messageVar, messageType, field, fieldVars, nodes)
         }
     }
 
@@ -633,7 +647,7 @@ private fun ProtocolCompiler.fixRegistriesInner(
         if (messageInfo.tailrec && field.type.realType.hasName(messageInfo.className)) {
             continue
         }
-        handleField(messageVar, messageType, field, nodes)
+        handleField(messageVar, messageType, field, fieldVars, nodes)
     }
 
     if (messageInfo.polymorphic != null && messageInfo.polymorphicParent == null) {
@@ -656,6 +670,7 @@ private fun ProtocolCompiler.fixRegistriesInner(
                 McNode(LoadVariableOp(messageVar, messageType))
             )
             val childVarId = VariableId.create()
+            val childFieldVars = fieldVars.toMutableMap()
             val childNodes = mutableListOf<McNode>()
             childNodes += McNode(StoreVariableStmtOp(childVarId, childType, true),
                 McNode(CastOp(messageType, childType), McNode(LoadVariableOp(messageVar, messageType)))
@@ -664,7 +679,7 @@ private fun ProtocolCompiler.fixRegistriesInner(
                 if (messageInfo.tailrec && field.type.realType.hasName(messageInfo.className)) {
                     continue
                 }
-                handleField(childVarId, childType, field, childNodes)
+                handleField(childVarId, childType, field, childFieldVars, childNodes)
             }
             if (outSubtypeVar != null) {
                 val newSubtypeVal = if (childInfo.fields.lastOrNull()?.type?.realType?.hasName(messageInfo.className) == true) {
