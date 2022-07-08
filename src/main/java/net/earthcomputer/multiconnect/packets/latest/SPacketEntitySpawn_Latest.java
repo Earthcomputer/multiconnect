@@ -1,11 +1,14 @@
 package net.earthcomputer.multiconnect.packets.latest;
 
 import net.earthcomputer.multiconnect.ap.Argument;
+import net.earthcomputer.multiconnect.ap.CustomFix;
+import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.SPacketEntitySpawn;
 
 import java.util.UUID;
@@ -23,6 +26,7 @@ public class SPacketEntitySpawn_Latest implements SPacketEntitySpawn {
     public byte yaw;
     @Introduce(compute = "computeHeadYaw")
     public byte headYaw;
+    @CustomFix("fixData")
     public int data;
     public short velocityX;
     public short velocityY;
@@ -30,5 +34,16 @@ public class SPacketEntitySpawn_Latest implements SPacketEntitySpawn {
 
     public static byte computeHeadYaw(@Argument("yaw") byte yaw) {
         return yaw;
+    }
+
+    public static int fixData(
+        int data,
+        @Argument("type") int type,
+        @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.ENTITY_TYPE, value = "falling_block")) int fallingBlockId
+    ) {
+        if (type == fallingBlockId) {
+            return PacketSystem.serverBlockStateIdToClient(data);
+        }
+        return data;
     }
 }
