@@ -12,7 +12,6 @@
   "multiconnect.debug.menu.title": "Multiconnect Debug Skärm",
   "multiconnect.debug.menu.HttpServer.start" : "Starta HttpServer",
   "multiconnect.debug.menu.start" : "Starta Replay",
-  "multiconnect.debug.menu.cancel" : "Avbryt",
   "multiconnect.debug.startingReplay": "Startar Packet Replay",
   "multiconnect.rareBug": "Ett sällsynt fel inträffade just i multiconnect. Ladda upp din spellogg till %s så att det felet kan åtgärdas.",
   "multiconnect.rareBug.link": "Issue Tracker",
