@@ -12,8 +12,8 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketBlockEntityUpdate;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.Identifier;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 
 @MessageVariant(minVersion = Protocols.V1_18)
 public class SPacketBlockEntityUpdate_Latest implements SPacketBlockEntityUpdate {
@@ -22,7 +22,7 @@ public class SPacketBlockEntityUpdate_Latest implements SPacketBlockEntityUpdate
     @Introduce(compute = "computeBlockEntityType")
     public int blockEntityType;
     @Datafix(value = DatafixTypes.BLOCK_ENTITY, preprocess = "preprocessBlockEntityData")
-    public NbtCompound data;
+    public CompoundTag data;
 
     public static int computeBlockEntityType(
             @Argument("blockEntityType") byte blockEntityType,
@@ -59,13 +59,13 @@ public class SPacketBlockEntityUpdate_Latest implements SPacketBlockEntityUpdate
     }
 
     public static void preprocessBlockEntityData(
-            NbtCompound data,
+            CompoundTag data,
             @Argument("blockEntityType") int blockEntityType
     ) {
         if (data == null) {
             return;
         }
-        Identifier name = PacketSystem.serverRawIdToId(net.minecraft.util.registry.Registry.BLOCK_ENTITY_TYPE, blockEntityType);
+        ResourceLocation name = PacketSystem.serverRawIdToId(net.minecraft.core.Registry.BLOCK_ENTITY_TYPE, blockEntityType);
         if (name != null) {
             data.putString("id", name.toString());
         }

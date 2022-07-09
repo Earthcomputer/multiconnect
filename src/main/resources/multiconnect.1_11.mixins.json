@@ -3,8 +3,16 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_11.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "MixinFireworkRocketItem",
-    "PigEntityAccessor"
+    "ClientPacketListnerMixin",
+    "CraftingMenuMixin",
+    "FireworkRocketItemMixin",
+    "MinecraftMixin",
+    "PlayerRendererMixin",
+    "InventoryMenuMixin",
+    "AbstractContainerMenuMixin",
+    "BedBlockMixin",
+    "PigAccessor",
+    "PlayerAccessor"
   ],
   "client": [
   ],

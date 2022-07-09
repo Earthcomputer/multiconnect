@@ -7,15 +7,15 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketRecipeBookData;
 import net.earthcomputer.multiconnect.packets.v1_16_1.CPacketRecipeBookData_1_16_1;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 @MessageVariant(minVersion = Protocols.V1_16_2)
 public class CPacketRecipeBookData_Latest implements CPacketRecipeBookData {
-    public Identifier displayedRecipe;
+    public ResourceLocation displayedRecipe;
 
     @Handler(protocol = Protocols.V1_16_1)
     public static CPacketRecipeBookData_1_16_1 handle(
-            @Argument("displayedRecipe") Identifier displayedRecipe,
+            @Argument("displayedRecipe") ResourceLocation displayedRecipe,
             @DefaultConstruct CPacketRecipeBookData_1_16_1.Shown packet
     ) {
         packet.recipeId = displayedRecipe;

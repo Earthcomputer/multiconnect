@@ -9,9 +9,8 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketChunkRenderDistanceCenter;
 import net.earthcomputer.multiconnect.packets.SPacketPlayerPositionLook;
 import net.earthcomputer.multiconnect.packets.v1_16_5.SPacketPlayerPositionLook_1_16_5;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.ChunkMapManager_1_13_2;
-import net.minecraft.util.math.MathHelper;
-
+import net.earthcomputer.multiconnect.protocols.v1_13.ChunkMapManager_1_13_2;
+import net.minecraft.util.Mth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -37,8 +36,8 @@ public class SPacketPlayerPositionLook_1_13_2 implements SPacketPlayerPositionLo
         packets.add(translatedThis);
 
         var packet = new SPacketChunkRenderDistanceCenter();
-        packet.x = MathHelper.floor(translatedThis.x / 16);
-        packet.z = MathHelper.floor(translatedThis.z / 16);
+        packet.x = Mth.floor(translatedThis.x / 16);
+        packet.z = Mth.floor(translatedThis.z / 16);
         packets.add(packet);
 
         chunkMapManagerSetter.accept(new ChunkMapManager_1_13_2(true));

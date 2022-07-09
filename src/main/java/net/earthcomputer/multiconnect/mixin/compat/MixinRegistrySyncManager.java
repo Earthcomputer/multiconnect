@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.mixin.compat;
 import com.google.common.base.Joiner;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
 import java.util.function.Consumer;
+import net.minecraft.resources.ResourceLocation;
 
 @Pseudo
 @Mixin(targets = "net.fabricmc.fabric.impl.registry.sync.RegistrySyncManager", remap = false)
@@ -35,7 +36,7 @@ public class MixinRegistrySyncManager {
 
     @Dynamic
     @Inject(method = "lambda$receivePacket$0", at = @At("HEAD"), cancellable = true)
-    private static void onApplyModdedRegistry(Map<Identifier, Object2IntMap<Identifier>> map, Consumer<Exception> errorHandler, CallbackInfoReturnable<Object> ci) {
+    private static void onApplyModdedRegistry(@Nullable Map<ResourceLocation, Object2IntMap<ResourceLocation>> map, Consumer<Exception> errorHandler, CallbackInfoReturnable<Object> ci) {
         if (map == null) {
             return;
         }

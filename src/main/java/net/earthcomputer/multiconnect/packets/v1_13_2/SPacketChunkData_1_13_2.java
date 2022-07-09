@@ -18,10 +18,9 @@ import net.earthcomputer.multiconnect.packets.SPacketChunkRenderDistanceCenter;
 import net.earthcomputer.multiconnect.packets.v1_14_4.ChunkData_1_14_4;
 import net.earthcomputer.multiconnect.packets.v1_14_4.SPacketChunkData_1_14_4;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.ChunkMapManager_1_13_2;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
-import net.minecraft.nbt.NbtCompound;
-
+import net.earthcomputer.multiconnect.protocols.v1_13.ChunkMapManager_1_13_2;
+import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13_2;
+import net.minecraft.nbt.CompoundTag;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +35,7 @@ public class SPacketChunkData_1_13_2 implements SPacketChunkData {
     @Length(raw = true)
     public ChunkData data;
     @Datafix(DatafixTypes.BLOCK_ENTITY)
-    public List<NbtCompound> blockEntities;
+    public List<CompoundTag> blockEntities;
 
     @ReturnType(SPacketChunkData.class)
     @ReturnType(SPacketChunkRenderDistanceCenter.class)

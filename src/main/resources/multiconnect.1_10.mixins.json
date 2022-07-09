@@ -3,17 +3,17 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_10.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "AbstractDonkeyEntityAccessor",
-    "GuardianEntityAccessor",
-    "AbstractHorseEntityAccessor",
-    "HorseEntityAccessor",
-    "MixinCauldronBehavior",
-    "MixinChatScreen",
-    "MixinFenceBlock",
-    "MixinFlowerPotBlock",
-    "ShulkerEntityAccessor",
-    "ZombieEntityAccessor",
-    "ZombieVillagerEntityAccessor"
+    "AbstractChestedHorseAccessor",
+    "GuardianAccessor",
+    "AbstractHorseAccessor",
+    "HorseAccessor",
+    "CauldronInteractionMixin",
+    "ChatScreenMixin",
+    "FenceBlockMixin",
+    "FlowerPotBlockMixin",
+    "ShulkerAccessor",
+    "ZombieAccessor",
+    "ZombieVillagerAccessor"
   ],
   "client": [
   ],

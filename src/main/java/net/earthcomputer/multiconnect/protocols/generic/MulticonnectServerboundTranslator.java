@@ -8,10 +8,9 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.debug.DebugUtils;
 import net.earthcomputer.multiconnect.impl.PacketIntrinsics;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.listener.PacketListener;
-
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.Connection;
+import net.minecraft.network.PacketListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,13 +21,13 @@ public class MulticonnectServerboundTranslator extends ChannelOutboundHandlerAda
             return;
         }
 
-        ClientConnection clientConnection = (ClientConnection) ctx.pipeline().context("packet_handler").handler();
+        Connection clientConnection = (Connection) ctx.pipeline().context("packet_handler").handler();
         PacketListener packetListener = clientConnection.getPacketListener();
-        ClientPlayNetworkHandler networkHandler;
-        if (packetListener instanceof ClientPlayNetworkHandler) {
-            networkHandler = (ClientPlayNetworkHandler) packetListener;
+        ClientPacketListener connection;
+        if (packetListener instanceof ClientPacketListener) {
+            connection = (ClientPacketListener) packetListener;
         } else {
-            networkHandler = null;
+            throw new AssertionError("Packet listener is not a ClientPacketListener");
         }
         TypedMap userData = new TypedMap();
 
@@ -41,12 +40,12 @@ public class MulticonnectServerboundTranslator extends ChannelOutboundHandlerAda
             untranslated.readerIndex(untranslated.readerIndex() + untranslated.readableBytes());
             PacketSystem.Internals.submitTranslationTask(result.readDependencies(), result.writeDependencies(), () -> {
                 DebugUtils.wrapInErrorHandler(ctx, inCopy, "outbound", () -> {
-                    result.sender().send(inCopy, bufs, networkHandler, PacketSystem.Internals.getGlobalData(), userData);
+                    result.sender().send(inCopy, bufs, connection, PacketSystem.Internals.getGlobalData(), userData);
                     // don't need user data in the serverbound direction
                 });
             }, () -> {
                 DebugUtils.wrapInErrorHandler(ctx, inCopy, "outbound", () -> {
-                    PacketIntrinsics.sendRawToServer(networkHandler, bufs);
+                    PacketIntrinsics.sendRawToServer(connection, bufs);
                 });
             }, false);
         });

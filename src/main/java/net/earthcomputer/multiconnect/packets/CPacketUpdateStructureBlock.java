@@ -6,6 +6,8 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.v1_12_2.CPacketCustomPayload_1_12_2;
+import net.earthcomputer.multiconnect.packets.v1_12_2.CPacketCustomPayload_1_12_2.Struct;
+import net.minecraft.core.BlockPos;
 
 @MessageVariant(minVersion = Protocols.V1_13)
 public class CPacketUpdateStructureBlock {

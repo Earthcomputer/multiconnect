@@ -11,6 +11,7 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
+import net.earthcomputer.multiconnect.packets.CommonTypes.Particle_Latest;
 import net.earthcomputer.multiconnect.packets.SPacketParticle;
 import net.earthcomputer.multiconnect.packets.v1_12_2.Particle_1_12_2;
 

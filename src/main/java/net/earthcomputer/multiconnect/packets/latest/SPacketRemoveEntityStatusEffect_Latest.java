@@ -9,6 +9,6 @@ import net.earthcomputer.multiconnect.packets.SPacketRemoveEntityStatusEffect;
 @MessageVariant(minVersion = Protocols.V1_18_2)
 public class SPacketRemoveEntityStatusEffect_Latest implements SPacketRemoveEntityStatusEffect {
     public int entityId;
-    @Registry(Registries.STATUS_EFFECT)
+    @Registry(Registries.MOB_EFFECT)
     public int effectId;
 }

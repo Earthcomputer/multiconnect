@@ -16,10 +16,9 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.packets.SPacketChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
-import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
-import net.minecraft.nbt.NbtCompound;
-
+import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17_1;
+import net.minecraft.nbt.CompoundTag;
 import java.util.BitSet;
 import java.util.List;
 
@@ -31,13 +30,13 @@ public class SPacketChunkData_1_17_1 implements SPacketChunkData {
     public int z;
     @Introduce(compute = "computeVerticalStripBitmask")
     public BitSet verticalStripBitmask;
-    public NbtCompound heightmaps;
+    public CompoundTag heightmaps;
     @Introduce(compute = "computeBiomes")
     public IntList biomes;
     @Length(raw = true)
     public ChunkData data;
     @Datafix(DatafixTypes.BLOCK_ENTITY)
-    public List<NbtCompound> blockEntities;
+    public List<CompoundTag> blockEntities;
 
     public static BitSet computeVerticalStripBitmask(@Argument("verticalStripBitmask") int verticalStripBitmask) {
         return BitSet.valueOf(new long[] {verticalStripBitmask});

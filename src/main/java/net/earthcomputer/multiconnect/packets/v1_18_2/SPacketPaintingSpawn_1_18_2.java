@@ -14,9 +14,8 @@ import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketEntityTrackerUpdate;
 import net.earthcomputer.multiconnect.packets.SPacketPaintingSpawn;
 import net.earthcomputer.multiconnect.packets.latest.SPacketEntitySpawn_Latest;
-import net.earthcomputer.multiconnect.protocols.v1_18_2.mixin.PaintingEntityAccessor;
-import net.minecraft.util.math.Direction;
-
+import net.earthcomputer.multiconnect.protocols.v1_18.mixin.PaintingAccessor;
+import net.minecraft.core.Direction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -42,18 +41,18 @@ public class SPacketPaintingSpawn_1_18_2 implements SPacketPaintingSpawn {
     ) {
         List<Object> packets = new ArrayList<>(2);
 
-        Direction direction = Direction.fromHorizontal(self.direction);
+        Direction direction = Direction.from2DDataValue(self.direction);
 
         {
             var packet = new SPacketEntitySpawn_Latest();
             packet.entityId = self.entityId;
             packet.uuid = self.uuid;
             packet.type = paintingId;
-            packet.data = direction.getId();
+            packet.data = direction.get3DDataValue();
             var mcPos = self.pos.toMinecraft();
-            packet.x = mcPos.getX() + 0.5 - 0.46875 * direction.getOffsetX();
+            packet.x = mcPos.getX() + 0.5 - 0.46875 * direction.getStepX();
             packet.y = mcPos.getY() + 0.5;
-            packet.z = mcPos.getZ() + 0.5 - 0.46875 * direction.getOffsetZ();
+            packet.z = mcPos.getZ() + 0.5 - 0.46875 * direction.getStepZ();
             packets.add(packet);
         }
 
@@ -61,7 +60,7 @@ public class SPacketPaintingSpawn_1_18_2 implements SPacketPaintingSpawn {
             var packet = new SPacketEntityTrackerUpdate();
             packet.entityId = self.entityId;
             var firstEntry = new CommonTypes.EntityTrackerEntry.Other();
-            firstEntry.field = PaintingEntityAccessor.getVariant().getId();
+            firstEntry.field = PaintingAccessor.getDataPaintingVariantId().getId();
             trackedData.value = self.motive;
             firstEntry.trackedData = trackedData;
             firstEntry.next = emptyEntry;

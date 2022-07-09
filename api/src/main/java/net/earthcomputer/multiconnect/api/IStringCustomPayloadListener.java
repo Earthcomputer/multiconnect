@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.api;
 
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
 
 /**
  * @deprecated Use {@link ICustomPayloadListener} instead.
@@ -8,5 +8,5 @@ import net.minecraft.network.PacketByteBuf;
 @Deprecated
 @FunctionalInterface
 public interface IStringCustomPayloadListener {
-    void onCustomPayload(int protocol, String channel, PacketByteBuf data);
+    void onCustomPayload(int protocol, String channel, FriendlyByteBuf data);
 }

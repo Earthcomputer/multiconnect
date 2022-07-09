@@ -17,12 +17,14 @@ import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.packets.SPacketChunkData;
 import net.earthcomputer.multiconnect.packets.v1_13_2.ChunkSection_1_13_2;
 import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.world.Heightmap;
-
+import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer;
+import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer.RegistryContainer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import java.util.List;
+import java.util.function.Predicate;
 
 @MessageVariant(minVersion = Protocols.V1_14, maxVersion = Protocols.V1_14_4)
 public class SPacketChunkData_1_14_4 implements SPacketChunkData {
@@ -33,13 +35,13 @@ public class SPacketChunkData_1_14_4 implements SPacketChunkData {
     public boolean fullChunk;
     public int verticalStripBitmask;
     @Introduce(compute = "computeHeightmaps")
-    public NbtCompound heightmaps;
+    public CompoundTag heightmaps;
     @Length(raw = true)
     public ChunkData data;
     @Datafix(DatafixTypes.BLOCK_ENTITY)
-    public List<NbtCompound> blockEntities;
+    public List<CompoundTag> blockEntities;
 
-    public static NbtCompound computeHeightmaps(
+    public static CompoundTag computeHeightmaps(
             @Argument("verticalStripBitmask") int verticalStripBitmask,
             @Argument("data") ChunkData data_,
             @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.BLOCK_STATE, value = "air")) int airId
@@ -52,8 +54,8 @@ public class SPacketChunkData_1_14_4 implements SPacketChunkData {
             }
         }
 
-        var worldSurfacePredicate = Heightmap.Type.WORLD_SURFACE.getBlockPredicate();
-        var motionBlockingPredicate = Heightmap.Type.MOTION_BLOCKING.getBlockPredicate();
+        var worldSurfacePredicate = Heightmap.Types.WORLD_SURFACE.isOpaque();
+        var motionBlockingPredicate = Heightmap.Types.MOTION_BLOCKING.isOpaque();
         long[] worldSurface = new long[36];
         long[] motionBlocking = new long[36];
 
@@ -89,7 +91,7 @@ public class SPacketChunkData_1_14_4 implements SPacketChunkData {
                         }
                     }
                     stateId = PacketSystem.serverBlockStateIdToClient(stateId);
-                    BlockState state = Block.getStateFromRawId(stateId);
+                    BlockState state = Block.stateById(stateId);
 
                     // test heightmaps
                     if (findingWorldSurface && worldSurfacePredicate.test(state)) {
@@ -108,7 +110,7 @@ public class SPacketChunkData_1_14_4 implements SPacketChunkData {
             }
         }
 
-        NbtCompound heightmaps = new NbtCompound();
+        CompoundTag heightmaps = new CompoundTag();
         heightmaps.putLongArray("WORLD_SURFACE", worldSurface);
         heightmaps.putLongArray("MOTION_BLOCKING", motionBlocking);
         return heightmaps;

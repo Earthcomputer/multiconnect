@@ -8,6 +8,8 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketBookUpdate;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.v1_12_2.CPacketCustomPayload_1_12_2;
+import net.earthcomputer.multiconnect.packets.v1_12_2.CPacketCustomPayload_1_12_2.BookEdit;
+import net.earthcomputer.multiconnect.packets.v1_12_2.CPacketCustomPayload_1_12_2.BookSign;
 import net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2;
 import net.earthcomputer.multiconnect.packets.v1_13_1.ItemStack_1_13_1;
 

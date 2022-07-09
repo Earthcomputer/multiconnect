@@ -10,8 +10,8 @@ import java.util.OptionalInt;
 
 @MessageVariant(minVersion = Protocols.V1_19)
 public class CPacketUpdateBeacon_Latest implements CPacketUpdateBeacon {
-    @Registry(Registries.STATUS_EFFECT)
+    @Registry(Registries.MOB_EFFECT)
     public OptionalInt primaryEffect;
-    @Registry(Registries.STATUS_EFFECT)
+    @Registry(Registries.MOB_EFFECT)
     public OptionalInt secondaryEffect;
 }

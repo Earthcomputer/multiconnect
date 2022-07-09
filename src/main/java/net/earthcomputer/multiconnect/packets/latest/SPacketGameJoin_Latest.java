@@ -19,13 +19,13 @@ import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketGameJoin;
 import net.earthcomputer.multiconnect.protocols.generic.DimensionTypeReference;
 import net.minecraft.SharedConstants;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.world.World;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -42,12 +42,12 @@ public class SPacketGameJoin_Latest implements SPacketGameJoin {
     @Type(Types.UNSIGNED_BYTE)
     public int gamemode;
     public byte previousGamemode;
-    public List<Identifier> dimensions;
-    @Datafix(DatafixTypes.REGISTRY_MANAGER)
-    public NbtCompound registryManager;
+    public List<ResourceLocation> dimensions;
+    @Datafix(DatafixTypes.REGISTRY_ACCESS)
+    public CompoundTag registryManager;
     @Introduce(compute = "computeDimensionType")
-    public Identifier dimensionType;
-    public Identifier dimension;
+    public ResourceLocation dimensionType;
+    public ResourceLocation dimension;
     @Type(Types.LONG)
     public long hashedSeed;
     public int maxPlayers;
@@ -60,37 +60,37 @@ public class SPacketGameJoin_Latest implements SPacketGameJoin {
     @Introduce(defaultConstruct = true)
     public Optional<CommonTypes.GlobalPos> lastDeathPos;
 
-    public static Identifier computeDimensionType(
-            @Argument("registryManager") NbtCompound registryManager,
-            @Argument("dimensionType") NbtCompound dimensionType,
-            @Argument("dimension") Identifier dimensionName
+    public static ResourceLocation computeDimensionType(
+            @Argument("registryManager") CompoundTag registryManager,
+            @Argument("dimensionType") CompoundTag dimensionType,
+            @Argument("dimension") ResourceLocation dimensionName
     ) {
-        NbtCompound updatedDimType = (NbtCompound) MulticonnectDFU.FIXER.update(
+        CompoundTag updatedDimType = (CompoundTag) MulticonnectDFU.FIXER.update(
                 MulticonnectDFU.DIMENSION,
                 new Dynamic<>(NbtOps.INSTANCE, dimensionType),
                 ConnectionMode.byValue(ConnectionInfo.protocolVersion).getDataVersion(),
                 ConnectionMode.V1_18_2.getDataVersion()
         ).getValue();
-        NbtCompound updatedRegistryManager = (NbtCompound) MulticonnectDFU.FIXER.update(
-                MulticonnectDFU.REGISTRY_MANAGER,
+        CompoundTag updatedRegistryManager = (CompoundTag) MulticonnectDFU.FIXER.update(
+                MulticonnectDFU.REGISTRY_ACCESS,
                 new Dynamic<>(NbtOps.INSTANCE, registryManager),
                 ConnectionMode.byValue(ConnectionInfo.protocolVersion).getDataVersion(),
                 ConnectionMode.V1_18_2.getDataVersion()
         ).getValue();
-        if (!updatedRegistryManager.contains("minecraft:dimension_type", NbtElement.COMPOUND_TYPE)) {
-            return World.OVERWORLD.getValue();
+        if (!updatedRegistryManager.contains("minecraft:dimension_type", Tag.TAG_COMPOUND)) {
+            return Level.OVERWORLD.location();
         }
-        NbtCompound dimensionTypes = updatedRegistryManager.getCompound("minecraft:dimension_type");
-        if (!dimensionTypes.contains("value", NbtElement.LIST_TYPE)) {
-            return World.OVERWORLD.getValue();
+        CompoundTag dimensionTypes = updatedRegistryManager.getCompound("minecraft:dimension_type");
+        if (!dimensionTypes.contains("value", Tag.TAG_LIST)) {
+            return Level.OVERWORLD.location();
         }
-        NbtList dimTypeValues = dimensionTypes.getList("value", NbtElement.COMPOUND_TYPE);
+        ListTag dimTypeValues = dimensionTypes.getList("value", Tag.TAG_COMPOUND);
 
-        Identifier matchedDimension = World.OVERWORLD.getValue();
+        ResourceLocation matchedDimension = Level.OVERWORLD.location();
         int maxScore = -1;
         for (int i = 0; i < dimTypeValues.size(); i++) {
-            NbtCompound dimension = dimTypeValues.getCompound(i);
-            if (!dimension.contains("name", NbtElement.STRING_TYPE) || !dimension.contains("element", NbtElement.COMPOUND_TYPE)) {
+            CompoundTag dimension = dimTypeValues.getCompound(i);
+            if (!dimension.contains("name", Tag.TAG_STRING) || !dimension.contains("element", Tag.TAG_COMPOUND)) {
                 continue;
             }
             int score = matchDimensionType(dimension.getCompound("element"), updatedDimType);
@@ -100,7 +100,7 @@ public class SPacketGameJoin_Latest implements SPacketGameJoin {
             }
             if (score > maxScore) {
                 maxScore = score;
-                matchedDimension = new Identifier(name);
+                matchedDimension = new ResourceLocation(name);
             }
         }
         if (maxScore < 0) {
@@ -109,7 +109,7 @@ public class SPacketGameJoin_Latest implements SPacketGameJoin {
         return matchedDimension;
     }
 
-    public static int matchDimensionType(NbtCompound a, NbtCompound b) {
+    public static int matchDimensionType(CompoundTag a, CompoundTag b) {
         // match height first, it's the most important
         if (a.getInt("height") != b.getInt("height")) {
             return -101;
@@ -143,20 +143,20 @@ public class SPacketGameJoin_Latest implements SPacketGameJoin {
 
     @PartialHandler
     public static void saveRegistryManager(
-            @Argument("registryManager") NbtCompound registryManager,
-            @Argument("dimensionType") Identifier dimensionType,
-            @GlobalData Consumer<DynamicRegistryManager> registryManagerSetter,
+            @Argument("registryManager") CompoundTag registryManager,
+            @Argument("dimensionType") ResourceLocation dimensionType,
+            @GlobalData Consumer<RegistryAccess> registryManagerSetter,
             @GlobalData Consumer<DimensionTypeReference> dimensionTypeSetter
     ) {
         {
             Dynamic<?> updated = MulticonnectDFU.FIXER.update(
-                    MulticonnectDFU.REGISTRY_MANAGER,
+                    MulticonnectDFU.REGISTRY_ACCESS,
                     new Dynamic<>(NbtOps.INSTANCE, registryManager),
                     ConnectionMode.byValue(ConnectionInfo.protocolVersion).getDataVersion(),
-                    SharedConstants.getGameVersion().getSaveVersion().getId()
+                    SharedConstants.getCurrentVersion().getDataVersion().getVersion()
             );
-            var dataResult = DynamicRegistryManager.CODEC.decode(updated);
-            DynamicRegistryManager result = dataResult.getOrThrow(false, err -> {}).getFirst();
+            var dataResult = RegistryAccess.NETWORK_CODEC.decode(updated);
+            RegistryAccess result = dataResult.getOrThrow(false, err -> {}).getFirst();
             registryManagerSetter.accept(result);
         }
         {

@@ -9,9 +9,9 @@ import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.CPacketClickSlot;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.latest.CPacketClickSlot_Latest;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.slot.SlotActionType;
+import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_5;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.ItemStack;
 
 @MessageVariant(maxVersion = Protocols.V1_16_5)
 @Sendable(from = Protocols.V1_16_5)
@@ -26,7 +26,7 @@ public class CPacketClickSlot_1_16_5 implements CPacketClickSlot {
     @Introduce(defaultConstruct = true)
     public CommonTypes.ItemStack slotItemBeforeModification;
 
-    public static CPacketClickSlot_1_16_5 create(int syncId, int slotId, int clickData, SlotActionType actionType, ItemStack slotItemBeforeModification, int actionId) {
+    public static CPacketClickSlot_1_16_5 create(int syncId, int slotId, int clickData, ClickType actionType, ItemStack slotItemBeforeModification, int actionId) {
         CPacketClickSlot_1_16_5 newPacket = PacketSystem.defaultConstruct(CPacketClickSlot_1_16_5.class);
         newPacket.syncId = (byte) syncId;
         newPacket.slot = (short) slotId;

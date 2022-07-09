@@ -30,17 +30,16 @@ import net.earthcomputer.multiconnect.protocols.generic.DimensionTypeReference;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnectionsNetworkView;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
-import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
-import net.minecraft.block.Block;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.collection.PackedIntegerArray;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.math.EightWayDirection;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.registry.DynamicRegistryManager;
-
+import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13_2;
+import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17_1;
+import net.minecraft.core.Direction8;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.SectionPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.util.SimpleBitStorage;
+import net.minecraft.world.level.block.Block;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -60,12 +59,12 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
 
     public static InnerData computeInnerData(
             @Argument("verticalStripBitmask") BitSet verticalStripBitmask,
-            @Argument("heightmaps") NbtCompound heightmaps,
+            @Argument("heightmaps") CompoundTag heightmaps,
             @Argument("data") ChunkData data,
             @Argument("biomes") IntList biomes,
-            @Argument("blockEntities") List<NbtCompound> blockEntities,
+            @Argument("blockEntities") List<CompoundTag> blockEntities,
             @DefaultConstruct InnerData dest,
-            @GlobalData DynamicRegistryManager registryManager,
+            @GlobalData RegistryAccess registryManager,
             @GlobalData DimensionTypeReference dimensionType
     ) {
         dest.heightmaps = heightmaps;
@@ -121,13 +120,13 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
 
         // translate block entities
         dest.blockEntities = new ArrayList<>(blockEntities.size());
-        for (NbtCompound be : blockEntities) {
+        for (CompoundTag be : blockEntities) {
             BlockEntityData destBe = new BlockEntityData();
-            destBe.localXz = (byte) ((ChunkSectionPos.getLocalCoord(be.getInt("x")) << 4) | ChunkSectionPos.getLocalCoord(be.getInt("z")));
+            destBe.localXz = (byte) ((SectionPos.sectionRelative(be.getInt("x")) << 4) | SectionPos.sectionRelative(be.getInt("z")));
             destBe.y = (short) be.getInt("y");
-            Identifier id = Identifier.tryParse(be.getString("id"));
+            ResourceLocation id = ResourceLocation.tryParse(be.getString("id"));
             if (id != null) {
-                Integer rawId = PacketSystem.serverIdToRawId(net.minecraft.util.registry.Registry.BLOCK_ENTITY_TYPE, id);
+                Integer rawId = PacketSystem.serverIdToRawId(net.minecraft.core.Registry.BLOCK_ENTITY_TYPE, id);
                 if (rawId != null) {
                     destBe.type = rawId;
                 }
@@ -141,11 +140,11 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
 
     private static void computeBiomeData(
             int sectionY,
-            DynamicRegistryManager registryManager,
+            RegistryAccess registryManager,
             IntList biomes,
             ChunkData_Latest.ChunkSection toSection
     ) {
-        var biomeRegistry = registryManager.get(net.minecraft.util.registry.Registry.BIOME_KEY);
+        var biomeRegistry = registryManager.registryOrThrow(net.minecraft.core.Registry.BIOME_REGISTRY);
         Int2IntMap invBiomePalette = new Int2IntOpenHashMap();
         IntList biomePalette = new IntArrayList();
         for (int i = 0; i < biomes.size(); i++) {
@@ -160,7 +159,7 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
             invBiomePalette.put(0, 0);
         }
 
-        int bitsPerBiome = MathHelper.ceilLog2(biomePalette.size());
+        int bitsPerBiome = Mth.ceillog2(biomePalette.size());
         if (bitsPerBiome == 0) {
             var toBiomes = new ChunkData_Latest.BiomePalettedContainer.Singleton();
             toBiomes.dummyData = new long[0];
@@ -184,7 +183,7 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
             toBiomes.paletteSize = (byte) bitsPerBiome;
             toBiomes.data = result;
             toSection.biomes = toBiomes;
-            bitsPerBiome = MathHelper.ceilLog2(biomeRegistry.size());
+            bitsPerBiome = Mth.ceillog2(biomeRegistry.size());
         }
 
         if (sectionY < 0) {
@@ -237,7 +236,7 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
 
     @MessageVariant
     public static class InnerData {
-        public NbtCompound heightmaps;
+        public CompoundTag heightmaps;
         @Length(raw = true)
         @CustomFix("fixData")
         public ChunkData data;
@@ -246,7 +245,7 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
         public static ChunkData fixData(
                 ChunkData data_,
                 @FilledArgument TypedMap userData,
-                @GlobalData DynamicRegistryManager registryManager,
+                @GlobalData RegistryAccess registryManager,
                 @GlobalData DimensionTypeReference dimType
         ) {
             var data = (ChunkData_Latest) data_;
@@ -267,7 +266,7 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
                     }
                 } else {
                     var registryContainer = (ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer) section.blockStates;
-                    int newPaletteSize = MathHelper.ceilLog2(Block.STATE_IDS.size());
+                    int newPaletteSize = Mth.ceillog2(Block.BLOCK_STATE_REGISTRY.size());
                     int oldPaletteSize = userData.get(ChunkData.BlockStatePalettedContainer.HAS_EXPANDED_REGISTRY_PALETTE)
                             ? PacketSystem.getServerBlockStateRegistryBits()
                             : newPaletteSize;
@@ -280,15 +279,15 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
 
                     if (oldPaletteSize != newPaletteSize) {
                         registryContainer.paletteSize = (byte) newPaletteSize;
-                        PackedIntegerArray oldPalette = new PackedIntegerArray(oldPaletteSize, 4096, registryContainer.data);
-                        PackedIntegerArray newPalette = new PackedIntegerArray(newPaletteSize, 4096);
+                        SimpleBitStorage oldPalette = new SimpleBitStorage(oldPaletteSize, 4096, registryContainer.data);
+                        SimpleBitStorage newPalette = new SimpleBitStorage(newPaletteSize, 4096);
                         for (int i = 0; i < 4096; i++) {
                             newPalette.set(i, oldPalette.get(i));
                         }
-                        registryContainer.data = newPalette.getData();
+                        registryContainer.data = newPalette.getRaw();
                     }
 
-                    PackedIntegerArray packedArray = new PackedIntegerArray(newPaletteSize, 4096, registryContainer.data);
+                    SimpleBitStorage packedArray = new SimpleBitStorage(newPaletteSize, 4096, registryContainer.data);
                     for (int i = 0; i < 4096; i++) {
                         packedArray.set(i, PacketSystem.serverBlockStateIdToClient(packedArray.get(i)));
                     }
@@ -296,7 +295,7 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
             }
 
             var world = new BlockConnectionsNetworkView(dimType.getValue(registryManager).minY(), sections);
-            var blocksNeedingUpdate = new EnumMap<EightWayDirection, IntSet>(EightWayDirection.class);
+            var blocksNeedingUpdate = new EnumMap<Direction8, IntSet>(Direction8.class);
             ConnectionInfo.protocol.getBlockConnector().fixChunkData(world, blocksNeedingUpdate);
             userData.put(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY, blocksNeedingUpdate);
 
@@ -311,16 +310,16 @@ public class SPacketChunkData_Latest implements SPacketChunkData {
         @Registry(Registries.BLOCK_ENTITY_TYPE)
         public int type;
         @Datafix(value = DatafixTypes.BLOCK_ENTITY, preprocess = "preprocessBlockEntity")
-        public NbtCompound nbt;
+        public CompoundTag nbt;
 
         public static void preprocessBlockEntity(
-                NbtCompound nbt,
+                CompoundTag nbt,
                 @Argument("type") int type
         ) {
             if (nbt == null) {
                 return;
             }
-            Identifier name = PacketSystem.serverRawIdToId(net.minecraft.util.registry.Registry.BLOCK_ENTITY_TYPE, type);
+            ResourceLocation name = PacketSystem.serverRawIdToId(net.minecraft.core.Registry.BLOCK_ENTITY_TYPE, type);
             if (name != null) {
                 nbt.putString("id", name.toString());
             }

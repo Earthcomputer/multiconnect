@@ -13,23 +13,22 @@ import net.earthcomputer.multiconnect.packets.SPacketCustomPayload;
 import net.earthcomputer.multiconnect.packets.SPacketOpenWrittenBook;
 import net.earthcomputer.multiconnect.packets.SPacketSetTradeOffers;
 import net.earthcomputer.multiconnect.packets.v1_14_2.SPacketSetTradeOffers_1_14_2;
-import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
+import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 
 @Polymorphic
 @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
 public abstract class SPacketCustomPayload_1_13_2 implements SPacketCustomPayload {
-    public static final Identifier TRADER_LIST = new Identifier("trader_list");
-    public static final Identifier OPEN_BOOK = new Identifier("open_book");
+    public static final ResourceLocation TRADER_LIST = new ResourceLocation("trader_list");
+    public static final ResourceLocation OPEN_BOOK = new ResourceLocation("open_book");
 
     @Introduce(compute = "computeChannel")
-    public Identifier channel;
+    public ResourceLocation channel;
 
-    public static Identifier computeChannel(@Argument("channel") String channel) {
+    public static ResourceLocation computeChannel(@Argument("channel") String channel) {
         return switch (channel) {
-            case "MC|Brand" -> CustomPayloadS2CPacket.BRAND;
+            case "MC|Brand" -> ClientboundCustomPayloadPacket.BRAND;
             case "MC|TrList" -> TRADER_LIST;
             case "MC|BOpen" -> OPEN_BOOK;
             default -> throw new IllegalStateException("This packet should have been handled a different way");

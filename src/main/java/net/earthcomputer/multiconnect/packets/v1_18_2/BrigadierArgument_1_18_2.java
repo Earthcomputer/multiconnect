@@ -9,12 +9,12 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketCommandTree;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 @Polymorphic
 @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
 public abstract class BrigadierArgument_1_18_2 implements SPacketCommandTree.BrigadierArgument {
-    public Identifier parser;
+    public ResourceLocation parser;
 
     @Polymorphic(stringValue = "brigadier:double")
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
@@ -117,7 +117,7 @@ public abstract class BrigadierArgument_1_18_2 implements SPacketCommandTree.Bri
     @Polymorphic(stringValue = {"minecraft:resource", "minecraft:resource_or_tag"})
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
     public static class RegistryKeyArgument extends BrigadierArgument_1_18_2 implements SPacketCommandTree.BrigadierArgument.RegistryKeyArgument {
-        public Identifier registry;
+        public ResourceLocation registry;
     }
 
     @Polymorphic(otherwise = true)

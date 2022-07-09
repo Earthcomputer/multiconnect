@@ -38,7 +38,7 @@ public class SPacketMapUpdate_Latest implements SPacketMapUpdate {
     @MessageVariant(minVersion = Protocols.V1_13)
     public static class Icon implements SPacketMapUpdate.Icon {
         @Introduce(compute = "computeType")
-        public Type type;
+        public net.earthcomputer.multiconnect.packets.latest.SPacketMapUpdate_Latest.Icon.Type type;
         public byte x;
         public byte z;
         @Introduce(compute = "computeDirection")
@@ -46,8 +46,8 @@ public class SPacketMapUpdate_Latest implements SPacketMapUpdate {
         @Introduce(defaultConstruct = true)
         public Optional<CommonTypes.Text> displayName;
 
-        public static Type computeType(@Argument("metadata") byte metadata) {
-            return Type.VALUES[(metadata >> 4) & 15];
+        public static net.earthcomputer.multiconnect.packets.latest.SPacketMapUpdate_Latest.Icon.Type computeType(@Argument("metadata") byte metadata) {
+            return net.earthcomputer.multiconnect.packets.latest.SPacketMapUpdate_Latest.Icon.Type.VALUES[(metadata >> 4) & 15];
         }
 
         public static byte computeDirection(@Argument("metadata") byte metadata) {
@@ -85,7 +85,7 @@ public class SPacketMapUpdate_Latest implements SPacketMapUpdate {
             RED_X,
             ;
 
-            public static final Type[] VALUES = values();
+            public static final net.earthcomputer.multiconnect.packets.latest.SPacketMapUpdate_Latest.Icon.Type[] VALUES = values();
         }
     }
 }

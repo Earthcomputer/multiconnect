@@ -15,9 +15,8 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.packets.SPacketChunkData;
 import net.earthcomputer.multiconnect.packets.v1_14_4.ChunkData_1_14_4;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
-import net.minecraft.nbt.NbtCompound;
-
+import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_5;
+import net.minecraft.nbt.CompoundTag;
 import java.util.List;
 
 @MessageVariant(minVersion = Protocols.V1_15, maxVersion = Protocols.V1_15_2)
@@ -28,7 +27,7 @@ public class SPacketChunkData_1_15_2 implements SPacketChunkData {
     public int z;
     public boolean fullChunk;
     public int verticalStripBitmask;
-    public NbtCompound heightmaps;
+    public CompoundTag heightmaps;
     @Length(constant = Protocol_1_16_5.BIOME_ARRAY_LENGTH)
     @Type(Types.INT)
     @OnlyIf("hasFullChunk")
@@ -37,7 +36,7 @@ public class SPacketChunkData_1_15_2 implements SPacketChunkData {
     @Length(raw = true)
     public ChunkData data;
     @Datafix(DatafixTypes.BLOCK_ENTITY)
-    public List<NbtCompound> blockEntities;
+    public List<CompoundTag> blockEntities;
 
     public static boolean hasFullChunk(@Argument("fullChunk") boolean fullChunk) {
         return fullChunk;

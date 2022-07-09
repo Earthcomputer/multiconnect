@@ -1,12 +1,12 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.dimension.DimensionType;
 
-public record DimensionTypeReference(Identifier value) {
-    public DimensionType getValue(DynamicRegistryManager registryManager) {
-        return registryManager.get(Registry.DIMENSION_TYPE_KEY).get(value);
+public record DimensionTypeReference(ResourceLocation value) {
+    public DimensionType getValue(RegistryAccess registryManager) {
+        return registryManager.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY).get(value);
     }
 }

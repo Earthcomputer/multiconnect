@@ -225,7 +225,7 @@ object MessageVariantProcessor {
             }
 
             if (multiconnectType.datafixInfo != null) {
-                if (!deepComponentType.hasQualifiedName(MINECRAFT_NBT_COMPOUND)) {
+                if (!deepComponentType.hasQualifiedName(MINECRAFT_COMPOUND_TAG)) {
                     errorConsumer.report("@Datafix can only be used on fields of type NbtCompound", field)
                     continue
                 }
@@ -240,7 +240,7 @@ object MessageVariantProcessor {
                         errorConsumer.report("@Datafix preprocess function must have exactly 1 positional parameter", field)
                         continue
                     }
-                    if (!multiconnectFunction.positionalParameters.first().hasQualifiedName(MINECRAFT_NBT_COMPOUND)) {
+                    if (!multiconnectFunction.positionalParameters.first().hasQualifiedName(MINECRAFT_COMPOUND_TAG)) {
                         errorConsumer.report("@Datafix preprocess function positional parameter must be of type NbtCompound", field)
                         continue
                     }

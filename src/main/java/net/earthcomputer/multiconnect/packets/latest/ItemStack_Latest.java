@@ -11,10 +11,10 @@ import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-
+import net.minecraft.core.DefaultedRegistry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.item.ItemStack;
 import java.util.UUID;
 
 @Polymorphic
@@ -30,14 +30,14 @@ public abstract class ItemStack_Latest implements CommonTypes.ItemStack {
 
     public static ItemStack_Latest fromMinecraft(ItemStack stack) {
         if (stack.isEmpty()) {
-            return new Empty();
+            return new net.earthcomputer.multiconnect.packets.latest.ItemStack_Latest.Empty();
         } else {
-            var result = new NonEmpty();
+            var result = new net.earthcomputer.multiconnect.packets.latest.ItemStack_Latest.NonEmpty();
             result.present = true;
-            var itemRegistry = net.minecraft.util.registry.Registry.ITEM;
-            result.itemId = PacketSystem.clientRawIdToServer(itemRegistry, itemRegistry.getRawId(stack.getItem()));
+            var itemRegistry = net.minecraft.core.Registry.ITEM;
+            result.itemId = PacketSystem.clientRawIdToServer(itemRegistry, itemRegistry.getId(stack.getItem()));
             result.count = (byte) stack.getCount();
-            result.tag = stack.getNbt();
+            result.tag = stack.getTag();
             return result;
         }
     }
@@ -55,7 +55,7 @@ public abstract class ItemStack_Latest implements CommonTypes.ItemStack {
         @DefaultConstruct(intValue = 1)
         public byte count;
         @Introduce(direction = Introduce.Direction.FROM_OLDER, compute = "translateTagClientbound")
-        public NbtCompound tag;
+        public CompoundTag tag;
 
         @Override
         public int getItemId() {
@@ -68,24 +68,24 @@ public abstract class ItemStack_Latest implements CommonTypes.ItemStack {
         }
 
         @Override
-        public NbtCompound getTag() {
+        public CompoundTag getTag() {
             return tag;
         }
 
-        public static NbtCompound translateTagClientbound(
+        public static CompoundTag translateTagClientbound(
                 @Argument("itemId") int itemId,
                 @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.ITEM, value = "player_head")) int playerHeadId,
-                @Argument("tag") NbtCompound tag
+                @Argument("tag") CompoundTag tag
         ) {
             if (itemId != playerHeadId || tag == null) {
                 return tag;
             }
-            if (tag.contains("SkullOwner", NbtElement.COMPOUND_TYPE)) {
-                NbtCompound skullOwner = tag.getCompound("SkullOwner");
-                if (skullOwner.contains("Id", NbtElement.STRING_TYPE)) {
+            if (tag.contains("SkullOwner", Tag.TAG_COMPOUND)) {
+                CompoundTag skullOwner = tag.getCompound("SkullOwner");
+                if (skullOwner.contains("Id", Tag.TAG_STRING)) {
                     try {
                         UUID uuid = UUID.fromString(skullOwner.getString("Id"));
-                        skullOwner.putUuid("Id", uuid);
+                        skullOwner.putUUID("Id", uuid);
                     } catch (IllegalArgumentException e) {
                         // uuid failed to parse
                     }

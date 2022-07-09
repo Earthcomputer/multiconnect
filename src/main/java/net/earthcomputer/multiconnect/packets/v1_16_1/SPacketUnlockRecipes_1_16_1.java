@@ -8,8 +8,7 @@ import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketUnlockRecipes;
 import net.earthcomputer.multiconnect.packets.latest.SPacketUnlockRecipes_Latest;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.resources.ResourceLocation;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,12 +23,12 @@ public abstract class SPacketUnlockRecipes_1_16_1 implements SPacketUnlockRecipe
     @Introduce(booleanValue = false)
     public boolean smeltingBookFilterActive;
     @Introduce(compute = "computeRecipeIds")
-    public List<Identifier> recipeIdsToChange;
+    public List<ResourceLocation> recipeIdsToChange;
 
-    public static List<Identifier> computeRecipeIds(@Argument("recipeIdsToChange") IntList recipeIds) {
-        List<Identifier> result = new ArrayList<>(recipeIds.size());
+    public static List<ResourceLocation> computeRecipeIds(@Argument("recipeIdsToChange") IntList recipeIds) {
+        List<ResourceLocation> result = new ArrayList<>(recipeIds.size());
         for (int i = 0; i < recipeIds.size(); i++) {
-            result.add(new Identifier(String.valueOf(recipeIds.getInt(i))));
+            result.add(new ResourceLocation(String.valueOf(recipeIds.getInt(i))));
         }
         return result;
     }
@@ -38,9 +37,9 @@ public abstract class SPacketUnlockRecipes_1_16_1 implements SPacketUnlockRecipe
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_16_1)
     public static class Init extends SPacketUnlockRecipes_1_16_1 implements SPacketUnlockRecipes.Init {
         @Introduce(compute = "computeRecipeIdsToInit")
-        public List<Identifier> recipeIdsToInit;
+        public List<ResourceLocation> recipeIdsToInit;
 
-        public static List<Identifier> computeRecipeIdsToInit(@Argument("recipeIdsToInit") IntList recipeIds) {
+        public static List<ResourceLocation> computeRecipeIdsToInit(@Argument("recipeIdsToInit") IntList recipeIds) {
             return computeRecipeIds(recipeIds);
         }
     }

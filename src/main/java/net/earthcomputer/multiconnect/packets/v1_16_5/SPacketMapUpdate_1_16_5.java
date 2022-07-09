@@ -14,12 +14,11 @@ import net.earthcomputer.multiconnect.packets.SPacketMapUpdate;
 import net.earthcomputer.multiconnect.packets.latest.SPacketMapUpdate_Latest;
 import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.mixin.MapStateAccessor;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.item.FilledMapItem;
-import net.minecraft.item.map.MapState;
-
+import net.earthcomputer.multiconnect.protocols.v1_16.mixin.MapItemSavedDataAccessor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.item.MapItem;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import java.util.List;
 import java.util.Optional;
 
@@ -73,15 +72,15 @@ public class SPacketMapUpdate_1_16_5 implements SPacketMapUpdate {
         newPacket.z = z;
         newPacket.data = data;
         userData.put(POST_HANDLE_MAP_PACKET, () -> {
-            ClientWorld world = MinecraftClient.getInstance().world;
+            ClientLevel world = Minecraft.getInstance().level;
             if (world != null) {
-                String mapName = FilledMapItem.getMapName(mapId);
-                MapState mapState = world.getMapState(mapName);
+                String mapName = MapItem.makeKey(mapId);
+                MapItemSavedData mapState = world.getMapData(mapName);
                 if (mapState != null) {
-                    MapStateAccessor accessor = (MapStateAccessor) mapState;
-                    if (showIcons != accessor.isShowIcons()) {
-                        accessor.setShowIcons(showIcons);
-                        MinecraftClient.getInstance().gameRenderer.getMapRenderer().updateTexture(mapId, mapState);
+                    MapItemSavedDataAccessor accessor = (MapItemSavedDataAccessor) mapState;
+                    if (showIcons != accessor.isTrackingPosition()) {
+                        accessor.setTrackingPosition(showIcons);
+                        Minecraft.getInstance().gameRenderer.getMapRenderer().update(mapId, mapState);
                     }
                 }
             }

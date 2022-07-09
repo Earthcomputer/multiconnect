@@ -6,8 +6,7 @@ import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketUnlockRecipes;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 
 @MessageVariant(minVersion = Protocols.V1_16_2)
@@ -27,12 +26,12 @@ public abstract class SPacketUnlockRecipes_Latest implements SPacketUnlockRecipe
     public boolean smokerBookOpen;
     @Introduce(booleanValue = false)
     public boolean smokerBookFilterActive;
-    public List<Identifier> recipeIdsToChange;
+    public List<ResourceLocation> recipeIdsToChange;
 
     @Polymorphic(stringValue = "INIT")
     @MessageVariant(minVersion = Protocols.V1_16_2)
     public static class Init extends SPacketUnlockRecipes_Latest implements SPacketUnlockRecipes.Init {
-        public List<Identifier> recipeIdsToInit;
+        public List<ResourceLocation> recipeIdsToInit;
     }
 
     @Polymorphic(otherwise = true)

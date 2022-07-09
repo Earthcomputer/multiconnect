@@ -3,23 +3,19 @@ package net.earthcomputer.multiconnect.protocols.generic;
 import com.google.common.base.Suppliers;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.earthcomputer.multiconnect.mixin.bridge.MinecraftClientAccessor;
+import net.earthcomputer.multiconnect.mixin.bridge.MinecraftAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnections;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.BlockConnector;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandler;
-import net.minecraft.network.Packet;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.World;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -37,20 +33,20 @@ public abstract class AbstractProtocol {
     public void setup() {
         PacketSystem.connect();
         revertCollisionBoxes();
-        DataTrackerManager.onConnectToServer();
+        SynchedDataManager.onConnectToServer();
         AssetDownloader.reloadLanguages();
         markChangedCollisionBoxes();
-        ((MinecraftClientAccessor) MinecraftClient.getInstance()).getSearchManager().reload(MinecraftClient.getInstance().getResourceManager());
+        ((MinecraftAccessor) Minecraft.getInstance()).getSearchRegistry().onResourceManagerReload(Minecraft.getInstance().getResourceManager());
     }
 
     public void disable() {
         PacketSystem.disconnect();
     }
 
-    public void preAcceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+    public void preAcceptEntityData(Class<? extends Entity> clazz, EntityDataAccessor<?> data) {
     }
 
-    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
+    public boolean acceptEntityData(Class<? extends Entity> clazz, EntityDataAccessor<?> data) {
         return true;
     }
 
@@ -59,28 +55,28 @@ public abstract class AbstractProtocol {
 
     private void revertCollisionBoxes() {
         for (Block block : collisionBoxesToRevert) {
-            for (BlockState state : block.getStateManager().getStates()) {
-                state.initShapeCache();
+            for (BlockState state : block.getStateDefinition().getPossibleStates()) {
+                state.initCache();
             }
         }
         collisionBoxesToRevert.clear();
     }
 
     protected void markCollisionBoxChanged(Block block) {
-        for (BlockState state : block.getStateManager().getStates()) {
-            state.initShapeCache();
+        for (BlockState state : block.getStateDefinition().getPossibleStates()) {
+            state.initCache();
         }
         collisionBoxesToRevert.add(block);
     }
 
-    public BlockState getActualState(World world, BlockPos pos, BlockState state) {
+    public BlockState getActualState(Level world, BlockPos pos, BlockState state) {
         return state;
     }
 
     public void postEntityDataRegister(Class<? extends Entity> clazz) {
     }
 
-    public <T> T readTrackedData(TrackedDataHandler<T> handler, PacketByteBuf buf) {
+    public <T> T readEntityData(EntityDataSerializer<T> handler, FriendlyByteBuf buf) {
         return handler.read(buf);
     }
 
@@ -93,28 +89,19 @@ public abstract class AbstractProtocol {
         return oldBlock != newBlock;
     }
 
-    public float getBlockHardness(BlockState state, float hardness) {
-        return hardness;
+    public float getBlockDestroySpeed(BlockState state, float destroySpeed) {
+        return destroySpeed;
     }
 
-    public float getBlockResistance(Block block, float resistance) {
+    public float getBlockExplosionResistance(Block block, float resistance) {
         return resistance;
     }
 
-    public int clientSlotIdToServer(ScreenHandler screenHandler, int slotId) {
+    public int clientSlotIdToServer(AbstractContainerMenu menu, int slotId) {
         return slotId;
     }
 
-    public int serverSlotIdToClient(ScreenHandler screenHandler, int slotId) {
+    public int serverSlotIdToClient(AbstractContainerMenu menu, int slotId) {
         return slotId;
-    }
-
-    @ThreadSafe
-    public ChunkPos extractChunkPos(Class<? extends Packet<?>> packetClass, PacketByteBuf buf) {
-        if (packetClass == ChunkDataS2CPacket.class) {
-            return new ChunkPos(buf.readInt(), buf.readInt());
-        } else {
-            throw new IllegalArgumentException();
-        }
     }
 }

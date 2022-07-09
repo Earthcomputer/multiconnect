@@ -11,12 +11,12 @@ import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.v1_15_2.ItemStack_1_15_2;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.text.Text;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 
 @Polymorphic
 @MessageVariant(minVersion = Protocols.V1_13_2, maxVersion = Protocols.V1_13_2)
@@ -36,14 +36,14 @@ public abstract class ItemStack_1_13_2 implements CommonTypes.ItemStack {
 
     public static ItemStack_1_13_2 fromMinecraft(ItemStack stack) {
         if (stack.isEmpty()) {
-            return new Empty();
+            return new net.earthcomputer.multiconnect.packets.v1_13_2.ItemStack_1_13_2.Empty();
         } else {
             var later = (ItemStack_1_15_2.NonEmpty) ItemStack_1_15_2.fromMinecraft(stack);
-            var result = new NonEmpty();
+            var result = new net.earthcomputer.multiconnect.packets.v1_13_2.ItemStack_1_13_2.NonEmpty();
             result.present = true;
             result.itemId = later.itemId;
             result.count = later.count;
-            result.tag = NonEmpty.translateTagServerbound(later.tag);
+            result.tag = net.earthcomputer.multiconnect.packets.v1_13_2.ItemStack_1_13_2.NonEmpty.translateTagServerbound(later.tag);
             return result;
         }
     }
@@ -61,7 +61,7 @@ public abstract class ItemStack_1_13_2 implements CommonTypes.ItemStack {
         @DefaultConstruct(intValue = 1)
         public byte count;
         @Introduce(direction = Introduce.Direction.FROM_NEWER, compute = "translateTagServerbound")
-        public NbtCompound tag;
+        public CompoundTag tag;
 
         @Override
         public int getItemId() {
@@ -74,28 +74,28 @@ public abstract class ItemStack_1_13_2 implements CommonTypes.ItemStack {
         }
 
         @Override
-        public NbtCompound getTag() {
+        public CompoundTag getTag() {
             return tag;
         }
 
-        public static NbtCompound translateTagServerbound(
-                @Argument("tag") NbtCompound tag
+        public static CompoundTag translateTagServerbound(
+                @Argument("tag") CompoundTag tag
         ) {
             if (tag == null) {
                 return null;
             }
-            if (tag.contains("display", NbtElement.COMPOUND_TYPE)) {
-                NbtCompound display = tag.getCompound("display");
-                if (display.contains("multiconnect:1.13.2/oldLore", NbtElement.LIST_TYPE) || display.contains("Lore", NbtElement.LIST_TYPE)) {
-                    NbtList lore = display.contains("multiconnect:1.13.2/oldLore", NbtElement.LIST_TYPE) ? display.getList("multiconnect:1.13.2/oldLore", NbtElement.STRING_TYPE) : display.getList("Lore", NbtElement.STRING_TYPE);
-                    NbtList newLore = new NbtList();
+            if (tag.contains("display", Tag.TAG_COMPOUND)) {
+                CompoundTag display = tag.getCompound("display");
+                if (display.contains("multiconnect:1.13.2/oldLore", Tag.TAG_LIST) || display.contains("Lore", Tag.TAG_LIST)) {
+                    ListTag lore = display.contains("multiconnect:1.13.2/oldLore", Tag.TAG_LIST) ? display.getList("multiconnect:1.13.2/oldLore", Tag.TAG_STRING) : display.getList("Lore", Tag.TAG_STRING);
+                    ListTag newLore = new ListTag();
                     for (int i = 0; i < lore.size(); i++) {
                         try {
-                            Text text = Text.Serializer.fromJson(lore.getString(i));
+                            Component text = Component.Serializer.fromJson(lore.getString(i));
                             if (text == null) {
                                 throw new JsonParseException("text null");
                             }
-                            newLore.add(NbtString.of(text.getString()));
+                            newLore.add(StringTag.valueOf(text.getString()));
                         } catch (JsonParseException e) {
                             newLore.add(lore.get(i));
                         }

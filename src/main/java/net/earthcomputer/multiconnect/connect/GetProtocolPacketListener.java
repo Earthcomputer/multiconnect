@@ -1,39 +1,38 @@
 package net.earthcomputer.multiconnect.connect;
 
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.listener.ClientQueryPacketListener;
-import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket;
-import net.minecraft.network.packet.s2c.query.QueryResponseS2CPacket;
-import net.minecraft.text.Text;
-
 import java.util.concurrent.Semaphore;
+import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.status.ClientStatusPacketListener;
+import net.minecraft.network.protocol.status.ClientboundPongResponsePacket;
+import net.minecraft.network.protocol.status.ClientboundStatusResponsePacket;
 
-public class GetProtocolPacketListener implements ClientQueryPacketListener {
+public class GetProtocolPacketListener implements ClientStatusPacketListener {
 
-    private final ClientConnection connection;
+    private final Connection connection;
     private final Semaphore semaphore = new Semaphore(0);
     private int protocol;
     private boolean completed = false;
     private boolean failed = false;
 
-    public GetProtocolPacketListener(ClientConnection connection) {
+    public GetProtocolPacketListener(Connection connection) {
         this.connection = connection;
     }
 
     @Override
-    public void onResponse(QueryResponseS2CPacket packet) {
-        protocol = packet.getServerMetadata().getVersion().getProtocolVersion();
+    public void handleStatusResponse(ClientboundStatusResponsePacket packet) {
+        protocol = packet.getStatus().getVersion().getProtocol();
         completed = true;
         semaphore.release();
-        connection.disconnect(Text.translatable("multiplayer.status.finished"));
+        connection.disconnect(Component.translatable("multiplayer.status.finished"));
     }
 
     @Override
-    public void onPong(QueryPongS2CPacket packet) {
+    public void handlePongResponse(ClientboundPongResponsePacket packet) {
     }
 
     @Override
-    public void onDisconnected(Text reason) {
+    public void onDisconnect(Component reason) {
         if (!completed) {
             completed = true;
             failed = true;
@@ -42,7 +41,7 @@ public class GetProtocolPacketListener implements ClientQueryPacketListener {
     }
 
     @Override
-    public ClientConnection getConnection() {
+    public Connection getConnection() {
         return connection;
     }
 

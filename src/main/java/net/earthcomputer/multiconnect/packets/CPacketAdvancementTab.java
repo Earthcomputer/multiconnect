@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.packets;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 @MessageVariant
 @Polymorphic
@@ -18,7 +18,7 @@ public abstract class CPacketAdvancementTab {
     @Polymorphic(stringValue = "OPENED")
     @MessageVariant
     public static class Opened extends CPacketAdvancementTab {
-        public Identifier tabId;
+        public ResourceLocation tabId;
     }
 
     @Polymorphic(stringValue = "CLOSED")

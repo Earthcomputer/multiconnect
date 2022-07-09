@@ -6,17 +6,16 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.ap.Registry;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.nbt.AbstractNbtList;
-import net.minecraft.nbt.AbstractNbtNumber;
-import net.minecraft.nbt.NbtByteArray;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtIntArray;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtLongArray;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.util.Identifier;
+import net.minecraft.nbt.ByteArrayTag;
+import net.minecraft.nbt.CollectionTag;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntArrayTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongArrayTag;
+import net.minecraft.nbt.NumericTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +31,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
@@ -86,14 +86,14 @@ public final class PacketVisualizer {
 
     @SuppressWarnings("unchecked")
     @Language("HTML")
-    private static <T> String objectToHtml(Object object, @Nullable Registries registry, boolean clientbound, boolean wantOutline) {
+    private static <T> String objectToHtml(@Nullable Object object, @Nullable Registries registry, boolean clientbound, boolean wantOutline) {
         // handle null first to avoid NPEs
         if (object == null) {
             return stringEntry("null", EntryType.NULL, wantOutline);
         }
 
         // handle simple stringifiable types
-        if (object instanceof Number || object instanceof Boolean || object instanceof UUID || object instanceof Identifier) {
+        if (object instanceof Number || object instanceof Boolean || object instanceof UUID || object instanceof ResourceLocation) {
             // check if there is an associated registry to display something more useful
             if (registry != null) {
                 if (object instanceof Byte || object instanceof Short || object instanceof Integer || object instanceof Long) {
@@ -189,7 +189,7 @@ public final class PacketVisualizer {
         }
 
         // nbt
-        if (object instanceof NbtElement nbt) {
+        if (object instanceof Tag nbt) {
             return nbtToHtml(nbt, wantOutline);
         }
 
@@ -198,36 +198,36 @@ public final class PacketVisualizer {
     }
 
     @Language("HTML")
-    private static String nbtToHtml(NbtElement nbt, boolean wantOutline) {
-        if (nbt instanceof NbtCompound compound) {
+    private static String nbtToHtml(Tag nbt, boolean wantOutline) {
+        if (nbt instanceof CompoundTag compound) {
             StringBuilder text = new StringBuilder(
                     "<details><summary>Click to expand NBT Compound</summary><div class='record_table'>"
             );
-            for (String key : compound.getKeys()) {
+            for (String key : compound.getAllKeys()) {
                 text.append("<span class='table_key'>").append(key).append(": </span>");
-                text.append("<span>").append(nbtToHtml(compound.get(key), true)).append("</span>");
+                text.append("<span>").append(nbtToHtml(Objects.requireNonNull(compound.get(key)), true)).append("</span>");
             }
             text.append("</div></details>");
             return entry(text.toString(), EntryType.NBT, wantOutline);
         }
-        if (nbt instanceof AbstractNbtList<?> list) {
-            if (nbt instanceof NbtList) {
+        if (nbt instanceof CollectionTag<?> list) {
+            if (nbt instanceof ListTag) {
                 return makeObjectList(list.stream(), null, false, wantOutline);
-            } else if (nbt instanceof NbtByteArray byteArray) {
-                return objectToHtml(byteArray.getByteArray(), null, false, wantOutline);
-            } else if (nbt instanceof NbtIntArray intArray) {
-                return objectToHtml(intArray.getIntArray(), null, false, wantOutline);
-            } else if (nbt instanceof NbtLongArray longArray) {
-                return objectToHtml(longArray.getLongArray(), null, false, wantOutline);
+            } else if (nbt instanceof ByteArrayTag byteArray) {
+                return objectToHtml(byteArray.getAsByteArray(), null, false, wantOutline);
+            } else if (nbt instanceof IntArrayTag intArray) {
+                return objectToHtml(intArray.getAsIntArray(), null, false, wantOutline);
+            } else if (nbt instanceof LongArrayTag longArray) {
+                return objectToHtml(longArray.getAsLongArray(), null, false, wantOutline);
             } else {
                 throw new IllegalStateException("Unknown NbtList type: " + nbt.getClass());
             }
         }
-        if (nbt instanceof AbstractNbtNumber number) {
-            return stringEntry(number.numberValue().toString(), EntryType.PRIMITIVE, wantOutline);
+        if (nbt instanceof NumericTag number) {
+            return stringEntry(number.getAsNumber().toString(), EntryType.PRIMITIVE, wantOutline);
         }
-        if (nbt instanceof NbtString str) {
-            return objectToHtml(str.asString(), null, false, wantOutline);
+        if (nbt instanceof StringTag str) {
+            return objectToHtml(str.getAsString(), null, false, wantOutline);
         }
         throw new IllegalStateException("Unknown NbtElement type: " + nbt.getClass());
     }

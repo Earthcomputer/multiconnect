@@ -10,13 +10,13 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.MulticonnectConfig;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.ServerInfo;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.network.NetworkState;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.network.ConnectionProtocol;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 
@@ -42,7 +42,7 @@ public final class PacketRecorder {
     public static final int SERVERBOUND_PACKET = 1;
     public static final int PLAYER_POSITION = 2;
     public static final int TICK = 3;
-    public static final int NETWORK_STATE = 4;
+    public static final int CONNECTION_PROTOCOL = 4;
     public static final int DISCONNECTED = 255;
     private static final Object LOCK = new Object();
     private static DataOutputStream stream;
@@ -63,8 +63,8 @@ public final class PacketRecorder {
         synchronized (LOCK) {
             hasThrownError = false;
 
-            ServerInfo server = MinecraftClient.getInstance().getCurrentServerEntry();
-            String serverIp = server == null ? "unknown" : server.address;
+            ServerData server = Minecraft.getInstance().getCurrentServer();
+            String serverIp = server == null ? "unknown" : server.ip;
 
             try {
                 Path dir = FabricLoader.getInstance().getConfigDir().resolve("multiconnect").resolve("packet-logs");
@@ -77,9 +77,9 @@ public final class PacketRecorder {
                 return;
             }
 
-            NbtCompound header = new NbtCompound();
+            CompoundTag header = new CompoundTag();
             header.putInt("version", VERSION);
-            header.putString("minecraft-version", SharedConstants.getGameVersion().getId());
+            header.putString("minecraft-version", SharedConstants.getCurrentVersion().getId());
             FabricLoader.getInstance().getModContainer("multiconnect").ifPresent(modContainer -> {
                 header.putString("multiconnect-version", modContainer.getMetadata().getVersion().getFriendlyString());
             });
@@ -102,7 +102,7 @@ public final class PacketRecorder {
     }
 
     private static void zipLogFile(Path oldLog) throws IOException {
-        NbtCompound nbt;
+        CompoundTag nbt;
         try (var in = new DataInputStream(Files.newInputStream(oldLog))) {
             nbt = NbtIo.read(in);
         } catch (IOException e) {
@@ -158,17 +158,17 @@ public final class PacketRecorder {
         });
     }
 
-    public static void tickMovement(ClientPlayerEntity player) {
+    public static void tickMovement(LocalPlayer player) {
         writePacketLogEntry(() -> {
             stream.writeByte(PLAYER_POSITION);
-            BlockPos blockPos = player.getBlockPos();
+            BlockPos blockPos = player.blockPosition();
             stream.writeLong(blockPos.asLong());
             int dx = (int) ((player.getX() - blockPos.getX()) * 16) & 15;
             int dy = (int) ((player.getY() - blockPos.getY()) * 16) & 15;
             int dz = (int) ((player.getZ() - blockPos.getZ()) * 16) & 15;
             stream.writeShort((dy << 8) | (dz << 4) | dx);
-            stream.writeByte((int) (player.getYaw() * 256 / 360));
-            stream.writeByte((int) (player.getPitch() * 256 / 360));
+            stream.writeByte((int) (player.getYRot() * 256 / 360));
+            stream.writeByte((int) (player.getXRot() * 256 / 360));
         });
     }
 
@@ -176,9 +176,9 @@ public final class PacketRecorder {
         writePacketLogEntry(() -> stream.writeByte(TICK));
     }
 
-    public static void onSetNetworkState(NetworkState state) {
+    public static void onSetConnectionProtocol(ConnectionProtocol state) {
         writePacketLogEntry(() -> {
-            stream.writeByte(NETWORK_STATE);
+            stream.writeByte(CONNECTION_PROTOCOL);
             stream.writeByte(state.getId());
         });
     }

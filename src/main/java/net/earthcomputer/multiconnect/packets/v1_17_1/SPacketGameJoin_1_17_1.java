@@ -9,9 +9,8 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketGameJoin;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 
 @MessageVariant(minVersion = Protocols.V1_16_2, maxVersion = Protocols.V1_17_1)
@@ -24,13 +23,13 @@ public class SPacketGameJoin_1_17_1 implements SPacketGameJoin {
     @Introduce(compute = "computeGamemode")
     public int gamemode;
     public byte previousGamemode;
-    public List<Identifier> dimensions;
-    @Datafix(DatafixTypes.REGISTRY_MANAGER)
-    public NbtCompound registryManager;
+    public List<ResourceLocation> dimensions;
+    @Datafix(DatafixTypes.REGISTRY_ACCESS)
+    public CompoundTag registryManager;
     @Datafix(DatafixTypes.DIMENSION)
     @Introduce(compute = "computeDimensionType")
-    public NbtCompound dimensionType;
-    public Identifier dimension;
+    public CompoundTag dimensionType;
+    public ResourceLocation dimension;
     @Type(Types.LONG)
     public long hashedSeed;
     public int maxPlayers;
@@ -48,8 +47,8 @@ public class SPacketGameJoin_1_17_1 implements SPacketGameJoin {
         return gamemode & ~8;
     }
 
-    public static NbtCompound computeDimensionType(@Argument("dimensionType") Identifier dimension) {
-        NbtCompound dimType = new NbtCompound();
+    public static CompoundTag computeDimensionType(@Argument("dimensionType") ResourceLocation dimension) {
+        CompoundTag dimType = new CompoundTag();
         dimType.putString("name", dimension.toString());
         return dimType;
     }

@@ -1,0 +1,34 @@
+package net.earthcomputer.multiconnect.protocols.v1_12;
+
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+
+public class BlockEntities_1_12_2 {
+
+    public static final BlockEntityType<NoteBlockBlockEntity> NOTE_BLOCK = BlockEntityType.Builder.of(NoteBlockBlockEntity::new, Blocks.NOTE_BLOCK).build(null);
+    public static final BlockEntityType<FlowerPotBlockEntity> FLOWER_POT = BlockEntityType.Builder.of(FlowerPotBlockEntity::new,
+            Blocks.FLOWER_POT,
+            Blocks.POTTED_OAK_SAPLING,
+            Blocks.POTTED_SPRUCE_SAPLING,
+            Blocks.POTTED_BIRCH_SAPLING,
+            Blocks.POTTED_JUNGLE_SAPLING,
+            Blocks.POTTED_ACACIA_SAPLING,
+            Blocks.POTTED_DARK_OAK_SAPLING,
+            Blocks.POTTED_FERN,
+            Blocks.POTTED_DANDELION,
+            Blocks.POTTED_POPPY,
+            Blocks.POTTED_BLUE_ORCHID,
+            Blocks.POTTED_ALLIUM,
+            Blocks.POTTED_AZURE_BLUET,
+            Blocks.POTTED_RED_TULIP,
+            Blocks.POTTED_ORANGE_TULIP,
+            Blocks.POTTED_WHITE_TULIP,
+            Blocks.POTTED_PINK_TULIP,
+            Blocks.POTTED_OXEYE_DAISY,
+            Blocks.POTTED_RED_MUSHROOM,
+            Blocks.POTTED_BROWN_MUSHROOM,
+            Blocks.POTTED_DEAD_BUSH,
+            Blocks.POTTED_CACTUS
+    ).build(null);
+
+}

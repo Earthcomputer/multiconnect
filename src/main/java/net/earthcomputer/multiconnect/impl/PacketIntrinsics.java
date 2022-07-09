@@ -16,21 +16,23 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.earthcomputer.multiconnect.debug.PacketReplay;
-import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
+import net.earthcomputer.multiconnect.mixin.connect.ConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.SharedConstants;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.core.Registry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.NbtTagSizeTracker;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.Property;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.Property;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
@@ -63,16 +65,18 @@ public final class PacketIntrinsics {
         }
     }
 
-    public static NbtCompound datafix(NbtCompound data, DataFixer fixer, DSL.TypeReference type, int fromVersion) {
+    @Contract("null, _, _, _ -> null; !null, _, _, _ -> !null")
+    @Nullable
+    public static CompoundTag datafix(@Nullable CompoundTag data, DataFixer fixer, DSL.TypeReference type, int fromVersion) {
         if (data == null) {
             return null;
         }
 
-        return (NbtCompound) fixer.update(
+        return (CompoundTag) fixer.update(
                 type,
                 new Dynamic<>(NbtOps.INSTANCE, data),
                 fromVersion,
-                SharedConstants.getGameVersion().getWorldVersion()
+                SharedConstants.getCurrentVersion().getDataVersion().getVersion()
         ).getValue();
     }
 
@@ -170,20 +174,20 @@ public final class PacketIntrinsics {
                 } else {
                     blockName = string.substring(0, bracketIndex);
                 }
-                Block block = Registry.BLOCK.getOrThrow(RegistryKey.of(Registry.BLOCK_KEY, new Identifier("multiconnect", blockName)));
+                Block block = Registry.BLOCK.getOrThrow(ResourceKey.create(Registry.BLOCK_REGISTRY, new ResourceLocation("multiconnect", blockName)));
                 if (bracketIndex == -1) {
-                    ret.add(block.getDefaultState());
+                    ret.add(block.defaultBlockState());
                 } else {
                     String stateString = string.substring(bracketIndex + 1, string.length() - 1);
-                    BlockState state = block.getDefaultState();
-                    StateManager<Block, BlockState> stateManager = block.getStateManager();
+                    BlockState state = block.defaultBlockState();
+                    StateDefinition<Block, BlockState> stateManager = block.getStateDefinition();
                     for (String propertyString : stateString.split(",")) {
                         String[] propertySplit = propertyString.split("=", 2);
                         String propertyName = propertySplit[0];
                         String propertyValue = propertySplit[1];
                         Property<T> property = (Property<T>) stateManager.getProperty(propertyName);
                         Objects.requireNonNull(property);
-                        state = state.with(property, property.parse(propertyValue).orElseThrow(() -> new IllegalArgumentException("Could not parse property " + propertyName + " with value " + propertyValue)));
+                        state = state.setValue(property, property.getValue(propertyValue).orElseThrow(() -> new IllegalArgumentException("Could not parse property " + propertyName + " with value " + propertyValue)));
                     }
                     ret.add(state);
                 }
@@ -200,21 +204,21 @@ public final class PacketIntrinsics {
         return ret.build();
     }
 
-    public static int getStateId(RegistryKey<Block> blockKey, int offset) {
+    public static int getStateId(ResourceKey<Block> blockKey, int offset) {
         Block block = Registry.BLOCK.get(blockKey);
         if (block == null) {
-            throw new AssertionError("Could not find block " + blockKey.getValue());
+            throw new AssertionError("Could not find block " + blockKey.location());
         }
-        BlockState firstState = block.getStateManager().getStates().get(0);
-        return Block.getRawIdFromState(firstState) + offset;
+        BlockState firstState = block.getStateDefinition().getPossibleStates().get(0);
+        return Block.getId(firstState) + offset;
     }
 
-    public static void sendRawToServer(ClientPlayNetworkHandler networkHandler, List<ByteBuf> bufs) {
+    public static void sendRawToServer(ClientPacketListener connection, List<ByteBuf> bufs) {
         if (bufs.isEmpty()) {
             return;
         }
 
-        ChannelHandlerContext context = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel()
+        ChannelHandlerContext context = ((ConnectionAccessor) connection.getConnection()).getChannel()
                 .pipeline()
                 .context("multiconnect_serverbound_translator");
 
@@ -225,12 +229,12 @@ public final class PacketIntrinsics {
         context.flush();
     }
 
-    public static void sendRawToClient(ClientPlayNetworkHandler networkHandler, TypedMap userData, List<ByteBuf> bufs) {
+    public static void sendRawToClient(ClientPacketListener connection, TypedMap userData, List<ByteBuf> bufs) {
         if (bufs.isEmpty()) {
             return;
         }
 
-        ChannelHandlerContext context = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel()
+        ChannelHandlerContext context = ((ConnectionAccessor) connection.getConnection()).getChannel()
                 .pipeline()
                 .context("multiconnect_clientbound_translator");
 
@@ -289,7 +293,7 @@ public final class PacketIntrinsics {
         return string;
     }
 
-    public static NbtCompound readNbtCompound(ByteBuf buf) {
+    public static CompoundTag readNbtCompound(ByteBuf buf) {
         int index = buf.readerIndex();
         byte b = buf.readByte();
         if (b == 0) {
@@ -297,7 +301,7 @@ public final class PacketIntrinsics {
         }
         buf.readerIndex(index);
         try {
-            return NbtIo.read(new ByteBufInputStream(buf), new NbtTagSizeTracker(2097152));
+            return NbtIo.read(new ByteBufInputStream(buf), new NbtAccounter(2097152));
         } catch (IOException e) {
             throw new DecoderException(e);
         }
@@ -337,7 +341,7 @@ public final class PacketIntrinsics {
         buf.writeBytes(bytes);
     }
 
-    public static void writeNbtCompound(ByteBuf buf, NbtCompound value) {
+    public static void writeNbtCompound(ByteBuf buf, @Nullable CompoundTag value) {
         if (value == null) {
             buf.writeByte(0);
         } else {
@@ -362,7 +366,7 @@ public final class PacketIntrinsics {
         void send(
                 Object packet,
                 List<ByteBuf> outBufs,
-                ClientPlayNetworkHandler networkHandler,
+                ClientPacketListener connection,
                 Map<Class<?>, Object> globalData,
                 TypedMap userData
         );
@@ -373,7 +377,7 @@ public final class PacketIntrinsics {
         void send(
                 ByteBuf packet,
                 List<ByteBuf> outBufs,
-                ClientPlayNetworkHandler networkHandler,
+                ClientPacketListener connection,
                 Map<Class<?>, Object> globalData,
                 TypedMap userData
         );

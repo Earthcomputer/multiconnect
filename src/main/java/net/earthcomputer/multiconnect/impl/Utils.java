@@ -5,19 +5,19 @@ import com.google.common.collect.ImmutableList;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.registry.*;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeKeys;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.WorldChunk;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
@@ -28,12 +28,12 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class Utils {
-    public static boolean isChunkEmpty(WorldChunk chunk) {
+    public static boolean isChunkEmpty(LevelChunk chunk) {
         if (chunk.isEmpty()) {
             return true;
         }
-        for (ChunkSection section : chunk.getSectionArray()) {
-            if (!section.isEmpty()) { // TODO: this was ChunkSection.isEmpty (static method), impl the same?
+        for (LevelChunkSection section : chunk.getSections()) {
+            if (!section.hasOnlyAir()) { // TODO: this was ChunkSection.isEmpty (static method), impl the same?
                 return false;
             }
         }
@@ -42,25 +42,25 @@ public class Utils {
 
     public static DropDownWidget<ConnectionMode> createVersionDropdown(Screen screen, ConnectionMode initialMode) {
         var versionDropDown = new DropDownWidget<>(screen.width - 80, 5, 75, 20, initialMode, mode -> {
-            MutableText text = Text.literal(mode.getName());
+            MutableComponent text = Component.literal(mode.getName());
             if (mode.isMulticonnectBeta()) {
-                text.append(Text.literal(" !").formatted(Formatting.RED));
+                text.append(Component.literal(" !").withStyle(ChatFormatting.RED));
             }
             return text;
         })
                 .setCategoryLabelExtractor(mode -> {
-                    MutableText text = Text.literal(mode.getMajorReleaseName());
+                    MutableComponent text = Component.literal(mode.getMajorReleaseName());
                     if (mode.isMulticonnectBeta()) {
-                        text.append(Text.literal(" !").formatted(Formatting.RED));
+                        text.append(Component.literal(" !").withStyle(ChatFormatting.RED));
                     }
                     return text;
                 })
                 .setTooltipRenderer((matrices, mode, x, y, isCategory) -> {
                     if (mode.isMulticonnectBeta()) {
                         String modeName = isCategory ? mode.getMajorReleaseName() : mode.getName();
-                        screen.renderTooltip(matrices, ImmutableList.of(
-                                Text.translatable("multiconnect.betaWarning.line1", modeName),
-                                Text.translatable("multiconnect.betaWarning.line2", modeName)
+                        screen.renderComponentTooltip(matrices, ImmutableList.of(
+                                Component.translatable("multiconnect.betaWarning.line1", modeName),
+                                Component.translatable("multiconnect.betaWarning.line2", modeName)
                         ), x, y);
                     }
                 });
@@ -257,11 +257,11 @@ public class Utils {
         list.set(k, x);
     }
 
-    public static ChunkDataS2CPacket createEmptyChunkDataPacket(int x, int z, World world, DynamicRegistryManager registryManager) {
-        Registry<Biome> biomeRegistry = registryManager.get(Registry.BIOME_KEY);
-        Biome plainsBiome = biomeRegistry.get(BiomeKeys.PLAINS);
+    public static ClientboundLevelChunkWithLightPacket createEmptyChunkDataPacket(int x, int z, Level world, RegistryAccess registryManager) {
+        Registry<Biome> biomeRegistry = registryManager.registryOrThrow(Registry.BIOME_REGISTRY);
+        Biome plainsBiome = biomeRegistry.get(Biomes.PLAINS);
 
-        ChunkDataS2CPacket packet = new ChunkDataS2CPacket(new WorldChunk(world, new ChunkPos(x, z)), world.getLightingProvider(), new BitSet(), new BitSet(), true);
+        ClientboundLevelChunkWithLightPacket packet = new ClientboundLevelChunkWithLightPacket(new LevelChunk(world, new ChunkPos(x, z)), world.getLightEngine(), new BitSet(), new BitSet(), true);
         // TODO: rewrite
 //        //noinspection ConstantConditions
 //        IUserDataHolder iPacket = (IUserDataHolder) packet;

@@ -4,12 +4,13 @@ import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.text.Text;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 @MessageVariant(maxVersion = Protocols.V1_18_2)
 public class Text_1_18_2 implements CommonTypes.Text {
-    @Length(max = PacketByteBuf.MAX_TEXT_LENGTH)
+    @Length(max = FriendlyByteBuf.MAX_COMPONENT_STRING_LENGTH)
     public String json;
 
     public Text_1_18_2() {
@@ -25,8 +26,8 @@ public class Text_1_18_2 implements CommonTypes.Text {
     }
 
     public static Text_1_18_2 createLiteral(String value) {
-        var text = Text.literal(value);
-        String json = Text.Serializer.toJson(text);
+        var text = Component.literal(value);
+        String json = Component.Serializer.toJson(text);
         return new Text_1_18_2(json);
     }
 }

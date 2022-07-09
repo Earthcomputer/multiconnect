@@ -11,8 +11,7 @@ import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.protocols.generic.DimensionTypeReference;
-import net.minecraft.util.registry.DynamicRegistryManager;
-
+import net.minecraft.core.RegistryAccess;
 import java.util.List;
 
 @MessageVariant(minVersion = Protocols.V1_18)
@@ -21,7 +20,7 @@ public class ChunkData_Latest implements ChunkData {
     public List<ChunkData.Section> sections;
 
     public static int computeSectionsLength(
-            @GlobalData DynamicRegistryManager registryManager,
+            @GlobalData RegistryAccess registryManager,
             @GlobalData DimensionTypeReference dimensionType
     ) {
         return dimensionType.getValue(registryManager).height() >> 4;
@@ -41,7 +40,7 @@ public class ChunkData_Latest implements ChunkData {
 
         @MessageVariant
         @Polymorphic(intValue = 0)
-        public static class Singleton extends BlockStatePalettedContainer {
+        public static class Singleton extends net.earthcomputer.multiconnect.packets.latest.ChunkData_Latest.BlockStatePalettedContainer {
             @Registry(Registries.BLOCK_STATE)
             public int blockStateId;
             @Type(Types.LONG)
@@ -50,7 +49,7 @@ public class ChunkData_Latest implements ChunkData {
 
         @MessageVariant
         @Polymorphic(intValue = {1, 2, 3, 4, 5, 6, 7, 8})
-        public static class Multiple extends BlockStatePalettedContainer {
+        public static class Multiple extends net.earthcomputer.multiconnect.packets.latest.ChunkData_Latest.BlockStatePalettedContainer {
             @Registry(Registries.BLOCK_STATE)
             public int[] palette;
             @Type(Types.LONG)
@@ -59,7 +58,7 @@ public class ChunkData_Latest implements ChunkData {
 
         @MessageVariant
         @Polymorphic(otherwise = true)
-        public static class RegistryContainer extends BlockStatePalettedContainer {
+        public static class RegistryContainer extends net.earthcomputer.multiconnect.packets.latest.ChunkData_Latest.BlockStatePalettedContainer {
             @Type(Types.LONG)
             public long[] data;
         }

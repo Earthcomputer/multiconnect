@@ -5,15 +5,15 @@ import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketCraftFailedResponse;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 @MessageVariant(minVersion = Protocols.V1_13)
 public class SPacketCraftFailedResponse_Latest implements SPacketCraftFailedResponse {
     public byte syncId;
     @Introduce(compute = "computeRecipe")
-    public Identifier recipe;
+    public ResourceLocation recipe;
 
-    public static Identifier computeRecipe(@Argument("recipe") int recipe) {
-        return new Identifier(String.valueOf(recipe));
+    public static ResourceLocation computeRecipe(@Argument("recipe") int recipe) {
+        return new ResourceLocation(String.valueOf(recipe));
     }
 }

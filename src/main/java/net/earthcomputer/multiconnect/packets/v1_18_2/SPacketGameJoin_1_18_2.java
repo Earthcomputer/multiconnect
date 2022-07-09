@@ -11,10 +11,9 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketGameJoin;
-import net.earthcomputer.multiconnect.protocols.v1_18_2.DiggingTracker;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.Identifier;
-
+import net.earthcomputer.multiconnect.protocols.v1_18.DiggingTracker;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -26,12 +25,12 @@ public class SPacketGameJoin_1_18_2 implements SPacketGameJoin {
     @Type(Types.UNSIGNED_BYTE)
     public int gamemode;
     public byte previousGamemode;
-    public List<Identifier> dimensions;
-    @Datafix(DatafixTypes.REGISTRY_MANAGER)
-    public NbtCompound registryManager;
+    public List<ResourceLocation> dimensions;
+    @Datafix(DatafixTypes.REGISTRY_ACCESS)
+    public CompoundTag registryManager;
     @Datafix(DatafixTypes.DIMENSION)
-    public NbtCompound dimensionType;
-    public Identifier dimension;
+    public CompoundTag dimensionType;
+    public ResourceLocation dimension;
     @Type(Types.LONG)
     public long hashedSeed;
     public int maxPlayers;

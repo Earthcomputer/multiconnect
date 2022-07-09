@@ -14,8 +14,7 @@ import net.earthcomputer.multiconnect.packets.SPacketSynchronizeRecipes;
 import net.earthcomputer.multiconnect.packets.v1_13_2.ItemStack_1_13_2;
 import net.earthcomputer.multiconnect.packets.v1_13_2.SPacketSynchronizeRecipes_1_13_2;
 import net.earthcomputer.multiconnect.packets.v1_15_2.ItemStack_1_15_2;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.resources.ResourceLocation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -60,7 +59,7 @@ public class SPacketSynchronizeRecipes_Latest implements SPacketSynchronizeRecip
                         newRecipe = new Special();
                     }
                     newRecipe.recipeId = recipe.recipeId;
-                    newRecipe.type = new Identifier(recipe.recipe.type);
+                    newRecipe.type = new ResourceLocation(recipe.recipe.type);
                     return newRecipe;
                 })
                 .collect(Collectors.toCollection(ArrayList::new));
@@ -70,8 +69,8 @@ public class SPacketSynchronizeRecipes_Latest implements SPacketSynchronizeRecip
     @MessageVariant
     public static abstract class Recipe {
         @Registry(Registries.RECIPE_SERIALIZER)
-        public Identifier type;
-        public Identifier recipeId;
+        public ResourceLocation type;
+        public ResourceLocation recipeId;
     }
 
     @Polymorphic(stringValue = "crafting_shapeless")

@@ -12,7 +12,7 @@ import net.earthcomputer.multiconnect.packets.SPacketDifficulty;
 import net.earthcomputer.multiconnect.packets.SPacketPlayerRespawn;
 import net.earthcomputer.multiconnect.packets.latest.SPacketDifficulty_Latest;
 import net.earthcomputer.multiconnect.packets.v1_14_4.SPacketPlayerRespawn_1_14_4;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.ChunkMapManager_1_13_2;
+import net.earthcomputer.multiconnect.protocols.v1_13.ChunkMapManager_1_13_2;
 
 import java.util.ArrayList;
 import java.util.List;

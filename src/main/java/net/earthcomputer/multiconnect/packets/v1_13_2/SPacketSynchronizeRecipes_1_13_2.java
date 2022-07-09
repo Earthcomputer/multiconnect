@@ -8,8 +8,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketSynchronizeRecipes;
 import net.earthcomputer.multiconnect.packets.latest.SPacketSynchronizeRecipes_Latest;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 
 @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
@@ -18,7 +17,7 @@ public class SPacketSynchronizeRecipes_1_13_2 implements SPacketSynchronizeRecip
 
     @MessageVariant
     public static class RecipeWithId {
-        public Identifier recipeId;
+        public ResourceLocation recipeId;
         public Recipe recipe;
     }
 

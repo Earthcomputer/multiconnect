@@ -14,11 +14,10 @@ import net.earthcomputer.multiconnect.packets.SPacketGameJoin;
 import net.earthcomputer.multiconnect.packets.v1_13_2.SPacketGameJoin_1_13_2;
 import net.earthcomputer.multiconnect.packets.v1_13_2.SPacketSynchronizeRecipes_1_13_2;
 import net.earthcomputer.multiconnect.packets.v1_13_2.SPacketSynchronizeTags_1_13_2;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.Protocol_1_12_2;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.RecipeInfo;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.TabCompletionManager;
-import net.minecraft.util.Identifier;
-
+import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12_2;
+import net.earthcomputer.multiconnect.protocols.v1_12.RecipeInfo;
+import net.earthcomputer.multiconnect.protocols.v1_12.TabCompletionManager;
+import net.minecraft.resources.ResourceLocation;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +52,7 @@ public class SPacketGameJoin_1_12_2 implements SPacketGameJoin {
 
         int recipeId = 0;
         for (RecipeInfo<?> recipeInfo : ((Protocol_1_12_2) ConnectionInfo.protocol).getRecipes()) {
-            synchronizeRecipesPacket.recipes.add(recipeInfo.toPacketRecipe(new Identifier(String.valueOf(recipeId++))));
+            synchronizeRecipesPacket.recipes.add(recipeInfo.toPacketRecipe(new ResourceLocation(String.valueOf(recipeId++))));
         }
 
         packets.add(synchronizeRecipesPacket);

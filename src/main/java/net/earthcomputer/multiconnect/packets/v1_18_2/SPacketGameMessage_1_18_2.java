@@ -22,14 +22,14 @@ import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketChatMessage;
 import net.earthcomputer.multiconnect.packets.SPacketGameMessage;
 import net.earthcomputer.multiconnect.packets.latest.SPacketGameMessage_Latest;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.StringNbtReader;
-import net.minecraft.network.message.MessageType;
-import net.minecraft.util.JsonHelper;
-import net.minecraft.util.Util;
-import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.Util;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.network.chat.ChatType;
+import net.minecraft.util.GsonHelper;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
@@ -55,7 +55,7 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
     public static UUID computeSender(@Argument("text") CommonTypes.Text text) {
         MyText myText;
         try {
-            myText = JsonHelper.deserialize(GSON, text.getJson(), MyText.class, false);
+            myText = GsonHelper.fromJson(GSON, text.getJson(), MyText.class, false);
         } catch (JsonParseException e) {
             return Util.NIL_UUID;
         }
@@ -80,13 +80,13 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
             }
         }
         if (senderArg.hoverEvent.value != null) {
-            NbtCompound nbt;
+            CompoundTag nbt;
             try {
-                nbt = StringNbtReader.parse(senderArg.hoverEvent.value);
+                nbt = TagParser.parseTag(senderArg.hoverEvent.value);
             } catch (CommandSyntaxException e) {
                 nbt = null;
             }
-            if (nbt != null && nbt.contains("id", NbtElement.STRING_TYPE)) {
+            if (nbt != null && nbt.contains("id", Tag.TAG_STRING)) {
                 try {
                     return UUID.fromString(nbt.getString("id"));
                 } catch (IllegalArgumentException ignore) {
@@ -114,7 +114,7 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
             @Argument("position") byte position,
             @Argument("sender") UUID sender,
             @FilledArgument(fromVersion = Protocols.V1_18_2, toVersion = Protocols.V1_19) Function<Text_1_18_2, CommonTypes.Text_Latest> textTranslator,
-            @GlobalData DynamicRegistryManager registryManager
+            @GlobalData RegistryAccess registryManager
     ) {
         if (registryManager == null) {
             // Some servers apparently send chat messages before the game join packet. We can't handle these anymore
@@ -123,10 +123,10 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
 
         CommonTypes.Text text = textTranslator.apply((Text_1_18_2) text_);
 
-        Registry<MessageType> messageTypeRegistry = registryManager.get(Registry.MESSAGE_TYPE_KEY);
-        int systemId = messageTypeRegistry.getRawId(messageTypeRegistry.get(MessageType.SYSTEM));
-        int gameInfoId = messageTypeRegistry.getRawId(messageTypeRegistry.get(MessageType.GAME_INFO));
-        int chatId = messageTypeRegistry.getRawId(messageTypeRegistry.get(MessageType.CHAT));
+        Registry<ChatType> messageTypeRegistry = registryManager.registryOrThrow(Registry.CHAT_TYPE_REGISTRY);
+        int systemId = messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.SYSTEM));
+        int gameInfoId = messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.GAME_INFO));
+        int chatId = messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.CHAT));
         int messageType = switch (position) {
             case 1 -> systemId;
             case 2 -> gameInfoId;
@@ -141,7 +141,7 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
 
         MyText myText;
         try {
-            myText = JsonHelper.deserialize(GSON, text.getJson(), MyText.class, false);
+            myText = GsonHelper.fromJson(GSON, text.getJson(), MyText.class, false);
         } catch (JsonParseException e) {
             return packets;
         }
@@ -149,11 +149,11 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
             return packets;
         }
 
-        int teamId = messageTypeRegistry.getRawId(messageTypeRegistry.get(MessageType.TEAM_MSG_COMMAND));
+        int teamId = messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.TEAM_MSG_COMMAND));
         messageType = switch (myText.translate) {
-            case "chat.type.announcement" -> messageTypeRegistry.getRawId(messageTypeRegistry.get(MessageType.SAY_COMMAND));
-            case "chat.message.display.incoming" -> messageTypeRegistry.getRawId(messageTypeRegistry.get(MessageType.MSG_COMMAND));
-            case "chat.type.emote" -> messageTypeRegistry.getRawId(messageTypeRegistry.get(MessageType.EMOTE_COMMAND));
+            case "chat.type.announcement" -> messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.SAY_COMMAND));
+            case "chat.message.display.incoming" -> messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.MSG_COMMAND));
+            case "chat.type.emote" -> messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.EMOTE_COMMAND));
             case "chat.type.team.text" -> teamId;
             default -> messageType;
         };
@@ -163,7 +163,7 @@ public class SPacketGameMessage_1_18_2 implements SPacketGameMessage {
         }
 
         if (messageType == chatId && !"chat.type.text".equals(myText.translate)) {
-            messageType = messageTypeRegistry.getRawId(messageTypeRegistry.get(MessageType.TELLRAW_COMMAND));
+            messageType = messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.TELLRAW_COMMAND));
         }
 
         Integer contentIndex = switch (myText.translate) {

@@ -9,10 +9,9 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketGameJoin;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
-
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,14 +28,14 @@ public class SPacketGameJoin_1_16_1 implements SPacketGameJoin {
     @Introduce(intValue = 255)
     public int previousGamemode;
     @Introduce(compute = "computeDimensions")
-    public List<Identifier> dimensions;
-    @Datafix(DatafixTypes.REGISTRY_MANAGER)
+    public List<ResourceLocation> dimensions;
+    @Datafix(DatafixTypes.REGISTRY_ACCESS)
     @Introduce(compute = "computeRegistryManager")
-    public NbtCompound registryManager;
+    public CompoundTag registryManager;
     @Introduce(compute = "computeDimension")
-    public Identifier dimensionType;
+    public ResourceLocation dimensionType;
     @Introduce(compute = "computeDimension")
-    public Identifier dimension;
+    public ResourceLocation dimension;
     @Type(Types.LONG)
     public long hashedSeed;
     @Type(Types.UNSIGNED_BYTE)
@@ -49,21 +48,21 @@ public class SPacketGameJoin_1_16_1 implements SPacketGameJoin {
     @Introduce(compute = "computeIsFlat")
     public boolean isFlat;
 
-    public static List<Identifier> computeDimensions() {
-        List<Identifier> list = new ArrayList<>(3);
-        Collections.addAll(list, World.OVERWORLD.getValue(), World.NETHER.getValue(), World.END.getValue());
+    public static List<ResourceLocation> computeDimensions() {
+        List<ResourceLocation> list = new ArrayList<>(3);
+        Collections.addAll(list, Level.OVERWORLD.location(), Level.NETHER.location(), Level.END.location());
         return list;
     }
 
-    public static NbtCompound computeRegistryManager() {
-        return new NbtCompound();
+    public static CompoundTag computeRegistryManager() {
+        return new CompoundTag();
     }
 
-    public static Identifier computeDimension(@Argument("dimensionId") int dimensionId) {
+    public static ResourceLocation computeDimension(@Argument("dimensionId") int dimensionId) {
         return switch (dimensionId) {
-            case -1 -> World.NETHER.getValue();
-            case 1 -> World.END.getValue();
-            default -> World.OVERWORLD.getValue();
+            case -1 -> Level.NETHER.location();
+            case 1 -> Level.END.location();
+            default -> Level.OVERWORLD.location();
         };
     }
 

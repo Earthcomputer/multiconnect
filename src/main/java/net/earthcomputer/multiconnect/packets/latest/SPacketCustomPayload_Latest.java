@@ -9,13 +9,13 @@ import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketCustomPayload;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.resources.ResourceLocation;
 
 @MessageVariant(minVersion = Protocols.V1_14)
 @Polymorphic
 public abstract class SPacketCustomPayload_Latest implements SPacketCustomPayload {
-    public Identifier channel;
+    public ResourceLocation channel;
 
     @Polymorphic(stringValue = "brand")
     @MessageVariant(minVersion = Protocols.V1_14)
@@ -31,9 +31,9 @@ public abstract class SPacketCustomPayload_Latest implements SPacketCustomPayloa
 
         @Handler
         public static void handle(
-                @Argument("channel") Identifier channel,
+                @Argument("channel") ResourceLocation channel,
                 @Argument("data") byte[] data,
-                @FilledArgument ClientPlayNetworkHandler networkHandler
+                @FilledArgument ClientPacketListener networkHandler
         ) {
             CustomPayloadHandler.handleClientboundIdentifierCustomPayload(networkHandler, channel, data);
         }

@@ -15,35 +15,35 @@ public enum Registries {
     GAME_EVENT,
     INSTRUMENT,
     ITEM,
+    MENU,
     PAINTING_VARIANT,
     PARTICLE_TYPE,
     POINT_OF_INTEREST_TYPE,
     POSITION_SOURCE_TYPE,
     RECIPE_SERIALIZER,
-    SCREEN_HANDLER("MENU_KEY"),
     SOUND_EVENT,
     STAT_TYPE,
-    STATUS_EFFECT("MOB_EFFECT_KEY"),
+    MOB_EFFECT,
     TRACKED_DATA_HANDLER(false),
     VILLAGER_PROFESSION,
     VILLAGER_TYPE,
     ;
 
     private final boolean isRealRegistry;
-    private final String registryKeyFieldName;
+    private final String resourceKeyFieldName;
 
     Registries() {
-        this.registryKeyFieldName = name() + "_KEY";
+        this.resourceKeyFieldName = name() + "_REGISTRY";
         this.isRealRegistry = true;
     }
 
-    Registries(String registryKeyFieldName) {
-        this.registryKeyFieldName = registryKeyFieldName;
+    Registries(String resourceKeyFieldName) {
+        this.resourceKeyFieldName = resourceKeyFieldName;
         this.isRealRegistry = true;
     }
 
     Registries(boolean isRealRegistry) {
-        this.registryKeyFieldName = name() + "_KEY";
+        this.resourceKeyFieldName = name() + "_REGISTRY";
         this.isRealRegistry = isRealRegistry;
     }
 
@@ -51,7 +51,7 @@ public enum Registries {
         return isRealRegistry;
     }
 
-    public String getRegistryKeyFieldName() {
-        return registryKeyFieldName;
+    public String getResourceKeyFieldName() {
+        return resourceKeyFieldName;
     }
 }

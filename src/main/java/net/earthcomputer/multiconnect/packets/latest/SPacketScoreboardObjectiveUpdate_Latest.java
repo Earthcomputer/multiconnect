@@ -28,7 +28,7 @@ public class SPacketScoreboardObjectiveUpdate_Latest implements SPacketScoreboar
 
     @Polymorphic(stringValue = {"CREATE", "UPDATE"})
     @MessageVariant(minVersion = Protocols.V1_13)
-    public static class AdditiveAction extends Action implements SPacketScoreboardObjectiveUpdate.AdditiveAction {
+    public static class AdditiveAction extends net.earthcomputer.multiconnect.packets.latest.SPacketScoreboardObjectiveUpdate_Latest.Action implements SPacketScoreboardObjectiveUpdate.AdditiveAction {
         @Introduce(compute = "computeValue")
         public CommonTypes.Text value;
         @Introduce(compute = "computeType")
@@ -45,7 +45,7 @@ public class SPacketScoreboardObjectiveUpdate_Latest implements SPacketScoreboar
 
     @Polymorphic(stringValue = "REMOVE")
     @MessageVariant(minVersion = Protocols.V1_13)
-    public static class RemoveAction extends Action implements SPacketScoreboardObjectiveUpdate.RemoveAction {
+    public static class RemoveAction extends net.earthcomputer.multiconnect.packets.latest.SPacketScoreboardObjectiveUpdate_Latest.Action implements SPacketScoreboardObjectiveUpdate.RemoveAction {
     }
 
     @NetworkEnum

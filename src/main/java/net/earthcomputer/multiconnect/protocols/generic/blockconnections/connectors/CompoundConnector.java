@@ -1,8 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors;
 
-import net.minecraft.block.Block;
-
 import java.util.List;
+import net.minecraft.world.level.block.Block;
 
 public class CompoundConnector extends SimpleConnector {
     private final boolean needsNeighbors;

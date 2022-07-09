@@ -16,11 +16,10 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.latest.ItemStack_Latest;
 import net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2;
 import net.earthcomputer.multiconnect.packets.v1_13_1.ItemStack_1_13_1;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.block.Blocks_1_12_2;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.Identifier;
-
+import net.earthcomputer.multiconnect.protocols.v1_12.block.Blocks_1_12_2;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +36,7 @@ public class CommonTypes {
     @MessageVariant(minVersion = Protocols.V1_19)
     public static class Text_Latest implements Text {
         @Introduce(direction = Introduce.Direction.FROM_OLDER, compute = "fixNullJson")
-        @Length(max = PacketByteBuf.MAX_TEXT_LENGTH)
+        @Length(max = FriendlyByteBuf.MAX_COMPONENT_STRING_LENGTH)
         public String json;
 
         public Text_Latest() {
@@ -53,8 +52,8 @@ public class CommonTypes {
         }
 
         public static Text_Latest createLiteral(String value) {
-            var text = net.minecraft.text.Text.literal(value);
-            String json = net.minecraft.text.Text.Serializer.toJson(text);
+            var text = net.minecraft.network.chat.Component.literal(value);
+            String json = net.minecraft.network.chat.Component.Serializer.toJson(text);
             return new Text_Latest(json);
         }
 
@@ -66,7 +65,7 @@ public class CommonTypes {
 
     @Message
     public interface BlockPos {
-        net.minecraft.util.math.BlockPos toMinecraft();
+        net.minecraft.core.BlockPos toMinecraft();
     }
 
     @MessageVariant(minVersion = Protocols.V1_14)
@@ -83,14 +82,14 @@ public class CommonTypes {
         }
 
         @Override
-        public net.minecraft.util.math.BlockPos toMinecraft() {
+        public net.minecraft.core.BlockPos toMinecraft() {
             int x = (int) (packedData >> 38);
             int y = (int) (packedData << 52 >> 52);
             int z = (int) (packedData << 26 >> 38);
-            return new net.minecraft.util.math.BlockPos(x, y, z);
+            return new net.minecraft.core.BlockPos(x, y, z);
         }
 
-        public static BlockPos_Latest fromMinecraft(net.minecraft.util.math.BlockPos pos) {
+        public static BlockPos_Latest fromMinecraft(net.minecraft.core.BlockPos pos) {
             var result = new BlockPos_Latest();
             result.packedData = ((long)(pos.getX() & 0x3FFFFFF) << 38) | ((long)(pos.getZ() & 0x3FFFFFF) << 12) | (long)(pos.getY() & 0xFFF);
             return result;
@@ -99,7 +98,7 @@ public class CommonTypes {
 
     @MessageVariant
     public static class GlobalPos {
-        public Identifier dimension;
+        public ResourceLocation dimension;
         public BlockPos pos;
     }
 
@@ -138,15 +137,15 @@ public class CommonTypes {
     public interface ItemStack {
         boolean isPresent();
 
-        static ItemStack fromMinecraft(net.minecraft.item.ItemStack stack) {
+        static ItemStack fromMinecraft(net.minecraft.world.item.ItemStack stack) {
             if (stack.isEmpty()) {
                 return new ItemStack_Latest.Empty();
             } else {
                 ItemStack_Latest.NonEmpty newStack = new ItemStack_Latest.NonEmpty();
                 newStack.present = true;
-                newStack.itemId = net.minecraft.util.registry.Registry.ITEM.getRawId(stack.getItem());
+                newStack.itemId = net.minecraft.core.Registry.ITEM.getId(stack.getItem());
                 newStack.count = (byte) stack.getCount();
-                newStack.tag = stack.getNbt() != null ? stack.getNbt().copy() : null;
+                newStack.tag = stack.getTag() != null ? stack.getTag().copy() : null;
                 return newStack;
             }
         }
@@ -159,7 +158,7 @@ public class CommonTypes {
         interface NonEmpty extends ItemStack {
             int getItemId();
             byte getCount();
-            NbtCompound getTag();
+            CompoundTag getTag();
         }
     }
 
@@ -193,7 +192,7 @@ public class CommonTypes {
                 public byte value;
             }
 
-            @Polymorphic(stringValue = "integer")
+            @Polymorphic(stringValue = "int")
             @MessageVariant
             public static class VarInt extends TrackedData {
                 public int value;
@@ -211,13 +210,13 @@ public class CommonTypes {
                 public java.lang.String value;
             }
 
-            @Polymorphic(stringValue = "text_component")
+            @Polymorphic(stringValue = "component")
             @MessageVariant
             public static class Text extends TrackedData {
                 public CommonTypes.Text value;
             }
 
-            @Polymorphic(stringValue = "optional_text_component")
+            @Polymorphic(stringValue = "optional_component")
             @MessageVariant
             public static class OptionalText extends TrackedData {
                 public Optional<CommonTypes.Text> value;
@@ -235,7 +234,7 @@ public class CommonTypes {
                 public boolean value;
             }
 
-            @Polymorphic(stringValue = "rotation")
+            @Polymorphic(stringValue = "rotations")
             @MessageVariant
             public static class Rotation extends TrackedData {
                 public float x;
@@ -255,7 +254,7 @@ public class CommonTypes {
                 public Optional<CommonTypes.BlockPos> value;
             }
 
-            @Polymorphic(stringValue = "facing")
+            @Polymorphic(stringValue = "direction")
             @MessageVariant
             public static class Direction extends TrackedData {
                 public CommonTypes.Direction value;
@@ -267,17 +266,17 @@ public class CommonTypes {
                 public Optional<UUID> value;
             }
 
-            @Polymorphic(stringValue = "optional_block_state")
+            @Polymorphic(stringValue = "block_state")
             @MessageVariant
             public static class OptionalBlockState extends TrackedData {
                 @Registry(Registries.BLOCK_STATE)
                 public int value;
             }
 
-            @Polymorphic(stringValue = "nbt_compound")
+            @Polymorphic(stringValue = "compound_tag")
             @MessageVariant
             public static class Nbt extends TrackedData {
-                public NbtCompound value;
+                public CompoundTag value;
             }
 
             @Polymorphic(stringValue = "particle")
@@ -296,13 +295,13 @@ public class CommonTypes {
                 public int level;
             }
 
-            @Polymorphic(stringValue = "optional_int")
+            @Polymorphic(stringValue = "optional_unsigned_int")
             @MessageVariant
             public static class OptionalInt extends TrackedData {
                 public int value;
             }
 
-            @Polymorphic(stringValue = "entity_pose")
+            @Polymorphic(stringValue = "pose")
             @MessageVariant
             public static class Pose extends TrackedData {
                 @Registry(Registries.ENTITY_POSE)
@@ -508,7 +507,7 @@ public class CommonTypes {
     @MessageVariant(minVersion = Protocols.V1_19)
     public static abstract class PositionSource_Latest implements PositionSource {
         @Registry(Registries.POSITION_SOURCE_TYPE)
-        public Identifier type;
+        public ResourceLocation type;
 
         @Polymorphic(stringValue = "block")
         @MessageVariant(minVersion = Protocols.V1_19)

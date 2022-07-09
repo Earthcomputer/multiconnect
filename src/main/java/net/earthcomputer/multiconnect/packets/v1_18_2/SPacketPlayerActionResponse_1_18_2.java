@@ -11,7 +11,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketPlayerActionResponse;
 import net.earthcomputer.multiconnect.packets.latest.SPacketPlayerActionResponse_Latest;
-import net.earthcomputer.multiconnect.protocols.v1_18_2.DiggingTracker;
+import net.earthcomputer.multiconnect.protocols.v1_18.DiggingTracker;
 
 import java.util.ArrayList;
 import java.util.List;

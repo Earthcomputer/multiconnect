@@ -7,9 +7,9 @@ import net.earthcomputer.multiconnect.compiler.CommonClassNames.ARRAY_LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.CLASS
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.CONSUMER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.DELAYED_PACKET_SENDER
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.IDENTIFIER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.RESOURCE_LOCATION
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.MAP
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.NETWORK_HANDLER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.CLIENT_PACKET_LISTENER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.OBJECT
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPED_MAP
@@ -246,7 +246,7 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
                 }
                 .map { (child, group) ->
                     child to when {
-                        type.realType.hasName(IDENTIFIER) ->
+                        type.realType.hasName(RESOURCE_LOCATION) ->
                             group.value.map { (it as String).normalizeIdentifier() }
                         type.realType.isIntegral && type.registry != null ->
                             group.value.filter { it !is String || type.registry.getRawId(it) is Either.Left }.map { case ->
@@ -270,12 +270,12 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
             SwitchOp(
             cases.toSortedSet(),
             true,
-            if (type.realType.hasName(IDENTIFIER)) { McType.STRING } else { type.realType },
+            if (type.realType.hasName(RESOURCE_LOCATION)) { McType.STRING } else { type.realType },
             messageType
         ),
-            (listOf(if (type.realType.hasName(IDENTIFIER)) {
+            (listOf(if (type.realType.hasName(RESOURCE_LOCATION)) {
                 McNode(
-                    FunctionCallOp(IDENTIFIER, "toString", listOf(type.realType), McType.STRING, false, isStatic = false),
+                    FunctionCallOp(RESOURCE_LOCATION, "toString", listOf(type.realType), McType.STRING, false, isStatic = false),
                     loadTypeField
                 )
             } else {
@@ -466,9 +466,9 @@ internal fun ProtocolCompiler.generateConstantGraph(targetType: McType, value: A
             is Either.Right -> targetType.cast(rawId.right)
             null -> createCstNode(-1)
         }
-    } else if (targetType.hasName(IDENTIFIER)) {
+    } else if (targetType.hasName(RESOURCE_LOCATION)) {
         val (namespace, name) = (value as String).normalizeIdentifier().split(':', limit = 2)
-        McNode(NewOp(IDENTIFIER, listOf(McType.STRING, McType.STRING)),
+        McNode(NewOp(RESOURCE_LOCATION, listOf(McType.STRING, McType.STRING)),
             createCstNode(namespace),
             createCstNode(name)
         )
@@ -490,10 +490,10 @@ internal fun ProtocolCompiler.generateFilledConstructGraph(type: McType, filledP
                 is Either.Right -> rawId.right
                 null -> McNode(CstIntOp(-1))
             }
-        } else if (type.hasName(IDENTIFIER)) {
+        } else if (type.hasName(RESOURCE_LOCATION)) {
             val oldName = filledParam.fromRegistry.registry.getOldName(filledParam.fromRegistry.value) ?: "null"
-            val identifierField = createIdentifierConstantField(oldName)
-            McNode(LoadFieldOp(McType.DeclaredType(className), identifierField, McType.DeclaredType(IDENTIFIER), isStatic = true))
+            val resourceField = createResourceLocationConstantField(oldName)
+            McNode(LoadFieldOp(McType.DeclaredType(className), resourceField, McType.DeclaredType(RESOURCE_LOCATION), isStatic = true))
         } else {
             throw CompileException("Invalid @Filled(fromRegistry) type $type")
         }
@@ -521,7 +521,7 @@ internal fun ProtocolCompiler.generateFilledConstructGraph(type: McType, filledP
     }
 
     return when ((type as? McType.DeclaredType)?.name) {
-        NETWORK_HANDLER -> McNode(LoadVariableOp(VariableId.immediate("networkHandler"), type))
+        CLIENT_PACKET_LISTENER -> McNode(LoadVariableOp(VariableId.immediate("connection"), type))
         TYPED_MAP -> McNode(LoadVariableOp(VariableId.immediate("userData"), type))
         DELAYED_PACKET_SENDER -> {
             val bodyParam = VariableId.create()
@@ -533,14 +533,14 @@ internal fun ProtocolCompiler.generateFilledConstructGraph(type: McType, filledP
             }.distinct().singleOrNull() ?: throw CompileException("Packet $packetType has ambiguous direction")) == PacketDirection.CLIENTBOUND
 
             val sendRaw = if (clientbound) {
-                McNode(FunctionCallOp(PACKET_INTRINSICS, "sendRawToClient", listOf(McType.DeclaredType(NETWORK_HANDLER), McType.DeclaredType(TYPED_MAP), McType.BYTE_BUF.listOf()), McType.VOID, true),
-                    McNode(LoadVariableOp(VariableId.immediate("networkHandler"), McType.DeclaredType(NETWORK_HANDLER))),
+                McNode(FunctionCallOp(PACKET_INTRINSICS, "sendRawToClient", listOf(McType.DeclaredType(CLIENT_PACKET_LISTENER), McType.DeclaredType(TYPED_MAP), McType.BYTE_BUF.listOf()), McType.VOID, true),
+                    McNode(LoadVariableOp(VariableId.immediate("connection"), McType.DeclaredType(CLIENT_PACKET_LISTENER))),
                     McNode(LoadVariableOp(VariableId.immediate("userData"), McType.DeclaredType(TYPED_MAP))),
                     McNode(LoadVariableOp(bufsVar, McType.BYTE_BUF.listOf()))
                 )
             } else {
-                McNode(FunctionCallOp(PACKET_INTRINSICS, "sendRawToServer", listOf(McType.DeclaredType(NETWORK_HANDLER), McType.BYTE_BUF.listOf()), McType.VOID, true),
-                    McNode(LoadVariableOp(VariableId.immediate("networkHandler"), McType.DeclaredType(NETWORK_HANDLER))),
+                McNode(FunctionCallOp(PACKET_INTRINSICS, "sendRawToServer", listOf(McType.DeclaredType(CLIENT_PACKET_LISTENER), McType.BYTE_BUF.listOf()), McType.VOID, true),
+                    McNode(LoadVariableOp(VariableId.immediate("connection"), McType.DeclaredType(CLIENT_PACKET_LISTENER))),
                     McNode(LoadVariableOp(bufsVar, McType.BYTE_BUF.listOf()))
                 )
             }
@@ -601,12 +601,12 @@ internal fun ProtocolCompiler.createTailRecurseField(ownerClass: String, fieldNa
     return handleFieldName
 }
 
-internal fun ProtocolCompiler.createIdentifierConstantField(constant: String): String {
+internal fun ProtocolCompiler.createResourceLocationConstantField(constant: String): String {
     val (namespace, name) = constant.normalizeIdentifier().split(':', limit = 2)
-    val fieldName = "IDENTIFIER_${namespace.uppercase()}_${name.uppercase().replace('/', '_').replace('.', '_')}"
+    val fieldName = "RESOURCE_LOCATION_${namespace.uppercase()}_${name.uppercase().replace('/', '_').replace('.', '_')}"
     addMember(fieldName) { emitter ->
-        emitter.append("private static final ").appendClassName(IDENTIFIER).append(" ").append(fieldName)
-            .append(" = new ").appendClassName(IDENTIFIER).append("(")
+        emitter.append("private static final ").appendClassName(RESOURCE_LOCATION).append(" ").append(fieldName)
+            .append(" = new ").appendClassName(RESOURCE_LOCATION).append("(")
         McNode(CstStringOp(namespace)).emit(emitter, Precedence.COMMA)
         emitter.append(", ")
         McNode(CstStringOp(name)).emit(emitter, Precedence.COMMA)
@@ -615,14 +615,14 @@ internal fun ProtocolCompiler.createIdentifierConstantField(constant: String): S
     return fieldName
 }
 
-internal fun ProtocolCompiler.createRegistryKeyField(registry: Registries, id: String): String {
+internal fun ProtocolCompiler.createResourceKeyField(registry: Registries, id: String): String {
     val (namespace, name) = id.normalizeIdentifier().split(':', limit = 2)
     val fieldName = "RK_${registry.name}_${namespace.uppercase()}_${name.uppercase().replace('/', '_').replace('.', '_')}"
     addMember(fieldName) { emitter ->
-        emitter.append("private static final ").appendClassName(CommonClassNames.REGISTRY_KEY).append(" ").append(fieldName)
-            .append(" = ").appendClassName(CommonClassNames.REGISTRY_KEY).append(".of(")
-            .appendClassName(CommonClassNames.REGISTRY).append(".").append(registry.registryKeyFieldName).append(", new ")
-            .appendClassName(IDENTIFIER).append("(")
+        emitter.append("private static final ").appendClassName(CommonClassNames.RESOURCE_KEY).append(" ").append(fieldName)
+            .append(" = ").appendClassName(CommonClassNames.RESOURCE_KEY).append(".create(")
+            .appendClassName(CommonClassNames.REGISTRY).append(".").append(registry.resourceKeyFieldName).append(", new ")
+            .appendClassName(RESOURCE_LOCATION).append("(")
         McNode(CstStringOp(namespace)).emit(emitter, Precedence.COMMA)
         emitter.append(", ")
         McNode(CstStringOp(name)).emit(emitter, Precedence.COMMA)
