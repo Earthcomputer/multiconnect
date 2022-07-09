@@ -7,7 +7,7 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketCommandSuggestions;
 import net.earthcomputer.multiconnect.packets.latest.SPacketCommandSuggestions_Latest;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.TabCompletionManager;
+import net.earthcomputer.multiconnect.protocols.v1_12.TabCompletionManager;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;

@@ -10,8 +10,8 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketWorldEvent;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.block.Blocks_1_12_2;
-import net.minecraft.world.WorldEvents;
+import net.earthcomputer.multiconnect.protocols.v1_12.block.Blocks_1_12_2;
+import net.minecraft.world.level.block.LevelEvent;
 
 @MessageVariant(minVersion = Protocols.V1_13)
 public class SPacketWorldEvent_Latest implements SPacketWorldEvent {
@@ -25,7 +25,7 @@ public class SPacketWorldEvent_Latest implements SPacketWorldEvent {
     public boolean global;
 
     public static int computeData(@Argument("id") int id, @Argument("data") int data) {
-        if (id == WorldEvents.BLOCK_BROKEN) {
+        if (id == LevelEvent.PARTICLES_DESTROY_BLOCK) {
             return Blocks_1_12_2.convertToStateRegistryId(data);
         } else {
             return data;
@@ -33,7 +33,7 @@ public class SPacketWorldEvent_Latest implements SPacketWorldEvent {
     }
 
     public static int fixData(int data, @Argument("id") int id) {
-        if (id == WorldEvents.BLOCK_BROKEN) {
+        if (id == LevelEvent.PARTICLES_DESTROY_BLOCK) {
             return PacketSystem.serverBlockStateIdToClient(data);
         } else {
             return data;

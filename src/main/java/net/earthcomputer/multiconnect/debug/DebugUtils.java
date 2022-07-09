@@ -17,43 +17,43 @@ import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.PacketIntrinsics;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
+import net.earthcomputer.multiconnect.mixin.connect.ConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
 import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
+import net.minecraft.Util;
 import net.minecraft.client.ClientBrandRetriever;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandler;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.core.IdMap;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.network.NetworkSide;
-import net.minecraft.network.NetworkState;
-import net.minecraft.network.PacketEncoderException;
-import net.minecraft.state.property.Property;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
-import net.minecraft.util.collection.IndexedIterable;
-import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.network.ConnectionProtocol;
+import net.minecraft.network.SkipPacketException;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializer;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -95,7 +95,7 @@ public class DebugUtils {
     private static final String MULTICONNECT_ISSUE_URL = MULTICONNECT_ISSUES_BASE_URL + "/%d";
     private static int rareBugIdThatOccurred = 0;
     private static long timeThatRareBugOccurred;
-    public static String lastServerBrand = ClientBrandRetriever.VANILLA;
+    public static String lastServerBrand = ClientBrandRetriever.VANILLA_NAME;
     public static final boolean UNIT_TEST_MODE = Boolean.getBoolean("multiconnect.unitTestMode");
     public static final boolean IGNORE_ERRORS = Boolean.getBoolean("multiconnect.ignoreErrors");
     public static final boolean DUMP_REGISTRIES = Boolean.getBoolean("multiconnect.dumpRegistries");
@@ -106,57 +106,57 @@ public class DebugUtils {
     public static final AttributeKey<byte[]> NETTY_STORED_BUF = AttributeKey.valueOf("multiconnect.storedBuf");
     public static final AttributeKey<Boolean> NETTY_HAS_HANDLED_ERROR = AttributeKey.valueOf("multiconnect.hasHandledError");
 
-    private static final Map<TrackedData<?>, String> TRACKED_DATA_NAMES = new IdentityHashMap<>();
-    private static void computeTrackedDataNames() {
-        Set<Class<?>> trackedDataHolders = new HashSet<>();
+    private static final Map<EntityDataAccessor<?>, String> ENTITY_DATA_NAMES = new IdentityHashMap<>();
+    private static void computeEntityDataNames() {
+        Set<Class<?>> entityDataHolders = new HashSet<>();
         for (Field field : EntityType.class.getFields()) {
             if (field.getType() == EntityType.class && Modifier.isStatic(field.getModifiers())) {
                 if (field.getGenericType() instanceof ParameterizedType type) {
                     if (type.getActualTypeArguments()[0] instanceof Class<?> entityClass && Entity.class.isAssignableFrom(entityClass)) {
                         for (; entityClass != Object.class; entityClass = entityClass.getSuperclass()) {
-                            trackedDataHolders.add(entityClass);
+                            entityDataHolders.add(entityClass);
                         }
                     }
                 }
             }
         }
         for (AbstractProtocol protocol : ProtocolRegistry.all()) {
-            trackedDataHolders.add(protocol.getClass());
+            entityDataHolders.add(protocol.getClass());
         }
 
-        for (Class<?> trackedDataHolder : trackedDataHolders) {
-            for (Field field : trackedDataHolder.getDeclaredFields()) {
-                if (field.getType() == TrackedData.class && Modifier.isStatic(field.getModifiers())) {
+        for (Class<?> entityDataHolder : entityDataHolders) {
+            for (Field field : entityDataHolder.getDeclaredFields()) {
+                if (field.getType() == EntityDataAccessor.class && Modifier.isStatic(field.getModifiers())) {
                     field.setAccessible(true);
-                    TrackedData<?> trackedData;
+                    EntityDataAccessor<?> entityData;
                     try {
-                        trackedData = (TrackedData<?>) field.get(null);
+                        entityData = (EntityDataAccessor<?>) field.get(null);
                     } catch (ReflectiveOperationException e) {
                         throw new RuntimeException(e);
                     }
-                    TRACKED_DATA_NAMES.put(trackedData, trackedDataHolder.getSimpleName() + "::" + field.getName());
+                    ENTITY_DATA_NAMES.put(entityData, entityDataHolder.getSimpleName() + "::" + field.getName());
                 }
             }
         }
     }
 
-    public static String getTrackedDataName(TrackedData<?> data) {
-        if (TRACKED_DATA_NAMES.isEmpty()) {
-            computeTrackedDataNames();
+    public static String getEntityDataName(EntityDataAccessor<?> data) {
+        if (ENTITY_DATA_NAMES.isEmpty()) {
+            computeEntityDataNames();
         }
-        String name = TRACKED_DATA_NAMES.get(data);
+        String name = ENTITY_DATA_NAMES.get(data);
         return name == null ? "unknown" : name;
     }
 
-    public static String getAllTrackedData(Entity entity) {
-        List<DataTracker.Entry<?>> allEntries = entity.getDataTracker().getAllEntries();
+    public static String getAllEntityData(Entity entity) {
+        List<SynchedEntityData.DataItem<?>> allEntries = entity.getEntityData().getAll();
         if (allEntries == null || allEntries.isEmpty()) {
             return "<no entries>";
         }
 
         return allEntries.stream()
-                .sorted(Comparator.comparingInt(entry -> entry.getData().getId()))
-                .map(entry -> entry.getData().getId() + ": " + getTrackedDataName(entry.getData()) + " = " + entry.get())
+                .sorted(Comparator.comparingInt(entry -> entry.getAccessor().getId()))
+                .map(entry -> entry.getAccessor().getId() + ": " + getEntityDataName(entry.getAccessor()) + " = " + entry.getValue())
                 .collect(Collectors.joining("\n"));
     }
 
@@ -164,31 +164,31 @@ public class DebugUtils {
         rareBugIdThatOccurred = bugId;
         timeThatRareBugOccurred = System.nanoTime();
 
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (!mc.isOnThread()) {
-            mc.send(() -> reportRareBug(bugId));
+        Minecraft mc = Minecraft.getInstance();
+        if (!mc.isSameThread()) {
+            mc.tell(() -> reportRareBug(bugId));
             return;
         }
 
         String url = MULTICONNECT_ISSUE_URL.formatted(rareBugIdThatOccurred);
-        mc.inGameHud.getChatHud().addMessage(Text.translatable("multiconnect.rareBug", Text.translatable("multiconnect.rareBug.link")
-                        .styled(style -> style.withUnderline(true)
-                                .withColor(Formatting.BLUE)
-                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(url)))
+        mc.gui.getChat().addMessage(Component.translatable("multiconnect.rareBug", Component.translatable("multiconnect.rareBug.link")
+                        .withStyle(style -> style.withUnderlined(true)
+                                .withColor(ChatFormatting.BLUE)
+                                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(url)))
                                 .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))))
-            .formatted(Formatting.YELLOW));
+            .withStyle(ChatFormatting.YELLOW));
     }
 
     public static boolean wasRareBugReportedRecently() {
         return rareBugIdThatOccurred != 0 && (System.nanoTime() - timeThatRareBugOccurred) < 10_000_000_000L;
     }
 
-    private static Text getRareBugText(int line) {
+    private static Component getRareBugText(int line) {
         String url = MULTICONNECT_ISSUE_URL.formatted(rareBugIdThatOccurred);
-        return Text.translatable("multiconnect.rareBug", Text.translatable("multiconnect.rareBug.link")
-                .styled(style -> style.withUnderline(true)
-                        .withColor(Formatting.BLUE)
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(url)))
+        return Component.translatable("multiconnect.rareBug", Component.translatable("multiconnect.rareBug.link")
+                .withStyle(style -> style.withUnderlined(true)
+                        .withColor(ChatFormatting.BLUE)
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(url)))
                         .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))));
     }
 
@@ -203,15 +203,15 @@ public class DebugUtils {
         rareBugIdThatOccurred = 0;
         return new ConfirmScreen(result -> {
             if (result) {
-                Util.getOperatingSystem().open(url);
+                Util.getPlatform().openUrl(url);
             }
-            MinecraftClient.getInstance().setScreen(parentScreen);
-        }, parentScreen.getTitle(), Text.translatable("multiconnect.rareBug.screen"));
+            Minecraft.getInstance().setScreen(parentScreen);
+        }, parentScreen.getTitle(), Component.translatable("multiconnect.rareBug.screen"));
     }
 
     @ThreadSafe
     public static boolean isUnexpectedDisconnect(Throwable t) {
-        return !(t instanceof PacketEncoderException) && !(t instanceof TimeoutException);
+        return !(t instanceof SkipPacketException) && !(t instanceof TimeoutException);
     }
 
     private static class ErrorHandlerInfo {
@@ -266,7 +266,7 @@ public class DebugUtils {
     public static void logPacketError(byte[] data, String... extraLines) {
         LOGGER.error("!!!!!!!! Unexpected packet error, please upload this error to " + MULTICONNECT_ISSUES_BASE_URL + " !!!!!!!!");
         LOGGER.error("It may be helpful if you also provide the server IP, but you are not obliged to do this.");
-        LOGGER.error("Minecraft version: {}", SharedConstants.getGameVersion().getName());
+        LOGGER.error("Minecraft version: {}", SharedConstants.getCurrentVersion().getName());
         FabricLoader.getInstance().getModContainer("multiconnect").ifPresent(modContainer -> {
             String version = modContainer.getMetadata().getVersion().getFriendlyString();
             LOGGER.error("multiconnect version: {}", version);
@@ -293,13 +293,13 @@ public class DebugUtils {
         return result.toString(StandardCharsets.UTF_8);
     }
 
-    public static void handlePacketDump(ClientPlayNetworkHandler networkHandler, String base64, boolean compressed) {
+    public static void handlePacketDump(ClientPacketListener connection, String base64, boolean compressed) {
         byte[] bytes = decode(base64, compressed);
         if (bytes == null) {
             return;
         }
         LOGGER.info("Artificially handling packet of length {}", bytes.length);
-        Channel channel = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel();
+        Channel channel = ((ConnectionAccessor) connection.getConnection()).getChannel();
         assert channel != null;
         ChannelHandlerContext context = channel.pipeline().context("multiconnect_clientbound_translator");
         if (context == null) {
@@ -346,7 +346,7 @@ public class DebugUtils {
     @SuppressWarnings("unchecked")
     public static <T, R extends Registry<T>> RegistryLike<?> getRegistryLike(Registries registry) {
         return switch (registry) {
-            case BLOCK_STATE -> new IndexedIterableRegistryLike<>(Block.STATE_IDS) {
+            case BLOCK_STATE -> new IdMapRegistryLike<>(Block.BLOCK_STATE_REGISTRY) {
                 @Override
                 public String getName(BlockState value) {
                     return blockStateToString(value);
@@ -357,33 +357,35 @@ public class DebugUtils {
                     return PacketSystem.serverBlockStateIdToClient(serverRawId);
                 }
             };
-            case TRACKED_DATA_HANDLER -> TrackedDataHandlerRegistryLike.INSTANCE;
-            case ENTITY_POSE -> new EnumRegistryLike<>(EntityPose.values());
+            case TRACKED_DATA_HANDLER -> EntityDataSerializersRegistryLike.INSTANCE;
+            case ENTITY_POSE -> new EnumRegistryLike<>(Pose.values());
             default -> {
                 if (!registry.isRealRegistry()) {
                     throw new IllegalArgumentException("Cannot get indexed iterable for " + registry);
                 }
-                RegistryKey<R> registryKey;
+                ResourceKey<R> registryKey;
                 try {
-                    Field field = Registry.class.getField(registry.getRegistryKeyFieldName());
-                    registryKey = (RegistryKey<R>) field.get(null);
+                    Field field = Registry.class.getField(registry.getResourceKeyFieldName());
+                    registryKey = (ResourceKey<R>) field.get(null);
                 } catch (ReflectiveOperationException e) {
                     throw new IllegalArgumentException("Cannot get indexed iterable for " + registry, e);
                 }
-                yield new RegistryRegistryLike<>(((Registry<R>) Registry.REGISTRIES).get(registryKey));
+                R myRegistry = ((Registry<R>) Registry.REGISTRY).get(registryKey);
+                assert myRegistry != null;
+                yield new RegistryRegistryLike<>(myRegistry);
             }
         };
     }
 
     @SuppressWarnings("unchecked")
     public static <T> void dumpRegistries() throws IOException {
-        File dir = new File("../data/" + SharedConstants.getGameVersion().getReleaseTarget());
+        File dir = new File("../data/" + SharedConstants.getCurrentVersion().getReleaseTarget());
         if (!dir.exists()) {
             //noinspection ResultOfMethodCallIgnored
             dir.mkdirs();
         }
-        dumpPackets(new File(dir, "spackets.csv"), NetworkSide.CLIENTBOUND, "SPacket", "S2CPacket");
-        dumpPackets(new File(dir, "cpackets.csv"), NetworkSide.SERVERBOUND, "CPacket", "C2SPacket");
+        dumpPackets(new File(dir, "spackets.csv"), PacketFlow.CLIENTBOUND, "SPacket", "S2CPacket");
+        dumpPackets(new File(dir, "cpackets.csv"), PacketFlow.SERVERBOUND, "CPacket", "C2SPacket");
         for (Registries registries : Registries.values()) {
             RegistryLike<T> registryLike = (RegistryLike<T>) getRegistryLike(registries);
             try (PrintWriter pw = new PrintWriter(new FileWriter(new File(dir, registries.name().toLowerCase(Locale.ROOT) + ".csv")))) {
@@ -397,34 +399,34 @@ public class DebugUtils {
             }
         }
 
-        dumpDynamicRegistries();
+        dumpRegistryAccess();
     }
 
-    public static String identifierToString(@Nullable Identifier identifier) {
-        if (identifier == null) {
+    public static String resourceLocationToString(@Nullable ResourceLocation resourceLocation) {
+        if (resourceLocation == null) {
             return "null";
         }
-        if (identifier.getNamespace().equals("minecraft")) {
-            return identifier.getPath();
+        if (resourceLocation.getNamespace().equals("minecraft")) {
+            return resourceLocation.getPath();
         }
-        return identifier.toString();
+        return resourceLocation.toString();
     }
 
     public static String blockStateToString(BlockState state) {
-        Identifier unmodifiedName = Registry.BLOCK.getId(state.getBlock());
-        String result = identifierToString(unmodifiedName);
-        if (state.getBlock().getStateManager().getProperties().isEmpty()) return result;
-        String stateStr = state.getBlock().getStateManager().getProperties().stream().map(it -> it.getName() + "=" + getName(it, state.get(it))).collect(Collectors.joining(","));
+        ResourceLocation blockName = Registry.BLOCK.getKey(state.getBlock());
+        String result = resourceLocationToString(blockName);
+        if (state.getBlock().getStateDefinition().getProperties().isEmpty()) return result;
+        String stateStr = state.getBlock().getStateDefinition().getProperties().stream().map(it -> it.getName() + "=" + getName(it, state.getValue(it))).collect(Collectors.joining(","));
         return result + "[" + stateStr + "]";
     }
 
     @SuppressWarnings("unchecked")
     private static <T extends Comparable<T>> String getName(Property<T> prop, Object value) {
-        return prop.name((T) value);
+        return prop.getName((T) value);
     }
 
-    private static void dumpPackets(File output, NetworkSide side, String prefix, String toReplace) throws IOException {
-        var packetHandlers = new ArrayList<>(NetworkState.PLAY.getPacketIdToPacketMap(side).int2ObjectEntrySet());
+    private static void dumpPackets(File output, PacketFlow direction, String prefix, String toReplace) throws IOException {
+        var packetHandlers = new ArrayList<>(ConnectionProtocol.PLAY.getPacketsByIds(direction).int2ObjectEntrySet());
         packetHandlers.sort(Comparator.comparingInt(Int2ObjectMap.Entry::getIntKey));
         try (PrintWriter pw = new PrintWriter(new FileWriter(output))) {
             pw.println("id clazz");
@@ -460,12 +462,12 @@ public class DebugUtils {
         }
     }
 
-    private static void dumpDynamicRegistries() throws IOException {
-        Path destFile = Path.of("data/registry_manager.nbt");
+    private static void dumpRegistryAccess() throws IOException {
+        Path destFile = Path.of("data/registry_access.nbt");
         Files.createDirectories(destFile.getParent());
-        var registryManager = DynamicRegistryManager.createAndLoad().toImmutable();
+        var registryManager = RegistryAccess.builtinCopy().freeze();
         try (OutputStream output = new BufferedOutputStream(Files.newOutputStream(destFile))) {
-            NbtCompound nbt = (NbtCompound) DynamicRegistryManager.CODEC.encodeStart(NbtOps.INSTANCE, registryManager)
+            CompoundTag nbt = (CompoundTag) RegistryAccess.NETWORK_CODEC.encodeStart(NbtOps.INSTANCE, registryManager)
                     .getOrThrow(false, err -> {});
             NbtIo.writeCompressed(nbt, output);
         }
@@ -474,7 +476,7 @@ public class DebugUtils {
     public static void onDebugKey() {
     }
 
-    public static String dfuToString(Object dfuType) {
+    public static String dfuToString(@Nullable Object dfuType) {
         if (dfuType == null) {
             return "null";
         }
@@ -530,7 +532,7 @@ public class DebugUtils {
                 return (T) field.get(instance);
             } catch (NoSuchFieldException ignored) {
             } catch (ReflectiveOperationException e) {
-                Util.throwUnchecked(e);
+                Util.throwAsRuntime(e);
             }
         }
         throw new IllegalArgumentException("No such field " + name);
@@ -544,35 +546,35 @@ public class DebugUtils {
         Integer serverRawIdToClient(int serverRawId);
     }
 
-    private enum TrackedDataHandlerRegistryLike implements RegistryLike<TrackedDataHandler<?>> {
+    private enum EntityDataSerializersRegistryLike implements RegistryLike<EntityDataSerializer<?>> {
         INSTANCE;
 
         private static final Int2ObjectMap<String> NAME_MAP = Util.make(new Int2ObjectOpenHashMap<>(), map -> {
-            for (Field field : TrackedDataHandlerRegistry.class.getFields()) {
-                if (Modifier.isStatic(field.getModifiers()) && TrackedDataHandler.class.isAssignableFrom(field.getType())) {
-                    TrackedDataHandler<?> trackedDataHandler;
+            for (Field field : EntityDataSerializers.class.getFields()) {
+                if (Modifier.isStatic(field.getModifiers()) && EntityDataSerializer.class.isAssignableFrom(field.getType())) {
+                    EntityDataSerializer<?> trackedDataHandler;
                     try {
-                        trackedDataHandler = (TrackedDataHandler<?>) field.get(null);
+                        trackedDataHandler = (EntityDataSerializer<?>) field.get(null);
                     } catch (IllegalAccessException e) {
                         throw new AssertionError("Failed to access tracked data handler", e);
                     }
-                    map.put(TrackedDataHandlerRegistry.getId(trackedDataHandler), field.getName().toLowerCase(Locale.ROOT));
+                    map.put(EntityDataSerializers.getSerializedId(trackedDataHandler), field.getName().toLowerCase(Locale.ROOT));
                 }
             }
         });
 
         @Override
-        public int getRawId(TrackedDataHandler<?> value) {
-            return TrackedDataHandlerRegistry.getId(value);
+        public int getRawId(EntityDataSerializer<?> value) {
+            return EntityDataSerializers.getSerializedId(value);
         }
 
         @Override
-        public TrackedDataHandler<?> getValue(int id) {
-            return TrackedDataHandlerRegistry.get(id);
+        public EntityDataSerializer<?> getValue(int id) {
+            return EntityDataSerializers.getSerializer(id);
         }
 
         @Override
-        public String getName(TrackedDataHandler<?> value) {
+        public String getName(EntityDataSerializer<?> value) {
             return NAME_MAP.get(getRawId(value));
         }
 
@@ -584,10 +586,10 @@ public class DebugUtils {
 
         @NotNull
         @Override
-        public Iterator<TrackedDataHandler<?>> iterator() {
+        public Iterator<EntityDataSerializer<?>> iterator() {
             return new Iterator<>() {
                 private int index = 0;
-                private TrackedDataHandler<?> next = getValue(index);
+                private EntityDataSerializer<?> next = getValue(index);
 
                 @Override
                 public boolean hasNext() {
@@ -595,8 +597,8 @@ public class DebugUtils {
                 }
 
                 @Override
-                public TrackedDataHandler<?> next() {
-                    TrackedDataHandler<?> result = next;
+                public EntityDataSerializer<?> next() {
+                    EntityDataSerializer<?> result = next;
                     next = getValue(++index);
                     return result;
                 }
@@ -648,21 +650,21 @@ public class DebugUtils {
         }
     }
 
-    private static abstract class IndexedIterableRegistryLike<T> implements RegistryLike<T> {
-        private final IndexedIterable<T> registry;
+    private static abstract class IdMapRegistryLike<T> implements RegistryLike<T> {
+        private final IdMap<T> registry;
 
-        protected IndexedIterableRegistryLike(IndexedIterable<T> registry) {
+        protected IdMapRegistryLike(IdMap<T> registry) {
             this.registry = registry;
         }
 
         @Override
         public int getRawId(T value) {
-            return registry.getRawId(value);
+            return registry.getId(value);
         }
 
         @Override
         public T getValue(int index) {
-            return registry.get(index);
+            return registry.byId(index);
         }
 
         @NotNull
@@ -672,7 +674,7 @@ public class DebugUtils {
         }
     }
 
-    private static final class RegistryRegistryLike<T> extends IndexedIterableRegistryLike<T> {
+    private static final class RegistryRegistryLike<T> extends IdMapRegistryLike<T> {
         private final Registry<T> registry;
 
         private RegistryRegistryLike(Registry<T> registry) {
@@ -682,7 +684,7 @@ public class DebugUtils {
 
         @Override
         public String getName(T value) {
-            return identifierToString(registry.getId(value));
+            return resourceLocationToString(registry.getKey(value));
         }
 
         @Override

@@ -3,10 +3,6 @@ package net.earthcomputer.multiconnect.protocols.v1_8;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.mojang.logging.LogUtils;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 import org.slf4j.Logger;
 
 import java.io.InputStreamReader;
@@ -15,6 +11,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 
 public class SoundData_1_8 {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -42,7 +42,7 @@ public class SoundData_1_8 {
         return Collections.unmodifiableSet(sounds.keySet());
     }
 
-    public SoundCategory getCategory(String sound) {
+    public SoundSource getCategory(String sound) {
         SoundValue value = sounds.get(sound);
         if (value == null) return null;
         return value.getCategoryEnum();
@@ -55,13 +55,13 @@ public class SoundData_1_8 {
     }
 
     private static class SoundValue {
-        private String category = SoundCategory.MASTER.getName();
+        private String category = SoundSource.MASTER.getName();
         private String map;
 
-        private transient SoundCategory categoryEnum;
-        public SoundCategory getCategoryEnum() {
+        private transient SoundSource categoryEnum;
+        public SoundSource getCategoryEnum() {
             if (categoryEnum == null) {
-                for (SoundCategory ctgy : SoundCategory.values()) {
+                for (SoundSource ctgy : SoundSource.values()) {
                     if (ctgy.getName().equals(category)) {
                         categoryEnum = ctgy;
                         break;
@@ -74,9 +74,9 @@ public class SoundData_1_8 {
         private transient SoundEvent soundEvent;
         public SoundEvent getSoundEvent() {
             if (soundEvent == null) {
-                Identifier id = Identifier.tryParse(map);
+                ResourceLocation id = ResourceLocation.tryParse(map);
                 if (id != null) {
-                    soundEvent = Registry.SOUND_EVENT.getOrEmpty(id).orElse(null);
+                    soundEvent = Registry.SOUND_EVENT.getOptional(id).orElse(null);
                 }
             }
             return soundEvent;

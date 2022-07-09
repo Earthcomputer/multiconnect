@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.ap;
 public enum DatafixTypes {
     BLOCK_ENTITY(false),
     DIMENSION(true),
-    REGISTRY_MANAGER(true),
+    REGISTRY_ACCESS(true),
     STATUS_EFFECT_FACTOR_DATA(true),
     ;
 

@@ -17,13 +17,13 @@ import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketPlayerRespawn;
 import net.earthcomputer.multiconnect.protocols.generic.DimensionTypeReference;
 import net.minecraft.SharedConstants;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.slf4j.Logger;
 
 import java.util.Optional;
@@ -34,8 +34,8 @@ public class SPacketPlayerRespawn_Latest implements SPacketPlayerRespawn {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     @Introduce(compute = "computeDimension")
-    public Identifier dimension;
-    public Identifier dimensionId;
+    public ResourceLocation dimension;
+    public ResourceLocation dimensionId;
     @Type(Types.LONG)
     public long hashedSeed;
     @Type(Types.UNSIGNED_BYTE)
@@ -48,32 +48,32 @@ public class SPacketPlayerRespawn_Latest implements SPacketPlayerRespawn {
     @Introduce(defaultConstruct = true)
     public Optional<CommonTypes.GlobalPos> lastDeathPos;
 
-    public static Identifier computeDimension(
-            @Argument("dimension") NbtCompound dimension,
-            @Argument("dimensionId") Identifier dimensionId,
-            @GlobalData DynamicRegistryManager registryManager
+    public static ResourceLocation computeDimension(
+            @Argument("dimension") CompoundTag dimension,
+            @Argument("dimensionId") ResourceLocation dimensionId,
+            @GlobalData RegistryAccess registryManager
     ) {
-        NbtCompound updatedDimension = (NbtCompound) MulticonnectDFU.FIXER.update(
+        CompoundTag updatedDimension = (CompoundTag) MulticonnectDFU.FIXER.update(
                 MulticonnectDFU.DIMENSION,
                 new Dynamic<>(NbtOps.INSTANCE, dimension),
                 ConnectionMode.byValue(ConnectionInfo.protocolVersion).getDataVersion(),
-                SharedConstants.getGameVersion().getSaveVersion().getId()
+                SharedConstants.getCurrentVersion().getDataVersion().getVersion()
         ).getValue();
-        updatedDimension = (NbtCompound) DimensionType.CODEC.encodeStart(
+        updatedDimension = (CompoundTag) DimensionType.DIRECT_CODEC.encodeStart(
                 NbtOps.INSTANCE,
-                DimensionType.CODEC.decode(
+                DimensionType.DIRECT_CODEC.decode(
                         new Dynamic<>(NbtOps.INSTANCE, updatedDimension)
                 ).result().orElseThrow().getFirst()
         ).result().orElseThrow();
-        Registry<DimensionType> dimensionTypeRegistry = registryManager.get(Registry.DIMENSION_TYPE_KEY);
+        Registry<DimensionType> dimensionTypeRegistry = registryManager.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
 
-        Identifier matchedDimension = World.OVERWORLD.getValue();
+        ResourceLocation matchedDimension = Level.OVERWORLD.location();
         int maxScore = -1;
 
         for (DimensionType dimType : dimensionTypeRegistry) {
-            NbtCompound candidate = (NbtCompound) DimensionType.CODEC.encodeStart(NbtOps.INSTANCE, dimType).result().orElseThrow();
+            CompoundTag candidate = (CompoundTag) DimensionType.DIRECT_CODEC.encodeStart(NbtOps.INSTANCE, dimType).result().orElseThrow();
             int score = SPacketGameJoin_Latest.matchDimensionType(candidate, updatedDimension);
-            Identifier candidateId = dimensionTypeRegistry.getId(dimType);
+            ResourceLocation candidateId = dimensionTypeRegistry.getKey(dimType);
             if (dimensionId.equals(candidateId)) {
                 score += 90;
             }
@@ -90,7 +90,7 @@ public class SPacketPlayerRespawn_Latest implements SPacketPlayerRespawn {
 
     @PartialHandler
     public static void saveDimension(
-            @Argument("dimension") Identifier dimension,
+            @Argument("dimension") ResourceLocation dimension,
             @GlobalData Consumer<DimensionTypeReference> dimensionSetter
     ) {
         dimensionSetter.accept(new DimensionTypeReference(dimension));

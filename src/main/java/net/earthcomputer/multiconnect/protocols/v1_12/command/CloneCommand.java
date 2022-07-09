@@ -1,0 +1,24 @@
+package net.earthcomputer.multiconnect.protocols.v1_12.command;
+
+import com.mojang.brigadier.CommandDispatcher;
+import net.minecraft.commands.SharedSuggestionProvider;
+
+import static net.earthcomputer.multiconnect.protocols.v1_12.command.Commands_1_12_2.*;
+import static net.earthcomputer.multiconnect.protocols.v1_12.command.arguments.EnumArgumentType.*;
+import static net.minecraft.commands.arguments.coordinates.BlockPosArgument.*;
+
+public class CloneCommand {
+
+    public static void register(CommandDispatcher<SharedSuggestionProvider> dispatcher) {
+        dispatcher.register(literal("clone")
+            .then(argument("pos1", blockPos())
+                .then(argument("pos2", blockPos())
+                    .then(argument("pos", blockPos())
+                        .executes(ctx -> 0)
+                        .then(argument("maskMode", enumArg("replace", "masked", "filtered"))
+                            .executes(ctx -> 0)
+                            .then(argument("cloneMode", enumArg("normal", "force", "move"))
+                                .executes(ctx -> 0)))))));
+    }
+
+}

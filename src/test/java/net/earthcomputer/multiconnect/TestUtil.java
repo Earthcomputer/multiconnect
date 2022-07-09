@@ -1,12 +1,12 @@
 package net.earthcomputer.multiconnect;
 
-import net.minecraft.Bootstrap;
 import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
 
 public class TestUtil {
     public static void callBootstrap() {
-        SharedConstants.createGameVersion();
-        Bootstrap.initialize();
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
         Bootstrap.getMissingTranslations(); // forces initialization of translation keys
     }
 }

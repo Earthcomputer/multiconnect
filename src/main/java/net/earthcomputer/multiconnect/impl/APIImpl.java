@@ -3,11 +3,13 @@ package net.earthcomputer.multiconnect.impl;
 import net.earthcomputer.multiconnect.api.*;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.core.Registry;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,12 +32,12 @@ public class APIImpl extends MultiConnectAPI {
     }
 
     @Override
-    public void addClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
+    public void addClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
         CustomPayloadHandler.addClientboundIdentifierCustomPayloadListener(listener);
     }
 
     @Override
-    public void removeClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
+    public void removeClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
         CustomPayloadHandler.removeClientboundIdentifierCustomPayloadListener(listener);
     }
 
@@ -49,16 +51,18 @@ public class APIImpl extends MultiConnectAPI {
         CustomPayloadHandler.removeClientboundStringCustomPayloadListener(listener);
     }
 
+    @Contract("null, _, _ -> fail")
     @Override
-    public void forceSendCustomPayload(ClientPlayNetworkHandler networkHandler, Identifier channel, PacketByteBuf data) {
+    public void forceSendCustomPayload(@Nullable ClientPacketListener networkHandler, ResourceLocation channel, FriendlyByteBuf data) {
         if (networkHandler == null) {
             throw new IllegalStateException("Trying to send custom payload when not in-game");
         }
         CustomPayloadHandler.forceSendIdentifierCustomPayload(networkHandler, channel, data);
     }
 
+    @Contract("null, _, _ -> fail")
     @Override
-    public void forceSendStringCustomPayload(ClientPlayNetworkHandler networkHandler, String channel, PacketByteBuf data) {
+    public void forceSendStringCustomPayload(@Nullable ClientPacketListener networkHandler, String channel, FriendlyByteBuf data) {
         if (networkHandler == null) {
             throw new IllegalStateException("Trying to send custom payload when not in-game");
         }
@@ -69,12 +73,12 @@ public class APIImpl extends MultiConnectAPI {
     }
 
     @Override
-    public void addServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
+    public void addServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
         CustomPayloadHandler.addServerboundIdentifierCustomPayloadListener(listener);
     }
 
     @Override
-    public void removeServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<Identifier> listener) {
+    public void removeServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
         CustomPayloadHandler.removeServerboundIdentifierCustomPayloadListener(listener);
     }
 
@@ -94,7 +98,7 @@ public class APIImpl extends MultiConnectAPI {
     }
 
     @Override
-    public <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
+    public <T> boolean doesServerKnow(Registry<T> registry, ResourceKey<T> key) {
         return PacketSystem.doesServerKnow(registry, key);
     }
 
@@ -151,9 +155,9 @@ public class APIImpl extends MultiConnectAPI {
     @Deprecated
     private record IdentifierCustomPayloadListenerProxy(
             IIdentifierCustomPayloadListener delegate
-    ) implements ICustomPayloadListener<Identifier> {
+    ) implements ICustomPayloadListener<ResourceLocation> {
         @Override
-        public void onCustomPayload(ICustomPayloadEvent<Identifier> event) {
+        public void onCustomPayload(ICustomPayloadEvent<ResourceLocation> event) {
             delegate.onCustomPayload(event.getProtocol(), event.getChannel(), event.getData());
         }
 

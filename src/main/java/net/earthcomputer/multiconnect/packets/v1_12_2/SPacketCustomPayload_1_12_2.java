@@ -12,8 +12,7 @@ import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketCustomPayload;
 import net.earthcomputer.multiconnect.packets.SPacketSetTradeOffers;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import java.util.List;
 
 @Polymorphic
@@ -51,7 +50,7 @@ public abstract class SPacketCustomPayload_1_12_2 implements SPacketCustomPayloa
         public static void handle(
                 @Argument("channel") String channel,
                 @Argument("data") byte[] data,
-                @FilledArgument ClientPlayNetworkHandler networkHandler
+                @FilledArgument ClientPacketListener networkHandler
         ) {
             CustomPayloadHandler.handleClientboundStringCustomPayload(networkHandler, channel, data);
         }

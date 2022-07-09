@@ -7,7 +7,7 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketEntitySpawn;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.block.Blocks_1_12_2;
+import net.earthcomputer.multiconnect.protocols.v1_12.block.Blocks_1_12_2;
 
 import java.util.UUID;
 

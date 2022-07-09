@@ -10,7 +10,17 @@ loom {
     }
 }
 
+repositories {
+    maven {
+        url = uri("https://maven.parchmentmc.org/")
+    }
+}
+
 dependencies {
     minecraft("com.mojang:minecraft:${rootProject.property("minecraft_version")}")
-    mappings("net.fabricmc:yarn:${rootProject.property("yarn_mappings")}:v2")
+    @Suppress("UnstableApiUsage")
+    mappings(loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${rootProject.property("parchment_mcversion")}:${rootProject.property("parchment_version")}@zip")
+    })
 }

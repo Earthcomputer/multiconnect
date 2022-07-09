@@ -7,16 +7,17 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketPlayerRespawn;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.GameMode;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.GameType;
 
 @MessageVariant(minVersion = Protocols.V1_16, maxVersion = Protocols.V1_16_1)
 public class SPacketPlayerRespawn_1_16_1 implements SPacketPlayerRespawn {
     @Introduce(compute = "computeDimension")
-    public Identifier dimension;
+    public ResourceLocation dimension;
     @Introduce(compute = "computeDimension")
-    public Identifier dimensionId;
+    public ResourceLocation dimensionId;
     @Type(Types.LONG)
     public long hashedSeed;
     @Type(Types.UNSIGNED_BYTE)
@@ -31,15 +32,15 @@ public class SPacketPlayerRespawn_1_16_1 implements SPacketPlayerRespawn {
     @Introduce(booleanValue = true)
     public boolean copyMetadata;
 
-    public static Identifier computeDimension(@Argument("dimensionId") int dimensionId) {
+    public static ResourceLocation computeDimension(@Argument("dimensionId") int dimensionId) {
         return SPacketGameJoin_1_16_1.computeDimension(dimensionId);
     }
 
     public static int computePreviousGamemode() {
         // TODO: save this value in global data rather than getting it from the main thread which is racey
-        var interactionManager = MinecraftClient.getInstance().interactionManager;
+        var interactionManager = Minecraft.getInstance().gameMode;
         if (interactionManager != null) {
-            GameMode previousGameMode = interactionManager.getPreviousGameMode();
+            GameType previousGameMode = interactionManager.getPreviousPlayerMode();
             if (previousGameMode != null) {
                 return previousGameMode.getId();
             }

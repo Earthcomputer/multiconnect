@@ -9,7 +9,7 @@ import net.earthcomputer.multiconnect.packets.SPacketEntityStatusEffect;
 @MessageVariant(minVersion = Protocols.V1_18_2, maxVersion = Protocols.V1_18_2)
 public class SPacketEntityStatusEffect_1_18_2 implements SPacketEntityStatusEffect {
     public int entityId;
-    @Registry(Registries.STATUS_EFFECT)
+    @Registry(Registries.MOB_EFFECT)
     public int effectId;
     public byte amplifier;
     public int duration;

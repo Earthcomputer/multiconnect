@@ -8,9 +8,8 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketChunkDeltaUpdate;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +39,7 @@ public class SPacketChunkDeltaUpdate_1_16_1 {
             updatedSectionBitmask |= 1 << sectionY;
         }
 
-        BlockPos.Mutable pos = new BlockPos.Mutable();
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         List<SPacketChunkDeltaUpdate> packets = new ArrayList<>();
 
         for (int sectionY = 0; sectionY < 16; sectionY++) {
@@ -56,7 +55,7 @@ public class SPacketChunkDeltaUpdate_1_16_1 {
                     if (y >> 4 == sectionY) {
                         int x = (update.index >> 12) & 15;
                         int z = (update.index >> 8) & 15;
-                        packet.blocks.add(((long) update.stateId << 12) | ChunkSectionPos.packLocal(pos.set(x, y & 15, z)));
+                        packet.blocks.add(((long) update.stateId << 12) | SectionPos.sectionRelativePos(pos.set(x, y & 15, z)));
                     }
                 }
             }

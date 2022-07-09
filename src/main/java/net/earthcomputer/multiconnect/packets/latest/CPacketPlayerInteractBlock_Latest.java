@@ -7,10 +7,10 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketPlayerInteractBlock;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.v1_18_2.CPacketPlayerInteractBlock_1_18_2;
-import net.earthcomputer.multiconnect.protocols.v1_18_2.IPendingUpdateManager;
-import net.earthcomputer.multiconnect.protocols.v1_18_2.mixin.ClientWorldAccessor;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
+import net.earthcomputer.multiconnect.protocols.v1_18.IBlockStatePredictionHandler;
+import net.earthcomputer.multiconnect.protocols.v1_18.mixin.ClientLevelAccessor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 
 @MessageVariant(minVersion = Protocols.V1_19)
 public class CPacketPlayerInteractBlock_Latest implements CPacketPlayerInteractBlock {
@@ -29,12 +29,12 @@ public class CPacketPlayerInteractBlock_Latest implements CPacketPlayerInteractB
             @Argument(value = "this", translate = true) CPacketPlayerInteractBlock_1_18_2 translatedThis,
             @Argument("sequence") int sequence
     ) {
-        MinecraftClient.getInstance().execute(() -> {
-            ClientWorld world = MinecraftClient.getInstance().world;
+        Minecraft.getInstance().execute(() -> {
+            ClientLevel world = Minecraft.getInstance().level;
             if (world != null) {
-                var pendingUpdateManager = (IPendingUpdateManager) ((ClientWorldAccessor) world).multiconnect_getPendingUpdateManager();
-                pendingUpdateManager.multiconnect_nullifyPendingUpdatesUpTo(world, sequence);
-                world.handlePlayerActionResponse(sequence);
+                var pendingUpdateManager = (IBlockStatePredictionHandler) ((ClientLevelAccessor) world).multiconnect_getBlockStatePredictionHandler();
+                pendingUpdateManager.multiconnect_nullifyServerVerifiedStatesUpTo(world, sequence);
+                world.handleBlockChangedAck(sequence);
             }
         });
         return translatedThis;

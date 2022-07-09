@@ -17,20 +17,20 @@ import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientLoginNetworkHandler;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
+import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientHandshakePacketListenerImpl;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.DecoderHandler;
-import net.minecraft.network.NetworkSide;
-import net.minecraft.network.NetworkState;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.ConnectionProtocol;
+import net.minecraft.network.PacketDecoder;
 import net.minecraft.network.PacketEncoder;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.network.protocol.PacketFlow;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.entity.InputStreamEntity;
@@ -57,7 +57,7 @@ public final class PacketReplay {
     public static final Path packetLogsDir = FabricLoader.getInstance().getConfigDir().resolve("multiconnect").resolve("packet-logs");
     private static DataInputStream stream;
     private static BufferedWriter htmlWriter;
-    private static ClientConnection connection;
+    private static Connection connection;
     private static Channel channel;
     private static int packetCount;
 
@@ -174,7 +174,7 @@ public final class PacketReplay {
                 type = stream.readUnsignedByte();
             } catch (EOFException e) {
                 LOGGER.warn("Reached the end of the packet log without finding a disconnect packet");
-                MinecraftClient.getInstance().disconnect();
+                Minecraft.getInstance().clearLevel();
                 return false;
             }
 
@@ -193,7 +193,7 @@ public final class PacketReplay {
                     return true;
                 }
                 case PacketRecorder.PLAYER_POSITION -> {
-                    BlockPos pos = BlockPos.fromLong(stream.readLong());
+                    BlockPos pos = BlockPos.of(stream.readLong());
                     short packedFractional = stream.readShort();
                     int dx = packedFractional & 15;
                     int dy = (packedFractional >> 8) & 15;
@@ -203,38 +203,38 @@ public final class PacketReplay {
                     double z = pos.getZ() + dz / 16.0;
                     float yaw = stream.readUnsignedByte() * 360.0F / 256.0F;
                     float pitch = stream.readUnsignedByte() * 360.0F / 256.0F;
-                    ClientPlayerEntity player = MinecraftClient.getInstance().player;
+                    LocalPlayer player = Minecraft.getInstance().player;
                     assert player != null;
-                    player.refreshPositionAndAngles(x, y, z, yaw, pitch);
+                    player.moveTo(x, y, z, yaw, pitch);
                     return true;
                 }
                 case PacketRecorder.TICK -> {
                     return false;
                 }
-                case PacketRecorder.NETWORK_STATE -> {
+                case PacketRecorder.CONNECTION_PROTOCOL -> {
                     int stateId = stream.readByte();
-                    NetworkState state = NetworkState.byId(stateId);
-                    if (state == null) {
-                        LOGGER.warn("Invalid network state: {}", stateId);
+                    ConnectionProtocol protocol = ConnectionProtocol.getById(stateId);
+                    if (protocol == null) {
+                        LOGGER.warn("Invalid connection protocol: {}", stateId);
                         return false;
                     }
-                    connection.setState(state);
+                    connection.setProtocol(protocol);
                     return true;
                 }
                 case PacketRecorder.DISCONNECTED -> {
                     LOGGER.info("End of packet replay");
-                    MinecraftClient.getInstance().disconnect();
+                    Minecraft.getInstance().clearLevel();
                     return false;
                 }
                 default -> {
                     LOGGER.warn("Unknown packet log entry type {}", type);
-                    MinecraftClient.getInstance().disconnect();
+                    Minecraft.getInstance().clearLevel();
                     return false;
                 }
             }
         } catch (IOException e) {
             LOGGER.error("Failed to read packet log entry", e);
-            MinecraftClient.getInstance().disconnect();
+            Minecraft.getInstance().clearLevel();
             return false;
         }
     }
@@ -310,11 +310,11 @@ public final class PacketReplay {
             HttpServer server = bootstrap.create();
             server.start();
             Thread thread = new Thread(() -> {
-                Util.getOperatingSystem().open("http://localhost:8080/");
+                Util.getPlatform().openUri("http://localhost:8080/");
             });
             thread.setDaemon(true);
             thread.start();
-            MinecraftClient.getInstance().setScreen(new PacketReplayHttpServerScreen(server));
+            Minecraft.getInstance().setScreen(new PacketReplayHttpServerScreen(server));
         } catch (IOException e) {
             LOGGER.error("Error starting HTTP server", e);
         }
@@ -355,7 +355,7 @@ public final class PacketReplay {
             return false;
         }
 
-        NbtCompound nbt;
+        CompoundTag nbt;
         try {
             nbt = NbtIo.read(stream);
         } catch (IOException e) {
@@ -377,7 +377,7 @@ public final class PacketReplay {
         ConnectionInfo.protocol = ProtocolRegistry.get(protocol);
         ConnectionInfo.protocol.setup();
 
-        Dynamic<NbtElement> nbtDyn = new Dynamic<>(NbtOps.INSTANCE, nbt);
+        Dynamic<Tag> nbtDyn = new Dynamic<>(NbtOps.INSTANCE, nbt);
         Dynamic<JsonElement> jsonDyn = nbtDyn.convert(JsonOps.INSTANCE);
         JsonObject json = jsonDyn.getValue().getAsJsonObject();
         LOGGER.info("Packet replay metadata:");
@@ -389,18 +389,18 @@ public final class PacketReplay {
     }
 
     private static void startReplayServer() {
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
 
-        connection = new ClientConnection(NetworkSide.CLIENTBOUND);
+        connection = new Connection(PacketFlow.CLIENTBOUND);
         PacketReplayLoginScreen screen = new PacketReplayLoginScreen(connection);
         mc.setScreen(screen);
-        connection.setPacketListener(new ClientLoginNetworkHandler(connection, mc, mc.currentScreen, screen::setStatus));
+        connection.setListener(new ClientHandshakePacketListenerImpl(connection, mc, mc.screen, screen::setStatus));
 
         channel = new EmbeddedChannel(true, new ChannelInitializer<EmbeddedChannel>() {
             @Override
             protected void initChannel(@NotNull EmbeddedChannel ch) {
-                ch.pipeline().addLast("decoder", new DecoderHandler(NetworkSide.CLIENTBOUND));
-                ch.pipeline().addLast("encoder", new PacketEncoder(NetworkSide.SERVERBOUND));
+                ch.pipeline().addLast("decoder", new PacketDecoder(PacketFlow.CLIENTBOUND));
+                ch.pipeline().addLast("encoder", new PacketEncoder(PacketFlow.SERVERBOUND));
                 ch.pipeline().addLast("drop_vanilla_packets", new DropVanillaPackets());
                 ch.pipeline().addLast("packet_handler", connection);
             }

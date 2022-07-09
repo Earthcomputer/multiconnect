@@ -8,15 +8,14 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.v1_18_2.SPacketEntitySpawn_1_18_2;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.random.Random;
-
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import java.util.ArrayList;
 import java.util.List;
 
 @MessageVariant(maxVersion = Protocols.V1_15_2)
 public class SPacketEntitySpawnGlobal_1_15_2 {
-    private static final Random random = Random.createLocal();
+    private static final RandomSource random = RandomSource.createNewThreadLocalInstance();
 
     public int id;
     public byte entityTypeId;
@@ -39,7 +38,7 @@ public class SPacketEntitySpawnGlobal_1_15_2 {
 
         packet.entityId = random.nextInt(); // let's hope this doesn't collide (not important, only a lightning bolt)
         packet.type = lightningBoltId;
-        packet.uuid = MathHelper.randomUuid(random);
+        packet.uuid = Mth.createInsecureUUID(random);
         packet.x = x;
         packet.y = y;
         packet.z = z;

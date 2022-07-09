@@ -13,9 +13,9 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.SPacketSynchronizeTags;
 import net.earthcomputer.multiconnect.protocols.generic.TagLoader;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -54,18 +54,18 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
         return ret;
     }
 
-    private static final Map<Identifier, Supplier<Group>> REQUIRED_GROUPS = ImmutableMap.<Identifier, Supplier<Group>>builder()
-        .put(new Identifier("block"), BlockGroup::create)
-        .put(new Identifier("item"), ItemGroup::create)
-        .put(new Identifier("fluid"), FluidGroup::create)
-        .put(new Identifier("entity_type"), EntityTypeGroup::create)
-        .put(new Identifier("game_event"), GameEventGroup::create)
-        .put(new Identifier("instrument"), InstrumentGroup::create)
-        .put(new Identifier("painting_variant"), PaintingVariantGroup::create)
-        .put(new Identifier("banner_pattern"), BannerPatternGroup::create)
-        .put(new Identifier("point_of_interest_type"), PointOfInterestTypeGroup::create)
-        .put(new Identifier("cat_variant"), CatVariantGroup::create)
-        .put(new Identifier("worldgen/biome"), BiomeGroup::create)
+    private static final Map<ResourceLocation, Supplier<Group>> REQUIRED_GROUPS = ImmutableMap.<ResourceLocation, Supplier<Group>>builder()
+        .put(new ResourceLocation("block"), BlockGroup::create)
+        .put(new ResourceLocation("item"), ItemGroup::create)
+        .put(new ResourceLocation("fluid"), FluidGroup::create)
+        .put(new ResourceLocation("entity_type"), EntityTypeGroup::create)
+        .put(new ResourceLocation("game_event"), GameEventGroup::create)
+        .put(new ResourceLocation("instrument"), InstrumentGroup::create)
+        .put(new ResourceLocation("painting_variant"), PaintingVariantGroup::create)
+        .put(new ResourceLocation("banner_pattern"), BannerPatternGroup::create)
+        .put(new ResourceLocation("point_of_interest_type"), PointOfInterestTypeGroup::create)
+        .put(new ResourceLocation("cat_variant"), CatVariantGroup::create)
+        .put(new ResourceLocation("worldgen/biome"), BiomeGroup::create)
         .build();
 
     public static List<Group> fixGroups(List<Group> groups) {
@@ -87,7 +87,7 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
     @Polymorphic
     @MessageVariant
     public static abstract class Group {
-        public Identifier id;
+        public ResourceLocation id;
     }
 
     @Polymorphic(stringValue = "block")
@@ -272,7 +272,7 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
             return ret;
         }
 
-        public static List<Tag> fixTags(List<Tag> tags, @GlobalData DynamicRegistryManager registryManager) {
+        public static List<Tag> fixTags(List<Tag> tags, @GlobalData RegistryAccess registryManager) {
             return doFixTags(null, () -> TagLoader.biomes(registryManager), tags);
         }
     }
@@ -285,10 +285,10 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
 
     private static List<Tag> doFixTags(
             @Nullable Registry<?> registry,
-            Supplier<Map<Identifier, IntList>> vanillaSupplier,
+            Supplier<Map<ResourceLocation, IntList>> vanillaSupplier,
             List<Tag> tags
     ) {
-        Map<Identifier, IntList> vanillaTags = vanillaSupplier.get();
+        Map<ResourceLocation, IntList> vanillaTags = vanillaSupplier.get();
         for (Tag tag : tags) {
             vanillaTags.remove(tag.name);
             if (registry != null) {
@@ -303,11 +303,11 @@ public class SPacketSynchronizeTags_Latest implements SPacketSynchronizeTags {
 
     @MessageVariant
     public static class Tag {
-        public Identifier name;
+        public ResourceLocation name;
         public IntList entries;
 
         public Tag() {}
-        public Tag(Identifier name, IntList entries) {
+        public Tag(ResourceLocation name, IntList entries) {
             this.name = name;
             this.entries = entries;
         }

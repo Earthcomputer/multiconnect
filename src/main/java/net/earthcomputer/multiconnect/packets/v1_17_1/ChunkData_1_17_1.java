@@ -11,9 +11,9 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.ChunkData;
-import net.minecraft.datafixer.fix.BitStorageAlignFix;
-import net.minecraft.util.math.MathHelper;
-
+import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer.RegistryContainer;
+import net.minecraft.util.Mth;
+import net.minecraft.util.datafix.fixes.BitStorageAlignFix;
 import java.util.BitSet;
 import java.util.List;
 
@@ -37,13 +37,13 @@ public class ChunkData_1_17_1 implements ChunkData {
         public static ChunkData.BlockStatePalettedContainer translateBlockStates(
                 @Argument("blockStates") ChunkData.BlockStatePalettedContainer blockStates_
         ) {
-            var blockStates = (BlockStatePalettedContainer) blockStates_;
-            if (blockStates.paletteSize != 0 && !MathHelper.isPowerOfTwo(blockStates.paletteSize)) {
-                if (blockStates instanceof BlockStatePalettedContainer.Multiple multiple) {
-                    multiple.data = BitStorageAlignFix.resizePackedIntArray(4096, blockStates.paletteSize, multiple.data);
+            var blockStates = (net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer) blockStates_;
+            if (blockStates.paletteSize != 0 && !Mth.isPowerOfTwo(blockStates.paletteSize)) {
+                if (blockStates instanceof net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer.Multiple multiple) {
+                    multiple.data = BitStorageAlignFix.addPadding(4096, blockStates.paletteSize, multiple.data);
                 } else {
-                    var registryContainer = (BlockStatePalettedContainer.RegistryContainer) blockStates;
-                    registryContainer.data = BitStorageAlignFix.resizePackedIntArray(4096, blockStates.paletteSize, registryContainer.data);
+                    var registryContainer = (net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer.RegistryContainer) blockStates;
+                    registryContainer.data = BitStorageAlignFix.addPadding(4096, blockStates.paletteSize, registryContainer.data);
                 }
             }
             return blockStates;
@@ -57,7 +57,7 @@ public class ChunkData_1_17_1 implements ChunkData {
 
         @Polymorphic(intValue = {1, 2, 3, 4, 5, 6, 7, 8})
         @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_17_1)
-        public static class Multiple extends BlockStatePalettedContainer {
+        public static class Multiple extends net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer {
             @Registry(Registries.BLOCK_STATE)
             public int[] palette;
             @Type(Types.LONG)
@@ -66,7 +66,7 @@ public class ChunkData_1_17_1 implements ChunkData {
 
         @Polymorphic(otherwise = true)
         @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_17_1)
-        public static class RegistryContainer extends BlockStatePalettedContainer {
+        public static class RegistryContainer extends net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer {
             @Type(Types.LONG)
             public long[] data;
         }

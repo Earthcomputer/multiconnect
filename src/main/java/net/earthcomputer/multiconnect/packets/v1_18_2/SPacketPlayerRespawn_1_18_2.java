@@ -11,18 +11,17 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketPlayerRespawn;
-import net.earthcomputer.multiconnect.protocols.v1_18_2.DiggingTracker;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.Identifier;
-
+import net.earthcomputer.multiconnect.protocols.v1_18.DiggingTracker;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import java.util.function.Consumer;
 
 @MessageVariant(minVersion = Protocols.V1_16_2, maxVersion = Protocols.V1_18_2)
 public class SPacketPlayerRespawn_1_18_2 implements SPacketPlayerRespawn {
     @Datafix(DatafixTypes.DIMENSION)
     @Introduce(compute = "computeDimension")
-    public NbtCompound dimension;
-    public Identifier dimensionId;
+    public CompoundTag dimension;
+    public ResourceLocation dimensionId;
     @Type(Types.LONG)
     public long hashedSeed;
     @Type(Types.UNSIGNED_BYTE)
@@ -33,8 +32,8 @@ public class SPacketPlayerRespawn_1_18_2 implements SPacketPlayerRespawn {
     public boolean isFlat;
     public boolean copyMetadata;
 
-    public static NbtCompound computeDimension(@Argument("dimension") Identifier dimension) {
-        NbtCompound dimType = new NbtCompound();
+    public static CompoundTag computeDimension(@Argument("dimension") ResourceLocation dimension) {
+        CompoundTag dimType = new CompoundTag();
         dimType.putString("name", dimension.toString());
         return dimType;
     }

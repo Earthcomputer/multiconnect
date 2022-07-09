@@ -6,8 +6,7 @@ import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
@@ -16,15 +15,15 @@ import java.util.OptionalLong;
 public class SPacketAdvancementUpdate {
     public boolean clearCurrent;
     public List<Task> toAdd;
-    public List<Identifier> toRemove;
+    public List<ResourceLocation> toRemove;
     public List<Progress> toSetProgress;
 
     @MessageVariant
     public static class Task {
-        public Identifier id;
-        public Optional<Identifier> parentId;
+        public ResourceLocation id;
+        public Optional<ResourceLocation> parentId;
         public Optional<Display> display;
-        public List<Identifier> criteria;
+        public List<ResourceLocation> criteria;
         public List<List<String>> requirements;
 
         @MessageVariant
@@ -36,7 +35,7 @@ public class SPacketAdvancementUpdate {
             @Type(Types.INT)
             public int flags;
             @OnlyIf("hasBackgroundTexture")
-            public Identifier backgroundTexture;
+            public ResourceLocation backgroundTexture;
             public float x;
             public float y;
 
@@ -53,7 +52,7 @@ public class SPacketAdvancementUpdate {
 
     @MessageVariant
     public static class Progress {
-        public Identifier id;
+        public ResourceLocation id;
         public List<Entry> entries;
 
         @MessageVariant

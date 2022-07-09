@@ -7,13 +7,13 @@ import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Sendable;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketCustomPayload;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 @MessageVariant(minVersion = Protocols.V1_13)
 @Polymorphic
 @Sendable(from = {}, fromLatest = true)
 public abstract class CPacketCustomPayload_Latest implements CPacketCustomPayload {
-    public Identifier channel;
+    public ResourceLocation channel;
 
     @Polymorphic(stringValue = "brand")
     @MessageVariant(minVersion = Protocols.V1_13)

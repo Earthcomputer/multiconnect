@@ -9,8 +9,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.EnumCoerce;
 import net.earthcomputer.multiconnect.packets.CPacketClickSlot;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
-import net.minecraft.screen.slot.SlotActionType;
-
+import net.minecraft.world.inventory.ClickType;
 import java.util.List;
 
 @MessageVariant(minVersion = Protocols.V1_17_1)
@@ -32,7 +31,7 @@ public class CPacketClickSlot_Latest implements CPacketClickSlot {
     public enum Mode {
         PICKUP, QUICK_MOVE, SWAP, CLONE, THROW, QUICK_CRAFT, PICKUP_ALL;
 
-        public static final EnumCoerce<SlotActionType, Mode> FROM_MINECRAFT = new EnumCoerce<>(SlotActionType.class, Mode.class);
+        public static final EnumCoerce<ClickType, Mode> FROM_MINECRAFT = new EnumCoerce<>(ClickType.class, Mode.class);
     }
 
     @MessageVariant

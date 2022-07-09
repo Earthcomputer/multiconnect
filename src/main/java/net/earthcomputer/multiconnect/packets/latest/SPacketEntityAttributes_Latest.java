@@ -8,9 +8,8 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.SPacketEntityAttributes;
-import net.earthcomputer.multiconnect.protocols.v1_15_2.mixin.RenameItemStackAttributesFixAccessor;
-import net.minecraft.util.Identifier;
-
+import net.earthcomputer.multiconnect.protocols.v1_15.mixin.AttributesRenameAccessor;
+import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -23,13 +22,13 @@ public class SPacketEntityAttributes_Latest implements SPacketEntityAttributes {
     @MessageVariant(minVersion = Protocols.V1_16)
     public static class Property implements SPacketEntityAttributes.Property {
         @Introduce(compute = "translateKey")
-        public Identifier key;
+        public ResourceLocation key;
         public double value;
         public List<Modifier> modifiers;
 
-        public static Identifier translateKey(@Argument("key") String key) {
-            String newKey = RenameItemStackAttributesFixAccessor.getRenames().getOrDefault(key, key).toLowerCase(Locale.ROOT);
-            return new Identifier(newKey);
+        public static ResourceLocation translateKey(@Argument("key") String key) {
+            String newKey = AttributesRenameAccessor.getRenames().getOrDefault(key, key).toLowerCase(Locale.ROOT);
+            return new ResourceLocation(newKey);
         }
 
         @MessageVariant

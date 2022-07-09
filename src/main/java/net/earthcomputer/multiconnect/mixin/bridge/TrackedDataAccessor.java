@@ -1,11 +1,11 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
-import net.minecraft.entity.data.TrackedData;
+import net.minecraft.network.syncher.EntityDataAccessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(TrackedData.class)
+@Mixin(EntityDataAccessor.class)
 public interface TrackedDataAccessor {
 
     @Accessor

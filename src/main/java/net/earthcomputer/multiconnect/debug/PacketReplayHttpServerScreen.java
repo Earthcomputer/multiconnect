@@ -1,13 +1,13 @@
 package net.earthcomputer.multiconnect.debug;
 
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.apache.http.impl.bootstrap.HttpServer;
 
 public class PacketReplayHttpServerScreen extends Screen {
-    private static final Text TITLE = Text.translatable("multiconnect.debug.runningHttpServer.title");
+    private static final Component TITLE = Component.translatable("multiconnect.debug.runningHttpServer.title");
 
     private final HttpServer server;
 
@@ -18,21 +18,21 @@ public class PacketReplayHttpServerScreen extends Screen {
 
     @Override
     protected void init() {
-        addDrawableChild(new ButtonWidget(width / 2 - 100, height / 2 + 20, 200, 20, Text.translatable("multiconnect.debug.runningHttpServer.stop"), button -> {
-            close();
+        addRenderableWidget(new Button(width / 2 - 100, height / 2 + 20, 200, 20, Component.translatable("multiconnect.debug.runningHttpServer.stop"), button -> {
+            onClose();
         }));
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         server.stop();
-        this.client.setScreen(new PacketReplayMenuScreen());
+        this.minecraft.setScreen(new PacketReplayMenuScreen());
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
         renderBackground(matrices);
-        drawCenteredText(matrices, textRenderer, TITLE, width / 2, height / 2 - 50, 0xffffff);
+        drawCenteredString(matrices, font, TITLE, width / 2, height / 2 - 50, 0xffffff);
         super.render(matrices, mouseX, mouseY, delta);
     }
 }

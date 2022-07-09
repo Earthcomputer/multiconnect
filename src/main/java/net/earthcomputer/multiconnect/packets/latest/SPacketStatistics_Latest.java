@@ -11,8 +11,8 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.SPacketStatistics;
 import net.earthcomputer.multiconnect.packets.v1_12_2.SPacketStatistics_1_12_2;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.mixin.StatsCounterFixAccessor;
-import net.minecraft.util.Identifier;
+import net.earthcomputer.multiconnect.protocols.v1_12.mixin.StatsCounterFixAccessor;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -70,8 +70,8 @@ public class SPacketStatistics_Latest implements SPacketStatistics {
                 return null;
             }
 
-            Identifier customStatId = new Identifier(customStat);
-            Integer customStatRawId = PacketSystem.serverIdToRawId(net.minecraft.util.registry.Registry.CUSTOM_STAT, customStatId);
+            ResourceLocation customStatId = new ResourceLocation(customStat);
+            Integer customStatRawId = PacketSystem.serverIdToRawId(net.minecraft.core.Registry.CUSTOM_STAT, customStatId);
             if (customStatRawId == null) {
                 throw new AssertionError("translateCustomStat returned value not in registry");
             }
@@ -126,11 +126,11 @@ public class SPacketStatistics_Latest implements SPacketStatistics {
         statistic.category = category;
 
         if (statistic instanceof EntityStatistic entityStat) {
-            String renamed = StatsCounterFixAccessor.getRenamedEntities().get(parts[2]);
+            String renamed = StatsCounterFixAccessor.getEntities().get(parts[2]);
             if (renamed == null) {
                 return null;
             }
-            Integer rawId = PacketSystem.serverIdToRawId(net.minecraft.util.registry.Registry.ENTITY_TYPE, new Identifier(renamed));
+            Integer rawId = PacketSystem.serverIdToRawId(net.minecraft.core.Registry.ENTITY_TYPE, new ResourceLocation(renamed));
             if (rawId == null) {
                 throw new AssertionError("getRenamedEntities returned value not in registry");
             }
@@ -141,20 +141,20 @@ public class SPacketStatistics_Latest implements SPacketStatistics {
         if (parts.length < 4) {
             return null;
         }
-        Identifier id = Identifier.tryParse(parts[2] + ":" + String.join(".", Arrays.asList(parts).subList(3, parts.length)));
+        ResourceLocation id = ResourceLocation.tryParse(parts[2] + ":" + String.join(".", Arrays.asList(parts).subList(3, parts.length)));
         if (id == null) {
             return null;
         }
 
         if (statistic instanceof BlockStatistic blockStat) {
-            Integer rawId = PacketSystem.serverIdToRawId(net.minecraft.util.registry.Registry.BLOCK, id);
+            Integer rawId = PacketSystem.serverIdToRawId(net.minecraft.core.Registry.BLOCK, id);
             if (rawId == null) {
                 return null;
             }
             blockStat.block = rawId;
         } else {
             ItemStatistic itemStat = (ItemStatistic) statistic;
-            Integer rawId = PacketSystem.serverIdToRawId(net.minecraft.util.registry.Registry.ITEM, id);
+            Integer rawId = PacketSystem.serverIdToRawId(net.minecraft.core.Registry.ITEM, id);
             if (rawId == null) {
                 return null;
             }

@@ -10,13 +10,13 @@ import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketPlaySoundId;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
 public class SPacketPlaySoundId_1_18_2 implements SPacketPlaySoundId {
     @Registry(Registries.SOUND_EVENT)
     @Introduce(compute = "computeId")
-    public Identifier id;
+    public ResourceLocation id;
     public CommonTypes.SoundCategory category;
     @Type(Types.INT)
     public int x;
@@ -27,8 +27,8 @@ public class SPacketPlaySoundId_1_18_2 implements SPacketPlaySoundId {
     public float volume;
     public float pitch;
 
-    public static Identifier computeId(@Argument("id") String id) {
-        Identifier newId = Identifier.tryParse(id);
-        return newId == null ? new Identifier("ambient.cave") : newId;
+    public static ResourceLocation computeId(@Argument("id") String id) {
+        ResourceLocation newId = ResourceLocation.tryParse(id);
+        return newId == null ? new ResourceLocation("ambient.cave") : newId;
     }
 }

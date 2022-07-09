@@ -26,7 +26,7 @@ public class SPacketBossBar_Latest implements SPacketBossBar {
 
     @Polymorphic(intValue = 0)
     @MessageVariant(minVersion = Protocols.V1_13)
-    public static class AddAction extends Action implements SPacketBossBar.AddAction {
+    public static class AddAction extends net.earthcomputer.multiconnect.packets.latest.SPacketBossBar_Latest.Action implements SPacketBossBar.AddAction {
         public CommonTypes.Text title;
         public float health;
         public Color color;
@@ -42,30 +42,30 @@ public class SPacketBossBar_Latest implements SPacketBossBar {
 
     @Polymorphic(intValue = 1)
     @MessageVariant(minVersion = Protocols.V1_13)
-    public static class RemoveAction extends Action implements SPacketBossBar.RemoveAction {}
+    public static class RemoveAction extends net.earthcomputer.multiconnect.packets.latest.SPacketBossBar_Latest.Action implements SPacketBossBar.RemoveAction {}
 
     @Polymorphic(intValue = 2)
     @MessageVariant(minVersion = Protocols.V1_13)
-    public static class UpdateHealthAction extends Action implements SPacketBossBar.UpdateHealthAction {
+    public static class UpdateHealthAction extends net.earthcomputer.multiconnect.packets.latest.SPacketBossBar_Latest.Action implements SPacketBossBar.UpdateHealthAction {
         public float health;
     }
 
     @Polymorphic(intValue = 3)
     @MessageVariant(minVersion = Protocols.V1_13)
-    public static class UpdateTitleAction extends Action implements SPacketBossBar.UpdateTitleAction {
+    public static class UpdateTitleAction extends net.earthcomputer.multiconnect.packets.latest.SPacketBossBar_Latest.Action implements SPacketBossBar.UpdateTitleAction {
         public CommonTypes.Text title;
     }
 
     @Polymorphic(intValue = 4)
     @MessageVariant(minVersion = Protocols.V1_13)
-    public static class UpdateStyleAction extends Action implements SPacketBossBar.UpdateStyleAction {
+    public static class UpdateStyleAction extends net.earthcomputer.multiconnect.packets.latest.SPacketBossBar_Latest.Action implements SPacketBossBar.UpdateStyleAction {
         public Color color;
         public Division division;
     }
 
     @Polymorphic(intValue = 5)
     @MessageVariant(minVersion = Protocols.V1_13)
-    public static class UpdateFlagsAction extends Action implements SPacketBossBar.UpdateFlagsAction {
+    public static class UpdateFlagsAction extends net.earthcomputer.multiconnect.packets.latest.SPacketBossBar_Latest.Action implements SPacketBossBar.UpdateFlagsAction {
         @Type(Types.UNSIGNED_BYTE)
         @Introduce(compute = "computeFlags")
         public int flags;

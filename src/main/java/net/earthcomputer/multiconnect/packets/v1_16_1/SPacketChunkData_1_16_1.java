@@ -13,12 +13,11 @@ import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.packets.SPacketChunkData;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
-import net.minecraft.datafixer.fix.BitStorageAlignFix;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtLongArray;
-
+import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_5;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.LongArrayTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.util.datafix.fixes.BitStorageAlignFix;
 import java.util.List;
 
 @MessageVariant(minVersion = Protocols.V1_16, maxVersion = Protocols.V1_16_1)
@@ -32,7 +31,7 @@ public class SPacketChunkData_1_16_1 implements SPacketChunkData {
     public boolean forgetOldData;
     public int verticalStripBitmask;
     @Introduce(compute = "computeHeightmaps")
-    public NbtCompound heightmaps;
+    public CompoundTag heightmaps;
     @Length(constant = Protocol_1_16_5.BIOME_ARRAY_LENGTH)
     @Type(Types.INT)
     @OnlyIf("hasFullChunk")
@@ -40,21 +39,21 @@ public class SPacketChunkData_1_16_1 implements SPacketChunkData {
     @Length(raw = true)
     public ChunkData data;
     @Datafix(DatafixTypes.BLOCK_ENTITY)
-    public List<NbtCompound> blockEntities;
+    public List<CompoundTag> blockEntities;
 
     public static boolean hasFullChunk(@Argument("fullChunk") boolean fullChunk) {
         return fullChunk;
     }
 
-    public static NbtCompound computeHeightmaps(@Argument("heightmaps") NbtCompound heightmaps) {
+    public static CompoundTag computeHeightmaps(@Argument("heightmaps") CompoundTag heightmaps) {
         if (heightmaps == null) {
             return null;
         }
 
-        for (String key : heightmaps.getKeys()) {
-            NbtElement nbt = heightmaps.get(key);
-            if (nbt instanceof NbtLongArray nbtLongArray) {
-                heightmaps.putLongArray(key, BitStorageAlignFix.resizePackedIntArray(256, 9, nbtLongArray.getLongArray()));
+        for (String key : heightmaps.getAllKeys()) {
+            Tag nbt = heightmaps.get(key);
+            if (nbt instanceof LongArrayTag nbtLongArray) {
+                heightmaps.putLongArray(key, BitStorageAlignFix.addPadding(256, 9, nbtLongArray.getAsLongArray()));
             }
         }
 

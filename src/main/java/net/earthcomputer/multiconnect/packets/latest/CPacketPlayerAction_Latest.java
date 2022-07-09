@@ -12,7 +12,7 @@ import net.earthcomputer.multiconnect.packets.CPacketPlayerAction;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.v1_18_2.CPacketPlayerAction_1_18_2;
 import net.earthcomputer.multiconnect.packets.v1_18_2.SPacketPlayerActionResponse_1_18_2;
-import net.earthcomputer.multiconnect.protocols.v1_18_2.DiggingTracker;
+import net.earthcomputer.multiconnect.protocols.v1_18.DiggingTracker;
 
 @MessageVariant(minVersion = Protocols.V1_19)
 public class CPacketPlayerAction_Latest implements CPacketPlayerAction {

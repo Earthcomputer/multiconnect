@@ -5,7 +5,15 @@
   "mixins": [
   ],
   "client": [
-    "MerchantEntityAccessor"
+    "EnderManAccessor",
+    "LivingEntityAccessor",
+    "AbstractVillagerAccessor",
+    "LocalPlayerMixin",
+    "LocalPlayerMixin",
+    "EntityMixin",
+    "KeyboardInputMixin",
+    "ThrownTridentAccessor",
+    "WolfAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

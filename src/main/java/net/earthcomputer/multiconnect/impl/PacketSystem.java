@@ -12,18 +12,18 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
-import net.earthcomputer.multiconnect.mixin.connect.ClientConnectionAccessor;
+import net.earthcomputer.multiconnect.mixin.connect.ConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.SharedConstants;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.Packet;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.Util;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.core.Registry;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -53,8 +54,8 @@ public class PacketSystem {
             String protocolName = protocol.getName();
 
             // handle snapshot version for snapshot development
-            if (!SharedConstants.getGameVersion().isStable() && protocolName.equals(SharedConstants.getGameVersion().getId())) {
-                protocolName = SharedConstants.getGameVersion().getReleaseTarget();
+            if (!SharedConstants.getCurrentVersion().isStable() && protocolName.equals(SharedConstants.getCurrentVersion().getId())) {
+                protocolName = SharedConstants.getCurrentVersion().getReleaseTarget();
             }
 
             Class<?> clazz;
@@ -136,18 +137,18 @@ public class PacketSystem {
         }
     }
 
-    public static void sendToServer(ClientPlayNetworkHandler networkHandler, int protocol, Object packet) {
-        sendToServer(networkHandler, protocol, packet, userData -> {});
+    public static void sendToServer(ClientPacketListener connection, int protocol, Object packet) {
+        sendToServer(connection, protocol, packet, userData -> {});
     }
 
-    public static void sendToServer(ClientPlayNetworkHandler networkHandler, int protocol, Object packet, Consumer<TypedMap> userDataSetter) {
-        Channel channel = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel();
+    public static void sendToServer(ClientPacketListener connection, int protocol, Object packet, Consumer<TypedMap> userDataSetter) {
+        Channel channel = ((ConnectionAccessor) connection.getConnection()).getChannel();
         Runnable send = () -> {
             List<ByteBuf> bufs = new ArrayList<>(1);
             TypedMap userData = new TypedMap();
             userDataSetter.accept(userData);
-            protocolClasses.get(ConnectionInfo.protocolVersion).sendToServer(packet, protocol, bufs, networkHandler, globalData, userData);
-            PacketIntrinsics.sendRawToServer(networkHandler, bufs);
+            protocolClasses.get(ConnectionInfo.protocolVersion).sendToServer(packet, protocol, bufs, connection, globalData, userData);
+            PacketIntrinsics.sendRawToServer(connection, bufs);
         };
         if (channel.eventLoop().inEventLoop()) {
             send.run();
@@ -156,18 +157,18 @@ public class PacketSystem {
         }
     }
 
-    public static void sendToClient(ClientPlayNetworkHandler networkHandler, int protocol, Object packet) {
-        sendToClient(networkHandler, protocol, packet, userData -> {});
+    public static void sendToClient(ClientPacketListener connection, int protocol, Object packet) {
+        sendToClient(connection, protocol, packet, userData -> {});
     }
 
-    public static void sendToClient(ClientPlayNetworkHandler networkHandler, int protocol, Object packet, Consumer<TypedMap> userDataSetter) {
-        Channel channel = ((ClientConnectionAccessor) networkHandler.getConnection()).getChannel();
+    public static void sendToClient(ClientPacketListener connection, int protocol, Object packet, Consumer<TypedMap> userDataSetter) {
+        Channel channel = ((ConnectionAccessor) connection.getConnection()).getChannel();
         Runnable send = () -> {
             List<ByteBuf> bufs = new ArrayList<>(1);
             TypedMap userData = new TypedMap();
             userDataSetter.accept(userData);
-            protocolClasses.get(protocol).sendToClient(packet, bufs, networkHandler, globalData, userData);
-            PacketIntrinsics.sendRawToClient(networkHandler, userData, bufs);
+            protocolClasses.get(protocol).sendToClient(packet, bufs, connection, globalData, userData);
+            PacketIntrinsics.sendRawToClient(connection, userData, bufs);
         };
         if (channel.eventLoop().inEventLoop()) {
             send.run();
@@ -176,26 +177,26 @@ public class PacketSystem {
         }
     }
 
-    public static <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key) {
-        return doesServerKnow(registry, key, registry.get(key));
+    public static <T> boolean doesServerKnow(Registry<T> registry, ResourceKey<T> key) {
+        return doesServerKnow(registry, key, Objects.requireNonNull(registry.get(key)));
     }
 
     public static <T> boolean doesServerKnow(Registry<T> registry, T value) {
-        Optional<RegistryKey<T>> key = registry.getKey(value);
+        Optional<ResourceKey<T>> key = registry.getResourceKey(value);
         if (key.isEmpty()) {
             return false;
         }
         return doesServerKnow(registry, key.get(), value);
     }
 
-    private static <T> boolean doesServerKnow(Registry<T> registry, RegistryKey<T> key, T value) {
-        int rawId = registry.getRawId(value);
+    private static <T> boolean doesServerKnow(Registry<T> registry, ResourceKey<T> key, T value) {
+        int rawId = registry.getId(value);
         ProtocolClassProxy proxy = protocolClasses.get(ConnectionInfo.protocolVersion);
-        return proxy.doesServerKnow(registry.getKey(), rawId) || proxy.doesServerKnowMulticonnect(key);
+        return proxy.doesServerKnow(registry.key(), rawId) || proxy.doesServerKnowMulticonnect(key);
     }
 
     public static boolean doesServerKnowBlockState(BlockState state) {
-        int rawId = Block.getRawIdFromState(state);
+        int rawId = Block.getId(state);
         ProtocolClassProxy proxy = protocolClasses.get(ConnectionInfo.protocolVersion);
         return proxy.doesServerKnowBlockState(rawId) || proxy.doesServerKnowBlockStateMulticonnect(state);
     }
@@ -205,7 +206,7 @@ public class PacketSystem {
     }
 
     public static int serverRawIdToClient(int serverVersion, Registry<?> registry, int serverRawId) {
-        return protocolClasses.get(serverVersion).remapSInt(registry.getKey(), serverRawId);
+        return protocolClasses.get(serverVersion).remapSInt(registry.key(), serverRawId);
     }
 
     public static int clientRawIdToServer(Registry<?> registry, int clientRawId) {
@@ -213,54 +214,55 @@ public class PacketSystem {
     }
 
     public static int clientRawIdToServer(int serverVersion, Registry<?> registry, int clientRawId) {
-        return protocolClasses.get(serverVersion).remapCInt(registry.getKey(), clientRawId);
+        return protocolClasses.get(serverVersion).remapCInt(registry.key(), clientRawId);
     }
 
-    public static Identifier serverIdToClient(Registry<?> registry, Identifier serverId) {
+    public static ResourceLocation serverIdToClient(Registry<?> registry, ResourceLocation serverId) {
         return serverIdToClient(ConnectionInfo.protocolVersion, registry, serverId);
     }
 
-    public static Identifier serverIdToClient(int serverVersion, Registry<?> registry, Identifier serverId) {
-        return protocolClasses.get(serverVersion).remapSIdentifier(registry.getKey(), serverId);
+    public static ResourceLocation serverIdToClient(int serverVersion, Registry<?> registry, ResourceLocation serverId) {
+        return protocolClasses.get(serverVersion).remapSIdentifier(registry.key(), serverId);
     }
 
-    public static Identifier clientIdToServer(Registry<?> registry, Identifier clientId) {
+    public static ResourceLocation clientIdToServer(Registry<?> registry, ResourceLocation clientId) {
         return clientIdToServer(ConnectionInfo.protocolVersion, registry, clientId);
     }
 
-    public static Identifier clientIdToServer(int serverVersion, Registry<?> registry, Identifier clientId) {
-        return protocolClasses.get(serverVersion).remapCIdentifier(registry.getKey(), clientId);
+    public static ResourceLocation clientIdToServer(int serverVersion, Registry<?> registry, ResourceLocation clientId) {
+        return protocolClasses.get(serverVersion).remapCIdentifier(registry.key(), clientId);
     }
 
     @Nullable
-    public static Integer serverIdToRawId(Registry<?> registry, Identifier serverId) {
+    public static Integer serverIdToRawId(Registry<?> registry, ResourceLocation serverId) {
         return serverIdToRawId(ConnectionInfo.protocolVersion, registry, serverId);
     }
 
     @Nullable
-    public static <T> Integer serverIdToRawId(int serverVersion, Registry<T> registry, Identifier serverId) {
-        Identifier clientId = serverIdToClient(serverVersion, registry, serverId);
+    public static <T> Integer serverIdToRawId(int serverVersion, Registry<T> registry, ResourceLocation serverId) {
+        ResourceLocation clientId = serverIdToClient(serverVersion, registry, serverId);
         T value = registry.get(clientId);
         if (value == null) {
             return null;
         }
-        int clientRawId = registry.getRawId(value);
+        int clientRawId = registry.getId(value);
         return clientRawIdToServer(serverVersion, registry, clientRawId);
     }
 
     @Nullable
-    public static Identifier serverRawIdToId(Registry<?> registry, int serverRawId) {
+    public static ResourceLocation serverRawIdToId(Registry<?> registry, int serverRawId) {
         return serverRawIdToId(ConnectionInfo.protocolVersion, registry, serverRawId);
     }
 
     @Nullable
-    public static <T> Identifier serverRawIdToId(int serverVersion, Registry<T> registry, int serverRawId) {
+    public static <T> ResourceLocation serverRawIdToId(int serverVersion, Registry<T> registry, int serverRawId) {
         int clientRawId = serverRawIdToClient(serverVersion, registry, serverRawId);
-        T value = registry.get(clientRawId);
+        T value = registry.byId(clientRawId);
         if (value == null) {
             return null;
         }
-        Identifier clientId = registry.getId(value);
+        ResourceLocation clientId = registry.getKey(value);
+        assert clientId != null;
         return clientIdToServer(serverVersion, registry, clientId);
     }
 
@@ -297,12 +299,12 @@ public class PacketSystem {
         try {
             return blockStateRegistryBits.computeIfAbsent(ConnectionInfo.protocolVersion, k -> {
                 int count = 0;
-                for (BlockState state : Block.STATE_IDS) {
+                for (BlockState state : Block.BLOCK_STATE_REGISTRY) {
                     if (doesServerKnowBlockState(state)) {
                         count++;
                     }
                 }
-                return MathHelper.ceilLog2(count);
+                return Mth.ceillog2(count);
             });
         } finally {
             blockStateRegistryBitsLock.writeLock().unlock();
@@ -382,16 +384,16 @@ public class PacketSystem {
         ProtocolClassProxy(Class<?> clazz, int protocol) {
             this.translateSPacket = findMethodHandle(clazz, "translateSPacket", PacketIntrinsics.StartSendPacketResult.class, ByteBuf.class);
             this.translateCPacket = findMethodHandle(clazz, "translateCPacket", PacketIntrinsics.StartSendPacketResult.class, ByteBuf.class);
-            this.sendToClient = findMethodHandle(clazz, "sendToClient", void.class, Object.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
-            this.sendToServer = findMethodHandle(clazz, "sendToServer", void.class, Object.class, int.class, List.class, ClientPlayNetworkHandler.class, Map.class, TypedMap.class);
-            this.doesServerKnow = findMethodHandle(clazz, "doesServerKnow", boolean.class, RegistryKey.class, int.class);
-            this.doesServerKnowMulticonnect = findMethodHandle(clazz, "doesServerKnowMulticonnect", boolean.class, RegistryKey.class);
+            this.sendToClient = findMethodHandle(clazz, "sendToClient", void.class, Object.class, List.class, ClientPacketListener.class, Map.class, TypedMap.class);
+            this.sendToServer = findMethodHandle(clazz, "sendToServer", void.class, Object.class, int.class, List.class, ClientPacketListener.class, Map.class, TypedMap.class);
+            this.doesServerKnow = findMethodHandle(clazz, "doesServerKnow", boolean.class, ResourceKey.class, int.class);
+            this.doesServerKnowMulticonnect = findMethodHandle(clazz, "doesServerKnowMulticonnect", boolean.class, ResourceKey.class);
             this.doesServerKnowBlockState = findMethodHandle(clazz, "doesServerKnowBlockState", boolean.class, int.class);
             this.doesServerKnowBlockStateMulticonnect = findMethodHandle(clazz, "doesServerKnowBlockStateMulticonnect", boolean.class, BlockState.class);
-            this.remapCInt = findMethodHandle(clazz, "remapCInt", int.class, RegistryKey.class, int.class);
-            this.remapSInt = findMethodHandle(clazz, "remapSInt", int.class, RegistryKey.class, int.class);
-            this.remapCIdentifier = findMethodHandle(clazz, "remapCIdentifier", Identifier.class, RegistryKey.class, Identifier.class);
-            this.remapSIdentifier = findMethodHandle(clazz, "remapSIdentifier", Identifier.class, RegistryKey.class, Identifier.class);
+            this.remapCInt = findMethodHandle(clazz, "remapCInt", int.class, ResourceKey.class, int.class);
+            this.remapSInt = findMethodHandle(clazz, "remapSInt", int.class, ResourceKey.class, int.class);
+            this.remapCIdentifier = findMethodHandle(clazz, "remapCIdentifier", ResourceLocation.class, ResourceKey.class, ResourceLocation.class);
+            this.remapSIdentifier = findMethodHandle(clazz, "remapSIdentifier", ResourceLocation.class, ResourceKey.class, ResourceLocation.class);
             this.remapCIntBlockState = findMethodHandle(clazz, "remapCIntBlockState", int.class, int.class);
             this.remapSIntBlockState = findMethodHandle(clazz, "remapSIntBlockState", int.class, int.class);
         }
@@ -412,7 +414,7 @@ public class PacketSystem {
             }
         }
 
-        void sendToClient(Object packet, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
+        void sendToClient(Object packet, List<ByteBuf> outBufs, ClientPacketListener networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
             try {
                 sendToClient.invoke(packet, outBufs, networkHandler, globalData, userData);
             } catch (Throwable e) {
@@ -420,7 +422,7 @@ public class PacketSystem {
             }
         }
 
-        void sendToServer(Object packet, int fromProtocol, List<ByteBuf> outBufs, ClientPlayNetworkHandler networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
+        void sendToServer(Object packet, int fromProtocol, List<ByteBuf> outBufs, ClientPacketListener networkHandler, Map<Class<?>, Object> globalData, TypedMap userData) {
             try {
                 sendToServer.invoke(packet, fromProtocol, outBufs, networkHandler, globalData, userData);
             } catch (Throwable e) {
@@ -428,7 +430,7 @@ public class PacketSystem {
             }
         }
 
-        boolean doesServerKnow(RegistryKey<? extends Registry<?>> registry, int newId) {
+        boolean doesServerKnow(ResourceKey<? extends Registry<?>> registry, int newId) {
             try {
                 return (Boolean) doesServerKnow.invoke(registry, newId);
             } catch (Throwable e) {
@@ -436,7 +438,7 @@ public class PacketSystem {
             }
         }
 
-        boolean doesServerKnowMulticonnect(RegistryKey<?> value) {
+        boolean doesServerKnowMulticonnect(ResourceKey<?> value) {
             try {
                 return (Boolean) doesServerKnowMulticonnect.invoke(value);
             } catch (Throwable e) {
@@ -460,7 +462,7 @@ public class PacketSystem {
             }
         }
 
-        int remapCInt(RegistryKey<? extends Registry<?>> registry, int value) {
+        int remapCInt(ResourceKey<? extends Registry<?>> registry, int value) {
             try {
                 return (Integer) remapCInt.invoke(registry, value);
             } catch (Throwable e) {
@@ -468,7 +470,7 @@ public class PacketSystem {
             }
         }
 
-        int remapSInt(RegistryKey<? extends Registry<?>> registry, int value) {
+        int remapSInt(ResourceKey<? extends Registry<?>> registry, int value) {
             try {
                 return (Integer) remapSInt.invoke(registry, value);
             } catch (Throwable e) {
@@ -476,17 +478,17 @@ public class PacketSystem {
             }
         }
 
-        Identifier remapCIdentifier(RegistryKey<? extends Registry<?>> registry, Identifier value) {
+        ResourceLocation remapCIdentifier(ResourceKey<? extends Registry<?>> registry, ResourceLocation value) {
             try {
-                return (Identifier) remapCIdentifier.invoke(registry, value);
+                return (ResourceLocation) remapCIdentifier.invoke(registry, value);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }
         }
 
-        Identifier remapSIdentifier(RegistryKey<? extends Registry<?>> registry, Identifier value) {
+        ResourceLocation remapSIdentifier(ResourceKey<? extends Registry<?>> registry, ResourceLocation value) {
             try {
-                return (Identifier) remapSIdentifier.invoke(registry, value);
+                return (ResourceLocation) remapSIdentifier.invoke(registry, value);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }

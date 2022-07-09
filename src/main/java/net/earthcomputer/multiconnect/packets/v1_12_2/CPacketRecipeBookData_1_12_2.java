@@ -10,7 +10,7 @@ import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketRecipeBookData;
 import net.earthcomputer.multiconnect.packets.v1_16_1.CPacketRecipeBookData_1_16_1;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 @Polymorphic
 @MessageVariant(maxVersion = Protocols.V1_12_2)
@@ -24,7 +24,7 @@ public abstract class CPacketRecipeBookData_1_12_2 implements CPacketRecipeBookD
         @Introduce(compute = "computeRecipeId")
         public int recipeId;
 
-        public static int computeRecipeId(@Argument("recipeId") Identifier recipeId) {
+        public static int computeRecipeId(@Argument("recipeId") ResourceLocation recipeId) {
             try {
                 return Integer.parseInt(recipeId.getPath());
             } catch (NumberFormatException e) {

@@ -14,8 +14,7 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 
 @MessageVariant
@@ -34,7 +33,7 @@ public class SPacketCommandTree {
         @OnlyIf(value = "isArgument")
         public BrigadierArgument argument;
         @OnlyIf(value = "hasSuggestions")
-        public Identifier suggestionsProvider;
+        public ResourceLocation suggestionsProvider;
 
         public static boolean isRedirect(@Argument("flags") int flags) {
             return (flags & 8) != 0;
@@ -100,8 +99,8 @@ public class SPacketCommandTree {
         @Introduce(compute = "computeParser")
         public int parser;
 
-        public static int computeParser(@Argument("parser") Identifier parser) {
-            Integer rawId = PacketSystem.serverIdToRawId(net.minecraft.util.registry.Registry.COMMAND_ARGUMENT_TYPE, parser);
+        public static int computeParser(@Argument("parser") ResourceLocation parser) {
+            Integer rawId = PacketSystem.serverIdToRawId(net.minecraft.core.Registry.COMMAND_ARGUMENT_TYPE, parser);
             return rawId == null ? 0 : rawId;
         }
     }
@@ -185,7 +184,7 @@ public class SPacketCommandTree {
     @Polymorphic(stringValue = "brigadier:string")
     @MessageVariant(minVersion = Protocols.V1_19)
     public static class StringArgument extends BrigadierArgument_Latest implements BrigadierArgument.StringArgument {
-        public Type type;
+        public net.earthcomputer.multiconnect.packets.SPacketCommandTree.StringArgument.Type type;
         @NetworkEnum
         public enum Type {
             SINGLE_WORD, QUOTABLE_PHRASE, GREEDY_PHRASE
@@ -207,7 +206,7 @@ public class SPacketCommandTree {
     @Polymorphic(stringValue = {"minecraft:resource", "minecraft:resource_or_tag"})
     @MessageVariant(minVersion = Protocols.V1_19)
     public static class RegistryKeyArgument extends BrigadierArgument_Latest implements BrigadierArgument.RegistryKeyArgument {
-        public Identifier registry;
+        public ResourceLocation registry;
     }
 
     @Polymorphic(otherwise = true)

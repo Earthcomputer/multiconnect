@@ -1,16 +1,16 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
 import net.earthcomputer.multiconnect.impl.MixinHelper;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedDataHandler;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.syncher.EntityDataSerializer;
+import net.minecraft.network.syncher.SynchedEntityData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(DataTracker.class)
+@Mixin(SynchedEntityData.class)
 public interface DataTrackerAccessor {
-    @Invoker
-    static <T> DataTracker.Entry<T> callEntryFromPacket(PacketByteBuf buf, int id, TrackedDataHandler<T> handler) {
+    @Invoker("genericHelper")
+    static <T> SynchedEntityData.DataItem<T> callEntryFromPacket(FriendlyByteBuf buf, int id, EntityDataSerializer<T> handler) {
         return MixinHelper.fakeInstance();
     }
 }

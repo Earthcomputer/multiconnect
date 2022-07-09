@@ -6,7 +6,7 @@ import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketCraftRequest;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 @MessageVariant(minVersion = Protocols.V1_12_1, maxVersion = Protocols.V1_12_2)
 public class CPacketCraftRequest_1_12_2 implements CPacketCraftRequest {
@@ -15,7 +15,7 @@ public class CPacketCraftRequest_1_12_2 implements CPacketCraftRequest {
     public int recipeId;
     public boolean craftAll;
 
-    public static int computeRecipeId(@Argument("recipeId") Identifier recipeId) {
+    public static int computeRecipeId(@Argument("recipeId") ResourceLocation recipeId) {
         try {
             return Integer.parseInt(recipeId.getPath());
         } catch (NumberFormatException e) {

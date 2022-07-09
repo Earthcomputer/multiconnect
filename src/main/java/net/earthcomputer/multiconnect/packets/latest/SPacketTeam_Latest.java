@@ -30,7 +30,7 @@ public class SPacketTeam_Latest implements SPacketTeam {
 
     @Polymorphic(stringValue = "CREATE")
     @MessageVariant(minVersion = Protocols.V1_13)
-    public static class CreateAction extends Action implements SPacketTeam.CreateAction {
+    public static class CreateAction extends net.earthcomputer.multiconnect.packets.latest.SPacketTeam_Latest.Action implements SPacketTeam.CreateAction {
         @Introduce(compute = "computeDisplayName")
         public CommonTypes.Text displayName;
         public byte friendlyFlags;
@@ -66,12 +66,12 @@ public class SPacketTeam_Latest implements SPacketTeam {
 
     @Polymorphic(stringValue = "REMOVE")
     @MessageVariant(minVersion = Protocols.V1_13)
-    public static class RemoveAction extends Action implements SPacketTeam.RemoveAction {
+    public static class RemoveAction extends net.earthcomputer.multiconnect.packets.latest.SPacketTeam_Latest.Action implements SPacketTeam.RemoveAction {
     }
 
     @Polymorphic(stringValue = "UPDATE_INFO")
     @MessageVariant(minVersion = Protocols.V1_13)
-    public static class UpdateInfoAction extends Action implements SPacketTeam.UpdateInfoAction {
+    public static class UpdateInfoAction extends net.earthcomputer.multiconnect.packets.latest.SPacketTeam_Latest.Action implements SPacketTeam.UpdateInfoAction {
         @Introduce(compute = "computeDisplayName")
         public CommonTypes.Text displayName;
         public byte friendlyFlags;
@@ -106,7 +106,7 @@ public class SPacketTeam_Latest implements SPacketTeam {
 
     @Polymorphic(stringValue = {"ADD_ENTITIES", "REMOVE_ENTITIES"})
     @MessageVariant(minVersion = Protocols.V1_13)
-    public static class EntitiesAction extends Action implements SPacketTeam.EntitiesAction {
+    public static class EntitiesAction extends net.earthcomputer.multiconnect.packets.latest.SPacketTeam_Latest.Action implements SPacketTeam.EntitiesAction {
         public List<String> entities;
     }
 }

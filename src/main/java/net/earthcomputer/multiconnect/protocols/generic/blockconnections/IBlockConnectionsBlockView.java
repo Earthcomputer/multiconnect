@@ -1,15 +1,15 @@
 package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
 
 import com.mojang.logging.LogUtils;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
 import org.slf4j.Logger;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 public interface IBlockConnectionsBlockView {
     Logger LOGGER = LogUtils.getLogger();
@@ -21,12 +21,12 @@ public interface IBlockConnectionsBlockView {
     int getMinY();
     int getMaxY();
 
-    static <T> T withNullWorld(Block block, T def, Supplier<T> supplier) {
+    static <T> T withNullLevel(Block block, T def, Supplier<T> supplier) {
         try {
             return supplier.get();
         } catch (NullPointerException e) {
             if (WARNED_NPE_BLOCKS.add(block)) {
-                LOGGER.warn("Block {} threw NPE with null world", Registry.BLOCK.getId(block));
+                LOGGER.warn("Block {} threw NPE with null level", Registry.BLOCK.getKey(block));
             }
             return def;
         }
