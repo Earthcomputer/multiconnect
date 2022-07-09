@@ -28,8 +28,7 @@
 
   "custom": {
     "modmenu": {
-      "badges": [ "library" ],
-      "parent": "multiconnect"
+      "badges": [ "library" ]
     }
   }
 }

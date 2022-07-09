@@ -12,6 +12,7 @@
   "multiconnect.debug.menu.title": "Multiconnect Debug Screen",
   "multiconnect.debug.menu.HttpServer.start" : "Start HttpServer",
   "multiconnect.debug.menu.start" : "Start Replay",
+  "multiconnect.debug.menu.cancel" : "Cancel",
   "multiconnect.debug.startingReplay": "Starting Packet Replay",
   "multiconnect.rareBug": "A rare bug just occurred in multiconnect. Please upload your game log to the %s so it can be fixed.",
   "multiconnect.rareBug.link": "issue tracker",
