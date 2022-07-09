@@ -1,9 +1,9 @@
 package net.earthcomputer.multiconnect.protocols.v1_12;
 
 import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.earthcomputer.multiconnect.packets.latest.SPacketSynchronizeRecipes_Latest;
+import net.earthcomputer.multiconnect.packets.latest.SPacketUpdateRecipes_Latest;
 import net.earthcomputer.multiconnect.packets.v1_13_1.ItemStack_1_13_1;
-import net.earthcomputer.multiconnect.packets.v1_13_2.SPacketSynchronizeRecipes_1_13_2;
+import net.earthcomputer.multiconnect.packets.v1_13_2.SPacketUpdateRecipes_1_13_2;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
@@ -204,12 +204,12 @@ public final class RecipeInfo<T extends Recipe<?>> {
         return distinguisher;
     }
 
-    public SPacketSynchronizeRecipes_1_13_2.RecipeWithId toPacketRecipe(ResourceLocation id) {
+    public SPacketUpdateRecipes_1_13_2.RecipeWithId toPacketRecipe(ResourceLocation id) {
         var recipe = create(id);
-        SPacketSynchronizeRecipes_1_13_2.Recipe packetRecipe;
+        SPacketUpdateRecipes_1_13_2.Recipe packetRecipe;
         if (recipeType == RecipeSerializer.SMELTING_RECIPE) {
             var smelting = (SmeltingRecipe) recipe;
-            var packetSmelting = new SPacketSynchronizeRecipes_1_13_2.Smelting();
+            var packetSmelting = new SPacketUpdateRecipes_1_13_2.Smelting();
             packetSmelting.group = smelting.getGroup();
             packetSmelting.ingredient = convertIngredient(smelting.getIngredients().get(0));
             packetSmelting.result = ItemStack_1_13_1.fromMinecraft(smelting.getResultItem());
@@ -218,7 +218,7 @@ public final class RecipeInfo<T extends Recipe<?>> {
             packetRecipe = packetSmelting;
         } else if (recipeType == RecipeSerializer.SHAPED_RECIPE) {
             var shaped = (ShapedRecipe) recipe;
-            var packetShaped = new SPacketSynchronizeRecipes_1_13_2.CraftingShaped();
+            var packetShaped = new SPacketUpdateRecipes_1_13_2.CraftingShaped();
             packetShaped.width = shaped.getWidth();
             packetShaped.height = shaped.getHeight();
             packetShaped.group = shaped.getGroup();
@@ -227,24 +227,24 @@ public final class RecipeInfo<T extends Recipe<?>> {
             packetRecipe = packetShaped;
         } else if (recipeType == RecipeSerializer.SHAPELESS_RECIPE) {
             var shapeless = (ShapelessRecipe) recipe;
-            var packetShapeless = new SPacketSynchronizeRecipes_1_13_2.CraftingShapeless();
+            var packetShapeless = new SPacketUpdateRecipes_1_13_2.CraftingShapeless();
             packetShapeless.group = shapeless.getGroup();
             packetShapeless.ingredients = shapeless.getIngredients().stream().map(RecipeInfo::convertIngredient).collect(Collectors.toCollection(ArrayList::new));
             packetShapeless.result = ItemStack_1_13_1.fromMinecraft(shapeless.getResultItem());
             packetRecipe = packetShapeless;
         } else {
-            packetRecipe = new SPacketSynchronizeRecipes_1_13_2.Special();
+            packetRecipe = new SPacketUpdateRecipes_1_13_2.Special();
         }
         packetRecipe.type = PacketSystem.clientIdToServer(Registry.RECIPE_SERIALIZER, Registry.RECIPE_SERIALIZER.getKey(recipe.getSerializer())).getPath();
 
-        var result = new SPacketSynchronizeRecipes_1_13_2.RecipeWithId();
+        var result = new SPacketUpdateRecipes_1_13_2.RecipeWithId();
         result.recipeId = id;
         result.recipe = packetRecipe;
         return result;
     }
 
-    private static SPacketSynchronizeRecipes_Latest.Ingredient convertIngredient(Ingredient ingredient) {
-        var result = new SPacketSynchronizeRecipes_Latest.Ingredient();
+    private static SPacketUpdateRecipes_Latest.Ingredient convertIngredient(Ingredient ingredient) {
+        var result = new SPacketUpdateRecipes_Latest.Ingredient();
         result.options = new ArrayList<>(ingredient.getItems().length);
         for (ItemStack matchingStack : ingredient.getItems()) {
             result.options.add(ItemStack_1_13_1.fromMinecraft(matchingStack));

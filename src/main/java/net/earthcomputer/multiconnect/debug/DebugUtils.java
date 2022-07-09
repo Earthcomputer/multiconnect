@@ -384,8 +384,8 @@ public class DebugUtils {
             //noinspection ResultOfMethodCallIgnored
             dir.mkdirs();
         }
-        dumpPackets(new File(dir, "spackets.csv"), PacketFlow.CLIENTBOUND, "SPacket", "S2CPacket");
-        dumpPackets(new File(dir, "cpackets.csv"), PacketFlow.SERVERBOUND, "CPacket", "C2SPacket");
+        dumpPackets(new File(dir, "spackets.csv"), PacketFlow.CLIENTBOUND, "SPacket", "Clientbound", "Packet");
+        dumpPackets(new File(dir, "cpackets.csv"), PacketFlow.SERVERBOUND, "CPacket", "Serverbound", "Packet");
         for (Registries registries : Registries.values()) {
             RegistryLike<T> registryLike = (RegistryLike<T>) getRegistryLike(registries);
             try (PrintWriter pw = new PrintWriter(new FileWriter(new File(dir, registries.name().toLowerCase(Locale.ROOT) + ".csv")))) {
@@ -425,7 +425,7 @@ public class DebugUtils {
         return prop.getName((T) value);
     }
 
-    private static void dumpPackets(File output, PacketFlow direction, String prefix, String toReplace) throws IOException {
+    private static void dumpPackets(File output, PacketFlow direction, String prefix, String... toReplace) throws IOException {
         var packetHandlers = new ArrayList<>(ConnectionProtocol.PLAY.getPacketsByIds(direction).int2ObjectEntrySet());
         packetHandlers.sort(Comparator.comparingInt(Int2ObjectMap.Entry::getIntKey));
         try (PrintWriter pw = new PrintWriter(new FileWriter(output))) {
@@ -438,7 +438,10 @@ public class DebugUtils {
                 if (underscoreIndex >= 0) {
                     baseClassName = baseClassName.substring(0, underscoreIndex);
                 }
-                baseClassName = baseClassName.replace("$", "").replace(toReplace, "");
+                baseClassName = baseClassName.replace("$", "");
+                for (String toReplaceStr : toReplace) {
+                    baseClassName = baseClassName.replace(toReplaceStr, "");
+                }
                 baseClassName = prefix + baseClassName;
                 String className = "net.earthcomputer.multiconnect.packets." + baseClassName;
                 Class<?> clazz;

@@ -10,7 +10,7 @@ import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketCustomPayload;
-import net.earthcomputer.multiconnect.packets.SPacketSetTradeOffers;
+import net.earthcomputer.multiconnect.packets.SPacketMerchantOffers;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import java.util.List;
@@ -31,7 +31,7 @@ public abstract class SPacketCustomPayload_1_12_2 implements SPacketCustomPayloa
     public static class TraderList extends SPacketCustomPayload_1_12_2 implements SPacketCustomPayload.TraderList {
         public int syncId;
         @Length(type = Types.UNSIGNED_BYTE)
-        public List<SPacketSetTradeOffers.Trade> trades;
+        public List<SPacketMerchantOffers.Trade> trades;
     }
 
     @Polymorphic(stringValue = "MC|BOpen")

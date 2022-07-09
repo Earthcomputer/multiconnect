@@ -10,9 +10,9 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
-import net.earthcomputer.multiconnect.packets.SPacketDeathMessage;
-import net.earthcomputer.multiconnect.packets.SPacketEndCombat;
-import net.earthcomputer.multiconnect.packets.SPacketEnterCombat;
+import net.earthcomputer.multiconnect.packets.SPacketPlayerCombatKill;
+import net.earthcomputer.multiconnect.packets.SPacketPlayerCombatEnd;
+import net.earthcomputer.multiconnect.packets.SPacketPlayerCombatEnter;
 
 @MessageVariant(maxVersion = Protocols.V1_16_5)
 @Polymorphic
@@ -28,7 +28,7 @@ public abstract class SPacketCombatEvent_1_16_5 {
     @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class EnterCombat extends SPacketCombatEvent_1_16_5 {
         @Handler
-        public static SPacketEnterCombat handle(@DefaultConstruct SPacketEnterCombat packet) {
+        public static SPacketPlayerCombatEnter handle(@DefaultConstruct SPacketPlayerCombatEnter packet) {
             return packet;
         }
     }
@@ -41,10 +41,10 @@ public abstract class SPacketCombatEvent_1_16_5 {
         public int entityId;
 
         @Handler
-        public static SPacketEndCombat handle(
+        public static SPacketPlayerCombatEnd handle(
                 @Argument("duration") int duration,
                 @Argument("entityId") int entityId,
-                @DefaultConstruct SPacketEndCombat packet
+                @DefaultConstruct SPacketPlayerCombatEnd packet
         ) {
             packet.duration = duration;
             packet.entityId = entityId;
@@ -61,11 +61,11 @@ public abstract class SPacketCombatEvent_1_16_5 {
         public CommonTypes.Text message;
 
         @Handler
-        public static SPacketDeathMessage handle(
+        public static SPacketPlayerCombatKill handle(
                 @Argument("playerId") int playerId,
                 @Argument("entityId") int entityId,
                 @Argument("message") CommonTypes.Text message,
-                @DefaultConstruct SPacketDeathMessage packet
+                @DefaultConstruct SPacketPlayerCombatKill packet
         ) {
             packet.playerId = playerId;
             packet.entityId = entityId;

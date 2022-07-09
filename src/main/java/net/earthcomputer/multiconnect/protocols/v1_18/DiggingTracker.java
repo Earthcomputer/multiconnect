@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_18;
 
-import net.earthcomputer.multiconnect.packets.v1_18_2.SPacketPlayerActionResponse_1_18_2;
+import net.earthcomputer.multiconnect.packets.v1_18_2.SPacketBlockChangedAck_1_18_2;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -14,6 +14,6 @@ public record DiggingTracker(
         return new DiggingTracker(new ConcurrentHashMap<>(), new AtomicInteger(-1));
     }
 
-    public record DiggingPos(SPacketPlayerActionResponse_1_18_2.Action action, long pos) {
+    public record DiggingPos(SPacketBlockChangedAck_1_18_2.Action action, long pos) {
     }
 }

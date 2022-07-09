@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_16.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.earthcomputer.multiconnect.packets.v1_16_5.CPacketClickSlot_1_16_5;
+import net.earthcomputer.multiconnect.packets.v1_16_5.CPacketContainerClick_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_5;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -65,7 +65,7 @@ public class MultiPlayerGameModeMixin {
                 slotItemBeforeModification = multiconnect_oldItems.get(slotId);
             }
 
-            CPacketClickSlot_1_16_5 newPacket = CPacketClickSlot_1_16_5.create(syncId, slotId, button, actionType, slotItemBeforeModification, Protocol_1_16_5.nextScreenActionId());
+            CPacketContainerClick_1_16_5 newPacket = CPacketContainerClick_1_16_5.create(syncId, slotId, button, actionType, slotItemBeforeModification, Protocol_1_16_5.nextScreenActionId());
             PacketSystem.sendToServer(this.connection, Protocols.V1_16_5, newPacket);
             ci.cancel();
         }

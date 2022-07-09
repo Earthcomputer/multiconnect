@@ -11,7 +11,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketPlayerAction;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.v1_18_2.CPacketPlayerAction_1_18_2;
-import net.earthcomputer.multiconnect.packets.v1_18_2.SPacketPlayerActionResponse_1_18_2;
+import net.earthcomputer.multiconnect.packets.v1_18_2.SPacketBlockChangedAck_1_18_2;
 import net.earthcomputer.multiconnect.protocols.v1_18.DiggingTracker;
 
 @MessageVariant(minVersion = Protocols.V1_19)
@@ -30,10 +30,10 @@ public class CPacketPlayerAction_Latest implements CPacketPlayerAction {
     ) {
         var pos = (CommonTypes.BlockPos_Latest) translatedThis.pos;
 
-        SPacketPlayerActionResponse_1_18_2.Action diggingAction = switch (translatedThis.action) {
-            case START_DESTROY_BLOCK -> SPacketPlayerActionResponse_1_18_2.Action.STARTED_DIGGING;
-            case ABORT_DESTROY_BLOCK -> SPacketPlayerActionResponse_1_18_2.Action.CANCELED_DIGGING;
-            case STOP_DESTROY_BLOCK -> SPacketPlayerActionResponse_1_18_2.Action.FINISHED_DIGGING;
+        SPacketBlockChangedAck_1_18_2.Action diggingAction = switch (translatedThis.action) {
+            case START_DESTROY_BLOCK -> SPacketBlockChangedAck_1_18_2.Action.STARTED_DIGGING;
+            case ABORT_DESTROY_BLOCK -> SPacketBlockChangedAck_1_18_2.Action.CANCELED_DIGGING;
+            case STOP_DESTROY_BLOCK -> SPacketBlockChangedAck_1_18_2.Action.FINISHED_DIGGING;
             default -> null;
         };
         if (diggingAction != null) {
