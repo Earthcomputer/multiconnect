@@ -7,7 +7,7 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.packets.SPacketChunkDeltaUpdate;
+import net.earthcomputer.multiconnect.packets.SPacketSectionBlocksUpdate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ public class SPacketChunkDeltaUpdate_1_16_1 {
     }
 
     @Handler
-    public static List<SPacketChunkDeltaUpdate> handle(
+    public static List<SPacketSectionBlocksUpdate> handle(
             @Argument("chunkX") int chunkX,
             @Argument("chunkZ") int chunkZ,
             @Argument("updates") Update[] updates
@@ -40,11 +40,11 @@ public class SPacketChunkDeltaUpdate_1_16_1 {
         }
 
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-        List<SPacketChunkDeltaUpdate> packets = new ArrayList<>();
+        List<SPacketSectionBlocksUpdate> packets = new ArrayList<>();
 
         for (int sectionY = 0; sectionY < 16; sectionY++) {
             if ((updatedSectionBitmask & (1 << sectionY)) != 0) {
-                SPacketChunkDeltaUpdate packet = new SPacketChunkDeltaUpdate();
+                SPacketSectionBlocksUpdate packet = new SPacketSectionBlocksUpdate();
                 packets.add(packet);
 
                 packet.sectionPos = ((long) chunkX << 42) | ((long) chunkZ << 20) | sectionY;

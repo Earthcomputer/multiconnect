@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.protocols.v1_11;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.earthcomputer.multiconnect.packets.v1_16_5.CPacketClickSlot_1_16_5;
+import net.earthcomputer.multiconnect.packets.v1_16_5.CPacketContainerClick_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_5;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -148,21 +148,21 @@ public class RecipeBookEmulator {
         assert player != null;
 
         // pickup (swap with cursor stack)
-        PacketSystem.sendToServer(player.connection, Protocols.V1_16_5, CPacketClickSlot_1_16_5.create(menu.containerId, fromSlot, 0, ClickType.PICKUP, clickedStack, Protocol_1_16_5.nextScreenActionId()));
+        PacketSystem.sendToServer(player.connection, Protocols.V1_16_5, CPacketContainerClick_1_16_5.create(menu.containerId, fromSlot, 0, ClickType.PICKUP, clickedStack, Protocol_1_16_5.nextScreenActionId()));
 
         // place items
         if (count == clickedStack.getCount()) {
-            PacketSystem.sendToServer(player.connection, Protocols.V1_16_5, CPacketClickSlot_1_16_5.create(menu.containerId, toSlot, 0, ClickType.PICKUP, placedOn, Protocol_1_16_5.nextScreenActionId()));
+            PacketSystem.sendToServer(player.connection, Protocols.V1_16_5, CPacketContainerClick_1_16_5.create(menu.containerId, toSlot, 0, ClickType.PICKUP, placedOn, Protocol_1_16_5.nextScreenActionId()));
         } else {
             for (int i = 0; i < count; i++) {
                 ItemStack existingStack = clickedStack.copy();
                 existingStack.setCount(placedOn.getCount() + i);
-                PacketSystem.sendToServer(player.connection, Protocols.V1_16_5, CPacketClickSlot_1_16_5.create(menu.containerId, toSlot, 1, ClickType.PICKUP, existingStack, Protocol_1_16_5.nextScreenActionId()));
+                PacketSystem.sendToServer(player.connection, Protocols.V1_16_5, CPacketContainerClick_1_16_5.create(menu.containerId, toSlot, 1, ClickType.PICKUP, existingStack, Protocol_1_16_5.nextScreenActionId()));
             }
         }
 
         // return (pickup old cursor stack)
-        PacketSystem.sendToServer(player.connection, Protocols.V1_16_5, CPacketClickSlot_1_16_5.create(menu.containerId, fromSlot, 0, ClickType.PICKUP, menu.getCarried(), Protocol_1_16_5.nextScreenActionId()));
+        PacketSystem.sendToServer(player.connection, Protocols.V1_16_5, CPacketContainerClick_1_16_5.create(menu.containerId, fromSlot, 0, ClickType.PICKUP, menu.getCarried(), Protocol_1_16_5.nextScreenActionId()));
     }
 
     private void resyncContainer() {

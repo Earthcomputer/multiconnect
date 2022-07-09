@@ -11,7 +11,7 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
-import net.earthcomputer.multiconnect.packets.SPacketOpenHorseScreen;
+import net.earthcomputer.multiconnect.packets.SPacketHorseScreenOpen;
 import net.earthcomputer.multiconnect.packets.SPacketOpenScreen;
 import net.earthcomputer.multiconnect.packets.latest.SPacketOpenScreen_Latest;
 
@@ -35,7 +35,7 @@ public class SPacketOpenScreen_1_13_2 implements SPacketOpenScreen {
     }
 
     @ReturnType(SPacketOpenScreen.class)
-    @ReturnType(SPacketOpenHorseScreen.class)
+    @ReturnType(SPacketHorseScreenOpen.class)
     @Handler
     public static List<Object> handle(
             @Argument("syncId") int syncId,
@@ -66,7 +66,7 @@ public class SPacketOpenScreen_1_13_2 implements SPacketOpenScreen {
         } else if ("minecraft:villager".equals(type)) {
             newType = merchantId;
         } else if ("EntityHorse".equals(type)) {
-            var packet = new SPacketOpenHorseScreen();
+            var packet = new SPacketHorseScreenOpen();
             packet.syncId = (byte) syncId;
             packet.slotCount = slotCount;
             packet.entityId = horseId;

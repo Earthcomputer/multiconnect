@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_16.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.earthcomputer.multiconnect.packets.v1_16_5.SPacketMapUpdate_1_16_5;
+import net.earthcomputer.multiconnect.packets.v1_16_5.SPacketMapItemData_1_16_5;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.LocalPlayer;
@@ -39,7 +39,7 @@ public class ClientPacketListenerMixin {
     @Inject(method = "handleMapItemData", at = @At("RETURN"))
     private void onHandleMapItemData(ClientboundMapItemDataPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_16_5) {
-            Runnable runnable = PacketSystem.getUserData(packet).get(SPacketMapUpdate_1_16_5.POST_HANDLE_MAP_PACKET);
+            Runnable runnable = PacketSystem.getUserData(packet).get(SPacketMapItemData_1_16_5.POST_HANDLE_MAP_PACKET);
             if (runnable != null) {
                 runnable.run();
             }

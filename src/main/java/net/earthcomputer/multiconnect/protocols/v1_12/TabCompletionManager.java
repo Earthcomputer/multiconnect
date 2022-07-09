@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_12;
 import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.earthcomputer.multiconnect.packets.latest.CPacketRequestCommandCompletions_Latest;
+import net.earthcomputer.multiconnect.packets.latest.CPacketCommandSuggestion_Latest;
 import net.earthcomputer.multiconnect.protocols.v1_12.command.Commands_1_12_2;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -38,7 +38,7 @@ public class TabCompletionManager {
     }
 
     public static void requestCommandList() {
-        var packet = new CPacketRequestCommandCompletions_Latest();
+        var packet = new CPacketCommandSuggestion_Latest();
         packet.transactionId = -1;
         packet.text = "/";
         ClientPacketListener connection = Minecraft.getInstance().getConnection();
@@ -50,7 +50,7 @@ public class TabCompletionManager {
     public static CompletableFuture<List<String>> requestCustomCompletion(String command) {
         var future = new CompletableFuture<List<String>>();
         customCompletions.add(future);
-        var packet = new CPacketRequestCommandCompletions_Latest();
+        var packet = new CPacketCommandSuggestion_Latest();
         packet.transactionId = -2;
         packet.text = command;
         ClientPacketListener connection = Minecraft.getInstance().getConnection();

@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_13.mixin;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.earthcomputer.multiconnect.packets.SPacketChunkRenderDistanceCenter;
+import net.earthcomputer.multiconnect.packets.SPacketSetChunkCacheCenter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -37,7 +37,7 @@ public class ClientChunkCacheMixin {
             }
         }
 
-        var packet = new SPacketChunkRenderDistanceCenter();
+        var packet = new SPacketSetChunkCacheCenter();
         packet.x = Mth.floor(cameraEntity.getX() / 16);
         packet.z = Mth.floor(cameraEntity.getZ() / 16);
         PacketSystem.sendToClient(networkHandler, Protocols.V1_14, packet);
