@@ -6,7 +6,7 @@
   "multiconnect.config.allowOldUnsignedChat.tooltip": "Tillåter osäkra chattmeddelanden från 1.18.2-servrar eller äldre",
   "multiconnect.config.enableDebugKey": "Debug Knapp",
   "multiconnect.config.enablePacketRecording": "Packet Inspelare",
-  "multiconnect.config.enablePacketRecording.tooltip": "Spelar in och sparar all packets som skickas och tas emot av klienten, denna log-fil kan användas av programmerarna för att lättarer återskapa och åtgärda problemet som uppstått. Det rekommenderas ej att använda ha detta körandes i bakgrunden ifall ej nödvändigt",
+  "multiconnect.config.enablePacketRecording.tooltip": "Spelar in och sparar alla packets som skickas och tas emot av klienten, denna log-fil kan användas av programmerarna för att lättarer återskapa och åtgärda problemet som uppstått. Det rekommenderas ej att använda detta ifall ej nödvändigt",
   "multiconnect.config.title": "Multiconnect Konfiguration",
   "multiconnect.debug.runningHttpServer.stop": "Stoppa Server",
   "multiconnect.debug.runningHttpServer.title": "Körande HTTP Server",
