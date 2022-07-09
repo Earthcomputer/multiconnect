@@ -1,12 +1,13 @@
 package net.earthcomputer.multiconnect.debug;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.screen.ScreenTexts;
+import net.minecraft.text.Text;
 
 public class PacketReplayMenuScreen extends Screen {
-    private static final Component TITLE = Component.translatable("multiconnect.debug.menu.title");
+    private static final Text TITLE = Text.translatable("multiconnect.debug.menu.title");
 
     public PacketReplayMenuScreen() {
         super(TITLE);
@@ -14,28 +15,28 @@ public class PacketReplayMenuScreen extends Screen {
 
     @Override
     protected void init() {
-        addRenderableWidget(new Button(width / 2 - 100, height / 2 + 20, 200, 20, Component.translatable("multiconnect.debug.menu.HttpServer.start"), button -> {
+        addDrawableChild(new ButtonWidget(width / 2 - 100, height / 2 + 20, 200, 20, Text.translatable("multiconnect.debug.menu.HttpServer.start"), button -> {
             PacketReplay.startHttpServer();
         }));
 
-        addRenderableWidget(new Button(width / 2 - 100, height / 2 + 20 + 30, 200, 20, Component.translatable("multiconnect.debug.menu.start"), button -> {
+        addDrawableChild(new ButtonWidget(width / 2 - 100, height / 2 + 20 + 30, 200, 20, Text.translatable("multiconnect.debug.menu.start"), button -> {
             PacketReplay.start();
         }));
 
-        addRenderableWidget(new Button(width / 2 - 100, height / 2 + 20 + 60, 200, 20, CommonComponents.GUI_CANCEL, button -> {
-            onClose();
+        addDrawableChild(new ButtonWidget(width / 2 - 100, height / 2 + 20 + 60, 200, 20, ScreenTexts.CANCEL, button -> {
+            close();
         }));
     }
 
     @Override
-    public void onClose() {
-        super.onClose();
+    public void close() {
+        super.close();
     }
 
     @Override
-    public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         renderBackground(matrices);
-        drawCenteredString(matrices, font, TITLE, width / 2, height / 2 - 50, 0xffffff);
+        drawCenteredText(matrices, textRenderer, TITLE, width / 2, height / 2 - 50, 0xffffff);
         super.render(matrices, mouseX, mouseY, delta);
     }
 }
