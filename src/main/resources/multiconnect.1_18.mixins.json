@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_18.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "CatAccessor",
+    "ClientLevelAccessor",
+    "ClientPacketListenerMixin",
+    "ServerboundHelloPacketMixin",
+    "ServerboundKeyPacketMixin",
+    "ClientboundGameProfilePacketMixin",
+    "BlockStatePredictionHandlerMixin",
+    "PaintingAccessor"
+  ],
+  "client": [
+    "ClientHandshakePacketListenerImplMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

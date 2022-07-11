@@ -1,8 +1,7 @@
 package net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors;
 
 import net.earthcomputer.multiconnect.api.ThreadSafe;
-import net.minecraft.block.Block;
-
+import net.minecraft.world.level.block.Block;
 import java.util.Collection;
 
 public interface IBlockConnector extends IConnectorFunction {

@@ -6,7 +6,7 @@ import net.minecraft.SharedConstants;
 
 public class ConnectionInfo {
 
-    public static int protocolVersion = SharedConstants.getGameVersion().getProtocolVersion();
+    public static int protocolVersion = SharedConstants.getCurrentVersion().getProtocolVersion();
     public static AbstractProtocol protocol = ProtocolRegistry.latest();
 
 }

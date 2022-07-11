@@ -1,13 +1,17 @@
 package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
 
 import net.earthcomputer.multiconnect.packets.ChunkData;
+import net.earthcomputer.multiconnect.packets.ChunkData.BlockStatePalettedContainer;
 import net.earthcomputer.multiconnect.packets.latest.ChunkData_Latest;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.collection.PackedIntegerArray;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
+import net.earthcomputer.multiconnect.packets.latest.ChunkData_Latest.BlockStatePalettedContainer.Multiple;
+import net.earthcomputer.multiconnect.packets.latest.ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer;
+import net.earthcomputer.multiconnect.packets.latest.ChunkData_Latest.ChunkSection;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.util.SimpleBitStorage;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.List;
@@ -18,19 +22,19 @@ import java.util.List;
 public class BlockConnectionsNetworkView implements IBlockConnectionsBlockView {
     private final int minY;
     private final List<ChunkData.Section> sections;
-    private final PackedIntegerArray[] packedArrays;
+    private final SimpleBitStorage[] packedArrays;
 
     public BlockConnectionsNetworkView(int minY, List<ChunkData.Section> sections) {
         this.minY = minY;
         this.sections = sections;
-        this.packedArrays = new PackedIntegerArray[sections.size()];
+        this.packedArrays = new SimpleBitStorage[sections.size()];
         for (int i = 0; i < sections.size(); i++) {
             var section = (ChunkData_Latest.ChunkSection) sections.get(i);
             var blockStates = section.blockStates;
             if (blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Multiple multiple) {
-                packedArrays[i] = new PackedIntegerArray(multiple.paletteSize, 4096, multiple.data);
+                packedArrays[i] = new SimpleBitStorage(multiple.paletteSize, 4096, multiple.data);
             } else if (blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer registryContainer) {
-                packedArrays[i] = new PackedIntegerArray(registryContainer.paletteSize, 4096, registryContainer.data);
+                packedArrays[i] = new SimpleBitStorage(registryContainer.paletteSize, 4096, registryContainer.data);
             }
         }
     }
@@ -39,7 +43,7 @@ public class BlockConnectionsNetworkView implements IBlockConnectionsBlockView {
     public BlockState getBlockState(BlockPos pos) {
         int sectionIndex = (pos.getY() - minY) >> 4;
         if (sectionIndex < 0 || sectionIndex >= sections.size()) {
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         }
         var section = (ChunkData_Latest.ChunkSection) sections.get(sectionIndex);
         int stateId;
@@ -51,7 +55,7 @@ public class BlockConnectionsNetworkView implements IBlockConnectionsBlockView {
         } else {
             stateId = packedArrays[sectionIndex].get((((pos.getY() - minY) & 15) << 8) | ((pos.getZ() & 15) << 4) | (pos.getX() & 15));
         }
-        return Block.getStateFromRawId(stateId);
+        return Block.stateById(stateId);
     }
 
     @Override
@@ -61,27 +65,27 @@ public class BlockConnectionsNetworkView implements IBlockConnectionsBlockView {
             return;
         }
         var section = (ChunkData_Latest.ChunkSection) sections.get(sectionIndex);
-        int stateId = Block.getRawIdFromState(state);
+        int stateId = Block.getId(state);
         int index = (((pos.getY() - minY) & 15) << 8) | ((pos.getZ() & 15) << 4) | (pos.getX() & 15);
         if (section.blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Singleton singleton) {
             if (stateId == singleton.blockStateId) {
                 return;
             }
-            PackedIntegerArray packedArray = new PackedIntegerArray(4, 4096);
+            SimpleBitStorage packedArray = new SimpleBitStorage(4, 4096);
             packedArray.set(index, 1);
             packedArrays[sectionIndex] = packedArray;
             var newBlockStates = new ChunkData_Latest.BlockStatePalettedContainer.Multiple();
             newBlockStates.paletteSize = 4;
             newBlockStates.palette = new int[] { singleton.blockStateId, stateId };
-            newBlockStates.data = packedArray.getData();
+            newBlockStates.data = packedArray.getRaw();
             section.blockStates = newBlockStates;
         } else if (section.blockStates instanceof ChunkData_Latest.BlockStatePalettedContainer.Multiple multiple) {
-            PackedIntegerArray packedArray = packedArrays[sectionIndex];
+            SimpleBitStorage packedArray = packedArrays[sectionIndex];
             int paletteIndex = ArrayUtils.indexOf(multiple.palette, stateId);
             if (paletteIndex == -1) {
                 if (multiple.palette.length == 256) {
-                    int elementBits = MathHelper.ceilLog2(Block.STATE_IDS.size());
-                    PackedIntegerArray newPackedArray = new PackedIntegerArray(elementBits, 4096);
+                    int elementBits = Mth.ceillog2(Block.BLOCK_STATE_REGISTRY.size());
+                    SimpleBitStorage newPackedArray = new SimpleBitStorage(elementBits, 4096);
                     for (int i = 0; i < 4096; i++) {
                         newPackedArray.set(i, multiple.palette[packedArray.get(i)]);
                     }
@@ -89,18 +93,18 @@ public class BlockConnectionsNetworkView implements IBlockConnectionsBlockView {
                     packedArrays[sectionIndex] = newPackedArray;
                     var newBlockStates = new ChunkData_Latest.BlockStatePalettedContainer.RegistryContainer();
                     newBlockStates.paletteSize = (byte) elementBits;
-                    newBlockStates.data = newPackedArray.getData();
+                    newBlockStates.data = newPackedArray.getRaw();
                     section.blockStates = newBlockStates;
                 } else {
                     paletteIndex = multiple.palette.length;
                     multiple.palette = ArrayUtils.add(multiple.palette, stateId);
-                    if (paletteIndex >= 16 && MathHelper.isPowerOfTwo(paletteIndex)) {
-                        PackedIntegerArray newPackedArray = new PackedIntegerArray(packedArray.getElementBits() + 1, 4096);
+                    if (paletteIndex >= 16 && Mth.isPowerOfTwo(paletteIndex)) {
+                        SimpleBitStorage newPackedArray = new SimpleBitStorage(packedArray.getBits() + 1, 4096);
                         for (int i = 0; i < 4096; i++) {
                             newPackedArray.set(i, packedArray.get(i));
                         }
                         multiple.paletteSize++;
-                        multiple.data = newPackedArray.getData();
+                        multiple.data = newPackedArray.getRaw();
                         packedArrays[sectionIndex] = newPackedArray;
                         packedArray = newPackedArray;
                     }

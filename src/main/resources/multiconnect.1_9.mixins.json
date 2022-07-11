@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_9.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "EntityAccessor",
+    "ClientPacketListenerMixin",
+    "LivingEntityMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

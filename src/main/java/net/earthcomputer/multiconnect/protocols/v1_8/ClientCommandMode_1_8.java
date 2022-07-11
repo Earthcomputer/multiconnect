@@ -1,6 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.v1_8;
 
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 
 public enum ClientCommandMode_1_8 {
     PRESS_SHIFT_KEY,
@@ -11,7 +11,7 @@ public enum ClientCommandMode_1_8 {
     HORSE_JUMP,
     OPEN_INVENTORY;
 
-    public static ClientCommandMode_1_8 fromNew(ClientCommandC2SPacket.Mode mode) {
+    public static ClientCommandMode_1_8 fromNew(ServerboundPlayerCommandPacket.Action mode) {
         return switch (mode) {
             case PRESS_SHIFT_KEY -> PRESS_SHIFT_KEY;
             case RELEASE_SHIFT_KEY -> RELEASE_SHIFT_KEY;

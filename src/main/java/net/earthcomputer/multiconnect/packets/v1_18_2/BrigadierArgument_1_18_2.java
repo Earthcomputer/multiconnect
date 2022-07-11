@@ -8,17 +8,17 @@ import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.packets.SPacketCommandTree;
-import net.minecraft.util.Identifier;
+import net.earthcomputer.multiconnect.packets.SPacketCommands;
+import net.minecraft.resources.ResourceLocation;
 
 @Polymorphic
 @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
-public abstract class BrigadierArgument_1_18_2 implements SPacketCommandTree.BrigadierArgument {
-    public Identifier parser;
+public abstract class BrigadierArgument_1_18_2 implements SPacketCommands.BrigadierArgument {
+    public ResourceLocation parser;
 
     @Polymorphic(stringValue = "brigadier:double")
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
-    public static class DoubleArgument extends BrigadierArgument_1_18_2 implements SPacketCommandTree.BrigadierArgument.DoubleArgument {
+    public static class DoubleArgument extends BrigadierArgument_1_18_2 implements SPacketCommands.BrigadierArgument.DoubleArgument {
         public byte flags;
         @OnlyIf("hasMin")
         public double min;
@@ -36,7 +36,7 @@ public abstract class BrigadierArgument_1_18_2 implements SPacketCommandTree.Bri
 
     @Polymorphic(stringValue = "brigadier:float")
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
-    public static class FloatArgument extends BrigadierArgument_1_18_2 implements SPacketCommandTree.BrigadierArgument.FloatArgument {
+    public static class FloatArgument extends BrigadierArgument_1_18_2 implements SPacketCommands.BrigadierArgument.FloatArgument {
         public byte flags;
         @OnlyIf("hasMin")
         public float min;
@@ -54,7 +54,7 @@ public abstract class BrigadierArgument_1_18_2 implements SPacketCommandTree.Bri
 
     @Polymorphic(stringValue = "brigadier:integer")
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
-    public static class IntArgument extends BrigadierArgument_1_18_2 implements SPacketCommandTree.BrigadierArgument.IntArgument {
+    public static class IntArgument extends BrigadierArgument_1_18_2 implements SPacketCommands.BrigadierArgument.IntArgument {
         public byte flags;
         @OnlyIf("hasMin")
         @Type(Types.INT)
@@ -74,7 +74,7 @@ public abstract class BrigadierArgument_1_18_2 implements SPacketCommandTree.Bri
 
     @Polymorphic(stringValue = "brigadier:long")
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
-    public static class LongArgument extends BrigadierArgument_1_18_2 implements SPacketCommandTree.BrigadierArgument.LongArgument {
+    public static class LongArgument extends BrigadierArgument_1_18_2 implements SPacketCommands.BrigadierArgument.LongArgument {
         public byte flags;
         @OnlyIf("hasMin")
         @Type(Types.LONG)
@@ -94,8 +94,8 @@ public abstract class BrigadierArgument_1_18_2 implements SPacketCommandTree.Bri
 
     @Polymorphic(stringValue = "brigadier:string")
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
-    public static class StringArgument extends BrigadierArgument_1_18_2 implements SPacketCommandTree.BrigadierArgument.StringArgument {
-        public SPacketCommandTree.StringArgument.Type type;
+    public static class StringArgument extends BrigadierArgument_1_18_2 implements SPacketCommands.BrigadierArgument.StringArgument {
+        public SPacketCommands.StringArgument.Type type;
         @NetworkEnum
         public enum Type {
             SINGLE_WORD, QUOTABLE_PHRASE, GREEDY_PHRASE
@@ -104,24 +104,24 @@ public abstract class BrigadierArgument_1_18_2 implements SPacketCommandTree.Bri
 
     @Polymorphic(stringValue = "minecraft:entity")
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
-    public static class EntityArgument extends BrigadierArgument_1_18_2 implements SPacketCommandTree.BrigadierArgument.EntityArgument {
+    public static class EntityArgument extends BrigadierArgument_1_18_2 implements SPacketCommands.BrigadierArgument.EntityArgument {
         public byte flags;
     }
 
     @Polymorphic(stringValue = "minecraft:score_holder")
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
-    public static class ScoreHolderArgument extends BrigadierArgument_1_18_2 implements SPacketCommandTree.BrigadierArgument.ScoreHolderArgument {
+    public static class ScoreHolderArgument extends BrigadierArgument_1_18_2 implements SPacketCommands.BrigadierArgument.ScoreHolderArgument {
         public byte flags;
     }
 
     @Polymorphic(stringValue = {"minecraft:resource", "minecraft:resource_or_tag"})
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
-    public static class RegistryKeyArgument extends BrigadierArgument_1_18_2 implements SPacketCommandTree.BrigadierArgument.RegistryKeyArgument {
-        public Identifier registry;
+    public static class RegistryKeyArgument extends BrigadierArgument_1_18_2 implements SPacketCommands.BrigadierArgument.RegistryKeyArgument {
+        public ResourceLocation registry;
     }
 
     @Polymorphic(otherwise = true)
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_18_2)
-    public static class ConstantArgument extends BrigadierArgument_1_18_2 implements SPacketCommandTree.BrigadierArgument.ConstantArgument {
+    public static class ConstantArgument extends BrigadierArgument_1_18_2 implements SPacketCommands.BrigadierArgument.ConstantArgument {
     }
 }

@@ -360,7 +360,7 @@ sealed class IntroduceInfo {
 }
 
 @Serializable
-data class CustomFixInfo(val value: String, val direction: Introduce.Direction)
+data class CustomFixInfo(val value: String, val recursive: Boolean, val direction: Introduce.Direction)
 
 private typealias MulticonnectBlockStatesSurrogate = Map<String, Map<String, List<String>>>
 @Serializable(with = MulticonnectBlockStates.Serializer::class)

@@ -4,17 +4,17 @@ import net.earthcomputer.multiconnect.ap.Registries
 import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.DATA_FIXER
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.IDENTIFIER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.RESOURCE_LOCATION
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.INT_LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.LONG_LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.MULTICONNECT_DFU
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.NBT_COMPOUND
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.COMPOUND_TAG
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.OPTIONAL
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.SCHEMAS
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.DATA_FIXERS
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPE_REFERENCE
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPE_REFERENCES
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.REFERENCES
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.FieldType
 import net.earthcomputer.multiconnect.compiler.McField
@@ -155,15 +155,37 @@ private fun ProtocolCompiler.fixRegistriesWithType(
     clientbound: Boolean,
     paramResolver: ParamResolver,
 ): McNode {
-    val customFixInfo = field.getCustomFixInfo(clientbound)
+    val customFixInfo = field.getCustomFixInfo(clientbound).takeIf { type == field.realType }
     if (customFixInfo != null) {
-        return generateFunctionCallGraph(
+        val customFixNode = generateFunctionCallGraph(
             ownerType.messageVariantInfo.findFunction(customFixInfo.value),
             McNode(LoadVariableOp(varId, type)),
             paramResolver = paramResolver
         )
+        return if (customFixInfo.recursive) {
+            val fixedVarId = VariableId.create()
+            McNode(StmtListOp,
+                McNode(StoreVariableStmtOp(fixedVarId, type, true), customFixNode),
+                McNode(ReturnStmtOp(type),
+                    fixRegistriesWithTypeInner(ownerType, field, type, fixedVarId, clientbound, paramResolver)
+                )
+            )
+        } else {
+            customFixNode
+        }
     }
 
+    return fixRegistriesWithTypeInner(ownerType, field, type, varId, clientbound, paramResolver)
+}
+
+private fun ProtocolCompiler.fixRegistriesWithTypeInner(
+    ownerType: McType,
+    field: FieldType,
+    type: McType,
+    varId: VariableId,
+    clientbound: Boolean,
+    paramResolver: ParamResolver
+): McNode {
     if (type.isOptional) {
         val functionType = McType.DeclaredType("java.util.function.Function")
         val isOptional = (type as McType.DeclaredType).name == OPTIONAL
@@ -276,24 +298,24 @@ private fun ProtocolCompiler.fixRegistriesWithType(
         ))
     }
 
-    if (type.hasName(IDENTIFIER)) {
-        val registry = field.registry ?: throw CompileException("Should not have thought registries need fixing for Identifier type without a registry")
+    if (type.hasName(RESOURCE_LOCATION)) {
+        val registry = field.registry ?: throw CompileException("Should not have thought registries need fixing for ResourceLocation type without a registry")
         return McNode(FunctionCallOp(className, createStringRemapFunc(registry, clientbound), listOf(type), type, false),
             McNode(LoadVariableOp(varId, type))
         )
     }
 
-    if (field.datafixInfo != null && type.hasName(NBT_COMPOUND)) {
+    if (field.datafixInfo != null && type.hasName(COMPOUND_TAG)) {
         val fixerType = McType.DeclaredType(DATA_FIXER)
         val fixer = if (field.datafixInfo.value.isMulticonnect) {
             McNode(LoadFieldOp(McType.DeclaredType(MULTICONNECT_DFU), "FIXER", fixerType, isStatic = true))
         } else {
-            McNode(FunctionCallOp(SCHEMAS, "getFixer", listOf(), fixerType, false))
+            McNode(FunctionCallOp(DATA_FIXERS, "getDataFixer", listOf(), fixerType, false))
         }
         val typesClass = if (field.datafixInfo.value.isMulticonnect) {
             MULTICONNECT_DFU
         } else {
-            TYPE_REFERENCES
+            REFERENCES
         }
         val typeReferenceType = McType.DeclaredType(TYPE_REFERENCE)
         val typeReference = McNode(LoadFieldOp(McType.DeclaredType(typesClass), field.datafixInfo.value.name, typeReferenceType, isStatic = true))
@@ -368,23 +390,23 @@ internal fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbou
             }
             is IntRemapValue.FromName -> {
                 val registryType = McType.DeclaredType(CommonClassNames.REGISTRY)
-                val registryKeyType = McType.DeclaredType(CommonClassNames.REGISTRY_KEY)
+                val resourceKeyType = McType.DeclaredType(CommonClassNames.RESOURCE_KEY)
                 val registryElementType = McType.DeclaredType("RegistryElement")
                 McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT),
-                    McNode(FunctionCallOp(CommonClassNames.REGISTRY, "getRawId", listOf(registryType, registryElementType), McType.INT, false, isStatic = false),
+                    McNode(FunctionCallOp(CommonClassNames.REGISTRY, "getId", listOf(registryType, registryElementType), McType.INT, false, isStatic = false),
                         McNode(LoadFieldOp(registryType, registry.name, registryType, isStatic = true)),
-                        McNode(FunctionCallOp(CommonClassNames.REGISTRY, "get", listOf(registryType, registryKeyType), registryElementType, false, isStatic = false),
+                        McNode(FunctionCallOp(CommonClassNames.REGISTRY, "get", listOf(registryType, resourceKeyType), registryElementType, false, isStatic = false),
                             McNode(LoadFieldOp(registryType, registry.name, registryType, isStatic = true)),
-                            McNode(LoadFieldOp(McType.DeclaredType(className), createRegistryKeyField(registry, middleValue.name), registryKeyType, isStatic = true))
+                            McNode(LoadFieldOp(McType.DeclaredType(className), createResourceKeyField(registry, middleValue.name), resourceKeyType, isStatic = true))
                         )
                     )
                 ))
             }
             is IntRemapValue.FromStateId -> {
-                val registryKeyType = McType.DeclaredType(CommonClassNames.REGISTRY_KEY)
+                val resourceKeyType = McType.DeclaredType(CommonClassNames.RESOURCE_KEY)
                 McNode(StmtListOp, McNode(ReturnStmtOp(McType.INT),
-                    McNode(FunctionCallOp(PACKET_INTRINSICS, "getStateId", listOf(registryKeyType, McType.INT), McType.INT, false),
-                        McNode(LoadFieldOp(McType.DeclaredType(className), createRegistryKeyField(Registries.BLOCK, middleValue.blockName), registryKeyType, isStatic = true)),
+                    McNode(FunctionCallOp(PACKET_INTRINSICS, "getStateId", listOf(resourceKeyType, McType.INT), McType.INT, false),
+                        McNode(LoadFieldOp(McType.DeclaredType(className), createResourceKeyField(Registries.BLOCK, middleValue.blockName), resourceKeyType, isStatic = true)),
                         McNode(CstIntOp(middleValue.offset))
                     )
                 ))
@@ -470,7 +492,7 @@ internal fun ProtocolCompiler.createIntRemapFunc(registry: Registries, clientbou
 }
 
 internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, clientbound: Boolean): String {
-    val identifierType = McType.DeclaredType(IDENTIFIER)
+    val identifierType = McType.DeclaredType(RESOURCE_LOCATION)
 
     fun buildNode(): McNode {
         val oldEntries = readCsv<RegistryEntry>(dataDir.resolve("${registry.name.lowercase()}.csv"))
@@ -504,9 +526,9 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
             .sortedBy { it.second }
             .unzip()
 
-        val resultNodes = results.map { McNode(LoadFieldOp(McType.DeclaredType(className), createIdentifierConstantField(it), identifierType, isStatic = true)) }
+        val resultNodes = results.map { McNode(LoadFieldOp(McType.DeclaredType(className), createResourceLocationConstantField(it), identifierType, isStatic = true)) }
 
-        val inputNode = McNode(FunctionCallOp(IDENTIFIER, "toString", listOf(identifierType), McType.STRING, false, isStatic = false),
+        val inputNode = McNode(FunctionCallOp(RESOURCE_LOCATION, "toString", listOf(identifierType), McType.STRING, false, isStatic = false),
             McNode(LoadVariableOp(VariableId.immediate("value"), identifierType))
         )
 
@@ -600,12 +622,19 @@ private fun ProtocolCompiler.fixRegistriesInner(
 
     val nodes = mutableListOf<McNode>()
 
-    fun handleField(ownerVar: VariableId, ownerType: McType, field: McField, outNodes: MutableList<McNode>) {
+    fun handleField(
+        ownerVar: VariableId,
+        ownerType: McType,
+        field: McField,
+        fieldVars: MutableMap<String, VariableId>,
+        outNodes: MutableList<McNode>
+    ) {
         if (!needsTranslating(field.type, clientbound)) {
             return
         }
 
         val fieldVar = VariableId.create()
+        fieldVars[field.name] = fieldVar
         outNodes += McNode(StoreVariableStmtOp(fieldVar, field.type.realType, true),
             McNode(LoadFieldOp(ownerType, field.name, field.type.realType),
                 McNode(LoadVariableOp(ownerVar, ownerType))
@@ -615,17 +644,24 @@ private fun ProtocolCompiler.fixRegistriesInner(
             McNode(LoadVariableOp(ownerVar, ownerType)),
             fixRegistries(ownerType, field.type, fieldVar, clientbound) { name, type ->
                 // TODO: support for outer references?
-                McNode(LoadFieldOp(ownerType, name, type),
-                    McNode(LoadVariableOp(ownerVar, ownerType))
-                )
+                val existingVar = fieldVars[name]
+                if (existingVar != null) {
+                    McNode(LoadVariableOp(existingVar, type))
+                } else {
+                    McNode(LoadFieldOp(ownerType, name, type),
+                        McNode(LoadVariableOp(ownerVar, ownerType))
+                    )
+                }
             }
         )
     }
 
+    val fieldVars = mutableMapOf<String, VariableId>()
+
     if (messageInfo.polymorphicParent != null) {
         val parentInfo = getMessageVariantInfo(messageInfo.polymorphicParent)
         for (field in parentInfo.fields) {
-            handleField(messageVar, messageType, field, nodes)
+            handleField(messageVar, messageType, field, fieldVars, nodes)
         }
     }
 
@@ -633,7 +669,7 @@ private fun ProtocolCompiler.fixRegistriesInner(
         if (messageInfo.tailrec && field.type.realType.hasName(messageInfo.className)) {
             continue
         }
-        handleField(messageVar, messageType, field, nodes)
+        handleField(messageVar, messageType, field, fieldVars, nodes)
     }
 
     if (messageInfo.polymorphic != null && messageInfo.polymorphicParent == null) {
@@ -656,6 +692,7 @@ private fun ProtocolCompiler.fixRegistriesInner(
                 McNode(LoadVariableOp(messageVar, messageType))
             )
             val childVarId = VariableId.create()
+            val childFieldVars = fieldVars.toMutableMap()
             val childNodes = mutableListOf<McNode>()
             childNodes += McNode(StoreVariableStmtOp(childVarId, childType, true),
                 McNode(CastOp(messageType, childType), McNode(LoadVariableOp(messageVar, messageType)))
@@ -664,7 +701,7 @@ private fun ProtocolCompiler.fixRegistriesInner(
                 if (messageInfo.tailrec && field.type.realType.hasName(messageInfo.className)) {
                     continue
                 }
-                handleField(childVarId, childType, field, childNodes)
+                handleField(childVarId, childType, field, childFieldVars, childNodes)
             }
             if (outSubtypeVar != null) {
                 val newSubtypeVal = if (childInfo.fields.lastOrNull()?.type?.realType?.hasName(messageInfo.className) == true) {

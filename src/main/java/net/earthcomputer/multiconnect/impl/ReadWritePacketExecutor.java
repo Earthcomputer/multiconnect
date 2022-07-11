@@ -6,7 +6,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import net.minecraft.util.Util;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import net.minecraft.Util;
 
 public final class ReadWritePacketExecutor {
     private final ReadWriteBlockingQueue queue;
@@ -126,7 +126,7 @@ final class ReadWriteBlockingQueue implements BlockingQueue<IHasPacket> {
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition canTake = lock.newCondition();
     private final Set<Class<?>> writeAccesses = Sets.newIdentityHashSet();
-    private final Object2IntMap<Class<?>> readAccesses = new Object2IntOpenCustomHashMap<>(Util.identityHashStrategy());
+    private final Object2IntMap<Class<?>> readAccesses = new Object2IntOpenCustomHashMap<>(Util.identityStrategy());
 
     public void finishedWriteAccess(Class<?> clazz) {
         lock.lock();
@@ -211,8 +211,8 @@ final class ReadWriteBlockingQueue implements BlockingQueue<IHasPacket> {
 
     @Override
     public IHasPacket peek() {
-        ObjectSet<Class<?>> readAccesses = new ObjectOpenCustomHashSet<>(this.readAccesses.keySet(), Util.identityHashStrategy());
-        ObjectSet<Class<?>> writeAccesses = new ObjectOpenCustomHashSet<>(this.writeAccesses, Util.identityHashStrategy());
+        ObjectSet<Class<?>> readAccesses = new ObjectOpenCustomHashSet<>(this.readAccesses.keySet(), Util.identityStrategy());
+        ObjectSet<Class<?>> writeAccesses = new ObjectOpenCustomHashSet<>(this.writeAccesses, Util.identityStrategy());
         lock.lock();
         try {
             for (IHasPacket packet : packets) {

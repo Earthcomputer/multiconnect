@@ -2,7 +2,7 @@ package net.earthcomputer.multiconnect.protocols.generic.blockconnections.connec
 
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.IBlockConnectionsBlockView;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 @FunctionalInterface
 public interface IConnectorFunction {

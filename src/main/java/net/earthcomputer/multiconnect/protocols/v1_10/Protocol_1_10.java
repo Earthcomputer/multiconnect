@@ -3,45 +3,50 @@ package net.earthcomputer.multiconnect.protocols.v1_10;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.mojang.brigadier.CommandDispatcher;
-import net.earthcomputer.multiconnect.protocols.generic.DataTrackerManager;
+import net.earthcomputer.multiconnect.protocols.generic.SynchedDataManager;
 import net.earthcomputer.multiconnect.protocols.v1_10.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.BlockEntities_1_12_2;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.RecipeInfo;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.command.BrigadierRemover;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
-import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.command.CommandSource;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.TrackedPosition;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.*;
-import net.minecraft.entity.passive.AbstractDonkeyEntity;
-import net.minecraft.entity.passive.AbstractHorseEntity;
-import net.minecraft.entity.passive.HorseEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.recipe.RecipeSerializer;
-import net.minecraft.util.math.Vec3d;
+import net.earthcomputer.multiconnect.protocols.v1_12.BlockEntities_1_12_2;
+import net.earthcomputer.multiconnect.protocols.v1_12.RecipeInfo;
+import net.earthcomputer.multiconnect.protocols.v1_12.command.BrigadierRemover;
+import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13_2;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.VecDeltaCodec;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.horse.AbstractChestedHorse;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.animal.horse.Horse;
+import net.minecraft.world.entity.monster.AbstractSkeleton;
+import net.minecraft.world.entity.monster.Guardian;
+import net.minecraft.world.entity.monster.Shulker;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.ZombieVillager;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
 
 public class Protocol_1_10 extends Protocol_1_11 {
-    public static final TrackedData<Byte> OLD_GUARDIAN_FLAGS = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BYTE);
-    public static final TrackedData<Integer> OLD_ZOMBIE_TYPE = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    public static final TrackedData<Boolean> OLD_ZOMBIE_CONVERTING = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BOOLEAN);
-    public static final TrackedData<Byte> OLD_HORSE_FLAGS = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.BYTE);
-    public static final TrackedData<Integer> OLD_HORSE_TYPE = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    public static final TrackedData<Integer> OLD_HORSE_VARIANT = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    public static final TrackedData<Integer> OLD_HORSE_ARMOR = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
-    public static final TrackedData<Integer> OLD_SKELETON_TYPE = DataTrackerManager.createOldTrackedData(TrackedDataHandlerRegistry.INTEGER);
+    public static final EntityDataAccessor<Byte> OLD_GUARDIAN_FLAGS = SynchedDataManager.createOldEntityData(EntityDataSerializers.BYTE);
+    public static final EntityDataAccessor<Integer> OLD_ZOMBIE_TYPE = SynchedDataManager.createOldEntityData(EntityDataSerializers.INT);
+    public static final EntityDataAccessor<Boolean> OLD_ZOMBIE_CONVERTING = SynchedDataManager.createOldEntityData(EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Byte> OLD_HORSE_FLAGS = SynchedDataManager.createOldEntityData(EntityDataSerializers.BYTE);
+    public static final EntityDataAccessor<Integer> OLD_HORSE_TYPE = SynchedDataManager.createOldEntityData(EntityDataSerializers.INT);
+    public static final EntityDataAccessor<Integer> OLD_HORSE_VARIANT = SynchedDataManager.createOldEntityData(EntityDataSerializers.INT);
+    public static final EntityDataAccessor<Integer> OLD_HORSE_ARMOR = SynchedDataManager.createOldEntityData(EntityDataSerializers.INT);
+    public static final EntityDataAccessor<Integer> OLD_SKELETON_TYPE = SynchedDataManager.createOldEntityData(EntityDataSerializers.INT);
 
     private static final BiMap<EntityType<?>, String> ENTITY_IDS = ImmutableBiMap.<EntityType<?>, String>builder()
             .put(EntityType.AREA_EFFECT_CLOUD, "AreaEffectCloud")
@@ -167,7 +172,7 @@ public class Protocol_1_10 extends Protocol_1_11 {
             } else if (item == Items.OBSERVER || item == Items.IRON_NUGGET) {
                 return true;
             } else if (item == Items.GOLD_NUGGET) {
-                return recipe.getRecipeType() == RecipeSerializer.SMELTING;
+                return recipe.getRecipeType() == RecipeSerializer.SMELTING_RECIPE;
             } else {
                 return false;
             }
@@ -176,16 +181,16 @@ public class Protocol_1_10 extends Protocol_1_11 {
     }
 
     @Override
-    public void registerCommands(CommandDispatcher<CommandSource> dispatcher, Set<String> serverCommands) {
+    public void registerCommands(CommandDispatcher<SharedSuggestionProvider> dispatcher, @Nullable Set<String> serverCommands) {
         super.registerCommands(dispatcher, serverCommands);
         BrigadierRemover.of(dispatcher).get("locate").remove();
         BrigadierRemover.of(dispatcher).get("title").get("player").get("actionbar").remove();
     }
 
     @Override
-    public void preAcceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
-        if (clazz == AbstractSkeletonEntity.class && data == Protocol_1_13_2.OLD_SKELETON_ATTACKING) {
-            DataTrackerManager.registerOldTrackedData(AbstractSkeletonEntity.class, OLD_SKELETON_TYPE, 0, (entity, val) -> {
+    public void preAcceptEntityData(Class<? extends Entity> clazz, EntityDataAccessor<?> data) {
+        if (clazz == AbstractSkeleton.class && data == Protocol_1_13_2.OLD_SKELETON_ATTACKING) {
+            SynchedDataManager.registerOldEntityData(AbstractSkeleton.class, OLD_SKELETON_TYPE, 0, (entity, val) -> {
                 EntityType<?> newType = switch (val) {
                     case 1 -> EntityType.WITHER_SKELETON;
                     case 2 -> EntityType.STRAY;
@@ -200,10 +205,10 @@ public class Protocol_1_10 extends Protocol_1_11 {
     }
 
     @Override
-    public boolean acceptEntityData(Class<? extends Entity> clazz, TrackedData<?> data) {
-        if (clazz == GuardianEntity.class && data == GuardianEntityAccessor.getSpikesRetracted()) {
-            DataTrackerManager.registerOldTrackedData(GuardianEntity.class, OLD_GUARDIAN_FLAGS, (byte)0, (entity, val) -> {
-                entity.getDataTracker().set(GuardianEntityAccessor.getSpikesRetracted(), (val & 2) != 0);
+    public boolean acceptEntityData(Class<? extends Entity> clazz, EntityDataAccessor<?> data) {
+        if (clazz == Guardian.class && data == GuardianAccessor.getDataIdMoving()) {
+            SynchedDataManager.registerOldEntityData(Guardian.class, OLD_GUARDIAN_FLAGS, (byte)0, (entity, val) -> {
+                entity.getEntityData().set(GuardianAccessor.getDataIdMoving(), (val & 2) != 0);
                 boolean isElder = entity.getType() == EntityType.ELDER_GUARDIAN;
                 boolean shouldBeElder = (val & 4) != 0;
                 if (isElder != shouldBeElder) {
@@ -212,42 +217,42 @@ public class Protocol_1_10 extends Protocol_1_11 {
             });
             return false;
         }
-        if (clazz == ShulkerEntity.class && data == ShulkerEntityAccessor.getColor()) {
+        if (clazz == Shulker.class && data == ShulkerAccessor.getColorId()) {
             return false;
         }
-        if (clazz == ZombieVillagerEntity.class && data == ZombieVillagerEntityAccessor.getConverting()) {
+        if (clazz == ZombieVillager.class && data == ZombieVillagerAccessor.getDataConvertingId()) {
             return false;
         }
-        if (clazz == ZombieEntity.class && data == ZombieEntityAccessor.getZombieType()) {
-            DataTrackerManager.registerOldTrackedData(ZombieEntity.class, OLD_ZOMBIE_TYPE, 0, (entity, val) -> {
+        if (clazz == Zombie.class && data == ZombieAccessor.getDataSpecialTypeId()) {
+            SynchedDataManager.registerOldEntityData(Zombie.class, OLD_ZOMBIE_TYPE, 0, (entity, val) -> {
                 EntityType<?> newType = switch (val) {
                     case 1, 2, 3, 4, 5 -> EntityType.ZOMBIE_VILLAGER;
                     case 6 -> EntityType.HUSK;
                     default -> EntityType.ZOMBIE;
                 };
                 if (newType != entity.getType()) {
-                    entity = (ZombieEntity) changeEntityType(entity, newType);
+                    entity = (Zombie) changeEntityType(entity, newType);
                 }
                 if (newType == EntityType.ZOMBIE_VILLAGER) {
-                    entity.getDataTracker().set(Protocol_1_13_2.OLD_ZOMBIE_VILLAGER_PROFESSION, val - 1);
+                    entity.getEntityData().set(Protocol_1_13_2.OLD_ZOMBIE_VILLAGER_PROFESSION, val - 1);
                 }
             });
-            DataTrackerManager.registerOldTrackedData(ZombieEntity.class, OLD_ZOMBIE_CONVERTING, false, (entity, val) -> {
-                if (entity instanceof ZombieVillagerEntity) {
-                    entity.getDataTracker().set(ZombieVillagerEntityAccessor.getConverting(), val);
+            SynchedDataManager.registerOldEntityData(Zombie.class, OLD_ZOMBIE_CONVERTING, false, (entity, val) -> {
+                if (entity instanceof ZombieVillager) {
+                    entity.getEntityData().set(ZombieVillagerAccessor.getDataConvertingId(), val);
                 }
             });
             return false;
         }
-        if (clazz == AbstractHorseEntity.class && data == AbstractHorseEntityAccessor.getHorseFlags()) {
-            DataTrackerManager.registerOldTrackedData(AbstractHorseEntity.class, OLD_HORSE_FLAGS, (byte)0, (entity, val) -> {
+        if (clazz == AbstractHorse.class && data == AbstractHorseAccessor.getDataIdFlags()) {
+            SynchedDataManager.registerOldEntityData(AbstractHorse.class, OLD_HORSE_FLAGS, (byte)0, (entity, val) -> {
                 // keep the bottom 3 flags, skip the 4th and shift the higher ones down
-                entity.getDataTracker().set(AbstractHorseEntityAccessor.getHorseFlags(), (byte) ((val & 7) | ((val & ~15) >>> 1)));
-                if (entity instanceof AbstractDonkeyEntity donkey) {
-                    donkey.setHasChest((val & 8) != 0);
+                entity.getEntityData().set(AbstractHorseAccessor.getDataIdFlags(), (byte) ((val & 7) | ((val & ~15) >>> 1)));
+                if (entity instanceof AbstractChestedHorse donkey) {
+                    donkey.setChest((val & 8) != 0);
                 }
             });
-            DataTrackerManager.registerOldTrackedData(AbstractHorseEntity.class, OLD_HORSE_TYPE, 0, (entity, val) -> {
+            SynchedDataManager.registerOldEntityData(AbstractHorse.class, OLD_HORSE_TYPE, 0, (entity, val) -> {
                 EntityType<?> newType = switch (val) {
                     case 1 -> EntityType.DONKEY;
                     case 2 -> EntityType.MULE;
@@ -259,17 +264,17 @@ public class Protocol_1_10 extends Protocol_1_11 {
                     changeEntityType(entity, newType);
                 }
             });
-            DataTrackerManager.registerOldTrackedData(AbstractHorseEntity.class, OLD_HORSE_VARIANT, 0, (entity, val) -> {
-                if (entity instanceof HorseEntity) {
-                    entity.getDataTracker().set(HorseEntityAccessor.getVariant(), val);
+            SynchedDataManager.registerOldEntityData(AbstractHorse.class, OLD_HORSE_VARIANT, 0, (entity, val) -> {
+                if (entity instanceof Horse) {
+                    entity.getEntityData().set(HorseAccessor.getDataIdTypeVariant(), val);
                 }
             });
             return false;
         }
-        if (clazz == HorseEntity.class && (data == HorseEntityAccessor.getVariant() || data == Protocol_1_13_2.OLD_HORSE_ARMOR)) {
+        if (clazz == Horse.class && (data == HorseAccessor.getDataIdTypeVariant() || data == Protocol_1_13_2.OLD_HORSE_ARMOR)) {
             return false;
         }
-        if (clazz == AbstractDonkeyEntity.class && data == AbstractDonkeyEntityAccessor.getChest()) {
+        if (clazz == AbstractChestedHorse.class && data == AbstractChestedHorseAccessor.getDataIdChest()) {
             return false;
         }
         return super.acceptEntityData(clazz, data);
@@ -278,37 +283,37 @@ public class Protocol_1_10 extends Protocol_1_11 {
     @Override
     public void postEntityDataRegister(Class<? extends Entity> clazz) {
         super.postEntityDataRegister(clazz);
-        if (clazz == AbstractHorseEntity.class) {
-            DataTrackerManager.registerOldTrackedData(AbstractHorseEntity.class, OLD_HORSE_ARMOR, 0, (entity, val) -> {
-                if (entity instanceof HorseEntity) {
-                    entity.getDataTracker().set(Protocol_1_13_2.OLD_HORSE_ARMOR, val);
+        if (clazz == AbstractHorse.class) {
+            SynchedDataManager.registerOldEntityData(AbstractHorse.class, OLD_HORSE_ARMOR, 0, (entity, val) -> {
+                if (entity instanceof Horse) {
+                    entity.getEntityData().set(Protocol_1_13_2.OLD_HORSE_ARMOR, val);
                 }
             });
         }
     }
 
     private static Entity changeEntityType(Entity entity, EntityType<?> newType) {
-        ClientWorld world = (ClientWorld) entity.world;
-        Entity destEntity = newType.create(world);
+        ClientLevel level = (ClientLevel) entity.level;
+        Entity destEntity = newType.create(level);
         if (destEntity == null) {
             return entity;
         }
 
         // copy the entity
-        destEntity.readNbt(entity.writeNbt(new NbtCompound()));
-        TrackedPosition trackedPosition = entity.getTrackedPosition();
-        // yarn has the subtract method backwards >.< also yes it's stupid we have to do it this way
-        Vec3d trackedPos = trackedPosition.subtract(Vec3d.ZERO).negate();
-        destEntity.updateTrackedPosition(trackedPos.x, trackedPos.y, trackedPos.z);
+        destEntity.load(entity.saveWithoutId(new CompoundTag()));
+        VecDeltaCodec positionCodec = entity.getPositionCodec();
+        // yes it's stupid we have to do it this way
+        Vec3 pos = positionCodec.delta(Vec3.ZERO).reverse();
+        destEntity.syncPacketPositionCodec(pos.x, pos.y, pos.z);
 
-        // replace entity in world and exchange entity id
+        // replace entity in level and exchange entity id
         int entityId = entity.getId();
-        world.removeEntity(entityId, Entity.RemovalReason.DISCARDED);
+        level.removeEntity(entityId, Entity.RemovalReason.DISCARDED);
         destEntity.setId(entityId);
-        world.addEntity(entityId, destEntity);
+        level.putNonPlayerEntity(entityId, destEntity);
 
-        // exchange data tracker (this may be part of a series of data tracker updates, need the same data tracker instance)
-        DataTrackerManager.transferDataTracker(entity, destEntity);
+        // exchange entity data (this may be part of a series of entity data updates, need the same entity data instance)
+        SynchedDataManager.transferEntityData(entity, destEntity);
         return destEntity;
     }
 

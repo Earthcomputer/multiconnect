@@ -8,13 +8,14 @@ import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -24,6 +25,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 public class AssetDownloader {
 
@@ -42,7 +44,7 @@ public class AssetDownloader {
     private static final Map<String, Map<String, File>> langFiles = new HashMap<>();
 
     public static void reloadLanguages() {
-        MinecraftClient.getInstance().getLanguageManager().reload(MinecraftClient.getInstance().getResourceManager());
+        Minecraft.getInstance().getLanguageManager().onResourceManagerReload(Minecraft.getInstance().getResourceManager());
         if (FabricLoader.getInstance().isModLoaded("optifabric")) {
             try {
                 Class.forName("net.optifine.Lang").getMethod("resourcesReloaded").invoke(null);
@@ -65,7 +67,7 @@ public class AssetDownloader {
             return;
 
         String currentVersion = ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName();
-        String latestVersion = ConnectionMode.byValue(SharedConstants.getGameVersion().getProtocolVersion()).getName();
+        String latestVersion = ConnectionMode.byValue(SharedConstants.getCurrentVersion().getProtocolVersion()).getName();
 
         Map<String, String> currentNative = getTranslations(currentVersion, nativeLang);
         Map<String, String> currentFallback = getTranslations(currentVersion, "en_us");
@@ -320,7 +322,11 @@ public class AssetDownloader {
 
             destFile.getParentFile().mkdirs();
             try {
-                FileUtils.copyInputStreamToFile(connection.getInputStream(), destFile);
+                InputStream stream = connection.getInputStream();
+                if ("gzip".equals(connection.getContentEncoding())) {
+                    stream = new GZIPInputStream(stream);
+                }
+                FileUtils.copyInputStreamToFile(stream, destFile);
             } catch (IOException e) {
                 destFile.delete();
                 throw e;

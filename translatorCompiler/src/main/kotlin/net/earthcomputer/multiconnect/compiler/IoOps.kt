@@ -73,8 +73,8 @@ object IoOps {
             Types.BYTE -> byteBuf("readByte", McType.BYTE)
             Types.INT -> byteBuf("readInt", McType.INT)
             Types.SHORT -> byteBuf("readShort", McType.SHORT)
-            Types.NBT_COMPOUND -> intrinsic("readNbtCompound", McType.DeclaredType(CommonClassNames.NBT_COMPOUND))
-            Types.IDENTIFIER -> McNode(NewOp(CommonClassNames.IDENTIFIER, listOf(McType.STRING)), readType(bufVar, Types.STRING, maxLength))
+            Types.NBT_COMPOUND -> intrinsic("readNbtCompound", McType.DeclaredType(CommonClassNames.COMPOUND_TAG))
+            Types.IDENTIFIER -> McNode(NewOp(CommonClassNames.RESOURCE_LOCATION, listOf(McType.STRING)), readType(bufVar, Types.STRING, maxLength))
             Types.STRING -> McNode(FunctionCallOp(CommonClassNames.PACKET_INTRINSICS, "readString", listOf(McType.BYTE_BUF, McType.INT), McType.STRING, true),
                 McNode(LoadVariableOp(bufVar, McType.BYTE_BUF)),
                 McNode(CstIntOp(maxLength ?: 32767)),
@@ -113,9 +113,9 @@ object IoOps {
             Types.BYTE -> byteBuf("writeByte", McType.INT, value)
             Types.INT -> byteBuf("writeInt", McType.INT, value)
             Types.SHORT -> byteBuf("writeShort", McType.INT, value)
-            Types.NBT_COMPOUND -> intrinsic("writeNbtCompound", McType.DeclaredType(CommonClassNames.NBT_COMPOUND), value)
+            Types.NBT_COMPOUND -> intrinsic("writeNbtCompound", McType.DeclaredType(CommonClassNames.COMPOUND_TAG), value)
             Types.IDENTIFIER -> intrinsic("writeString", McType.STRING, McNode(
-                FunctionCallOp(CommonClassNames.IDENTIFIER, "toString", listOf(McType.DeclaredType(CommonClassNames.IDENTIFIER)), McType.STRING, false, isStatic = false),
+                FunctionCallOp(CommonClassNames.RESOURCE_LOCATION, "toString", listOf(McType.DeclaredType(CommonClassNames.RESOURCE_LOCATION)), McType.STRING, false, isStatic = false),
                 value
             ))
             Types.STRING -> intrinsic("writeString", McType.STRING, value)

@@ -3,7 +3,8 @@ package net.earthcomputer.multiconnect.compiler.gen
 import net.earthcomputer.multiconnect.ap.Types
 import net.earthcomputer.multiconnect.compiler.CommonClassNames
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.MAP
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.NETWORK_HANDLER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.CLIENT_PACKET_LISTENER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.TYPED_MAP
 import net.earthcomputer.multiconnect.compiler.CompileException
 import net.earthcomputer.multiconnect.compiler.FileLocations
@@ -23,6 +24,7 @@ import net.earthcomputer.multiconnect.compiler.hasName
 import net.earthcomputer.multiconnect.compiler.messageVariantInfo
 import net.earthcomputer.multiconnect.compiler.node.BinaryExpressionOp
 import net.earthcomputer.multiconnect.compiler.node.CastOp
+import net.earthcomputer.multiconnect.compiler.node.CstBoolOp
 import net.earthcomputer.multiconnect.compiler.node.CstIntOp
 import net.earthcomputer.multiconnect.compiler.node.CstStringOp
 import net.earthcomputer.multiconnect.compiler.node.FunctionCallOp
@@ -119,7 +121,7 @@ internal fun ProtocolCompiler.generateExplicitSenderServerRegistries(
         packet.toMcType().emit(emitter)
         emitter.append(" protocol_").append(protocolId.toString()).append(", ").appendClassName(CommonClassNames.LIST)
             .append("<").appendClassName(CommonClassNames.BYTE_BUF).append("> outBufs, ")
-            .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+            .appendClassName(CLIENT_PACKET_LISTENER).append(" connection, ")
             .appendClassName(MAP).append("<").appendClassName(CommonClassNames.CLASS).append("<?>, ").appendClassName(CommonClassNames.OBJECT).append("> globalData, ")
             .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
 
@@ -150,13 +152,13 @@ internal fun ProtocolCompiler.generateExplicitSenderServerRegistries(
         McNode(FunctionCallOp(className, functionName, listOf(
             packet.toMcType(),
             McType.BYTE_BUF.listOf(),
-            McType.DeclaredType(NETWORK_HANDLER),
+            McType.DeclaredType(CLIENT_PACKET_LISTENER),
             McType.DeclaredType(MAP),
             McType.DeclaredType(TYPED_MAP),
         ), McType.VOID, true),
             McNode(LoadVariableOp(packetVar, packet.toMcType())),
             McNode(LoadVariableOp(bufsVar, McType.BYTE_BUF.listOf())),
-            McNode(LoadVariableOp(VariableId.immediate("networkHandler"), McType.DeclaredType(NETWORK_HANDLER))),
+            McNode(LoadVariableOp(VariableId.immediate("connection"), McType.DeclaredType(CLIENT_PACKET_LISTENER))),
             McNode(LoadVariableOp(VariableId.immediate("globalData"), McType.DeclaredType(MAP))),
             McNode(LoadVariableOp(VariableId.immediate("userData"), McType.DeclaredType(TYPED_MAP))),
         )
@@ -179,7 +181,15 @@ private fun ProtocolCompiler.generateRead(group: MessageInfo?, packet: MessageVa
         currentProtocolId = protocolId
     }
 
-    return ret
+    return McNode(StmtListOp,
+        ret,
+        McNode(PopStmtOp,
+            McNode(FunctionCallOp(PACKET_INTRINSICS, "onPacketDeserialized", listOf(packet.toMcType(), McType.BOOLEAN), McType.VOID, true),
+                McNode(LoadVariableOp(protocolVariable(protocolsSubset.first().id), packet.toMcType())),
+                McNode(CstBoolOp(clientbound)),
+            ),
+        )
+    )
 }
 
 private fun ProtocolCompiler.generateFixRegistries(group: MessageInfo?, packet: MessageVariantInfo, protocolsSubset: List<ProtocolEntry>, clientbound: Boolean): McNode {

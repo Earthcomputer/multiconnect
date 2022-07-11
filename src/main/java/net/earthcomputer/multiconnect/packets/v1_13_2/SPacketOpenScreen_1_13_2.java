@@ -11,7 +11,7 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
-import net.earthcomputer.multiconnect.packets.SPacketOpenHorseScreen;
+import net.earthcomputer.multiconnect.packets.SPacketHorseScreenOpen;
 import net.earthcomputer.multiconnect.packets.SPacketOpenScreen;
 import net.earthcomputer.multiconnect.packets.latest.SPacketOpenScreen_Latest;
 
@@ -35,7 +35,7 @@ public class SPacketOpenScreen_1_13_2 implements SPacketOpenScreen {
     }
 
     @ReturnType(SPacketOpenScreen.class)
-    @ReturnType(SPacketOpenHorseScreen.class)
+    @ReturnType(SPacketHorseScreenOpen.class)
     @Handler
     public static List<Object> handle(
             @Argument("syncId") int syncId,
@@ -43,22 +43,22 @@ public class SPacketOpenScreen_1_13_2 implements SPacketOpenScreen {
             @Argument("title") CommonTypes.Text title,
             @Argument("slotCount") int slotCount,
             @Argument("horseId") int horseId,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "generic_9x1")) int generic9x1Id,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "generic_9x2")) int generic9x2Id,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "generic_9x3")) int generic9x3Id,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "generic_9x4")) int generic9x4Id,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "generic_9x5")) int generic9x5Id,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "generic_9x6")) int generic9x6Id,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "merchant")) int merchantId,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "crafting")) int craftingId,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "enchantment")) int enchantmentId,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "anvil")) int anvilId,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "hopper")) int hopperId,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "furnace")) int furnaceId,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "brewing_stand")) int brewingStandId,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "beacon")) int beaconId,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "generic_3x3")) int generic3x3Id,
-            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.SCREEN_HANDLER, value = "shulker_box")) int shulkerBoxId
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "generic_9x1")) int generic9x1Id,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "generic_9x2")) int generic9x2Id,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "generic_9x3")) int generic9x3Id,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "generic_9x4")) int generic9x4Id,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "generic_9x5")) int generic9x5Id,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "generic_9x6")) int generic9x6Id,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "merchant")) int merchantId,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "crafting")) int craftingId,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "enchantment")) int enchantmentId,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "anvil")) int anvilId,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "hopper")) int hopperId,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "furnace")) int furnaceId,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "brewing_stand")) int brewingStandId,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "beacon")) int beaconId,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "generic_3x3")) int generic3x3Id,
+            @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.MENU, value = "shulker_box")) int shulkerBoxId
     ) {
         int newType;
         if ("minecraft:container".equals(type)) {
@@ -66,7 +66,7 @@ public class SPacketOpenScreen_1_13_2 implements SPacketOpenScreen {
         } else if ("minecraft:villager".equals(type)) {
             newType = merchantId;
         } else if ("EntityHorse".equals(type)) {
-            var packet = new SPacketOpenHorseScreen();
+            var packet = new SPacketHorseScreenOpen();
             packet.syncId = (byte) syncId;
             packet.slotCount = slotCount;
             packet.entityId = horseId;

@@ -1,14 +1,14 @@
 package net.earthcomputer.multiconnect.impl;
 
 import net.earthcomputer.multiconnect.api.ICustomPayloadEvent;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.FriendlyByteBuf;
 
 public record CustomPayloadEvent<T>(
         int protocol,
         T channel,
-        PacketByteBuf data,
-        ClientPlayNetworkHandler networkHandler
+        FriendlyByteBuf data,
+        ClientPacketListener connection
 ) implements ICustomPayloadEvent<T> {
     @Override
     public int getProtocol() {
@@ -21,12 +21,12 @@ public record CustomPayloadEvent<T>(
     }
 
     @Override
-    public PacketByteBuf getData() {
+    public FriendlyByteBuf getData() {
         return data;
     }
 
     @Override
-    public ClientPlayNetworkHandler getNetworkHandler() {
-        return networkHandler;
+    public ClientPacketListener getConnection() {
+        return connection;
     }
 }

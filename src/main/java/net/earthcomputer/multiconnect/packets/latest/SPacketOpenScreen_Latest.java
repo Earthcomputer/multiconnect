@@ -10,7 +10,7 @@ import net.earthcomputer.multiconnect.packets.SPacketOpenScreen;
 @MessageVariant(minVersion = Protocols.V1_14)
 public class SPacketOpenScreen_Latest implements SPacketOpenScreen {
     public int syncId;
-    @Registry(Registries.SCREEN_HANDLER)
+    @Registry(Registries.MENU)
     public int screenHandlerType;
     public CommonTypes.Text title;
 }

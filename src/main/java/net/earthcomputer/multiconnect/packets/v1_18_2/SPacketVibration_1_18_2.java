@@ -7,7 +7,7 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Registries;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
-import net.earthcomputer.multiconnect.packets.latest.SPacketParticle_Latest;
+import net.earthcomputer.multiconnect.packets.latest.SPacketLevelParticles_Latest;
 
 @MessageVariant(minVersion = Protocols.V1_17, maxVersion = Protocols.V1_18_2)
 public class SPacketVibration_1_18_2 {
@@ -16,13 +16,13 @@ public class SPacketVibration_1_18_2 {
     public int arrivalTicks;
 
     @Handler
-    public static SPacketParticle_Latest handle(
+    public static SPacketLevelParticles_Latest handle(
             @Argument("pos") CommonTypes.BlockPos pos,
             @Argument("positionSource") CommonTypes.PositionSource positionSource,
             @Argument("arrivalTicks") int arrivalTicks,
             @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.PARTICLE_TYPE, value = "vibration")) int vibrationId
     ) {
-        var packet = new SPacketParticle_Latest();
+        var packet = new SPacketLevelParticles_Latest();
         packet.particleId = vibrationId;
         packet.count = 1;
         packet.longDistance = true;

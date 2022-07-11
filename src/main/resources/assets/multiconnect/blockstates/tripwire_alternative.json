@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "minecraft:block/tripwire_attached_nsew"
+    }
+  }
+}

@@ -6,12 +6,12 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
-import net.earthcomputer.multiconnect.packets.SPacketSetTradeOffers;
+import net.earthcomputer.multiconnect.packets.SPacketMerchantOffers;
 
 import java.util.Optional;
 
 @MessageVariant(minVersion = Protocols.V1_14_4, maxVersion = Protocols.V1_18_2)
-public class Trade_1_18_2 implements SPacketSetTradeOffers.Trade {
+public class Trade_1_18_2 implements SPacketMerchantOffers.Trade {
     public CommonTypes.ItemStack input1;
     public CommonTypes.ItemStack output;
     public Optional<CommonTypes.ItemStack> input2;

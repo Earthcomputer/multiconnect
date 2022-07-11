@@ -4,26 +4,25 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.impl.DebugUtils;
+import net.earthcomputer.multiconnect.debug.DebugUtils;
 import net.earthcomputer.multiconnect.impl.PacketIntrinsics;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.listener.PacketListener;
-
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.Connection;
+import net.minecraft.network.PacketListener;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MulticonnectClientboundTranslator extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-        ClientConnection clientConnection = (ClientConnection) ctx.pipeline().context("packet_handler").handler();
+        Connection clientConnection = (Connection) ctx.pipeline().context("packet_handler").handler();
         PacketListener packetListener = clientConnection.getPacketListener();
-        ClientPlayNetworkHandler networkHandler;
-        if (packetListener instanceof ClientPlayNetworkHandler) {
-            networkHandler = (ClientPlayNetworkHandler) packetListener;
+        ClientPacketListener connection;
+        if (packetListener instanceof ClientPacketListener) {
+            connection = (ClientPacketListener) packetListener;
         } else {
-            networkHandler = null;
+            throw new AssertionError("Packet listener is not a ClientPacketListener");
         }
         TypedMap userData = new TypedMap();
 
@@ -42,14 +41,14 @@ public class MulticonnectClientboundTranslator extends ByteToMessageDecoder {
             List<ByteBuf> outBufs = new ArrayList<>(1);
             PacketSystem.Internals.submitTranslationTask(result.readDependencies(), result.writeDependencies(), () -> {
                 DebugUtils.wrapInErrorHandler(ctx, inCopy, "inbound", () -> {
-                    result.sender().send(inCopy, outBufs, networkHandler, PacketSystem.Internals.getGlobalData(), userData);
+                    result.sender().send(inCopy, outBufs, connection, PacketSystem.Internals.getGlobalData(), userData);
                     for (ByteBuf outBuf : outBufs) {
                         PacketSystem.Internals.setUserData(outBuf, userData);
                     }
                 });
             }, () -> {
                 DebugUtils.wrapInErrorHandler(ctx, inCopy, "inbound", () -> {
-                    PacketIntrinsics.sendRawToClient(networkHandler, userData, outBufs);
+                    PacketIntrinsics.sendRawToClient(connection, userData, outBufs);
                 });
             }, true);
         });

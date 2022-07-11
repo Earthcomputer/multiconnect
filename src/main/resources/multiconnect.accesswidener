@@ -1,7 +1,7 @@
 accessWidener   v1  named
-accessible class net/minecraft/client/particle/ParticleManager$SimpleSpriteProvider
-accessible method net/minecraft/client/particle/ParticleManager$SimpleSpriteProvider <init> ()V
-accessible class net/minecraft/block/entity/BlockEntityType$BlockEntityFactory
-accessible class net/minecraft/client/network/PendingUpdateManager$PendingUpdate
-accessible field net/minecraft/client/network/PendingUpdateManager$PendingUpdate sequence I
-accessible method net/minecraft/client/network/PendingUpdateManager$PendingUpdate setBlockState (Lnet/minecraft/block/BlockState;)V
+accessible class net/minecraft/client/particle/ParticleEngine$MutableSpriteSet
+accessible method net/minecraft/client/particle/ParticleEngine$MutableSpriteSet <init> ()V
+accessible class net/minecraft/world/level/block/entity/BlockEntityType$BlockEntitySupplier
+accessible class net/minecraft/client/multiplayer/prediction/BlockStatePredictionHandler$ServerVerifiedState
+accessible field net/minecraft/client/multiplayer/prediction/BlockStatePredictionHandler$ServerVerifiedState sequence I
+accessible method net/minecraft/client/multiplayer/prediction/BlockStatePredictionHandler$ServerVerifiedState setBlockState (Lnet/minecraft/world/level/block/state/BlockState;)V

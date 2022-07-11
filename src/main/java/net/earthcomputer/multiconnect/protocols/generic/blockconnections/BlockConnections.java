@@ -5,14 +5,13 @@ import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.Key;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.CompoundConnector;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.IBlockConnector;
-import net.minecraft.block.Block;
-import net.minecraft.util.math.EightWayDirection;
-
+import net.minecraft.core.Direction8;
+import net.minecraft.world.level.block.Block;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class BlockConnections {
-    public static final Key<EnumMap<EightWayDirection, IntSet>> BLOCKS_NEEDING_UPDATE_KEY = Key.create("blocksNeedingUpdate", () -> new EnumMap<>(EightWayDirection.class));
+    public static final Key<EnumMap<Direction8, IntSet>> BLOCKS_NEEDING_UPDATE_KEY = Key.create("blocksNeedingUpdate", () -> new EnumMap<>(Direction8.class));
 
     private static final NavigableMap<Integer, Map<Block, IBlockConnector>> connectors = new TreeMap<>();
 
