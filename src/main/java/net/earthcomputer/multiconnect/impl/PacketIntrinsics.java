@@ -9,6 +9,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -218,9 +219,12 @@ public final class PacketIntrinsics {
             return;
         }
 
-        ChannelHandlerContext context = ((ConnectionAccessor) connection.getConnection()).getChannel()
-                .pipeline()
-                .context("multiconnect_serverbound_translator");
+        ChannelPipeline pipeline = ((ConnectionAccessor) connection.getConnection()).getChannel().pipeline();
+        ChannelHandlerContext context = pipeline.context("multiconnect_serverbound_translator");
+        if (context == null) {
+            // in singleplayer, the clientbound translator is not added to the pipeline
+            context = pipeline.context("encoder");
+        }
 
         for (ByteBuf buf : bufs) {
             // don't need to set the user data here, it's not accessed again
@@ -234,13 +238,25 @@ public final class PacketIntrinsics {
             return;
         }
 
-        ChannelHandlerContext context = ((ConnectionAccessor) connection.getConnection()).getChannel()
-                .pipeline()
-                .context("multiconnect_clientbound_translator");
+        ChannelPipeline pipeline = ((ConnectionAccessor) connection.getConnection()).getChannel().pipeline();
+        ChannelHandlerContext context = pipeline.context("multiconnect_clientbound_translator");
+        if (context == null) {
+            // in singleplayer, the clientbound translator is not added to the pipeline
+            // find the handler before the decoder
+            List<String> names = pipeline.names();
+            int decoderIndex = names.indexOf("decoder");
+            if (decoderIndex != 0) {
+                context = pipeline.context(names.get(decoderIndex - 1));
+            }
+        }
 
         for (ByteBuf buf : bufs) {
             PacketSystem.Internals.setUserData(buf, userData);
-            context.fireChannelRead(buf);
+            if (context == null) {
+                pipeline.fireChannelRead(buf);
+            } else {
+                context.fireChannelRead(buf);
+            }
         }
     }
 
