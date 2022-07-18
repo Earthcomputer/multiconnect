@@ -56,6 +56,18 @@
   "custom": {
     "lithium:options": {
       "mixin.entity.data_tracker": false
+    },
+    "multiconnect": {
+      "custom_payloads": {
+        "allowed_serverbound": "minecraft:register",
+        "allowed_clientbound": "minecraft:register",
+        "serverbound_112_names": {
+          "minecraft:register": "REGISTER"
+        },
+        "clientbound_112_names": {
+          "minecraft:register": "REGISTER"
+        }
+      }
     }
   }
 }

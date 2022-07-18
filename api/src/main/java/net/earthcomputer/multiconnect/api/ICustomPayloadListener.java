@@ -1,16 +1,9 @@
 package net.earthcomputer.multiconnect.api;
 
 /**
- * A listener for custom payloads.
- *
- * @param <T> The type of the channel, either {@linkplain net.minecraft.util.Identifier Identifier} or
- *              {@linkplain String}.
- *
- * @see MultiConnectAPI#addClientboundIdentifierCustomPayloadListener(ICustomPayloadListener)
- * @see MultiConnectAPI#addClientboundStringCustomPayloadListener(ICustomPayloadListener)
- * @see MultiConnectAPI#addServerboundIdentifierCustomPayloadListener(ICustomPayloadListener)
- * @see MultiConnectAPI#addServerboundStringCustomPayloadListener(ICustomPayloadListener)
+ * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
  */
+@Deprecated
 @FunctionalInterface
 public interface ICustomPayloadListener<T> {
     /**

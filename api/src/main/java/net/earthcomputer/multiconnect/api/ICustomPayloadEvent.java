@@ -2,16 +2,11 @@ package net.earthcomputer.multiconnect.api;
 
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
 
 /**
- * An event fired when custom payloads to or from older servers are blocked by multiconnect.
- *
- * @param <T> The type of the channel, either {@linkplain ResourceLocation} or
- *              {@linkplain String}.
- *
- * @see ICustomPayloadListener
+ * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
  */
+@Deprecated
 public interface ICustomPayloadEvent<T> {
     /**
      * The protocol version that the server is on, to be compared with values in {@link Protocols}.

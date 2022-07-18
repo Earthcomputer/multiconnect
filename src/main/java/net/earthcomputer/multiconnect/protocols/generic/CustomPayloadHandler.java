@@ -1,5 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableSet;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.api.ICustomPayloadListener;
 import net.earthcomputer.multiconnect.api.Protocols;
@@ -9,53 +12,166 @@ import net.earthcomputer.multiconnect.impl.CustomPayloadEvent;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.packets.latest.CPacketCustomPayload_Latest;
 import net.earthcomputer.multiconnect.packets.v1_12_2.CPacketCustomPayload_1_12_2;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.metadata.CustomValue;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class CustomPayloadHandler {
     public static final Key<Boolean> IS_FORCE_SENT = Key.create("isForceSent", false);
 
+    @Deprecated
     private static final List<ICustomPayloadListener<ResourceLocation>> clientboundIdentifierCustomPayloadListeners = new CopyOnWriteArrayList<>();
+    @Deprecated
     private static final List<ICustomPayloadListener<String>> clientboundStringCustomPayloadListeners = new CopyOnWriteArrayList<>();
+    @Deprecated
     private static final List<ICustomPayloadListener<ResourceLocation>> serverboundIdentifierCustomPayloadListeners = new CopyOnWriteArrayList<>();
+    @Deprecated
     private static final List<ICustomPayloadListener<String>> serverboundStringCustomPayloadListeners = new CopyOnWriteArrayList<>();
 
+    private static final Set<ResourceLocation> clientboundAllowedCustomPayloads;
+    private static final Set<ResourceLocation> serverboundAllowedCustomPayloads;
+    private static final BiMap<ResourceLocation, String> clientboundCustomPayloadNames112;
+    private static final BiMap<ResourceLocation, String> serverboundCustomPayloadNames112;
+
+    static {
+        var clientboundBuilder = ImmutableSet.<ResourceLocation>builder();
+        var serverboundBuilder = ImmutableSet.<ResourceLocation>builder();
+        var clientbound112Builder = ImmutableBiMap.<ResourceLocation, String>builder();
+        var serverbound112Builder = ImmutableBiMap.<ResourceLocation, String>builder();
+
+        populateCustomPayloadFilters(clientboundBuilder, serverboundBuilder, clientbound112Builder, serverbound112Builder);
+
+        clientboundAllowedCustomPayloads = clientboundBuilder.build();
+        serverboundAllowedCustomPayloads = serverboundBuilder.build();
+        clientboundCustomPayloadNames112 = clientbound112Builder.build();
+        serverboundCustomPayloadNames112 = serverbound112Builder.build();
+    }
+
+    private static void populateCustomPayloadFilters(
+        ImmutableSet.Builder<ResourceLocation> clientboundBuilder,
+        ImmutableSet.Builder<ResourceLocation> serverboundBuilder,
+        ImmutableBiMap.Builder<ResourceLocation, String> clientbound112Builder,
+        ImmutableBiMap.Builder<ResourceLocation, String> serverbound112Builder
+    ) {
+        for (ModContainer modContainer : FabricLoader.getInstance().getAllMods()) {
+            CustomValue multiconnect = modContainer.getMetadata().getCustomValue("multiconnect");
+            if (multiconnect == null || multiconnect.getType() != CustomValue.CvType.OBJECT) {
+                continue;
+            }
+            CustomValue customPayloads = multiconnect.getAsObject().get("custom_payloads");
+            if (customPayloads == null || customPayloads.getType() != CustomValue.CvType.OBJECT) {
+                continue;
+            }
+
+            loadAllowedCustomPayloads(customPayloads, "allowed_clientbound", clientboundBuilder);
+            loadAllowedCustomPayloads(customPayloads, "allowed_serverbound", serverboundBuilder);
+            load112Mappings(customPayloads, "clientbound_112_names", clientbound112Builder);
+            load112Mappings(customPayloads, "serverbound_112_names", serverbound112Builder);
+        }
+    }
+
+    private static void loadAllowedCustomPayloads(
+        CustomValue customPayloads,
+        String key,
+        ImmutableSet.Builder<ResourceLocation> builder
+    ) {
+        CustomValue allowed = customPayloads.getAsObject().get(key);
+        if (allowed != null) {
+            if (allowed.getType() == CustomValue.CvType.ARRAY) {
+                for (CustomValue allowedStr : allowed.getAsArray()) {
+                    if (allowedStr.getType() == CustomValue.CvType.STRING) {
+                        builder.add(new ResourceLocation(allowedStr.getAsString()));
+                    }
+                }
+            } else if (allowed.getType() == CustomValue.CvType.STRING) {
+                builder.add(new ResourceLocation(allowed.getAsString()));
+            }
+        }
+    }
+
+    private static void load112Mappings(
+        CustomValue customPayloads,
+        String key,
+        ImmutableBiMap.Builder<ResourceLocation, String> builder
+    ) {
+        CustomValue names = customPayloads.getAsObject().get(key);
+        if (names != null && names.getType() == CustomValue.CvType.OBJECT) {
+            for (var entry : names.getAsObject()) {
+                if (entry.getValue().getType() == CustomValue.CvType.STRING) {
+                    builder.put(new ResourceLocation(entry.getKey()), entry.getValue().getAsString());
+                }
+            }
+        }
+    }
+
+    public static boolean allowClientboundCustomPayload(ResourceLocation channel) {
+        return clientboundAllowedCustomPayloads.contains(channel);
+    }
+
+    public static boolean allowServerboundCustomPayload(ResourceLocation channel) {
+        return serverboundAllowedCustomPayloads.contains(channel);
+    }
+
+    @Nullable
+    public static ResourceLocation getClientboundChannel112(String channel) {
+        return clientboundCustomPayloadNames112.inverse().get(channel);
+    }
+
+    @Nullable
+    public static String getServerboundChannel112(ResourceLocation channel) {
+        return serverboundCustomPayloadNames112.get(channel);
+    }
+
+    @Deprecated
     public static void addClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
         clientboundIdentifierCustomPayloadListeners.add(listener);
     }
 
+    @Deprecated
     public static void removeClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
         clientboundIdentifierCustomPayloadListeners.remove(listener);
     }
 
+    @Deprecated
     public static void addClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
         clientboundStringCustomPayloadListeners.add(listener);
     }
 
+    @Deprecated
     public static void removeClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
         clientboundStringCustomPayloadListeners.remove(listener);
     }
 
+    @Deprecated
     public static void addServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
         serverboundIdentifierCustomPayloadListeners.add(listener);
     }
 
+    @Deprecated
     public static void removeServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
         serverboundIdentifierCustomPayloadListeners.remove(listener);
     }
 
+    @Deprecated
     public static void addServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
         serverboundStringCustomPayloadListeners.add(listener);
     }
 
+    @Deprecated
     public static void removeServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
         serverboundStringCustomPayloadListeners.remove(listener);
     }
 
+    @Deprecated
     public static void forceSendIdentifierCustomPayload(ClientPacketListener connection, ResourceLocation channel, FriendlyByteBuf data) {
         var packet = new CPacketCustomPayload_Latest.Other();
         packet.channel = channel;
@@ -66,6 +182,7 @@ public class CustomPayloadHandler {
         });
     }
 
+    @Deprecated
     public static void forceSendStringCustomPayload(ClientPacketListener connection, String channel, FriendlyByteBuf data) {
         var packet = new CPacketCustomPayload_1_12_2.Other();
         packet.channel = channel;
@@ -76,6 +193,7 @@ public class CustomPayloadHandler {
         });
     }
 
+    @Deprecated
     @ThreadSafe
     public static void handleServerboundCustomPayload(ClientPacketListener connection, ResourceLocation channel, byte[] data) {
         var event = new CustomPayloadEvent<>(
@@ -87,6 +205,7 @@ public class CustomPayloadHandler {
         serverboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
+    @Deprecated
     @ThreadSafe
     public static void handleServerboundCustomPayload(ClientPacketListener connection, String channel, byte[] data) {
         var event = new CustomPayloadEvent<>(
@@ -98,6 +217,7 @@ public class CustomPayloadHandler {
         serverboundStringCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
+    @Deprecated
     @ThreadSafe
     public static void handleClientboundIdentifierCustomPayload(ClientPacketListener connection, ResourceLocation channel, byte[] data) {
         var event = new CustomPayloadEvent<>(
@@ -109,6 +229,7 @@ public class CustomPayloadHandler {
         clientboundIdentifierCustomPayloadListeners.forEach(listener -> listener.onCustomPayload(event));
     }
 
+    @Deprecated
     @ThreadSafe
     public static void handleClientboundStringCustomPayload(ClientPacketListener connection, String channel, byte[] data) {
         var event = new CustomPayloadEvent<>(

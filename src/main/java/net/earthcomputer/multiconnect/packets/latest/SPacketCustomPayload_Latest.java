@@ -7,6 +7,7 @@ import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.api.Protocols;
+import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.packets.SPacketCustomPayload;
 import net.earthcomputer.multiconnect.protocols.generic.CustomPayloadHandler;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -29,13 +30,20 @@ public abstract class SPacketCustomPayload_Latest implements SPacketCustomPayloa
         @Length(remainingBytes = true)
         public byte[] data;
 
+        @SuppressWarnings("deprecation")
         @Handler
-        public static void handle(
+        public static boolean handle(
                 @Argument("channel") ResourceLocation channel,
                 @Argument("data") byte[] data,
                 @FilledArgument ClientPacketListener networkHandler
         ) {
-            CustomPayloadHandler.handleClientboundIdentifierCustomPayload(networkHandler, channel, data);
+            // call the deprecated method
+            // below 1.12.2, we called the string version of the method already
+            if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
+                CustomPayloadHandler.handleClientboundIdentifierCustomPayload(networkHandler, channel, data);
+            }
+
+            return CustomPayloadHandler.allowClientboundCustomPayload(channel);
         }
     }
 }
