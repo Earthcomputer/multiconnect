@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @MessageVariant(maxVersion = Protocols.V1_16_1)
-public class SPacketChunkDeltaUpdate_1_16_1 {
+public class SPacketMultiBlockUpdate_1_16_1 {
     @Type(Types.INT)
     public int chunkX;
     @Type(Types.INT)
@@ -47,7 +47,9 @@ public class SPacketChunkDeltaUpdate_1_16_1 {
                 SPacketSectionBlocksUpdate packet = new SPacketSectionBlocksUpdate();
                 packets.add(packet);
 
-                packet.sectionPos = ((long) chunkX << 42) | ((long) chunkZ << 20) | sectionY;
+                packet.sectionPos = ((long) chunkX << 42)
+                    | ((long) (chunkZ & ((1 << 22) - 1)) << 20)
+                    | sectionY;
                 packet.noLightUpdates = false;
                 packet.blocks = new LongArrayList();
                 for (Update update : updates) {
