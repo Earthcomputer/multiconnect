@@ -32,6 +32,8 @@ You can see a real-world example in multiconnect's own `fabric.mod.json`, which 
 
 If you want to unblock multiple channels, you can use a list for `allowed_clientbound` and `allowed_serverbound`.
 
+You can unblock all resource locations with a specific namespaces using `mymod:*`. If you do this, please remember to still think about the pitfalls each time you unblock a packet. I would rather you didn't use the wildcard to unblock packets from other mods, although this isn't checked. Please kindly do not unblock the entire `minecraft` namespace.
+
 ## 1.12 servers
 
 In Minecraft 1.13, custom payload channels changed from being strings to resource locations. The old string channels commonly contained illegal characters for resource locations, so are not compatible with the new channel format. This means that you need to specify mappings between old channel names and new channel names. This is again done in your `fabric.mod.json`, like so:
@@ -56,3 +58,5 @@ In Minecraft 1.13, custom payload channels changed from being strings to resourc
 With the above example, clientbound custom payloads with the channel name `MYMOD|CHANNEL` will be received as `mymod:channel`, and serverbound custom payloads with the channel `mymod:channel` will be sent as `MYMOD|CHANNEL`.
 
 You can see a real-world example in multiconnect's own `fabric.mod.json`, which maps the `minecraft:register` channel to `REGISTER`.
+
+The default behavior is to use the string representation of resource locations in 1.12 custom payloads. Clientbound custom payloads without a mapping that are not in this form are silently dropped.

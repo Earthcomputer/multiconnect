@@ -38,27 +38,35 @@ public class CustomPayloadHandler {
     private static final List<ICustomPayloadListener<String>> serverboundStringCustomPayloadListeners = new CopyOnWriteArrayList<>();
 
     private static final Set<ResourceLocation> clientboundAllowedCustomPayloads;
+    private static final Set<String> clientboundAllowedNamespaces;
     private static final Set<ResourceLocation> serverboundAllowedCustomPayloads;
+    private static final Set<String> serverboundAllowedNamespaces;
     private static final BiMap<ResourceLocation, String> clientboundCustomPayloadNames112;
     private static final BiMap<ResourceLocation, String> serverboundCustomPayloadNames112;
 
     static {
         var clientboundBuilder = ImmutableSet.<ResourceLocation>builder();
+        var clientboundNamespacesBuilder = ImmutableSet.<String>builder();
         var serverboundBuilder = ImmutableSet.<ResourceLocation>builder();
+        var serverboundNamespacesBuilder = ImmutableSet.<String>builder();
         var clientbound112Builder = ImmutableBiMap.<ResourceLocation, String>builder();
         var serverbound112Builder = ImmutableBiMap.<ResourceLocation, String>builder();
 
-        populateCustomPayloadFilters(clientboundBuilder, serverboundBuilder, clientbound112Builder, serverbound112Builder);
+        populateCustomPayloadFilters(clientboundBuilder, clientboundNamespacesBuilder, serverboundBuilder, serverboundNamespacesBuilder, clientbound112Builder, serverbound112Builder);
 
         clientboundAllowedCustomPayloads = clientboundBuilder.build();
+        clientboundAllowedNamespaces = clientboundNamespacesBuilder.build();
         serverboundAllowedCustomPayloads = serverboundBuilder.build();
+        serverboundAllowedNamespaces = serverboundNamespacesBuilder.build();
         clientboundCustomPayloadNames112 = clientbound112Builder.build();
         serverboundCustomPayloadNames112 = serverbound112Builder.build();
     }
 
     private static void populateCustomPayloadFilters(
         ImmutableSet.Builder<ResourceLocation> clientboundBuilder,
+        ImmutableSet.Builder<String> clientboundNamespacesBuilder,
         ImmutableSet.Builder<ResourceLocation> serverboundBuilder,
+        ImmutableSet.Builder<String> serverboundNamespacesBuilder,
         ImmutableBiMap.Builder<ResourceLocation, String> clientbound112Builder,
         ImmutableBiMap.Builder<ResourceLocation, String> serverbound112Builder
     ) {
@@ -72,8 +80,8 @@ public class CustomPayloadHandler {
                 continue;
             }
 
-            loadAllowedCustomPayloads(customPayloads, "allowed_clientbound", clientboundBuilder);
-            loadAllowedCustomPayloads(customPayloads, "allowed_serverbound", serverboundBuilder);
+            loadAllowedCustomPayloads(customPayloads, "allowed_clientbound", clientboundBuilder, clientboundNamespacesBuilder);
+            loadAllowedCustomPayloads(customPayloads, "allowed_serverbound", serverboundBuilder, serverboundNamespacesBuilder);
             load112Mappings(customPayloads, "clientbound_112_names", clientbound112Builder);
             load112Mappings(customPayloads, "serverbound_112_names", serverbound112Builder);
         }
@@ -82,19 +90,32 @@ public class CustomPayloadHandler {
     private static void loadAllowedCustomPayloads(
         CustomValue customPayloads,
         String key,
-        ImmutableSet.Builder<ResourceLocation> builder
+        ImmutableSet.Builder<ResourceLocation> builder,
+        ImmutableSet.Builder<String> namespacesBuilder
     ) {
         CustomValue allowed = customPayloads.getAsObject().get(key);
         if (allowed != null) {
             if (allowed.getType() == CustomValue.CvType.ARRAY) {
                 for (CustomValue allowedStr : allowed.getAsArray()) {
                     if (allowedStr.getType() == CustomValue.CvType.STRING) {
-                        builder.add(new ResourceLocation(allowedStr.getAsString()));
+                        loadAllowedCustomPayload(allowedStr.getAsString(), builder, namespacesBuilder);
                     }
                 }
             } else if (allowed.getType() == CustomValue.CvType.STRING) {
-                builder.add(new ResourceLocation(allowed.getAsString()));
+                loadAllowedCustomPayload(allowed.getAsString(), builder, namespacesBuilder);
             }
+        }
+    }
+
+    private static void loadAllowedCustomPayload(
+        String value,
+        ImmutableSet.Builder<ResourceLocation> builder,
+        ImmutableSet.Builder<String> namespacesBuilder
+    ) {
+        if (value.endsWith(":*")) {
+            namespacesBuilder.add(value.substring(0, value.length() - 2));
+        } else {
+            builder.add(new ResourceLocation(value));
         }
     }
 
@@ -114,21 +135,28 @@ public class CustomPayloadHandler {
     }
 
     public static boolean allowClientboundCustomPayload(ResourceLocation channel) {
-        return clientboundAllowedCustomPayloads.contains(channel);
+        return clientboundAllowedCustomPayloads.contains(channel) || clientboundAllowedNamespaces.contains(channel.getNamespace());
     }
 
     public static boolean allowServerboundCustomPayload(ResourceLocation channel) {
-        return serverboundAllowedCustomPayloads.contains(channel);
+        return serverboundAllowedCustomPayloads.contains(channel) || serverboundAllowedNamespaces.contains(channel.getNamespace());
     }
 
     @Nullable
     public static ResourceLocation getClientboundChannel112(String channel) {
-        return clientboundCustomPayloadNames112.inverse().get(channel);
+        ResourceLocation result = clientboundCustomPayloadNames112.inverse().get(channel);
+        if (result != null) {
+            return result;
+        }
+        return ResourceLocation.tryParse(channel);
     }
 
-    @Nullable
     public static String getServerboundChannel112(ResourceLocation channel) {
-        return serverboundCustomPayloadNames112.get(channel);
+        String result = serverboundCustomPayloadNames112.get(channel);
+        if (result != null) {
+            return result;
+        }
+        return channel.toString();
     }
 
     @Deprecated

@@ -38,17 +38,12 @@ public abstract class CPacketCustomPayload_Latest implements CPacketCustomPayloa
             @Argument("channel") ResourceLocation channel,
             @Argument("data") byte[] data
         ) {
-            String oldChannel = CustomPayloadHandler.getServerboundChannel112(channel);
-            if (oldChannel != null) {
-                List<CPacketCustomPayload_1_12_2> packets = new ArrayList<>(1);
-                var packet = new CPacketCustomPayload_1_12_2.Other();
-                packet.channel = oldChannel;
-                packet.data = data;
-                packets.add(packet);
-                return packets;
-            }
-
-            return new ArrayList<>(0);
+            List<CPacketCustomPayload_1_12_2> packets = new ArrayList<>(1);
+            var packet = new CPacketCustomPayload_1_12_2.Other();
+            packet.channel = CustomPayloadHandler.getServerboundChannel112(channel);
+            packet.data = data;
+            packets.add(packet);
+            return packets;
         }
     }
 }
