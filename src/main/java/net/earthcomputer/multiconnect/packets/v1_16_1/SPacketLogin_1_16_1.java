@@ -30,8 +30,8 @@ public class SPacketLogin_1_16_1 implements SPacketLogin {
     @Introduce(compute = "computeDimensions")
     public List<ResourceLocation> dimensions;
     @Datafix(DatafixTypes.REGISTRY_ACCESS)
-    @Introduce(compute = "computeRegistryManager")
-    public CompoundTag registryManager;
+    @Introduce(compute = "computeRegistryAccess")
+    public CompoundTag registryAccess;
     @Introduce(compute = "computeDimension")
     public ResourceLocation dimensionType;
     @Introduce(compute = "computeDimension")
@@ -54,7 +54,7 @@ public class SPacketLogin_1_16_1 implements SPacketLogin {
         return list;
     }
 
-    public static CompoundTag computeRegistryManager() {
+    public static CompoundTag computeRegistryAccess() {
         return new CompoundTag();
     }
 

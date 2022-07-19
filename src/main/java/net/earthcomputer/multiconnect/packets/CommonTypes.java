@@ -20,6 +20,8 @@ import net.earthcomputer.multiconnect.protocols.v1_12.block.Blocks_1_12_2;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -158,6 +160,7 @@ public class CommonTypes {
         interface NonEmpty extends ItemStack {
             int getItemId();
             byte getCount();
+            @Nullable
             CompoundTag getTag();
         }
     }

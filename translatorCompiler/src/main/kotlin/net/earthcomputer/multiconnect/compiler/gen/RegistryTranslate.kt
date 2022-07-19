@@ -543,7 +543,7 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
         )
     }
 
-    val methodName = "remap%sIdentifier%s".format(Locale.ROOT,
+    val methodName = "remap%sResourceLocation%s".format(Locale.ROOT,
         if (clientbound) "S" else "C",
         registry.name.toCamelCase(true)
     )

@@ -18,6 +18,8 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.UUID;
 
 @Polymorphic
@@ -59,6 +61,7 @@ public abstract class ItemStack_1_15_2 implements CommonTypes.ItemStack {
         public byte count;
         @Introduce(direction = Introduce.Direction.FROM_NEWER, compute = "translateTagServerbound")
         @Introduce(direction = Introduce.Direction.FROM_OLDER, compute = "translateTagClientbound")
+        @Nullable
         public CompoundTag tag;
 
         @Override
@@ -72,6 +75,7 @@ public abstract class ItemStack_1_15_2 implements CommonTypes.ItemStack {
         }
 
         @Override
+        @Nullable
         public CompoundTag getTag() {
             return tag;
         }
@@ -79,7 +83,7 @@ public abstract class ItemStack_1_15_2 implements CommonTypes.ItemStack {
         public static CompoundTag translateTagServerbound(
                 @Argument("itemId") int itemId,
                 @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.ITEM, value = "player_head")) int playerHeadId,
-                @Argument("tag") CompoundTag tag
+                @Argument("tag") @Nullable CompoundTag tag
         ) {
             if (itemId != playerHeadId || tag == null) {
                 return tag;
@@ -97,7 +101,7 @@ public abstract class ItemStack_1_15_2 implements CommonTypes.ItemStack {
         }
 
         public static CompoundTag translateTagClientbound(
-                @Argument("tag") CompoundTag tag
+                @Argument("tag") @Nullable CompoundTag tag
         ) {
             if (tag == null) {
                 return null;

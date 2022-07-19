@@ -222,7 +222,7 @@ public class PacketSystem {
     }
 
     public static ResourceLocation serverIdToClient(int serverVersion, Registry<?> registry, ResourceLocation serverId) {
-        return protocolClasses.get(serverVersion).remapSIdentifier(registry.key(), serverId);
+        return protocolClasses.get(serverVersion).remapSResourceLocation(registry.key(), serverId);
     }
 
     public static ResourceLocation clientIdToServer(Registry<?> registry, ResourceLocation clientId) {
@@ -230,7 +230,7 @@ public class PacketSystem {
     }
 
     public static ResourceLocation clientIdToServer(int serverVersion, Registry<?> registry, ResourceLocation clientId) {
-        return protocolClasses.get(serverVersion).remapCIdentifier(registry.key(), clientId);
+        return protocolClasses.get(serverVersion).remapCResourceLocation(registry.key(), clientId);
     }
 
     @Nullable
@@ -376,8 +376,8 @@ public class PacketSystem {
         private final MethodHandle doesServerKnowBlockStateMulticonnect;
         private final MethodHandle remapCInt;
         private final MethodHandle remapSInt;
-        private final MethodHandle remapCIdentifier;
-        private final MethodHandle remapSIdentifier;
+        private final MethodHandle remapCResourceLocation;
+        private final MethodHandle remapSResourceLocation;
         private final MethodHandle remapCIntBlockState;
         private final MethodHandle remapSIntBlockState;
 
@@ -392,8 +392,8 @@ public class PacketSystem {
             this.doesServerKnowBlockStateMulticonnect = findMethodHandle(clazz, "doesServerKnowBlockStateMulticonnect", boolean.class, BlockState.class);
             this.remapCInt = findMethodHandle(clazz, "remapCInt", int.class, ResourceKey.class, int.class);
             this.remapSInt = findMethodHandle(clazz, "remapSInt", int.class, ResourceKey.class, int.class);
-            this.remapCIdentifier = findMethodHandle(clazz, "remapCIdentifier", ResourceLocation.class, ResourceKey.class, ResourceLocation.class);
-            this.remapSIdentifier = findMethodHandle(clazz, "remapSIdentifier", ResourceLocation.class, ResourceKey.class, ResourceLocation.class);
+            this.remapCResourceLocation = findMethodHandle(clazz, "remapCResourceLocation", ResourceLocation.class, ResourceKey.class, ResourceLocation.class);
+            this.remapSResourceLocation = findMethodHandle(clazz, "remapSResourceLocation", ResourceLocation.class, ResourceKey.class, ResourceLocation.class);
             this.remapCIntBlockState = findMethodHandle(clazz, "remapCIntBlockState", int.class, int.class);
             this.remapSIntBlockState = findMethodHandle(clazz, "remapSIntBlockState", int.class, int.class);
         }
@@ -478,17 +478,17 @@ public class PacketSystem {
             }
         }
 
-        ResourceLocation remapCIdentifier(ResourceKey<? extends Registry<?>> registry, ResourceLocation value) {
+        ResourceLocation remapCResourceLocation(ResourceKey<? extends Registry<?>> registry, ResourceLocation value) {
             try {
-                return (ResourceLocation) remapCIdentifier.invoke(registry, value);
+                return (ResourceLocation) remapCResourceLocation.invoke(registry, value);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }
         }
 
-        ResourceLocation remapSIdentifier(ResourceKey<? extends Registry<?>> registry, ResourceLocation value) {
+        ResourceLocation remapSResourceLocation(ResourceKey<? extends Registry<?>> registry, ResourceLocation value) {
             try {
-                return (ResourceLocation) remapSIdentifier.invoke(registry, value);
+                return (ResourceLocation) remapSResourceLocation.invoke(registry, value);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }

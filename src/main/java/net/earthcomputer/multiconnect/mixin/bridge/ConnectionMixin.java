@@ -77,17 +77,22 @@ public abstract class ConnectionMixin {
     }
 
     // TODO: move this to the network layer
+    @SuppressWarnings("deprecation")
     @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/util/concurrent/GenericFutureListener;)V", at = @At("HEAD"), cancellable = true)
     public void onSend(Packet<?> packet, @Nullable GenericFutureListener<? extends Future<? super Void>> callback, CallbackInfo ci) {
         if (packet instanceof ServerboundCustomPayloadPacket customPayload
                 && !customPayload.getIdentifier().equals(ServerboundCustomPayloadPacket.BRAND)) {
-            if (packetListener instanceof ClientPacketListener networkHandler) {
+            // call deprecated method
+            if (packetListener instanceof ClientPacketListener connection) {
                 FriendlyByteBuf dataBuf = customPayload.getData();
                 byte[] data = new byte[dataBuf.readableBytes()];
                 dataBuf.readBytes(data);
-                CustomPayloadHandler.handleServerboundCustomPayload(networkHandler, customPayload.getIdentifier(), data);
+                CustomPayloadHandler.handleServerboundCustomPayload(connection, customPayload.getIdentifier(), data);
             }
-            ci.cancel();
+
+            if (!CustomPayloadHandler.allowServerboundCustomPayload(customPayload.getIdentifier())) {
+                ci.cancel();
+            }
         }
     }
 }

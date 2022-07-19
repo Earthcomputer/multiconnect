@@ -45,9 +45,9 @@ public class ChunkSection_1_13_2 implements ChunkData.Section {
     }
 
     public static boolean hasSkyLight(
-            @GlobalData RegistryAccess registryManager,
+            @GlobalData RegistryAccess registryAccess,
             @GlobalData DimensionTypeReference dimType
     ) {
-        return dimType.getValue(registryManager).hasSkyLight();
+        return dimType.getValue(registryAccess).hasSkyLight();
     }
 }

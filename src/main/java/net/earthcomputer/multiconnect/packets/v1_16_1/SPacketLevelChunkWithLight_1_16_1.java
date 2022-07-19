@@ -18,6 +18,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.LongArrayTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.datafix.fixes.BitStorageAlignFix;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 @MessageVariant(minVersion = Protocols.V1_16, maxVersion = Protocols.V1_16_1)
@@ -31,6 +33,7 @@ public class SPacketLevelChunkWithLight_1_16_1 implements SPacketLevelChunkWithL
     public boolean forgetOldData;
     public int verticalStripBitmask;
     @Introduce(compute = "computeHeightmaps")
+    @Nullable
     public CompoundTag heightmaps;
     @Length(constant = Protocol_1_16_5.BIOME_ARRAY_LENGTH)
     @Type(Types.INT)
@@ -45,7 +48,7 @@ public class SPacketLevelChunkWithLight_1_16_1 implements SPacketLevelChunkWithL
         return fullChunk;
     }
 
-    public static CompoundTag computeHeightmaps(@Argument("heightmaps") CompoundTag heightmaps) {
+    public static CompoundTag computeHeightmaps(@Argument("heightmaps") @Nullable CompoundTag heightmaps) {
         if (heightmaps == null) {
             return null;
         }

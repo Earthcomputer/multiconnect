@@ -92,12 +92,12 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
 
     public static ItemStack_1_13_1 fromMinecraft(ItemStack stack) {
         if (stack.isEmpty()) {
-            var result = new net.earthcomputer.multiconnect.packets.v1_13_1.ItemStack_1_13_1.Empty();
+            var result = new ItemStack_1_13_1.Empty();
             result.itemId = -1;
             return result;
         } else {
             var later = (ItemStack_1_13_2.NonEmpty) ItemStack_1_13_2.fromMinecraft(stack);
-            var result = new net.earthcomputer.multiconnect.packets.v1_13_1.ItemStack_1_13_1.NonEmpty();
+            var result = new ItemStack_1_13_1.NonEmpty();
             result.itemId = (short) later.itemId;
             result.count = later.count;
             result.tag = later.tag;
@@ -116,6 +116,7 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
         @DefaultConstruct(intValue = 1)
         public byte count;
         @Introduce(direction = Introduce.Direction.FROM_OLDER, compute = "computeTag")
+        @Nullable
         public CompoundTag tag;
 
         @Override
@@ -129,6 +130,7 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
         }
 
         @Override
+        @Nullable
         public CompoundTag getTag() {
             return tag;
         }

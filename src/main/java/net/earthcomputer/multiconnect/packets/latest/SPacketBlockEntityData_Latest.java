@@ -14,6 +14,7 @@ import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketBlockEntityData;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 @MessageVariant(minVersion = Protocols.V1_18)
 public class SPacketBlockEntityData_Latest implements SPacketBlockEntityData {
@@ -22,6 +23,7 @@ public class SPacketBlockEntityData_Latest implements SPacketBlockEntityData {
     @Introduce(compute = "computeBlockEntityType")
     public int blockEntityType;
     @Datafix(value = DatafixTypes.BLOCK_ENTITY, preprocess = "preprocessBlockEntityData")
+    @Nullable
     public CompoundTag data;
 
     public static int computeBlockEntityType(
@@ -59,7 +61,7 @@ public class SPacketBlockEntityData_Latest implements SPacketBlockEntityData {
     }
 
     public static void preprocessBlockEntityData(
-            CompoundTag data,
+            @Nullable CompoundTag data,
             @Argument("blockEntityType") int blockEntityType
     ) {
         if (data == null) {

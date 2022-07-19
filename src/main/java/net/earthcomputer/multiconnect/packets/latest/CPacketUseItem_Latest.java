@@ -24,11 +24,11 @@ public class CPacketUseItem_Latest implements CPacketUseItem {
             @Argument("sequence") int sequence
     ) {
         Minecraft.getInstance().execute(() -> {
-            ClientLevel world = Minecraft.getInstance().level;
-            if (world != null) {
-                var pendingUpdateManager = (IBlockStatePredictionHandler) ((ClientLevelAccessor) world).multiconnect_getBlockStatePredictionHandler();
-                pendingUpdateManager.multiconnect_nullifyServerVerifiedStatesUpTo(world, sequence);
-                world.handleBlockChangedAck(sequence);
+            ClientLevel level = Minecraft.getInstance().level;
+            if (level != null) {
+                var blockStatePredictionHandler = (IBlockStatePredictionHandler) ((ClientLevelAccessor) level).multiconnect_getBlockStatePredictionHandler();
+                blockStatePredictionHandler.multiconnect_nullifyServerVerifiedStatesUpTo(level, sequence);
+                level.handleBlockChangedAck(sequence);
             }
         });
         return translatedThis;

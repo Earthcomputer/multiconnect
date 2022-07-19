@@ -75,25 +75,25 @@ public class APIImpl extends MultiConnectAPI {
     @Deprecated
     @Contract("null, _, _ -> fail")
     @Override
-    public void forceSendCustomPayload(@Nullable ClientPacketListener networkHandler, ResourceLocation channel, FriendlyByteBuf data) {
-        if (networkHandler == null) {
+    public void forceSendCustomPayload(@Nullable ClientPacketListener connection, ResourceLocation channel, FriendlyByteBuf data) {
+        if (connection == null) {
             throw new IllegalStateException("Trying to send custom payload when not in-game");
         }
-        CustomPayloadHandler.forceSendIdentifierCustomPayload(networkHandler, channel, data);
+        CustomPayloadHandler.forceSendIdentifierCustomPayload(connection, channel, data);
     }
 
     @SuppressWarnings("deprecation")
     @Deprecated
     @Contract("null, _, _ -> fail")
     @Override
-    public void forceSendStringCustomPayload(@Nullable ClientPacketListener networkHandler, String channel, FriendlyByteBuf data) {
-        if (networkHandler == null) {
+    public void forceSendStringCustomPayload(@Nullable ClientPacketListener connection, String channel, FriendlyByteBuf data) {
+        if (connection == null) {
             throw new IllegalStateException("Trying to send custom payload when not in-game");
         }
         if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
             throw new IllegalStateException("Trying to send string custom payload to " + ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName() + " server");
         }
-        CustomPayloadHandler.forceSendStringCustomPayload(networkHandler, channel, data);
+        CustomPayloadHandler.forceSendStringCustomPayload(connection, channel, data);
     }
 
     @SuppressWarnings("deprecation")

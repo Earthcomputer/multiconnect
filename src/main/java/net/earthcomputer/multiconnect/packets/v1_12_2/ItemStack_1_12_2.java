@@ -82,17 +82,17 @@ public abstract class ItemStack_1_12_2 implements CommonTypes.ItemStack {
 
     public static ItemStack_1_12_2 fromMinecraft(ItemStack stack) {
         if (stack.isEmpty()) {
-            var result = new net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2.Empty();
+            var result = new ItemStack_1_12_2.Empty();
             result.itemId = -1;
             return result;
         } else {
             var later = (ItemStack_1_13_1.NonEmpty) ItemStack_1_13_1.fromMinecraft(stack);
-            var result = new net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2.NonEmpty();
+            var result = new ItemStack_1_12_2.NonEmpty();
             result.itemId = computeItemId(later.itemId, PacketSystem.clientRawIdToServer(Registry.ITEM, Registry.ITEM.getId(Items.BAT_SPAWN_EGG)));
             result.count = later.count;
             int filledMapId = PacketSystem.clientRawIdToServer(Registry.ITEM, Registry.ITEM.getId(Items.FILLED_MAP));
-            result.damage = net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2.NonEmpty.computeDamage(result.itemId, result.tag, filledMapId);
-            result.tag = net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2.NonEmpty.computeTag(
+            result.damage = ItemStack_1_12_2.NonEmpty.computeDamage(result.itemId, result.tag, filledMapId);
+            result.tag = ItemStack_1_12_2.NonEmpty.computeTag(
                     result.itemId,
                     result.tag,
                     filledMapId,
@@ -116,6 +116,7 @@ public abstract class ItemStack_1_12_2 implements CommonTypes.ItemStack {
         @Introduce(direction = Introduce.Direction.FROM_NEWER, compute = "computeDamage")
         public short damage;
         @Introduce(direction = Introduce.Direction.FROM_NEWER, compute = "computeTag")
+        @Nullable
         public CompoundTag tag;
 
         @Override
@@ -129,6 +130,7 @@ public abstract class ItemStack_1_12_2 implements CommonTypes.ItemStack {
         }
 
         @Override
+        @Nullable
         public CompoundTag getTag() {
             return tag;
         }

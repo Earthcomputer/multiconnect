@@ -257,8 +257,8 @@ public class Utils {
         list.set(k, x);
     }
 
-    public static ClientboundLevelChunkWithLightPacket createEmptyChunkDataPacket(int x, int z, Level world, RegistryAccess registryManager) {
-        Registry<Biome> biomeRegistry = registryManager.registryOrThrow(Registry.BIOME_REGISTRY);
+    public static ClientboundLevelChunkWithLightPacket createEmptyChunkDataPacket(int x, int z, Level world, RegistryAccess registryAccess) {
+        Registry<Biome> biomeRegistry = registryAccess.registryOrThrow(Registry.BIOME_REGISTRY);
         Biome plainsBiome = biomeRegistry.get(Biomes.PLAINS);
 
         ClientboundLevelChunkWithLightPacket packet = new ClientboundLevelChunkWithLightPacket(new LevelChunk(world, new ChunkPos(x, z)), world.getLightEngine(), new BitSet(), new BitSet(), true);

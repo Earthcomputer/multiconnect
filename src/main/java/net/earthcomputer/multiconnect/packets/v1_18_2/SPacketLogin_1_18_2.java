@@ -27,7 +27,7 @@ public class SPacketLogin_1_18_2 implements SPacketLogin {
     public byte previousGamemode;
     public List<ResourceLocation> dimensions;
     @Datafix(DatafixTypes.REGISTRY_ACCESS)
-    public CompoundTag registryManager;
+    public CompoundTag registryAccess;
     @Datafix(DatafixTypes.DIMENSION)
     public CompoundTag dimensionType;
     public ResourceLocation dimension;

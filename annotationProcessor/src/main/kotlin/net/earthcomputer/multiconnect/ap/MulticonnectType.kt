@@ -57,8 +57,8 @@ data class MulticonnectType(
                     JAVA_LANG_STRING -> Types.STRING
                     JAVA_UTIL_BITSET -> Types.BITSET
                     JAVA_UTIL_UUID -> Types.UUID
-                    MINECRAFT_RESOURCE_LOCATION -> Types.IDENTIFIER
-                    MINECRAFT_COMPOUND_TAG -> Types.NBT_COMPOUND
+                    MINECRAFT_RESOURCE_LOCATION -> Types.RESOURCE_LOCATION
+                    MINECRAFT_COMPOUND_TAG -> Types.COMPOUND_TAG
                     else -> null
                 }
                 else -> null

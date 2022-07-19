@@ -19,8 +19,8 @@ A record field must have one of the following types:
 - A message variant type
 - A [network enum](#network-enums)
 - `UUID`
-- `Identifier`
-- `NbtCompound`
+- `ResourceLocation`
+- `CompoundTag`
 - `OptionalInt`
 - `OptionalLong`
 - `IntList`
@@ -68,9 +68,9 @@ Multiconnect functions may have the following types of parameters:
 - Context parameters: parameters annotated with `@Argument`. Passes the value of a field from the context message variant. The annotation specifies the name of the record field to pull from.
 - Default constructed parameters: parameters annotated with `@DefaultConstruct`. The translator compiler will generate code to construct an instance of the type of the parameter as per [default construction](#default-construction), and pass the instance in. If the parameter type is a `Supplier`, then the generated code will instead pass a `Supplier` which creates a new default-constructed instance of the supplied type on each invocation of `get()`.
 - Filled parameters: parameters annotated with `@Filled`. A value is passed into this parameter by the generated code depending on its type. Supported types are:
-  - `ClientPlayNetworkHandler` - passes the current network handler.
+  - `ClientPacketListener` - passes the current connection.
   - `TypedMap` - passes a typed map for user data that's valid from when the packet was sent/received until it is handled. This holder remains valid for the packets returned from a packet's handler, if any.
-  - `Identifier` and integral types - if the `@Filled` annotation has a `fromRegistry` attribute, then the parameter is filled with the string or numeric identifier for the registry entry specified.
+  - `ResourceLocation` and integral types - if the `@Filled` annotation has a `fromRegistry` attribute, then the parameter is filled with the string or numeric identifier for the registry entry specified.
   - `DelayedPacketSender<T>` - passes a function appropriate for sending a packet of type `T` (either to the client or to the server) from within a multiconnect function. Multiconnect functions should *not* send packets through alternative means such as `PacketSystem.sendToClient`. This is because registry IDs are *untranslated* inside multiconnect functions, but `PacketSystem.sendTo*` assumes that IDs have already been translated. Note that the preferred way to send packets from a `@Handler` in the same direction as the incoming packet is to return the packet(s) from the function.
   - `Function<T, U>` - filled with a function which translates instances of `T` to instances of `U`, from the version specified by `fromVersion` to the version specified by `toVersion`
 - Global data parameters: parameters annotated with `@GlobalData`. Global data can hold one instance per type and is valid for the duration of a connection. If the parameter is of type `Consumer<T>` then it is a setter to the global instance of type `T`. Otherwise if the parameter is of type `T`, then it gives read-only access to the global instance of type `T`. This instance *must* be treated as immutable because it may be accessed by multiple translator workers at the same time. The only valid way to modify global data is via `Consumer<T>`.
@@ -90,15 +90,15 @@ All of these are arrays defaulting to empty, except `booleanValue` which default
 
 Depending on the expected type of the constant, one of these annotation attributes is expected to be used:
 
-| Type | Constant |
-|---|---|
-| `boolean` | `booleanValue` |
-| Integral field annotated with `@Registry` | `stringValue`, converted as if by `registry.getRawId(registry.get(new Identifier(value)))` |
-| Integral | `intValue` |
-| `float`, `double` | `doubleValue` |
-| `String` | `stringValue` |
-| `Identifier` | `stringValue`, converted as if by `new Identifier(value)` |
-| Network enum `T` | `stringValue`, converted as if by `T.valueOf(value)` |
+| Type                                      | Constant                                                                                         |
+|-------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `boolean`                                 | `booleanValue`                                                                                   |
+| Integral field annotated with `@Registry` | `stringValue`, converted as if by `registry.getRawId(registry.get(new ResourceLocation(value)))` |
+| Integral                                  | `intValue`                                                                                       |
+| `float`, `double`                         | `doubleValue`                                                                                    |
+| `String`                                  | `stringValue`                                                                                    |
+| `ResourceLocation`                        | `stringValue`, converted as if by `new ResourceLocation(value)`                                  |
+| Network enum `T`                          | `stringValue`, converted as if by `T.valueOf(value)`                                             |
 
 No other types are supported for constant values.
 
@@ -150,7 +150,7 @@ There must be a way to fill in every record field in the *Y* variant. There are 
 It is okay if a field in message variant *X* is not used for filling message variant *Y*. Such fields will simply be ignored and removed. 
 
 ### Registry Translation
-Registry translation may occur on raw IDs or on `Identifier` IDs. Most IDs are known at compile time. The exception is multiconnect-added entries representing entries that were removed in vanilla. These entries are registered at game start and raw IDs may change when joining a singleplayer world or when joining a Fabric server due to Fabric registry sync. `Identifier` IDs and raw IDs of vanilla entries are never dynamic in this way.
+Registry translation may occur on raw IDs or on `ResourceLocation` IDs. Most IDs are known at compile time. The exception is multiconnect-added entries representing entries that were removed in vanilla. These entries are registered at game start and raw IDs may change when joining a singleplayer world or when joining a Fabric server due to Fabric registry sync. `ResourceLocation` IDs and raw IDs of vanilla entries are never dynamic in this way.
 
 Registry translation occurs on all fields annotated with `@Registry`. Additionally, DFU fixers can be applied in the registry translation phase with the `@Datafix` annotation, and a custom function can be used using the `@CustomFix` annotation.
 
