@@ -193,7 +193,7 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
         }
         long currentLong = 0;
         for (int i = 0; i < 64; i++) {
-            int valueToWrite = bitsPerBiome <= 2
+            int valueToWrite = bitsPerBiome <= 3
                     ? invBiomePalette.get(Protocol_1_17_1.mapBiomeId(biomes.getInt(minIndex + i), biomeRegistry))
                     : Protocol_1_17_1.mapBiomeId(biomes.getInt(minIndex + i), biomeRegistry);
             int posInLong = i % biomesPerLong;
