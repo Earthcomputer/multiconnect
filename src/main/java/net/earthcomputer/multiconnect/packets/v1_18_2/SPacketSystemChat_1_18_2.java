@@ -121,6 +121,12 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
             return new ArrayList<>(0);
         }
 
+        // 1.18.2 servers can send null chat messages, which don't do anything
+        // 1.19 can't handle these anymore, so just drop them
+        if ("null".equals(text_.getJson())) {
+            return new ArrayList<>(0);
+        }
+
         CommonTypes.Text text = textTranslator.apply((Text_1_18_2) text_);
 
         Registry<ChatType> chatTypeRegistry = registryAccess.registryOrThrow(Registry.CHAT_TYPE_REGISTRY);
