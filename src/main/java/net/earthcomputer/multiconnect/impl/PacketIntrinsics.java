@@ -26,6 +26,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.network.ConnectionProtocol;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -222,8 +226,19 @@ public final class PacketIntrinsics {
         ChannelPipeline pipeline = ((ConnectionAccessor) connection.getConnection()).getChannel().pipeline();
         ChannelHandlerContext context = pipeline.context("multiconnect_serverbound_translator");
         if (context == null) {
-            // in singleplayer, the clientbound translator is not added to the pipeline
+            // maybe we're in a different ConnectionProtocol
             context = pipeline.context("encoder");
+            if (context == null) {
+                // probably singleplayer
+                for (ByteBuf buf : bufs) {
+                    Packet<?> packet = decodeVanillaPacket(buf, ConnectionProtocol.PLAY, PacketFlow.SERVERBOUND);
+                    if (packet != null) {
+                        pipeline.write(packet);
+                    }
+                }
+                pipeline.flush();
+                return;
+            }
         }
 
         for (ByteBuf buf : bufs) {
@@ -241,11 +256,21 @@ public final class PacketIntrinsics {
         ChannelPipeline pipeline = ((ConnectionAccessor) connection.getConnection()).getChannel().pipeline();
         ChannelHandlerContext context = pipeline.context("multiconnect_clientbound_translator");
         if (context == null) {
-            // in singleplayer, the clientbound translator is not added to the pipeline
-            // find the handler before the decoder
+            // maybe we're in a different ConnectionProtocol
             List<String> names = pipeline.names();
             int decoderIndex = names.indexOf("decoder");
-            if (decoderIndex != 0) {
+            if (decoderIndex < 0) {
+                // probably singleplayer
+                for (ByteBuf buf : bufs) {
+                    Packet<?> packet = decodeVanillaPacket(buf, ConnectionProtocol.PLAY, PacketFlow.CLIENTBOUND);
+                    if (packet != null) {
+                        pipeline.fireChannelRead(packet);
+                    }
+                }
+                pipeline.flush();
+                return;
+            }
+            if (decoderIndex > 0) {
                 context = pipeline.context(names.get(decoderIndex - 1));
             }
         }
@@ -375,6 +400,13 @@ public final class PacketIntrinsics {
         for (long element : longs) {
             buf.writeLong(element);
         }
+    }
+
+    @Nullable
+    public static Packet<?> decodeVanillaPacket(ByteBuf buf_, ConnectionProtocol protocol, PacketFlow flow) {
+        FriendlyByteBuf buf = new FriendlyByteBuf(buf_);
+        int packetId = buf.readVarInt();
+        return protocol.createPacket(flow, packetId, buf);
     }
 
     @FunctionalInterface
