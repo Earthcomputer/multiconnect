@@ -533,6 +533,15 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
         )
 
         return McNode(StmtListOp,
+            McNode(IfStmtOp,
+                McNode(BinaryExpressionOp("==", identifierType, identifierType),
+                    McNode(LoadVariableOp(VariableId.immediate("value"), identifierType)),
+                    McNode(CstNullOp(identifierType))
+                ),
+                McNode(StmtListOp,
+                    McNode(ReturnStmtOp(identifierType), McNode(CstNullOp(identifierType)))
+                )
+            ),
             McNode(ReturnStmtOp(identifierType),
                 McNode(SwitchOp(cases.toSortedSet(), true, McType.STRING, identifierType),
                     (listOf(inputNode)
