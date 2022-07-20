@@ -521,6 +521,15 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
             }
         }
 
+        if (!clientbound) {
+            for (toEntry in toEntries) {
+                if (toEntry.name.startsWith("multiconnect:") && toEntry.name != toEntry.oldName) {
+                    val fromName = fromEntries.byName(toEntry.name)?.name ?: toEntry.name
+                    resultToInputs.computeIfAbsent(toEntry.oldName.normalizeIdentifier()) { mutableListOf() } += fromName
+                }
+            }
+        }
+
         val (results, cases) = resultToInputs.asSequence()
             .map { (first, second) -> Pair(first, SwitchOp.GroupCase(second.toSortedSet())) }
             .sortedBy { it.second }

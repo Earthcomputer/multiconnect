@@ -16,6 +16,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.debug.PacketReplay;
 import net.earthcomputer.multiconnect.mixin.connect.ConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
@@ -32,6 +33,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.datafix.fixes.References;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -77,11 +79,27 @@ public final class PacketIntrinsics {
             return null;
         }
 
+        int toVersion = SharedConstants.getCurrentVersion().getDataVersion().getVersion();
+
+        if (type == References.BLOCK_ENTITY) {
+            ResourceLocation id = ResourceLocation.tryParse(data.getString("id"));
+            if (id != null) {
+                Integer versionRemoved = PacketSystem.getVersionRemoved(Registry.BLOCK_ENTITY_TYPE, id);
+                if (versionRemoved != null) {
+                    toVersion = ConnectionMode.byValue(versionRemoved).getDataVersion();
+                }
+            }
+        }
+
+        if (fromVersion >= toVersion) {
+            return data;
+        }
+
         return (CompoundTag) fixer.update(
                 type,
                 new Dynamic<>(NbtOps.INSTANCE, data),
                 fromVersion,
-                SharedConstants.getCurrentVersion().getDataVersion().getVersion()
+                toVersion
         ).getValue();
     }
 

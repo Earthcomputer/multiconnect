@@ -11,6 +11,8 @@ import it.unimi.dsi.fastutil.ints.Int2IntMaps;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.connect.ConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
@@ -38,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -308,6 +311,55 @@ public class PacketSystem {
             });
         } finally {
             blockStateRegistryBitsLock.writeLock().unlock();
+        }
+    }
+
+    private static final Map<ResourceLocation, OptionalInt> versionRemovedCache = new HashMap<>();
+    private static final ReadWriteLock versionRemovedCacheLock = new ReentrantReadWriteLock();
+
+    /**
+     * Returns the last version with the specified ID instead of the multiconnect substitute.
+     */
+    @Nullable
+    public static Integer getVersionRemoved(Registry<?> registry, ResourceLocation id) {
+        ResourceLocation clientId = serverIdToClient(registry, id);
+        if (clientId == null || !"multiconnect".equals(clientId.getNamespace())) {
+            return null;
+        }
+
+        versionRemovedCacheLock.readLock().lock();
+        try {
+            OptionalInt versionRemoved = versionRemovedCache.get(clientId);
+            //noinspection OptionalAssignedToNull
+            if (versionRemoved != null) {
+                return versionRemoved.isPresent() ? versionRemoved.getAsInt() : null;
+            }
+        } finally {
+            versionRemovedCacheLock.readLock().unlock();
+        }
+        versionRemovedCacheLock.writeLock().lock();
+        try {
+            OptionalInt versionRemoved = versionRemovedCache.get(clientId);
+            //noinspection OptionalAssignedToNull
+            if (versionRemoved != null) {
+                return versionRemoved.isPresent() ? versionRemoved.getAsInt() : null;
+            }
+
+            Integer result = null;
+            for (ConnectionMode protocol : ConnectionMode.protocolValues()) {
+                ResourceLocation versionId = clientIdToServer(protocol.getValue(), registry, clientId);
+                if (versionId == null) {
+                    break;
+                }
+                if (!"multiconnect".equals(versionId.getNamespace())) {
+                    result = protocol.getValue();
+                    break;
+                }
+            }
+            versionRemovedCache.put(clientId, result != null ? OptionalInt.of(result) : OptionalInt.empty());
+            return result;
+        } finally {
+            versionRemovedCacheLock.writeLock().unlock();
         }
     }
 
