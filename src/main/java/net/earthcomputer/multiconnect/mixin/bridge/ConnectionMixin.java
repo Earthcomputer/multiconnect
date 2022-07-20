@@ -15,7 +15,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
@@ -84,9 +83,7 @@ public abstract class ConnectionMixin {
                 && !customPayload.getIdentifier().equals(ServerboundCustomPayloadPacket.BRAND)) {
             // call deprecated method
             if (packetListener instanceof ClientPacketListener connection) {
-                FriendlyByteBuf dataBuf = customPayload.getData();
-                byte[] data = new byte[dataBuf.readableBytes()];
-                dataBuf.readBytes(data);
+                byte[] data = DebugUtils.getBufData(customPayload.getData());
                 CustomPayloadHandler.handleServerboundCustomPayload(connection, customPayload.getIdentifier(), data);
             }
 

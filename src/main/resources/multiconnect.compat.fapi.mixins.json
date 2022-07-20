@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.compat.mixin.fapi",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "MappedRegistryMixin",
+    "RegistrySyncManagerMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  },
+  "plugin": "net.earthcomputer.multiconnect.compat.FapiCompatPlugin"
+}
