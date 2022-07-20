@@ -11,6 +11,7 @@ import java.util.Set;
 
 @Mixin(value = MappedRegistry.class, priority = 2000)
 public class MappedRegistryMixin {
+    @SuppressWarnings("target")
     @Shadow(remap = false)
     @Final
     @Mutable

@@ -20,8 +20,6 @@ public class Protocol_1_16_5 extends Protocol_1_17 {
 
     private static final EntityDataAccessor<Optional<BlockPos>> OLD_SHULKER_ATTACHED_POSITION = SynchedDataManager.createOldEntityData(EntityDataSerializers.OPTIONAL_BLOCK_POS);
 
-    public static final Key<Boolean> FULL_CHUNK_KEY = Key.create("fullChunk", true);
-
     public static short getLastScreenActionId() {
         return lastActionId;
     }

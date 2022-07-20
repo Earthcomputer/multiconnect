@@ -5,7 +5,6 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.PacketSystem;
 import net.earthcomputer.multiconnect.impl.Utils;
-import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.protocols.v1_8.DataTrackerEntry_1_8;
 import net.earthcomputer.multiconnect.protocols.v1_8.Protocol_1_8;
@@ -63,7 +62,6 @@ public abstract class ClientPacketListenerMixin {
     @Inject(method = "handleLevelChunkWithLight", at = @At("HEAD"), cancellable = true)
     private void onOnChunkData(ClientboundLevelChunkWithLightPacket packet, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_8
-                && PacketSystem.getUserData(packet).get(Protocol_1_16_5.FULL_CHUNK_KEY)
                 && PacketSystem.getUserData(packet).get(Protocol_1_17_1.VERTICAL_STRIP_BITMASK).isEmpty()) {
             handleForgetLevelChunk(new ClientboundForgetLevelChunkPacket(packet.getX(), packet.getZ()));
             ci.cancel();
