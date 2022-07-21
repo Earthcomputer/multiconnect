@@ -134,6 +134,9 @@ repositories {
 	maven {
 		url 'https://jitpack.io/'
 	}
+	maven {
+		url 'https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1/'
+	}
 }
 
 loom {
@@ -181,6 +184,12 @@ dependencies {
 	}
 
 	runtimeOnly sourceSets.generated.output
+
+	if (!project.devauth_version.isBlank()) {
+		modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:${project.devauth_version}") {
+			exclude group: 'net.fabricmc', module: 'fabric-loader'
+		}
+	}
 
 	sourceSets.test.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
 //	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
