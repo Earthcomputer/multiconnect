@@ -22,22 +22,16 @@
   "mixins": [
     "multiconnect.mixins.json",
     "multiconnect.1_19.mixins.json",
-    "multiconnect.1_18_2.mixins.json",
-    "multiconnect.1_17_1.mixins.json",
-    "multiconnect.1_16_5.mixins.json",
-    "multiconnect.1_16_1.mixins.json",
-    "multiconnect.1_15_2.mixins.json",
-    "multiconnect.1_14_4.mixins.json",
-    "multiconnect.1_14_1.mixins.json",
+    "multiconnect.1_18.mixins.json",
+    "multiconnect.1_17.mixins.json",
+    "multiconnect.1_16.mixins.json",
+    "multiconnect.1_15.mixins.json",
     "multiconnect.1_14.mixins.json",
-    "multiconnect.1_13_2.mixins.json",
-    "multiconnect.1_12_2.mixins.json",
-    "multiconnect.1_12_1.mixins.json",
+    "multiconnect.1_13.mixins.json",
     "multiconnect.1_12.mixins.json",
-    "multiconnect.1_11_2.mixins.json",
     "multiconnect.1_11.mixins.json",
     "multiconnect.1_10.mixins.json",
-    "multiconnect.1_9_4.mixins.json",
+    "multiconnect.1_9.mixins.json",
     "multiconnect.1_8.mixins.json"
   ],
   "accessWidener": "multiconnect.accesswidener",
@@ -63,6 +57,18 @@
   "custom": {
     "lithium:options": {
       "mixin.entity.data_tracker": false
+    },
+    "multiconnect": {
+      "custom_payloads": {
+        "allowed_serverbound": "minecraft:register",
+        "allowed_clientbound": "minecraft:register",
+        "serverbound_112_names": {
+          "minecraft:register": "REGISTER"
+        },
+        "clientbound_112_names": {
+          "minecraft:register": "REGISTER"
+        }
+      }
     }
   }
 }

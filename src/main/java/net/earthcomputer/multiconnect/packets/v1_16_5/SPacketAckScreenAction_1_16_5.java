@@ -10,11 +10,10 @@ import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.DelayedPacketSender;
-import net.earthcomputer.multiconnect.protocols.v1_11_2.IScreenHandler;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.screen.ScreenHandler;
-
+import net.earthcomputer.multiconnect.protocols.v1_11.IContainerMenu;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import java.util.function.Supplier;
 
 @MessageVariant
@@ -32,18 +31,18 @@ public class SPacketAckScreenAction_1_16_5 {
             @DefaultConstruct Supplier<CPacketAckScreenAction_1_16_5> responsePacketCreator,
             @FilledArgument DelayedPacketSender<CPacketAckScreenAction_1_16_5> responseSender
     ) {
-        MinecraftClient.getInstance().execute(() -> {
-            ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        Minecraft.getInstance().execute(() -> {
+            LocalPlayer player = Minecraft.getInstance().player;
             if (player != null) {
-                ScreenHandler screenHandler = null;
+                AbstractContainerMenu screenHandler = null;
                 if (syncId == 0) {
-                    screenHandler = player.playerScreenHandler;
-                } else if (syncId == player.currentScreenHandler.syncId) {
-                    screenHandler = player.currentScreenHandler;
+                    screenHandler = player.inventoryMenu;
+                } else if (syncId == player.containerMenu.containerId) {
+                    screenHandler = player.containerMenu;
                 }
                 if (screenHandler != null) {
                     if (ConnectionInfo.protocolVersion <= Protocols.V1_11_2) {
-                        ((IScreenHandler) screenHandler).multiconnect_getRecipeBookEmulator().onAckScreenAction(actionId, accepted);
+                        ((IContainerMenu) screenHandler).multiconnect_getRecipeBookEmulator().onAckScreenAction(actionId, accepted);
                     }
                     if (!accepted) {
                         CPacketAckScreenAction_1_16_5 response = responsePacketCreator.get();

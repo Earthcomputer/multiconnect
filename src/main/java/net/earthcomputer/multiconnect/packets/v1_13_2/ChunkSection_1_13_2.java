@@ -9,9 +9,12 @@ import net.earthcomputer.multiconnect.ap.OnlyIf;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.packets.v1_12_2.ChunkData_1_12_2;
+import net.earthcomputer.multiconnect.packets.v1_12_2.ChunkData_1_12_2.BlockStatePalettedContainer;
 import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1;
+import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer.Multiple;
+import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer.RegistryContainer;
 import net.earthcomputer.multiconnect.protocols.generic.DimensionTypeReference;
-import net.minecraft.util.registry.DynamicRegistryManager;
+import net.minecraft.core.RegistryAccess;
 
 @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
 public class ChunkSection_1_13_2 implements ChunkData.Section {
@@ -42,9 +45,9 @@ public class ChunkSection_1_13_2 implements ChunkData.Section {
     }
 
     public static boolean hasSkyLight(
-            @GlobalData DynamicRegistryManager registryManager,
+            @GlobalData RegistryAccess registryAccess,
             @GlobalData DimensionTypeReference dimType
     ) {
-        return dimType.getValue(registryManager).hasSkyLight();
+        return dimType.getValue(registryAccess).hasSkyLight();
     }
 }

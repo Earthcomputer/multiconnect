@@ -6,18 +6,18 @@ import net.earthcomputer.multiconnect.compiler.CommonClassNames.BITSET
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.BLOCK_STATE
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.BYTE_BUF
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.CLASS
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.IDENTIFIER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.RESOURCE_LOCATION
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.INT_UNARY_OPERATOR
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.LIST
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.MAP
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.NETWORK_HANDLER
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.CLIENT_PACKET_LISTENER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.OBJECT
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_INTRINSICS
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PACKET_SENDER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.PAIR
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.RAW_PACKET_SENDER
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY
-import net.earthcomputer.multiconnect.compiler.CommonClassNames.REGISTRY_KEY
+import net.earthcomputer.multiconnect.compiler.CommonClassNames.RESOURCE_KEY
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.SET
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.START_SEND_PACKET_RESULT
 import net.earthcomputer.multiconnect.compiler.CommonClassNames.SUPPLIER
@@ -51,6 +51,7 @@ import net.earthcomputer.multiconnect.compiler.node.SwitchOp
 import net.earthcomputer.multiconnect.compiler.node.ThrowStmtOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
 import net.earthcomputer.multiconnect.compiler.opto.optimize
+import net.earthcomputer.multiconnect.compiler.polymorphicChildren
 import net.earthcomputer.multiconnect.compiler.protocolNamesById
 import net.earthcomputer.multiconnect.compiler.protocols
 import net.earthcomputer.multiconnect.compiler.readCsv
@@ -90,10 +91,10 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         emitDoesServerKnowBlockState(emitter)
         emitDoesServerKnowBlockStateMulticonnect(emitter)
 
-        emitRemapFunc(emitter, clientbound = true, identifier = false)
-        emitRemapFunc(emitter, clientbound = false, identifier = false)
-        emitRemapFunc(emitter, clientbound = true, identifier = true)
-        emitRemapFunc(emitter, clientbound = false, identifier = true)
+        emitRemapFunc(emitter, clientbound = true, resourceLocation = false)
+        emitRemapFunc(emitter, clientbound = false, resourceLocation = false)
+        emitRemapFunc(emitter, clientbound = true, resourceLocation = true)
+        emitRemapFunc(emitter, clientbound = false, resourceLocation = true)
 
         createIntRemapFunc(Registries.BLOCK_STATE, true)
         createIntRemapFunc(Registries.BLOCK_STATE, false)
@@ -232,7 +233,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         function.append("private static void ").append(functionName).append("(")
             .appendClassName(BYTE_BUF).append(" buf, ").appendClassName(LIST)
             .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
-            .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+            .appendClassName(CLIENT_PACKET_LISTENER).append(" connection, ")
             .appendClassName(MAP).append("<").appendClassName(CLASS).append("<?>, ").appendClassName(OBJECT).append("> globalData, ")
             .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
         generateByteBufHandler(messageVariantInfo, clientbound).optimize().emit(function, Precedence.COMMA)
@@ -271,43 +272,50 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                         it >= protocolId && getPacketDirection(it, packet) == PacketDirection.SERVERBOUND
                     } + listOfNotNull(protocols[0].id.takeIf { variantInfo.sendableFromLatest })
                 }
-                for (protocolId in protocolIds) {
-                    val specializedFunctionName = buildString {
-                        append("send")
-                        append(splitPackageClass(packet).second.replace('.', '_'))
-                        append(if (clientbound) "ToClient" else "ToServer")
-                        if (!clientbound) {
-                            append(protocolId)
+                val packetImpls = if (variantInfo.polymorphic != null && variantInfo.polymorphicParent == null) {
+                    polymorphicChildren[packet]!!
+                } else {
+                    listOf(packet)
+                }
+                for (packetImpl in packetImpls) {
+                    for (protocolId in protocolIds) {
+                        val specializedFunctionName = buildString {
+                            append("send")
+                            append(splitPackageClass(packet).second.replace('.', '_'))
+                            append(if (clientbound) "ToClient" else "ToServer")
+                            if (!clientbound) {
+                                append(protocolId)
+                            }
                         }
-                    }
 
-                    if (!empty) {
-                        field.append(",")
-                    }
-                    empty = false
-                    field.appendNewLine()
-                    if (!clientbound) {
-                        field.appendClassName(PAIR).append(".of(")
-                    }
-                    field.appendClassName(packet).append(".class")
-                    if (!clientbound) {
-                        field.append(", ").append(protocolId.toString()).append(")")
-                    }
-                    field.append(", (")
-                    field.appendClassName(PACKET_SENDER)
-                    field.append(") (packet, outBufs, networkHandler, globalData, userData) -> ").append(specializedFunctionName).append("((")
-                        .appendClassName(packet).append(") packet, outBufs, networkHandler, globalData, userData)")
+                        if (!empty) {
+                            field.append(",")
+                        }
+                        empty = false
+                        field.appendNewLine()
+                        if (!clientbound) {
+                            field.appendClassName(PAIR).append(".of(")
+                        }
+                        field.appendClassName(packetImpl).append(".class")
+                        if (!clientbound) {
+                            field.append(", ").append(protocolId.toString()).append(")")
+                        }
+                        field.append(", (")
+                        field.appendClassName(PACKET_SENDER)
+                        field.append(") (packet, outBufs, connection, globalData, userData) -> ").append(specializedFunctionName).append("((")
+                            .appendClassName(packet).append(") packet, outBufs, connection, globalData, userData)")
 
-                    emitter.addMember(specializedFunctionName)?.let { specializedFunction ->
-                        specializedFunction.append("private static void ").append(specializedFunctionName)
-                            .append("(").appendClassName(packet).append(" protocol_$protocolId, ").appendClassName(LIST)
-                            .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
-                            .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
-                            .appendClassName(MAP).append("<").appendClassName(CLASS).append("<?>, ").appendClassName(OBJECT).append("> globalData, ")
-                            .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
-                        generateExplicitSenderClientRegistries(variantInfo, protocolId, clientbound)
-                            .optimize().emit(specializedFunction, Precedence.COMMA)
-                        specializedFunction.dedent().appendNewLine().append("}")
+                        emitter.addMember(specializedFunctionName)?.let { specializedFunction ->
+                            specializedFunction.append("private static void ").append(specializedFunctionName)
+                                .append("(").appendClassName(packet).append(" protocol_$protocolId, ").appendClassName(LIST)
+                                .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
+                                .appendClassName(CLIENT_PACKET_LISTENER).append(" connection, ")
+                                .appendClassName(MAP).append("<").appendClassName(CLASS).append("<?>, ").appendClassName(OBJECT).append("> globalData, ")
+                                .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
+                            generateExplicitSenderClientRegistries(variantInfo, protocolId, clientbound)
+                                .optimize().emit(specializedFunction, Precedence.COMMA)
+                            specializedFunction.dedent().appendNewLine().append("}")
+                        }
                     }
                 }
             }
@@ -322,7 +330,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         }
         function.appendClassName(LIST)
             .append("<").appendClassName(BYTE_BUF).append("> outBufs, ")
-            .appendClassName(NETWORK_HANDLER).append(" networkHandler, ")
+            .appendClassName(CLIENT_PACKET_LISTENER).append(" connection, ")
             .appendClassName(MAP).append("<").appendClassName(CLASS).append("<?>, ").appendClassName(OBJECT).append("> globalData, ")
             .appendClassName(TYPED_MAP).append(" userData) {").indent().appendNewLine()
 
@@ -345,14 +353,14 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             function.append("\"")
         }
         function.append(");").dedent().appendNewLine().append("}").appendNewLine()
-        function.append("sender.send(packet, outBufs, networkHandler, globalData, userData);")
+        function.append("sender.send(packet, outBufs, connection, globalData, userData);")
             .dedent().appendNewLine().append("}")
     }
 
     private fun emitDoesServerKnow(emitter: Emitter) {
         val function = emitter.addMember("doesServerKnow") ?: return
         function.append("public static boolean doesServerKnow(")
-            .appendClassName(REGISTRY_KEY).append("<? extends ").appendClassName(REGISTRY)
+            .appendClassName(RESOURCE_KEY).append("<? extends ").appendClassName(REGISTRY)
             .append("<?>> registry, int newId) {").indent().appendNewLine()
             .appendClassName(BITSET).append(" bitset = DOES_SERVER_KNOW.get(registry);").appendNewLine()
             .append("if (bitset == null) {").indent().appendNewLine()
@@ -363,7 +371,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
 
         val field = emitter.addMember("DOES_SERVER_KNOW") ?: return
         field.append("private static final ").appendClassName(MAP)
-            .append("<").appendClassName(REGISTRY_KEY).append("<? extends ").appendClassName(REGISTRY)
+            .append("<").appendClassName(RESOURCE_KEY).append("<? extends ").appendClassName(REGISTRY)
             .append("<?>>, ").appendClassName(BITSET).append("> DOES_SERVER_KNOW = ")
             .appendClassName(PACKET_INTRINSICS).append(".makeMap(").indent()
         var addedAnyRegistry = false
@@ -377,7 +385,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             }
             addedAnyRegistry = true
 
-            field.appendNewLine().appendClassName(REGISTRY).append(".").append(registry.registryKeyFieldName)
+            field.appendNewLine().appendClassName(REGISTRY).append(".").append(registry.resourceKeyFieldName)
                 .append(", ").appendClassName(PACKET_INTRINSICS).append(".makeRLEBitSet(")
 
             val bitset = BitSet()
@@ -398,13 +406,13 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
     private fun emitDoesServerKnowMulticonnect(emitter: Emitter) {
         val function = emitter.addMember("doesServerKnowMulticonnect") ?: return
         function.append("public static boolean doesServerKnowMulticonnect(")
-            .appendClassName(REGISTRY_KEY).append("<?> value) {").indent().appendNewLine()
+            .appendClassName(RESOURCE_KEY).append("<?> value) {").indent().appendNewLine()
             .append("return DOES_SERVER_KNOW_MULTICONNECT.contains(value);").dedent().appendNewLine()
             .append("}")
 
         val field = emitter.addMember("DOES_SERVER_KNOW_MULTICONNECT") ?: return
         field.append("private static final ").appendClassName(SET).append("<")
-            .appendClassName(REGISTRY_KEY).append("<?>>").append(" DOES_SERVER_KNOW_MULTICONNECT = ")
+            .appendClassName(RESOURCE_KEY).append("<?>>").append(" DOES_SERVER_KNOW_MULTICONNECT = ")
             .appendClassName(SET).append(".of(").indent()
         var addedAnyKey = false
         for (registry in Registries.values()) {
@@ -422,8 +430,8 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                 }
                 addedAnyKey = true
 
-                field.appendNewLine().appendClassName(REGISTRY_KEY).append(".of(").appendClassName(REGISTRY)
-                    .append(".").append(registry.registryKeyFieldName).append(", new ").appendClassName(IDENTIFIER)
+                field.appendNewLine().appendClassName(RESOURCE_KEY).append(".create(").appendClassName(REGISTRY)
+                    .append(".").append(registry.resourceKeyFieldName).append(", new ").appendClassName(RESOURCE_LOCATION)
                     .append("(\"multiconnect\", \"").append(entry.name.substring("multiconnect:".length)).append("\"))")
             }
         }
@@ -479,21 +487,21 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         field.dedent().appendNewLine().append(");")
     }
 
-    private fun emitRemapFunc(emitter: Emitter, clientbound: Boolean, identifier: Boolean) {
-        val methodName = "remap%s%s".format(if (clientbound) "S" else "C", if (identifier) "Identifier" else "Int")
-        val fieldName = "REMAP_%s_%s".format(if (clientbound) "S" else "C", if (identifier) "IDENTIFIER" else "INT")
+    private fun emitRemapFunc(emitter: Emitter, clientbound: Boolean, resourceLocation: Boolean) {
+        val methodName = "remap%s%s".format(if (clientbound) "S" else "C", if (resourceLocation) "ResourceLocation" else "Int")
+        val fieldName = "REMAP_%s_%s".format(if (clientbound) "S" else "C", if (resourceLocation) "RESOURCE_LOCATION" else "INT")
 
         fun emitType(emitter: Emitter) {
-            if (identifier) {
-                emitter.appendClassName(IDENTIFIER)
+            if (resourceLocation) {
+                emitter.appendClassName(RESOURCE_LOCATION)
             } else {
                 emitter.append("int")
             }
         }
 
         fun emitUnaryOperator(emitter: Emitter) {
-            if (identifier) {
-                emitter.appendClassName(UNARY_OPERATOR).append("<").appendClassName(IDENTIFIER).append(">")
+            if (resourceLocation) {
+                emitter.appendClassName(UNARY_OPERATOR).append("<").appendClassName(RESOURCE_LOCATION).append(">")
             } else {
                 emitter.appendClassName(INT_UNARY_OPERATOR)
             }
@@ -503,7 +511,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         function.append("public static ")
         emitType(function)
         function.append(" ").append(methodName).append("(")
-            .appendClassName(REGISTRY_KEY).append("<? extends ").appendClassName(REGISTRY)
+            .appendClassName(RESOURCE_KEY).append("<? extends ").appendClassName(REGISTRY)
             .append("<?>> registry, ")
         emitType(function)
         function.append(" value) {").indent().appendNewLine()
@@ -514,13 +522,13 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             .append("return value;").dedent().appendNewLine()
             .append("}").appendNewLine()
             .append("return remapper.apply")
-        if (!identifier) {
+        if (!resourceLocation) {
             function.append("AsInt")
         }
         function.append("(value);").dedent().appendNewLine().append("}")
 
         val field = emitter.addMember(fieldName) ?: return
-        field.append("private static final ").appendClassName(MAP).append("<").appendClassName(REGISTRY_KEY)
+        field.append("private static final ").appendClassName(MAP).append("<").appendClassName(RESOURCE_KEY)
             .append("<? extends ").appendClassName(REGISTRY).append("<?>>, ")
         emitUnaryOperator(field)
         field.append("> ").append(fieldName).append(" = ").appendClassName(PACKET_INTRINSICS).append(".makeMap(")
@@ -534,11 +542,11 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                 field.append(",")
             }
             addedAny = true
-            field.appendNewLine().appendClassName(REGISTRY).append(".").append(registry.registryKeyFieldName)
+            field.appendNewLine().appendClassName(REGISTRY).append(".").append(registry.resourceKeyFieldName)
                 .append(", (")
             emitUnaryOperator(field)
             field.append(") ").appendClassName(className).append("::").append(
-                if (identifier) {
+                if (resourceLocation) {
                     createStringRemapFunc(registry, clientbound)
                 } else {
                     createIntRemapFunc(registry, clientbound)
@@ -601,14 +609,14 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         // load id dynamically if necessary
         if (currentProtocolId != protocolId && value.startsWith("multiconnect:")) {
             val registryType = McType.DeclaredType(REGISTRY)
-            val registryKeyType = McType.DeclaredType(REGISTRY_KEY)
+            val resourceKeyType = McType.DeclaredType(RESOURCE_KEY)
             val registryElementType = McType.DeclaredType("RegistryElement")
             return Either.Right(
-                McNode(FunctionCallOp(REGISTRY, "getRawId", listOf(registryType, registryElementType), McType.INT, false, isStatic = false),
+                McNode(FunctionCallOp(REGISTRY, "getId", listOf(registryType, registryElementType), McType.INT, false, isStatic = false),
                     McNode(LoadFieldOp(registryType, this.name, registryType, isStatic = true)),
-                    McNode(FunctionCallOp(REGISTRY, "get", listOf(registryType, registryKeyType), registryElementType, false, isStatic = false),
+                    McNode(FunctionCallOp(REGISTRY, "get", listOf(registryType, resourceKeyType), registryElementType, false, isStatic = false),
                         McNode(LoadFieldOp(registryType, this.name, registryType, isStatic = true)),
-                        McNode(LoadFieldOp(McType.DeclaredType(className), createRegistryKeyField(this, value), registryKeyType, isStatic = true))
+                        McNode(LoadFieldOp(McType.DeclaredType(className), createResourceKeyField(this, value), resourceKeyType, isStatic = true))
                     )
                 )
             )

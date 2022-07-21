@@ -11,13 +11,14 @@ import net.earthcomputer.multiconnect.ap.Registry;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.latest.ItemStack_Latest;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.text.Text;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -34,14 +35,14 @@ public abstract class ItemStack_1_15_2 implements CommonTypes.ItemStack {
 
     public static ItemStack_1_15_2 fromMinecraft(ItemStack stack) {
         if (stack.isEmpty()) {
-            return new Empty();
+            return new net.earthcomputer.multiconnect.packets.v1_15_2.ItemStack_1_15_2.Empty();
         } else {
             var latest = (ItemStack_Latest.NonEmpty) ItemStack_Latest.fromMinecraft(stack);
-            var result = new NonEmpty();
+            var result = new net.earthcomputer.multiconnect.packets.v1_15_2.ItemStack_1_15_2.NonEmpty();
             result.present = true;
             result.itemId = latest.itemId;
             result.count = latest.count;
-            result.tag = NonEmpty.translateTagServerbound(latest.itemId, net.minecraft.util.registry.Registry.ITEM.getRawId(Items.PLAYER_HEAD), latest.tag);
+            result.tag = net.earthcomputer.multiconnect.packets.v1_15_2.ItemStack_1_15_2.NonEmpty.translateTagServerbound(latest.itemId, net.minecraft.core.Registry.ITEM.getId(Items.PLAYER_HEAD), latest.tag);
             return result;
         }
     }
@@ -60,7 +61,8 @@ public abstract class ItemStack_1_15_2 implements CommonTypes.ItemStack {
         public byte count;
         @Introduce(direction = Introduce.Direction.FROM_NEWER, compute = "translateTagServerbound")
         @Introduce(direction = Introduce.Direction.FROM_OLDER, compute = "translateTagClientbound")
-        public NbtCompound tag;
+        @Nullable
+        public CompoundTag tag;
 
         @Override
         public int getItemId() {
@@ -73,23 +75,24 @@ public abstract class ItemStack_1_15_2 implements CommonTypes.ItemStack {
         }
 
         @Override
-        public NbtCompound getTag() {
+        @Nullable
+        public CompoundTag getTag() {
             return tag;
         }
 
-        public static NbtCompound translateTagServerbound(
+        public static CompoundTag translateTagServerbound(
                 @Argument("itemId") int itemId,
                 @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.ITEM, value = "player_head")) int playerHeadId,
-                @Argument("tag") NbtCompound tag
+                @Argument("tag") @Nullable CompoundTag tag
         ) {
             if (itemId != playerHeadId || tag == null) {
                 return tag;
             }
 
-            if (tag.contains("SkullOwner", NbtElement.COMPOUND_TYPE)) {
-                NbtCompound skullOwner = tag.getCompound("SkullOwner");
-                if (skullOwner.containsUuid("Id")) {
-                    UUID uuid = skullOwner.getUuid("Id");
+            if (tag.contains("SkullOwner", Tag.TAG_COMPOUND)) {
+                CompoundTag skullOwner = tag.getCompound("SkullOwner");
+                if (skullOwner.hasUUID("Id")) {
+                    UUID uuid = skullOwner.getUUID("Id");
                     skullOwner.putString("Id", uuid.toString());
                 }
             }
@@ -97,20 +100,20 @@ public abstract class ItemStack_1_15_2 implements CommonTypes.ItemStack {
             return tag;
         }
 
-        public static NbtCompound translateTagClientbound(
-                @Argument("tag") NbtCompound tag
+        public static CompoundTag translateTagClientbound(
+                @Argument("tag") @Nullable CompoundTag tag
         ) {
             if (tag == null) {
                 return null;
             }
-            if (tag.contains("display", NbtElement.COMPOUND_TYPE)) {
-                NbtCompound display = tag.getCompound("display");
-                if (display.contains("Lore", NbtElement.LIST_TYPE)) {
-                    NbtList lore = display.getList("Lore", NbtElement.STRING_TYPE);
+            if (tag.contains("display", Tag.TAG_COMPOUND)) {
+                CompoundTag display = tag.getCompound("display");
+                if (display.contains("Lore", Tag.TAG_LIST)) {
+                    ListTag lore = display.getList("Lore", Tag.TAG_STRING);
                     display.put("multiconnect:1.13.2/oldLore", lore);
-                    NbtList newLore = new NbtList();
+                    ListTag newLore = new ListTag();
                     for (int i = 0; i < lore.size(); i++) {
-                        newLore.add(NbtString.of(Text.Serializer.toJson(Text.literal(lore.getString(i)))));
+                        newLore.add(StringTag.valueOf(Component.Serializer.toJson(Component.literal(lore.getString(i)))));
                     }
                     display.put("Lore", newLore);
                 }

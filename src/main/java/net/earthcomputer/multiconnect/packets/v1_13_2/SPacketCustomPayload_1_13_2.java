@@ -10,26 +10,25 @@ import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketCustomPayload;
-import net.earthcomputer.multiconnect.packets.SPacketOpenWrittenBook;
-import net.earthcomputer.multiconnect.packets.SPacketSetTradeOffers;
-import net.earthcomputer.multiconnect.packets.v1_14_2.SPacketSetTradeOffers_1_14_2;
-import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
-import net.minecraft.util.Identifier;
-
+import net.earthcomputer.multiconnect.packets.SPacketOpenBook;
+import net.earthcomputer.multiconnect.packets.SPacketMerchantOffers;
+import net.earthcomputer.multiconnect.packets.v1_14_2.SPacketMerchantOffers_1_14_2;
+import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
+import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 
 @Polymorphic
 @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
 public abstract class SPacketCustomPayload_1_13_2 implements SPacketCustomPayload {
-    public static final Identifier TRADER_LIST = new Identifier("trader_list");
-    public static final Identifier OPEN_BOOK = new Identifier("open_book");
+    public static final ResourceLocation TRADER_LIST = new ResourceLocation("trader_list");
+    public static final ResourceLocation OPEN_BOOK = new ResourceLocation("open_book");
 
     @Introduce(compute = "computeChannel")
-    public Identifier channel;
+    public ResourceLocation channel;
 
-    public static Identifier computeChannel(@Argument("channel") String channel) {
+    public static ResourceLocation computeChannel(@Argument("channel") String channel) {
         return switch (channel) {
-            case "MC|Brand" -> CustomPayloadS2CPacket.BRAND;
+            case "MC|Brand" -> ClientboundCustomPayloadPacket.BRAND;
             case "MC|TrList" -> TRADER_LIST;
             case "MC|BOpen" -> OPEN_BOOK;
             default -> throw new IllegalStateException("This packet should have been handled a different way");
@@ -47,14 +46,14 @@ public abstract class SPacketCustomPayload_1_13_2 implements SPacketCustomPayloa
     public static class TraderList extends SPacketCustomPayload_1_13_2 implements SPacketCustomPayload.TraderList {
         public int syncId;
         @Length(type = Types.UNSIGNED_BYTE)
-        public List<SPacketSetTradeOffers.Trade> trades;
+        public List<SPacketMerchantOffers.Trade> trades;
 
         @Handler
-        public static SPacketSetTradeOffers_1_14_2 handle(
+        public static SPacketMerchantOffers_1_14_2 handle(
                 @Argument("syncId") int syncId,
-                @Argument("trades") List<SPacketSetTradeOffers.Trade> trades
+                @Argument("trades") List<SPacketMerchantOffers.Trade> trades
         ) {
-            var packet = new SPacketSetTradeOffers_1_14_2();
+            var packet = new SPacketMerchantOffers_1_14_2();
             packet.syncId = syncId;
             packet.trades = trades;
             packet.villagerLevel = 5;
@@ -70,8 +69,8 @@ public abstract class SPacketCustomPayload_1_13_2 implements SPacketCustomPayloa
         public CommonTypes.Hand hand;
 
         @Handler
-        public static SPacketOpenWrittenBook handle(@Argument("hand") CommonTypes.Hand hand) {
-            var packet = new SPacketOpenWrittenBook();
+        public static SPacketOpenBook handle(@Argument("hand") CommonTypes.Hand hand) {
+            var packet = new SPacketOpenBook();
             packet.hand = hand;
             return packet;
         }

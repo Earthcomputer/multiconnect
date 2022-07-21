@@ -3,54 +3,53 @@ package net.earthcomputer.multiconnect.protocols.generic.blockconnections;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import net.minecraft.block.Block;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.EightWayDirection;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.WorldChunk;
-
 import java.util.EnumMap;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Direction8;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunk;
 
 public class ChunkConnector {
-    private final WorldChunk chunk;
-    private final BlockConnectionsWorldView worldView;
+    private final LevelChunk chunk;
+    private final BlockConnectionsLevelView worldView;
     private final BlockConnector connector;
-    private final EnumMap<EightWayDirection, IntSet> blocksNeedingUpdate;
+    private final EnumMap<Direction8, IntSet> blocksNeedingUpdate;
 
-    public ChunkConnector(WorldChunk chunk, BlockConnector connector, EnumMap<EightWayDirection, IntSet> blocksNeedingUpdate) {
+    public ChunkConnector(LevelChunk chunk, BlockConnector connector, EnumMap<Direction8, IntSet> blocksNeedingUpdate) {
         this.chunk = chunk;
-        this.worldView = new BlockConnectionsWorldView(chunk.getWorld());
+        this.worldView = new BlockConnectionsLevelView(chunk.getLevel());
         this.connector = connector;
         this.blocksNeedingUpdate = blocksNeedingUpdate;
     }
 
-    public static EightWayDirection directionForPos(BlockPos pos) {
+    public static Direction8 directionForPos(BlockPos pos) {
         int x = pos.getX() & 15;
         int z = pos.getZ() & 15;
         if (x == 0) {
             if (z == 0) {
-                return EightWayDirection.NORTH_WEST;
+                return Direction8.NORTH_WEST;
             } else if (z == 15) {
-                return EightWayDirection.SOUTH_WEST;
+                return Direction8.SOUTH_WEST;
             } else {
-                return EightWayDirection.WEST;
+                return Direction8.WEST;
             }
         } else if (x == 15) {
             if (z == 0) {
-                return EightWayDirection.NORTH_EAST;
+                return Direction8.NORTH_EAST;
             } else if (z == 15) {
-                return EightWayDirection.SOUTH_EAST;
+                return Direction8.SOUTH_EAST;
             } else {
-                return EightWayDirection.EAST;
+                return Direction8.EAST;
             }
         } else {
             if (z == 0) {
-                return EightWayDirection.NORTH;
+                return Direction8.NORTH;
             } else if (z == 15) {
-                return EightWayDirection.SOUTH;
+                return Direction8.SOUTH;
             } else {
                 return null;
             }
@@ -78,13 +77,13 @@ public class ChunkConnector {
     }
 
     public void onNeighborChunkLoaded(Direction side) {
-        BlockPos.Mutable pos = new BlockPos.Mutable();
-        for (EightWayDirection dir : EightWayDirection.values()) {
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+        for (Direction8 dir : Direction8.values()) {
             IntSet set = blocksNeedingUpdate.get(dir);
             if (set != null && dir.getDirections().contains(side)) {
                 boolean allNeighborsLoaded = true;
                 for (Direction requiredDir : dir.getDirections()) {
-                    if (requiredDir != side && chunk.getWorld().getChunk(chunk.getPos().x + requiredDir.getOffsetX(), chunk.getPos().z + requiredDir.getOffsetZ(), ChunkStatus.FULL, false) == null) {
+                    if (requiredDir != side && chunk.getLevel().getChunk(chunk.getPos().x + requiredDir.getStepX(), chunk.getPos().z + requiredDir.getStepZ(), ChunkStatus.FULL, false) == null) {
                         allNeighborsLoaded = false;
                         break;
                     }
@@ -94,7 +93,7 @@ public class ChunkConnector {
                     IntIterator itr = set.iterator();
                     while (itr.hasNext()) {
                         int packed = itr.nextInt();
-                        pos.set(chunk.getPos().getStartX() + unpackLocalX(packed), unpackLocalY(packed), chunk.getPos().getStartZ() + unpackLocalZ(packed));
+                        pos.set(chunk.getPos().getMinBlockX() + unpackLocalX(packed), unpackLocalY(packed), chunk.getPos().getMinBlockZ() + unpackLocalZ(packed));
                         connector.fix(worldView, pos, worldView.getBlockState(pos).getBlock());
                     }
                     blocksNeedingUpdate.remove(dir);
@@ -107,11 +106,11 @@ public class ChunkConnector {
         if (updateBlock(pos, newBlock) || updateNeighbors) {
             for (Direction dir : Direction.values()) {
                 BlockPos offsetPos = new BlockPos(
-                        chunk.getPos().getStartX() + (pos.getX() & 15) + dir.getOffsetX(),
-                        pos.getY() + dir.getOffsetY(),
-                        chunk.getPos().getStartZ() + (pos.getZ() & 15) + dir.getOffsetZ());
+                        chunk.getPos().getMinBlockX() + (pos.getX() & 15) + dir.getStepX(),
+                        pos.getY() + dir.getStepY(),
+                        chunk.getPos().getMinBlockZ() + (pos.getZ() & 15) + dir.getStepZ());
                 ChunkPos offsetChunkPos = new ChunkPos(offsetPos);
-                Chunk offsetChunk = offsetChunkPos.equals(chunk.getPos()) ? chunk : chunk.getWorld().getChunk(offsetChunkPos.x, offsetChunkPos.z, ChunkStatus.FULL, false);
+                ChunkAccess offsetChunk = offsetChunkPos.equals(chunk.getPos()) ? chunk : chunk.getLevel().getChunk(offsetChunkPos.x, offsetChunkPos.z, ChunkStatus.FULL, false);
                 if (offsetChunk != null) {
                     ((IBlockConnectableChunk) offsetChunk).multiconnect_getChunkConnector().onBlockChange(offsetPos, offsetChunk.getBlockState(offsetPos).getBlock(), false);
                 }
@@ -124,7 +123,7 @@ public class ChunkConnector {
             return false;
         }
 
-        EightWayDirection dir = directionForPos(pos);
+        Direction8 dir = directionForPos(pos);
         if (dir == null) {
             return connector.fix(worldView, pos, newBlock);
         }
@@ -133,9 +132,9 @@ public class ChunkConnector {
         if (needsNeighbors) {
             boolean allChunksLoaded = true;
             for (Direction offset : dir.getDirections()) {
-                int chunkX = chunk.getPos().x + offset.getOffsetX();
-                int chunkZ = chunk.getPos().z + offset.getOffsetZ();
-                if (chunk.getWorld().getChunk(chunkX, chunkZ, ChunkStatus.FULL, false) == null) {
+                int chunkX = chunk.getPos().x + offset.getStepX();
+                int chunkZ = chunk.getPos().z + offset.getStepZ();
+                if (chunk.getLevel().getChunk(chunkX, chunkZ, ChunkStatus.FULL, false) == null) {
                     allChunksLoaded = false;
                     break;
                 }

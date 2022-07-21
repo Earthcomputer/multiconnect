@@ -1,22 +1,24 @@
 package net.earthcomputer.multiconnect.connect;
 
 import com.mojang.logging.LogUtils;
+import net.earthcomputer.multiconnect.debug.PacketRecorder;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.mixin.connect.HandshakePacketAccessor;
+import net.earthcomputer.multiconnect.mixin.connect.ClientIntentionPacketAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ConnectScreen;
-import net.minecraft.client.gui.screen.DisconnectedScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.network.ServerAddress;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.NetworkState;
-import net.minecraft.network.Packet;
-import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
-import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.ConnectScreen;
+import net.minecraft.client.gui.screens.DisconnectedScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import net.minecraft.network.Connection;
+import net.minecraft.network.ConnectionProtocol;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
+import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
@@ -25,7 +27,7 @@ import java.util.Locale;
 public class ConnectionHandler {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public static boolean preConnect(InetSocketAddress addr, ServerAddress serverAddress, String addressField) {
+    public static boolean preConnect(InetSocketAddress addr, ServerAddress serverAddress, @Nullable String addressField) {
         // Hypixel has their own closed-source connection proxy and closed-source anti-cheat.
         // Users were getting banned for odd reasons. Their maps are designed to have fair play between clients on any
         // version, so we force the current protocol version here to disable any kind of bridge, in the hope that users
@@ -35,8 +37,8 @@ public class ConnectionHandler {
             testIp = testIp.substring(0, testIp.length() - 1);
         }
         if (testIp.equals("hypixel.net") || testIp.endsWith(".hypixel.net")) {
-            if (SharedConstants.getGameVersion().isStable()) {
-                ConnectionInfo.protocolVersion = SharedConstants.getGameVersion().getProtocolVersion();
+            if (SharedConstants.getCurrentVersion().isStable()) {
+                ConnectionInfo.protocolVersion = SharedConstants.getCurrentVersion().getProtocolVersion();
             } else {
                 ConnectionInfo.protocolVersion = ConnectionMode.protocolValues()[1].getValue();
             }
@@ -53,36 +55,31 @@ public class ConnectionHandler {
             }
         }
 
-        Screen screen = MinecraftClient.getInstance().currentScreen;
+        Screen screen = Minecraft.getInstance().screen;
         if (!(screen instanceof ConnectScreen))
             return true;
         IConnectScreen connectScreen = (IConnectScreen) screen;
 
-        ClientConnection connection = ClientConnection.connect(addr, false);
+        Connection connection = Connection.connectToServer(addr, false);
         connectScreen.multiconnect_setVersionRequestConnection(connection);
         GetProtocolPacketListener listener = new GetProtocolPacketListener(connection);
-        connection.setPacketListener(listener);
+        connection.setListener(listener);
 
-        HandshakeC2SPacket handshake  = new HandshakeC2SPacket(serverAddress.getAddress(), serverAddress.getPort(), NetworkState.STATUS);
+        ClientIntentionPacket intentionPacket = new ClientIntentionPacket(serverAddress.getHost(), serverAddress.getPort(), ConnectionProtocol.STATUS);
         //noinspection ConstantConditions
-        ((HandshakePacketAccessor) handshake).setProtocolVersion(-1);
-        connection.send(handshake);
-        connection.send(new QueryRequestC2SPacket());
+        ((ClientIntentionPacketAccessor) intentionPacket).setProtocolVersion(-1);
+        connection.send(intentionPacket);
+        connection.send(new ServerboundStatusRequestPacket());
 
-        while (!listener.hasCompleted()) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            if (connectScreen.isConnectingCancelled()) {
-                connection.disconnect(Text.translatable("multiplayer.disconnected"));
-                return false;
-            }
+        try {
+            listener.await();
+        } catch (InterruptedException e) {
+            connection.disconnect(Component.translatable("multiplayer.disconnected"));
+            return false;
         }
 
         if (listener.hasFailed()) {
-            MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().setScreen(new DisconnectedScreen(connectScreen.getParent(), ScreenTexts.CONNECT_FAILED, Text.literal("Failed to request server protocol version"))));
+            Minecraft.getInstance().execute(() -> Minecraft.getInstance().setScreen(new DisconnectedScreen(connectScreen.getParent(), CommonComponents.CONNECT_FAILED, Component.literal("Failed to request server protocol version"))));
         }
 
         connectScreen.multiconnect_setVersionRequestConnection(null);
@@ -97,18 +94,19 @@ public class ConnectionHandler {
             ConnectionInfo.protocolVersion = protocol;
         } else {
             LOGGER.info("Discovered server protocol: " + protocol + " (unsupported), " +
-                    "falling back to " + SharedConstants.getGameVersion().getProtocolVersion() + " (" + SharedConstants.getGameVersion().getName() + ")");
-            ConnectionInfo.protocolVersion = SharedConstants.getGameVersion().getProtocolVersion();
+                    "falling back to " + SharedConstants.getCurrentVersion().getProtocolVersion() + " (" + SharedConstants.getCurrentVersion().getName() + ")");
+            ConnectionInfo.protocolVersion = SharedConstants.getCurrentVersion().getProtocolVersion();
         }
 
         return true;
     }
 
-    public static void onSendHandshake(ClientConnection connect, Packet<?> handshakePacket) {
+    public static void onSendIntention(Packet<?> intentionPacket) {
         if (ConnectionMode.isSupportedProtocol(ConnectionInfo.protocolVersion)) {
-            ((HandshakePacketAccessor) handshakePacket).setProtocolVersion(ConnectionInfo.protocolVersion);
+            ((ClientIntentionPacketAccessor) intentionPacket).setProtocolVersion(ConnectionInfo.protocolVersion);
             ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
-            ConnectionInfo.protocol.setup(false);
+            ConnectionInfo.protocol.setup();
+            PacketRecorder.onConnect();
         }
     }
 

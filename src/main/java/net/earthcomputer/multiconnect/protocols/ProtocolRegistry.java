@@ -4,37 +4,37 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11;
-import net.earthcomputer.multiconnect.protocols.v1_11_2.Protocol_1_11_2;
+import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11_2;
 import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12;
-import net.earthcomputer.multiconnect.protocols.v1_12_1.Protocol_1_12_1;
-import net.earthcomputer.multiconnect.protocols.v1_12_2.Protocol_1_12_2;
+import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12_1;
+import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
-import net.earthcomputer.multiconnect.protocols.v1_13_1.Protocol_1_13_1;
-import net.earthcomputer.multiconnect.protocols.v1_13_2.Protocol_1_13_2;
+import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13_1;
+import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13_2;
 import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
-import net.earthcomputer.multiconnect.protocols.v1_14_1.Protocol_1_14_1;
-import net.earthcomputer.multiconnect.protocols.v1_14_2.Protocol_1_14_2;
-import net.earthcomputer.multiconnect.protocols.v1_14_3.Protocol_1_14_3;
-import net.earthcomputer.multiconnect.protocols.v1_14_4.Protocol_1_14_4;
+import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14_1;
+import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14_2;
+import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14_3;
+import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14_4;
 import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15;
-import net.earthcomputer.multiconnect.protocols.v1_15_1.Protocol_1_15_1;
-import net.earthcomputer.multiconnect.protocols.v1_15_2.Protocol_1_15_2;
+import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15_1;
+import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15_2;
 import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
-import net.earthcomputer.multiconnect.protocols.v1_16_1.Protocol_1_16_1;
-import net.earthcomputer.multiconnect.protocols.v1_16_2.Protocol_1_16_2;
-import net.earthcomputer.multiconnect.protocols.v1_16_3.Protocol_1_16_3;
-import net.earthcomputer.multiconnect.protocols.v1_16_5.Protocol_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_1;
+import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_2;
+import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_3;
+import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_5;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
-import net.earthcomputer.multiconnect.protocols.v1_17_1.Protocol_1_17_1;
+import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.protocols.v1_18.Protocol_1_18;
-import net.earthcomputer.multiconnect.protocols.v1_18_2.Protocol_1_18_2;
+import net.earthcomputer.multiconnect.protocols.v1_18.Protocol_1_18_2;
 import net.earthcomputer.multiconnect.protocols.v1_19.Protocol_1_19;
-import net.earthcomputer.multiconnect.protocols.v1_19_1.Protocol_1_19_1;
+import net.earthcomputer.multiconnect.protocols.v1_19.Protocol_1_19_1;
 import net.earthcomputer.multiconnect.protocols.v1_8.Protocol_1_8;
 import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
-import net.earthcomputer.multiconnect.protocols.v1_9_1.Protocol_1_9_1;
-import net.earthcomputer.multiconnect.protocols.v1_9_2.Protocol_1_9_2;
-import net.earthcomputer.multiconnect.protocols.v1_9_4.Protocol_1_9_4;
+import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9_1;
+import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9_2;
+import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9_4;
 import net.minecraft.SharedConstants;
 
 import static net.earthcomputer.multiconnect.api.Protocols.*;
@@ -47,7 +47,7 @@ public class ProtocolRegistry {
     }
 
     public static AbstractProtocol latest() {
-        return protocols.get(SharedConstants.getGameVersion().getProtocolVersion());
+        return protocols.get(SharedConstants.getCurrentVersion().getProtocolVersion());
     }
 
     public static Iterable<AbstractProtocol> all() {

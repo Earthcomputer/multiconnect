@@ -10,11 +10,11 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
-import net.earthcomputer.multiconnect.packets.SPacketClearTitle;
-import net.earthcomputer.multiconnect.packets.SPacketOverlayMessage;
-import net.earthcomputer.multiconnect.packets.SPacketSubtitle;
-import net.earthcomputer.multiconnect.packets.SPacketTitle;
-import net.earthcomputer.multiconnect.packets.SPacketTitleFade;
+import net.earthcomputer.multiconnect.packets.SPacketClearTitles;
+import net.earthcomputer.multiconnect.packets.SPacketSetActionBarText;
+import net.earthcomputer.multiconnect.packets.SPacketSetSubtitleText;
+import net.earthcomputer.multiconnect.packets.SPacketSetTitleText;
+import net.earthcomputer.multiconnect.packets.SPacketSetTitlesAnimation;
 
 @MessageVariant(maxVersion = Protocols.V1_16_5)
 @Polymorphic
@@ -27,9 +27,9 @@ public abstract class SPacketTitle_1_16_5 {
         public CommonTypes.Text text;
 
         @Handler
-        public static SPacketTitle handle(
+        public static SPacketSetTitleText handle(
                 @Argument("text") CommonTypes.Text text,
-                @DefaultConstruct SPacketTitle packet
+                @DefaultConstruct SPacketSetTitleText packet
         ) {
             packet.title = text;
             return packet;
@@ -42,9 +42,9 @@ public abstract class SPacketTitle_1_16_5 {
         public CommonTypes.Text text;
 
         @Handler
-        public static SPacketSubtitle handle(
+        public static SPacketSetSubtitleText handle(
                 @Argument("text") CommonTypes.Text text,
-                @DefaultConstruct SPacketSubtitle packet
+                @DefaultConstruct SPacketSetSubtitleText packet
         ) {
             packet.subtitle = text;
             return packet;
@@ -57,9 +57,9 @@ public abstract class SPacketTitle_1_16_5 {
         public CommonTypes.Text text;
 
         @Handler
-        public static SPacketOverlayMessage handle(
+        public static SPacketSetActionBarText handle(
                 @Argument("text") CommonTypes.Text text,
-                @DefaultConstruct SPacketOverlayMessage packet
+                @DefaultConstruct SPacketSetActionBarText packet
         ) {
             packet.text = text;
             return packet;
@@ -77,11 +77,11 @@ public abstract class SPacketTitle_1_16_5 {
         public int fadeOutTime;
 
         @Handler
-        public static SPacketTitleFade handle(
+        public static SPacketSetTitlesAnimation handle(
                 @Argument("fadeInTime") int fadeInTime,
                 @Argument("stayTime") int stayTime,
                 @Argument("fadeOutTime") int fadeOutTime,
-                @DefaultConstruct SPacketTitleFade packet
+                @DefaultConstruct SPacketSetTitlesAnimation packet
         ) {
             packet.fadeIn = fadeInTime;
             packet.stay = stayTime;
@@ -94,9 +94,9 @@ public abstract class SPacketTitle_1_16_5 {
     @MessageVariant(maxVersion = Protocols.V1_16_5)
     public static class Clear extends SPacketTitle_1_16_5 {
         @Handler
-        public static SPacketClearTitle handle(
+        public static SPacketClearTitles handle(
                 @Argument("mode") Mode mode,
-                @DefaultConstruct SPacketClearTitle packet
+                @DefaultConstruct SPacketClearTitles packet
         ) {
             packet.reset = mode == Mode.RESET;
             return packet;

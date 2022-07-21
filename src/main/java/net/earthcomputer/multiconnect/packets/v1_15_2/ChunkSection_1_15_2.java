@@ -9,6 +9,9 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.packets.ChunkData;
 import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1;
+import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer;
+import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer.Multiple;
+import net.earthcomputer.multiconnect.packets.v1_17_1.ChunkData_1_17_1.BlockStatePalettedContainer.RegistryContainer;
 
 @MessageVariant(minVersion = Protocols.V1_14, maxVersion = Protocols.V1_15_2)
 public class ChunkSection_1_15_2 implements ChunkData.Section {

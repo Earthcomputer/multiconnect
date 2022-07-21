@@ -139,6 +139,9 @@ public enum ConnectionMode implements IProtocol {
         return BY_VALUE.getOrDefault(value, AUTO);
     }
 
+    /**
+     * Newest to oldest
+     */
     public static ConnectionMode[] protocolValues() {
         return PROTOCOLS;
     }

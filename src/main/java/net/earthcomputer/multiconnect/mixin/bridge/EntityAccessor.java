@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.data.DataTracker;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -10,5 +10,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface EntityAccessor {
     @Mutable
     @Accessor
-    void setDataTracker(DataTracker dataTracker);
+    void setEntityData(SynchedEntityData dataTracker);
 }

@@ -1,16 +1,12 @@
 package net.earthcomputer.multiconnect.api;
 
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.FriendlyByteBuf;
 
 /**
- * An event fired when custom payloads to or from older servers are blocked by multiconnect.
- *
- * @param <T> The type of the channel, either {@linkplain net.minecraft.util.Identifier Identifier} or
- *              {@linkplain String}.
- *
- * @see ICustomPayloadListener
+ * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
  */
+@Deprecated
 public interface ICustomPayloadEvent<T> {
     /**
      * The protocol version that the server is on, to be compared with values in {@link Protocols}.
@@ -25,10 +21,18 @@ public interface ICustomPayloadEvent<T> {
     /**
      * The payload itself.
      */
-    PacketByteBuf getData();
+    FriendlyByteBuf getData();
 
     /**
-     * The {@linkplain ClientPlayNetworkHandler} that is being sent to or from.
+     * The {@linkplain ClientPacketListener} that is being sent to or from.
      */
-    ClientPlayNetworkHandler getNetworkHandler();
+    ClientPacketListener getConnection();
+
+    /**
+     * @deprecated Use {@link #getConnection()} instead.
+     */
+    @Deprecated
+    default ClientPacketListener getNetworkHandler() {
+        return getConnection();
+    }
 }

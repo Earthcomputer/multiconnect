@@ -23,13 +23,13 @@ data class MulticonnectType(
         return realType.kind.isPrimitive
                 || realType.isEnum
                 || realType.hasQualifiedName(JAVA_LANG_STRING)
-                || realType.hasQualifiedName(MINECRAFT_IDENTIFIER)
+                || realType.hasQualifiedName(MINECRAFT_RESOURCE_LOCATION)
     }
 
     fun canCoerceFromString(): Boolean {
         return realType.isEnum
                 || realType.hasQualifiedName(JAVA_LANG_STRING)
-                || realType.hasQualifiedName(MINECRAFT_IDENTIFIER)
+                || realType.hasQualifiedName(MINECRAFT_RESOURCE_LOCATION)
                 || registry != null
     }
 
@@ -57,8 +57,8 @@ data class MulticonnectType(
                     JAVA_LANG_STRING -> Types.STRING
                     JAVA_UTIL_BITSET -> Types.BITSET
                     JAVA_UTIL_UUID -> Types.UUID
-                    MINECRAFT_IDENTIFIER -> Types.IDENTIFIER
-                    MINECRAFT_NBT_COMPOUND -> Types.NBT_COMPOUND
+                    MINECRAFT_RESOURCE_LOCATION -> Types.RESOURCE_LOCATION
+                    MINECRAFT_COMPOUND_TAG -> Types.COMPOUND_TAG
                     else -> null
                 }
                 else -> null
@@ -75,11 +75,11 @@ data class MulticonnectType(
         }
 
         fun isRegistryCompatible(realType: TypeMirror): Boolean {
-            return realType.isIntegral || realType.hasQualifiedName(MINECRAFT_IDENTIFIER)
+            return realType.isIntegral || realType.hasQualifiedName(MINECRAFT_RESOURCE_LOCATION)
         }
 
         fun canAutoFill(realType: TypeMirror): Boolean {
-            return realType.hasQualifiedName(MINECRAFT_NETWORK_HANDLER)
+            return realType.hasQualifiedName(MINECRAFT_CLIENT_PACKET_LISTENER)
                     || realType.hasQualifiedName(MULTICONNECT_TYPED_MAP)
                     || realType.hasQualifiedName(MULTICONNECT_DELAYED_PACKET_SENDER)
         }

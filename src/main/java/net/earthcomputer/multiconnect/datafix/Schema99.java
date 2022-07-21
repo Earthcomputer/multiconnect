@@ -19,7 +19,7 @@ public class Schema99 extends Schema {
         // see https://github.com/Mojang/DataFixerUpper/issues/45
         schema.registerType(true, () -> "dummy", DSL::remainder);
 
-        schema.registerType(false, MulticonnectDFU.REGISTRY_MANAGER, DSL::remainder);
+        schema.registerType(false, MulticonnectDFU.REGISTRY_ACCESS, DSL::remainder);
         schema.registerType(false, MulticonnectDFU.DIMENSION, DSL::remainder);
         schema.registerType(false, MulticonnectDFU.STATUS_EFFECT_FACTOR_DATA, DSL::remainder);
     }

@@ -13,16 +13,16 @@ import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2;
 import net.earthcomputer.multiconnect.packets.v1_13_2.ItemStack_1_13_2;
 import net.earthcomputer.multiconnect.packets.v1_18_2.Text_1_18_2;
-import net.minecraft.datafixer.fix.ItemInstanceTheFlatteningFix;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SpawnEggItem;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.core.Registry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.datafix.fixes.ItemStackTheFlatteningFix;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SpawnEggItem;
 import org.jetbrains.annotations.Nullable;
 
 @Polymorphic
@@ -55,16 +55,16 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
 
         if (self.itemId == spawnEggId) {
             if (nonEmptySelf.tag != null) {
-                NbtCompound entityTag = nonEmptySelf.tag.getCompound("EntityTag");
+                CompoundTag entityTag = nonEmptySelf.tag.getCompound("EntityTag");
                 if (entityTag != null) {
                     String entityId = entityTag.getString("id");
-                    Identifier identifier = Identifier.tryParse(entityId);
+                    ResourceLocation identifier = ResourceLocation.tryParse(entityId);
                     if (identifier != null) {
-                        Identifier newId = PacketSystem.serverIdToClient(Registry.ENTITY_TYPE, identifier);
+                        ResourceLocation newId = PacketSystem.serverIdToClient(Registry.ENTITY_TYPE, identifier);
                         if (newId != null) {
                             EntityType<?> entityType = Registry.ENTITY_TYPE.get(newId);
-                            Item newItem = SpawnEggItem.forEntity(entityType);
-                            int newItemId = Registry.ITEM.getRawId(newItem);
+                            Item newItem = SpawnEggItem.byId(entityType);
+                            int newItemId = Registry.ITEM.getId(newItem);
                             return (short) PacketSystem.clientRawIdToServer(Registry.ITEM, newItemId);
                         }
                     }
@@ -72,13 +72,13 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
             }
         }
 
-        Identifier name = PacketSystem.serverRawIdToId(Registry.ITEM, self.itemId);
-        String newName = ItemInstanceTheFlatteningFix.getItem(name == null ? null : name.toString(), nonEmptySelf.damage);
+        ResourceLocation name = PacketSystem.serverRawIdToId(Registry.ITEM, self.itemId);
+        String newName = ItemStackTheFlatteningFix.updateItem(name == null ? null : name.toString(), nonEmptySelf.damage);
         if (newName != null) {
             // convert 1.13 name to server raw id
-            Identifier currentName = PacketSystem.serverIdToClient(Protocols.V1_13, Registry.ITEM, new Identifier(newName));
+            ResourceLocation currentName = PacketSystem.serverIdToClient(Protocols.V1_13, Registry.ITEM, new ResourceLocation(newName));
             Item item = Registry.ITEM.get(currentName);
-            int currentRawId = Registry.ITEM.getRawId(item);
+            int currentRawId = Registry.ITEM.getId(item);
             return (short) PacketSystem.clientRawIdToServer(Registry.ITEM, currentRawId);
         }
 
@@ -92,12 +92,12 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
 
     public static ItemStack_1_13_1 fromMinecraft(ItemStack stack) {
         if (stack.isEmpty()) {
-            var result = new Empty();
+            var result = new ItemStack_1_13_1.Empty();
             result.itemId = -1;
             return result;
         } else {
             var later = (ItemStack_1_13_2.NonEmpty) ItemStack_1_13_2.fromMinecraft(stack);
-            var result = new NonEmpty();
+            var result = new ItemStack_1_13_1.NonEmpty();
             result.itemId = (short) later.itemId;
             result.count = later.count;
             result.tag = later.tag;
@@ -116,7 +116,8 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
         @DefaultConstruct(intValue = 1)
         public byte count;
         @Introduce(direction = Introduce.Direction.FROM_OLDER, compute = "computeTag")
-        public NbtCompound tag;
+        @Nullable
+        public CompoundTag tag;
 
         @Override
         public int getItemId() {
@@ -129,14 +130,15 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
         }
 
         @Override
-        public NbtCompound getTag() {
+        @Nullable
+        public CompoundTag getTag() {
             return tag;
         }
 
-        public static NbtCompound computeTag(
+        public static CompoundTag computeTag(
                 @Argument("itemId") short itemId,
                 @Argument("damage") short damage,
-                @Argument("tag") @Nullable NbtCompound tag,
+                @Argument("tag") @Nullable CompoundTag tag,
                 @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.ITEM, value = "filled_map")) int filledMapId,
                 @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.ITEM, value = "enchanted_book")) int enchantedBookId,
                 @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.ITEM, value = "black_banner")) int bannerId,
@@ -145,27 +147,27 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
             boolean copiedTag = false;
             if (itemId == filledMapId) {
                 copiedTag = true;
-                tag = tag == null ? new NbtCompound() : tag.copy();
+                tag = tag == null ? new CompoundTag() : tag.copy();
                 tag.putInt("map", damage);
             } else if (itemId == enchantedBookId) {
-                if (tag != null && tag.contains("StoredEnchantments", NbtElement.LIST_TYPE)) {
+                if (tag != null && tag.contains("StoredEnchantments", Tag.TAG_LIST)) {
                     copiedTag = true;
                     tag = tag.copy();
-                    NbtList enchantments = tag.getList("StoredEnchantments", NbtElement.COMPOUND_TYPE);
+                    ListTag enchantments = tag.getList("StoredEnchantments", Tag.TAG_COMPOUND);
                     oldEnchantmentListToNew(enchantments);
                 }
             } else {
                 int newId = PacketSystem.serverRawIdToClient(Registry.ITEM, itemId);
-                Item item = Registry.ITEM.get(newId);
+                Item item = Registry.ITEM.byId(newId);
                 if (item.getMaxDamage() > 0) {
                     copiedTag = true;
-                    tag = tag == null ? new NbtCompound() : tag.copy();
+                    tag = tag == null ? new CompoundTag() : tag.copy();
                     tag.putInt("Damage", damage);
                 }
             }
 
             if (itemId == bannerId || itemId == shieldId) {
-                if (tag != null && tag.contains("BlockEntityTag", NbtElement.COMPOUND_TYPE)) {
+                if (tag != null && tag.contains("BlockEntityTag", Tag.TAG_COMPOUND)) {
                     if (!copiedTag) {
                         copiedTag = true;
                         tag = tag.copy();
@@ -174,24 +176,24 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
                 }
             }
 
-            if (tag != null && tag.contains("ench", NbtElement.LIST_TYPE)) {
+            if (tag != null && tag.contains("ench", Tag.TAG_LIST)) {
                 if (!copiedTag) {
                     copiedTag = true;
                     tag = tag.copy();
                 }
-                NbtList enchantments = tag.getList("ench", NbtElement.COMPOUND_TYPE);
+                ListTag enchantments = tag.getList("ench", Tag.TAG_COMPOUND);
                 oldEnchantmentListToNew(enchantments);
                 tag.put("Enchantments", enchantments);
                 tag.remove("ench");
             }
 
-            if (tag != null && tag.contains("display", NbtElement.COMPOUND_TYPE)) {
+            if (tag != null && tag.contains("display", Tag.TAG_COMPOUND)) {
                 if (!copiedTag) {
                     copiedTag = true;
                     tag = tag.copy();
                 }
-                NbtCompound display = tag.getCompound("display");
-                if (display.contains("Name", NbtElement.STRING_TYPE)) {
+                CompoundTag display = tag.getCompound("display");
+                if (display.contains("Name", Tag.TAG_STRING)) {
                     display.putString("Name", Text_1_18_2.createLiteral(display.getString("Name")).json);
                 }
             }
@@ -199,23 +201,23 @@ public abstract class ItemStack_1_13_1 implements CommonTypes.ItemStack {
             return tag;
         }
 
-        public static void invertBannerColors(NbtCompound tag) {
-            NbtCompound blockEntityTag = tag.getCompound("BlockEntityTag");
-            if (blockEntityTag.contains("Patterns", NbtElement.LIST_TYPE)) {
-                NbtList patterns = blockEntityTag.getList("Patterns", NbtElement.COMPOUND_TYPE);
+        public static void invertBannerColors(CompoundTag tag) {
+            CompoundTag blockEntityTag = tag.getCompound("BlockEntityTag");
+            if (blockEntityTag.contains("Patterns", Tag.TAG_LIST)) {
+                ListTag patterns = blockEntityTag.getList("Patterns", Tag.TAG_COMPOUND);
                 for (int i = 0; i < patterns.size(); i++) {
-                    NbtCompound pattern = patterns.getCompound(i);
-                    if (pattern.contains("Color", NbtElement.INT_TYPE)) {
+                    CompoundTag pattern = patterns.getCompound(i);
+                    if (pattern.contains("Color", Tag.TAG_INT)) {
                         pattern.putInt("Color", 15 - pattern.getInt("Color"));
                     }
                 }
             }
         }
 
-        private static void oldEnchantmentListToNew(NbtList enchantments) {
+        private static void oldEnchantmentListToNew(ListTag enchantments) {
             for (int i = 0; i < enchantments.size(); i++) {
-                NbtCompound ench = enchantments.getCompound(i);
-                Identifier name = PacketSystem.serverRawIdToId(Registry.ENCHANTMENT, ench.getInt("id"));
+                CompoundTag ench = enchantments.getCompound(i);
+                ResourceLocation name = PacketSystem.serverRawIdToId(Registry.ENCHANTMENT, ench.getInt("id"));
                 if (name == null) {
                     enchantments.remove(i--);
                 } else {

@@ -1,52 +1,52 @@
 package net.earthcomputer.multiconnect.protocols.v1_8;
 
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderer;
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3f;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Vector3f;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.vehicle.Boat;
 
-public class BoatRenderer_1_8 extends EntityRenderer<BoatEntity> {
-    private static final Identifier TEXTURE = new Identifier("multiconnect", "textures/entity/boat_1_8.png");
+public class BoatRenderer_1_8 extends EntityRenderer<Boat> {
+    private static final ResourceLocation TEXTURE = new ResourceLocation("multiconnect", "textures/entity/boat_1_8.png");
     private final BoatModel_1_8 model;
 
-    public BoatRenderer_1_8(EntityRendererFactory.Context ctx) {
+    public BoatRenderer_1_8(EntityRendererProvider.Context ctx) {
         super(ctx);
         shadowRadius = 0.8f;
-        model = new BoatModel_1_8(ctx.getPart(BoatModel_1_8.MODEL_LAYER));
+        model = new BoatModel_1_8(ctx.bakeLayer(BoatModel_1_8.MODEL_LAYER));
     }
 
     @Override
-    public Identifier getTexture(BoatEntity entity) {
+    public ResourceLocation getTextureLocation(Boat entity) {
         return TEXTURE;
     }
 
     @Override
-    public void render(BoatEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-        matrices.push();
+    public void render(Boat entity, float yaw, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light) {
+        matrices.pushPose();
         matrices.translate(0, 0.375, 0);
-        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180 - yaw));
-        float damageWobbleTicks = entity.getDamageWobbleTicks() - tickDelta;
-        float damageWobbleStrength = entity.getDamageWobbleStrength() - tickDelta;
+        matrices.mulPose(Vector3f.YP.rotationDegrees(180 - yaw));
+        float damageWobbleTicks = entity.getHurtTime() - tickDelta;
+        float damageWobbleStrength = entity.getDamage() - tickDelta;
         if (damageWobbleStrength < 0) {
             damageWobbleStrength = 0;
         }
 
         if (damageWobbleTicks > 0) {
-            matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(MathHelper.sin(damageWobbleTicks) * damageWobbleTicks * damageWobbleStrength / 10 * entity.getDamageWobbleSide()));
+            matrices.mulPose(Vector3f.XP.rotationDegrees(Mth.sin(damageWobbleTicks) * damageWobbleTicks * damageWobbleStrength / 10 * entity.getHurtDir()));
         }
 
         matrices.scale(-1, -1, 1);
-        model.setAngles(entity, tickDelta, 0, -0.1f, 0, 0);
-        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(model.getLayer(TEXTURE));
-        model.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, 1, 1, 1, 1);
+        model.setupAnim(entity, tickDelta, 0, -0.1f, 0, 0);
+        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(model.renderType(TEXTURE));
+        model.renderToBuffer(matrices, vertexConsumer, light, OverlayTexture.NO_OVERLAY, 1, 1, 1, 1);
 
-        matrices.pop();
+        matrices.popPose();
         super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
     }
 }

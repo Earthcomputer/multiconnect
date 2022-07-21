@@ -4,11 +4,10 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.protocols.generic.blockconnections.connectors.IBlockConnector;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.EightWayDirection;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction8;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -40,7 +39,7 @@ public class BlockConnector {
         }
     }
 
-    public void fixChunkData(BlockConnectionsNetworkView connectionsView, EnumMap<EightWayDirection, IntSet> blocksNeedingUpdateOut) {
+    public void fixChunkData(BlockConnectionsNetworkView connectionsView, EnumMap<Direction8, IntSet> blocksNeedingUpdateOut) {
         // early exit if no fixing ever needs to be done
         if (connectors.isEmpty()) {
             return;
@@ -50,10 +49,10 @@ public class BlockConnector {
         int numSections = (connectionsView.getMaxY() - minY + 1) >> 4;
         for (int sectionIndex = 0; sectionIndex < numSections; sectionIndex++) {
             if (connectionsView.doesSectionExist(sectionIndex)) {
-                for (BlockPos pos : BlockPos.iterate(0, (sectionIndex << 4) + minY, 0, 15, (sectionIndex << 4) + 15 + minY, 15)) {
+                for (BlockPos pos : BlockPos.betweenClosed(0, (sectionIndex << 4) + minY, 0, 15, (sectionIndex << 4) + 15 + minY, 15)) {
                     IBlockConnector connector = connectors.get(connectionsView.getBlockState(pos).getBlock());
                     if (connector != null) {
-                        EightWayDirection dir = ChunkConnector.directionForPos(pos);
+                        Direction8 dir = ChunkConnector.directionForPos(pos);
                         if (dir == null || !connector.needsNeighbors()) {
                             connector.fix(connectionsView, pos);
                         } else {

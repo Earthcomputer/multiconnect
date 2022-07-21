@@ -7,7 +7,7 @@ import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 @MessageVariant(maxVersion = Protocols.V1_13_2)
 public class BlockPos_1_13_2 implements CommonTypes.BlockPos {

@@ -1,19 +1,48 @@
 package net.earthcomputer.multiconnect.impl;
 
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
-import net.minecraft.client.option.SimpleOption;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.OptionInstance;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.OptionsList;
+import net.minecraft.client.gui.screens.OptionsSubScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
+
+import java.util.List;
 
 public class ConfigScreen extends Screen {
-    private static final Text TITLE = Text.translatable("multiconnect.config.title");
-    private static final Text ALLOW_OLD_UNSIGNED_CHAT = Text.translatable("multiconnect.config.allowOldUnsignedChat");
-    private static final Text ALLOW_OLD_UNSIGNED_CHAT_TOOLTIP = Text.translatable("multiconnect.config.allowOldUnsignedChat.tooltip");
+    private static final Component TITLE = Component.translatable("multiconnect.config.title");
+    private static final Component ALLOW_OLD_UNSIGNED_CHAT_TOOLTIP = Component.translatable("multiconnect.config.allowOldUnsignedChat.tooltip");
+    private static final Component ALLOW_PACKET_RECORDER_CHAT_TOOLTIP = Component.translatable("multiconnect.config.enablePacketRecording.tooltip");
 
     private final Screen parent;
+    private static final OptionInstance<Boolean> debugKey =
+            OptionInstance.createBoolean(
+                    "multiconnect.config.enableDebugKey",
+                    OptionInstance.noTooltip(),
+                    Boolean.TRUE.equals(MulticonnectConfig.INSTANCE.debugKey),
+                    (value) -> MulticonnectConfig.INSTANCE.debugKey = value
+            );
+
+    private static final OptionInstance<Boolean> allowOldUnsignedChat =
+            OptionInstance.createBoolean(
+                    "multiconnect.config.allowOldUnsignedChat",
+                    OptionInstance.cachedConstantTooltip(ALLOW_OLD_UNSIGNED_CHAT_TOOLTIP),
+                    Boolean.TRUE.equals(MulticonnectConfig.INSTANCE.allowOldUnsignedChat),
+                    (value) -> MulticonnectConfig.INSTANCE.allowOldUnsignedChat = value
+            );
+
+    private static final OptionInstance<Boolean> enablePacketRecorder =
+            OptionInstance.createBoolean(
+                    "multiconnect.config.enablePacketRecording",
+                    OptionInstance.cachedConstantTooltip(ALLOW_PACKET_RECORDER_CHAT_TOOLTIP),
+                    Boolean.TRUE.equals(MulticonnectConfig.INSTANCE.enablePacketRecorder),
+                    (value) -> MulticonnectConfig.INSTANCE.enablePacketRecorder = value
+            );
+
+    private OptionsList list;
 
     protected ConfigScreen(Screen parent) {
         super(TITLE);
@@ -22,23 +51,28 @@ public class ConfigScreen extends Screen {
 
     @Override
     protected void init() {
-        addDrawableChild(CyclingButtonWidget.onOffBuilder(MulticonnectConfig.INSTANCE.allowOldUnsignedChat == Boolean.TRUE)
-                .tooltip(SimpleOption.<Boolean>constantTooltip(ALLOW_OLD_UNSIGNED_CHAT_TOOLTIP).apply(client))
-                .build(width / 2, 50, 100, 20, ALLOW_OLD_UNSIGNED_CHAT, (button, value) -> MulticonnectConfig.INSTANCE.allowOldUnsignedChat = value));
-        addDrawableChild(new ButtonWidget(20, height - 50, 100, 20, ScreenTexts.DONE, button -> close()));
+        this.list = new OptionsList(this.minecraft, this.width, this.height, 32, this.height - 32, 25);
+        this.list.addSmall(new OptionInstance[]{debugKey, allowOldUnsignedChat, enablePacketRecorder});
+        this.addWidget(this.list);
+        addRenderableWidget(new Button(this.width / 2 - 100, this.height - 27, 200, 20, CommonComponents.GUI_DONE, button -> onClose()));
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
         renderBackground(matrices);
+        this.list.render(matrices, mouseX, mouseY, delta);
+        drawCenteredString(matrices, font, TITLE.getVisualOrderText(), width / 2, 20, 0xffffff);
         super.render(matrices, mouseX, mouseY, delta);
-        drawCenteredTextWithShadow(matrices, textRenderer, TITLE.asOrderedText(), width / 2, 20, 0xffffff);
+        List<FormattedCharSequence> list = OptionsSubScreen.tooltipAt(this.list, mouseX, mouseY);
+        if (this.list != null) {
+            this.renderTooltip(matrices, list, mouseX, mouseY);
+        }
     }
 
     @Override
-    public void close() {
-        assert client != null;
+    public void onClose() {
+        assert minecraft != null;
         MulticonnectConfig.INSTANCE.save();
-        client.setScreen(parent);
+        minecraft.setScreen(parent);
     }
 }

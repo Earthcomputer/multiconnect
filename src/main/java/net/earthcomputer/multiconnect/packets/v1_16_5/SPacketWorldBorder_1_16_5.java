@@ -7,12 +7,12 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.NetworkEnum;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.api.Protocols;
-import net.earthcomputer.multiconnect.packets.SPacketWorldBorderCenterChanged;
-import net.earthcomputer.multiconnect.packets.SPacketWorldBorderInitialize;
-import net.earthcomputer.multiconnect.packets.SPacketWorldBorderInterpolateSize;
-import net.earthcomputer.multiconnect.packets.SPacketWorldBorderSizeChanged;
-import net.earthcomputer.multiconnect.packets.SPacketWorldBorderWarningBlocksChanged;
-import net.earthcomputer.multiconnect.packets.SPacketWorldBorderWarningTimeChanged;
+import net.earthcomputer.multiconnect.packets.SPacketSetBorderCenter;
+import net.earthcomputer.multiconnect.packets.SPacketInitializeBorder;
+import net.earthcomputer.multiconnect.packets.SPacketSetBorderLerpSize;
+import net.earthcomputer.multiconnect.packets.SPacketSetBorderSize;
+import net.earthcomputer.multiconnect.packets.SPacketSetBorderWarningDistance;
+import net.earthcomputer.multiconnect.packets.SPacketSetBorderWarningDelay;
 
 @MessageVariant(maxVersion = Protocols.V1_16_5)
 @Polymorphic
@@ -25,9 +25,9 @@ public abstract class SPacketWorldBorder_1_16_5 {
         public double newSize;
 
         @Handler
-        public static SPacketWorldBorderSizeChanged handle(
+        public static SPacketSetBorderSize handle(
                 @Argument("newSize") double newSize,
-                @DefaultConstruct SPacketWorldBorderSizeChanged packet
+                @DefaultConstruct SPacketSetBorderSize packet
         ) {
             packet.diameter = newSize;
             return packet;
@@ -42,11 +42,11 @@ public abstract class SPacketWorldBorder_1_16_5 {
         public long lerpTime;
 
         @Handler
-        public static SPacketWorldBorderInterpolateSize handle(
+        public static SPacketSetBorderLerpSize handle(
                 @Argument("oldSize") double oldSize,
                 @Argument("newSize") double newSize,
                 @Argument("lerpTime") long lerpTime,
-                @DefaultConstruct SPacketWorldBorderInterpolateSize packet
+                @DefaultConstruct SPacketSetBorderLerpSize packet
         ) {
             packet.oldDiameter = oldSize;
             packet.newDiameter = newSize;
@@ -62,10 +62,10 @@ public abstract class SPacketWorldBorder_1_16_5 {
         public double z;
 
         @Handler
-        public static SPacketWorldBorderCenterChanged handle(
+        public static SPacketSetBorderCenter handle(
                 @Argument("x") double x,
                 @Argument("z") double z,
-                @DefaultConstruct SPacketWorldBorderCenterChanged packet
+                @DefaultConstruct SPacketSetBorderCenter packet
         ) {
             packet.x = x;
             packet.z = z;
@@ -79,9 +79,9 @@ public abstract class SPacketWorldBorder_1_16_5 {
         public int warningBlocks;
 
         @Handler
-        public static SPacketWorldBorderWarningBlocksChanged handle(
+        public static SPacketSetBorderWarningDistance handle(
                 @Argument("warningBlocks") int warningBlocks,
-                @DefaultConstruct SPacketWorldBorderWarningBlocksChanged packet
+                @DefaultConstruct SPacketSetBorderWarningDistance packet
         ) {
             packet.warningBlocks = warningBlocks;
             return packet;
@@ -94,9 +94,9 @@ public abstract class SPacketWorldBorder_1_16_5 {
         public int warningTime;
 
         @Handler
-        public static SPacketWorldBorderWarningTimeChanged handle(
+        public static SPacketSetBorderWarningDelay handle(
                 @Argument("warningTime") int warningTime,
-                @DefaultConstruct SPacketWorldBorderWarningTimeChanged packet
+                @DefaultConstruct SPacketSetBorderWarningDelay packet
         ) {
             packet.warningTime = warningTime;
             return packet;
@@ -116,7 +116,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
         public int warningTime;
 
         @Handler
-        public static SPacketWorldBorderInitialize handle(
+        public static SPacketInitializeBorder handle(
                 @Argument("x") double x,
                 @Argument("z") double z,
                 @Argument("oldSize") double oldSize,
@@ -125,7 +125,7 @@ public abstract class SPacketWorldBorder_1_16_5 {
                 @Argument("newAbsoluteMaxSize") int newAbsoluteMaxSize,
                 @Argument("warningBlocks") int warningBlocks,
                 @Argument("warningTime") int warningTime,
-                @DefaultConstruct SPacketWorldBorderInitialize packet
+                @DefaultConstruct SPacketInitializeBorder packet
         ) {
             packet.x = x;
             packet.z = z;

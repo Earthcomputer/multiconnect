@@ -1,7 +1,7 @@
 package net.earthcomputer.multiconnect.api;
 
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * @deprecated Use {@link ICustomPayloadListener} instead.
@@ -9,5 +9,5 @@ import net.minecraft.util.Identifier;
 @Deprecated
 @FunctionalInterface
 public interface IIdentifierCustomPayloadListener {
-    void onCustomPayload(int protocol, Identifier channel, PacketByteBuf data);
+    void onCustomPayload(int protocol, ResourceLocation channel, FriendlyByteBuf data);
 }

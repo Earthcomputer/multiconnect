@@ -1,9 +1,9 @@
 package net.earthcomputer.multiconnect.protocols.v1_8;
 
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.SynchedEntityData;
 
-public class DataTrackerEntry_1_8 extends DataTracker.Entry<Object> {
+public class DataTrackerEntry_1_8 extends SynchedEntityData.DataItem<Object> {
     private final int serializerId;
     private final int id;
 
@@ -22,12 +22,12 @@ public class DataTrackerEntry_1_8 extends DataTracker.Entry<Object> {
     }
 
     @Override
-    public TrackedData<Object> getData() {
+    public EntityDataAccessor<Object> getAccessor() {
         throw new UnsupportedOperationException("Cannot get tracked data for 1.8 tracked data entry");
     }
 
     @Override
-    public DataTracker.Entry<Object> copy() {
-        return new DataTrackerEntry_1_8(serializerId, id, get());
+    public SynchedEntityData.DataItem<Object> copy() {
+        return new DataTrackerEntry_1_8(serializerId, id, getValue());
     }
 }
