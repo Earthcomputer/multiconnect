@@ -18,7 +18,6 @@
   "multiconnect.rareBug.link": "Issue Tracker",
   "multiconnect.rareBug.screen": "En sällsynt bugg inträffade just i multiconnect. Vill du ladda upp din spellogg till issue tracker för att hjälpa till att åtgärda problemet?",
   "multiconnect.signedChatScreen.title": "Säker Chatt Varning",
-  "multiconnect.signedChatScreen.line1": "Chattmeddelanden från 1.18.2 och nedan är inte säkra. Det betyder att chattmeddelanden från dessa versioner inte nödvändigtvis kommer från vem de utger sig för att vara. Senare versioner av Minecraft har ett alternativ att blockera osäkra meddelanden, men att göra det på gamla servrar skulle resultera i att inga chattmeddelanden från andra spelare syns. Vill du avblockera osäkra meddelanden på 1.18.2 och senare?",
   "multiconnect.signedChatScreen.line2": "Du kan ändra detta alternativ i multiconnects inställningar senare.",
   "multiconnect.unsupportedExperimentalCodec": "Den här servern använder experimentella funktioner, eller funktioner som var experimentella på angiven serverversion. Multiconnect kan inte översätta experimentell data och kan därav inte ansluta till denna server."
 }
