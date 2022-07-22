@@ -6,8 +6,8 @@
     "ServerboundHelloPacketMixin"
   ],
   "client": [
-    "ClientHandshakePacketListenerImplMixin",
-    "ClientPacketListenerMixin"
+    "ChatListenerMixin",
+    "ClientHandshakePacketListenerImplMixin"
   ],
   "injectors": {
     "defaultRequire": 1

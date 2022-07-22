@@ -19,9 +19,11 @@ import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.ReturnType;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
-import net.earthcomputer.multiconnect.packets.SPacketPlayerChat;
 import net.earthcomputer.multiconnect.packets.SPacketSystemChat;
-import net.earthcomputer.multiconnect.packets.latest.SPacketSystemChat_Latest;
+import net.earthcomputer.multiconnect.packets.v1_19.SPacketSystemChat_1_19;
+import net.earthcomputer.multiconnect.packets.v1_19.SPacketPlayerChat_1_19;
+import net.earthcomputer.multiconnect.protocols.generic.Key;
+import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
 import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
@@ -46,6 +48,7 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
             .registerTypeAdapter(MyText.Arg.class, new MyText.Arg.Serializer())
             .registerTypeAdapter(MyText.Contents.class, new MyText.Contents.Serializer())
             .create();
+    public static final Key<Byte> POSITION = Key.create("position");
 
     public CommonTypes.Text text;
     public byte position;
@@ -80,9 +83,22 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
             }
         }
         if (senderArg.hoverEvent.value != null) {
+            String value;
+            if (senderArg.hoverEvent.value.isJsonPrimitive()) {
+                value = senderArg.hoverEvent.value.getAsString();
+            } else if (senderArg.hoverEvent.value.isJsonObject()) {
+                JsonElement valueText = senderArg.hoverEvent.value.getAsJsonObject().get("text");
+                if (valueText != null && valueText.isJsonPrimitive()) {
+                    value = valueText.getAsString();
+                } else {
+                    return Util.NIL_UUID;
+                }
+            } else {
+                return Util.NIL_UUID;
+            }
             CompoundTag nbt;
             try {
-                nbt = TagParser.parseTag(senderArg.hoverEvent.value);
+                nbt = TagParser.parseTag(value);
             } catch (CommandSyntaxException e) {
                 nbt = null;
             }
@@ -106,14 +122,15 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
         };
     }
 
-    @ReturnType(SPacketSystemChat_Latest.class)
-    @ReturnType(SPacketPlayerChat.class)
+    @ReturnType(SPacketPlayerChat_1_19.class)
+    @ReturnType(SPacketSystemChat_1_19.class)
     @Handler
     public static List<Object> handle(
             @Argument("text") CommonTypes.Text text_,
             @Argument("position") byte position,
             @Argument("sender") UUID sender,
             @FilledArgument(fromVersion = Protocols.V1_18_2, toVersion = Protocols.V1_19) Function<Text_1_18_2, CommonTypes.Text_Latest> textTranslator,
+            @FilledArgument TypedMap userData,
             @GlobalData @Nullable RegistryAccess registryAccess
     ) {
         if (registryAccess == null) {
@@ -130,20 +147,20 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
         CommonTypes.Text text = textTranslator.apply((Text_1_18_2) text_);
 
         Registry<ChatType> chatTypeRegistry = registryAccess.registryOrThrow(Registry.CHAT_TYPE_REGISTRY);
-        int systemId = chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.SYSTEM));
-        int gameInfoId = chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.GAME_INFO));
         int chatId = chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.CHAT));
-        int chatType = switch (position) {
-            case 1 -> systemId;
-            case 2 -> gameInfoId;
-            default -> chatId;
-        };
+        int chatType = chatId;
 
         List<Object> packets = new ArrayList<>(1);
-        var basicPacket = new SPacketSystemChat_Latest();
+        var basicPacket = new SPacketSystemChat_1_19();
         basicPacket.messageType = chatType;
         basicPacket.text = text;
+        userData.put(POSITION, position);
         packets.add(basicPacket);
+
+        if (position == 1 || position == 2) {
+            // system chat
+            return packets;
+        }
 
         MyText myText;
         try {
@@ -155,21 +172,18 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
             return packets;
         }
 
-        int teamId = chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.TEAM_MSG_COMMAND));
+        int teamId = chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.TEAM_MSG_COMMAND_INCOMING));
         chatType = switch (myText.translate) {
             case "chat.type.announcement" -> chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.SAY_COMMAND));
-            case "chat.message.display.incoming" -> chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.MSG_COMMAND));
+            case "chat.message.display.incoming" -> chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.MSG_COMMAND_INCOMING));
             case "chat.type.emote" -> chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.EMOTE_COMMAND));
             case "chat.type.team.text" -> teamId;
             default -> chatType;
         };
 
-        if (chatType == systemId || chatType == gameInfoId) {
-            return packets;
-        }
-
         if (chatType == chatId && !"chat.type.text".equals(myText.translate)) {
-            chatType = chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.TELLRAW_COMMAND));
+            // tellraw, it's a system message
+            return packets;
         }
 
         Integer contentIndex = switch (myText.translate) {
@@ -178,12 +192,12 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
             default -> null;
         };
 
-        var packet = new SPacketPlayerChat();
+        var packet = new SPacketPlayerChat_1_19();
         packet.signedContent = contentIndex == null || contentIndex >= myText.with.length
                 ? text
                 : new CommonTypes.Text_Latest(GSON.toJson(myText.with[contentIndex]));
         packet.unsignedContent = Optional.empty();
-        packet.messageType = chatType;
+        packet.chatType = chatType;
         packet.sender = sender;
         Integer senderIndex = getSenderIndex(myText);
         packet.displayName = senderIndex == null || senderIndex >= myText.with.length
@@ -194,7 +208,7 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
                 : Optional.of(new CommonTypes.Text_Latest(GSON.toJson(myText.with[0])));
         packet.timestamp = Instant.now().toEpochMilli();
         packet.salt = 0;
-        packet.signature = new byte[0];
+        packet.messageSignature = new byte[0];
         packets.clear();
         packets.add(packet);
         return packets;
@@ -237,7 +251,7 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
 
         private static class HoverEvent {
             String action = "";
-            String value;
+            JsonElement value;
             Contents contents;
         }
 

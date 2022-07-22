@@ -38,7 +38,8 @@ public abstract class NewExperimentalRegistryAccessFix extends AbstractRegistryA
             });
         });
 
-        return updateBiomes(fromDynamic, toDynamic);
+        toDynamic = updateBiomes(fromDynamic, toDynamic);
+        return updateChatTypes(fromDynamic, toDynamic);
     }
 
     @Override

@@ -47,7 +47,7 @@ id clazz
 45 net.earthcomputer.multiconnect.packets.SPacketPing
 46 net.earthcomputer.multiconnect.packets.latest.SPacketPlaceGhostRecipe_Latest
 47 net.earthcomputer.multiconnect.packets.SPacketPlayerAbilities
-48 net.earthcomputer.multiconnect.packets.SPacketPlayerChat
+48 net.earthcomputer.multiconnect.packets.v1_19.SPacketPlayerChat_1_19
 49 net.earthcomputer.multiconnect.packets.SPacketPlayerCombatEnd
 50 net.earthcomputer.multiconnect.packets.SPacketPlayerCombatEnter
 51 net.earthcomputer.multiconnect.packets.SPacketPlayerCombatKill
@@ -62,7 +62,7 @@ id clazz
 60 net.earthcomputer.multiconnect.packets.SPacketRotateHead
 61 net.earthcomputer.multiconnect.packets.SPacketSectionBlocksUpdate
 62 net.earthcomputer.multiconnect.packets.SPacketSelectAdvancementsTab
-63 net.earthcomputer.multiconnect.packets.SPacketServerData
+63 net.earthcomputer.multiconnect.packets.v1_19.SPacketServerData_1_19
 64 net.earthcomputer.multiconnect.packets.SPacketSetActionBarText
 65 net.earthcomputer.multiconnect.packets.SPacketSetBorderCenter
 66 net.earthcomputer.multiconnect.packets.SPacketSetBorderLerpSize
@@ -94,7 +94,7 @@ id clazz
 92 net.earthcomputer.multiconnect.packets.latest.SPacketSoundEntity_Latest
 93 net.earthcomputer.multiconnect.packets.latest.SPacketSound_Latest
 94 net.earthcomputer.multiconnect.packets.SPacketStopSound
-95 net.earthcomputer.multiconnect.packets.latest.SPacketSystemChat_Latest
+95 net.earthcomputer.multiconnect.packets.v1_19.SPacketSystemChat_1_19
 96 net.earthcomputer.multiconnect.packets.SPacketTabList
 97 net.earthcomputer.multiconnect.packets.SPacketTagQuery
 98 net.earthcomputer.multiconnect.packets.SPacketTakeItemEntity

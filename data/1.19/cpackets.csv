@@ -2,8 +2,8 @@ id clazz
 0 net.earthcomputer.multiconnect.packets.CPacketAcceptTeleportation
 1 net.earthcomputer.multiconnect.packets.CPacketBlockEntityTagQuery
 2 net.earthcomputer.multiconnect.packets.CPacketChangeDifficulty
-3 net.earthcomputer.multiconnect.packets.CPacketChatCommand
-4 net.earthcomputer.multiconnect.packets.latest.CPacketChat_Latest
+3 net.earthcomputer.multiconnect.packets.v1_19.CPacketChatCommand_1_19
+4 net.earthcomputer.multiconnect.packets.v1_19.CPacketChat_1_19
 5 net.earthcomputer.multiconnect.packets.CPacketChatPreview
 6 net.earthcomputer.multiconnect.packets.CPacketClientCommand
 7 net.earthcomputer.multiconnect.packets.latest.CPacketClientInformation_Latest

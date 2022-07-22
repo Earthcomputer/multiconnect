@@ -14,7 +14,7 @@ import java.util.Optional;
 // TODO: fix login packets on the network layer
 @Mixin(ServerboundHelloPacket.class)
 public class ServerboundHelloPacketMixin {
-    @Inject(method = "write", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/FriendlyByteBuf;writeOptional(Ljava/util/Optional;Lnet/minecraft/network/FriendlyByteBuf$Writer;)V"), cancellable = true)
+    @Inject(method = "write", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/FriendlyByteBuf;writeOptional(Ljava/util/Optional;Lnet/minecraft/network/FriendlyByteBuf$Writer;)V", ordinal = 0), cancellable = true)
     private void onWritePublicKey(FriendlyByteBuf buf, CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_19) {
             if (ConnectionInfo.protocolVersion > Protocols.V1_18_2) {
