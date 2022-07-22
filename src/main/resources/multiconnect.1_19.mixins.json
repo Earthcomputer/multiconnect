@@ -7,7 +7,8 @@
   ],
   "client": [
     "ChatListenerMixin",
-    "ClientHandshakePacketListenerImplMixin"
+    "ClientHandshakePacketListenerImplMixin",
+    "GuiMessageTagMixin"
   ],
   "injectors": {
     "defaultRequire": 1
