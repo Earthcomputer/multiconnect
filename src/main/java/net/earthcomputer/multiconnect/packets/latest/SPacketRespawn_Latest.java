@@ -15,6 +15,7 @@ import net.earthcomputer.multiconnect.datafix.MulticonnectDFU;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
 import net.earthcomputer.multiconnect.packets.SPacketRespawn;
+import net.earthcomputer.multiconnect.protocols.generic.CurrentMenuReference;
 import net.earthcomputer.multiconnect.protocols.generic.DimensionTypeReference;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.Registry;
@@ -89,10 +90,12 @@ public class SPacketRespawn_Latest implements SPacketRespawn {
     }
 
     @PartialHandler
-    public static void saveDimension(
+    public static void saveData(
             @Argument("dimension") ResourceLocation dimension,
-            @GlobalData Consumer<DimensionTypeReference> dimensionSetter
+            @GlobalData Consumer<DimensionTypeReference> dimensionSetter,
+            @GlobalData Consumer<CurrentMenuReference> menuReferenceSetter
     ) {
         dimensionSetter.accept(new DimensionTypeReference(dimension));
+        menuReferenceSetter.accept(null);
     }
 }
