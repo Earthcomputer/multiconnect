@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.mixin.compat;
+package net.earthcomputer.multiconnect.compat.mixin.fapi;
 
 import com.google.common.base.Joiner;
 import com.mojang.logging.LogUtils;
@@ -20,7 +20,7 @@ import net.minecraft.resources.ResourceLocation;
 
 @Pseudo
 @Mixin(targets = "net.fabricmc.fabric.impl.registry.sync.RegistrySyncManager", remap = false)
-public class MixinRegistrySyncManager {
+public class RegistrySyncManagerMixin {
     @Unique
     private static final Logger MULTICONNECT_LOGGER = LogUtils.getLogger();
 

@@ -24,8 +24,8 @@ public class ClientChunkCacheMixin {
         if (ConnectionInfo.protocolVersion > Protocols.V1_13_2) {
             return;
         }
-        ClientPacketListener networkHandler = Minecraft.getInstance().getConnection();
-        if (networkHandler == null) {
+        ClientPacketListener connection = Minecraft.getInstance().getConnection();
+        if (connection == null) {
             return;
         }
 
@@ -40,6 +40,6 @@ public class ClientChunkCacheMixin {
         var packet = new SPacketSetChunkCacheCenter();
         packet.x = Mth.floor(cameraEntity.getX() / 16);
         packet.z = Mth.floor(cameraEntity.getZ() / 16);
-        PacketSystem.sendToClient(networkHandler, Protocols.V1_14, packet);
+        PacketSystem.sendToClient(connection, Protocols.V1_14, packet);
     }
 }

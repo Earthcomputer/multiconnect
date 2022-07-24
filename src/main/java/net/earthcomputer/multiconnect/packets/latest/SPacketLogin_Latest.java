@@ -44,7 +44,7 @@ public class SPacketLogin_Latest implements SPacketLogin {
     public byte previousGamemode;
     public List<ResourceLocation> dimensions;
     @Datafix(DatafixTypes.REGISTRY_ACCESS)
-    public CompoundTag registryManager;
+    public CompoundTag registryAccess;
     @Introduce(compute = "computeDimensionType")
     public ResourceLocation dimensionType;
     public ResourceLocation dimension;
@@ -61,7 +61,7 @@ public class SPacketLogin_Latest implements SPacketLogin {
     public Optional<CommonTypes.GlobalPos> lastDeathPos;
 
     public static ResourceLocation computeDimensionType(
-            @Argument("registryManager") CompoundTag registryManager,
+            @Argument("registryAccess") CompoundTag registryAccess,
             @Argument("dimensionType") CompoundTag dimensionType,
             @Argument("dimension") ResourceLocation dimensionName
     ) {
@@ -71,16 +71,16 @@ public class SPacketLogin_Latest implements SPacketLogin {
                 ConnectionMode.byValue(ConnectionInfo.protocolVersion).getDataVersion(),
                 ConnectionMode.V1_18_2.getDataVersion()
         ).getValue();
-        CompoundTag updatedRegistryManager = (CompoundTag) MulticonnectDFU.FIXER.update(
+        CompoundTag updatedRegistryAccess = (CompoundTag) MulticonnectDFU.FIXER.update(
                 MulticonnectDFU.REGISTRY_ACCESS,
-                new Dynamic<>(NbtOps.INSTANCE, registryManager),
+                new Dynamic<>(NbtOps.INSTANCE, registryAccess),
                 ConnectionMode.byValue(ConnectionInfo.protocolVersion).getDataVersion(),
                 ConnectionMode.V1_18_2.getDataVersion()
         ).getValue();
-        if (!updatedRegistryManager.contains("minecraft:dimension_type", Tag.TAG_COMPOUND)) {
+        if (!updatedRegistryAccess.contains("minecraft:dimension_type", Tag.TAG_COMPOUND)) {
             return Level.OVERWORLD.location();
         }
-        CompoundTag dimensionTypes = updatedRegistryManager.getCompound("minecraft:dimension_type");
+        CompoundTag dimensionTypes = updatedRegistryAccess.getCompound("minecraft:dimension_type");
         if (!dimensionTypes.contains("value", Tag.TAG_LIST)) {
             return Level.OVERWORLD.location();
         }
@@ -142,22 +142,22 @@ public class SPacketLogin_Latest implements SPacketLogin {
     }
 
     @PartialHandler
-    public static void saveRegistryManager(
-            @Argument("registryManager") CompoundTag registryManager,
+    public static void saveRegistryAccess(
+            @Argument("registryAccess") CompoundTag registryAccess,
             @Argument("dimensionType") ResourceLocation dimensionType,
-            @GlobalData Consumer<RegistryAccess> registryManagerSetter,
+            @GlobalData Consumer<RegistryAccess> registryAccessSetter,
             @GlobalData Consumer<DimensionTypeReference> dimensionTypeSetter
     ) {
         {
             Dynamic<?> updated = MulticonnectDFU.FIXER.update(
                     MulticonnectDFU.REGISTRY_ACCESS,
-                    new Dynamic<>(NbtOps.INSTANCE, registryManager),
+                    new Dynamic<>(NbtOps.INSTANCE, registryAccess),
                     ConnectionMode.byValue(ConnectionInfo.protocolVersion).getDataVersion(),
                     SharedConstants.getCurrentVersion().getDataVersion().getVersion()
             );
             var dataResult = RegistryAccess.NETWORK_CODEC.decode(updated);
             RegistryAccess result = dataResult.getOrThrow(false, err -> {}).getFirst();
-            registryManagerSetter.accept(result);
+            registryAccessSetter.accept(result);
         }
         {
             dimensionTypeSetter.accept(new DimensionTypeReference(dimensionType));

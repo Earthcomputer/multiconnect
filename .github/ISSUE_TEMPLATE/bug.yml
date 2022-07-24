@@ -1,0 +1,36 @@
+name: Bug Report
+description: Create a bug report
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for creating a bug report and helping multiconnect to improve!
+  - type: checkboxes
+    id: latest_version_confirmation
+    attributes:
+      label: "Latest Version?"
+      description: "Ensure you have the latest version of multiconnect, as found from the [releases page](https://github.com/Earthcomputer/multiconnect/releases)."
+      options:
+        - label: I confirm I have the latest version of multiconnect
+          required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please describe the bug in detail.
+    validations:
+      required: true
+  - type: input
+    id: logs
+    attributes:
+      label: Log File
+      description: "Log files can be found in `.minecraft/logs`, usually `latest.log`. Please do *not* use an expiring paste service, as it prevents looking at it in the future."
+      placeholder: Paste a link to the log file here.
+    validations:
+      required: true
+  - type: input
+    id: crash_report
+    attributes:
+      label: Crash Report (if applicable)
+      description: "Crash reports can be found in `.minecraft/crash-reports`. Please do *not* use an expiring paste service, as it prevents looking at it in the future."
+      placeholder: Paste a link to the crash report here.

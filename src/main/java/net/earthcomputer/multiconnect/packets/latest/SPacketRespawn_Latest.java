@@ -51,7 +51,7 @@ public class SPacketRespawn_Latest implements SPacketRespawn {
     public static ResourceLocation computeDimension(
             @Argument("dimension") CompoundTag dimension,
             @Argument("dimensionId") ResourceLocation dimensionId,
-            @GlobalData RegistryAccess registryManager
+            @GlobalData RegistryAccess registryAccess
     ) {
         CompoundTag updatedDimension = (CompoundTag) MulticonnectDFU.FIXER.update(
                 MulticonnectDFU.DIMENSION,
@@ -65,7 +65,7 @@ public class SPacketRespawn_Latest implements SPacketRespawn {
                         new Dynamic<>(NbtOps.INSTANCE, updatedDimension)
                 ).result().orElseThrow().getFirst()
         ).result().orElseThrow();
-        Registry<DimensionType> dimensionTypeRegistry = registryManager.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
+        Registry<DimensionType> dimensionTypeRegistry = registryAccess.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
 
         ResourceLocation matchedDimension = Level.OVERWORLD.location();
         int maxScore = -1;

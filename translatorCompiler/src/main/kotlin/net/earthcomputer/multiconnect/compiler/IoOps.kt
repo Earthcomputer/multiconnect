@@ -18,7 +18,7 @@ object IoOps {
         }
         return when (type) {
             Types.MESSAGE -> throw IllegalArgumentException("One does not simply skip over a message") // should have been handled by the caller
-            Types.VAR_INT, Types.VAR_LONG, Types.NBT_COMPOUND -> McNode(PopStmtOp, readType(bufVar, type))
+            Types.VAR_INT, Types.VAR_LONG, Types.COMPOUND_TAG -> McNode(PopStmtOp, readType(bufVar, type))
             Types.STRING, Types.BITSET -> {
                 var readLength = McNode(
                     FunctionCallOp(CommonClassNames.PACKET_INTRINSICS, "readVarInt", listOf(McType.BYTE_BUF), McType.INT, true),
@@ -43,7 +43,7 @@ object IoOps {
                     )
                 )
             }
-            Types.IDENTIFIER -> skipOver(bufVar, Types.STRING)
+            Types.RESOURCE_LOCATION -> skipOver(bufVar, Types.STRING)
             else -> throw AssertionError()
         }
     }
@@ -73,8 +73,8 @@ object IoOps {
             Types.BYTE -> byteBuf("readByte", McType.BYTE)
             Types.INT -> byteBuf("readInt", McType.INT)
             Types.SHORT -> byteBuf("readShort", McType.SHORT)
-            Types.NBT_COMPOUND -> intrinsic("readNbtCompound", McType.DeclaredType(CommonClassNames.COMPOUND_TAG))
-            Types.IDENTIFIER -> McNode(NewOp(CommonClassNames.RESOURCE_LOCATION, listOf(McType.STRING)), readType(bufVar, Types.STRING, maxLength))
+            Types.COMPOUND_TAG -> intrinsic("readNbtCompound", McType.DeclaredType(CommonClassNames.COMPOUND_TAG))
+            Types.RESOURCE_LOCATION -> McNode(NewOp(CommonClassNames.RESOURCE_LOCATION, listOf(McType.STRING)), readType(bufVar, Types.STRING, maxLength))
             Types.STRING -> McNode(FunctionCallOp(CommonClassNames.PACKET_INTRINSICS, "readString", listOf(McType.BYTE_BUF, McType.INT), McType.STRING, true),
                 McNode(LoadVariableOp(bufVar, McType.BYTE_BUF)),
                 McNode(CstIntOp(maxLength ?: 32767)),
@@ -113,8 +113,8 @@ object IoOps {
             Types.BYTE -> byteBuf("writeByte", McType.INT, value)
             Types.INT -> byteBuf("writeInt", McType.INT, value)
             Types.SHORT -> byteBuf("writeShort", McType.INT, value)
-            Types.NBT_COMPOUND -> intrinsic("writeNbtCompound", McType.DeclaredType(CommonClassNames.COMPOUND_TAG), value)
-            Types.IDENTIFIER -> intrinsic("writeString", McType.STRING, McNode(
+            Types.COMPOUND_TAG -> intrinsic("writeNbtCompound", McType.DeclaredType(CommonClassNames.COMPOUND_TAG), value)
+            Types.RESOURCE_LOCATION -> intrinsic("writeString", McType.STRING, McNode(
                 FunctionCallOp(CommonClassNames.RESOURCE_LOCATION, "toString", listOf(McType.DeclaredType(CommonClassNames.RESOURCE_LOCATION)), McType.STRING, false, isStatic = false),
                 value
             ))

@@ -15,6 +15,8 @@ import net.minecraft.core.DefaultedRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.UUID;
 
 @Polymorphic
@@ -55,6 +57,7 @@ public abstract class ItemStack_Latest implements CommonTypes.ItemStack {
         @DefaultConstruct(intValue = 1)
         public byte count;
         @Introduce(direction = Introduce.Direction.FROM_OLDER, compute = "translateTagClientbound")
+        @Nullable
         public CompoundTag tag;
 
         @Override
@@ -68,6 +71,7 @@ public abstract class ItemStack_Latest implements CommonTypes.ItemStack {
         }
 
         @Override
+        @Nullable
         public CompoundTag getTag() {
             return tag;
         }
@@ -75,7 +79,7 @@ public abstract class ItemStack_Latest implements CommonTypes.ItemStack {
         public static CompoundTag translateTagClientbound(
                 @Argument("itemId") int itemId,
                 @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.ITEM, value = "player_head")) int playerHeadId,
-                @Argument("tag") CompoundTag tag
+                @Argument("tag") @Nullable CompoundTag tag
         ) {
             if (itemId != playerHeadId || tag == null) {
                 return tag;

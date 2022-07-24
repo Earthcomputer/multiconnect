@@ -40,6 +40,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.util.SimpleBitStorage;
 import net.minecraft.world.level.block.Block;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -64,7 +66,7 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
             @Argument("biomes") IntList biomes,
             @Argument("blockEntities") List<CompoundTag> blockEntities,
             @DefaultConstruct InnerData dest,
-            @GlobalData RegistryAccess registryManager,
+            @GlobalData RegistryAccess registryAccess,
             @GlobalData DimensionTypeReference dimensionType
     ) {
         dest.heightmaps = heightmaps;
@@ -73,7 +75,7 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
         List<ChunkData.Section> fromSections = ((ChunkData_1_17_1) data).sections;
         List<ChunkData.Section> destSections = new ArrayList<>(fromSections.size());
         ((ChunkData_Latest) dest.data).sections = destSections;
-        int numSections = dimensionType.getValue(registryManager).height() >> 4;
+        int numSections = dimensionType.getValue(registryAccess).height() >> 4;
         int i = 0;
         for (int sectionY = 0; sectionY < numSections; sectionY++) {
             if (verticalStripBitmask.get(sectionY)) {
@@ -106,14 +108,14 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
                     throw new IllegalStateException("Illegal subtype of BlockStatePalettedContainer");
                 }
 
-                computeBiomeData(sectionY, registryManager, biomes, toSection);
+                computeBiomeData(sectionY, registryAccess, biomes, toSection);
                 destSections.add(toSection);
             } else {
                 var toSection = new ChunkData_Latest.ChunkSection();
                 var toStates = new ChunkData_Latest.BlockStatePalettedContainer.Singleton();
                 toStates.dummyData = new long[0];
                 toSection.blockStates = toStates;
-                computeBiomeData(sectionY, registryManager, biomes, toSection);
+                computeBiomeData(sectionY, registryAccess, biomes, toSection);
                 destSections.add(toSection);
             }
         }
@@ -140,15 +142,17 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
 
     private static void computeBiomeData(
             int sectionY,
-            RegistryAccess registryManager,
+            RegistryAccess registryAccess,
             IntList biomes,
             ChunkData_Latest.ChunkSection toSection
     ) {
-        var biomeRegistry = registryManager.registryOrThrow(net.minecraft.core.Registry.BIOME_REGISTRY);
+        int minIndex = sectionY << 6;
+
+        var biomeRegistry = registryAccess.registryOrThrow(net.minecraft.core.Registry.BIOME_REGISTRY);
         Int2IntMap invBiomePalette = new Int2IntOpenHashMap();
         IntList biomePalette = new IntArrayList();
-        for (int i = 0; i < biomes.size(); i++) {
-            int biome = Protocol_1_17_1.mapBiomeId(biomes.getInt(i), biomeRegistry);
+        for (int i = 0; i < 64; i++) {
+            int biome = Protocol_1_17_1.mapBiomeId(biomes.getInt(minIndex + i), biomeRegistry);
             invBiomePalette.computeIfAbsent(biome, k -> {
                 biomePalette.add(biome);
                 return invBiomePalette.size();
@@ -168,7 +172,6 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
             return;
         }
 
-        int minIndex = sectionY << 6;
         int biomesPerLong = 64 / bitsPerBiome;
         long[] result = new long[(64 + biomesPerLong - 1) / biomesPerLong];
 
@@ -186,17 +189,14 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
             bitsPerBiome = Mth.ceillog2(biomeRegistry.size());
         }
 
-        if (sectionY < 0) {
-            return;
-        }
         long currentLong = 0;
         for (int i = 0; i < 64; i++) {
-            int valueToWrite = bitsPerBiome <= 2
+            int valueToWrite = bitsPerBiome <= 3
                     ? invBiomePalette.get(Protocol_1_17_1.mapBiomeId(biomes.getInt(minIndex + i), biomeRegistry))
                     : Protocol_1_17_1.mapBiomeId(biomes.getInt(minIndex + i), biomeRegistry);
             int posInLong = i % biomesPerLong;
             currentLong |= (long) valueToWrite << (posInLong * bitsPerBiome);
-            if (posInLong + bitsPerBiome >= 64 || i == 63) {
+            if ((posInLong + 1) * bitsPerBiome >= 64 || i == 63) {
                 result[i / biomesPerLong] = currentLong;
                 currentLong = 0;
             }
@@ -245,7 +245,7 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
         public static ChunkData fixData(
                 ChunkData data_,
                 @FilledArgument TypedMap userData,
-                @GlobalData RegistryAccess registryManager,
+                @GlobalData RegistryAccess registryAccess,
                 @GlobalData DimensionTypeReference dimType
         ) {
             var data = (ChunkData_Latest) data_;
@@ -294,7 +294,7 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
                 }
             }
 
-            var world = new BlockConnectionsNetworkView(dimType.getValue(registryManager).minY(), sections);
+            var world = new BlockConnectionsNetworkView(dimType.getValue(registryAccess).minY(), sections);
             var blocksNeedingUpdate = new EnumMap<Direction8, IntSet>(Direction8.class);
             ConnectionInfo.protocol.getBlockConnector().fixChunkData(world, blocksNeedingUpdate);
             userData.put(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY, blocksNeedingUpdate);
@@ -310,10 +310,11 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
         @Registry(Registries.BLOCK_ENTITY_TYPE)
         public int type;
         @Datafix(value = DatafixTypes.BLOCK_ENTITY, preprocess = "preprocessBlockEntity")
+        @Nullable
         public CompoundTag nbt;
 
         public static void preprocessBlockEntity(
-                CompoundTag nbt,
+                @Nullable CompoundTag nbt,
                 @Argument("type") int type
         ) {
             if (nbt == null) {

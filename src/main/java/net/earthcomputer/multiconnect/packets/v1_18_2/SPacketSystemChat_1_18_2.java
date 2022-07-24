@@ -114,20 +114,26 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
             @Argument("position") byte position,
             @Argument("sender") UUID sender,
             @FilledArgument(fromVersion = Protocols.V1_18_2, toVersion = Protocols.V1_19) Function<Text_1_18_2, CommonTypes.Text_Latest> textTranslator,
-            @GlobalData RegistryAccess registryManager
+            @GlobalData @Nullable RegistryAccess registryAccess
     ) {
-        if (registryManager == null) {
+        if (registryAccess == null) {
             // Some servers apparently send chat messages before the game join packet. We can't handle these anymore
+            return new ArrayList<>(0);
+        }
+
+        // 1.18.2 servers can send null chat messages, which don't do anything
+        // 1.19 can't handle these anymore, so just drop them
+        if ("null".equals(text_.getJson())) {
             return new ArrayList<>(0);
         }
 
         CommonTypes.Text text = textTranslator.apply((Text_1_18_2) text_);
 
-        Registry<ChatType> messageTypeRegistry = registryManager.registryOrThrow(Registry.CHAT_TYPE_REGISTRY);
-        int systemId = messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.SYSTEM));
-        int gameInfoId = messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.GAME_INFO));
-        int chatId = messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.CHAT));
-        int messageType = switch (position) {
+        Registry<ChatType> chatTypeRegistry = registryAccess.registryOrThrow(Registry.CHAT_TYPE_REGISTRY);
+        int systemId = chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.SYSTEM));
+        int gameInfoId = chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.GAME_INFO));
+        int chatId = chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.CHAT));
+        int chatType = switch (position) {
             case 1 -> systemId;
             case 2 -> gameInfoId;
             default -> chatId;
@@ -135,7 +141,7 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
 
         List<Object> packets = new ArrayList<>(1);
         var basicPacket = new SPacketSystemChat_Latest();
-        basicPacket.messageType = messageType;
+        basicPacket.messageType = chatType;
         basicPacket.text = text;
         packets.add(basicPacket);
 
@@ -149,21 +155,21 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
             return packets;
         }
 
-        int teamId = messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.TEAM_MSG_COMMAND));
-        messageType = switch (myText.translate) {
-            case "chat.type.announcement" -> messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.SAY_COMMAND));
-            case "chat.message.display.incoming" -> messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.MSG_COMMAND));
-            case "chat.type.emote" -> messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.EMOTE_COMMAND));
+        int teamId = chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.TEAM_MSG_COMMAND));
+        chatType = switch (myText.translate) {
+            case "chat.type.announcement" -> chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.SAY_COMMAND));
+            case "chat.message.display.incoming" -> chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.MSG_COMMAND));
+            case "chat.type.emote" -> chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.EMOTE_COMMAND));
             case "chat.type.team.text" -> teamId;
-            default -> messageType;
+            default -> chatType;
         };
 
-        if (messageType == systemId || messageType == gameInfoId) {
+        if (chatType == systemId || chatType == gameInfoId) {
             return packets;
         }
 
-        if (messageType == chatId && !"chat.type.text".equals(myText.translate)) {
-            messageType = messageTypeRegistry.getId(messageTypeRegistry.get(ChatType.TELLRAW_COMMAND));
+        if (chatType == chatId && !"chat.type.text".equals(myText.translate)) {
+            chatType = chatTypeRegistry.getId(chatTypeRegistry.get(ChatType.TELLRAW_COMMAND));
         }
 
         Integer contentIndex = switch (myText.translate) {
@@ -177,13 +183,13 @@ public class SPacketSystemChat_1_18_2 implements SPacketSystemChat {
                 ? text
                 : new CommonTypes.Text_Latest(GSON.toJson(myText.with[contentIndex]));
         packet.unsignedContent = Optional.empty();
-        packet.messageType = messageType;
+        packet.messageType = chatType;
         packet.sender = sender;
         Integer senderIndex = getSenderIndex(myText);
         packet.displayName = senderIndex == null || senderIndex >= myText.with.length
                 ? new CommonTypes.Text_Latest("\"\"")
                 : new CommonTypes.Text_Latest(GSON.toJson(myText.with[senderIndex]));
-        packet.teamDisplayName = messageType != teamId || myText.with.length == 0
+        packet.teamDisplayName = chatType != teamId || myText.with.length == 0
                 ? Optional.empty()
                 : Optional.of(new CommonTypes.Text_Latest(GSON.toJson(myText.with[0])));
         packet.timestamp = Instant.now().toEpochMilli();

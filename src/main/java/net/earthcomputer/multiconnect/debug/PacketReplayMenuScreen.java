@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.debug;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
 public class PacketReplayMenuScreen extends Screen {
@@ -22,7 +23,7 @@ public class PacketReplayMenuScreen extends Screen {
             PacketReplay.start();
         }));
 
-        addRenderableWidget(new Button(width / 2 - 100, height / 2 + 20 + 60, 200, 20, Component.translatable("multiconnect.debug.menu.cancel"), button -> {
+        addRenderableWidget(new Button(width / 2 - 100, height / 2 + 20 + 60, 200, 20, CommonComponents.GUI_CANCEL, button -> {
             onClose();
         }));
     }

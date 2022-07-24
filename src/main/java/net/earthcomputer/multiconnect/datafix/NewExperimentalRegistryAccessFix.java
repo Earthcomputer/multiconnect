@@ -27,7 +27,7 @@ public abstract class NewExperimentalRegistryAccessFix extends AbstractRegistryA
                 return dynamic.createList(dynamic.asStream().map(toDimension -> {
                     String dimensionName = toDimension.get("name").asString("");
                     Dynamic<?> fromDimension = fromMap.get(dimensionName);
-                    Dynamic<?> fromElement = fromDimension.get("element").orElseEmptyMap();
+                    Dynamic<?> fromElement = fromDimension == null ? fromDynamic.emptyMap() : fromDimension.get("element").orElseEmptyMap();
                     return toDimension.update("element", toElement -> {
                         toElement = toElement.set("logical_height", fromElement.createInt(fromElement.get("logical_height").asInt(256)));
                         toElement = toElement.set("height", fromElement.createInt(fromElement.get("height").asInt(256)));

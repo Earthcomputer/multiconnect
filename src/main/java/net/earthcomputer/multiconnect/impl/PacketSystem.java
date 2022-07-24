@@ -11,6 +11,8 @@ import it.unimi.dsi.fastutil.ints.Int2IntMaps;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.mixin.connect.ConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
@@ -38,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -222,7 +225,7 @@ public class PacketSystem {
     }
 
     public static ResourceLocation serverIdToClient(int serverVersion, Registry<?> registry, ResourceLocation serverId) {
-        return protocolClasses.get(serverVersion).remapSIdentifier(registry.key(), serverId);
+        return protocolClasses.get(serverVersion).remapSResourceLocation(registry.key(), serverId);
     }
 
     public static ResourceLocation clientIdToServer(Registry<?> registry, ResourceLocation clientId) {
@@ -230,7 +233,7 @@ public class PacketSystem {
     }
 
     public static ResourceLocation clientIdToServer(int serverVersion, Registry<?> registry, ResourceLocation clientId) {
-        return protocolClasses.get(serverVersion).remapCIdentifier(registry.key(), clientId);
+        return protocolClasses.get(serverVersion).remapCResourceLocation(registry.key(), clientId);
     }
 
     @Nullable
@@ -311,6 +314,55 @@ public class PacketSystem {
         }
     }
 
+    private static final Map<ResourceLocation, OptionalInt> versionRemovedCache = new HashMap<>();
+    private static final ReadWriteLock versionRemovedCacheLock = new ReentrantReadWriteLock();
+
+    /**
+     * Returns the last version with the specified ID instead of the multiconnect substitute.
+     */
+    @Nullable
+    public static Integer getVersionRemoved(Registry<?> registry, ResourceLocation id) {
+        ResourceLocation clientId = serverIdToClient(registry, id);
+        if (clientId == null || !"multiconnect".equals(clientId.getNamespace())) {
+            return null;
+        }
+
+        versionRemovedCacheLock.readLock().lock();
+        try {
+            OptionalInt versionRemoved = versionRemovedCache.get(clientId);
+            //noinspection OptionalAssignedToNull
+            if (versionRemoved != null) {
+                return versionRemoved.isPresent() ? versionRemoved.getAsInt() : null;
+            }
+        } finally {
+            versionRemovedCacheLock.readLock().unlock();
+        }
+        versionRemovedCacheLock.writeLock().lock();
+        try {
+            OptionalInt versionRemoved = versionRemovedCache.get(clientId);
+            //noinspection OptionalAssignedToNull
+            if (versionRemoved != null) {
+                return versionRemoved.isPresent() ? versionRemoved.getAsInt() : null;
+            }
+
+            Integer result = null;
+            for (ConnectionMode protocol : ConnectionMode.protocolValues()) {
+                ResourceLocation versionId = clientIdToServer(protocol.getValue(), registry, clientId);
+                if (versionId == null) {
+                    break;
+                }
+                if (!"multiconnect".equals(versionId.getNamespace())) {
+                    result = protocol.getValue();
+                    break;
+                }
+            }
+            versionRemovedCache.put(clientId, result != null ? OptionalInt.of(result) : OptionalInt.empty());
+            return result;
+        } finally {
+            versionRemovedCacheLock.writeLock().unlock();
+        }
+    }
+
     public static class Internals {
         private static final LoadingCache<ByteBuf, TypedMap> bufUserData = CacheBuilder.newBuilder().weakKeys().build(CacheLoader.from(TypedMap::new));
 
@@ -376,8 +428,8 @@ public class PacketSystem {
         private final MethodHandle doesServerKnowBlockStateMulticonnect;
         private final MethodHandle remapCInt;
         private final MethodHandle remapSInt;
-        private final MethodHandle remapCIdentifier;
-        private final MethodHandle remapSIdentifier;
+        private final MethodHandle remapCResourceLocation;
+        private final MethodHandle remapSResourceLocation;
         private final MethodHandle remapCIntBlockState;
         private final MethodHandle remapSIntBlockState;
 
@@ -392,8 +444,8 @@ public class PacketSystem {
             this.doesServerKnowBlockStateMulticonnect = findMethodHandle(clazz, "doesServerKnowBlockStateMulticonnect", boolean.class, BlockState.class);
             this.remapCInt = findMethodHandle(clazz, "remapCInt", int.class, ResourceKey.class, int.class);
             this.remapSInt = findMethodHandle(clazz, "remapSInt", int.class, ResourceKey.class, int.class);
-            this.remapCIdentifier = findMethodHandle(clazz, "remapCIdentifier", ResourceLocation.class, ResourceKey.class, ResourceLocation.class);
-            this.remapSIdentifier = findMethodHandle(clazz, "remapSIdentifier", ResourceLocation.class, ResourceKey.class, ResourceLocation.class);
+            this.remapCResourceLocation = findMethodHandle(clazz, "remapCResourceLocation", ResourceLocation.class, ResourceKey.class, ResourceLocation.class);
+            this.remapSResourceLocation = findMethodHandle(clazz, "remapSResourceLocation", ResourceLocation.class, ResourceKey.class, ResourceLocation.class);
             this.remapCIntBlockState = findMethodHandle(clazz, "remapCIntBlockState", int.class, int.class);
             this.remapSIntBlockState = findMethodHandle(clazz, "remapSIntBlockState", int.class, int.class);
         }
@@ -478,17 +530,17 @@ public class PacketSystem {
             }
         }
 
-        ResourceLocation remapCIdentifier(ResourceKey<? extends Registry<?>> registry, ResourceLocation value) {
+        ResourceLocation remapCResourceLocation(ResourceKey<? extends Registry<?>> registry, ResourceLocation value) {
             try {
-                return (ResourceLocation) remapCIdentifier.invoke(registry, value);
+                return (ResourceLocation) remapCResourceLocation.invoke(registry, value);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }
         }
 
-        ResourceLocation remapSIdentifier(ResourceKey<? extends Registry<?>> registry, ResourceLocation value) {
+        ResourceLocation remapSResourceLocation(ResourceKey<? extends Registry<?>> registry, ResourceLocation value) {
             try {
-                return (ResourceLocation) remapSIdentifier.invoke(registry, value);
+                return (ResourceLocation) remapSResourceLocation.invoke(registry, value);
             } catch (Throwable e) {
                 throw PacketIntrinsics.sneakyThrow(e);
             }

@@ -50,6 +50,8 @@ bridges.
 3. The JAR file can be found in `build/libs` (it's the one with the shortest name).
 
 ## Installation for Mod Developers
+Looking to support custom payloads? Check out [this document](docs/custom_payloads.md).
+
 This section is for when you are developing your own mod and want to use the multiconnect API, or run multiconnect alongside your mod in the IDE. Aside from the first step, you ONLY need to follow the steps applicable to you and your mod.
 1. Explicitly setting a repository is not necessary, as multiconnect is hosted on Maven Central.
 1. If you want to use the API inside your mod, you will have to jar-in-jar it for the release and add it to the classpath. To do this, add the following to your `dependencies {}` block:

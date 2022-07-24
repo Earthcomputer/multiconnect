@@ -8,6 +8,7 @@ public enum Registries {
     CAT_VARIANT,
     COMMAND_ARGUMENT_TYPE,
     CUSTOM_STAT,
+    ENCHANTMENT,
     ENTITY_POSE(false),
     ENTITY_TYPE,
     FLUID,

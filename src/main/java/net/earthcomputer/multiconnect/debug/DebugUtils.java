@@ -468,9 +468,9 @@ public class DebugUtils {
     private static void dumpRegistryAccess() throws IOException {
         Path destFile = Path.of("data/registry_access.nbt");
         Files.createDirectories(destFile.getParent());
-        var registryManager = RegistryAccess.builtinCopy().freeze();
+        var registryAccess = RegistryAccess.builtinCopy().freeze();
         try (OutputStream output = new BufferedOutputStream(Files.newOutputStream(destFile))) {
-            CompoundTag nbt = (CompoundTag) RegistryAccess.NETWORK_CODEC.encodeStart(NbtOps.INSTANCE, registryManager)
+            CompoundTag nbt = (CompoundTag) RegistryAccess.NETWORK_CODEC.encodeStart(NbtOps.INSTANCE, registryAccess)
                     .getOrThrow(false, err -> {});
             NbtIo.writeCompressed(nbt, output);
         }

@@ -43,19 +43,19 @@ public class SPacketLogin_1_12_2 implements SPacketLogin {
     @Handler
     public static List<Object> handle(
             @Argument(value = "this", translate = true) SPacketLogin_1_13_2 translatedThis,
-            @DefaultConstruct SPacketUpdateTags_1_13_2 synchronizeTagsPacket,
-            @DefaultConstruct SPacketUpdateRecipes_1_13_2 synchronizeRecipesPacket
+            @DefaultConstruct SPacketUpdateTags_1_13_2 updateTagsPacket,
+            @DefaultConstruct SPacketUpdateRecipes_1_13_2 updateRecipesPacket
     ) {
         List<Object> packets = new ArrayList<>(4);
         packets.add(translatedThis);
-        packets.add(synchronizeTagsPacket);
+        packets.add(updateTagsPacket);
 
         int recipeId = 0;
         for (RecipeInfo<?> recipeInfo : ((Protocol_1_12_2) ConnectionInfo.protocol).getRecipes()) {
-            synchronizeRecipesPacket.recipes.add(recipeInfo.toPacketRecipe(new ResourceLocation(String.valueOf(recipeId++))));
+            updateRecipesPacket.recipes.add(recipeInfo.toPacketRecipe(new ResourceLocation(String.valueOf(recipeId++))));
         }
 
-        packets.add(synchronizeRecipesPacket);
+        packets.add(updateRecipesPacket);
         // TODO: command tree
         TabCompletionManager.requestCommandList();
         return packets;

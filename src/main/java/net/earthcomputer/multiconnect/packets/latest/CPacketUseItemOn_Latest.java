@@ -32,8 +32,8 @@ public class CPacketUseItemOn_Latest implements CPacketUseItemOn {
         Minecraft.getInstance().execute(() -> {
             ClientLevel world = Minecraft.getInstance().level;
             if (world != null) {
-                var pendingUpdateManager = (IBlockStatePredictionHandler) ((ClientLevelAccessor) world).multiconnect_getBlockStatePredictionHandler();
-                pendingUpdateManager.multiconnect_nullifyServerVerifiedStatesUpTo(world, sequence);
+                var blockStatePredictionHandler = (IBlockStatePredictionHandler) ((ClientLevelAccessor) world).multiconnect_getBlockStatePredictionHandler();
+                blockStatePredictionHandler.multiconnect_nullifyServerVerifiedStatesUpTo(world, sequence);
                 world.handleBlockChangedAck(sequence);
             }
         });

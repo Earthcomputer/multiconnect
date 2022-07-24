@@ -188,7 +188,7 @@ public final class PacketReplay {
                     if (type == PacketRecorder.CLIENTBOUND_PACKET) {
                         channel.pipeline().fireChannelRead(buf);
                     } else {
-                        channel.pipeline().context("decoder").writeAndFlush(buf);
+                        channel.pipeline().context("encoder").writeAndFlush(buf);
                     }
                     return true;
                 }
@@ -410,6 +410,7 @@ public final class PacketReplay {
     private static class DropVanillaPackets extends ChannelOutboundHandlerAdapter {
         @Override
         public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
+            System.out.println("Dropping vanilla packet");
             // all serverbound packets sent by the game are dropped here
             // we only want packets from the replay
         }

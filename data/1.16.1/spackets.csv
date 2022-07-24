@@ -14,7 +14,7 @@ id clazz
 12 net.earthcomputer.multiconnect.packets.latest.SPacketBossEvent_Latest
 13 net.earthcomputer.multiconnect.packets.latest.SPacketChangeDifficulty_Latest
 14 net.earthcomputer.multiconnect.packets.v1_18_2.SPacketSystemChat_1_18_2
-15 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketChunkDeltaUpdate_1_16_1
+15 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketMultiBlockUpdate_1_16_1
 16 net.earthcomputer.multiconnect.packets.latest.SPacketCommandSuggestions_Latest
 17 net.earthcomputer.multiconnect.packets.SPacketCommands
 18 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketAckScreenAction_1_16_5

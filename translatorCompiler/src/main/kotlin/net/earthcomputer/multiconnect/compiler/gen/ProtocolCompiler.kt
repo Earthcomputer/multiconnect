@@ -91,10 +91,10 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         emitDoesServerKnowBlockState(emitter)
         emitDoesServerKnowBlockStateMulticonnect(emitter)
 
-        emitRemapFunc(emitter, clientbound = true, identifier = false)
-        emitRemapFunc(emitter, clientbound = false, identifier = false)
-        emitRemapFunc(emitter, clientbound = true, identifier = true)
-        emitRemapFunc(emitter, clientbound = false, identifier = true)
+        emitRemapFunc(emitter, clientbound = true, resourceLocation = false)
+        emitRemapFunc(emitter, clientbound = false, resourceLocation = false)
+        emitRemapFunc(emitter, clientbound = true, resourceLocation = true)
+        emitRemapFunc(emitter, clientbound = false, resourceLocation = true)
 
         createIntRemapFunc(Registries.BLOCK_STATE, true)
         createIntRemapFunc(Registries.BLOCK_STATE, false)
@@ -487,12 +487,12 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         field.dedent().appendNewLine().append(");")
     }
 
-    private fun emitRemapFunc(emitter: Emitter, clientbound: Boolean, identifier: Boolean) {
-        val methodName = "remap%s%s".format(if (clientbound) "S" else "C", if (identifier) "Identifier" else "Int")
-        val fieldName = "REMAP_%s_%s".format(if (clientbound) "S" else "C", if (identifier) "IDENTIFIER" else "INT")
+    private fun emitRemapFunc(emitter: Emitter, clientbound: Boolean, resourceLocation: Boolean) {
+        val methodName = "remap%s%s".format(if (clientbound) "S" else "C", if (resourceLocation) "ResourceLocation" else "Int")
+        val fieldName = "REMAP_%s_%s".format(if (clientbound) "S" else "C", if (resourceLocation) "RESOURCE_LOCATION" else "INT")
 
         fun emitType(emitter: Emitter) {
-            if (identifier) {
+            if (resourceLocation) {
                 emitter.appendClassName(RESOURCE_LOCATION)
             } else {
                 emitter.append("int")
@@ -500,7 +500,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
         }
 
         fun emitUnaryOperator(emitter: Emitter) {
-            if (identifier) {
+            if (resourceLocation) {
                 emitter.appendClassName(UNARY_OPERATOR).append("<").appendClassName(RESOURCE_LOCATION).append(">")
             } else {
                 emitter.appendClassName(INT_UNARY_OPERATOR)
@@ -522,7 +522,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
             .append("return value;").dedent().appendNewLine()
             .append("}").appendNewLine()
             .append("return remapper.apply")
-        if (!identifier) {
+        if (!resourceLocation) {
             function.append("AsInt")
         }
         function.append("(value);").dedent().appendNewLine().append("}")
@@ -546,7 +546,7 @@ class ProtocolCompiler(internal val protocolName: String, internal val protocolI
                 .append(", (")
             emitUnaryOperator(field)
             field.append(") ").appendClassName(className).append("::").append(
-                if (identifier) {
+                if (resourceLocation) {
                     createStringRemapFunc(registry, clientbound)
                 } else {
                     createIntRemapFunc(registry, clientbound)

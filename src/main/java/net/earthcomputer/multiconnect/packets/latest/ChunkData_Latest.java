@@ -20,10 +20,10 @@ public class ChunkData_Latest implements ChunkData {
     public List<ChunkData.Section> sections;
 
     public static int computeSectionsLength(
-            @GlobalData RegistryAccess registryManager,
+            @GlobalData RegistryAccess registryAccess,
             @GlobalData DimensionTypeReference dimensionType
     ) {
-        return dimensionType.getValue(registryManager).height() >> 4;
+        return dimensionType.getValue(registryAccess).height() >> 4;
     }
 
     @MessageVariant(minVersion = Protocols.V1_18)

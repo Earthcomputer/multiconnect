@@ -521,6 +521,15 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
             }
         }
 
+        if (!clientbound) {
+            for (toEntry in toEntries) {
+                if (toEntry.name.startsWith("multiconnect:") && toEntry.name != toEntry.oldName) {
+                    val fromName = fromEntries.byName(toEntry.name)?.name ?: toEntry.name
+                    resultToInputs.computeIfAbsent(toEntry.oldName.normalizeIdentifier()) { mutableListOf() } += fromName
+                }
+            }
+        }
+
         val (results, cases) = resultToInputs.asSequence()
             .map { (first, second) -> Pair(first, SwitchOp.GroupCase(second.toSortedSet())) }
             .sortedBy { it.second }
@@ -533,6 +542,15 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
         )
 
         return McNode(StmtListOp,
+            McNode(IfStmtOp,
+                McNode(BinaryExpressionOp("==", identifierType, identifierType),
+                    McNode(LoadVariableOp(VariableId.immediate("value"), identifierType)),
+                    McNode(CstNullOp(identifierType))
+                ),
+                McNode(StmtListOp,
+                    McNode(ReturnStmtOp(identifierType), McNode(CstNullOp(identifierType)))
+                )
+            ),
             McNode(ReturnStmtOp(identifierType),
                 McNode(SwitchOp(cases.toSortedSet(), true, McType.STRING, identifierType),
                     (listOf(inputNode)
@@ -543,7 +561,7 @@ internal fun ProtocolCompiler.createStringRemapFunc(registry: Registries, client
         )
     }
 
-    val methodName = "remap%sIdentifier%s".format(Locale.ROOT,
+    val methodName = "remap%sResourceLocation%s".format(Locale.ROOT,
         if (clientbound) "S" else "C",
         registry.name.toCamelCase(true)
     )

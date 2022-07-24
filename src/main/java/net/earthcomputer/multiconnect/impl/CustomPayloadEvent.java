@@ -4,6 +4,7 @@ import net.earthcomputer.multiconnect.api.ICustomPayloadEvent;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.FriendlyByteBuf;
 
+@Deprecated
 public record CustomPayloadEvent<T>(
         int protocol,
         T channel,

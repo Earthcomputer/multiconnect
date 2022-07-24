@@ -272,8 +272,8 @@ public class SPacketUpdateTags_Latest implements SPacketUpdateTags {
             return ret;
         }
 
-        public static List<Tag> fixTags(List<Tag> tags, @GlobalData RegistryAccess registryManager) {
-            return doFixTags(null, () -> TagLoader.biomes(registryManager), tags);
+        public static List<Tag> fixTags(List<Tag> tags, @GlobalData RegistryAccess registryAccess) {
+            return doFixTags(null, () -> TagLoader.biomes(registryAccess), tags);
         }
     }
 

@@ -42,6 +42,7 @@ import net.earthcomputer.multiconnect.compiler.node.ReturnVoidStmtOp
 import net.earthcomputer.multiconnect.compiler.node.StmtListOp
 import net.earthcomputer.multiconnect.compiler.node.StoreVariableStmtOp
 import net.earthcomputer.multiconnect.compiler.node.ThrowStmtOp
+import net.earthcomputer.multiconnect.compiler.node.UnaryExpressionOp
 import net.earthcomputer.multiconnect.compiler.node.VariableId
 import net.earthcomputer.multiconnect.compiler.node.WhileStmtOp
 import net.earthcomputer.multiconnect.compiler.opto.optimize
@@ -342,13 +343,19 @@ private fun ProtocolCompiler.generateHandler(
         && (clientbound || this.protocolId <= (packet.handlerProtocol ?: throw CompileException("@Handler protocol is required for serverbound packets (${packet.className})")))
         && (nextProtocolId == null || !isProtocolValid(nextProtocolId) || (packet.variantOf != null && (getClassInfo(packet.variantOf) as MessageInfo).getVariant(nextProtocolId)!!.className != packet.className))
     ) {
-        return generateHandlerInner(McNode(LoadVariableOp(varId, packet.toMcType())), protocolId, nextProtocolId, packet, packet.handler, clientbound) to true
+        return generateHandlerInner(McNode(LoadVariableOp(varId, packet.toMcType())), protocolId, nextProtocolId, packet, packet.handler, clientbound)
     }
     if (packet.polymorphic != null && packet.polymorphicParent == null) {
         val alwaysHandled = polymorphicChildren[packet.className]!!.all {
             val variant = getMessageVariantInfo(it)
             variant.handler != null
-                && (nextProtocolId == null || !isProtocolValid(nextProtocolId) || (variant.variantOf != null && (getClassInfo(variant.variantOf) as MessageInfo).getVariant(nextProtocolId)?.className != variant.className))
+                && variant.findFunction(variant.handler).returnType != McType.BOOLEAN
+                && (nextProtocolId == null
+                    || !isProtocolValid(nextProtocolId)
+                    || (variant.variantOf != null
+                        && (getClassInfo(variant.variantOf) as MessageInfo).getVariant(nextProtocolId)?.className != variant.className
+                    )
+                )
         }
         var ifElseChain = if (alwaysHandled) {
             McNode(
@@ -371,7 +378,7 @@ private fun ProtocolCompiler.generateHandler(
                     InstanceOfOp(packet.toMcType(), childMessage.toMcType()),
                     McNode(LoadVariableOp(varId, packet.toMcType()))
                 )
-                var ifBlock = generateHandlerInner(
+                var (ifBlock, handled) = generateHandlerInner(
                     McNode(
                         CastOp(packet.toMcType(), childMessage.toMcType()),
                         McNode(LoadVariableOp(varId, packet.toMcType()))
@@ -382,7 +389,7 @@ private fun ProtocolCompiler.generateHandler(
                     childMessage.handler,
                     clientbound
                 )
-                if (!alwaysHandled) {
+                if (!alwaysHandled && handled) {
                     ifBlock = McNode(StmtListOp,
                         ifBlock,
                         McNode(ReturnVoidStmtOp)
@@ -420,7 +427,7 @@ private fun ProtocolCompiler.generateHandlerInner(
     packet: MessageVariantInfo,
     handlerName: String,
     clientbound: Boolean
-): McNode {
+): Pair<McNode, Boolean> {
     val handlerFunc = packet.findFunction(handlerName)
     val functionCall = generateFunctionCallGraph(
         handlerFunc,
@@ -452,7 +459,16 @@ private fun ProtocolCompiler.generateHandlerInner(
         }
     )
     if (handlerFunc.returnType == McType.VOID) {
-        return McNode(PopStmtOp, functionCall)
+        return McNode(PopStmtOp, functionCall) to true
+    }
+
+    if (handlerFunc.returnType == McType.BOOLEAN) {
+        return McNode(StmtListOp,
+            McNode(IfStmtOp,
+                McNode(UnaryExpressionOp("!", McType.BOOLEAN), functionCall),
+                McNode(StmtListOp, McNode(ReturnVoidStmtOp))
+            )
+        ) to false
     }
 
     if (nextProtocolId == null) {
@@ -555,7 +571,7 @@ private fun ProtocolCompiler.generateHandlerInner(
         nodes += handlerBody
     }
 
-    return McNode(StmtListOp, nodes)
+    return McNode(StmtListOp, nodes) to true
 }
 
 private fun ProtocolCompiler.generateWrite(group: MessageInfo?, packet: MessageVariantInfo, protocolsSubset: List<ProtocolEntry>, clientbound: Boolean): McNode {

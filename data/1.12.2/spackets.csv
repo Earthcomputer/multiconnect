@@ -15,7 +15,7 @@ id clazz
 13 net.earthcomputer.multiconnect.packets.v1_13_2.SPacketChangeDifficulty_1_13_2
 14 net.earthcomputer.multiconnect.packets.v1_12_2.SPacketCommandSuggestions_1_12_2
 15 net.earthcomputer.multiconnect.packets.v1_15_2.SPacketSystemChat_1_15_2
-16 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketChunkDeltaUpdate_1_16_1
+16 net.earthcomputer.multiconnect.packets.v1_16_1.SPacketMultiBlockUpdate_1_16_1
 17 net.earthcomputer.multiconnect.packets.v1_16_5.SPacketAckScreenAction_1_16_5
 18 net.earthcomputer.multiconnect.packets.SPacketContainerClose
 19 net.earthcomputer.multiconnect.packets.v1_13_2.SPacketOpenScreen_1_13_2

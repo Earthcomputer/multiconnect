@@ -17,6 +17,7 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 @Polymorphic
 @MessageVariant(minVersion = Protocols.V1_13_2, maxVersion = Protocols.V1_13_2)
@@ -36,14 +37,14 @@ public abstract class ItemStack_1_13_2 implements CommonTypes.ItemStack {
 
     public static ItemStack_1_13_2 fromMinecraft(ItemStack stack) {
         if (stack.isEmpty()) {
-            return new net.earthcomputer.multiconnect.packets.v1_13_2.ItemStack_1_13_2.Empty();
+            return new ItemStack_1_13_2.Empty();
         } else {
             var later = (ItemStack_1_15_2.NonEmpty) ItemStack_1_15_2.fromMinecraft(stack);
-            var result = new net.earthcomputer.multiconnect.packets.v1_13_2.ItemStack_1_13_2.NonEmpty();
+            var result = new ItemStack_1_13_2.NonEmpty();
             result.present = true;
             result.itemId = later.itemId;
             result.count = later.count;
-            result.tag = net.earthcomputer.multiconnect.packets.v1_13_2.ItemStack_1_13_2.NonEmpty.translateTagServerbound(later.tag);
+            result.tag = ItemStack_1_13_2.NonEmpty.translateTagServerbound(later.tag);
             return result;
         }
     }
@@ -61,6 +62,7 @@ public abstract class ItemStack_1_13_2 implements CommonTypes.ItemStack {
         @DefaultConstruct(intValue = 1)
         public byte count;
         @Introduce(direction = Introduce.Direction.FROM_NEWER, compute = "translateTagServerbound")
+        @Nullable
         public CompoundTag tag;
 
         @Override
@@ -74,12 +76,13 @@ public abstract class ItemStack_1_13_2 implements CommonTypes.ItemStack {
         }
 
         @Override
+        @Nullable
         public CompoundTag getTag() {
             return tag;
         }
 
         public static CompoundTag translateTagServerbound(
-                @Argument("tag") CompoundTag tag
+                @Argument("tag") @Nullable CompoundTag tag
         ) {
             if (tag == null) {
                 return null;

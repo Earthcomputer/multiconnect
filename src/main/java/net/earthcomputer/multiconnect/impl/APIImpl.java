@@ -32,67 +32,6 @@ public class APIImpl extends MultiConnectAPI {
     }
 
     @Override
-    public void addClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
-        CustomPayloadHandler.addClientboundIdentifierCustomPayloadListener(listener);
-    }
-
-    @Override
-    public void removeClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
-        CustomPayloadHandler.removeClientboundIdentifierCustomPayloadListener(listener);
-    }
-
-    @Override
-    public void addClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
-        CustomPayloadHandler.addClientboundStringCustomPayloadListener(listener);
-    }
-
-    @Override
-    public void removeClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
-        CustomPayloadHandler.removeClientboundStringCustomPayloadListener(listener);
-    }
-
-    @Contract("null, _, _ -> fail")
-    @Override
-    public void forceSendCustomPayload(@Nullable ClientPacketListener networkHandler, ResourceLocation channel, FriendlyByteBuf data) {
-        if (networkHandler == null) {
-            throw new IllegalStateException("Trying to send custom payload when not in-game");
-        }
-        CustomPayloadHandler.forceSendIdentifierCustomPayload(networkHandler, channel, data);
-    }
-
-    @Contract("null, _, _ -> fail")
-    @Override
-    public void forceSendStringCustomPayload(@Nullable ClientPacketListener networkHandler, String channel, FriendlyByteBuf data) {
-        if (networkHandler == null) {
-            throw new IllegalStateException("Trying to send custom payload when not in-game");
-        }
-        if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
-            throw new IllegalStateException("Trying to send string custom payload to " + ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName() + " server");
-        }
-        CustomPayloadHandler.forceSendStringCustomPayload(networkHandler, channel, data);
-    }
-
-    @Override
-    public void addServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
-        CustomPayloadHandler.addServerboundIdentifierCustomPayloadListener(listener);
-    }
-
-    @Override
-    public void removeServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
-        CustomPayloadHandler.removeServerboundIdentifierCustomPayloadListener(listener);
-    }
-
-    @Override
-    public void addServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
-        CustomPayloadHandler.addServerboundStringCustomPayloadListener(listener);
-    }
-
-    @Override
-    public void removeServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
-        CustomPayloadHandler.removeServerboundStringCustomPayloadListener(listener);
-    }
-
-    @Override
     public <T> boolean doesServerKnow(Registry<T> registry, T value) {
         return PacketSystem.doesServerKnow(registry, value);
     }
@@ -104,48 +43,137 @@ public class APIImpl extends MultiConnectAPI {
 
     //region deprecated stuff
 
+    @SuppressWarnings("deprecation")
+    @Deprecated
+    @Override
+    public void addClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
+        CustomPayloadHandler.addClientboundIdentifierCustomPayloadListener(listener);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Deprecated
+    @Override
+    public void removeClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
+        CustomPayloadHandler.removeClientboundIdentifierCustomPayloadListener(listener);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Deprecated
+    @Override
+    public void addClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
+        CustomPayloadHandler.addClientboundStringCustomPayloadListener(listener);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Deprecated
+    @Override
+    public void removeClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
+        CustomPayloadHandler.removeClientboundStringCustomPayloadListener(listener);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Deprecated
+    @Contract("null, _, _ -> fail")
+    @Override
+    public void forceSendCustomPayload(@Nullable ClientPacketListener connection, ResourceLocation channel, FriendlyByteBuf data) {
+        if (connection == null) {
+            throw new IllegalStateException("Trying to send custom payload when not in-game");
+        }
+        CustomPayloadHandler.forceSendIdentifierCustomPayload(connection, channel, data);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Deprecated
+    @Contract("null, _, _ -> fail")
+    @Override
+    public void forceSendStringCustomPayload(@Nullable ClientPacketListener connection, String channel, FriendlyByteBuf data) {
+        if (connection == null) {
+            throw new IllegalStateException("Trying to send custom payload when not in-game");
+        }
+        if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
+            throw new IllegalStateException("Trying to send string custom payload to " + ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName() + " server");
+        }
+        CustomPayloadHandler.forceSendStringCustomPayload(connection, channel, data);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Deprecated
+    @Override
+    public void addServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
+        CustomPayloadHandler.addServerboundIdentifierCustomPayloadListener(listener);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Deprecated
+    @Override
+    public void removeServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
+        CustomPayloadHandler.removeServerboundIdentifierCustomPayloadListener(listener);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Deprecated
+    @Override
+    public void addServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
+        CustomPayloadHandler.addServerboundStringCustomPayloadListener(listener);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Deprecated
+    @Override
+    public void removeServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
+        CustomPayloadHandler.removeServerboundStringCustomPayloadListener(listener);
+    }
+
+    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public void addIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
         addClientboundIdentifierCustomPayloadListener(new IdentifierCustomPayloadListenerProxy(listener));
     }
 
+    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public void removeIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
         removeClientboundIdentifierCustomPayloadListener(new IdentifierCustomPayloadListenerProxy(listener));
     }
 
+    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public void addStringCustomPayloadListener(IStringCustomPayloadListener listener) {
         addClientboundStringCustomPayloadListener(new StringCustomPayloadListenerProxy(listener));
     }
 
+    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public void removeStringCustomPayloadListener(IStringCustomPayloadListener listener) {
         removeClientboundStringCustomPayloadListener(new StringCustomPayloadListenerProxy(listener));
     }
 
+    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public void addServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
         addServerboundIdentifierCustomPayloadListener(new IdentifierCustomPayloadListenerProxy(listener));
     }
 
+    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public void removeServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
         removeServerboundIdentifierCustomPayloadListener(new IdentifierCustomPayloadListenerProxy(listener));
     }
 
+    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public void addServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
         addServerboundStringCustomPayloadListener(new StringCustomPayloadListenerProxy(listener));
     }
 
+    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public void removeServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {

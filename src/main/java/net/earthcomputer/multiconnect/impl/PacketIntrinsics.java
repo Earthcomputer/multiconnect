@@ -9,12 +9,14 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.debug.PacketReplay;
 import net.earthcomputer.multiconnect.mixin.connect.ConnectionAccessor;
 import net.earthcomputer.multiconnect.protocols.generic.TypedMap;
@@ -25,8 +27,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.network.ConnectionProtocol;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.datafix.fixes.References;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -72,11 +79,27 @@ public final class PacketIntrinsics {
             return null;
         }
 
+        int toVersion = SharedConstants.getCurrentVersion().getDataVersion().getVersion();
+
+        if (type == References.BLOCK_ENTITY) {
+            ResourceLocation id = ResourceLocation.tryParse(data.getString("id"));
+            if (id != null) {
+                Integer versionRemoved = PacketSystem.getVersionRemoved(Registry.BLOCK_ENTITY_TYPE, id);
+                if (versionRemoved != null) {
+                    toVersion = ConnectionMode.byValue(versionRemoved).getDataVersion();
+                }
+            }
+        }
+
+        if (fromVersion >= toVersion) {
+            return data;
+        }
+
         return (CompoundTag) fixer.update(
                 type,
                 new Dynamic<>(NbtOps.INSTANCE, data),
                 fromVersion,
-                SharedConstants.getCurrentVersion().getDataVersion().getVersion()
+                toVersion
         ).getValue();
     }
 
@@ -218,9 +241,23 @@ public final class PacketIntrinsics {
             return;
         }
 
-        ChannelHandlerContext context = ((ConnectionAccessor) connection.getConnection()).getChannel()
-                .pipeline()
-                .context("multiconnect_serverbound_translator");
+        ChannelPipeline pipeline = ((ConnectionAccessor) connection.getConnection()).getChannel().pipeline();
+        ChannelHandlerContext context = pipeline.context("multiconnect_serverbound_translator");
+        if (context == null) {
+            // maybe we're in a different ConnectionProtocol
+            context = pipeline.context("encoder");
+            if (context == null) {
+                // probably singleplayer
+                for (ByteBuf buf : bufs) {
+                    Packet<?> packet = decodeVanillaPacket(buf, ConnectionProtocol.PLAY, PacketFlow.SERVERBOUND);
+                    if (packet != null) {
+                        pipeline.write(packet);
+                    }
+                }
+                pipeline.flush();
+                return;
+            }
+        }
 
         for (ByteBuf buf : bufs) {
             // don't need to set the user data here, it's not accessed again
@@ -234,13 +271,35 @@ public final class PacketIntrinsics {
             return;
         }
 
-        ChannelHandlerContext context = ((ConnectionAccessor) connection.getConnection()).getChannel()
-                .pipeline()
-                .context("multiconnect_clientbound_translator");
+        ChannelPipeline pipeline = ((ConnectionAccessor) connection.getConnection()).getChannel().pipeline();
+        ChannelHandlerContext context = pipeline.context("multiconnect_clientbound_translator");
+        if (context == null) {
+            // maybe we're in a different ConnectionProtocol
+            List<String> names = pipeline.names();
+            int decoderIndex = names.indexOf("decoder");
+            if (decoderIndex < 0) {
+                // probably singleplayer
+                for (ByteBuf buf : bufs) {
+                    Packet<?> packet = decodeVanillaPacket(buf, ConnectionProtocol.PLAY, PacketFlow.CLIENTBOUND);
+                    if (packet != null) {
+                        pipeline.fireChannelRead(packet);
+                    }
+                }
+                pipeline.flush();
+                return;
+            }
+            if (decoderIndex > 0) {
+                context = pipeline.context(names.get(decoderIndex - 1));
+            }
+        }
 
         for (ByteBuf buf : bufs) {
             PacketSystem.Internals.setUserData(buf, userData);
-            context.fireChannelRead(buf);
+            if (context == null) {
+                pipeline.fireChannelRead(buf);
+            } else {
+                context.fireChannelRead(buf);
+            }
         }
     }
 
@@ -359,6 +418,13 @@ public final class PacketIntrinsics {
         for (long element : longs) {
             buf.writeLong(element);
         }
+    }
+
+    @Nullable
+    public static Packet<?> decodeVanillaPacket(ByteBuf buf_, ConnectionProtocol protocol, PacketFlow flow) {
+        FriendlyByteBuf buf = new FriendlyByteBuf(buf_);
+        int packetId = buf.readVarInt();
+        return protocol.createPacket(flow, packetId, buf);
     }
 
     @FunctionalInterface

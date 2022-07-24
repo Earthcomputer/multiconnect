@@ -16,7 +16,7 @@ import java.util.List;
 @MessageVariant(maxVersion = Protocols.V1_12_2)
 public class ChunkData_1_12_2 implements ChunkData {
     @Length(compute = "computeSectionsLength")
-    public List<net.earthcomputer.multiconnect.packets.v1_12_2.ChunkData_1_12_2.Section> sections;
+    public List<ChunkData_1_12_2.Section> sections;
     @Type(Types.UNSIGNED_BYTE)
     @Length(constant = 256)
     @OnlyIf("isFullChunk")
@@ -42,10 +42,10 @@ public class ChunkData_1_12_2 implements ChunkData {
         public byte[] skyLight;
 
         public static boolean hasSkyLight(
-                @GlobalData RegistryAccess registryManager,
+                @GlobalData RegistryAccess registryAccess,
                 @GlobalData DimensionTypeReference dimType
         ) {
-            return dimType.getValue(registryManager).hasSkyLight();
+            return dimType.getValue(registryAccess).hasSkyLight();
         }
     }
 

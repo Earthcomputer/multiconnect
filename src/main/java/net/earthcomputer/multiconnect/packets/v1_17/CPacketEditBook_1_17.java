@@ -29,7 +29,7 @@ public class CPacketEditBook_1_17 implements CPacketEditBook {
             @Argument("pages") List<String> pages,
             @Argument("title") Optional<String> title,
             @FilledArgument(fromRegistry = @FilledArgument.FromRegistry(registry = Registries.ITEM, value = "writable_book")) int writableBookId,
-            @FilledArgument ClientPacketListener networkHandler,
+            @FilledArgument ClientPacketListener connection,
             @DefaultConstruct ItemStack_Latest.NonEmpty stack
     ) {
         stack.itemId = writableBookId;
@@ -40,7 +40,7 @@ public class CPacketEditBook_1_17 implements CPacketEditBook {
             stack.tag.put("pages", pagesNbt);
         }
         if (title.isPresent()) {
-            stack.tag.put("author", StringTag.valueOf(networkHandler.getLocalGameProfile().getName()));
+            stack.tag.put("author", StringTag.valueOf(connection.getLocalGameProfile().getName()));
             stack.tag.put("title", StringTag.valueOf(title.get().trim()));
         }
         return stack;

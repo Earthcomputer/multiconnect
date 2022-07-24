@@ -176,8 +176,8 @@ public final class TagLoader {
     }
 
     @Contract("_ -> new")
-    public static Map<ResourceLocation, IntList> biomes(RegistryAccess registryManager) {
-        return convertTags(registryManager.registryOrThrow(Registry.BIOME_REGISTRY), BIOMES);
+    public static Map<ResourceLocation, IntList> biomes(RegistryAccess registryAccess) {
+        return convertTags(registryAccess.registryOrThrow(Registry.BIOME_REGISTRY), BIOMES);
     }
 
     @Contract("_, _ -> new")
