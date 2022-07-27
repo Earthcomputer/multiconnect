@@ -5,15 +5,12 @@
   "mixins": [
     "CatAccessor",
     "ClientLevelAccessor",
-    "ClientPacketListenerMixin",
-    "ServerboundHelloPacketMixin",
     "ServerboundKeyPacketMixin",
     "ClientboundGameProfilePacketMixin",
     "BlockStatePredictionHandlerMixin",
     "PaintingAccessor"
   ],
   "client": [
-    "ClientHandshakePacketListenerImplMixin"
   ],
   "injectors": {
     "defaultRequire": 1
