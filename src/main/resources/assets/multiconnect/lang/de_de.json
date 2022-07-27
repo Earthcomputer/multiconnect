@@ -18,7 +18,7 @@
   "multiconnect.rareBug.link": "Bugtracker",
   "multiconnect.rareBug.screen": "Es ist ein seltener Fehler in Multiconnect aufgetreten. Möchtest du die Logdatei auf unserem Bugtracker hochladen, damit der Fehler behoben werden kann?",
   "multiconnect.signedChatScreen.title": "Sichere Chat Warnung",
-  "multiconnect.signedChatScreen.line1": "Chat Nachrichten in Version 1.18.2 und früher sind nicht sicher. Das heißt, dass Nachrichten von anderen Spielern nicht unbedingt von diesen gesendet wurden. Modernere Minecraft Versionen können unsichere Nachrichten blockieren, allerdings würde diese Option auf älteren Servern alle Spielernachrichten blockieren. Möchtest du unsichere Nachrichten in Version 1.18.2 und früher erlauben?",
+  "multiconnect.signedChatScreen.line1": "Chat Nachrichten in Version 1.19.0 und früher sind nicht sicher. Das heißt, dass Nachrichten von anderen Spielern nicht gemeldet werden können. Modernere Minecraft Versionen können unsichere Nachrichten blockieren, allerdings würde diese Option auf älteren Servern alle Spielernachrichten blockieren. Möchtest du unsichere Nachrichten in Version 1.19.0 und früher erlauben?",
   "multiconnect.signedChatScreen.line2": "Diese Option kann später in der Konfiguration für Multiconnect geändert werden.",
   "multiconnect.unsupportedExperimentalCodec": "Dieser Server verwendet experimentelle Funktionen. Multiconnect kann diese leider nicht übersetzen, und somit nicht zum Server verbinden."
 }
