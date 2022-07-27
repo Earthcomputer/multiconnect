@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.packets.v1_19;
 
+import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
@@ -13,6 +14,7 @@ public class CPacketChat_1_19 implements CPacketChat {
     public long timestamp;
     @Type(Types.LONG)
     public long salt;
+    @Introduce(defaultConstruct = true) // strip the signature, it's different on 1.19.0
     public byte[] signature;
     public boolean signedPreview;
 }

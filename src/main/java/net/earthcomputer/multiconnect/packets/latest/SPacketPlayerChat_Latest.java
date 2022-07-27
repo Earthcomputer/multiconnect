@@ -4,9 +4,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import net.earthcomputer.multiconnect.ap.Argument;
+import net.earthcomputer.multiconnect.ap.DefaultConstruct;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
+import net.earthcomputer.multiconnect.ap.NetworkEnum;
+import net.earthcomputer.multiconnect.ap.Polymorphic;
 import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
@@ -24,10 +27,13 @@ public class SPacketPlayerChat_Latest implements SPacketPlayerChat {
 
     @Introduce(compute = "computeHeader")
     public SignedHeader header;
+    @Introduce(defaultConstruct = true) // strip the signature, it's different on 1.19.0
     public byte[] messageSignature;
     @Introduce(compute = "computeSignedBody")
     public SignedBody signedBody;
     public Optional<CommonTypes.Text> unsignedContent;
+    @Introduce(defaultConstruct = true)
+    public FilterMask filterMask;
     public int chatType;
     public CommonTypes.Text displayName;
     public Optional<CommonTypes.Text> teamDisplayName;
@@ -86,6 +92,31 @@ public class SPacketPlayerChat_Latest implements SPacketPlayerChat {
         public long salt;
         @Length(max = 5)
         public List<LastSeenMessage> lastSeen;
+    }
+
+    @MessageVariant
+    @Polymorphic
+    @DefaultConstruct(subType = FilterMask.Simple.class)
+    public static abstract class FilterMask {
+        public Type type;
+
+        @NetworkEnum
+        public enum Type {
+            PASS_THROUGH,
+            FULLY_FILTERED,
+            PARTIALLY_FILTERED,
+        }
+
+        @MessageVariant
+        @Polymorphic(stringValue = "PARTIALLY_FILTERED")
+        public static class PartiallyFiltered extends FilterMask {
+            public long[] mask;
+        }
+
+        @MessageVariant
+        @Polymorphic(otherwise = true)
+        public static class Simple extends FilterMask {
+        }
     }
 
     @MessageVariant

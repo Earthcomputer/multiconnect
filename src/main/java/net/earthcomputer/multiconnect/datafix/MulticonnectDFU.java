@@ -27,7 +27,7 @@ public class MulticonnectDFU {
         builder.addFixer(new RegistryAccess1_18_2Fix(schema_18_2, true));
         Schema schema_19 = builder.addSchema(3105, Schema::new);
         builder.addFixer(new RegistryAccess1_19Fix(schema_19, true));
-        Schema schema_19_1 = builder.addSchema(3115, Schema::new);
+        Schema schema_19_1 = builder.addSchema(3117, Schema::new);
         builder.addFixer(new RegistryAccess1_19_1Fix(schema_19_1, true));
         return builder.buildOptimized(Util.bootstrapExecutor());
     });

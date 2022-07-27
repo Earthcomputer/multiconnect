@@ -2,8 +2,6 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.debug.DebugUtils;
 import net.earthcomputer.multiconnect.debug.PacketRecorder;
@@ -16,6 +14,7 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.PacketListener;
+import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
 import org.jetbrains.annotations.Nullable;
@@ -77,8 +76,8 @@ public abstract class ConnectionMixin {
 
     // TODO: move this to the network layer
     @SuppressWarnings("deprecation")
-    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/util/concurrent/GenericFutureListener;)V", at = @At("HEAD"), cancellable = true)
-    public void onSend(Packet<?> packet, @Nullable GenericFutureListener<? extends Future<? super Void>> callback, CallbackInfo ci) {
+    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;)V", at = @At("HEAD"), cancellable = true)
+    public void onSend(Packet<?> packet, @Nullable PacketSendListener listener, CallbackInfo ci) {
         if (packet instanceof ServerboundCustomPayloadPacket customPayload
                 && !customPayload.getIdentifier().equals(ServerboundCustomPayloadPacket.BRAND)) {
             // call deprecated method
