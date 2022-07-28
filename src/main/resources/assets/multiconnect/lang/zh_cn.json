@@ -18,7 +18,7 @@
   "multiconnect.rareBug.link": "问题追踪器",
   "multiconnect.rareBug.screen": "multiconnect发生了一个不常见的问题.你是否愿意上传游戏日志帮助修复问题?",
   "multiconnect.signedChatScreen.title": "安全聊天警告",
-  "multiconnect.signedChatScreen.line1": "来自1.19.0及以下版本的聊天消息不安全.这意味着无法举报这些版本的聊天消息不.现在 Minecraft 有一个选项来阻止不安全的消息,但在旧版服务器上这样做会导致其他玩家的聊天消息不可见.您想取消阻止1.19.0及以下版本的不安全消息吗?",
+  "multiconnect.signedChatScreen.line1": "来自1.19.0及以下版本的聊天消息不安全.这意味着无法举报这些版本的聊天消息.现在 Minecraft 有一个选项来阻止不安全的消息,但在旧版服务器上这样做会导致其他玩家的聊天消息不可见.您想取消阻止1.19.0及以下版本的不安全消息吗?",
   "multiconnect.signedChatScreen.line2": "你可以稍后在multiconnect的设置中修改这个选项.",
   "multiconnect.unsupportedExperimentalCodec": "此服务器使用了实验性功能.multiconnect无法转译实验性数据,因此无法连接至此服务器."
 }
