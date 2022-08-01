@@ -1,10 +1,24 @@
 {
-  "multiconnect.betaWarning.line1": "%s er for øyeblikket i betastøtte av multiconnect.",
-  "multiconnect.betaWarning.line2": "Forvent bugs, men rapporter alle du finner til problemsporeren.",
-  "multiconnect.changeForcedProtocol": "Versjon",
-  "multiconnect.rareBug": "En sjelden bug har oppstått i multiconnect. Vennligst last opp din spilllog til %s så det kan bli fikset.",
-  "multiconnect.rareBug.link": "problem sporer",
-  "multiconnect.rareBug.screen": "En sjelden bug har oppstått i multiconnect. Vil du laste opp din spill log til problem sporeren for å hjelpe det med å bli fikset?",
-  "multiconnect.unsupportedExperimentalCodec": "Denne serveren bruker eksperimentelle funksjoner, eller funksjoner som var eksperimentelle på serverversjonen. Multiconnect kan ikke oversette eksperimentell data, og kan derfor ikke koble til denne serveren."
+    "multiconnect.betaWarning.line1": "%s er for øyeblikket i betastøtte av multiconnect.",
+    "multiconnect.betaWarning.line2": "Forvent bugs, men rapporter alle du finner til problemsporeren.",
+    "multiconnect.changeForcedProtocol": "Versjon",
+    "multiconnect.config.allowOldUnsignedChat.tooltip": "Tillater utrygge meldinger fra 1.19.0 eller eldre",
+    "multiconnect.config.allowOldUnsignedChat": "Utrygge Meldinger",
+    "multiconnect.config.enableDebugKey": "Debug Nøkkel",
+    "multiconnect.config.enablePacketRecording.tooltip": "Spiller inn alle nettverkspakker sendt eller mottat av klienten og lagrer de i en loggfil som kan bli brukt av utviklere for å lettere identifisere eller gjenskape bugs funnet av brukere. Anbefales ikke å bruke dette med mindre det er nødvendig.",
+    "multiconnect.config.enablePacketRecording": "Nettverkspakkeopptaker",
+    "multiconnect.config.title": "Multiconnect Konfigurasjon",
+    "multiconnect.debug.menu.HttpServer.start" : "Start HttpServer",
+    "multiconnect.debug.menu.start" : "Start Reprise",
+    "multiconnect.debug.menu.title": "Multiconnect Feilsøkingsskjerm",
+    "multiconnect.debug.runningHttpServer.stop": "Stopp",
+    "multiconnect.debug.runningHttpServer.title": "Kjører HTTP Server",
+    "multiconnect.debug.startingReplay": "Starter Nettverkspakke-Reprise",
+    "multiconnect.rareBug.link": "problem sporer",
+    "multiconnect.rareBug.screen": "En sjelden bug har oppstått i multiconnect. Vil du laste opp din spill log til problem sporeren for å hjelpe det med å bli fikset?",
+    "multiconnect.rareBug": "En sjelden bug har oppstått i multiconnect. Vennligst last opp din spilllog til %s så det kan bli fikset.",
+    "multiconnect.signedChatScreen.line1": "Chatmeldinger fra 1.19.0 og under er ikke sikre. Dette betyr at chat-meldinger fra disse versjonene ikke kan rapporteres. Moderne Minecraft har en innstilling for å blokkere usikre meldinger, men å bruke det på gamle servere vil føre til at ingen chat-meldinger fra andre spillere er synlige. Vil du slutte å blokkere meldinger på 1.19.0 og eldre?",
+    "multiconnect.signedChatScreen.line2": "Du kan endre denne innstillingen i Multiconnect innstillingene senere.",
+    "multiconnect.signedChatScreen.title": "Trygg-chat-advarsel",
+    "multiconnect.unsupportedExperimentalCodec": "Denne serveren bruker eksperimentelle funksjoner, eller funksjoner som var eksperimentelle på serverversjonen. Multiconnect kan ikke oversette eksperimentell data, og kan derfor ikke koble til denne serveren."
 }
-   
