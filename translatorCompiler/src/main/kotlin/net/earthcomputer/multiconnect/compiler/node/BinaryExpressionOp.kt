@@ -6,7 +6,7 @@ import net.earthcomputer.multiconnect.compiler.McType
 
 class BinaryExpressionOp(private val operator: String, leftType: McType, rightType: McType) : McNodeOp {
     init {
-        if (leftType == McType.STRING) {
+        if (leftType == McType.STRING || rightType == McType.STRING) {
             if (operator != "+") {
                 throw CompileException("Strings can only support the + operator")
             }
@@ -25,7 +25,7 @@ class BinaryExpressionOp(private val operator: String, leftType: McType, rightTy
     override val returnType by lazy {
         when (operator) {
             "==", "!=", "<", ">", "<=", ">=" -> McType.BOOLEAN
-            else -> leftType
+            else -> if (leftType == McType.STRING || rightType == McType.STRING) { McType.STRING } else { leftType }
         }
     }
     override val isExpensive = true

@@ -146,11 +146,13 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
             IntList biomes,
             ChunkData_Latest.ChunkSection toSection
     ) {
+        int minIndex = sectionY << 6;
+
         var biomeRegistry = registryAccess.registryOrThrow(net.minecraft.core.Registry.BIOME_REGISTRY);
         Int2IntMap invBiomePalette = new Int2IntOpenHashMap();
         IntList biomePalette = new IntArrayList();
-        for (int i = 0; i < biomes.size(); i++) {
-            int biome = Protocol_1_17_1.mapBiomeId(biomes.getInt(i), biomeRegistry);
+        for (int i = 0; i < 64; i++) {
+            int biome = Protocol_1_17_1.mapBiomeId(biomes.getInt(minIndex + i), biomeRegistry);
             invBiomePalette.computeIfAbsent(biome, k -> {
                 biomePalette.add(biome);
                 return invBiomePalette.size();
@@ -170,7 +172,6 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
             return;
         }
 
-        int minIndex = sectionY << 6;
         int biomesPerLong = 64 / bitsPerBiome;
         long[] result = new long[(64 + biomesPerLong - 1) / biomesPerLong];
 
@@ -188,9 +189,6 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
             bitsPerBiome = Mth.ceillog2(biomeRegistry.size());
         }
 
-        if (sectionY < 0) {
-            return;
-        }
         long currentLong = 0;
         for (int i = 0; i < 64; i++) {
             int valueToWrite = bitsPerBiome <= 3
@@ -198,7 +196,7 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
                     : Protocol_1_17_1.mapBiomeId(biomes.getInt(minIndex + i), biomeRegistry);
             int posInLong = i % biomesPerLong;
             currentLong |= (long) valueToWrite << (posInLong * bitsPerBiome);
-            if (posInLong + bitsPerBiome >= 64 || i == 63) {
+            if ((posInLong + 1) * bitsPerBiome >= 64 || i == 63) {
                 result[i / biomesPerLong] = currentLong;
                 currentLong = 0;
             }

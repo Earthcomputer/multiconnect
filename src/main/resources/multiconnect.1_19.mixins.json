@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "package": "net.earthcomputer.multiconnect.protocols.v1_19.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "ServerboundHelloPacketMixin"
+  ],
+  "client": [
+    "ChatListenerMixin",
+    "ClientHandshakePacketListenerImplMixin",
+    "GuiMessageTagMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

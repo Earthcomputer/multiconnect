@@ -1,12 +1,7 @@
 package net.earthcomputer.multiconnect.packets;
 
-import net.earthcomputer.multiconnect.ap.MessageVariant;
+import net.earthcomputer.multiconnect.ap.Message;
 
-import java.util.Optional;
-
-@MessageVariant
-public class SPacketServerData {
-    public Optional<CommonTypes.Text> description;
-    public Optional<String> favicon;
-    public boolean previewsChat;
+@Message
+public interface SPacketServerData {
 }

@@ -94,7 +94,7 @@ public class SPacketOpenScreen_1_13_2 implements SPacketOpenScreen {
 
         var packet = new SPacketOpenScreen_Latest();
         packet.syncId = syncId;
-        packet.screenHandlerType = newType;
+        packet.menuType = newType;
         packet.title = title;
 
         List<Object> packets = new ArrayList<>(1);

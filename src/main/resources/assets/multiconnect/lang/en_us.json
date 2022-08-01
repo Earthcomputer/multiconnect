@@ -3,7 +3,7 @@
   "multiconnect.betaWarning.line2": "Expect bugs, but report any you find to the issue tracker!",
   "multiconnect.changeForcedProtocol": "Version",
   "multiconnect.config.allowOldUnsignedChat": "Insecure Messages",
-  "multiconnect.config.allowOldUnsignedChat.tooltip": "Allows through insecure chat messages from 1.18.2 servers or older",
+  "multiconnect.config.allowOldUnsignedChat.tooltip": "Allows through insecure chat messages from 1.19.0 servers or older",
   "multiconnect.config.enableDebugKey": "Debug Key",
   "multiconnect.config.enablePacketRecording": "Packet Recorder",
   "multiconnect.config.enablePacketRecording.tooltip": "Records all packets sent and received by the client and saves it in a log file that can be used by developers to easier identify, reproduce bugs found by users. Using this is not recommend unless strictly necessary",
@@ -18,7 +18,7 @@
   "multiconnect.rareBug.link": "issue tracker",
   "multiconnect.rareBug.screen": "A rare bug just occurred in multiconnect. Would you like to upload your game log to the issue tracker to help it get fixed?",
   "multiconnect.signedChatScreen.title": "Secure Chat Warning",
-  "multiconnect.signedChatScreen.line1": "Chat messages from 1.18.2 and below are not secure. This means that chat messages from these versions are not necessarily from who they claim to be. Modern Minecraft has an option to block insecure messages, but doing so on old servers would result in no chat messages from other players being visible. Would you like to unblock insecure messages on 1.18.2 and below?",
+  "multiconnect.signedChatScreen.line1": "Chat messages from 1.19.0 and below are not secure. This means that chat messages from these versions are not able to be reported. Modern Minecraft has an option to block insecure messages, but doing so on old servers would result in no chat messages from other players being visible. Would you like to unblock insecure messages on 1.19.0 and below?",
   "multiconnect.signedChatScreen.line2": "You can change this option in multiconnect's settings later.",
   "multiconnect.unsupportedExperimentalCodec": "This server is using experimental features, or features which were experimental on the server version. Multiconnect cannot translate experimental data, and cannot connect to this server."
 }

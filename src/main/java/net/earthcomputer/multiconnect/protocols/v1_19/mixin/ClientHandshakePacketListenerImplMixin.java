@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.v1_18.mixin;
+package net.earthcomputer.multiconnect.protocols.v1_19.mixin;
 
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 public class ClientHandshakePacketListenerImplMixin {
     @ModifyVariable(method = "handleHello", at = @At("STORE"))
     private Signer modifySigner(Signer signer) {
-        if (ConnectionInfo.protocolVersion <= Protocols.V1_18_2) {
+        if (ConnectionInfo.protocolVersion <= Protocols.V1_19) {
             return null;
         }
         return signer;
