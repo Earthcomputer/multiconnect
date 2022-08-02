@@ -205,6 +205,8 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
 
     public static LightData computeLightData(
             @Argument("verticalStripBitmask") BitSet verticalStripBitmask,
+            @GlobalData @Nullable RegistryAccess registryAccess,
+            @GlobalData DimensionTypeReference dimensionType,
             @FilledArgument TypedMap userData,
             @DefaultConstruct LightData lightData
     ) {
@@ -220,15 +222,18 @@ public class SPacketLevelChunkWithLight_Latest implements SPacketLevelChunkWithL
                 }
             }
 
-            byte[][] skyLight = userData.get(Protocol_1_13_2.SKY_LIGHT_KEY);
-            for (int i = 0; i < blockLight.length; i++) {
-                if (blockLightMask.get(i)) {
-                    if (skyLight != null && i < skyLight.length && skyLight[i] != null) {
-                        lightData.skyLightData.add(skyLight[i]);
-                    } else {
-                        lightData.skyLightData.add(new byte[2048]);
+            if (registryAccess == null || dimensionType.getValue(registryAccess).hasSkyLight()) {
+                byte[][] skyLight = userData.get(Protocol_1_13_2.SKY_LIGHT_KEY);
+                for (int i = 0; i < blockLight.length; i++) {
+                    if (verticalStripBitmask.get(i)) {
+                        if (skyLight != null && i < skyLight.length && skyLight[i] != null) {
+                            lightData.skyLightData.add(skyLight[i]);
+                        } else {
+                            lightData.skyLightData.add(new byte[2048]);
+                        }
                     }
                 }
+                lightData.skyLightMask = (BitSet) blockLightMask.clone();
             }
         }
         return lightData;
