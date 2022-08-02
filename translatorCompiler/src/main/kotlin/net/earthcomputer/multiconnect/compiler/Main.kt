@@ -19,6 +19,9 @@ fun main(args: Array<String>) {
     FileLocations.outputDir = File(args[2])
     if (!FileLocations.outputDir.exists()) {
         FileLocations.outputDir.mkdirs()
+    } else {
+        FileLocations.outputDir.deleteRecursively()
+        FileLocations.outputDir.mkdir()
     }
 
     protocols = readCsv(File(FileLocations.dataDir, "protocols.csv"))
