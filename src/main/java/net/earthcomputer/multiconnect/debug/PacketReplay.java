@@ -218,6 +218,7 @@ public final class PacketReplay {
                         LOGGER.warn("Invalid connection protocol: {}", stateId);
                         return false;
                     }
+                    LOGGER.info("Changing connection protocol to {}", protocol);
                     connection.setProtocol(protocol);
                     return true;
                 }

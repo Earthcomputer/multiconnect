@@ -1,11 +1,13 @@
 package net.earthcomputer.multiconnect.packets.v1_13_2;
 
 import net.earthcomputer.multiconnect.ap.Argument;
+import net.earthcomputer.multiconnect.ap.FilledArgument;
 import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.Introduce;
 import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
+import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
@@ -13,9 +15,14 @@ import net.earthcomputer.multiconnect.packets.SPacketCustomPayload;
 import net.earthcomputer.multiconnect.packets.SPacketOpenBook;
 import net.earthcomputer.multiconnect.packets.SPacketMerchantOffers;
 import net.earthcomputer.multiconnect.packets.v1_14_2.SPacketMerchantOffers_1_14_2;
+import net.earthcomputer.multiconnect.packets.v1_14_3.Trade_1_14_3;
 import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceLocation;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Polymorphic
 @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
@@ -44,18 +51,20 @@ public abstract class SPacketCustomPayload_1_13_2 implements SPacketCustomPayloa
     @Polymorphic(stringValue = "trader_list")
     @MessageVariant(minVersion = Protocols.V1_13, maxVersion = Protocols.V1_13_2)
     public static class TraderList extends SPacketCustomPayload_1_13_2 implements SPacketCustomPayload.TraderList {
+        @Type(Types.INT)
         public int syncId;
         @Length(type = Types.UNSIGNED_BYTE)
         public List<SPacketMerchantOffers.Trade> trades;
 
         @Handler
         public static SPacketMerchantOffers_1_14_2 handle(
-                @Argument("syncId") int syncId,
-                @Argument("trades") List<SPacketMerchantOffers.Trade> trades
+            @Argument("syncId") int syncId,
+            @Argument("trades") List<SPacketMerchantOffers.Trade> trades,
+            @FilledArgument(fromVersion = Protocols.V1_13_2, toVersion = Protocols.V1_14) Function<Trade_1_13_2, Trade_1_14_3> tradeTranslator
         ) {
             var packet = new SPacketMerchantOffers_1_14_2();
             packet.syncId = syncId;
-            packet.trades = trades;
+            packet.trades = trades.stream().map(trade -> tradeTranslator.apply((Trade_1_13_2) trade)).collect(Collectors.toCollection(ArrayList::new));
             packet.villagerLevel = 5;
             packet.experience = 0;
             packet.isRegularVillager = false;

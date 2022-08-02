@@ -6,6 +6,7 @@ import net.earthcomputer.multiconnect.ap.Handler;
 import net.earthcomputer.multiconnect.ap.Length;
 import net.earthcomputer.multiconnect.ap.MessageVariant;
 import net.earthcomputer.multiconnect.ap.Polymorphic;
+import net.earthcomputer.multiconnect.ap.Type;
 import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CommonTypes;
@@ -33,6 +34,7 @@ public abstract class SPacketCustomPayload_1_12_2 implements SPacketCustomPayloa
     @Polymorphic(stringValue = "MC|TrList")
     @MessageVariant(maxVersion = Protocols.V1_12_2)
     public static class TraderList extends SPacketCustomPayload_1_12_2 implements SPacketCustomPayload.TraderList {
+        @Type(Types.INT)
         public int syncId;
         @Length(type = Types.UNSIGNED_BYTE)
         public List<SPacketMerchantOffers.Trade> trades;
