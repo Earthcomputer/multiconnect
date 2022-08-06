@@ -9,7 +9,7 @@ import net.earthcomputer.multiconnect.packets.CPacketChatCommand;
 
 import java.util.List;
 
-@MessageVariant(minVersion = Protocols.V1_19_1)
+@MessageVariant(minVersion = Protocols.V1_19_2)
 public class CPacketChatCommand_Latest implements CPacketChatCommand {
     public String command;
     @Type(Types.LONG)

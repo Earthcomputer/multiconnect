@@ -6,6 +6,8 @@ package net.earthcomputer.multiconnect.api;
 public class Protocols {
 
     // 1.19.x
+    public static final int V1_19_2 = 760;
+    @Deprecated // Same as 1.19.2
     public static final int V1_19_1 = 760;
     public static final int V1_19 = 759;
 

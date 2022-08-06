@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@MessageVariant(minVersion = Protocols.V1_19_1)
+@MessageVariant(minVersion = Protocols.V1_19_2)
 public class SPacketPlayerChat_Latest implements SPacketPlayerChat {
     private static final Gson GSON = new Gson();
 

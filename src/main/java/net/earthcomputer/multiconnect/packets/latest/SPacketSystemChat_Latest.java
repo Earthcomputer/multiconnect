@@ -17,7 +17,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
-@MessageVariant(minVersion = Protocols.V1_19_1)
+@MessageVariant(minVersion = Protocols.V1_19_2)
 public class SPacketSystemChat_Latest implements SPacketSystemChat {
     private static final ResourceKey<ChatType> GAME_INFO_TYPE = ResourceKey.create(Registry.CHAT_TYPE_REGISTRY, new ResourceLocation("game_info"));
 

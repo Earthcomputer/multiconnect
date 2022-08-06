@@ -6,7 +6,7 @@ import net.earthcomputer.multiconnect.ap.Types;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.packets.CPacketChat;
 
-@MessageVariant(minVersion = Protocols.V1_19_1)
+@MessageVariant(minVersion = Protocols.V1_19_2)
 public class CPacketChat_Latest implements CPacketChat {
     public String message;
     @Type(Types.LONG)

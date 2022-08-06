@@ -8,7 +8,7 @@ import net.earthcomputer.multiconnect.packets.SPacketServerData;
 
 import java.util.Optional;
 
-@MessageVariant(minVersion = Protocols.V1_19_1)
+@MessageVariant(minVersion = Protocols.V1_19_2)
 public class SPacketServerData_Latest implements SPacketServerData {
     public Optional<CommonTypes.Text> description;
     public Optional<String> favicon;
