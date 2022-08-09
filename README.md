@@ -68,7 +68,7 @@ This section is for when you are developing your own mod and want to use the mul
    ```groovy
    dependencies {
       // ...
-      modRuntime('net.earthcomputer.multiconnect:multiconnect-slim:<version>') { transitive = false }
+      modRuntimeOnly('net.earthcomputer.multiconnect:multiconnect-slim:<version>') { transitive = false }
    }
    ```
    - Note: the previous step should also be done alongside this step.
