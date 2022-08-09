@@ -90,7 +90,6 @@ public class Main {
             }
 
             if (!command.run(nonOptions.subList(1, nonOptions.size()), options)) {
-                System.out.println("hi");
                 printHelp(options);
             }
         } catch (Throwable e) {

@@ -19,6 +19,7 @@ dependencies {
     implementation("net.sf.jopt-simple:jopt-simple:5.0.4")
     implementation("org.jetbrains:annotations:22.0.0")
     implementation("com.google.code.gson:gson:2.8.9")
+    implementation("io.github.java-diff-utils:java-diff-utils:4.12")
 }
 
 tasks.getByName<JavaExec>("run") {

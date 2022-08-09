@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.debug;
 
+import com.google.gson.reflect.TypeToken;
 import com.mojang.datafixers.TypeRewriteRule;
 import com.mojang.logging.LogUtils;
 import io.netty.buffer.ByteBuf;
@@ -55,18 +56,19 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -76,8 +78,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -85,6 +89,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -388,18 +394,19 @@ public class DebugUtils {
         dumpPackets(new File(dir, "cpackets.csv"), PacketFlow.SERVERBOUND, "CPacket", "Serverbound", "Packet");
         for (Registries registries : Registries.values()) {
             RegistryLike<T> registryLike = (RegistryLike<T>) getRegistryLike(registries);
-            try (PrintWriter pw = new PrintWriter(new FileWriter(new File(dir, registries.name().toLowerCase(Locale.ROOT) + ".csv")))) {
-                pw.println("id name oldName remapTo");
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dir, registries.name().toLowerCase(Locale.ROOT) + ".csv")))) {
+                writer.write("id name oldName remapTo\n");
                 for (T value : registryLike) {
                     String name = registryLike.getName(value);
                     if (!name.startsWith("multiconnect:")) {
-                        pw.println(registryLike.getRawId(value) + " " + name);
+                        writer.write(registryLike.getRawId(value) + " " + name + "\n");
                     }
                 }
             }
         }
 
         dumpRegistryAccess();
+        dumpEntitySynchedData(dir);
     }
 
     public static String resourceLocationToString(@Nullable ResourceLocation resourceLocation) {
@@ -428,8 +435,8 @@ public class DebugUtils {
     private static void dumpPackets(File output, PacketFlow direction, String prefix, String... toReplace) throws IOException {
         var packetHandlers = new ArrayList<>(ConnectionProtocol.PLAY.getPacketsByIds(direction).int2ObjectEntrySet());
         packetHandlers.sort(Comparator.comparingInt(Int2ObjectMap.Entry::getIntKey));
-        try (PrintWriter pw = new PrintWriter(new FileWriter(output))) {
-            pw.println("id clazz");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(output))) {
+            writer.write("id clazz\n");
             for (var entry : packetHandlers) {
                 int id = entry.getIntKey();
                 String baseClassName = entry.getValue().getName();
@@ -460,7 +467,7 @@ public class DebugUtils {
                         continue;
                     }
                 }
-                pw.println(id + " " + className);
+                writer.write(id + " " + className + "\n");
             }
         }
     }
@@ -473,6 +480,83 @@ public class DebugUtils {
             CompoundTag nbt = (CompoundTag) RegistryAccess.NETWORK_CODEC.encodeStart(NbtOps.INSTANCE, registryAccess)
                     .getOrThrow(false, err -> {});
             NbtIo.writeCompressed(nbt, output);
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static void dumpEntitySynchedData(File outputDir) throws IOException {
+        var inheritance = new HashMap<Class<?>, Class<?>>();
+        var entityTypes = new HashMap<Class<?>, EntityType<?>>();
+
+        for (Field field : EntityType.class.getFields()) {
+            if (!Modifier.isStatic(field.getModifiers())
+                || !(field.getGenericType() instanceof ParameterizedType type)
+                || type.getRawType() != EntityType.class
+            ) {
+                continue;
+            }
+            Class<?> entityClass = TypeToken.get(type.getActualTypeArguments()[0]).getRawType();
+            EntityType<?> entityType;
+            try {
+                entityType = (EntityType<?>) field.get(null);
+            } catch (ReflectiveOperationException e) {
+                throw new AssertionError(e);
+            }
+            entityTypes.put(entityClass, entityType);
+            do {
+                inheritance.put(entityClass, entityClass = entityClass.getSuperclass());
+            } while (Entity.class.isAssignableFrom(entityClass) && !inheritance.containsKey(entityClass));
+        }
+
+        Function<Class<?>, String> entityClassToString = clazz -> Util.mapNullable(entityTypes.get(clazz), type -> Registry.ENTITY_TYPE.getKey(type).toString(), clazz.getSimpleName());
+
+        var inheritanceLines = inheritance.entrySet().stream()
+            .filter(entry -> Entity.class.isAssignableFrom(entry.getValue()))
+            .map(entry -> Pair.of(entityClassToString.apply(entry.getKey()), entityClassToString.apply(entry.getValue())))
+            .sorted(Comparator.comparing(Pair::getLeft))
+            .map(pair -> pair.getLeft() + " " + pair.getRight());
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(outputDir, "entity_inheritance.csv")))) {
+            writer.write("class superclass\n");
+            for (String inheritanceLine : (Iterable<String>) inheritanceLines::iterator) {
+                writer.write(inheritanceLine + "\n");
+            }
+        }
+
+        var synchedDataLines = inheritance.keySet().stream()
+            .map(clazz -> Pair.of((Class) clazz, entityClassToString.apply(clazz)))
+            .sorted(Comparator.comparing(Pair::getRight))
+            .mapMulti((Pair<Class, String> clazzNamePair, Consumer<String> results) -> {
+                Set<String> takenNames = new HashSet<>();
+                for (Field field : clazzNamePair.getLeft().getDeclaredFields()) {
+                    if (!Modifier.isStatic(field.getModifiers()) || field.getType() != EntityDataAccessor.class) {
+                        continue;
+                    }
+                    String name = Arrays.stream(field.getName().toLowerCase(Locale.ROOT).split("_"))
+                        .filter(word -> !"data".equals(word) && !"id".equals(word))
+                        .collect(Collectors.joining("_"));
+                    if (name.isEmpty()) {
+                        throw new AssertionError("Entity " + clazzNamePair.getRight() + " has empty synched data name");
+                    }
+                    if (!takenNames.add(name)) {
+                        throw new AssertionError("Entity " + clazzNamePair.getRight() + " has duplicate synched data name " + name);
+                    }
+                    field.setAccessible(true);
+                    EntityDataAccessor<?> accessor;
+                    try {
+                        accessor = (EntityDataAccessor<?>) field.get(null);
+                    } catch (IllegalAccessException e) {
+                        throw new AssertionError(e);
+                    }
+                    results.accept(clazzNamePair.getRight() + " " + accessor.getId() + " " + name);
+                }
+            });
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(outputDir, "synched_entity_data.csv")))) {
+            writer.write("class id name\n");
+            for (String synchedDataLine : (Iterable<String>) synchedDataLines::iterator) {
+                writer.write(synchedDataLine + "\n");
+            }
         }
     }
 
