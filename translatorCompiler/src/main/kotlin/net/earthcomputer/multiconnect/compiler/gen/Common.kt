@@ -224,7 +224,13 @@ internal fun ProtocolCompiler.generatePolymorphicInstantiationGraph(
                         ThrowStmtOp,
                         McNode(
                             NewOp("java.lang.IllegalArgumentException", listOf(McType.STRING)),
-                            createCstNode("Could not select polymorphic child of \"${splitPackageClass(message.className).second}\"")
+                            McNode(BinaryExpressionOp("+", McType.STRING, McType.STRING),
+                                createCstNode("Could not select polymorphic child of \"${splitPackageClass(message.className).second}\" for field value \""),
+                                McNode(BinaryExpressionOp("+", type.realType, McType.STRING),
+                                    loadTypeField,
+                                    createCstNode("\"")
+                                )
+                            )
                         )
                     )
                 }
