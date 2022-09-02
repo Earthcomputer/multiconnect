@@ -23,7 +23,7 @@ public class SPacketUpdateAdvancements {
         public ResourceLocation id;
         public Optional<ResourceLocation> parentId;
         public Optional<Display> display;
-        public List<ResourceLocation> criteria;
+        public List<String> criteria;
         public List<List<String>> requirements;
 
         @MessageVariant
