@@ -56,7 +56,6 @@ public class ProtocolRegistry {
 
 
     private static void register(int version, AbstractProtocol protocol) {
-        protocol.setProtocolVersion(version);
         protocols.put(version, protocol);
     }
 

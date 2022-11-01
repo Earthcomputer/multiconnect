@@ -1,12 +1,14 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
-import net.earthcomputer.multiconnect.impl.PacketSystem;
+import net.earthcomputer.multiconnect.impl.MulticonnectScheduler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
@@ -17,11 +19,17 @@ public class MinecraftMixin {
         for (int i = 0; i < values.size(); i++) {
             Object value = values.get(i);
             if (value instanceof ItemStack stack) {
-                if (!PacketSystem.doesServerKnow(Registry.ITEM, stack.getItem())) {
-                    values.remove(i--);
-                }
+                // TODO: rewrite for via
+//                if (!PacketSystem.doesServerKnow(Registry.ITEM, stack.getItem())) {
+//                    values.remove(i--);
+//                }
             }
         }
         return values;
+    }
+
+    @Inject(method = "tick", at = @At("RETURN"))
+    private void onTick(CallbackInfo ci) {
+        MulticonnectScheduler.tick();
     }
 }

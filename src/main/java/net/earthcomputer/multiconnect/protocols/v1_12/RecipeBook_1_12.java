@@ -5,10 +5,6 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
-import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.earthcomputer.multiconnect.packets.v1_12.CPacketPlaceRecipe_1_12;
-import net.earthcomputer.multiconnect.packets.v1_12_2.ItemStack_1_12_2;
-import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_5;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
@@ -27,7 +23,6 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class RecipeBook_1_12<C extends Container> {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -64,12 +59,13 @@ public class RecipeBook_1_12<C extends Container> {
             recipeBookComponent.setupGhostRecipe(recipe, menu.slots);
 
             if (!transactionsFromMatrix.isEmpty()) {
-                var packet = new CPacketPlaceRecipe_1_12();
-                packet.syncId = menu.containerId;
-                packet.transactionId = Protocol_1_16_5.nextScreenActionId();
-                packet.transactionsToMatrix = new ArrayList<>();
-                packet.transactionsFromMatrix = transactionsFromMatrix.stream().map(Transaction::toPacketTransaction).collect(Collectors.toCollection(ArrayList::new));
-                PacketSystem.sendToServer(mc.getConnection(), Protocols.V1_12, packet);
+                // TODO: rewrite for via
+//                var packet = new CPacketPlaceRecipe_1_12();
+//                packet.syncId = menu.containerId;
+//                packet.transactionId = Protocol_1_16_5.nextScreenActionId();
+//                packet.transactionsToMatrix = new ArrayList<>();
+//                packet.transactionsFromMatrix = transactionsFromMatrix.stream().map(Transaction::toPacketTransaction).collect(Collectors.toCollection(ArrayList::new));
+//                PacketSystem.sendToServer(mc.getConnection(), Protocols.V1_12, packet);
 
                 if (iRecipeBookComponent.getBook().isFiltering(menu)) {
                     mc.player.getInventory().setChanged();
@@ -129,12 +125,13 @@ public class RecipeBook_1_12<C extends Container> {
                 var transactionsFromMatrix = clearCraftMatrix();
                 var transactionsToMatrix = new ArrayList<Transaction>();
                 placeRecipe(recipe, slots, actualCount, inputItemIds, transactionsToMatrix);
-                var packet = new CPacketPlaceRecipe_1_12();
-                packet.syncId = menu.containerId;
-                packet.transactionId = Protocol_1_16_5.nextScreenActionId();
-                packet.transactionsToMatrix = transactionsToMatrix.stream().map(Transaction::toPacketTransaction).collect(Collectors.toCollection(ArrayList::new));
-                packet.transactionsFromMatrix = transactionsFromMatrix.stream().map(Transaction::toPacketTransaction).collect(Collectors.toCollection(ArrayList::new));
-                PacketSystem.sendToServer(mc.getConnection(), Protocols.V1_12, packet);
+                // TODO: rewrite for via
+//                var packet = new CPacketPlaceRecipe_1_12();
+//                packet.syncId = menu.containerId;
+//                packet.transactionId = Protocol_1_16_5.nextScreenActionId();
+//                packet.transactionsToMatrix = transactionsToMatrix.stream().map(Transaction::toPacketTransaction).collect(Collectors.toCollection(ArrayList::new));
+//                packet.transactionsFromMatrix = transactionsFromMatrix.stream().map(Transaction::toPacketTransaction).collect(Collectors.toCollection(ArrayList::new));
+//                PacketSystem.sendToServer(mc.getConnection(), Protocols.V1_12, packet);
             }
         }
     }
@@ -370,12 +367,13 @@ public class RecipeBook_1_12<C extends Container> {
             this.invSlot = invSlot;
         }
 
-        private CPacketPlaceRecipe_1_12.Transaction toPacketTransaction() {
-            var result = new CPacketPlaceRecipe_1_12.Transaction();
-            result.stack = ItemStack_1_12_2.fromMinecraft(this.stack);
-            result.craftingSlot = (byte) this.craftingSlot;
-            result.invSlot = (byte) this.invSlot;
-            return result;
-        }
+        // TODO: rewrite for via
+//        private CPacketPlaceRecipe_1_12.Transaction toPacketTransaction() {
+//            var result = new CPacketPlaceRecipe_1_12.Transaction();
+//            result.stack = ItemStack_1_12_2.fromMinecraft(this.stack);
+//            result.craftingSlot = (byte) this.craftingSlot;
+//            result.invSlot = (byte) this.invSlot;
+//            return result;
+//        }
     }
 }

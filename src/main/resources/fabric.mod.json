@@ -23,7 +23,6 @@
     "multiconnect.mixins.json",
     "multiconnect.1_19.mixins.json",
     "multiconnect.1_18.mixins.json",
-    "multiconnect.1_17.mixins.json",
     "multiconnect.1_16.mixins.json",
     "multiconnect.1_15.mixins.json",
     "multiconnect.1_14.mixins.json",
@@ -37,6 +36,7 @@
   "accessWidener": "multiconnect.accesswidener",
 
   "entrypoints": {
+    "main": [ "net.earthcomputer.multiconnect.impl.Multiconnect" ],
     "modmenu": [ "net.earthcomputer.multiconnect.impl.ModMenuImpl" ]
   },
 

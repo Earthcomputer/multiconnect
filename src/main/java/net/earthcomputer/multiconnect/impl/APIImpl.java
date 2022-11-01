@@ -33,12 +33,16 @@ public class APIImpl extends MultiConnectAPI {
 
     @Override
     public <T> boolean doesServerKnow(Registry<T> registry, T value) {
-        return PacketSystem.doesServerKnow(registry, value);
+        // TODO: rewrite for via
+//        return PacketSystem.doesServerKnow(registry, value);
+        return true;
     }
 
     @Override
     public <T> boolean doesServerKnow(Registry<T> registry, ResourceKey<T> key) {
-        return PacketSystem.doesServerKnow(registry, key);
+        // TODO: rewrite for via
+//        return PacketSystem.doesServerKnow(registry, key);
+        return true;
     }
 
     //region deprecated stuff

@@ -12,7 +12,6 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
-import net.earthcomputer.multiconnect.protocols.v1_12.TabCompletionManager;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntitySummonArgument;
 import net.minecraft.core.Registry;
@@ -300,7 +299,9 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
         }
 
         private CompletableFuture<List<String>> getScoreObjectives() {
-            return TabCompletionManager.requestCustomCompletion("/scoreboard objectives remove ");
+            // TODO: rewrite for via
+//            return TabCompletionManager.requestCustomCompletion("/scoreboard objectives remove ");
+            return CompletableFuture.completedFuture(Collections.emptyList());
         }
 
         private void parseInt(int min, int max) throws CommandSyntaxException {
@@ -440,11 +441,13 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
             int start = parser.reader.getCursor();
             parser.suggestor = builder -> {
                 SuggestionsBuilder newBuilder = builder.createOffset(start);
-                return TabCompletionManager.requestCustomCompletion("/scoreboard teams remove ").thenCompose(teams -> {
-                    SharedSuggestionProvider.suggest(teams, newBuilder);
-                    SharedSuggestionProvider.suggest(teams.stream().map(str -> "!" + str), newBuilder);
-                    return newBuilder.buildFuture();
-                });
+                // TODO: rewrite for via
+//                return TabCompletionManager.requestCustomCompletion("/scoreboard teams remove ").thenCompose(teams -> {
+//                    SharedSuggestionProvider.suggest(teams, newBuilder);
+//                    SharedSuggestionProvider.suggest(teams.stream().map(str -> "!" + str), newBuilder);
+//                    return newBuilder.buildFuture();
+//                });
+                return newBuilder.buildFuture();
             };
             parser.parseIsInverted();
             parser.reader.readUnquotedString();

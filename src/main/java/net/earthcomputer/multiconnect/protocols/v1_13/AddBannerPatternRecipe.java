@@ -18,6 +18,7 @@ import net.minecraft.world.item.crafting.SimpleRecipeSerializer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BannerBlockEntity;
 
+// TODO: is this applicable for via?
 public class AddBannerPatternRecipe extends CustomRecipe {
     public static final RecipeSerializer<AddBannerPatternRecipe> SERIALIZER = new SimpleRecipeSerializer<>(AddBannerPatternRecipe::new);
 

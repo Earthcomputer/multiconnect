@@ -18,7 +18,7 @@ public abstract class MinecraftMixin {
     @Inject(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;isServerControlledInventory()Z"))
     private void onInventoryKeyPressed(CallbackInfo ci) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_11_2) {
-            // TODO: rewrite 1.11.2
+            // TODO: rewrite for via
 //            getConnection().sendPacket(new ClientStatusC2SPacket_1_11_2(ClientStatusC2SPacket_1_11_2.Mode.OPEN_INVENTORY_ACHIEVEMENT));
         }
     }

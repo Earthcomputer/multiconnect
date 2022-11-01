@@ -5,26 +5,13 @@
   "mixins": [
     "bridge.BlockMixin",
     "bridge.BlockStateBaseMixin",
-    "bridge.ClientboundSetEntityDataPacketMixin",
     "bridge.ClientLanguageMixin",
-    "bridge.ClientLevelMixin",
-    "bridge.ClientPacketListenerMixin",
+    "bridge.Connection1Mixin",
     "bridge.ConnectionMixin",
     "bridge.CreativeModeTabMixin",
-    "bridge.DataFixersMixin",
-    "bridge.DataTrackerAccessor",
-    "bridge.EntityAccessor",
-    "bridge.EntityMixin",
-    "bridge.ImmutableRegistryAccessAccessor",
-    "bridge.LevelChunkMixin",
     "bridge.MinecraftAccessor",
     "bridge.MinecraftMixin",
-    "bridge.MultiPlayerGameModeMixin",
-    "bridge.PacketDecoderMixin",
-    "bridge.PacketEncoderMixin",
     "bridge.ParticleEngineMixin",
-    "bridge.SynchedEntityDataMixin",
-    "bridge.TrackedDataAccessor",
     "connect.BootstrapMixin",
     "connect.ClientIntentionPacketAccessor",
     "connect.ConnectionAccessor",
@@ -39,14 +26,9 @@
     "connect.MinecraftMixin",
     "connect.OnlineServerEntryMixin",
     "connect.ServerListMixin",
-    "debug.BlockableEventLoopMixin",
-    "debug.ConnectionMixin",
     "debug.KeyboardHandlerMixin"
   ],
   "client": [
-    "debug.ClientHandshakePacketListenerImplMixin",
-    "debug.LocalPlayerMixin",
-    "debug.MinecraftMixin"
   ],
   "injectors": {
     "defaultRequire": 1
