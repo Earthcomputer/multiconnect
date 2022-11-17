@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.protocols.generic;
 import com.google.gson.Gson;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.minecraft.server.packs.VanillaPackResources;
 import org.jetbrains.annotations.Contract;
 
 import java.io.BufferedReader;
@@ -35,10 +36,8 @@ public final class TagLoader {
 
     private static final Gson GSON = new Gson();
     private static final ResourceManager DATA_LOADER = Util.make(() -> {
-        PackRepository packRepo = new PackRepository(PackType.SERVER_DATA, new ServerPacksSource());
-        packRepo.reload();
-        packRepo.setSelected(Collections.singletonList("vanilla"));
-        return new MultiPackResourceManager(PackType.SERVER_DATA, packRepo.openAllSelected());
+        VanillaPackResources resources = new VanillaPackResources(ServerPacksSource.BUILT_IN_METADATA, "minecraft");
+        return new MultiPackResourceManager(PackType.SERVER_DATA, List.of(resources));
     });
 
     private static List<Tag<ResourceLocation>> loadTags(ResourceKey<? extends Registry<?>> registry) {
