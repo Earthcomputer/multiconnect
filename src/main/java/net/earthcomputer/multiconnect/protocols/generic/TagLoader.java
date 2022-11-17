@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.protocols.generic;
 import com.google.gson.Gson;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import net.minecraft.server.packs.VanillaPackResources;
 import org.jetbrains.annotations.Contract;
 
 import java.io.BufferedReader;
@@ -23,6 +22,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.VanillaPackResources;
 import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.server.packs.resources.Resource;
