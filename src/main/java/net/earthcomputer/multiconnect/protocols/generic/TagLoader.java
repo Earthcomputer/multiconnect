@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +22,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.repository.PackRepository;
+import net.minecraft.server.packs.VanillaPackResources;
 import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.packs.resources.MultiPackResourceManager;
 import net.minecraft.server.packs.resources.Resource;
@@ -35,10 +34,8 @@ public final class TagLoader {
 
     private static final Gson GSON = new Gson();
     private static final ResourceManager DATA_LOADER = Util.make(() -> {
-        PackRepository packRepo = new PackRepository(PackType.SERVER_DATA, new ServerPacksSource());
-        packRepo.reload();
-        packRepo.setSelected(Collections.singletonList("vanilla"));
-        return new MultiPackResourceManager(PackType.SERVER_DATA, packRepo.openAllSelected());
+        VanillaPackResources resources = new VanillaPackResources(ServerPacksSource.BUILT_IN_METADATA, "minecraft");
+        return new MultiPackResourceManager(PackType.SERVER_DATA, List.of(resources));
     });
 
     private static List<Tag<ResourceLocation>> loadTags(ResourceKey<? extends Registry<?>> registry) {
