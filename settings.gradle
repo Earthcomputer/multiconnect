@@ -27,3 +27,5 @@ buildscript {
 }
 
 include 'stubs'
+include 'translator-api'
+include 'via-translator'

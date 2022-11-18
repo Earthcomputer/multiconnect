@@ -1,10 +1,10 @@
-package net.earthcomputer.multiconnect.provider;
+package net.earthcomputer.multiconnect.impl.via.provider;
 
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.minecraft.item.DataItem;
 import com.viaversion.viaversion.api.minecraft.item.Item;
 import com.viaversion.viaversion.protocols.protocol1_9to1_8.providers.HandItemProvider;
-import net.earthcomputer.multiconnect.impl.MulticonnectScheduler;
+import net.earthcomputer.multiconnect.api.IMulticonnectTranslatorApi;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Registry;
@@ -13,8 +13,8 @@ import net.minecraft.world.item.ItemStack;
 public class MulticonnectHandItemProvider extends HandItemProvider {
     private Item handItem = new DataItem(0, (byte) 0, (short) 0, null);
 
-    public MulticonnectHandItemProvider() {
-        MulticonnectScheduler.scheduleWeak(this, MulticonnectHandItemProvider::tick);
+    public MulticonnectHandItemProvider(IMulticonnectTranslatorApi api) {
+        api.scheduleRepeatingWeak(this, MulticonnectHandItemProvider::tick);
     }
 
     @Override

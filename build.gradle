@@ -5,7 +5,7 @@ import net.fabricmc.loom.task.RemapJarTask
 import java.util.regex.Pattern
 
 plugins {
-	id 'fabric-loom' version '0.12-SNAPSHOT'
+	id 'fabric-loom' version '1.0-SNAPSHOT'
 	id 'maven-publish'
 	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
@@ -22,11 +22,6 @@ allprojects {
 	archivesBaseName = rootProject.archives_base_name
 	version = rootProject.mod_version
 	group = rootProject.maven_group
-}
-
-configurations {
-	multiconnectProcessor
-	annotationProcessor.extendsFrom multiconnectProcessor
 }
 
 def snapshotPattern = Pattern.compile('(\\d\\d)w(\\d\\d)([a-z])')
@@ -137,7 +132,12 @@ loom {
 
 dependencies {
 	//to change the versions see the gradle.properties file
-	// compileOnly project(':stubs') // when https://github.com/FabricMC/fabric-loom/pull/747 is merged
+	compileOnly project(':stubs')
+	implementation project(':translator-api')
+
+	runtimeOnly project(':via-translator')
+
+	compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings loom.layered {
@@ -147,9 +147,6 @@ dependencies {
 	modCompileOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	modRuntimeOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	testImplementation "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
-
-	implementation "com.viaversion:viaversion:${project.viaversion_version}"
-	implementation "org.yaml:snakeyaml:${project.snakeyaml_version}"
 
 	if (true) {
 		modCompileOnly(fabricApi.module('fabric-resource-loader-v0', project.fabric_api_version)) {

@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.impl;
+package net.earthcomputer.multiconnect.impl.via;
 
 import com.viaversion.viaversion.api.platform.ViaInjector;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;

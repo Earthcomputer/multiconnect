@@ -2,7 +2,7 @@
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 
-package net.earthcomputer.multiconnect.provider;
+package net.earthcomputer.multiconnect.impl.via.provider;
 
 import net.minecraft.FieldsAreNonnullByDefault;
 import net.minecraft.MethodsReturnNonnullByDefault;

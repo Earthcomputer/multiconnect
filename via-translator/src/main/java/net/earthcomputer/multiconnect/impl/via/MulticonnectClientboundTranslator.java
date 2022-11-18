@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.protocols.generic;
+package net.earthcomputer.multiconnect.impl.via;
 
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.UserConnection;

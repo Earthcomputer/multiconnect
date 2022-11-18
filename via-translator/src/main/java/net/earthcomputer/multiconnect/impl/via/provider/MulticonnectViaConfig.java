@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.provider;
+package net.earthcomputer.multiconnect.impl.via.provider;
 
 import com.viaversion.viaversion.configuration.AbstractViaConfig;
 

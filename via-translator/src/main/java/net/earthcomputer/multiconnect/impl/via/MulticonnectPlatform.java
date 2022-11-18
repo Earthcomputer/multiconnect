@@ -1,4 +1,4 @@
-package net.earthcomputer.multiconnect.impl;
+package net.earthcomputer.multiconnect.impl.via;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mojang.logging.LogUtils;
@@ -10,8 +10,8 @@ import com.viaversion.viaversion.api.configuration.ViaVersionConfig;
 import com.viaversion.viaversion.api.platform.PlatformTask;
 import com.viaversion.viaversion.api.platform.ViaPlatform;
 import com.viaversion.viaversion.libs.gson.JsonObject;
-import net.earthcomputer.multiconnect.provider.MulticonnectViaConfig;
-import net.fabricmc.loader.api.FabricLoader;
+import net.earthcomputer.multiconnect.api.IMulticonnectTranslatorApi;
+import net.earthcomputer.multiconnect.impl.via.provider.MulticonnectViaConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.server.IntegratedServer;
 import org.slf4j.Logger;
@@ -83,6 +83,17 @@ public class MulticonnectPlatform implements ViaPlatform<UUID> {
         }
     };
 
+    private final IMulticonnectTranslatorApi api;
+
+    private final File dataFolder;
+    private final MulticonnectViaConfig config;
+
+    public MulticonnectPlatform(IMulticonnectTranslatorApi api) {
+        this.api = api;
+        dataFolder = api.getConfigDir().toFile();
+        config = new MulticonnectViaConfig(new File(dataFolder, "viaversion.yml"));
+    }
+
     @Override
     public java.util.logging.Logger getLogger() {
         return JAVA_LOGGER;
@@ -95,9 +106,7 @@ public class MulticonnectPlatform implements ViaPlatform<UUID> {
 
     @Override
     public String getPlatformVersion() {
-        return FabricLoader.getInstance().getModContainer("multiconnect")
-            .orElseThrow(() -> new RuntimeException("Could not find multiconnect mod container"))
-            .getMetadata().getVersion().getFriendlyString();
+        return api.getVersion();
     }
 
     @Override
@@ -172,15 +181,12 @@ public class MulticonnectPlatform implements ViaPlatform<UUID> {
         return true;
     }
 
-    private final ViaAPI<UUID> api = new ViaAPIBase<>() {};
+    private final ViaAPI<UUID> viaApi = new ViaAPIBase<>() {};
 
     @Override
     public ViaAPI<UUID> getApi() {
-        return api;
+        return viaApi;
     }
-
-    private final File dataFolder = FabricLoader.getInstance().getConfigDir().resolve("multiconnect").toFile();
-    private final MulticonnectViaConfig config = new MulticonnectViaConfig(new File(dataFolder, "viaversion.yml"));
 
     @Override
     public ViaVersionConfig getConf() {
@@ -213,7 +219,7 @@ public class MulticonnectPlatform implements ViaPlatform<UUID> {
 
     @Override
     public boolean hasPlugin(String name) {
-        return FabricLoader.getInstance().isModLoaded(name);
+        return api.isModLoaded(name);
     }
 
     @Override
