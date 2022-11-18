@@ -132,7 +132,7 @@ loom {
 
 dependencies {
 	//to change the versions see the gradle.properties file
-	compileOnly project(':stubs')
+	// compileOnly project(':stubs') // when https://github.com/FabricMC/fabric-loom/pull/747 is merged
 	implementation project(':translator-api')
 
 	runtimeOnly project(':via-translator')
