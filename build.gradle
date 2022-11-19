@@ -135,7 +135,8 @@ dependencies {
 	// compileOnly project(':stubs') // when https://github.com/FabricMC/fabric-loom/pull/747 is merged
 	implementation project(':translator-api')
 
-	runtimeOnly project(':via-translator')
+	runtimeOnly project(path: ':via-translator', configuration: "namedElements")
+	runtimeOnly project(path: ':via-translator')
 
 	compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
