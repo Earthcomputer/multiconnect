@@ -5,13 +5,19 @@ import com.google.gson.JsonSyntaxException;
 import com.mojang.logging.LogUtils;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
+import net.earthcomputer.multiconnect.impl.Multiconnect;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -23,6 +29,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -291,6 +298,61 @@ public class AssetDownloader {
         }
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static Document downloadXml(URL url, String dest) {
+        File downloadedFile = download(url, dest);
+        if (downloadedFile == null) {
+            return null;
+        }
+        DocumentBuilder builder;
+        try {
+            builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            LOGGER.info("Failed to configure XML parser", e);
+            return null;
+        }
+        try {
+            return builder.parse(downloadedFile);
+        } catch (IOException | SAXException e) {
+            downloadedFile.delete();
+            // corrupted xml, try redownloading
+            downloadedFile = download(url, dest, true);
+            if (downloadedFile == null) {
+                return null;
+            }
+            try {
+                return builder.parse(downloadedFile);
+            } catch (IOException | SAXException e1) {
+                LOGGER.info("Failed to read file " + dest + " downloaded from " + url);
+                return null;
+            }
+        }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static File downloadJar(URL url, String dest) {
+        File downloadedFile = download(url, dest);
+        if (downloadedFile == null) {
+            return null;
+        }
+        try (JarFile ignored = new JarFile(downloadedFile)) {
+            return downloadedFile;
+        } catch (IOException e) {
+            downloadedFile.delete();
+            // corrupted jar, try redownloading
+            downloadedFile = download(url, dest, true);
+            if (downloadedFile == null) {
+                return null;
+            }
+            try (JarFile ignored = new JarFile(downloadedFile)) {
+                return downloadedFile;
+            } catch (IOException e1) {
+                LOGGER.info("Failed to read file " + dest + " downloaded from " + url);
+                return null;
+            }
+        }
+    }
+
     private static File download(URL url, String dest) {
         return download(url, dest, false);
     }
@@ -308,6 +370,7 @@ public class AssetDownloader {
             }
 
             connection.setRequestProperty("Accept-Encoding", "gzip");
+            connection.setRequestProperty("User-Agent", "multiconnect " + Multiconnect.getVersion());
 
             connection.connect();
 

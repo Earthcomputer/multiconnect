@@ -4,10 +4,8 @@ import com.mojang.logging.LogUtils;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslator;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslatorApi;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
-
-import java.util.Comparator;
-import java.util.ServiceLoader;
 
 public class Multiconnect implements ModInitializer {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -16,21 +14,20 @@ public class Multiconnect implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        try {
-            // sanity check that our via subproject is on the classpath
-            Class.forName("net.earthcomputer.multiconnect.impl.via.ViaMulticonnectTranslator");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-
         IMulticonnectTranslatorApi api = new TranslatorApiImpl();
-        ServiceLoader<IMulticonnectTranslator> loader = ServiceLoader.load(IMulticonnectTranslator.class);
-        translator = loader.stream()
-            .map(ServiceLoader.Provider::get)
-            .filter(translator -> translator.isApplicableInEnvironment(api))
-            .max(Comparator.comparingInt(IMulticonnectTranslator::priority))
-            .orElseThrow();
+        translator = TranslatorDiscoverer.discoverTranslator(api);
         LOGGER.info("Using multiconnect translator: {}", translator.getClass().getName());
         translator.init(api);
+    }
+
+    public static String getVersion() {
+        return VersionHolder.VERSION;
+    }
+
+    // used to get the version lazily
+    private static class VersionHolder {
+        private static final String VERSION = FabricLoader.getInstance().getModContainer("multiconnect")
+                .orElseThrow(() -> new RuntimeException("Could not find multiconnect mod container"))
+                .getMetadata().getVersion().getFriendlyString();
     }
 }

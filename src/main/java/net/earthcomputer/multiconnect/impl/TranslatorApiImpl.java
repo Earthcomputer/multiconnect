@@ -14,9 +14,7 @@ public class TranslatorApiImpl implements IMulticonnectTranslatorApi {
 
     @Override
     public String getVersion() {
-        return FabricLoader.getInstance().getModContainer("multiconnect")
-            .orElseThrow(() -> new RuntimeException("Could not find multiconnect mod container"))
-            .getMetadata().getVersion().getFriendlyString();
+        return Multiconnect.getVersion();
     }
 
     @Override

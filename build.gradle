@@ -297,4 +297,7 @@ task releaseAll {
 	dependsOn tasks.getByName('curseforge')
 	dependsOn tasks.getByName('publishModrinth')
 	dependsOn tasks.getByName('githubRelease')
+	project(':via-translator').afterEvaluate {
+		dependsOn it.tasks.getByName('publishModrinth')
+	}
 }

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "multiconnect-via-translator",
+  "name": "Multiconnect Via Translator",
+  "version": "${version}",
+  "description": "ViaVersion implementation of the multiconnect translator",
+  "authors": [
+    "Earthcomputer"
+  ],
+  "license": "GPL3",
+  "entrypoints": {
+    "main": [
+      "net.earthcomputer.multiconnect.impl.via.NonModCheck"
+    ]
+  }
+}
