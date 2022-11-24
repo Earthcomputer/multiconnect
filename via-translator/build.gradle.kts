@@ -33,8 +33,11 @@ dependencies {
     })
     modImplementation("com.github.Earthcomputer:fabric-loader:${rootProject.property("loader_version")}")
     implementation(project(":translator-api"))
-    implementation("com.viaversion:viaversion:${rootProject.property("viaversion_version")}")
+    implementation("com.viaversion:viaversion:${rootProject.property("viaversion_version")}") {
+        isTransitive = false
+    }
     implementation("org.yaml:snakeyaml:${rootProject.property("snakeyaml_version")}")
+    include("org.yaml:snakeyaml:${rootProject.property("snakeyaml_version")}")
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
 }
 

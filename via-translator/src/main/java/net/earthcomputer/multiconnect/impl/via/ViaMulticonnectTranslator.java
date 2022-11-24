@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.impl.via;
 
+import com.mojang.logging.LogUtils;
 import com.viaversion.viaversion.ViaManagerImpl;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.UserConnection;
@@ -9,8 +10,11 @@ import io.netty.channel.Channel;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslator;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslatorApi;
 import net.minecraft.client.Minecraft;
+import org.slf4j.Logger;
 
 public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     @Override
     public boolean isApplicableInEnvironment(IMulticonnectTranslatorApi api) {
         return !api.isModLoaded("viafabric");
@@ -25,6 +29,8 @@ public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
             .build();
         Via.init(manager);
         manager.init();
+
+        LOGGER.info("ViaVersion version: {}", Via.getAPI().getVersion());
     }
 
     @Override
