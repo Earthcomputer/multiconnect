@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -31,6 +32,7 @@ import java.util.ServiceLoader;
 import java.util.concurrent.CompletableFuture;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -70,16 +72,18 @@ public final class TranslatorDiscoverer {
 
     private static void maybeDownloadViaTranslator() {
         Path configDir = FabricLoader.getInstance().getConfigDir().resolve("multiconnect");
-        try (Stream<Path> dir = Files.list(configDir)) {
-            for (Path file : (Iterable<Path>) dir::iterator) {
-                if (isMatchingViaTranslatorJar(file)) {
-                    LOGGER.info("Found via translator: {}", file);
-                    addToClassPath(file);
-                    return;
+        if (Files.exists(configDir)) {
+            try (Stream<Path> dir = Files.list(configDir)) {
+                for (Path file : (Iterable<Path>) dir::iterator) {
+                    if (isMatchingViaTranslatorJar(file)) {
+                        LOGGER.info("Found via translator: {}", file);
+                        addToClassPath(file);
+                        return;
+                    }
                 }
+            } catch (IOException e) {
+                LOGGER.error("An I/O error occurred listing files in directory", e);
             }
-        } catch (IOException e) {
-            LOGGER.error("An I/O error occurred listing files in directory", e);
         }
 
         downloadViaTranslator(configDir);
@@ -123,7 +127,7 @@ public final class TranslatorDiscoverer {
         }
 
         try {
-            HttpClient client = HttpClient.newHttpClient();
+            HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
 
             String userAgent = "multiconnect " + Multiconnect.getVersion();
 
@@ -186,7 +190,7 @@ public final class TranslatorDiscoverer {
     }
 
     private static void maybeDownloadViaVersion() {
-        FileDownloader.downloadAndParse(
+        Path viaVersionJar = FileDownloader.downloadAndParse(
             FileDownloader.createURL("https://ci.viaversion.com/job/ViaVersion/lastSuccessfulBuild/artifact/*zip*/target.zip"),
             "viaversion.jar",
             (in, dest) -> {
@@ -205,9 +209,14 @@ public final class TranslatorDiscoverer {
                     return file;
                 }
             });
+
+        if (viaVersionJar != null) {
+            addToClassPath(viaVersionJar);
+            LOGGER.info("Downloaded ViaVersion");
+        }
     }
 
-    private static void addToClassPath(Path path) {
+    private static synchronized void addToClassPath(Path path) {
         try {
             Class<?> launcherBase;
             try {
@@ -215,10 +224,26 @@ public final class TranslatorDiscoverer {
             } catch (ClassNotFoundException e) {
                 launcherBase = Class.forName("org.quiltmc.loader.impl.launch.QuiltLauncherBase");
             }
-            Object launcher = launcherBase.getMethod("getLauncher").invoke(null);
-            launcher.getClass().getMethod("addToClassPath", Path.class).invoke(launcher, path);
+            Method getLauncher = launcherBase.getMethod("getLauncher");
+            Object launcher = getLauncher.invoke(null);
+            getLauncher.getReturnType().getMethod("addToClassPath", Path.class, String[].class).invoke(launcher, path, new String[0]);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("Failed to add multiconnect via translator to classpath. Report this to https://github.com/Earthcomputer/multiconnect/issues", e);
+        }
+
+        try (JarInputStream jar = new JarInputStream(Files.newInputStream(path))) {
+            JarEntry entry;
+            while ((entry = jar.getNextJarEntry()) != null) {
+                String name = entry.getName();
+                if (name.startsWith("META-INF/jars/") && name.endsWith(".jar")) {
+                    Path destJar = Files.createTempFile(null, ".jar");
+                    destJar.toFile().deleteOnExit();
+                    Files.copy(jar, destJar, StandardCopyOption.REPLACE_EXISTING);
+                    addToClassPath(destJar);
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.error("Failed to read jar file {}", path, e);
         }
     }
 }

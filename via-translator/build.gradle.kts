@@ -52,9 +52,14 @@ tasks.register<com.modrinth.minotaur.TaskModrinthUpload>("publishModrinth") {
     uploadFile = tasks.getByName("remapJar")
     addGameVersion(rootProject.property("minecraft_version").toString())
     addLoader("fabric")
+    addLoader("quilt")
 }
 
 tasks {
+    jar {
+        from("LICENSE.md")
+    }
+
     processResources {
         duplicatesStrategy = DuplicatesStrategy.WARN
 

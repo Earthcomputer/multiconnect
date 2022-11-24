@@ -70,6 +70,9 @@ tasks.withType(JavaCompile) {
 task sourcesJar(type: Jar, dependsOn: classes) {
 	archiveClassifier.set("sources")
 	from sourceSets.main.allSource
+	project(':translator-api').afterEvaluate {
+		from it.sourceSets.main.allSource
+	}
 }
 
 task javadocJar(type: Jar, dependsOn: classes) {
@@ -86,6 +89,9 @@ task remapSlimJar(type: RemapJarTask, dependsOn: jar) {
 
 jar {
 	from "LICENSE"
+	project(':translator-api').afterEvaluate {
+		from it.sourceSets.main.output
+	}
 }
 
 loom {
@@ -276,6 +282,7 @@ task publishModrinth(type: TaskModrinthUpload) {
 	changelog = changes
 	addGameVersion project.minecraft_version
 	addLoader 'fabric'
+	addLoader 'quilt'
 }
 
 githubRelease {
