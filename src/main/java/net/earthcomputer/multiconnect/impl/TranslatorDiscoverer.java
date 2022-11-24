@@ -8,23 +8,16 @@ import com.google.gson.JsonSyntaxException;
 import com.mojang.logging.LogUtils;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslator;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslatorApi;
-import net.earthcomputer.multiconnect.protocols.generic.AssetDownloader;
+import net.earthcomputer.multiconnect.protocols.generic.FileDownloader;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.GsonHelper;
 import org.slf4j.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -32,12 +25,15 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 import java.util.ServiceLoader;
 import java.util.concurrent.CompletableFuture;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public final class TranslatorDiscoverer {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -190,55 +186,25 @@ public final class TranslatorDiscoverer {
     }
 
     private static void maybeDownloadViaVersion() {
-        URL viaMavenMetadataUrl;
-        try {
-            viaMavenMetadataUrl = new URL("https://repo.viaversion.com/com/viaversion/viaversion/maven-metadata.xml");
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-        Document metadata = AssetDownloader.downloadXml(viaMavenMetadataUrl, "via-maven-metadata.xml");
-        if (metadata == null) {
-            return;
-        }
-        Element versioning = getChildElement(metadata.getDocumentElement(), "versioning");
-        if (versioning == null) {
-            LOGGER.info("Malformed via maven metadata");
-            return;
-        }
-        Element latest = getChildElement(versioning, "latest");
-        if (latest == null) {
-            LOGGER.info("Malformed via maven metadata");
-            return;
-        }
-        String latestVersion = latest.getTextContent();
-        LOGGER.info("Latest ViaVersion is {}", latestVersion);
-
-        String viaVersionUrlStr = "https://repo.viaversion.com/com/viaversion/viaversion/" + latestVersion + "/viaversion-" + latestVersion + ".jar";
-        URL viaVersionUrl;
-        try {
-            viaVersionUrl = new URL(viaVersionUrlStr);
-        } catch (MalformedURLException e) {
-            LOGGER.error("Malformed URL: {}", viaVersionUrlStr);
-            return;
-        }
-        File viaVersionJar = AssetDownloader.downloadJar(viaVersionUrl, "viaversion-" + latestVersion + ".jar");
-        if (viaVersionJar == null) {
-            return;
-        }
-
-        addToClassPath(viaVersionJar.toPath());
-        LOGGER.info("ViaVersion downloaded");
-    }
-
-    private static Element getChildElement(Element element, String name) {
-        NodeList children = element.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE && name.equals(child.getNodeName())) {
-                return (Element) child;
-            }
-        }
-        return null;
+        FileDownloader.downloadAndParse(
+            FileDownloader.createURL("https://ci.viaversion.com/job/ViaVersion/lastSuccessfulBuild/artifact/*zip*/target.zip"),
+            "viaversion.jar",
+            (in, dest) -> {
+                ZipInputStream zis = new ZipInputStream(in);
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    if (entry.getName().endsWith(".jar")) {
+                        Files.copy(zis, dest, StandardCopyOption.REPLACE_EXISTING);
+                        return;
+                    }
+                }
+                throw new IOException("Could not find viaversion.jar in the zip");
+            },
+            file -> {
+                try (JarFile ignored = new JarFile(file.toFile())) {
+                    return file;
+                }
+            });
     }
 
     private static void addToClassPath(Path path) {
