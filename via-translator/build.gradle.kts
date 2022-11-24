@@ -56,6 +56,8 @@ tasks.register<com.modrinth.minotaur.TaskModrinthUpload>("publishModrinth") {
 
 tasks {
     processResources {
+        duplicatesStrategy = DuplicatesStrategy.WARN
+
         inputs.property("version", project.version)
         from(sourceSets.main.get().resources.srcDirs) {
             include("fabric.mod.json")
