@@ -12,4 +12,6 @@ public interface IMulticonnectTranslator {
     void init(IMulticonnectTranslatorApi api);
     void inject(Channel channel);
     void postPipelineModifiers(Channel channel);
+
+    boolean doesServerKnow(String registry, String entry);
 }

@@ -1,7 +1,13 @@
 package net.earthcomputer.multiconnect.impl;
 
+import io.netty.channel.Channel;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslatorApi;
+import net.earthcomputer.multiconnect.mixin.connect.ConnectionAccessor;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.RateKickingConnection;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -25,6 +31,16 @@ public class TranslatorApiImpl implements IMulticonnectTranslatorApi {
     @Override
     public Path getConfigDir() {
         return FabricLoader.getInstance().getConfigDir().resolve("multiconnect");
+    }
+
+    @Override
+    @Nullable
+    public Channel getCurrentChannel() {
+        ClientPacketListener connection = Minecraft.getInstance().getConnection();
+        if (connection == null) {
+            return null;
+        }
+        return ((ConnectionAccessor) connection.getConnection()).getChannel();
     }
 
     @Override

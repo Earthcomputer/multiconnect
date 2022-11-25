@@ -26,4 +26,9 @@ public class NoopTranslator implements IMulticonnectTranslator {
     @Override
     public void postPipelineModifiers(Channel channel) {
     }
+
+    @Override
+    public boolean doesServerKnow(String registry, String entry) {
+        return true;
+    }
 }
