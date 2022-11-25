@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-// TODO: is this applicable for via?
 @Mixin(MerchantMenu.class)
 public abstract class MerchantMenuMixin extends AbstractContainerMenu {
 

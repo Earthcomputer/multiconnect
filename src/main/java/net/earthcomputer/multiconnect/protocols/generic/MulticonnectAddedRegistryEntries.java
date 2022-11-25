@@ -1,7 +1,6 @@
 package net.earthcomputer.multiconnect.protocols.generic;
 
 import net.earthcomputer.multiconnect.protocols.v1_12.Particles_1_12_2;
-import net.earthcomputer.multiconnect.protocols.v1_13.AddBannerPatternRecipe;
 import net.earthcomputer.multiconnect.protocols.v1_14.SoundEvents_1_14_4;
 
 public final class MulticonnectAddedRegistryEntries {
@@ -9,7 +8,6 @@ public final class MulticonnectAddedRegistryEntries {
 
     public static void register() {
         Particles_1_12_2.register();
-        AddBannerPatternRecipe.register();
         SoundEvents_1_14_4.register();
     }
 

@@ -36,4 +36,8 @@ public class NoopTranslator implements IMulticonnectTranslator {
     @Override
     public void sendStringCustomPayload(Channel channel, String payloadChannel, ByteBuf payload) {
     }
+
+    @Override
+    public void sendOpenedInventory(Channel channel) {
+    }
 }

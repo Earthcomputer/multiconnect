@@ -16,4 +16,5 @@ public interface IMulticonnectTranslator {
 
     boolean doesServerKnow(String registry, String entry);
     void sendStringCustomPayload(Channel channel, String payloadChannel, ByteBuf payload) throws Exception;
+    void sendOpenedInventory(Channel channel) throws Exception;
 }

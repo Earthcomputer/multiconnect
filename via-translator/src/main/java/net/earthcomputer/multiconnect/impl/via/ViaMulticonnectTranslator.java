@@ -12,7 +12,9 @@ import com.viaversion.viaversion.api.type.Type;
 import com.viaversion.viaversion.connection.UserConnectionImpl;
 import com.viaversion.viaversion.protocol.ProtocolPipelineImpl;
 import com.viaversion.viaversion.protocols.protocol1_12_1to1_12.ServerboundPackets1_12_1;
+import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_11_1;
 import com.viaversion.viaversion.protocols.protocol1_13to1_12_2.Protocol1_13To1_12_2;
+import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
@@ -180,5 +182,17 @@ public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
         payload.readBytes(bytes);
         packet.write(Type.REMAINING_BYTES, bytes);
         packet.sendToServer(Protocol1_13To1_12_2.class);
+    }
+
+    @Override
+    public void sendOpenedInventory(Channel channel) throws Exception {
+        UserConnection connection = channel.attr(VIA_USER_CONNECTION_KEY).get();
+        PacketWrapper packet = Via.getManager().getProtocolManager().createPacketWrapper(
+            ServerboundPackets1_9_3.CLIENT_STATUS,
+            channel.alloc().buffer(),
+            connection
+        );
+        packet.write(Type.VAR_INT, 2); // opened inventory
+        packet.sendToServer(Protocol1_12To1_11_1.class);
     }
 }
