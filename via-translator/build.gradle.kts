@@ -31,7 +31,7 @@ dependencies {
         officialMojangMappings()
         parchment("org.parchmentmc.data:parchment-${rootProject.property("parchment_mcversion")}:${rootProject.property("parchment_version")}@zip")
     })
-    modImplementation("com.github.Earthcomputer:fabric-loader:${rootProject.property("loader_version")}")
+    modCompileOnly("com.github.Earthcomputer:fabric-loader:${rootProject.property("loader_version")}")
     implementation(project(":translator-api"))
     implementation("com.viaversion:viaversion:${rootProject.property("viaversion_version")}") {
         isTransitive = false

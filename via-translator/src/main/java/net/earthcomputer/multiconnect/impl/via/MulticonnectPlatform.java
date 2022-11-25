@@ -1,22 +1,34 @@
 package net.earthcomputer.multiconnect.impl.via;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import com.viaversion.viaversion.ViaAPIBase;
+import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.ViaAPI;
 import com.viaversion.viaversion.api.command.ViaCommandSender;
 import com.viaversion.viaversion.api.configuration.ConfigurationProvider;
 import com.viaversion.viaversion.api.configuration.ViaVersionConfig;
 import com.viaversion.viaversion.api.platform.PlatformTask;
 import com.viaversion.viaversion.api.platform.ViaPlatform;
-import com.viaversion.viaversion.libs.gson.JsonObject;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslatorApi;
 import net.earthcomputer.multiconnect.impl.via.provider.MulticonnectViaConfig;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.server.IntegratedServer;
+import net.minecraft.util.GsonHelper;
 import org.slf4j.Logger;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.UUID;
 import java.util.concurrent.*;
@@ -109,9 +121,45 @@ public class MulticonnectPlatform implements ViaPlatform<UUID> {
         return api.getVersion();
     }
 
+    private static final class PluginVersionHolder {
+        private PluginVersionHolder() {
+        }
+
+        private static final String pluginVersion = computePluginVersion();
+
+        private static String computePluginVersion() {
+            try {
+                URL resource = Via.class.getClassLoader().getResource(Via.class.getName().replace('.', '/') + ".class");
+                if (resource == null) {
+                    throw new RuntimeException("Could not find Via class resoruce");
+                }
+                String resLocation = resource.toString();
+                int exclamationIndex = resLocation.indexOf('!');
+                if (exclamationIndex == -1) {
+                    throw new RuntimeException("Via location is not in a jar file");
+                }
+                resLocation = resLocation.substring(0, exclamationIndex + 1) + "/fabric.mod.json";
+                try {
+                    resource = new URL(resLocation);
+                } catch (MalformedURLException e) {
+                    throw new RuntimeException(e);
+                }
+                try (InputStream is = resource.openStream()) {
+                    JsonObject json = new Gson().fromJson(new InputStreamReader(is, StandardCharsets.UTF_8), JsonObject.class);
+                    return GsonHelper.getAsString(json, "version");
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to read via's fabric.mod.json", e);
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+                throw e;
+            }
+        }
+    }
+
     @Override
     public String getPluginVersion() {
-        return "4.4.3-SNAPSHOT"; // TODO
+        return PluginVersionHolder.pluginVersion;
     }
 
     private static final ExecutorService ASYNC_EXECUTOR = Executors.newFixedThreadPool(
@@ -208,8 +256,30 @@ public class MulticonnectPlatform implements ViaPlatform<UUID> {
     }
 
     @Override
-    public JsonObject getDump() {
-        return null; // TODO
+    public com.viaversion.viaversion.libs.gson.JsonObject getDump() {
+        var dump = new com.viaversion.viaversion.libs.gson.JsonObject();
+        var mods = new com.viaversion.viaversion.libs.gson.JsonArray();
+        for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
+            var modJson = new com.viaversion.viaversion.libs.gson.JsonObject();
+            modJson.addProperty("id", mod.getMetadata().getId());
+            modJson.addProperty("name", mod.getMetadata().getName());
+            modJson.addProperty("version", mod.getMetadata().getVersion().getFriendlyString());
+            var authors = new com.viaversion.viaversion.libs.gson.JsonArray();
+            for (Person author : mod.getMetadata().getAuthors()) {
+                var authorJson = new com.viaversion.viaversion.libs.gson.JsonObject();
+                authorJson.addProperty("name", author.getName());
+                var contact = new com.viaversion.viaversion.libs.gson.JsonObject();
+                author.getContact().asMap().forEach(contact::addProperty);
+                if (contact.size() != 0) {
+                    authorJson.add("contact", contact);
+                }
+                authors.add(authorJson);
+            }
+            modJson.add("authors", authors);
+            mods.add(modJson);
+        }
+        dump.add("mods", mods);
+        return dump;
     }
 
     @Override
