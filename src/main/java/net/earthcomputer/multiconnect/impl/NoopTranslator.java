@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.impl;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslator;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslatorApi;
@@ -30,5 +31,9 @@ public class NoopTranslator implements IMulticonnectTranslator {
     @Override
     public boolean doesServerKnow(String registry, String entry) {
         return true;
+    }
+
+    @Override
+    public void sendStringCustomPayload(Channel channel, String payloadChannel, ByteBuf payload) {
     }
 }

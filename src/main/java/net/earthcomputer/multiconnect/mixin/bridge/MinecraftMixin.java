@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.mixin.bridge;
 
+import net.earthcomputer.multiconnect.api.MultiConnectAPI;
 import net.earthcomputer.multiconnect.impl.MulticonnectScheduler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
@@ -19,10 +20,9 @@ public class MinecraftMixin {
         for (int i = 0; i < values.size(); i++) {
             Object value = values.get(i);
             if (value instanceof ItemStack stack) {
-                // TODO: rewrite for via
-//                if (!PacketSystem.doesServerKnow(Registry.ITEM, stack.getItem())) {
-//                    values.remove(i--);
-//                }
+                if (!MultiConnectAPI.instance().doesServerKnow(Registry.ITEM, stack.getItem())) {
+                    values.remove(i--);
+                }
             }
         }
         return values;

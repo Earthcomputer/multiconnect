@@ -7,17 +7,8 @@ import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.Biomes;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.LevelChunkSection;
 import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
@@ -28,17 +19,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class Utils {
-    public static boolean isChunkEmpty(LevelChunk chunk) {
-        if (chunk.isEmpty()) {
-            return true;
-        }
-        for (LevelChunkSection section : chunk.getSections()) {
-            if (!section.hasOnlyAir()) { // TODO: this was ChunkSection.isEmpty (static method), impl the same?
-                return false;
-            }
-        }
-        return true;
-    }
 
     public static DropDownWidget<ConnectionMode> createVersionDropdown(Screen screen, ConnectionMode initialMode) {
         var versionDropDown = new DropDownWidget<>(screen.width - 80, 5, 75, 20, initialMode, mode -> {
@@ -102,40 +82,6 @@ public class Utils {
                 bitSet.set(i - n);
                 bitSet.clear(i);
             }
-        }
-    }
-
-    public static int getExpectedPackedIntegerArraySize(int paletteSize, int size) {
-        int elementsPerLong = 64 / paletteSize;
-        return (size + elementsPerLong - 1) / elementsPerLong;
-    }
-
-    public static int getOldPackedBitArrayElement(long[] array, int index, int elementBits) {
-        int mask = (1 << elementBits) - 1;
-        int bitIndex = index * elementBits;
-        int wordIndex = bitIndex >>> 6;
-        int endWordIndex = ((index + 1) * elementBits - 1) >>> 6;
-        int indexInWord = (bitIndex ^ (wordIndex << 6));
-        if (wordIndex == endWordIndex) {
-            return (int) (array[wordIndex] >>> indexInWord) & mask;
-        } else {
-            int firstBits = 64 - indexInWord;
-            return ((int) (array[wordIndex] >>> indexInWord) & mask) | ((int) (array[endWordIndex] << firstBits) & mask);
-        }
-    }
-
-    public static void setOldPackedBitArrayElement(long[] array, int index, int value, int elementBits) {
-        int mask = (1 << elementBits) - 1;
-        int bitIndex = index * elementBits;
-        int wordIndex = bitIndex >>> 6;
-        int endWordIndex = ((index + 1) * elementBits - 1) >>> 6;
-        int indexInWord = (bitIndex ^ (wordIndex << 6));
-        array[wordIndex] = (array[wordIndex] & ~((long) mask << indexInWord)) | ((long) (value & mask) << indexInWord);
-        if (wordIndex != endWordIndex) {
-            int bitsWritten = 64 - indexInWord;
-            int bitsToWrite = elementBits - bitsWritten;
-            //noinspection PointlessBitwiseExpression
-            array[endWordIndex] = (array[wordIndex] & ~((1L << bitsToWrite) - 1)) | (long) ((value & mask) >>> bitsWritten);
         }
     }
 
@@ -255,25 +201,5 @@ public class Utils {
             k = parent;
         }
         list.set(k, x);
-    }
-
-    public static ClientboundLevelChunkWithLightPacket createEmptyChunkDataPacket(int x, int z, Level world, RegistryAccess registryAccess) {
-        Registry<Biome> biomeRegistry = registryAccess.registryOrThrow(Registry.BIOME_REGISTRY);
-        Biome plainsBiome = biomeRegistry.get(Biomes.PLAINS);
-
-        ClientboundLevelChunkWithLightPacket packet = new ClientboundLevelChunkWithLightPacket(new LevelChunk(world, new ChunkPos(x, z)), world.getLightEngine(), new BitSet(), new BitSet(), true);
-        // TODO: rewrite
-//        //noinspection ConstantConditions
-//        IUserDataHolder iPacket = (IUserDataHolder) packet;
-//        iPacket.multiconnect_setUserData(ChunkDataTranslator.DATA_TRANSLATED_KEY, true);
-//        iPacket.multiconnect_setUserData(ChunkDataTranslator.DIMENSION_KEY, world.getDimension());
-//        iPacket.multiconnect_setUserData(BlockConnections.BLOCKS_NEEDING_UPDATE_KEY, new EnumMap<>(EightWayDirection.class));
-//        Biome[] biomes = new Biome[256];
-//        Arrays.fill(biomes, plainsBiome);
-//        iPacket.multiconnect_setUserData(Protocol_1_14_4.BIOME_DATA_KEY, biomes);
-//        if (ConnectionInfo.protocolVersion <= Protocols.V1_17_1) {
-//            iPacket.multiconnect_setUserData(Protocol_1_17_1.VERTICAL_STRIP_BITMASK, new BitSet());
-//        }
-        return packet;
     }
 }

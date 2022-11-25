@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.api;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 
 public interface IMulticonnectTranslator {
@@ -14,4 +15,5 @@ public interface IMulticonnectTranslator {
     void postPipelineModifiers(Channel channel);
 
     boolean doesServerKnow(String registry, String entry);
+    void sendStringCustomPayload(Channel channel, String payloadChannel, ByteBuf payload) throws Exception;
 }

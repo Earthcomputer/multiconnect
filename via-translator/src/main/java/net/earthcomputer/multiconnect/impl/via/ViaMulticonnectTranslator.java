@@ -7,8 +7,13 @@ import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.data.FullMappings;
 import com.viaversion.viaversion.api.data.MappingData;
 import com.viaversion.viaversion.api.data.Mappings;
+import com.viaversion.viaversion.api.protocol.packet.PacketWrapper;
+import com.viaversion.viaversion.api.type.Type;
 import com.viaversion.viaversion.connection.UserConnectionImpl;
 import com.viaversion.viaversion.protocol.ProtocolPipelineImpl;
+import com.viaversion.viaversion.protocols.protocol1_12_1to1_12.ServerboundPackets1_12_1;
+import com.viaversion.viaversion.protocols.protocol1_13to1_12_2.Protocol1_13To1_12_2;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslator;
@@ -160,5 +165,20 @@ public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
         }
         T value = reg.getOrThrow(ResourceKey.create(reg.key(), new ResourceLocation(entry)));
         return reg.getId(value);
+    }
+
+    @Override
+    public void sendStringCustomPayload(Channel channel, String payloadChannel, ByteBuf payload) throws Exception {
+        UserConnection connection = channel.attr(VIA_USER_CONNECTION_KEY).get();
+        PacketWrapper packet = Via.getManager().getProtocolManager().createPacketWrapper(
+            ServerboundPackets1_12_1.PLUGIN_MESSAGE,
+            channel.alloc().buffer(),
+            connection
+        );
+        packet.write(Type.STRING, payloadChannel);
+        byte[] bytes = new byte[payload.readableBytes()];
+        payload.readBytes(bytes);
+        packet.write(Type.REMAINING_BYTES, bytes);
+        packet.sendToServer(Protocol1_13To1_12_2.class);
     }
 }
