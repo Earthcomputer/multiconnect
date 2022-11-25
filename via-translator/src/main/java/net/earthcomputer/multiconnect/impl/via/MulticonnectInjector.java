@@ -37,4 +37,14 @@ public class MulticonnectInjector implements ViaInjector {
         dump.addProperty("multiconnect", true);
         return dump;
     }
+
+    @Override
+    public String getEncoderName() {
+        return "multiconnect_serverbound_translator";
+    }
+
+    @Override
+    public String getDecoderName() {
+        return "multiconnect_clientbound_translator";
+    }
 }
