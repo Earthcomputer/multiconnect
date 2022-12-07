@@ -9,10 +9,9 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.blocks.BlockStateParser;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -41,11 +40,11 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
 
         int start = reader.getCursor();
         ResourceLocation id = ResourceLocation.read(reader);
-        if (!Registry.BLOCK.containsKey(id)) {
+        if (!BuiltInRegistries.BLOCK.containsKey(id)) {
             reader.setCursor(start);
             throw BlockStateParser.ERROR_UNKNOWN_BLOCK.createWithContext(reader, id);
         }
-        Block block = Registry.BLOCK.get(id);
+        Block block = BuiltInRegistries.BLOCK.get(id);
         if (!isValidBlock(block)) {
             reader.setCursor(start);
             throw BlockStateParser.ERROR_UNKNOWN_BLOCK.createWithContext(reader, id);
@@ -113,7 +112,7 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         int spaceIndex = builder.getRemaining().indexOf(' ');
         if (spaceIndex == -1) {
-            SharedSuggestionProvider.suggestResource(Registry.BLOCK.keySet().stream().filter(id -> isValidBlock(Registry.BLOCK.get(id))), builder);
+            SharedSuggestionProvider.suggestResource(BuiltInRegistries.BLOCK.keySet().stream().filter(id -> isValidBlock(BuiltInRegistries.BLOCK.get(id))), builder);
             return builder.buildFuture();
         }
 
@@ -155,7 +154,7 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
     }
 
     private static boolean isValidBlock(Block block) {
-        return Registry.BLOCK.getId(block) < 256;
+        return BuiltInRegistries.BLOCK.getId(block) < 256;
     }
 
 }

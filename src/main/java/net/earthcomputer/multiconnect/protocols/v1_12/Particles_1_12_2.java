@@ -21,6 +21,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
@@ -36,11 +37,11 @@ public class Particles_1_12_2 {
     public static final SimpleParticleType TAKE = new MyParticleType(false);
 
     public static void register() {
-        Registry.register(Registry.PARTICLE_TYPE, "multiconnect:depth_suspend", DEPTH_SUSPEND);
-        Registry.register(Registry.PARTICLE_TYPE, "multiconnect:footstep", FOOTSTEP);
-        Registry.register(Registry.PARTICLE_TYPE, "multiconnect:snow_shovel", SNOW_SHOVEL);
-        Registry.register(Registry.PARTICLE_TYPE, "multiconnect:block_dust", BLOCK_DUST);
-        Registry.register(Registry.PARTICLE_TYPE, "multiconnect:take", TAKE);
+        Registry.register(BuiltInRegistries.PARTICLE_TYPE, "multiconnect:depth_suspend", DEPTH_SUSPEND);
+        Registry.register(BuiltInRegistries.PARTICLE_TYPE, "multiconnect:footstep", FOOTSTEP);
+        Registry.register(BuiltInRegistries.PARTICLE_TYPE, "multiconnect:snow_shovel", SNOW_SHOVEL);
+        Registry.register(BuiltInRegistries.PARTICLE_TYPE, "multiconnect:block_dust", BLOCK_DUST);
+        Registry.register(BuiltInRegistries.PARTICLE_TYPE, "multiconnect:take", TAKE);
     }
 
     public static void registerFactories() {

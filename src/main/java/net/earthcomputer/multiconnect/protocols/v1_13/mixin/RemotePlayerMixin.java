@@ -6,8 +6,6 @@ import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.RemotePlayer;
-import net.minecraft.world.entity.player.ProfilePublicKey;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(RemotePlayer.class)
 public abstract class RemotePlayerMixin extends AbstractClientPlayer {
 
-    public RemotePlayerMixin(ClientLevel world, GameProfile profile, @Nullable ProfilePublicKey publicKey) {
-        super(world, profile, publicKey);
+    public RemotePlayerMixin(ClientLevel clientLevel, GameProfile gameProfile) {
+        super(clientLevel, gameProfile);
     }
 
     @Inject(method = "updatePlayerPose", at = @At("HEAD"))

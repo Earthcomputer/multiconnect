@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.earthcomputer.multiconnect.protocols.v1_12.command.BrigadierRemover;
 import net.earthcomputer.multiconnect.protocols.v1_8.mixin.*;
 import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -45,8 +46,8 @@ public class Protocol_1_8 extends Protocol_1_9 {
     }
 
     @Override
-    public void registerCommands(CommandDispatcher<SharedSuggestionProvider> dispatcher, @Nullable Set<String> serverCommands) {
-        super.registerCommands(dispatcher, serverCommands);
+    public void registerCommands(CommandBuildContext context, CommandDispatcher<SharedSuggestionProvider> dispatcher, @Nullable Set<String> serverCommands) {
+        super.registerCommands(context, dispatcher, serverCommands);
         BrigadierRemover.of(dispatcher).get("time").get("query").get("day").remove();
         BrigadierRemover.of(dispatcher).get("scoreboard").get("players").get("tag").remove();
         BrigadierRemover.of(dispatcher).get("scoreboard").get("teams").get("option").get("team").get("collisionRule").remove();

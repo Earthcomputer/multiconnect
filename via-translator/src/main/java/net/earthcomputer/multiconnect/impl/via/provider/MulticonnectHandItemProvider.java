@@ -7,7 +7,7 @@ import com.viaversion.viaversion.protocols.protocol1_9to1_8.providers.HandItemPr
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslatorApi;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.ItemStack;
 
 public class MulticonnectHandItemProvider extends HandItemProvider {
@@ -33,7 +33,7 @@ public class MulticonnectHandItemProvider extends HandItemProvider {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null) {
             ItemStack stack = player.getMainHandItem();
-            int id = Registry.ITEM.getId(stack.getItem());
+            int id = BuiltInRegistries.ITEM.getId(stack.getItem());
             handItem = new DataItem(id, (byte) stack.getCount(), (short) 0, null);
         }
     }

@@ -3,8 +3,6 @@ package net.earthcomputer.multiconnect.debug;
 import com.mojang.datafixers.TypeRewriteRule;
 import io.netty.handler.timeout.TimeoutException;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
-import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
-import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.ClientBrandRetriever;
@@ -15,24 +13,11 @@ import net.minecraft.network.SkipPacketException;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class DebugUtils {
     private static final String MULTICONNECT_ISSUES_BASE_URL = "https://github.com/Earthcomputer/multiconnect/issues";
@@ -41,62 +26,6 @@ public class DebugUtils {
     private static long timeThatRareBugOccurred;
     public static String lastServerBrand = ClientBrandRetriever.VANILLA_NAME;
     public static final boolean UNIT_TEST_MODE = Boolean.getBoolean("multiconnect.unitTestMode");
-    public static final boolean SKIP_TRANSLATION = Boolean.getBoolean("multiconnect.skipTranslation");
-
-
-    private static final Map<EntityDataAccessor<?>, String> ENTITY_DATA_NAMES = new IdentityHashMap<>();
-    private static void computeEntityDataNames() {
-        Set<Class<?>> entityDataHolders = new HashSet<>();
-        for (Field field : EntityType.class.getFields()) {
-            if (field.getType() == EntityType.class && Modifier.isStatic(field.getModifiers())) {
-                if (field.getGenericType() instanceof ParameterizedType type) {
-                    if (type.getActualTypeArguments()[0] instanceof Class<?> entityClass && Entity.class.isAssignableFrom(entityClass)) {
-                        for (; entityClass != Object.class; entityClass = entityClass.getSuperclass()) {
-                            entityDataHolders.add(entityClass);
-                        }
-                    }
-                }
-            }
-        }
-        for (AbstractProtocol protocol : ProtocolRegistry.all()) {
-            entityDataHolders.add(protocol.getClass());
-        }
-
-        for (Class<?> entityDataHolder : entityDataHolders) {
-            for (Field field : entityDataHolder.getDeclaredFields()) {
-                if (field.getType() == EntityDataAccessor.class && Modifier.isStatic(field.getModifiers())) {
-                    field.setAccessible(true);
-                    EntityDataAccessor<?> entityData;
-                    try {
-                        entityData = (EntityDataAccessor<?>) field.get(null);
-                    } catch (ReflectiveOperationException e) {
-                        throw new RuntimeException(e);
-                    }
-                    ENTITY_DATA_NAMES.put(entityData, entityDataHolder.getSimpleName() + "::" + field.getName());
-                }
-            }
-        }
-    }
-
-    public static String getEntityDataName(EntityDataAccessor<?> data) {
-        if (ENTITY_DATA_NAMES.isEmpty()) {
-            computeEntityDataNames();
-        }
-        String name = ENTITY_DATA_NAMES.get(data);
-        return name == null ? "unknown" : name;
-    }
-
-    public static String getAllEntityData(Entity entity) {
-        List<SynchedEntityData.DataItem<?>> allEntries = entity.getEntityData().getAll();
-        if (allEntries == null || allEntries.isEmpty()) {
-            return "<no entries>";
-        }
-
-        return allEntries.stream()
-                .sorted(Comparator.comparingInt(entry -> entry.getAccessor().getId()))
-                .map(entry -> entry.getAccessor().getId() + ": " + getEntityDataName(entry.getAccessor()) + " = " + entry.getValue())
-                .collect(Collectors.joining("\n"));
-    }
 
     public static void reportRareBug(int bugId) {
         rareBugIdThatOccurred = bugId;

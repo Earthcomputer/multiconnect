@@ -22,6 +22,7 @@ import net.earthcomputer.multiconnect.api.IMulticonnectTranslator;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslatorApi;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -161,7 +162,7 @@ public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
 
     @SuppressWarnings("unchecked")
     private static <T> int getRegistryId(String registry, String entry) {
-        Registry<T> reg = (Registry<T>) Registry.REGISTRY.get(new ResourceLocation(registry));
+        Registry<T> reg = (Registry<T>) BuiltInRegistries.REGISTRY.get(new ResourceLocation(registry));
         if (reg == null) {
             throw new RuntimeException("Unknown registry: " + registry);
         }

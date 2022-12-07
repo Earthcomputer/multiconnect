@@ -2,7 +2,6 @@ package net.earthcomputer.multiconnect.protocols.v1_8;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -10,6 +9,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.vehicle.Boat;
+import org.joml.Quaternionf;
 
 public class BoatRenderer_1_8 extends EntityRenderer<Boat> {
     private static final ResourceLocation TEXTURE = new ResourceLocation("multiconnect", "textures/entity/boat_1_8.png");
@@ -30,7 +30,7 @@ public class BoatRenderer_1_8 extends EntityRenderer<Boat> {
     public void render(Boat entity, float yaw, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light) {
         matrices.pushPose();
         matrices.translate(0, 0.375, 0);
-        matrices.mulPose(Vector3f.YP.rotationDegrees(180 - yaw));
+        matrices.mulPose(new Quaternionf().rotateY((180 - yaw) * Mth.DEG_TO_RAD));
         float damageWobbleTicks = entity.getHurtTime() - tickDelta;
         float damageWobbleStrength = entity.getDamage() - tickDelta;
         if (damageWobbleStrength < 0) {
@@ -38,7 +38,7 @@ public class BoatRenderer_1_8 extends EntityRenderer<Boat> {
         }
 
         if (damageWobbleTicks > 0) {
-            matrices.mulPose(Vector3f.XP.rotationDegrees(Mth.sin(damageWobbleTicks) * damageWobbleTicks * damageWobbleStrength / 10 * entity.getHurtDir()));
+            matrices.mulPose(new Quaternionf().rotateX((Mth.sin(damageWobbleTicks) * damageWobbleTicks * damageWobbleStrength / 10 * entity.getHurtDir()) * Mth.DEG_TO_RAD));
         }
 
         matrices.scale(-1, -1, 1);

@@ -6,8 +6,9 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
-import net.minecraft.commands.arguments.EntitySummonArgument;
-import net.minecraft.core.Registry;
+import net.minecraft.commands.arguments.ResourceArgument;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import java.util.Arrays;
@@ -28,14 +29,14 @@ public class EntityTypeArgumentType_1_12 implements ArgumentType<String> {
             EntityType<?> type = Protocol_1_10.getEntityById(entityId);
             if (type == null || !type.canSummon()) {
                 reader.setCursor(start);
-                throw EntitySummonArgument.ERROR_UNKNOWN_ENTITY.createWithContext(reader, entityId);
+                throw ResourceArgument.ERROR_UNKNOWN_RESOURCE.createWithContext(reader, entityId, Registries.ENTITY_TYPE.location());
             }
             return entityId;
         } else {
             ResourceLocation entityId = ResourceLocation.read(reader);
-            return Registry.ENTITY_TYPE.getOptional(entityId).filter(EntityType::canSummon).orElseThrow(() -> {
+            return BuiltInRegistries.ENTITY_TYPE.getOptional(entityId).filter(EntityType::canSummon).orElseThrow(() -> {
                 reader.setCursor(start);
-                return EntitySummonArgument.ERROR_UNKNOWN_ENTITY.createWithContext(reader, entityId);
+                return ResourceArgument.ERROR_UNKNOWN_RESOURCE.createWithContext(reader, entityId, Registries.ENTITY_TYPE.location());
             }).toString();
         }
     }

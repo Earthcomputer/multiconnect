@@ -94,21 +94,21 @@ public class DropDownWidget<T> extends AbstractButton {
     private void onExpandedMouseClicked(int mouseX, int mouseY) {
         int trackHeight = numShownCategories() * DROP_DOWN_ELEMENT_HEIGHT;
         if (needsScrollBar()
-                && mouseX >= x + width - SCROLL_BAR_WIDTH
-                && mouseX < x + width
-                && mouseY >= y + height
-                && mouseY < y + height + trackHeight
+                && mouseX >= getX() + width - SCROLL_BAR_WIDTH
+                && mouseX < getX() + width
+                && mouseY >= getY() + height
+                && mouseY < getY() + height + trackHeight
         ) {
             // clicked on scroll bar
             int scrollBarY = scrollBarY();
             int scrollBarHeight = scrollBarHeight();
-            if (mouseY >= y + height + scrollBarY && mouseY < y + height + scrollBarY + scrollBarHeight) {
+            if (mouseY >= getY() + height + scrollBarY && mouseY < getY() + height + scrollBarY + scrollBarHeight) {
                 // clicked on scroll bar itself
-                int scrollBarTop = y + height + scrollBarY;
+                int scrollBarTop = getY() + height + scrollBarY;
                 scrollBarGrabPos = (mouseY - scrollBarTop) / (float) scrollBarHeight;
             } else {
                 // clicked on scroll bar track
-                int scrollBarTop = mouseY - scrollBarHeight / 2 - y - height;
+                int scrollBarTop = mouseY - scrollBarHeight / 2 - getY() - height;
                 int maxScrollBarTop = trackHeight - scrollBarHeight;
                 if (maxScrollBarTop > 0) {
                     float percentage = Mth.clamp((float) scrollBarTop / maxScrollBarTop, 0, 1);
@@ -161,7 +161,7 @@ public class DropDownWidget<T> extends AbstractButton {
             return;
         }
         int trackHeight = numShownCategories() * DROP_DOWN_ELEMENT_HEIGHT;
-        int scrollBarTop = (int) (mouseY - scrollBarGrabPos * scrollBarHeight()) - y - height;
+        int scrollBarTop = (int) (mouseY - scrollBarGrabPos * scrollBarHeight()) - getY() - height;
         int maxScrollBarTop = trackHeight - scrollBarHeight();
         if (maxScrollBarTop > 0) {
             float percentage = Mth.clamp((float) scrollBarTop / maxScrollBarTop, 0, 1);
@@ -208,8 +208,8 @@ public class DropDownWidget<T> extends AbstractButton {
 
             // scroll bar
             if (needsScrollBar()) {
-                int scrollBarX = x + dropDownElementWidth();
-                int scrollBarTop = y + height;
+                int scrollBarX = getX() + dropDownElementWidth();
+                int scrollBarTop = getY() + height;
                 int scrollBarY = scrollBarTop + scrollBarY();
                 int scrollBarHeight = scrollBarHeight();
                 int scrollBarBottom = scrollBarTop + numShownCategories() * DROP_DOWN_ELEMENT_HEIGHT;
@@ -244,14 +244,14 @@ public class DropDownWidget<T> extends AbstractButton {
             for (int categoryIndex = scrollPos, ctgyIdxEnd = scrollPos + numShownCategories(); categoryIndex < ctgyIdxEnd; categoryIndex++) {
                 Category category = categories.get(categoryIndex);
 
-                int categoryY = this.y + height + DROP_DOWN_ELEMENT_HEIGHT * (categoryIndex - scrollPos);
-                renderButtonBackground(matrices, x, categoryY, dropDownElementWidth(), categoryIndex == hoveredCategory);
+                int categoryY = getY() + height + DROP_DOWN_ELEMENT_HEIGHT * (categoryIndex - scrollPos);
+                renderButtonBackground(matrices, getX(), categoryY, dropDownElementWidth(), categoryIndex == hoveredCategory);
 
                 Font textRenderer = Minecraft.getInstance().font;
                 int textY = categoryY + (height - 8) / 2;
-                drawCenteredString(matrices, textRenderer, categoryLabelExtractor.apply(category.value), x + dropDownElementWidth() / 2, textY, 0xffffff);
+                drawCenteredString(matrices, textRenderer, categoryLabelExtractor.apply(category.value), getX() + dropDownElementWidth() / 2, textY, 0xffffff);
                 if (category.hasChildren()) {
-                    drawString(matrices, textRenderer, EXPAND_RIGHT_TEXT, x + dropDownElementWidth() - 5 - textRenderer.width(EXPAND_RIGHT_TEXT), textY, 0xc0c0c0);
+                    drawString(matrices, textRenderer, EXPAND_RIGHT_TEXT, getX() + dropDownElementWidth() - 5 - textRenderer.width(EXPAND_RIGHT_TEXT), textY, 0xc0c0c0);
                 }
             }
 
@@ -259,8 +259,8 @@ public class DropDownWidget<T> extends AbstractButton {
             if (hoveredCategory != -1) {
                 Category category = categories.get(hoveredCategory);
                 if (category.hasChildren()) {
-                    int subcategoriesX = shouldExpandSubcategoriesLeft() ? x - width : x + width;
-                    int subcategoriesY = y + height + DROP_DOWN_ELEMENT_HEIGHT * (hoveredCategory - scrollPos);
+                    int subcategoriesX = shouldExpandSubcategoriesLeft() ? getX() - width : getX() + width;
+                    int subcategoriesY = getY() + height + DROP_DOWN_ELEMENT_HEIGHT * (hoveredCategory - scrollPos);
                     if (shouldExpandSubcategoriesUp()) {
                         subcategoriesY -= DROP_DOWN_ELEMENT_HEIGHT * (category.children.size() - 1);
                     }
@@ -299,7 +299,7 @@ public class DropDownWidget<T> extends AbstractButton {
     public void renderButton(PoseStack matrices, int mouseX, int mouseY, float delta) {
         super.renderButton(matrices, mouseX, mouseY, delta);
         Font textRenderer = Minecraft.getInstance().font;
-        drawString(matrices, textRenderer, EXPAND_DOWN_TEXT, x + width - 5 - textRenderer.width(EXPAND_DOWN_TEXT), y + (height - 8) / 2, 0xc0c0c0);
+        drawString(matrices, textRenderer, EXPAND_DOWN_TEXT, getX() + width - 5 - textRenderer.width(EXPAND_DOWN_TEXT), getY() + (height - 8) / 2, 0xc0c0c0);
         if (isHoveredOrFocused()) {
             if (hoveredCategory == -1 || !expanded) {
                 tooltipRenderer.render(matrices, value, mouseX, mouseY, false);
@@ -312,8 +312,8 @@ public class DropDownWidget<T> extends AbstractButton {
         if (hoveredCategory != -1 && hoveredCategory < categories.size()) {
             List<T> children = categories.get(hoveredCategory).children;
 
-            int subcategoriesX = shouldExpandSubcategoriesLeft() ? x - width : x + width;
-            int subcategoriesY = y + height + DROP_DOWN_ELEMENT_HEIGHT * (hoveredCategory - scrollPos);
+            int subcategoriesX = shouldExpandSubcategoriesLeft() ? getX() - width : getX() + width;
+            int subcategoriesY = getY() + height + DROP_DOWN_ELEMENT_HEIGHT * (hoveredCategory - scrollPos);
             if (shouldExpandSubcategoriesUp()) {
                 subcategoriesY -= DROP_DOWN_ELEMENT_HEIGHT * (children.size() - 1);
             }
@@ -332,7 +332,7 @@ public class DropDownWidget<T> extends AbstractButton {
 
         // update hovered category
         if (isMouseInMainMenuPart(mouseX, mouseY)) {
-            hoveredCategory = (mouseY - y - height) / DROP_DOWN_ELEMENT_HEIGHT + scrollPos;
+            hoveredCategory = (mouseY - getY() - height) / DROP_DOWN_ELEMENT_HEIGHT + scrollPos;
         } else {
             // if the mouse is not currently over a category, keep it hovered if the category actually has children, otherwise un-hover it
             if (hoveredCategory != -1 && hoveredCategory < categories.size() && !categories.get(hoveredCategory).hasChildren()) {
@@ -346,32 +346,32 @@ public class DropDownWidget<T> extends AbstractButton {
     }
 
     private boolean isMouseInMainMenuPart(int mouseX, int mouseY) {
-        return mouseX >= x && mouseX < x + dropDownElementWidth() && mouseY >= y + height && mouseY < y + height + DROP_DOWN_ELEMENT_HEIGHT * numShownCategories();
+        return mouseX >= getX() && mouseX < getX() + dropDownElementWidth() && mouseY >= getY() + height && mouseY < getY() + height + DROP_DOWN_ELEMENT_HEIGHT * numShownCategories();
     }
 
     private boolean shouldExpandSubcategoriesLeft() {
         Screen currentScreen = Minecraft.getInstance().screen;
         assert currentScreen != null;
-        return x + width + width > currentScreen.width;
+        return getX() + width + width > currentScreen.width;
     }
 
     private boolean shouldExpandSubcategoriesUp() {
         Screen currentScreen = Minecraft.getInstance().screen;
         assert currentScreen != null;
-        return y + height + DROP_DOWN_ELEMENT_HEIGHT * hoveredCategory + DROP_DOWN_ELEMENT_HEIGHT * categories.get(hoveredCategory).children.size() > currentScreen.height;
+        return getY() + height + DROP_DOWN_ELEMENT_HEIGHT * hoveredCategory + DROP_DOWN_ELEMENT_HEIGHT * categories.get(hoveredCategory).children.size() > currentScreen.height;
     }
 
     private boolean needsScrollBar() {
         Screen currentScreen = Minecraft.getInstance().screen;
         assert currentScreen != null;
-        return y + height + DROP_DOWN_ELEMENT_HEIGHT * categories.size() > currentScreen.height;
+        return getY() + height + DROP_DOWN_ELEMENT_HEIGHT * categories.size() > currentScreen.height;
     }
 
     private int numShownCategories() {
         if (needsScrollBar()) {
             Screen currentScreen = Minecraft.getInstance().screen;
             assert currentScreen != null;
-            return Math.max(1, (currentScreen.height - y - height) / DROP_DOWN_ELEMENT_HEIGHT);
+            return Math.max(1, (currentScreen.height - getY() - height) / DROP_DOWN_ELEMENT_HEIGHT);
         }
         return categories.size();
     }
@@ -388,7 +388,7 @@ public class DropDownWidget<T> extends AbstractButton {
     }
 
     @Override
-    public void updateNarration(NarrationElementOutput messageBuilder) {
+    protected void updateWidgetNarration(NarrationElementOutput messageBuilder) {
         // TODO: better narration and accessibility
         this.defaultButtonNarrationText(messageBuilder);
     }

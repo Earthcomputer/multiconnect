@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(ChatListener.class)
 public class ChatListenerMixin {
-    @ModifyVariable(method = "handleChatMessage", at = @At(value = "STORE", ordinal = 0), ordinal = 0)
+    @ModifyVariable(method = "showMessageToPlayer", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private boolean modifyOnlyShowSecureChat(boolean original) {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_19 && MulticonnectConfig.INSTANCE.allowOldUnsignedChat == Boolean.TRUE) {
             return false;

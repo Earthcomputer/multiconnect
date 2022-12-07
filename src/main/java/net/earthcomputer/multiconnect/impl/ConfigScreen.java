@@ -4,11 +4,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.OptionsList;
-import net.minecraft.client.gui.screens.OptionsSubScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.FormattedCharSequence;
 
 import java.util.List;
 
@@ -54,7 +52,7 @@ public class ConfigScreen extends Screen {
         this.list = new OptionsList(this.minecraft, this.width, this.height, 32, this.height - 32, 25);
         this.list.addSmall(new OptionInstance[]{debugKey, allowOldUnsignedChat, enablePacketRecorder});
         this.addWidget(this.list);
-        addRenderableWidget(new Button(this.width / 2 - 100, this.height - 27, 200, 20, CommonComponents.GUI_DONE, button -> onClose()));
+        addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose()).bounds(this.width / 2 - 100, this.height - 27, 200, 20).build());
     }
 
     @Override
@@ -63,10 +61,6 @@ public class ConfigScreen extends Screen {
         this.list.render(matrices, mouseX, mouseY, delta);
         drawCenteredString(matrices, font, TITLE.getVisualOrderText(), width / 2, 20, 0xffffff);
         super.render(matrices, mouseX, mouseY, delta);
-        List<FormattedCharSequence> list = OptionsSubScreen.tooltipAt(this.list, mouseX, mouseY);
-        if (this.list != null) {
-            this.renderTooltip(matrices, list, mouseX, mouseY);
-        }
     }
 
     @Override

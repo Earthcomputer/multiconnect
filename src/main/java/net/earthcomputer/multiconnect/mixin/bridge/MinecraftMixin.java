@@ -3,7 +3,7 @@ package net.earthcomputer.multiconnect.mixin.bridge;
 import net.earthcomputer.multiconnect.api.MultiConnectAPI;
 import net.earthcomputer.multiconnect.impl.MulticonnectScheduler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,7 +20,7 @@ public class MinecraftMixin {
         for (int i = 0; i < values.size(); i++) {
             Object value = values.get(i);
             if (value instanceof ItemStack stack) {
-                if (!MultiConnectAPI.instance().doesServerKnow(Registry.ITEM, stack.getItem())) {
+                if (!MultiConnectAPI.instance().doesServerKnow(BuiltInRegistries.ITEM, stack.getItem())) {
                     values.remove(i--);
                 }
             }
