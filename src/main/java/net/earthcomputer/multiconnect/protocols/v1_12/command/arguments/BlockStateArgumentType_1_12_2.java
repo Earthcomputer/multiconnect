@@ -7,13 +7,11 @@ import com.mojang.brigadier.context.ParsedArgument;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.earthcomputer.multiconnect.protocols.v1_12.BlockStateReverseData;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.blocks.BlockStateParser;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -42,11 +40,11 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
 
         int start = reader.getCursor();
         ResourceLocation id = ResourceLocation.read(reader);
-        if (!Registry.BLOCK.containsKey(id)) {
+        if (!BuiltInRegistries.BLOCK.containsKey(id)) {
             reader.setCursor(start);
             throw BlockStateParser.ERROR_UNKNOWN_BLOCK.createWithContext(reader, id);
         }
-        Block block = Registry.BLOCK.get(id);
+        Block block = BuiltInRegistries.BLOCK.get(id);
         if (!isValidBlock(block)) {
             reader.setCursor(start);
             throw BlockStateParser.ERROR_UNKNOWN_BLOCK.createWithContext(reader, id);
@@ -80,30 +78,31 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
 
         reader.setCursor(start);
 
-        List<String> properties = BlockStateReverseData.OLD_PROPERTIES.getOrDefault(id, Collections.emptyList());
-        Set<String> alreadySeen = new HashSet<>();
-        while (reader.canRead() && reader.peek() != ' ') {
-            int propStart = reader.getCursor();
-            String property = reader.readUnquotedString();
-            if (alreadySeen.contains(property)) {
-                reader.setCursor(propStart);
-                throw BlockStateParser.ERROR_DUPLICATE_PROPERTY.createWithContext(reader, id, property);
-            }
-            if (!properties.contains(property)) {
-                reader.setCursor(propStart);
-                throw BlockStateParser.ERROR_UNKNOWN_PROPERTY.createWithContext(reader, id, property);
-            }
-            alreadySeen.add(property);
-            reader.expect('=');
-            int valueStart = reader.getCursor();
-            String value = reader.readUnquotedString();
-            if (!BlockStateReverseData.OLD_PROPERTY_VALUES.get(Pair.of(id, property)).contains(value)) {
-                reader.setCursor(valueStart);
-                throw BlockStateParser.ERROR_INVALID_VALUE.createWithContext(reader, id, property, value);
-            }
-            if (reader.canRead() && reader.peek() != ' ')
-                reader.expect(',');
-        }
+        // TODO: rewrite for via
+//        List<String> properties = BlockStateReverseData.OLD_PROPERTIES.getOrDefault(id, Collections.emptyList());
+//        Set<String> alreadySeen = new HashSet<>();
+//        while (reader.canRead() && reader.peek() != ' ') {
+//            int propStart = reader.getCursor();
+//            String property = reader.readUnquotedString();
+//            if (alreadySeen.contains(property)) {
+//                reader.setCursor(propStart);
+//                throw BlockStateParser.ERROR_DUPLICATE_PROPERTY.createWithContext(reader, id, property);
+//            }
+//            if (!properties.contains(property)) {
+//                reader.setCursor(propStart);
+//                throw BlockStateParser.ERROR_UNKNOWN_PROPERTY.createWithContext(reader, id, property);
+//            }
+//            alreadySeen.add(property);
+//            reader.expect('=');
+//            int valueStart = reader.getCursor();
+//            String value = reader.readUnquotedString();
+//            if (!BlockStateReverseData.OLD_PROPERTY_VALUES.get(Pair.of(id, property)).contains(value)) {
+//                reader.setCursor(valueStart);
+//                throw BlockStateParser.ERROR_INVALID_VALUE.createWithContext(reader, id, property, value);
+//            }
+//            if (reader.canRead() && reader.peek() != ' ')
+//                reader.expect(',');
+//        }
 
         result.add(new ParsedArgument<>(start, reader.getCursor(), null));
         return new Custom_1_12_Argument(result);
@@ -113,7 +112,7 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         int spaceIndex = builder.getRemaining().indexOf(' ');
         if (spaceIndex == -1) {
-            SharedSuggestionProvider.suggestResource(Registry.BLOCK.keySet().stream().filter(id -> isValidBlock(Registry.BLOCK.get(id))), builder);
+            SharedSuggestionProvider.suggestResource(BuiltInRegistries.BLOCK.keySet().stream().filter(id -> isValidBlock(BuiltInRegistries.BLOCK.get(id))), builder);
             return builder.buildFuture();
         }
 
@@ -131,19 +130,20 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
                 SharedSuggestionProvider.suggest(new String[] {"*"}, builder);
         }
 
-        if (blockId == null || !BlockStateReverseData.OLD_PROPERTIES.containsKey(blockId))
-            return builder.buildFuture();
-
-        if (equalsIndex <= commaIndex) {
-            SharedSuggestionProvider.suggest(BlockStateReverseData.OLD_PROPERTIES.get(blockId).stream().map(str -> str + "="), builder);
-        } else {
-            String property = builder.getInput().substring(builder.getStart(), builder.getStart() + equalsIndex - commaIndex - 1);
-            List<String> values = BlockStateReverseData.OLD_PROPERTY_VALUES.get(Pair.of(blockId, property));
-            if (values != null) {
-                builder = builder.createOffset(builder.getStart() + equalsIndex - commaIndex);
-                SharedSuggestionProvider.suggest(values, builder);
-            }
-        }
+        // TODO: rewrite for via
+//        if (blockId == null || !BlockStateReverseData.OLD_PROPERTIES.containsKey(blockId))
+//            return builder.buildFuture();
+//
+//        if (equalsIndex <= commaIndex) {
+//            SharedSuggestionProvider.suggest(BlockStateReverseData.OLD_PROPERTIES.get(blockId).stream().map(str -> str + "="), builder);
+//        } else {
+//            String property = builder.getInput().substring(builder.getStart(), builder.getStart() + equalsIndex - commaIndex - 1);
+//            List<String> values = BlockStateReverseData.OLD_PROPERTY_VALUES.get(Pair.of(blockId, property));
+//            if (values != null) {
+//                builder = builder.createOffset(builder.getStart() + equalsIndex - commaIndex);
+//                SharedSuggestionProvider.suggest(values, builder);
+//            }
+//        }
 
         return builder.buildFuture();
     }
@@ -154,7 +154,7 @@ public final class BlockStateArgumentType_1_12_2 implements ArgumentType<Custom_
     }
 
     private static boolean isValidBlock(Block block) {
-        return Registry.BLOCK.getId(block) < 256;
+        return BuiltInRegistries.BLOCK.getId(block) < 256;
     }
 
 }

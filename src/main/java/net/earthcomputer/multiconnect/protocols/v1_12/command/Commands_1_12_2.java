@@ -11,10 +11,11 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
 import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12_2;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.synchronization.SuggestionProviders;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +28,7 @@ public class Commands_1_12_2 {
     @SuppressWarnings("unchecked")
     public static final SuggestionProvider<SharedSuggestionProvider> SUMMONABLE_ENTITIES = (ctx, builder) -> {
         if (ConnectionInfo.protocolVersion <= Protocols.V1_10) {
-            return SharedSuggestionProvider.suggest(Registry.ENTITY_TYPE.stream()
+            return SharedSuggestionProvider.suggest(BuiltInRegistries.ENTITY_TYPE.stream()
                     .filter(EntityType::canSummon)
                     .map(Protocol_1_10::getEntityId)
                     .filter(Objects::nonNull),
@@ -46,7 +47,7 @@ public class Commands_1_12_2 {
         }
     }
 
-    public static void register(CommandDispatcher<SharedSuggestionProvider> dispatcher, @Nullable Set<String> serverCommands) {
+    public static void register(CommandBuildContext context, CommandDispatcher<SharedSuggestionProvider> dispatcher, @Nullable Set<String> serverCommands) {
         registerVanilla(dispatcher, serverCommands, "time", TimeCommand::register);
         registerVanilla(dispatcher, serverCommands, "gamemode", GamemodeCommand::register);
         registerVanilla(dispatcher, serverCommands, "difficulty", DifficultyCommand::register);
@@ -60,8 +61,8 @@ public class Commands_1_12_2 {
         registerVanilla(dispatcher, serverCommands, "give", GiveCommand::register);
         registerVanilla(dispatcher, serverCommands, "replaceitem", ReplaceItemCommand::register);
         registerVanilla(dispatcher, serverCommands, "stats", StatsCommand::register);
-        registerVanilla(dispatcher, serverCommands, "effect", EffectCommand::register);
-        registerVanilla(dispatcher, serverCommands, "enchant", EnchantCommand::register);
+        registerVanilla(dispatcher, serverCommands, "effect", d -> EffectCommand.register(context, d));
+        registerVanilla(dispatcher, serverCommands, "enchant", d -> EnchantCommand.register(context, d));
         registerVanilla(dispatcher, serverCommands, "particle", ParticleCommand::register);
         registerVanilla(dispatcher, serverCommands, "me", d -> SayCommand.register(d, "me"));
         registerVanilla(dispatcher, serverCommands, "seed", d -> NoArgCommand.register(d, "seed"));
@@ -116,8 +117,8 @@ public class Commands_1_12_2 {
         registerVanilla(dispatcher, serverCommands, "setidletimeout", SetIdleTimeoutCommand::register);
     }
 
-    public static void registerAll(CommandDispatcher<SharedSuggestionProvider> dispatcher, @Nullable Set<String> serverCommands) {
-        ((Protocol_1_12_2) ConnectionInfo.protocol).registerCommands(dispatcher, serverCommands);
+    public static void registerAll(CommandBuildContext context, CommandDispatcher<SharedSuggestionProvider> dispatcher, @Nullable Set<String> serverCommands) {
+        ((Protocol_1_12_2) ConnectionInfo.protocol).registerCommands(context, dispatcher, serverCommands);
 
         if (serverCommands != null) {
             for (String command : serverCommands) {

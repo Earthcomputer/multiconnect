@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -30,11 +30,11 @@ public class ItemArgumentType_1_12_2 implements ArgumentType<Item> {
     public Item parse(StringReader reader) throws CommandSyntaxException {
         int start = reader.getCursor();
         ResourceLocation id = ResourceLocation.read(reader);
-        if (!Registry.ITEM.containsKey(id)) {
+        if (!BuiltInRegistries.ITEM.containsKey(id)) {
             reader.setCursor(start);
             throw ID_INVALID_EXCEPTION.createWithContext(reader, id);
         }
-        Item item = Registry.ITEM.get(id);
+        Item item = BuiltInRegistries.ITEM.get(id);
         if (!isValidItem(item)) {
             reader.setCursor(start);
             throw ID_INVALID_EXCEPTION.createWithContext(reader, id);
@@ -44,7 +44,7 @@ public class ItemArgumentType_1_12_2 implements ArgumentType<Item> {
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        SharedSuggestionProvider.suggestResource(Registry.ITEM.keySet().stream().filter(id -> isValidItem(Registry.ITEM.get(id))), builder);
+        SharedSuggestionProvider.suggestResource(BuiltInRegistries.ITEM.keySet().stream().filter(id -> isValidItem(BuiltInRegistries.ITEM.get(id))), builder);
         return builder.buildFuture();
     }
 
@@ -54,7 +54,7 @@ public class ItemArgumentType_1_12_2 implements ArgumentType<Item> {
     }
 
     private static boolean isValidItem(Item item) {
-        return Registry.ITEM.getId(item) < 4096;
+        return BuiltInRegistries.ITEM.getId(item) < 4096;
     }
 
 }

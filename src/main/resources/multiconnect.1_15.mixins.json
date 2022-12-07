@@ -3,13 +3,10 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_15.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "WallBlockMixin",
-    "TamableAnimalAccessor",
-    "WolfAccessor"
+    "WallBlockMixin"
   ],
   "client": [
-    "JigsawBlockEditScreenMixin",
-    "AttributesRenameAccessor"
+    "JigsawBlockEditScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

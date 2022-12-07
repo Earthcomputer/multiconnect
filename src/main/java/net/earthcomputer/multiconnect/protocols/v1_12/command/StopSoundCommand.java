@@ -5,7 +5,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_8.SoundData_1_8;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import static net.earthcomputer.multiconnect.protocols.v1_12.command.Commands_1_12_2.*;
 import static net.earthcomputer.multiconnect.protocols.v1_12.command.arguments.EntityArgumentType_1_12_2.*;
@@ -21,7 +21,7 @@ public class StopSoundCommand {
                 .then(argument("category", enumArg("master", "music", "record", "weather", "block", "hostile", "neutral", "player", "ambient", "voice"))
                     .executes(ctx -> 0)
                     .then(argument("sound", id())
-                        .suggests((ctx, builder) -> ConnectionInfo.protocolVersion <= Protocols.V1_8 ? SharedSuggestionProvider.suggest(SoundData_1_8.getInstance().getAllSounds(), builder) : SharedSuggestionProvider.suggestResource(Registry.SOUND_EVENT.keySet(), builder))
+                        .suggests((ctx, builder) -> ConnectionInfo.protocolVersion <= Protocols.V1_8 ? SharedSuggestionProvider.suggest(SoundData_1_8.getInstance().getAllSounds(), builder) : SharedSuggestionProvider.suggestResource(BuiltInRegistries.SOUND_EVENT.keySet(), builder))
                         .executes(ctx -> 0)))));
     }
 

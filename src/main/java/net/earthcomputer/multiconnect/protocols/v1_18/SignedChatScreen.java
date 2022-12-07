@@ -24,16 +24,16 @@ public class SignedChatScreen extends Screen {
 
     @Override
     protected void init() {
-        addRenderableWidget(new Button(width / 2 - 100, height - 50, 80, 20, CommonComponents.GUI_YES, button -> {
+        addRenderableWidget(Button.builder(CommonComponents.GUI_YES, button -> {
             MulticonnectConfig.INSTANCE.allowOldUnsignedChat = true;
             MulticonnectConfig.INSTANCE.save();
             onClose();
-        }));
-        addRenderableWidget(new Button(width / 2 + 20, height - 50, 80, 20, CommonComponents.GUI_NO, button -> {
+        }).bounds(width / 2 - 100, height - 50, 80, 20).build());
+        addRenderableWidget(Button.builder(CommonComponents.GUI_NO, button -> {
             MulticonnectConfig.INSTANCE.allowOldUnsignedChat = false;
             MulticonnectConfig.INSTANCE.save();
             onClose();
-        }));
+        }).bounds(width / 2 + 20, height - 50, 80, 20).build());
     }
 
     @Override

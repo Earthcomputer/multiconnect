@@ -10,9 +10,7 @@
     "PlayerRendererMixin",
     "InventoryMenuMixin",
     "AbstractContainerMenuMixin",
-    "BedBlockMixin",
-    "PigAccessor",
-    "PlayerAccessor"
+    "BedBlockMixin"
   ],
   "client": [
   ],

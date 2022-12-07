@@ -12,10 +12,10 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
-import net.earthcomputer.multiconnect.protocols.v1_12.TabCompletionManager;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.commands.arguments.EntitySummonArgument;
-import net.minecraft.core.Registry;
+import net.minecraft.commands.arguments.ResourceArgument;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import java.util.*;
@@ -300,7 +300,9 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
         }
 
         private CompletableFuture<List<String>> getScoreObjectives() {
-            return TabCompletionManager.requestCustomCompletion("/scoreboard objectives remove ");
+            // TODO: rewrite for via
+//            return TabCompletionManager.requestCustomCompletion("/scoreboard objectives remove ");
+            return CompletableFuture.completedFuture(Collections.emptyList());
         }
 
         private void parseInt(int min, int max) throws CommandSyntaxException {
@@ -440,11 +442,13 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
             int start = parser.reader.getCursor();
             parser.suggestor = builder -> {
                 SuggestionsBuilder newBuilder = builder.createOffset(start);
-                return TabCompletionManager.requestCustomCompletion("/scoreboard teams remove ").thenCompose(teams -> {
-                    SharedSuggestionProvider.suggest(teams, newBuilder);
-                    SharedSuggestionProvider.suggest(teams.stream().map(str -> "!" + str), newBuilder);
-                    return newBuilder.buildFuture();
-                });
+                // TODO: rewrite for via
+//                return TabCompletionManager.requestCustomCompletion("/scoreboard teams remove ").thenCompose(teams -> {
+//                    SharedSuggestionProvider.suggest(teams, newBuilder);
+//                    SharedSuggestionProvider.suggest(teams.stream().map(str -> "!" + str), newBuilder);
+//                    return newBuilder.buildFuture();
+//                });
+                return newBuilder.buildFuture();
             };
             parser.parseIsInverted();
             parser.reader.readUnquotedString();
@@ -467,18 +471,18 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
                         }
                     } else {
                         if (ConnectionInfo.protocolVersion <= Protocols.V1_10) {
-                            SharedSuggestionProvider.suggest(Registry.ENTITY_TYPE.stream()
+                            SharedSuggestionProvider.suggest(BuiltInRegistries.ENTITY_TYPE.stream()
                                     .filter(EntityArgumentType_1_12_2::canSelectEntityType)
                                     .map(Protocol_1_10::getEntityId)
                                     .filter(Objects::nonNull)
                                     .flatMap(it -> Stream.of(it, "!" + it)),
                                 builder);
                         } else {
-                            SharedSuggestionProvider.suggestResource(Registry.ENTITY_TYPE.stream()
+                            SharedSuggestionProvider.suggestResource(BuiltInRegistries.ENTITY_TYPE.stream()
                                     .filter(EntityArgumentType_1_12_2::canSelectEntityType)
                                     .map(EntityType::getKey),
                                 builder);
-                            SharedSuggestionProvider.suggestResource(Registry.ENTITY_TYPE.stream()
+                            SharedSuggestionProvider.suggestResource(BuiltInRegistries.ENTITY_TYPE.stream()
                                     .filter(EntityArgumentType_1_12_2::canSelectEntityType)
                                     .map(EntityType::getKey)::iterator,
                                 builder,
@@ -494,14 +498,14 @@ public final class EntityArgumentType_1_12_2 implements ArgumentType<Void> {
                     entityType = Protocol_1_10.getEntityById(entityId);
                     if (entityType == null || !canSelectEntityType(entityType)) {
                         parser.reader.setCursor(start);
-                        throw EntitySummonArgument.ERROR_UNKNOWN_ENTITY.createWithContext(parser.reader, entityId);
+                        throw ResourceArgument.ERROR_UNKNOWN_RESOURCE.createWithContext(parser.reader, entityId, Registries.ENTITY_TYPE.location());
                     }
                 } else {
                     ResourceLocation entityId = ResourceLocation.read(parser.reader);
-                    entityType = Registry.ENTITY_TYPE.get(entityId);
-                    if (!Registry.ENTITY_TYPE.containsKey(entityId) || !canSelectEntityType(entityType)) {
+                    entityType = BuiltInRegistries.ENTITY_TYPE.get(entityId);
+                    if (!BuiltInRegistries.ENTITY_TYPE.containsKey(entityId) || !canSelectEntityType(entityType)) {
                         parser.reader.setCursor(start);
-                        throw EntitySummonArgument.ERROR_UNKNOWN_ENTITY.createWithContext(parser.reader, entityId);
+                        throw ResourceArgument.ERROR_UNKNOWN_RESOURCE.createWithContext(parser.reader, entityId, Registries.ENTITY_TYPE.location());
                     }
                 }
                 if (!inverted) {

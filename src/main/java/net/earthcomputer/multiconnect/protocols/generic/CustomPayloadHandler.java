@@ -5,19 +5,17 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableSet;
 import io.netty.buffer.Unpooled;
 import net.earthcomputer.multiconnect.api.ICustomPayloadListener;
-import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.impl.CustomPayloadEvent;
-import net.earthcomputer.multiconnect.impl.PacketSystem;
-import net.earthcomputer.multiconnect.packets.latest.CPacketCustomPayload_Latest;
-import net.earthcomputer.multiconnect.packets.v1_12_2.CPacketCustomPayload_1_12_2;
+import net.earthcomputer.multiconnect.impl.Multiconnect;
+import net.earthcomputer.multiconnect.mixin.connect.ConnectionAccessor;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
-import net.minecraft.SharedConstants;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,8 +24,6 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class CustomPayloadHandler {
-    public static final Key<Boolean> IS_FORCE_SENT = Key.create("isForceSent", false);
-
     @Deprecated
     private static final List<ICustomPayloadListener<ResourceLocation>> clientboundIdentifierCustomPayloadListeners = new CopyOnWriteArrayList<>();
     @Deprecated
@@ -201,24 +197,16 @@ public class CustomPayloadHandler {
 
     @Deprecated
     public static void forceSendIdentifierCustomPayload(ClientPacketListener connection, ResourceLocation channel, FriendlyByteBuf data) {
-        var packet = new CPacketCustomPayload_Latest.Other();
-        packet.channel = channel;
-        packet.data = new byte[data.readableBytes()];
-        data.readBytes(packet.data);
-        PacketSystem.sendToServer(connection, SharedConstants.getProtocolVersion(), packet, userData -> {
-            userData.put(IS_FORCE_SENT, true);
-        });
+        connection.send(new ServerboundCustomPayloadPacket(channel, data));
     }
 
     @Deprecated
     public static void forceSendStringCustomPayload(ClientPacketListener connection, String channel, FriendlyByteBuf data) {
-        var packet = new CPacketCustomPayload_1_12_2.Other();
-        packet.channel = channel;
-        packet.data = new byte[data.readableBytes()];
-        data.readBytes(packet.data);
-        PacketSystem.sendToServer(connection, Protocols.V1_12_2, packet, userData -> {
-            userData.put(IS_FORCE_SENT, true);
-        });
+        try {
+            Multiconnect.translator.sendStringCustomPayload(((ConnectionAccessor) connection.getConnection()).getChannel(), channel, data);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Deprecated

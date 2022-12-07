@@ -6,9 +6,9 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -50,7 +50,7 @@ public class ParticleEngineMixin implements IParticleManager {
     ) {
         SpriteSet spriteSet = new ParticleEngine.MutableSpriteSet();
 
-        spriteSets.put(Registry.PARTICLE_TYPE.getKey(type), spriteSet);
+        spriteSets.put(BuiltInRegistries.PARTICLE_TYPE.getKey(type), spriteSet);
         multiconnect_customProviders.put(type, spriteAwareFactory.apply(spriteSet));
     }
 }

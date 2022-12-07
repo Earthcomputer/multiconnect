@@ -11,8 +11,8 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ParticleArgument;
-import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 
 public class ParticleEffectArgumentType_1_12_2 implements ArgumentType<ParticleType<?>> {
@@ -29,16 +29,16 @@ public class ParticleEffectArgumentType_1_12_2 implements ArgumentType<ParticleT
     public ParticleType<?> parse(StringReader reader) throws CommandSyntaxException {
         int start = reader.getCursor();
         ResourceLocation id = ResourceLocation.read(reader);
-        if (!Registry.PARTICLE_TYPE.containsKey(id)) {
+        if (!BuiltInRegistries.PARTICLE_TYPE.containsKey(id)) {
             reader.setCursor(start);
             throw ParticleArgument.ERROR_UNKNOWN_PARTICLE.createWithContext(reader, id);
         }
-        return Registry.PARTICLE_TYPE.get(id);
+        return BuiltInRegistries.PARTICLE_TYPE.get(id);
     }
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        SharedSuggestionProvider.suggestResource(Registry.PARTICLE_TYPE.keySet(), builder);
+        SharedSuggestionProvider.suggestResource(BuiltInRegistries.PARTICLE_TYPE.keySet(), builder);
         return builder.buildFuture();
     }
 

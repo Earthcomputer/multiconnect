@@ -3,6 +3,7 @@ package net.earthcomputer.multiconnect.protocols.v1_8;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.mojang.logging.LogUtils;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.slf4j.Logger;
 
 import java.io.InputStreamReader;
@@ -21,6 +22,7 @@ public class SoundData_1_8 {
 
     private static SoundData_1_8 INSTANCE;
     public static SoundData_1_8 getInstance() {
+        // TODO: rewrite for via?
         if (INSTANCE == null) {
             try {
                 INSTANCE = new Gson().fromJson(
@@ -76,7 +78,7 @@ public class SoundData_1_8 {
             if (soundEvent == null) {
                 ResourceLocation id = ResourceLocation.tryParse(map);
                 if (id != null) {
-                    soundEvent = Registry.SOUND_EVENT.getOptional(id).orElse(null);
+                    soundEvent = BuiltInRegistries.SOUND_EVENT.getOptional(id).orElse(null);
                 }
             }
             return soundEvent;

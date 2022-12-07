@@ -3,15 +3,7 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_16.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "AbstractPiglinAccessor",
-    "EntityAccessor",
-    "MapItemSavedDataAccessor",
-    "MultiPlayerGameModeMixin",
-    "ClientPacketListenerMixin",
-    "ClientPacketListenerMixin",
-    "SquidMixin",
-    "PiglinAccessor",
-    "ShulkerAccessor"
+    "SquidMixin"
   ],
   "client": [
   ],

@@ -33,12 +33,12 @@ public class APIImpl extends MultiConnectAPI {
 
     @Override
     public <T> boolean doesServerKnow(Registry<T> registry, T value) {
-        return PacketSystem.doesServerKnow(registry, value);
+        return doesServerKnow(registry, registry.getResourceKey(value).orElseThrow(() -> new IllegalArgumentException("Called doesServerKnow on unregistered registry entry")));
     }
 
     @Override
     public <T> boolean doesServerKnow(Registry<T> registry, ResourceKey<T> key) {
-        return PacketSystem.doesServerKnow(registry, key);
+        return Multiconnect.translator.doesServerKnow(registry.key().location().toString(), key.location().toString());
     }
 
     //region deprecated stuff

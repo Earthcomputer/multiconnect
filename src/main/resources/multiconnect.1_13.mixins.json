@@ -3,24 +3,12 @@
   "package": "net.earthcomputer.multiconnect.protocols.v1_13.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "CatAccessor",
-    "EyeOfEnderAccessor",
-    "EntityAccessor",
-    "FireworkRocketEntityAccessor",
-    "LivingEntityAccessor",
-    "ClientChunkCacheMixin",
-    "ClientPacketListenerMixin",
     "EntityMixin",
     "LivingEntityMixin",
     "MerchantMenuMixin",
     "RemotePlayerMixin",
     "PlayerMixin",
-    "PlayerRendererMixin",
-    "MushroomCowAccessor",
-    "AbstractArrowAccessor",
-    "VillagerAccessor",
-    "ZombieAccessor",
-    "ZombieVillagerAccessor"
+    "PlayerRendererMixin"
   ],
   "client": [
   ],

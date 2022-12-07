@@ -5,7 +5,7 @@ import net.fabricmc.loom.task.RemapJarTask
 import java.util.regex.Pattern
 
 plugins {
-	id 'fabric-loom' version '0.12-SNAPSHOT'
+	id 'fabric-loom' version '1.0-SNAPSHOT'
 	id 'maven-publish'
 	id 'signing'
 	id 'com.matthewprenger.cursegradle' version '1.4.0'
@@ -22,15 +22,6 @@ allprojects {
 	archivesBaseName = rootProject.archives_base_name
 	version = rootProject.mod_version
 	group = rootProject.maven_group
-}
-
-configurations {
-	multiconnectProcessor
-	annotationProcessor.extendsFrom multiconnectProcessor
-}
-
-sourceSets {
-	generated
 }
 
 def snapshotPattern = Pattern.compile('(\\d\\d)w(\\d\\d)([a-z])')
@@ -50,8 +41,6 @@ if (snapshotMatcher.matches()) {
 }
 
 processResources {
-	dependsOn processGeneratedResources
-
 	duplicatesStrategy = DuplicatesStrategy.WARN
 	inputs.property "version", project.version
 	inputs.property "mcversion", project.supported_versions ?: normalizedVersion
@@ -81,6 +70,9 @@ tasks.withType(JavaCompile) {
 task sourcesJar(type: Jar, dependsOn: classes) {
 	archiveClassifier.set("sources")
 	from sourceSets.main.allSource
+	project(':translator-api').afterEvaluate {
+		from it.sourceSets.main.allSource
+	}
 }
 
 task javadocJar(type: Jar, dependsOn: classes) {
@@ -95,17 +87,11 @@ task remapSlimJar(type: RemapJarTask, dependsOn: jar) {
 }
 
 
-idea {
-	module {
-		excludeDirs << file('src/generated/java')
-		excludeDirs << file('run/config/multiconnect/packet-logs')
-	}
-}
-
 jar {
 	from "LICENSE"
-	from sourceSets.generated.output.classesDirs
-	from sourceSets.generated.output.resourcesDir
+	project(':translator-api').afterEvaluate {
+		from it.sourceSets.main.output
+	}
 }
 
 loom {
@@ -129,6 +115,9 @@ subprojects {
 
 repositories {
 	maven {
+		url 'https://repo.viaversion.com/'
+	}
+	maven {
 		url 'https://maven.parchmentmc.org/'
 	}
 	maven {
@@ -149,11 +138,13 @@ loom {
 
 dependencies {
 	//to change the versions see the gradle.properties file
-	multiconnectProcessor project(':annotationProcessor')
-	implementation project(':annotations')
-	implementation project(':api')
-	include project(':api')
-	compileOnly project(':stubs')
+	// compileOnly project(':stubs') // when https://github.com/FabricMC/fabric-loom/pull/747 is merged
+	implementation project(':translator-api')
+
+	runtimeOnly project(path: ':via-translator', configuration: "namedElements")
+	runtimeOnly project(path: ':via-translator')
+
+	compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings loom.layered {
@@ -163,8 +154,6 @@ dependencies {
 	modCompileOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	modRuntimeOnly "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
 	testImplementation "com.github.Earthcomputer:fabric-loader:${project.loader_version}"
-	sourceSets.generated.compileClasspath += files({sourceSets.main.compileClasspath.toList()})
-	generatedImplementation sourceSets.main.output
 
 	if (true) {
 		modCompileOnly(fabricApi.module('fabric-resource-loader-v0', project.fabric_api_version)) {
@@ -183,8 +172,6 @@ dependencies {
 		}
 	}
 
-	runtimeOnly sourceSets.generated.output
-
 	if (!project.devauth_version.isBlank()) {
 		modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:${project.devauth_version}") {
 			exclude group: 'net.fabricmc', module: 'fabric-loader'
@@ -202,35 +189,6 @@ test {
 	systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
 	systemProperty 'org.junit.TestClassResolver', 'net.earthcomputer.multiconnect.TestingExtension'
 	workingDir 'run'
-}
-
-afterEvaluate {
-	task multiconnectAP(type: JavaCompile, group: 'build') {
-		source = sourceSets.main.java
-		classpath = configurations.compileClasspath
-		options.annotationProcessorPath = configurations.multiconnectProcessor
-		options.compilerArgs = [
-				'-proc:only',
-				'-processor', 'net.earthcomputer.multiconnect.ap.MulticonnectAP'
-		]
-		destinationDirectory.set(file("$buildDir/translatorJsons"))
-	}
-
-	task generateTranslators(group: 'build') {
-		dependsOn multiconnectAP
-		dependsOn ':translatorCompiler:compileTranslator'
-		inputs.dir "$buildDir/translatorJsons"
-		outputs.dirs sourceSets.generated.java.srcDirs
-	}
-
-	compileGeneratedJava {
-		dependsOn generateTranslators
-		options.warnings = false
-	}
-
-	clean {
-		delete sourceSets.generated.java.srcDirs
-	}
 }
 
 def changes = file('changelog.txt')
@@ -324,6 +282,7 @@ task publishModrinth(type: TaskModrinthUpload) {
 	changelog = changes
 	addGameVersion project.minecraft_version
 	addLoader 'fabric'
+	addLoader 'quilt'
 }
 
 githubRelease {
@@ -345,6 +304,7 @@ task releaseAll {
 	dependsOn tasks.getByName('curseforge')
 	dependsOn tasks.getByName('publishModrinth')
 	dependsOn tasks.getByName('githubRelease')
+	project(':via-translator').afterEvaluate {
+		dependsOn it.tasks.getByName('publishModrinth')
+	}
 }
-
-apply from: 'setupRealMcAccount.gradle'

@@ -5,7 +5,7 @@ import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_8.SoundData_1_8;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import static com.mojang.brigadier.arguments.DoubleArgumentType.*;
 import static com.mojang.brigadier.arguments.FloatArgumentType.*;
@@ -20,7 +20,7 @@ public class PlaySoundCommand {
         for (String category : new String[] {"master", "music", "record", "weather", "block", "hostile", "neutral", "player", "ambient", "voice"}) {
             dispatcher.register(literal("playsound")
                 .then(argument("sound", id())
-                    .suggests((ctx, builder) -> ConnectionInfo.protocolVersion <= Protocols.V1_8 ? SharedSuggestionProvider.suggest(SoundData_1_8.getInstance().getAllSounds(), builder) : SharedSuggestionProvider.suggestResource(Registry.SOUND_EVENT.keySet(), builder))
+                    .suggests((ctx, builder) -> ConnectionInfo.protocolVersion <= Protocols.V1_8 ? SharedSuggestionProvider.suggest(SoundData_1_8.getInstance().getAllSounds(), builder) : SharedSuggestionProvider.suggestResource(BuiltInRegistries.SOUND_EVENT.keySet(), builder))
                     .then(literal(category)
                         .then(argument("player", players())
                             .executes(ctx -> 0)

@@ -1,7 +1,6 @@
 package net.earthcomputer.multiconnect.connect;
 
 import com.mojang.logging.LogUtils;
-import net.earthcomputer.multiconnect.debug.PacketRecorder;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.mixin.connect.ClientIntentionPacketAccessor;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
@@ -15,7 +14,6 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
 import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket;
 import org.jetbrains.annotations.Nullable;
@@ -101,12 +99,10 @@ public class ConnectionHandler {
         return true;
     }
 
-    public static void onSendIntention(Packet<?> intentionPacket) {
+    public static void onSendIntention() {
         if (ConnectionMode.isSupportedProtocol(ConnectionInfo.protocolVersion)) {
-            ((ClientIntentionPacketAccessor) intentionPacket).setProtocolVersion(ConnectionInfo.protocolVersion);
             ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
             ConnectionInfo.protocol.setup();
-            PacketRecorder.onConnect();
         }
     }
 
