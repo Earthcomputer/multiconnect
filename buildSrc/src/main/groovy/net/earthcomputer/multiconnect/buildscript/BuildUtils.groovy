@@ -43,7 +43,7 @@ class BuildUtils {
         return {
             it.maven {
                 name = 'nexus'
-                url = isBeta(project) ? 'https://s01.oss.sonatype.org/content/repositories/snapshots/' : 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+                url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
                 credentials {
                     username(project.hasProperty('ossrhUser') ? project.property('ossrhUser') : 'foo')
                     password(project.hasProperty('ossrhPass') ? project.property('ossrhPass') : 'bar')
