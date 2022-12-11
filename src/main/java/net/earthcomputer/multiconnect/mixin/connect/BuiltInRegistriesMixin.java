@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BuiltInRegistries.class)
 public class BuiltInRegistriesMixin {
-    @Inject(method = "bootStrap", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/registries/BuiltInRegistries;freeze()V"))
+    @Inject(method = "createContents()V", at = @At("RETURN"))
     private static void preFreezeRegistries(CallbackInfo ci) {
         MulticonnectAddedRegistryEntries.register();
     }
