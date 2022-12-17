@@ -12,19 +12,12 @@ Discord: https://discord.gg/Jg7Bun7
 Patreon: https://www.patreon.com/earthcomputer
 
 ## Why another protocol translator?
-Multiconnect distinguishes itself from similar projects such as ViaVersion and ProtocolSupport in that it is
-very much client-side. Crucially, this means it can (and does) fix many version differences on the client;
-such issues are unfixable on the server. As of the time of writing, multiconnect is the only mod which fixes
-1.12 swimming mechanics, parkour differences, and re-adds removed features such as command syntax on the client.
+Multiconnect distinguishes itself from similar projects such as ViaVersion and ProtocolSupport in that it is very much client-side. Crucially, this means it can (and does) fix many version differences on the client; such issues are unfixable on the server. As of the time of writing, multiconnect is the only mod that fixes 1.12 swimming mechanics, parkour differences, and re-adds removed features such as command syntax on the client.
 
-On the other hand, multiconnect supports only the latest Minecraft client version, and only on Fabric. It also
-does not have as much version coverage as ViaVersion and ProtocolSupport (yet).
+On the other hand, multiconnect supports only the latest Minecraft client version and only on Fabric. It also does not have as much version coverage as ViaVersion and ProtocolSupport (yet).
 
 ### Usage with ViaFabric
-If you want to connect to servers older than what multiconnect can currently support, you can install
-[ViaFabric](https://github.com/ViaVersion/ViaFabric) alongside multiconnect, the two are compatible -
-multiconnect will translate as much as it can, ViaFabric will take you the rest of the way. Follow the
-instructions in the ViaFabric readme for details on how to do this.
+If you want to connect to servers older than what multiconnect can currently support, you can install [ViaFabric](https://github.com/ViaVersion/ViaFabric) alongside multiconnect. The two are compatible - multiconnect will translate as much as it can and ViaFabric will take you the rest of the way. Follow the instructions in the ViaFabric readme for details on how to do this.
 
 ### Other alternatives
 - [ClientViaVersion](https://github.com/Gerrygames/ClientViaVersion): a discontinued plugin for The 5zig Mod
