@@ -52,7 +52,7 @@ public interface IProtocol {
      * including this protocol. Throws an exception if this protocol is not a major release.
      */
     @ThreadSafe
-    List<IProtocol> getMinorReleases();
+    List<? extends IProtocol> getMinorReleases();
 
     /**
      * Returns whether this protocol is only in beta support by multiconnect, and may have stability issues when

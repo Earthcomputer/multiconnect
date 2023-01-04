@@ -49,7 +49,7 @@ public class Utils {
         for (ConnectionMode mode : ConnectionMode.values()) {
             if (mode.isMajorRelease()) {
                 var category = versionDropDown.add(mode);
-                List<IProtocol> children = mode.getMinorReleases();
+                List<? extends IProtocol> children = mode.getMinorReleases();
                 if (children.size() > 1) {
                     for (IProtocol child : children) {
                         category.add((ConnectionMode) child);
