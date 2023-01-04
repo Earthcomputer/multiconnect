@@ -46,14 +46,14 @@ public final class ConnectionMode implements IProtocol {
     public static final ConnectionMode V1_12_2 = register("1.12.2", Protocols.V1_12_2, 1343, InitFlags.MULTICONNECT_BETA);
     public static final ConnectionMode V1_12_1 = register("1.12.1", Protocols.V1_12_1, 1241, InitFlags.MULTICONNECT_BETA);
     public static final ConnectionMode V1_12 = register("1.12", Protocols.V1_12, 1139, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA);
-//    V1_11_2("1.11.2", Protocols.V1_11_2, 922),
-//    V1_11("1.11", Protocols.V1_11, 921, InitFlags.MAJOR_RELEASE),
-//    V1_10("1.10", Protocols.V1_10, 512, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
-//    V1_9_4("1.9.4", Protocols.V1_9_4, 184, InitFlags.MULTICONNECT_BETA),
-//    V1_9_2("1.9.2", Protocols.V1_9_2, 176, InitFlags.MULTICONNECT_BETA),
-//    V1_9_1("1.9.1", Protocols.V1_9_1, 175, InitFlags.MULTICONNECT_BETA),
-//    V1_9("1.9", Protocols.V1_9, 169, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
-//    V1_8("1.8", Protocols.V1_8, 99, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA),
+    public static final ConnectionMode V1_11_2 = register("1.11.2", Protocols.V1_11_2, 922);
+    public static final ConnectionMode V1_11 = register("1.11", Protocols.V1_11, 921, InitFlags.MAJOR_RELEASE);
+    public static final ConnectionMode V1_10 = register("1.10", Protocols.V1_10, 512, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA);
+    public static final ConnectionMode V1_9_4 = register("1.9.4", Protocols.V1_9_4, 184, InitFlags.MULTICONNECT_BETA);
+    public static final ConnectionMode V1_9_2 = register("1.9.2", Protocols.V1_9_2, 176, InitFlags.MULTICONNECT_BETA);
+    public static final ConnectionMode V1_9_1 = register("1.9.1", Protocols.V1_9_1, 175, InitFlags.MULTICONNECT_BETA);
+    public static final ConnectionMode V1_9 = register("1.9", Protocols.V1_9, 169, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA);
+    public static final ConnectionMode V1_8 = register("1.8", Protocols.V1_8, 99, InitFlags.MAJOR_RELEASE | InitFlags.MULTICONNECT_BETA);
     // the last value MUST be considered a "major release"
 
     public static class InitFlags {
