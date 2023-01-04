@@ -34,7 +34,7 @@ public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final AttributeKey<UserConnection> VIA_USER_CONNECTION_KEY = AttributeKey.valueOf("multiconnect.via_user_connection");
 
-    private IMulticonnectTranslatorApi api;
+    protected IMulticonnectTranslatorApi api;
 
     @Override
     public boolean isApplicableInEnvironment(IMulticonnectTranslatorApi api) {
