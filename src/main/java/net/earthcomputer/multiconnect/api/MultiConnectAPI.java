@@ -306,6 +306,11 @@ public class MultiConnectAPI {
         public boolean isMulticonnectBeta() {
             return false;
         }
+
+        @Override
+        public boolean isMulticonnectExtension() {
+            return false;
+        }
     }
 
     //endregion

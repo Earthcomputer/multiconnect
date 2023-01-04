@@ -61,4 +61,6 @@ public interface IProtocol {
     @ThreadSafe
     boolean isMulticonnectBeta();
 
+    boolean isMulticonnectExtension();
+
 }

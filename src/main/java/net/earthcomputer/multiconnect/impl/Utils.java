@@ -26,6 +26,9 @@ public class Utils {
             if (mode.isMulticonnectBeta()) {
                 text.append(Component.literal(" !").withStyle(ChatFormatting.RED));
             }
+            if (mode.isMulticonnectExtension()) {
+                text.append(Component.literal(" e").withStyle(ChatFormatting.GOLD));
+            }
             return text;
         })
                 .setCategoryLabelExtractor(mode -> {
@@ -33,15 +36,27 @@ public class Utils {
                     if (mode.isMulticonnectBeta()) {
                         text.append(Component.literal(" !").withStyle(ChatFormatting.RED));
                     }
+                    if (mode.isMulticonnectExtension()) {
+                        text.append(Component.literal(" e").withStyle(ChatFormatting.GOLD));
+                    }
                     return text;
                 })
                 .setTooltipRenderer((matrices, mode, x, y, isCategory) -> {
+                    final List<Component> tooltip = new ArrayList<>();
                     if (mode.isMulticonnectBeta()) {
                         String modeName = isCategory ? mode.getMajorReleaseName() : mode.getName();
-                        screen.renderComponentTooltip(matrices, ImmutableList.of(
-                                Component.translatable("multiconnect.betaWarning.line1", modeName),
-                                Component.translatable("multiconnect.betaWarning.line2", modeName)
-                        ), x, y);
+                        tooltip.add(Component.translatable("multiconnect.betaWarning.line1", modeName));
+                        if (!mode.isMulticonnectExtension()) {
+                            tooltip.add(Component.translatable("multiconnect.betaWarning.line2", modeName));
+                        }
+                    }
+                    if (mode.isMulticonnectExtension()) {
+                        String modeName = isCategory ? mode.getMajorReleaseName() : mode.getName();
+                        tooltip.add(Component.translatable("multiconnect.extensionWarning.line1", modeName));
+                        tooltip.add(Component.translatable("multiconnect.extensionWarning.line2", modeName));
+                    }
+                    if (!tooltip.isEmpty()) {
+                        screen.renderComponentTooltip(matrices, tooltip, x, y);
                     }
                 });
 

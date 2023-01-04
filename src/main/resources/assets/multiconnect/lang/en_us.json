@@ -1,6 +1,8 @@
 {
   "multiconnect.betaWarning.line1": "%s is currently in beta support by multiconnect.",
   "multiconnect.betaWarning.line2": "Expect bugs, but report any you find to the issue tracker!",
+  "multiconnect.extensionWarning.line1": "%s support is implemented with a multiconnect extension.",
+  "multiconnect.extensionWarning.line2": "If you have any issues, report them to the extension's bug tracker.",
   "multiconnect.changeForcedProtocol": "Version",
   "multiconnect.config.allowOldUnsignedChat": "Insecure Messages",
   "multiconnect.config.allowOldUnsignedChat.tooltip": "Allows through insecure chat messages from 1.19.0 servers or older",

@@ -59,6 +59,7 @@ public final class ConnectionMode implements IProtocol {
     public static class InitFlags {
         private static final int MAJOR_RELEASE = 1;
         private static final int MULTICONNECT_BETA = 2;
+        private static final int MULTICONNECT_EXTENSION = 4;
     }
 
     private final int value;
@@ -67,6 +68,7 @@ public final class ConnectionMode implements IProtocol {
     private final String majorReleaseName;
     private final int dataVersion;
     private final boolean multiconnectBeta;
+    private final boolean multiconnectExtension;
     private final int ordinal = nextOrdinal++;
 
     private ConnectionMode(String name, int value, int dataVersion) {
@@ -84,6 +86,7 @@ public final class ConnectionMode implements IProtocol {
         this.dataVersion = dataVersion;
         this.majorReleaseName = majorReleaseName;
         this.multiconnectBeta = (initializationFlags & InitFlags.MULTICONNECT_BETA) != 0;
+        this.multiconnectExtension = (initializationFlags & InitFlags.MULTICONNECT_EXTENSION) != 0;
     }
 
     public int ordinal() {
@@ -130,6 +133,11 @@ public final class ConnectionMode implements IProtocol {
     @Override
     public boolean isMulticonnectBeta() {
         return multiconnectBeta;
+    }
+
+    @Override
+    public boolean isMulticonnectExtension() {
+        return multiconnectExtension;
     }
 
     @Override
