@@ -11,19 +11,11 @@ import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12_2;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13_1;
 import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13_2;
-import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
-import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14_1;
-import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14_2;
-import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14_3;
-import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14_4;
+import net.earthcomputer.multiconnect.protocols.v1_14.*;
 import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15;
 import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15_1;
 import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15_2;
-import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
-import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_1;
-import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_2;
-import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_3;
-import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_5;
+import net.earthcomputer.multiconnect.protocols.v1_16.*;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
 import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17_1;
 import net.earthcomputer.multiconnect.protocols.v1_18.Protocol_1_18;
@@ -56,7 +48,7 @@ public class ProtocolRegistry {
     }
 
 
-    private static void register(int version, AbstractProtocol protocol) {
+    public static void register(int version, AbstractProtocol protocol) {
         protocols.put(version, protocol);
     }
 
