@@ -57,9 +57,9 @@ public final class ConnectionMode implements IProtocol {
     // the last value MUST be considered a "major release"
 
     public static class InitFlags {
-        private static final int MAJOR_RELEASE = 1;
-        private static final int MULTICONNECT_BETA = 2;
-        private static final int MULTICONNECT_EXTENSION = 4;
+        public static final int MAJOR_RELEASE = 1;
+        public static final int MULTICONNECT_BETA = 2;
+        public static final int MULTICONNECT_EXTENSION = 4;
     }
 
     private final int value;
