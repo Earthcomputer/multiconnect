@@ -1,7 +1,6 @@
 package net.earthcomputer.multiconnect.mixin.connect;
 
 import net.earthcomputer.multiconnect.connect.ConnectionHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.Connection;
@@ -24,10 +23,13 @@ public class ConnectScreen1Mixin {
     @Final
     ServerAddress val$hostAndPort;
 
+    @Shadow(aliases = "field_40415", remap = false)
+    @Final
+    ServerData val$server;
+
     @Inject(method = "run()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;connectToServer(Ljava/net/InetSocketAddress;Z)Lnet/minecraft/network/Connection;"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
     public void beforeConnect(CallbackInfo ci, InetSocketAddress address) {
-        ServerData serverEntry = Minecraft.getInstance().getCurrentServer();
-        if (!ConnectionHandler.preConnect(address, val$hostAndPort, serverEntry == null ? null : serverEntry.ip)) {
+        if (!ConnectionHandler.preConnect(address, val$hostAndPort, val$server.ip)) {
             ci.cancel();
         }
     }
