@@ -1,11 +1,8 @@
 package net.earthcomputer.multiconnect.protocols.v1_8;
 
-import com.mojang.brigadier.CommandDispatcher;
+import net.earthcomputer.multiconnect.api.ProtocolBehavior;
 import net.earthcomputer.multiconnect.protocols.v1_12.command.BrigadierRemover;
 import net.earthcomputer.multiconnect.protocols.v1_8.mixin.*;
-import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
-import net.minecraft.commands.CommandBuildContext;
-import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.AxeItem;
@@ -16,41 +13,40 @@ import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.item.Tiers;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.OptionalDouble;
-import java.util.Set;
 
-public class Protocol_1_8 extends Protocol_1_9 {
+public class Protocol_1_8 extends ProtocolBehavior {
+    private static final Block[] BLOCKS_WITH_CHANGED_COLLISION = {
+        Blocks.LADDER,
+        Blocks.LILY_PAD,
+    };
+
     public static final int LEVEL_EVENT_QUIET_GHAST_SHOOT = -1000 + 1;
     private static final EntityDimensions DEFAULT_BOAT_DIMENSIONS = EntityType.BOAT.getDimensions();
 
     @Override
-    public void setup() {
-        super.setup();
+    public void onSetup() {
         ((EntityTypeAccessor) EntityType.BOAT).setDimensions(EntityDimensions.scalable(1.5f, 0.5625f));
     }
 
     @Override
-    public void disable() {
+    public void onDisable() {
         ((EntityTypeAccessor) EntityType.BOAT).setDimensions(DEFAULT_BOAT_DIMENSIONS);
-        super.disable();
     }
 
     @Override
-    protected void markChangedCollisionBoxes() {
-        super.markChangedCollisionBoxes();
-        markCollisionBoxChanged(Blocks.LADDER);
-        markCollisionBoxChanged(Blocks.LILY_PAD);
+    public Block[] getBlocksWithChangedCollision() {
+        return BLOCKS_WITH_CHANGED_COLLISION;
     }
 
     @Override
-    public void registerCommands(CommandBuildContext context, CommandDispatcher<SharedSuggestionProvider> dispatcher, @Nullable Set<String> serverCommands) {
-        super.registerCommands(context, dispatcher, serverCommands);
-        BrigadierRemover.of(dispatcher).get("time").get("query").get("day").remove();
-        BrigadierRemover.of(dispatcher).get("scoreboard").get("players").get("tag").remove();
-        BrigadierRemover.of(dispatcher).get("scoreboard").get("teams").get("option").get("team").get("collisionRule").remove();
+    public void onCommandRegistration(CommandRegistrationArgs args) {
+        BrigadierRemover.of(args.dispatcher()).get("time").get("query").get("day").remove();
+        BrigadierRemover.of(args.dispatcher()).get("scoreboard").get("players").get("tag").remove();
+        BrigadierRemover.of(args.dispatcher()).get("scoreboard").get("teams").get("option").get("team").get("collisionRule").remove();
     }
 
     public static OptionalDouble getDefaultAttackDamage(Item item) {

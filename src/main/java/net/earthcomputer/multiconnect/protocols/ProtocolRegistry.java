@@ -1,100 +1,142 @@
 package net.earthcomputer.multiconnect.protocols;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.earthcomputer.multiconnect.protocols.generic.AbstractProtocol;
-import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
-import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11;
-import net.earthcomputer.multiconnect.protocols.v1_11.Protocol_1_11_2;
-import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12;
-import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12_1;
-import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12_2;
-import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13;
-import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13_1;
-import net.earthcomputer.multiconnect.protocols.v1_13.Protocol_1_13_2;
-import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14;
-import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14_1;
-import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14_2;
-import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14_3;
-import net.earthcomputer.multiconnect.protocols.v1_14.Protocol_1_14_4;
-import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15;
-import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15_1;
-import net.earthcomputer.multiconnect.protocols.v1_15.Protocol_1_15_2;
-import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16;
-import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_1;
-import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_2;
-import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_3;
-import net.earthcomputer.multiconnect.protocols.v1_16.Protocol_1_16_5;
-import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17;
-import net.earthcomputer.multiconnect.protocols.v1_17.Protocol_1_17_1;
-import net.earthcomputer.multiconnect.protocols.v1_18.Protocol_1_18;
-import net.earthcomputer.multiconnect.protocols.v1_18.Protocol_1_18_2;
-import net.earthcomputer.multiconnect.protocols.v1_19.Protocol_1_19;
-import net.earthcomputer.multiconnect.protocols.v1_19.Protocol_1_19_2;
-import net.earthcomputer.multiconnect.protocols.v1_19.Protocol_1_19_3;
-import net.earthcomputer.multiconnect.protocols.v1_8.Protocol_1_8;
-import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9;
-import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9_1;
-import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9_2;
-import net.earthcomputer.multiconnect.protocols.v1_9.Protocol_1_9_4;
+import net.earthcomputer.multiconnect.api.IProtocol;
+import net.earthcomputer.multiconnect.api.ProtocolBehavior;
+import net.earthcomputer.multiconnect.connect.ConnectionMode;
+import net.earthcomputer.multiconnect.impl.IProtocolExt;
+import net.earthcomputer.multiconnect.protocols.generic.ProtocolBehaviorSet;
 import net.minecraft.SharedConstants;
+import org.jetbrains.annotations.Nullable;
 
-import static net.earthcomputer.multiconnect.api.Protocols.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 public class ProtocolRegistry {
-    private static final Int2ObjectOpenHashMap<AbstractProtocol> protocols = new Int2ObjectOpenHashMap<>();
-
-    public static AbstractProtocol get(int version) {
-        return protocols.get(version);
-    }
-
-    public static AbstractProtocol latest() {
-        return protocols.get(SharedConstants.getCurrentVersion().getProtocolVersion());
-    }
-
-    public static Iterable<AbstractProtocol> all() {
-        return protocols.values();
-    }
-
-
-    private static void register(int version, AbstractProtocol protocol) {
-        protocols.put(version, protocol);
-    }
-
     static {
-        register(V1_19_3, new Protocol_1_19_3());
-        register(V1_19_2, new Protocol_1_19_2());
-        register(V1_19, new Protocol_1_19());
-        register(V1_18_2, new Protocol_1_18_2());
-        register(V1_18, new Protocol_1_18());
-        register(V1_17_1, new Protocol_1_17_1());
-        register(V1_17, new Protocol_1_17());
-        register(V1_16_5, new Protocol_1_16_5());
-        register(V1_16_3, new Protocol_1_16_3());
-        register(V1_16_2, new Protocol_1_16_2());
-        register(V1_16_1, new Protocol_1_16_1());
-        register(V1_16, new Protocol_1_16());
-        register(V1_15_2, new Protocol_1_15_2());
-        register(V1_15_1, new Protocol_1_15_1());
-        register(V1_15, new Protocol_1_15());
-        register(V1_14_4, new Protocol_1_14_4());
-        register(V1_14_3, new Protocol_1_14_3());
-        register(V1_14_2, new Protocol_1_14_2());
-        register(V1_14_1, new Protocol_1_14_1());
-        register(V1_14, new Protocol_1_14());
-        register(V1_13_2, new Protocol_1_13_2());
-        register(V1_13_1, new Protocol_1_13_1());
-        register(V1_13, new Protocol_1_13());
-        register(V1_12_2, new Protocol_1_12_2());
-        register(V1_12_1, new Protocol_1_12_1());
-        register(V1_12, new Protocol_1_12());
-        register(V1_11_2, new Protocol_1_11_2());
-        register(V1_11, new Protocol_1_11());
-        register(V1_10, new Protocol_1_10());
-        register(V1_9_4, new Protocol_1_9_4());
-        register(V1_9_2, new Protocol_1_9_2());
-        register(V1_9_1, new Protocol_1_9_1());
-        register(V1_9, new Protocol_1_9());
-        register(V1_8, new Protocol_1_8());
+        // make sure ConnectionMode class is initialized
+        //noinspection ResultOfMethodCallIgnored
+        ConnectionMode.values();
+    }
+
+    private static final Int2ObjectOpenHashMap<ProtocolEntry> protocols = new Int2ObjectOpenHashMap<>();
+    private static final List<ProtocolEntry> sortedProtocols = new ArrayList<>();
+
+    public static boolean isSupported(int version) {
+        return protocols.containsKey(version);
+    }
+
+    public static boolean isSupportedName(String name) {
+        for (ProtocolEntry protocol : sortedProtocols) {
+            if (name.equals(protocol.protocol.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static List<IProtocolExt> getProtocols() {
+        return sortedProtocols.stream().map(ProtocolEntry::protocol).toList();
+    }
+
+    public static IProtocolExt get(int version) {
+        ProtocolEntry entry = protocols.get(version);
+        if (entry == null) {
+            throw new IllegalArgumentException("No protocol registered for version " + version);
+        }
+        return protocols.get(version).protocol;
+    }
+
+    public static ProtocolBehaviorSet getBehaviorSet(int version) {
+        ProtocolEntry entry = protocols.get(version);
+        if (entry == null) {
+            throw new IllegalArgumentException("No protocol registered for version " + version);
+        }
+        int index = Collections.binarySearch(sortedProtocols, entry);
+        return new ProtocolBehaviorSet(sortedProtocols.stream().skip(index).map(ProtocolEntry::behavior).filter(Objects::nonNull).toList());
+    }
+
+    public static ProtocolBehaviorSet latestBehaviorSet() {
+        return getBehaviorSet(SharedConstants.getCurrentVersion().getProtocolVersion());
+    }
+
+    public static void register(IProtocolExt protocol, @Nullable ProtocolBehavior behavior) {
+        ProtocolEntry existingProtocol = protocols.get(protocol.getValue());
+        if (existingProtocol != null) {
+            throw new IllegalArgumentException("Can't register protocol " + protocol.getName() + " with id " + protocol.getValue() + " because a protocol " + existingProtocol.protocol.getName() + " already exists with the same id");
+        }
+
+        for (ProtocolEntry existing : sortedProtocols) {
+            if (existing.protocol.getName().equals(protocol.getName())) {
+                throw new IllegalArgumentException("Can't register protocol " + protocol.getName() + " with id " + protocol.getValue() + " because a protocol with id " + existing.protocol.getValue() + " already exists with the same name");
+            }
+        }
+
+        ProtocolEntry newEntry = new ProtocolEntry(protocol, behavior);
+        int index = Collections.binarySearch(sortedProtocols, newEntry);
+        // index will be negative because the protocol id won't be found (checked above)
+        index = -index - 1;
+
+        if (index != 0) {
+            IProtocol prevProtocol = sortedProtocols.get(index - 1).protocol;
+            if (protocol.getDataVersion() < prevProtocol.getDataVersion()) {
+                throw new IllegalArgumentException("Protocol " + protocol.getName() + " has data version (" + protocol.getDataVersion() + ") less than the previous protocol's (" + prevProtocol.getName() + ") data version (" + prevProtocol.getDataVersion() + ")");
+            }
+        }
+        if (index != sortedProtocols.size()) {
+            IProtocol nextProtocol = sortedProtocols.get(index).protocol;
+            if (protocol.getDataVersion() > nextProtocol.getDataVersion()) {
+                throw new IllegalArgumentException("Protocol " + protocol.getName() + " has data version (" + protocol.getDataVersion() + ") greater than the next protocol's (" + nextProtocol.getName() + ") data version (" + nextProtocol.getDataVersion() + ")");
+            }
+        }
+
+        protocols.put(protocol.getValue(), newEntry);
+        sortedProtocols.add(index, newEntry);
+    }
+
+    public static IProtocolExt getMajorRelease(IProtocolExt protocol) {
+        int index = Collections.binarySearch(sortedProtocols, new ProtocolEntry(protocol, null));
+        if (index < 0) {
+            throw new IllegalArgumentException("Trying to get major release for unregistered protocol");
+        }
+
+        for (; index >= 0; index--) {
+            protocol = sortedProtocols.get(index).protocol;
+            if (protocol.isMajorRelease()) {
+                return protocol;
+            }
+        }
+        return protocol;
+    }
+
+    public static List<IProtocol> getMinorReleases(IProtocolExt protocol) {
+        int index = Collections.binarySearch(sortedProtocols, new ProtocolEntry(protocol, null));
+        if (index < 0) {
+            throw new IllegalArgumentException("Trying to get minor releases for unregistered protocol");
+        }
+        if (index != 0 && !protocol.isMajorRelease()) {
+            throw new UnsupportedOperationException("Cannot get the minor releases of a minor release");
+        }
+
+        List<IProtocol> result = new ArrayList<>();
+        result.add(protocol);
+        for (index++; index < sortedProtocols.size(); index++) {
+            IProtocolExt p = sortedProtocols.get(index).protocol;
+            if (p.isMajorRelease()) {
+                break;
+            }
+            result.add(p);
+        }
+        return result;
+    }
+
+    private record ProtocolEntry(IProtocolExt protocol, @Nullable ProtocolBehavior behavior) implements Comparable<ProtocolEntry> {
+        @Override
+        public int compareTo(ProtocolEntry other) {
+            return Integer.compare(protocol.getValue(), other.protocol.getValue());
+        }
     }
 
 }

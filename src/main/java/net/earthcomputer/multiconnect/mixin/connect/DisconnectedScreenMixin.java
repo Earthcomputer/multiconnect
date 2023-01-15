@@ -2,10 +2,11 @@ package net.earthcomputer.multiconnect.mixin.connect;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.earthcomputer.multiconnect.connect.ConnectionMode;
+import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.connect.ServersExt;
 import net.earthcomputer.multiconnect.impl.Utils;
+import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -26,7 +27,7 @@ public abstract class DisconnectedScreenMixin extends Screen {
     @Unique private static final Set<String> MULTICONNECT_TRIGGER_WORDS = ImmutableSet.of("outdated", "incompatible", "version");
     @Unique private ServerData multiconnect_server;
     @Unique private boolean multiconnect_isProtocolReason;
-    @Unique private DropDownWidget<ConnectionMode> multiconnect_protocolSelector;
+    @Unique private DropDownWidget<IProtocol> multiconnect_protocolSelector;
     @Unique private FormattedCharSequence multiconnect_forceProtocolLabel;
 
     protected DisconnectedScreenMixin(Component title) {
@@ -41,8 +42,8 @@ public abstract class DisconnectedScreenMixin extends Screen {
         multiconnect_server = Minecraft.getInstance().getCurrentServer();
         if (multiconnect_server != null) {
             String reasonText = reason.getString().toLowerCase();
-            for (ConnectionMode protocol : ConnectionMode.values()) {
-                if (protocol != ConnectionMode.AUTO && reasonText.contains(protocol.getName())) {
+            for (IProtocol protocol : ProtocolRegistry.getProtocols()) {
+                if (reasonText.contains(protocol.getName())) {
                     multiconnect_isProtocolReason = true;
                     break;
                 }
@@ -79,9 +80,9 @@ public abstract class DisconnectedScreenMixin extends Screen {
     }
 
     @Unique
-    private ConnectionMode getForcedVersion() {
+    private IProtocol getForcedVersion() {
         int protocolVersion = ServersExt.getInstance().getForcedProtocol(multiconnect_server.ip);
-        return ConnectionMode.byValue(protocolVersion);
+        return ProtocolRegistry.get(protocolVersion);
     }
 
 }

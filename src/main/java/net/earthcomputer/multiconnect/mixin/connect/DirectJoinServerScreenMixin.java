@@ -1,10 +1,12 @@
 package net.earthcomputer.multiconnect.mixin.connect;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.connect.ServersExt;
 import net.earthcomputer.multiconnect.impl.Utils;
+import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.DirectJoinServerScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -23,7 +25,7 @@ public class DirectJoinServerScreenMixin extends Screen {
     @Shadow private EditBox ipEdit;
 
     @Unique private String multiconnect_lastAddress;
-    @Unique private DropDownWidget<ConnectionMode> multiconnect_protocolSelector;
+    @Unique private DropDownWidget<IProtocol> multiconnect_protocolSelector;
     @Unique private FormattedCharSequence multiconnect_forceProtocolLabel;
 
     protected DirectJoinServerScreenMixin(Component title) {
@@ -43,7 +45,7 @@ public class DirectJoinServerScreenMixin extends Screen {
             multiconnect_lastAddress = ipEdit.getValue();
             if (ServersExt.getInstance().hasServer(ipEdit.getValue())) {
                 int protocolVersion = ServersExt.getInstance().getForcedProtocol(ipEdit.getValue());
-                multiconnect_protocolSelector.setValue(ConnectionMode.byValue(protocolVersion));
+                multiconnect_protocolSelector.setValue(ProtocolRegistry.get(protocolVersion));
             }
         }
     }

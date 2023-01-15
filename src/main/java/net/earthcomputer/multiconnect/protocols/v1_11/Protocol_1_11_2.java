@@ -1,25 +1,17 @@
 package net.earthcomputer.multiconnect.protocols.v1_11;
 
-import com.mojang.brigadier.CommandDispatcher;
-import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12;
+import net.earthcomputer.multiconnect.api.ProtocolBehavior;
 import net.earthcomputer.multiconnect.protocols.v1_12.command.BrigadierRemover;
 import net.earthcomputer.multiconnect.protocols.v1_12.command.Commands_1_12_2;
-import net.minecraft.commands.CommandBuildContext;
-import net.minecraft.commands.SharedSuggestionProvider;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.Set;
-
-public class Protocol_1_11_2 extends Protocol_1_12 {
+public class Protocol_1_11_2 extends ProtocolBehavior {
     @Override
-    public void registerCommands(CommandBuildContext context, CommandDispatcher<SharedSuggestionProvider> dispatcher, @Nullable Set<String> serverCommands) {
-        super.registerCommands(context, dispatcher, serverCommands);
+    public void onCommandRegistration(CommandRegistrationArgs args) {
+        BrigadierRemover.of(args.dispatcher()).get("advancement").remove();
+        BrigadierRemover.of(args.dispatcher()).get("function").remove();
+        BrigadierRemover.of(args.dispatcher()).get("recipe").remove();
+        BrigadierRemover.of(args.dispatcher()).get("reload").remove();
 
-        BrigadierRemover.of(dispatcher).get("advancement").remove();
-        BrigadierRemover.of(dispatcher).get("function").remove();
-        BrigadierRemover.of(dispatcher).get("recipe").remove();
-        BrigadierRemover.of(dispatcher).get("reload").remove();
-
-        Commands_1_12_2.registerVanilla(dispatcher, serverCommands, "achievement", AchievementCommand::register);
+        Commands_1_12_2.registerVanilla(args.dispatcher(), args.serverCommands(), "achievement", AchievementCommand::register);
     }
 }

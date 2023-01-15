@@ -1,10 +1,10 @@
 package net.earthcomputer.multiconnect.impl;
 
 import com.google.common.cache.Cache;
-import com.google.common.collect.ImmutableList;
 import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
+import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -20,11 +20,14 @@ import java.util.concurrent.TimeUnit;
 
 public class Utils {
 
-    public static DropDownWidget<ConnectionMode> createVersionDropdown(Screen screen, ConnectionMode initialMode) {
+    public static DropDownWidget<IProtocol> createVersionDropdown(Screen screen, IProtocol initialMode) {
         var versionDropDown = new DropDownWidget<>(screen.width - 80, 5, 75, 20, initialMode, mode -> {
             MutableComponent text = Component.literal(mode.getName());
             if (mode.isMulticonnectBeta()) {
                 text.append(Component.literal(" !").withStyle(ChatFormatting.RED));
+            }
+            if (mode.isMulticonnectExtension()) {
+                text.append(Component.literal(" e").withStyle(ChatFormatting.GOLD));
             }
             return text;
         })
@@ -33,32 +36,49 @@ public class Utils {
                     if (mode.isMulticonnectBeta()) {
                         text.append(Component.literal(" !").withStyle(ChatFormatting.RED));
                     }
+                    if (mode.isMulticonnectExtension()) {
+                        text.append(Component.literal(" e").withStyle(ChatFormatting.GOLD));
+                    }
                     return text;
                 })
                 .setTooltipRenderer((matrices, mode, x, y, isCategory) -> {
+                    final List<Component> tooltip = new ArrayList<>();
                     if (mode.isMulticonnectBeta()) {
                         String modeName = isCategory ? mode.getMajorReleaseName() : mode.getName();
-                        screen.renderComponentTooltip(matrices, ImmutableList.of(
-                                Component.translatable("multiconnect.betaWarning.line1", modeName),
-                                Component.translatable("multiconnect.betaWarning.line2", modeName)
-                        ), x, y);
+                        tooltip.add(Component.translatable("multiconnect.betaWarning.line1", modeName));
+                        if (!mode.isMulticonnectExtension()) {
+                            tooltip.add(Component.translatable("multiconnect.betaWarning.line2", modeName));
+                        }
+                    }
+                    if (mode.isMulticonnectExtension()) {
+                        String modeName = isCategory ? mode.getMajorReleaseName() : mode.getName();
+                        tooltip.add(Component.translatable("multiconnect.extensionWarning.line1", modeName));
+                        tooltip.add(Component.translatable("multiconnect.extensionWarning.line2", modeName));
+                    }
+                    if (!tooltip.isEmpty()) {
+                        screen.renderComponentTooltip(matrices, tooltip, x, y);
                     }
                 });
 
         // populate the versions
-        for (ConnectionMode mode : ConnectionMode.values()) {
-            if (mode.isMajorRelease()) {
-                var category = versionDropDown.add(mode);
-                List<IProtocol> children = mode.getMinorReleases();
-                if (children.size() > 1) {
-                    for (IProtocol child : children) {
-                        category.add((ConnectionMode) child);
-                    }
-                }
-            }
+        populateDropdown(versionDropDown, ConnectionMode.AUTO);
+        for (IProtocol protocol : ProtocolRegistry.getProtocols()) {
+            populateDropdown(versionDropDown, protocol);
         }
 
         return versionDropDown;
+    }
+
+    private static void populateDropdown(DropDownWidget<IProtocol> versionDropDown, IProtocol protocol) {
+        if (protocol.isMajorRelease()) {
+            var category = versionDropDown.add(protocol);
+            List<IProtocol> children = protocol.getMinorReleases();
+            if (children.size() > 1) {
+                for (IProtocol child : children) {
+                    category.add(child);
+                }
+            }
+        }
     }
 
     @ThreadSafe

@@ -10,7 +10,6 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.earthcomputer.multiconnect.api.Protocols;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.v1_10.Protocol_1_10;
-import net.earthcomputer.multiconnect.protocols.v1_12.Protocol_1_12_2;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -118,7 +117,7 @@ public class Commands_1_12_2 {
     }
 
     public static void registerAll(CommandBuildContext context, CommandDispatcher<SharedSuggestionProvider> dispatcher, @Nullable Set<String> serverCommands) {
-        ((Protocol_1_12_2) ConnectionInfo.protocol).registerCommands(context, dispatcher, serverCommands);
+        ConnectionInfo.protocol.register112Commands(context, dispatcher, serverCommands);
 
         if (serverCommands != null) {
             for (String command : serverCommands) {

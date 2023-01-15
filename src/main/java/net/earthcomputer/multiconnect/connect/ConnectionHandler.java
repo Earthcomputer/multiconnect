@@ -38,9 +38,9 @@ public class ConnectionHandler {
             if (SharedConstants.getCurrentVersion().isStable()) {
                 ConnectionInfo.protocolVersion = SharedConstants.getCurrentVersion().getProtocolVersion();
             } else {
-                ConnectionInfo.protocolVersion = ConnectionMode.protocolValues()[1].getValue();
+                ConnectionInfo.protocolVersion = ConnectionMode.values()[2].getValue();
             }
-            LOGGER.info("Hypixel detected, protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName() + ")");
+            LOGGER.info("Hypixel detected, protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ProtocolRegistry.get(ConnectionInfo.protocolVersion).getName() + ")");
             return true;
         }
 
@@ -48,7 +48,7 @@ public class ConnectionHandler {
             int forcedVersion = ServersExt.getInstance().getForcedProtocol(addressField);
             if (forcedVersion != ConnectionMode.AUTO.getValue()) {
                 ConnectionInfo.protocolVersion = forcedVersion;
-                LOGGER.info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ConnectionMode.byValue(forcedVersion).getName() + ")");
+                LOGGER.info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ProtocolRegistry.get(forcedVersion).getName() + ")");
                 return true;
             }
         }
@@ -87,8 +87,8 @@ public class ConnectionHandler {
         }
 
         int protocol = listener.getProtocol();
-        if (ConnectionMode.isSupportedProtocol(protocol)) {
-            LOGGER.info("Discovered server protocol: " + protocol + " (" + ConnectionMode.byValue(protocol).getName() + ")");
+        if (ProtocolRegistry.isSupported(protocol)) {
+            LOGGER.info("Discovered server protocol: " + protocol + " (" + ProtocolRegistry.get(protocol).getName() + ")");
             ConnectionInfo.protocolVersion = protocol;
         } else {
             LOGGER.info("Discovered server protocol: " + protocol + " (unsupported), " +
@@ -100,8 +100,8 @@ public class ConnectionHandler {
     }
 
     public static void onSendIntention() {
-        if (ConnectionMode.isSupportedProtocol(ConnectionInfo.protocolVersion)) {
-            ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
+        if (ProtocolRegistry.isSupported(ConnectionInfo.protocolVersion)) {
+            ConnectionInfo.protocol = ProtocolRegistry.getBehaviorSet(ConnectionInfo.protocolVersion);
             ConnectionInfo.protocol.setup();
         }
     }

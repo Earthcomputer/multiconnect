@@ -3,7 +3,6 @@ package net.earthcomputer.multiconnect.protocols.generic;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.logging.LogUtils;
-import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.ConnectionInfo;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.fabricmc.loader.api.FabricLoader;
@@ -54,12 +53,12 @@ public final class AssetDownloader {
     }
 
     public static void addExtraTranslations(String nativeLang, BiConsumer<String, String> translations) {
-        if (ConnectionInfo.protocol == ProtocolRegistry.latest()) {
+        if (ConnectionInfo.protocol == ProtocolRegistry.latestBehaviorSet()) {
             return;
         }
 
-        String currentVersion = ConnectionMode.byValue(ConnectionInfo.protocolVersion).getName();
-        String latestVersion = ConnectionMode.byValue(SharedConstants.getCurrentVersion().getProtocolVersion()).getName();
+        String currentVersion = ProtocolRegistry.get(ConnectionInfo.protocolVersion).getName();
+        String latestVersion = ProtocolRegistry.get(SharedConstants.getCurrentVersion().getProtocolVersion()).getName();
 
         Map<String, String> currentNative = getTranslations(currentVersion, nativeLang);
         Map<String, String> currentFallback = getTranslations(currentVersion, "en_us");
@@ -101,7 +100,7 @@ public final class AssetDownloader {
 
         versionUrls = new HashMap<>();
         for (VersionManifest.Version version : manifest.versions) {
-            if (ConnectionMode.isSupportedVersionName(version.id)) {
+            if (ProtocolRegistry.isSupportedName(version.id)) {
                 versionUrls.put(version.id, version.url);
             }
         }

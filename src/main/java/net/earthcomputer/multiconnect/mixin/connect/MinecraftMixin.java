@@ -24,7 +24,7 @@ public abstract class MinecraftMixin {
             ConnectionInfo.protocol.disable();
         }
         ConnectionInfo.protocolVersion = SharedConstants.getCurrentVersion().getProtocolVersion();
-        ConnectionInfo.protocol = ProtocolRegistry.get(ConnectionInfo.protocolVersion);
+        ConnectionInfo.protocol = ProtocolRegistry.getBehaviorSet(ConnectionInfo.protocolVersion);
         ConnectionInfo.protocol.setup();
     }
 

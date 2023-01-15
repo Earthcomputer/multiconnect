@@ -1,24 +1,22 @@
 package net.earthcomputer.multiconnect.api;
 
-import net.minecraft.SharedConstants;
-import net.minecraft.client.Minecraft;
+import net.earthcomputer.multiconnect.impl.APIImpl;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * The MultiConnect API
  */
-public class MultiConnectAPI {
+@ApiStatus.NonExtendable
+public abstract class MultiConnectAPI {
+    // can't be changed to an interface for backwards compatibility reasons
 
     /**
      * Returns the singleton instance of this API
@@ -33,41 +31,33 @@ public class MultiConnectAPI {
      * or the current game version if not connected to a server
      */
     @ThreadSafe
-    public int getProtocolVersion() {
-        return SharedConstants.getCurrentVersion().getProtocolVersion();
-    }
+    public abstract int getProtocolVersion();
 
     /**
      * Gets a supported {@link IProtocol} object by its protocol version, or {@code null} if the protocol is not supported
      */
     @ThreadSafe
-    public IProtocol byProtocolVersion(int version) {
-        return version == SharedConstants.getCurrentVersion().getProtocolVersion() ? CurrentVersionProtocol.INSTANCE : null;
-    }
+    public abstract IProtocol byProtocolVersion(int version);
 
     /**
      * Returns a list of supported protocols, from newest to oldest
      */
     @ThreadSafe
-    public List<IProtocol> getSupportedProtocols() {
-        return Collections.singletonList(CurrentVersionProtocol.INSTANCE);
-    }
+    public abstract List<IProtocol> getSupportedProtocols();
+
+    public abstract CustomProtocolBuilder createCustomProtocol(int version, String name, int dataVersion);
 
     /**
      * Returns whether the given registry contains the given value on the server.
      */
     @ThreadSafe
-    public <T> boolean doesServerKnow(Registry<T> registry, T value) {
-        return registry.getResourceKey(value).isPresent();
-    }
+    public abstract <T> boolean doesServerKnow(Registry<T> registry, T value);
 
     /**
      * Returns whether the given registry contains the given value on the server.
      */
     @ThreadSafe
-    public <T> boolean doesServerKnow(Registry<T> registry, ResourceKey<T> key) {
-        return key.isFor(registry.key()) && registry.getOptional(key.location()).isPresent();
-    }
+    public abstract <T> boolean doesServerKnow(Registry<T> registry, ResourceKey<T> key);
 
     //region deprecated methods
 
@@ -75,33 +65,25 @@ public class MultiConnectAPI {
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void addClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
-        // overridden by protocol impl
-    }
+    public abstract void addClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void removeClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
-        // overridden by protocol impl
-    }
+    public abstract void removeClientboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void addClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
-        // overridden by protocol impl
-    }
+    public abstract void addClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void removeClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
-        // overridden by protocol impl
-    }
+    public abstract void removeClientboundStringCustomPayloadListener(ICustomPayloadListener<String> listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
@@ -109,12 +91,7 @@ public class MultiConnectAPI {
     @Deprecated
     @Contract("null, _, _ -> fail")
     @ThreadSafe
-    public void forceSendCustomPayload(ClientPacketListener listener, ResourceLocation channel, FriendlyByteBuf data) {
-        if (listener == null) {
-            throw new IllegalArgumentException("Trying to send custom payload when not in-game");
-        }
-        listener.send(new ServerboundCustomPayloadPacket(channel, data));
-    }
+    public abstract void forceSendCustomPayload(ClientPacketListener listener, ResourceLocation channel, FriendlyByteBuf data);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
@@ -122,192 +99,94 @@ public class MultiConnectAPI {
     @Deprecated
     @Contract("null, _, _ -> fail")
     @ThreadSafe
-    public void forceSendStringCustomPayload(ClientPacketListener listener, String channel, FriendlyByteBuf data) {
-        throw new IllegalStateException("Trying to send custom payload to " + SharedConstants.getCurrentVersion().getName() + " server");
-    }
+    public abstract void forceSendStringCustomPayload(ClientPacketListener listener, String channel, FriendlyByteBuf data);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void addServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
-        // overridden by protocol impl
-    }
+    public abstract void addServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void removeServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener) {
-        // overridden by protocol impl
-    }
+    public abstract void removeServerboundIdentifierCustomPayloadListener(ICustomPayloadListener<ResourceLocation> listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void addServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
-        // overridden by protocol impl
-    }
+    public abstract void addServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void removeServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener) {
-        // overridden by protocol impl
-    }
+    public abstract void removeServerboundStringCustomPayloadListener(ICustomPayloadListener<String> listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void addIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
-        // overridden by protocol impl
-    }
+    public abstract void addIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void removeIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
-        // overridden by protocol impl
-    }
+    public abstract void removeIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void addStringCustomPayloadListener(IStringCustomPayloadListener listener) {
-        // overridden by protocol impl
-    }
+    public abstract void addStringCustomPayloadListener(IStringCustomPayloadListener listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void removeStringCustomPayloadListener(IStringCustomPayloadListener listener) {
-        // overridden by protocol impl
-    }
+    public abstract void removeStringCustomPayloadListener(IStringCustomPayloadListener listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void forceSendCustomPayload(ResourceLocation channel, FriendlyByteBuf data) {
-        forceSendCustomPayload(Minecraft.getInstance().getConnection(), channel, data);
-    }
+    public abstract void forceSendCustomPayload(ResourceLocation channel, FriendlyByteBuf data);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void forceSendStringCustomPayload(String channel, FriendlyByteBuf data) {
-        forceSendStringCustomPayload(Minecraft.getInstance().getConnection(), channel, data);
-    }
+    public abstract void forceSendStringCustomPayload(String channel, FriendlyByteBuf data);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void addServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
-        // overridden by protocol impl
-    }
+    public abstract void addServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void removeServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener) {
-        // overridden by protocol impl
-    }
+    public abstract void removeServerboundIdentifierCustomPayloadListener(IIdentifierCustomPayloadListener listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void addServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
-        // overridden by protocol impl
-    }
+    public abstract void addServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener);
 
     /**
      * @deprecated See <a href="https://github.com/Earthcomputer/multiconnect/blob/master/docs/custom_payloads.md">the docs on custom payload handling</a>.
      */
     @Deprecated
-    public void removeServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener) {
-        // overridden by protocol impl
-    }
+    public abstract void removeServerboundStringCustomPayloadListener(IStringCustomPayloadListener listener);
 
     //endregion
 
-    //region internal
-
-    private static final MultiConnectAPI INSTANCE;
-    static {
-        MultiConnectAPI api;
-        try {
-            api = (MultiConnectAPI) Class.forName("net.earthcomputer.multiconnect.impl.APIImpl").getConstructor().newInstance();
-        } catch (ClassNotFoundException e) {
-            api = new MultiConnectAPI();
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
-        }
-        INSTANCE = api;
-    }
-
-    private static class CurrentVersionProtocol implements IProtocol {
-        public static CurrentVersionProtocol INSTANCE = new CurrentVersionProtocol();
-
-        private String majorReleaseName;
-
-        @Override
-        public int getValue() {
-            return SharedConstants.getCurrentVersion().getProtocolVersion();
-        }
-
-        @Override
-        public String getName() {
-            return SharedConstants.getCurrentVersion().getName();
-        }
-
-        @Override
-        public int getDataVersion() {
-            return SharedConstants.getCurrentVersion().getWorldVersion();
-        }
-
-        @Override
-        public boolean isMajorRelease() {
-            return true;
-        }
-
-        @Override
-        public IProtocol getMajorRelease() {
-            return this;
-        }
-
-        @Override
-        public String getMajorReleaseName() {
-            if (majorReleaseName == null) {
-                // take everything before the second dot, if there is one
-                Matcher matcher = Pattern.compile("([^.]*(\\.[^.]*)?).*").matcher(getName());
-                boolean matches = matcher.matches();
-                assert matches;
-                majorReleaseName = matcher.group(1);
-            }
-            return majorReleaseName;
-        }
-
-        @Override
-        public List<IProtocol> getMinorReleases() {
-            return Collections.singletonList(this);
-        }
-
-        @Override
-        public boolean isMulticonnectBeta() {
-            return false;
-        }
-    }
-
-    //endregion
+    private static final MultiConnectAPI INSTANCE = new APIImpl();
 
 }
