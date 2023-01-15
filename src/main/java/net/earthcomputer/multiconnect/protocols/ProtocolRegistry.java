@@ -15,14 +15,14 @@ import java.util.List;
 import java.util.Objects;
 
 public class ProtocolRegistry {
+    private static final Int2ObjectOpenHashMap<ProtocolEntry> protocols = new Int2ObjectOpenHashMap<>();
+    private static final List<ProtocolEntry> sortedProtocols = new ArrayList<>();
+
     static {
         // make sure ConnectionMode class is initialized
         //noinspection ResultOfMethodCallIgnored
         ConnectionMode.values();
     }
-
-    private static final Int2ObjectOpenHashMap<ProtocolEntry> protocols = new Int2ObjectOpenHashMap<>();
-    private static final List<ProtocolEntry> sortedProtocols = new ArrayList<>();
 
     public static boolean isSupported(int version) {
         return protocols.containsKey(version);
