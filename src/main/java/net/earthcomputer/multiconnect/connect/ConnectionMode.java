@@ -111,6 +111,9 @@ public enum ConnectionMode implements IProtocolExt {
 
     @Override
     public IProtocolExt getMajorRelease() {
+        if (this == AUTO) {
+            return this;
+        }
         return ProtocolRegistry.getMajorRelease(this);
     }
 
@@ -126,6 +129,9 @@ public enum ConnectionMode implements IProtocolExt {
 
     @Override
     public List<IProtocol> getMinorReleases() {
+        if (this == AUTO) {
+            return Collections.singletonList(this);
+        }
         return ProtocolRegistry.getMinorReleases(this);
     }
 
