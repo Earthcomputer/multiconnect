@@ -25,6 +25,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
@@ -57,17 +58,46 @@ public final class TranslatorDiscoverer {
             LOGGER.info("Skipping translator discovery due to development environment");
             return;
         }
+
+        if (loadCustomTranslator("multiconnect.customTranslator")) {
+            return;
+        }
+
         if (Boolean.getBoolean("multiconnect.skipTranslatorDiscovery")) {
             LOGGER.info("Skipping translator discovery due to system property");
             return;
         }
 
         if (!FabricLoader.getInstance().isModLoaded("viafabric")) {
-            CompletableFuture<Void> viaTranslatorFuture = CompletableFuture.runAsync(TranslatorDiscoverer::maybeDownloadViaTranslator);
             CompletableFuture<Void> viaVersionFuture = CompletableFuture.runAsync(TranslatorDiscoverer::maybeDownloadViaVersion);
-            viaTranslatorFuture.join();
+            if (!loadCustomTranslator("multiconnect.customMulticonnectViaTranslator")) {
+                CompletableFuture<Void> viaTranslatorFuture = CompletableFuture.runAsync(TranslatorDiscoverer::maybeDownloadViaTranslator);
+                viaTranslatorFuture.join();
+            }
             viaVersionFuture.join();
         }
+    }
+
+    private static boolean loadCustomTranslator(String systemProp) {
+        String customTranslator = System.getProperty(systemProp);
+        if (customTranslator != null) {
+            boolean success = false;
+            try {
+                Path file = Path.of(customTranslator);
+                if (Files.exists(file)) {
+                    success = true;
+                    addToClassPath(file);
+                }
+            } catch (InvalidPathException e) {
+                success = false;
+            }
+            if (!success) {
+                LOGGER.error("Failed to load custom translator {}, falling back to translator discovery", customTranslator);
+            } else {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void maybeDownloadViaTranslator() {
