@@ -42,6 +42,10 @@ public class ProtocolRegistry {
     }
 
     public static IProtocolExt get(int version) {
+        if (version == ConnectionMode.AUTO.getValue()) {
+            // Special-case Auto
+            return ConnectionMode.AUTO;
+        }
         ProtocolEntry entry = protocols.get(version);
         if (entry == null) {
             throw new IllegalArgumentException("No protocol registered for version " + version);
