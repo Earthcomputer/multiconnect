@@ -14,6 +14,6 @@ import java.util.List;
 public class DebugScreenOverlayMixin {
     @Inject(method = "getGameInformation", at = @At("RETURN"))
     private void addServerVersion(CallbackInfoReturnable<List<String>> ci) {
-        ci.getReturnValue().add("[multiconnect] Server version: " + ProtocolRegistry.get(ConnectionInfo.protocolVersion).getName() + " (" + ConnectionInfo.protocolVersion + ")");
+        ci.getReturnValue().add("[multiconnect] Server version: " + ProtocolRegistry.getName(ConnectionInfo.protocolVersion) + " (" + ConnectionInfo.protocolVersion + ")");
     }
 }

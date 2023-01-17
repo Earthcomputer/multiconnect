@@ -12,7 +12,6 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class APIImpl extends MultiConnectAPI {
@@ -97,7 +96,7 @@ public class APIImpl extends MultiConnectAPI {
             throw new IllegalStateException("Trying to send custom payload when not in-game");
         }
         if (ConnectionInfo.protocolVersion > Protocols.V1_12_2) {
-            throw new IllegalStateException("Trying to send string custom payload to " + ProtocolRegistry.get(ConnectionInfo.protocolVersion).getName() + " server");
+            throw new IllegalStateException("Trying to send string custom payload to " + ProtocolRegistry.getName(ConnectionInfo.protocolVersion) + " server");
         }
         CustomPayloadHandler.forceSendStringCustomPayload(connection, channel, data);
     }

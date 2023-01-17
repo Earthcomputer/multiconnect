@@ -40,7 +40,7 @@ public class ConnectionHandler {
             } else {
                 ConnectionInfo.protocolVersion = ConnectionMode.values()[2].getValue();
             }
-            LOGGER.info("Hypixel detected, protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ProtocolRegistry.get(ConnectionInfo.protocolVersion).getName() + ")");
+            LOGGER.info("Hypixel detected, protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ProtocolRegistry.getName(ConnectionInfo.protocolVersion) + ")");
             return true;
         }
 
@@ -48,7 +48,7 @@ public class ConnectionHandler {
             int forcedVersion = ServersExt.getInstance().getForcedProtocol(addressField);
             if (forcedVersion != ConnectionMode.AUTO.getValue()) {
                 ConnectionInfo.protocolVersion = forcedVersion;
-                LOGGER.info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ProtocolRegistry.get(forcedVersion).getName() + ")");
+                LOGGER.info("Protocol version forced to " + ConnectionInfo.protocolVersion + " (" + ProtocolRegistry.getName(forcedVersion) + ")");
                 return true;
             }
         }
@@ -88,7 +88,7 @@ public class ConnectionHandler {
 
         int protocol = listener.getProtocol();
         if (ProtocolRegistry.isSupported(protocol)) {
-            LOGGER.info("Discovered server protocol: " + protocol + " (" + ProtocolRegistry.get(protocol).getName() + ")");
+            LOGGER.info("Discovered server protocol: " + protocol + " (" + ProtocolRegistry.getName(protocol) + ")");
             ConnectionInfo.protocolVersion = protocol;
         } else {
             LOGGER.info("Discovered server protocol: " + protocol + " (unsupported), " +

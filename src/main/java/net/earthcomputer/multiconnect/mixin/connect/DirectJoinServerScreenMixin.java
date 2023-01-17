@@ -5,8 +5,8 @@ import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.connect.ServersExt;
+import net.earthcomputer.multiconnect.impl.IProtocolExt;
 import net.earthcomputer.multiconnect.impl.Utils;
-import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.DirectJoinServerScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -44,8 +44,8 @@ public class DirectJoinServerScreenMixin extends Screen {
         if (!ipEdit.getValue().equals(multiconnect_lastAddress)) {
             multiconnect_lastAddress = ipEdit.getValue();
             if (ServersExt.getInstance().hasServer(ipEdit.getValue())) {
-                int protocolVersion = ServersExt.getInstance().getForcedProtocol(ipEdit.getValue());
-                multiconnect_protocolSelector.setValue(ProtocolRegistry.get(protocolVersion));
+                IProtocolExt protocolVersion = ServersExt.getInstance().getForcedProtocolObj(ipEdit.getValue());
+                multiconnect_protocolSelector.setValue(protocolVersion);
             }
         }
     }

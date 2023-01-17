@@ -22,5 +22,7 @@
   "multiconnect.signedChatScreen.title": "Secure Chat Warning",
   "multiconnect.signedChatScreen.line1": "Chat messages from 1.19.0 and below are not secure. This means that chat messages from these versions are not able to be reported. Modern Minecraft has an option to block insecure messages, but doing so on old servers would result in no chat messages from other players being visible. Would you like to unblock insecure messages on 1.19.0 and below?",
   "multiconnect.signedChatScreen.line2": "You can change this option in multiconnect's settings later.",
-  "multiconnect.unsupportedExperimentalCodec": "This server is using experimental features, or features which were experimental on the server version. Multiconnect cannot translate experimental data, and cannot connect to this server."
+  "multiconnect.unsupportedExperimentalCodec": "This server is using experimental features, or features which were experimental on the server version. Multiconnect cannot translate experimental data, and cannot connect to this server.",
+
+  "protocol.auto": "Auto"
 }

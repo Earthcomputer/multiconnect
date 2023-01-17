@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.mojang.logging.LogUtils;
+import net.earthcomputer.multiconnect.impl.IProtocolExt;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
@@ -58,6 +59,15 @@ public final class ServersExt {
     public int getForcedProtocol(String address) {
         ServerExt server = servers.get(ConnectionHandler.normalizeAddress(address));
         return server == null || !ProtocolRegistry.isSupported(server.forcedProtocol) ? ConnectionMode.AUTO.getValue() : server.forcedProtocol;
+    }
+
+    public IProtocolExt getForcedProtocolObj(String address) {
+        int protocol = getForcedProtocol(address);
+        if (protocol == ConnectionMode.AUTO.getValue()) {
+            return ConnectionMode.AUTO;
+        } else {
+            return ProtocolRegistry.get(protocol);
+        }
     }
 
     public boolean hasServer(String address) {

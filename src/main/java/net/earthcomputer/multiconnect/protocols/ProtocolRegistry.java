@@ -1,5 +1,6 @@
 package net.earthcomputer.multiconnect.protocols;
 
+import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.api.ProtocolBehavior;
@@ -38,7 +39,15 @@ public class ProtocolRegistry {
     }
 
     public static List<IProtocolExt> getProtocols() {
-        return sortedProtocols.stream().map(ProtocolEntry::protocol).toList();
+        return Lists.reverse(sortedProtocols.stream().map(ProtocolEntry::protocol).toList());
+    }
+
+    public static String getName(int version) {
+        if (version == ConnectionMode.AUTO.getValue()) {
+            return ConnectionMode.AUTO.getName();
+        } else {
+            return get(version).getName();
+        }
     }
 
     public static IProtocolExt get(int version) {
@@ -135,7 +144,11 @@ public class ProtocolRegistry {
     private record ProtocolEntry(IProtocolExt protocol, @Nullable ProtocolBehavior behavior) implements Comparable<ProtocolEntry> {
         @Override
         public int compareTo(ProtocolEntry other) {
-            return Integer.compare(protocol.getValue(), other.protocol.getValue());
+            if (protocol.getSortingIndex() != other.protocol.getSortingIndex()) {
+                return Integer.compare(protocol.getSortingIndex(), other.protocol.getSortingIndex());
+            } else {
+                return Integer.compare(protocol.getValue(), other.protocol.getValue());
+            }
         }
     }
 

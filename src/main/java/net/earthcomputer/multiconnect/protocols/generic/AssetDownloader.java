@@ -57,8 +57,8 @@ public final class AssetDownloader {
             return;
         }
 
-        String currentVersion = ProtocolRegistry.get(ConnectionInfo.protocolVersion).getName();
-        String latestVersion = ProtocolRegistry.get(SharedConstants.getCurrentVersion().getProtocolVersion()).getName();
+        String currentVersion = ProtocolRegistry.getName(ConnectionInfo.protocolVersion);
+        String latestVersion = ProtocolRegistry.getName(SharedConstants.getCurrentVersion().getProtocolVersion());
 
         Map<String, String> currentNative = getTranslations(currentVersion, nativeLang);
         Map<String, String> currentFallback = getTranslations(currentVersion, "en_us");

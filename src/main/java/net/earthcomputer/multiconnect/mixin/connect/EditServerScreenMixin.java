@@ -5,7 +5,6 @@ import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.connect.ServersExt;
 import net.earthcomputer.multiconnect.impl.Utils;
-import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.client.gui.screens.EditServerScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ServerData;
@@ -34,7 +33,7 @@ public abstract class EditServerScreenMixin extends Screen {
     @Inject(method = "init", at = @At("RETURN"))
     private void createButtons(CallbackInfo ci) {
         multiconnect_forceProtocolLabel = Component.translatable("multiconnect.changeForcedProtocol").append(" ->").getVisualOrderText();
-        multiconnect_protocolSelector = Utils.createVersionDropdown(this, ProtocolRegistry.get(ServersExt.getInstance().getForcedProtocol(serverData.ip)));
+        multiconnect_protocolSelector = Utils.createVersionDropdown(this, ServersExt.getInstance().getForcedProtocolObj(serverData.ip));
         addRenderableWidget(multiconnect_protocolSelector);
     }
 

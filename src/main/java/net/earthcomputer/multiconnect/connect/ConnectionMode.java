@@ -105,6 +105,14 @@ public enum ConnectionMode implements IProtocolExt {
     }
 
     @Override
+    public int getSortingIndex() {
+        if (this == AUTO) {
+            return Integer.MIN_VALUE;
+        }
+        return value;
+    }
+
+    @Override
     public boolean isMajorRelease() {
         return majorRelease;
     }
@@ -128,6 +136,16 @@ public enum ConnectionMode implements IProtocolExt {
     }
 
     @Override
+    public boolean isMajorReleaseTranslatable() {
+        return this == AUTO;
+    }
+
+    @Override
+    public String getMajorReleaseTranslationKey() {
+        return getTranslationKey();
+    }
+
+    @Override
     public List<IProtocol> getMinorReleases() {
         if (this == AUTO) {
             return Collections.singletonList(this);
@@ -148,6 +166,16 @@ public enum ConnectionMode implements IProtocolExt {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public boolean isTranslatable() {
+        return this == AUTO;
+    }
+
+    @Override
+    public String getTranslationKey() {
+        return "protocol.auto";
     }
 
     @Override

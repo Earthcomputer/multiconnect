@@ -81,8 +81,7 @@ public abstract class DisconnectedScreenMixin extends Screen {
 
     @Unique
     private IProtocol getForcedVersion() {
-        int protocolVersion = ServersExt.getInstance().getForcedProtocol(multiconnect_server.ip);
-        return ProtocolRegistry.get(protocolVersion);
+        return ServersExt.getInstance().getForcedProtocolObj(multiconnect_server.ip);
     }
 
 }

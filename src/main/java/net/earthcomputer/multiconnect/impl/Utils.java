@@ -21,39 +21,39 @@ import java.util.concurrent.TimeUnit;
 public class Utils {
 
     public static DropDownWidget<IProtocol> createVersionDropdown(Screen screen, IProtocol initialMode) {
-        var versionDropDown = new DropDownWidget<>(screen.width - 80, 5, 75, 20, initialMode, mode -> {
-            MutableComponent text = Component.literal(mode.getName());
-            if (mode.isMulticonnectBeta()) {
+        var versionDropDown = new DropDownWidget<>(screen.width - 80, 5, 75, 20, initialMode, protocol -> {
+            MutableComponent text = getProtocolNameText((IProtocolExt) protocol);
+            if (protocol.isMulticonnectBeta()) {
                 text.append(Component.literal(" !").withStyle(ChatFormatting.RED));
             }
-            if (mode.isMulticonnectExtension()) {
+            if (protocol.isMulticonnectExtension()) {
                 text.append(Component.literal(" e").withStyle(ChatFormatting.GOLD));
             }
             return text;
         })
-                .setCategoryLabelExtractor(mode -> {
-                    MutableComponent text = Component.literal(mode.getMajorReleaseName());
-                    if (mode.isMulticonnectBeta()) {
+                .setCategoryLabelExtractor(protocol -> {
+                    MutableComponent text = getMajorReleaseNameText((IProtocolExt) protocol);
+                    if (protocol.isMulticonnectBeta()) {
                         text.append(Component.literal(" !").withStyle(ChatFormatting.RED));
                     }
-                    if (mode.isMulticonnectExtension()) {
+                    if (protocol.isMulticonnectExtension()) {
                         text.append(Component.literal(" e").withStyle(ChatFormatting.GOLD));
                     }
                     return text;
                 })
-                .setTooltipRenderer((matrices, mode, x, y, isCategory) -> {
+                .setTooltipRenderer((matrices, protocol, x, y, isCategory) -> {
                     final List<Component> tooltip = new ArrayList<>();
-                    if (mode.isMulticonnectBeta()) {
-                        String modeName = isCategory ? mode.getMajorReleaseName() : mode.getName();
-                        tooltip.add(Component.translatable("multiconnect.betaWarning.line1", modeName));
-                        if (!mode.isMulticonnectExtension()) {
-                            tooltip.add(Component.translatable("multiconnect.betaWarning.line2", modeName));
+                    if (protocol.isMulticonnectBeta()) {
+                        Component protocolName = isCategory ? getMajorReleaseNameText((IProtocolExt) protocol) : getProtocolNameText((IProtocolExt) protocol);
+                        tooltip.add(Component.translatable("multiconnect.betaWarning.line1", protocolName));
+                        if (!protocol.isMulticonnectExtension()) {
+                            tooltip.add(Component.translatable("multiconnect.betaWarning.line2", protocolName));
                         }
                     }
-                    if (mode.isMulticonnectExtension()) {
-                        String modeName = isCategory ? mode.getMajorReleaseName() : mode.getName();
-                        tooltip.add(Component.translatable("multiconnect.extensionWarning.line1", modeName));
-                        tooltip.add(Component.translatable("multiconnect.extensionWarning.line2", modeName));
+                    if (protocol.isMulticonnectExtension()) {
+                        Component protocolName = isCategory ? getMajorReleaseNameText((IProtocolExt) protocol) : getProtocolNameText((IProtocolExt) protocol);
+                        tooltip.add(Component.translatable("multiconnect.extensionWarning.line1", protocolName));
+                        tooltip.add(Component.translatable("multiconnect.extensionWarning.line2", protocolName));
                     }
                     if (!tooltip.isEmpty()) {
                         screen.renderComponentTooltip(matrices, tooltip, x, y);
@@ -67,6 +67,14 @@ public class Utils {
         }
 
         return versionDropDown;
+    }
+
+    private static MutableComponent getProtocolNameText(IProtocolExt protocol) {
+        return protocol.isTranslatable() ? Component.translatable(protocol.getTranslationKey()) : Component.literal(protocol.getName());
+    }
+
+    private static MutableComponent getMajorReleaseNameText(IProtocolExt protocol) {
+        return protocol.isMajorReleaseTranslatable() ? Component.translatable(protocol.getMajorReleaseTranslationKey()) : Component.literal(protocol.getMajorReleaseName());
     }
 
     private static void populateDropdown(DropDownWidget<IProtocol> versionDropDown, IProtocol protocol) {
