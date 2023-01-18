@@ -7,6 +7,8 @@ import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.data.FullMappings;
 import com.viaversion.viaversion.api.data.MappingData;
 import com.viaversion.viaversion.api.data.Mappings;
+import com.viaversion.viaversion.api.minecraft.item.DataItem;
+import com.viaversion.viaversion.api.minecraft.item.Item;
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper;
 import com.viaversion.viaversion.api.type.Type;
 import com.viaversion.viaversion.connection.UserConnectionImpl;
@@ -128,6 +130,18 @@ public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
         }
         UserConnection connection = channel.attr(VIA_USER_CONNECTION_KEY).get();
         for (final var protocol : connection.getProtocolInfo().getPipeline().pipes()) {
+            if (registry.equals("minecraft:item")) {
+                final var itemRewriter = protocol.getItemRewriter();
+                if (itemRewriter != null) {
+                    final Item newItem = itemRewriter.handleItemToServer(new DataItem(id, (byte)1, (short)0, null));
+                    if (newItem != null) {
+                        id = newItem.identifier();
+                        if (id == 1) return false;
+                        continue;
+                    }
+                }
+            }
+
             MappingData mappingData = protocol.getMappingData();
             if (mappingData == null) continue;
 
