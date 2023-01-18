@@ -18,6 +18,8 @@ import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPac
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslator;
 import net.earthcomputer.multiconnect.api.IMulticonnectTranslatorApi;
 import net.minecraft.client.Minecraft;
@@ -27,8 +29,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
-
-import java.util.BitSet;
 
 public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -84,78 +84,81 @@ public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
         }
     }
 
-    private static BitSet invertMappings(Mappings mappings) {
-        BitSet result = new BitSet(mappings.mappedSize());
+    private static Int2IntMap invertMappings(Mappings mappings) {
+        Int2IntMap result = new Int2IntOpenHashMap(mappings.mappedSize());
         for (int oldId = 0; oldId < mappings.size(); oldId++) {
             int newId = mappings.getNewId(oldId);
             if (newId != -1) {
-                result.set(newId);
+                result.put(newId, oldId);
             }
         }
         return result;
     }
 
-    private static BitSet getInverseMappings(Channel channel, AttributeKey<BitSet> key, Mappings mappings) {
+    private static Int2IntMap getInverseMappings(Channel channel, AttributeKey<Int2IntMap> key, Mappings mappings) {
         if (mappings == null) {
             return null;
         }
 
-        BitSet result = channel.attr(key).get();
+        Int2IntMap result = channel.attr(key).get();
         if (result == null) {
             channel.attr(key).set(result = invertMappings(mappings));
         }
         return result;
     }
 
-    private static final AttributeKey<BitSet> INV_BLOCK_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invBlockMappings");
-    private static final AttributeKey<BitSet> INV_ENTITY_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invEntityMappings");
-    private static final AttributeKey<BitSet> INV_ENCHANTMENT_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invEnchantmentMappings");
-    private static final AttributeKey<BitSet> INV_ARGUMENT_TYPE_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invArgumentTypeMappings");
-    private static final AttributeKey<BitSet> INV_BLOCK_ENTITY_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invBlockEntityMappings");
-    private static final AttributeKey<BitSet> INV_PAINTING_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invPaintingMappings");
-    private static final AttributeKey<BitSet> INV_PARTICLE_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invParticleMappings");
-    private static final AttributeKey<BitSet> INV_SOUND_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invSoundMappings");
-    private static final AttributeKey<BitSet> INV_STATISTICS_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invStatisticsMappings");
+    private static final AttributeKey<Int2IntMap> INV_BLOCK_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invBlockMappings");
+    private static final AttributeKey<Int2IntMap> INV_ENTITY_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invEntityMappings");
+    private static final AttributeKey<Int2IntMap> INV_ENCHANTMENT_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invEnchantmentMappings");
+    private static final AttributeKey<Int2IntMap> INV_ARGUMENT_TYPE_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invArgumentTypeMappings");
+    private static final AttributeKey<Int2IntMap> INV_BLOCK_ENTITY_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invBlockEntityMappings");
+    private static final AttributeKey<Int2IntMap> INV_PAINTING_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invPaintingMappings");
+    private static final AttributeKey<Int2IntMap> INV_PARTICLE_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invParticleMappings");
+    private static final AttributeKey<Int2IntMap> INV_SOUND_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invSoundMappings");
+    private static final AttributeKey<Int2IntMap> INV_STATISTICS_MAPPINGS_KEY = AttributeKey.valueOf("multiconnect.invStatisticsMappings");
 
     @Override
     public boolean doesServerKnow(String registry, String entry) {
         int id = getRegistryId(registry, entry);
+        if (registry.equals("minecraft:item") && id == 1) return true; // Stone *always* exists
 
         Channel channel = api.getCurrentChannel();
         if (channel == null) {
             return true;
         }
         UserConnection connection = channel.attr(VIA_USER_CONNECTION_KEY).get();
-        MappingData mappingData = connection.getProtocolInfo().getPipeline().getMappingData();
-        if (mappingData == null) {
-            return true;
-        }
+        for (final var protocol : connection.getProtocolInfo().getPipeline().pipes()) {
+            MappingData mappingData = protocol.getMappingData();
+            if (mappingData == null) continue;
 
-        return switch (registry) {
-            case "minecraft:block" -> doesServerKnow(channel, INV_BLOCK_MAPPINGS_KEY, mappingData.getBlockMappings(), id);
-            case "minecraft:item" -> mappingData.getOldItemId(id) != -1;
-            case "minecraft:entity_type" -> doesServerKnow(channel, INV_ENTITY_MAPPINGS_KEY, mappingData.getEntityMappings(), id);
-            case "minecraft:enchantment" -> doesServerKnow(channel, INV_ENCHANTMENT_MAPPINGS_KEY, mappingData.getEnchantmentMappings(), id);
-            case "minecraft:command_argument_type" -> doesServerKnow(channel, INV_ARGUMENT_TYPE_MAPPINGS_KEY, mappingData.getArgumentTypeMappings(), id);
-            case "minecraft:block_entity_type" -> doesServerKnow(channel, INV_BLOCK_ENTITY_MAPPINGS_KEY, mappingData.getBlockEntityMappings(), id);
-            case "minecraft:painting_variant" -> doesServerKnow(channel, INV_PAINTING_MAPPINGS_KEY, mappingData.getPaintingMappings(), id);
-            case "minecraft:particle_type" -> doesServerKnow(channel, INV_PARTICLE_MAPPINGS_KEY, mappingData.getParticleMappings(), id);
-            case "minecraft:sound_event" -> doesServerKnow(channel, INV_SOUND_MAPPINGS_KEY, mappingData.getSoundMappings(), id);
-            case "minecraft:custom_stat" -> doesServerKnow(channel, INV_STATISTICS_MAPPINGS_KEY, mappingData.getStatisticsMappings(), id);
-            default -> true;
-        };
+            id = switch (registry) {
+                case "minecraft:block" -> getOldId(channel, INV_BLOCK_MAPPINGS_KEY, mappingData.getBlockMappings(), id);
+                case "minecraft:item" -> mappingData.getOldItemId(id);
+                case "minecraft:entity_type" -> getOldId(channel, INV_ENTITY_MAPPINGS_KEY, mappingData.getEntityMappings(), id);
+                case "minecraft:enchantment" -> getOldId(channel, INV_ENCHANTMENT_MAPPINGS_KEY, mappingData.getEnchantmentMappings(), id);
+                case "minecraft:command_argument_type" -> getOldId(channel, INV_ARGUMENT_TYPE_MAPPINGS_KEY, mappingData.getArgumentTypeMappings(), id);
+                case "minecraft:block_entity_type" -> getOldId(channel, INV_BLOCK_ENTITY_MAPPINGS_KEY, mappingData.getBlockEntityMappings(), id);
+                case "minecraft:painting_variant" -> getOldId(channel, INV_PAINTING_MAPPINGS_KEY, mappingData.getPaintingMappings(), id);
+                case "minecraft:particle_type" -> getOldId(channel, INV_PARTICLE_MAPPINGS_KEY, mappingData.getParticleMappings(), id);
+                case "minecraft:sound_event" -> getOldId(channel, INV_SOUND_MAPPINGS_KEY, mappingData.getSoundMappings(), id);
+                case "minecraft:custom_stat" -> getOldId(channel, INV_STATISTICS_MAPPINGS_KEY, mappingData.getStatisticsMappings(), id);
+                default -> id;
+            };
+            if (id == -1 || (registry.equals("minecraft:item") && id == 1)) return false;
+        }
+        return true;
     }
 
-    private static boolean doesServerKnow(Channel channel, AttributeKey<BitSet> key, @Nullable FullMappings mappings, int id) {
+    private static int getOldId(Channel channel, AttributeKey<Int2IntMap> key, @Nullable FullMappings mappings, int id) {
         if (mappings == null) {
-            return true;
+            return id;
         }
-        return doesServerKnow(channel, key, mappings.mappings(), id);
+        return getOldId(channel, key, mappings.mappings(), id);
     }
 
-    private static boolean doesServerKnow(Channel channel, AttributeKey<BitSet> key, @Nullable Mappings mappings, int id) {
+    private static int getOldId(Channel channel, AttributeKey<Int2IntMap> key, @Nullable Mappings mappings, int id) {
         if (mappings == null) {
-            return true;
+            return id;
         }
         return getInverseMappings(channel, key, mappings).get(id);
     }
