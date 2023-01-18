@@ -3,8 +3,8 @@ package net.earthcomputer.multiconnect.mixin.connect;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.earthcomputer.multiconnect.api.IProtocol;
-import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.connect.ServersExt;
+import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.client.Minecraft;
@@ -69,7 +69,7 @@ public abstract class DisconnectedScreenMixin extends Screen {
     @Inject(method = "render", at = @At("RETURN"))
     private void onRender(PoseStack matrixStack, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (multiconnect_isProtocolReason) {
-            font.drawShadow(matrixStack, multiconnect_forceProtocolLabel, width - 85 - font.width(multiconnect_forceProtocolLabel), 11, 0xFFFFFF);
+            font.drawShadow(matrixStack, multiconnect_forceProtocolLabel, width - multiconnect_protocolSelector.getWidth() - 10 - font.width(multiconnect_forceProtocolLabel), 11, 0xFFFFFF);
             multiconnect_protocolSelector.render(matrixStack, mouseX, mouseY, delta);
         }
     }
