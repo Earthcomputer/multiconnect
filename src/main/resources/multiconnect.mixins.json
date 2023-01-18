@@ -9,6 +9,7 @@
     "bridge.Connection1Mixin",
     "bridge.ConnectionMixin",
     "bridge.CreativeModeTabItemDisplayBuilderMixin",
+    "bridge.CreativeModeTabsMixin",
     "bridge.MinecraftAccessor",
     "bridge.MinecraftMixin",
     "bridge.ParticleEngineMixin",
