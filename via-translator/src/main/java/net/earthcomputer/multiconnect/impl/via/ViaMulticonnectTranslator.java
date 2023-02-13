@@ -126,6 +126,9 @@ public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
             return true;
         }
         UserConnection connection = channel.attr(VIA_USER_CONNECTION_KEY).get();
+        if (connection == null) {
+            return true;
+        }
         MappingData mappingData = connection.getProtocolInfo().getPipeline().getMappingData();
         if (mappingData == null) {
             return true;
