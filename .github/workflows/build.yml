@@ -25,3 +25,7 @@ jobs:
         with:
           name: multiconnect-snapshot
           path: build/libs/
+      - uses: actions/upload-artifact@v2
+        with:
+          name: via-translator-snapshot
+          path: via-translator/build/libs/
