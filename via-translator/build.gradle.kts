@@ -1,7 +1,7 @@
 
 plugins {
     id("fabric-loom") version "1.0-SNAPSHOT"
-    id("com.modrinth.minotaur") version "1.2.1"
+    id("com.modrinth.minotaur") version "2.+"
 }
 
 loom {
@@ -41,18 +41,12 @@ dependencies {
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
 }
 
-tasks.register<com.modrinth.minotaur.TaskModrinthUpload>("publishModrinth") {
-    dependsOn(tasks.getByName("remapJar"))
-
-    onlyIf {
-        project.hasProperty("modrinthKey")
-    }
-
-    token = if (project.hasProperty("modrinthKey")) project.property("modrinthKey").toString() else "foo"
-    projectId = "MNhf9veJ"
-    versionName = project.version.toString()
-    versionNumber = project.version.toString()
-    uploadFile = tasks.getByName("remapJar")
+modrinth {
+    token.set(if (project.hasProperty("modrinthKey")) project.property("modrinthKey").toString() else "foo")
+    projectId.set("MNhf9veJ")
+    versionName.set(project.version.toString())
+    versionNumber.set(project.version.toString())
+    uploadFile.set(tasks.getByName("remapJar"))
     addGameVersion(rootProject.property("minecraft_version").toString())
     addLoader("fabric")
     addLoader("quilt")
