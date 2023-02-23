@@ -8,6 +8,7 @@ import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.io.BufferedReader;
@@ -33,6 +34,7 @@ public final class AssetDownloader {
     private static final URL VERSION_MANIFEST = FileDownloader.createURL("https://launchermeta.mojang.com/mc/game/version_manifest.json");
     private static final String ASSET_URL_FORMAT = "https://resources.download.minecraft.net/%s/%s";
 
+    @Nullable
     private static Map<String, String> versionUrls;
     private static final Map<String, String> versionAssetUrls = new HashMap<>();
     private static final Map<String, Map<String, String>> langFileUrls = new HashMap<>();
@@ -53,7 +55,7 @@ public final class AssetDownloader {
     }
 
     public static void addExtraTranslations(String nativeLang, BiConsumer<String, String> translations) {
-        if (ConnectionInfo.protocol == ProtocolRegistry.latestBehaviorSet()) {
+        if (ConnectionInfo.protocolVersion == SharedConstants.getProtocolVersion()) {
             return;
         }
 
@@ -107,6 +109,7 @@ public final class AssetDownloader {
         return versionUrls;
     }
 
+    @Nullable
     private static String getAssetUrl(String version) {
         if (versionAssetUrls.containsKey(version)) {
             return versionAssetUrls.get(version);
@@ -121,6 +124,7 @@ public final class AssetDownloader {
         return versionFile.assetIndex.url;
     }
 
+    @Nullable
     private static VersionFile getVersionFile(String version) {
         URL versionUrl;
         try {
@@ -178,6 +182,7 @@ public final class AssetDownloader {
         return urls;
     }
 
+    @Nullable
     private static Path getLangFile(String version, String langCode) {
         langCode = langCode.toLowerCase(Locale.ENGLISH);
         // en_us is in the jar file rather than in the assets, we don't want to have to download the whole jar
@@ -244,6 +249,7 @@ public final class AssetDownloader {
         return translations;
     }
 
+    @Nullable
     public static Path downloadServer(String version) {
         VersionFile versionFile = getVersionFile(version);
         if (versionFile == null) {
