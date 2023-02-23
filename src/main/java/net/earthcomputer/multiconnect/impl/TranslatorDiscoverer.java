@@ -55,7 +55,7 @@ public final class TranslatorDiscoverer {
     }
 
     private static void maybeDownloadTranslators() {
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+        if (FabricLoader.getInstance().isDevelopmentEnvironment() && !Boolean.getBoolean("multiconnect.translatorDiscoveryInDev")) {
             LOGGER.info("Skipping translator discovery due to development environment");
             return;
         }
@@ -230,22 +230,10 @@ public final class TranslatorDiscoverer {
     }
 
     private static void downloadViaTranslatorFromGithubActions(String gitHashStart) {
-        @SuppressWarnings("FieldMayBeFinal")
-        class Run {
-            long id;
-            String path = "";
-            String head_sha = "";
-            long check_suite_id;
-            String artifacts_url = "";
-        }
-        @SuppressWarnings("FieldMayBeFinal")
-        class Runs {
-            Run[] workflow_runs = new Run[0];
-        }
-        Runs runs = FileDownloader.downloadJson(
+        JsonObject runs = FileDownloader.downloadJson(
             FileDownloader.createURL("https://api.github.com/repos/Earthcomputer/multiconnect/actions/runs"),
             "multiconnect_runs.json",
-            Runs.class
+            JsonObject.class
         );
         if (runs == null) {
             return;
@@ -255,49 +243,43 @@ public final class TranslatorDiscoverer {
         String fileName = null;
 
         runLoop:
-        for (Run run : runs.workflow_runs) {
-            if (!".github/workflows/build.yml".equals(run.path)) {
+        for (JsonElement runElement : GsonHelper.getAsJsonArray(runs, "workflow_runs")) {
+            JsonObject run = GsonHelper.convertToJsonObject(runElement, "workflow run");
+            if (!".github/workflows/build.yml".equals(GsonHelper.getAsString(run, "path"))) {
                 continue;
             }
-            if (!run.head_sha.startsWith(gitHashStart)) {
+            if (!GsonHelper.getAsString(run, "head_sha").startsWith(gitHashStart)) {
                 continue;
             }
 
-            @SuppressWarnings("FieldMayBeFinal")
-            class Artifact {
-                long id;
-                String name = "";
-                boolean expired = false;
-            }
-            @SuppressWarnings("FieldMayBeFinal")
-            class Artifacts {
-                Artifact[] artifacts = new Artifact[0];
-            }
             URL artifactsUrl;
             try {
-                artifactsUrl = new URL(run.artifacts_url);
+                artifactsUrl = new URL(GsonHelper.getAsString(run, "artifacts_url"));
             } catch (MalformedURLException e) {
-                LOGGER.error("GitHub gave malformed artifacts URL: {}", run.artifacts_url);
+                LOGGER.error("GitHub gave malformed artifacts URL: {}", GsonHelper.getAsString(run, "artifacts_url"));
                 continue;
             }
-            Artifacts artifacts = FileDownloader.downloadJson(
+            long checkSuiteId = GsonHelper.getAsLong(run, "check_suite_id");
+            JsonObject artifacts = FileDownloader.downloadJson(
                 artifactsUrl,
-                "multiconnect_run_" + run.id + "_artifacts.json",
-                Artifacts.class
+                "multiconnect_run_" + GsonHelper.getAsLong(run, "id") + "_artifacts.json",
+                JsonObject.class
             );
             if (artifacts == null) {
                 continue;
             }
-            for (Artifact artifact : artifacts.artifacts) {
-                if (!"via-translator-snapshot".equals(artifact.name)) {
+            for (JsonElement artifactElement : GsonHelper.getAsJsonArray(artifacts, "artifacts")) {
+                JsonObject artifact = GsonHelper.convertToJsonObject(artifactElement, "artifact");
+                if (!"via-translator-snapshot".equals(GsonHelper.getAsString(artifact, "name"))) {
                     continue;
                 }
-                if (artifact.expired) {
-                    LOGGER.warn("Found a matching via-translator artifact (ID {}) on GitHub actions, but it has expired. Please compile manually.", artifact.id);
+                long artifactId = GsonHelper.getAsLong(artifact, "id");
+                if (GsonHelper.getAsBoolean(artifact, "expired", false)) {
+                    LOGGER.warn("Found a matching via-translator artifact (ID {}) on GitHub actions, but it has expired. Please compile manually.", artifactId);
                     continue;
                 }
-                downloadUrl = "https://nightly.link/Earthcomputer/multiconnect/suites/" + run.check_suite_id + "/artifacts/" + artifact.id;
-                fileName = "multiconnect_" + run.check_suite_id + "_" + artifact.id + ".jar";
+                downloadUrl = "https://nightly.link/Earthcomputer/multiconnect/suites/" + checkSuiteId + "/artifacts/" + artifactId;
+                fileName = "multiconnect_" + checkSuiteId + "_" + artifactId + ".jar";
                 break runLoop;
             }
         }
