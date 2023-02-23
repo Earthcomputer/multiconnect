@@ -35,6 +35,7 @@ public final class FileDownloader {
     }
 
     // Downloads a json file if un-downloaded, or if it has a json syntax error (corrupted)
+    @Nullable
     public static <T> T downloadJson(URL url, String dest, Class<T> type) {
         return downloadAndParse(url, dest, file -> {
             try (BufferedReader reader = Files.newBufferedReader(file)) {
@@ -43,6 +44,7 @@ public final class FileDownloader {
         });
     }
 
+    @Nullable
     public static Path download(URL url, String dest) {
         return download(url, dest, Downloader.DEFAULT, false);
     }
@@ -89,6 +91,7 @@ public final class FileDownloader {
         return null;
     }
 
+    @Nullable
     private static Path download(URL url, String dest, Downloader downloader, boolean force) {
         Path destFile = CACHE_DIR.resolve(dest);
         Path etagFile = CACHE_DIR.resolve(dest + ".etag");

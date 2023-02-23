@@ -17,9 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -34,6 +32,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -41,6 +41,7 @@ import java.util.zip.ZipInputStream;
 public final class TranslatorDiscoverer {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Gson GSON = new Gson();
+    private static final Pattern GIT_DESCRIBE_PATTERN = Pattern.compile("-[0-9a-z]([0-9a-z]{8})$");
 
     public static IMulticonnectTranslator discoverTranslator(IMulticonnectTranslatorApi api) {
         maybeDownloadTranslators();
@@ -54,7 +55,7 @@ public final class TranslatorDiscoverer {
     }
 
     private static void maybeDownloadTranslators() {
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+        if (FabricLoader.getInstance().isDevelopmentEnvironment() && !Boolean.getBoolean("multiconnect.translatorDiscoveryInDev")) {
             LOGGER.info("Skipping translator discovery due to development environment");
             return;
         }
@@ -149,6 +150,15 @@ public final class TranslatorDiscoverer {
     }
 
     private static void downloadViaTranslator(Path configDir) {
+        Matcher matcher = GIT_DESCRIBE_PATTERN.matcher(Multiconnect.getVersion());
+        if (matcher.find()) {
+            downloadViaTranslatorFromGithubActions(matcher.group(1));
+        } else {
+            downloadViaTranslatorFromModrinth(configDir);
+        }
+    }
+
+    private static void downloadViaTranslatorFromModrinth(Path configDir) {
         URI versionsUri;
         try {
             versionsUri = new URI("https://api.modrinth.com/v2/project/MNhf9veJ/version");
@@ -216,6 +226,93 @@ public final class TranslatorDiscoverer {
             LOGGER.error("Couldn't connect to modrinth, check your internet connection", e);
         } catch (IOException | JsonSyntaxException e) {
             LOGGER.error("Unable to download multiconnect via translator", e);
+        }
+    }
+
+    private static void downloadViaTranslatorFromGithubActions(String gitHashStart) {
+        JsonObject runs = FileDownloader.downloadJson(
+            FileDownloader.createURL("https://api.github.com/repos/Earthcomputer/multiconnect/actions/runs"),
+            "multiconnect_runs.json",
+            JsonObject.class
+        );
+        if (runs == null) {
+            return;
+        }
+
+        String downloadUrl = null;
+        String fileName = null;
+
+        runLoop:
+        for (JsonElement runElement : GsonHelper.getAsJsonArray(runs, "workflow_runs")) {
+            JsonObject run = GsonHelper.convertToJsonObject(runElement, "workflow run");
+            if (!".github/workflows/build.yml".equals(GsonHelper.getAsString(run, "path"))) {
+                continue;
+            }
+            if (!GsonHelper.getAsString(run, "head_sha").startsWith(gitHashStart)) {
+                continue;
+            }
+
+            URL artifactsUrl;
+            try {
+                artifactsUrl = new URL(GsonHelper.getAsString(run, "artifacts_url"));
+            } catch (MalformedURLException e) {
+                LOGGER.error("GitHub gave malformed artifacts URL: {}", GsonHelper.getAsString(run, "artifacts_url"));
+                continue;
+            }
+            long checkSuiteId = GsonHelper.getAsLong(run, "check_suite_id");
+            JsonObject artifacts = FileDownloader.downloadJson(
+                artifactsUrl,
+                "multiconnect_run_" + GsonHelper.getAsLong(run, "id") + "_artifacts.json",
+                JsonObject.class
+            );
+            if (artifacts == null) {
+                continue;
+            }
+            for (JsonElement artifactElement : GsonHelper.getAsJsonArray(artifacts, "artifacts")) {
+                JsonObject artifact = GsonHelper.convertToJsonObject(artifactElement, "artifact");
+                if (!"via-translator-snapshot".equals(GsonHelper.getAsString(artifact, "name"))) {
+                    continue;
+                }
+                long artifactId = GsonHelper.getAsLong(artifact, "id");
+                if (GsonHelper.getAsBoolean(artifact, "expired", false)) {
+                    LOGGER.warn("Found a matching via-translator artifact (ID {}) on GitHub actions, but it has expired. Please compile manually.", artifactId);
+                    continue;
+                }
+                downloadUrl = "https://nightly.link/Earthcomputer/multiconnect/suites/" + checkSuiteId + "/artifacts/" + artifactId;
+                fileName = "multiconnect_" + checkSuiteId + "_" + artifactId + ".jar";
+                break runLoop;
+            }
+        }
+
+        if (downloadUrl == null) {
+            LOGGER.warn("Could not find a matching via-translator artifact. Please compile manually.");
+            return;
+        }
+
+        Path viaTranslatorJar = FileDownloader.downloadAndParse(
+            FileDownloader.createURL(downloadUrl),
+            fileName,
+            (in, dest) -> {
+                ZipInputStream zis = new ZipInputStream(in);
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    if (entry.getName().endsWith(".jar") && !entry.getName().contains("sources")) {
+                        Files.copy(zis, dest, StandardCopyOption.REPLACE_EXISTING);
+                        return;
+                    }
+                }
+                throw new IOException("Could not find via-translator.jar in the zip");
+            },
+            file -> {
+                try (JarFile ignored = new JarFile(file.toFile())) {
+                    return file;
+                }
+            }
+        );
+
+        if (viaTranslatorJar != null) {
+            addToClassPath(viaTranslatorJar);
+            LOGGER.info("Downloaded multiconnect via translator");
         }
     }
 
