@@ -36,6 +36,14 @@ public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
 
     protected IMulticonnectTranslatorApi api;
 
+    /**
+     * Returns null in singleplayer
+     */
+    @Nullable
+    public static UserConnection getUserConnection(Channel channel) {
+        return channel.attr(VIA_USER_CONNECTION_KEY).get();
+    }
+
     @Override
     public boolean isApplicableInEnvironment(IMulticonnectTranslatorApi api) {
         return !api.isModLoaded("viafabric");
@@ -125,7 +133,10 @@ public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
         if (channel == null) {
             return true;
         }
-        UserConnection connection = channel.attr(VIA_USER_CONNECTION_KEY).get();
+        UserConnection connection = getUserConnection(channel);
+        if (connection == null) {
+            return true;
+        }
         MappingData mappingData = connection.getProtocolInfo().getPipeline().getMappingData();
         if (mappingData == null) {
             return true;
@@ -172,7 +183,7 @@ public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
 
     @Override
     public void sendStringCustomPayload(Channel channel, String payloadChannel, ByteBuf payload) throws Exception {
-        UserConnection connection = channel.attr(VIA_USER_CONNECTION_KEY).get();
+        UserConnection connection = getUserConnection(channel);
         PacketWrapper packet = Via.getManager().getProtocolManager().createPacketWrapper(
             ServerboundPackets1_12_1.PLUGIN_MESSAGE,
             channel.alloc().buffer(),
@@ -187,7 +198,7 @@ public class ViaMulticonnectTranslator implements IMulticonnectTranslator {
 
     @Override
     public void sendOpenedInventory(Channel channel) throws Exception {
-        UserConnection connection = channel.attr(VIA_USER_CONNECTION_KEY).get();
+        UserConnection connection = getUserConnection(channel);
         PacketWrapper packet = Via.getManager().getProtocolManager().createPacketWrapper(
             ServerboundPackets1_9_3.CLIENT_STATUS,
             channel.alloc().buffer(),
