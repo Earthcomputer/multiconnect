@@ -3,8 +3,8 @@ package net.earthcomputer.multiconnect.mixin.connect;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.earthcomputer.multiconnect.api.IProtocol;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
-import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.connect.ServersExt;
+import net.earthcomputer.multiconnect.impl.DropDownWidget;
 import net.earthcomputer.multiconnect.impl.IProtocolExt;
 import net.earthcomputer.multiconnect.impl.Utils;
 import net.minecraft.client.gui.components.EditBox;
@@ -52,7 +52,7 @@ public class DirectJoinServerScreenMixin extends Screen {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void drawScreen(PoseStack matrixStack, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        font.drawShadow(matrixStack, multiconnect_forceProtocolLabel, width - 85 - font.width(multiconnect_forceProtocolLabel), 11, 0xFFFFFF);
+        font.drawShadow(matrixStack, multiconnect_forceProtocolLabel, width - multiconnect_protocolSelector.getWidth() - 10 - font.width(multiconnect_forceProtocolLabel), 11, 0xFFFFFF);
         multiconnect_protocolSelector.render(matrixStack, mouseX, mouseY, delta);
     }
 

@@ -1,3 +1,4 @@
 # this is a comment
 
 serverside-blockconnections: true
+suppress-conversion-warnings: true

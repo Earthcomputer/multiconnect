@@ -1,18 +1,23 @@
 package net.earthcomputer.multiconnect.impl;
 
 import com.google.common.cache.Cache;
-import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.api.IProtocol;
+import net.earthcomputer.multiconnect.api.ThreadSafe;
 import net.earthcomputer.multiconnect.connect.ConnectionMode;
 import net.earthcomputer.multiconnect.protocols.ProtocolRegistry;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+
 import java.lang.ref.Cleaner;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -65,6 +70,7 @@ public class Utils {
         for (IProtocol protocol : ProtocolRegistry.getProtocols()) {
             populateDropdown(versionDropDown, protocol);
         }
+        versionDropDown.setX(screen.width - 5 - versionDropDown.getWidth());
 
         return versionDropDown;
     }
@@ -80,13 +86,22 @@ public class Utils {
     private static void populateDropdown(DropDownWidget<IProtocol> versionDropDown, IProtocol protocol) {
         if (protocol.isMajorRelease()) {
             var category = versionDropDown.add(protocol);
+            var maxWidth = getWidth(versionDropDown, protocol);
             List<IProtocol> children = protocol.getMinorReleases();
             if (children.size() > 1) {
                 for (IProtocol child : children) {
                     category.add(child);
+                    maxWidth = Math.max(maxWidth, getWidth(versionDropDown, child));
                 }
             }
+            if (maxWidth + 30 > versionDropDown.getWidth()) {
+                versionDropDown.setWidth(maxWidth + 30);
+            }
         }
+    }
+
+    private static int getWidth(DropDownWidget<IProtocol> versionDropDown, IProtocol protocol) {
+        return Minecraft.getInstance().font.width(versionDropDown.getCategoryLabelExtractor().apply(protocol));
     }
 
     @ThreadSafe

@@ -1,15 +1,7 @@
 package net.earthcomputer.multiconnect.impl;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractButton;
@@ -18,6 +10,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class DropDownWidget<T> extends AbstractButton {
 
@@ -45,6 +42,14 @@ public class DropDownWidget<T> extends AbstractButton {
         this.labelExtractor = labelExtractor;
         this.categoryLabelExtractor = labelExtractor;
         this.value = initialValue;
+    }
+
+    public Function<T, Component> getLabelExtractor() {
+        return labelExtractor;
+    }
+
+    public Function<T, Component> getCategoryLabelExtractor() {
+        return categoryLabelExtractor;
     }
 
     public DropDownWidget<T> setCategoryLabelExtractor(Function<T, Component> categoryLabelExtractor) {
