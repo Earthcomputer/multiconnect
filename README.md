@@ -7,6 +7,11 @@
 
 Connect to many different server versions from your Fabric client!
 
+## This project has been archived
+Multiconnect has kind of been in a state of disrepair for a while now, and if I'm going to be totally honest it's because I haven't had the motivation or energy to work on it for quite a while. I don't see this changing so I have decided to archive the project.
+
+For a replacement, I can whole-heartedly recommend [ViaFabricPlus](https://github.com/FlorianMichael/ViaFabricPlus/), which has all the features that multiconnect had, and also goes all the way down to classic versions of Minecraft, and can connect to Bedrock servers. It is available on Modrinth and CurseForge for 1.19.4, and is open source under the GPL-3.0 license.
+
 ## Social
 Discord: https://discord.gg/Jg7Bun7
 Patreon: https://www.patreon.com/earthcomputer
